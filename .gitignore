@@ -1,0 +1,4 @@
+*.o
+block.spin_adapted
+*.so
+*.a
