@@ -115,7 +115,7 @@ void SpinAdapted::SweepParams::restorestate(bool &forward, int &size)
   onedot = (dmrginp.algorithm_method() == ONEDOT);
   env_add = dmrginp.env_add();
   forward_starting_size = 1;
-  n_iters = (dmrginp.last_site()/2 - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+  n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
   backward_starting_size = forward_starting_size;
   if (block_iter >= get_n_iters()) {
     sweep_iter ++;
