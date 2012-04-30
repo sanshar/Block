@@ -3,8 +3,10 @@
 namespace SpinAdapted{
 void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys)
 {
-  mcheck("at the start of block and decimate");
+  if (dmrginp.outputlevel() != 0) 
+    mcheck("at the start of block and decimate");
   // figure out if we are going forward or backwards
+  pout << "\t\t\t Performing Blocking"<<endl;
   dmrginp.guessgenT.start();
   bool forward = (system.get_sites() [0] == 0);
   SpinBlock systemDot;
@@ -30,6 +32,8 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
   system.addAdditionalCompOps();
   InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, dot_with_sys, true);
 
+  pout << "\t\t\t System  Block"<<newSystem;
+
   std::vector<Matrix> rotateMatrix;
   LoadRotationMatrix (newSystem.get_sites(), rotateMatrix);
 
@@ -40,10 +44,12 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
 
   SaveRotationMatrix (newSystem.get_sites(), rotateMatrix);
 
-
+  pout <<"\t\t\t Performing Renormalization "<<endl<<endl;
   newSystem.transform_operators(rotateMatrix);
-  mcheck("after rotation and transformation of block");
-  pout <<newSystem<<endl;
+  if (dmrginp.outputlevel() != 0) 
+    mcheck("after rotation and transformation of block");
+  if (dmrginp.outputlevel() != 0) 
+    pout <<newSystem<<endl;
   //mcheck("After renorm transform");
 }
 
@@ -65,7 +71,8 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
   if(!restart)
     sweepParams.set_block_iter() = 0;
 
-  pout << "\t\t\t Starting block is :: " << endl << system << endl;
+  if (dmrginp.outputlevel() != 0) 
+    pout << "\t\t\t Starting block is :: " << endl << system << endl;
   if (!restart) 
     SpinBlock::store (forward, system.get_sites(), system); // if restart, just restoring an existing block --
   sweepParams.savestate(forward, system.get_sites().size());
@@ -75,11 +82,12 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
     {
       pout << "\t\t\t Sweep Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
+      if (dmrginp.outputlevel() != 0) {
       if (forward)
 	pout << "\t\t\t Current direction is :: Forwards " << endl;
       else
 	pout << "\t\t\t Current direction is :: Backwards " << endl;
-
+      }
       //if (SHOW_MORE) pout << "system block" << endl << system << endl;
   
       if (dmrginp.no_transform())
@@ -93,7 +101,8 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
       else
         sweepParams.set_guesstype() = BASIC;
       
-      pout << "\t\t\t Blocking and Decimating " << endl;
+      if (dmrginp.outputlevel() != 0) 
+	pout << "\t\t\t Blocking and Decimating " << endl;
 	  
       SpinBlock newSystem;
 
@@ -110,16 +119,14 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
 
       SpinBlock::store (forward, system.get_sites(), system);	 	
 
-      pout << "\t\t\t saving state " << system.get_sites().size() << endl;
+      if (dmrginp.outputlevel() != 0) 
+	pout << "\t\t\t saving state " << system.get_sites().size() << endl;
       ++sweepParams.set_block_iter();
-      if (sweepParams.get_onedot())
-	pout << "\t\t\tUsing one dot algorithm!!"<<endl; 
+      //if (sweepParams.get_onedot())
+      //pout << "\t\t\tUsing one dot algorithm!!"<<endl; 
       sweepParams.savestate(forward, system.get_sites().size());
     }
-  for(int j=0;j<nroots;++j)
-    pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
-	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j] << endl;
-  pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
+  pout << "\t\t\t Finished Generate-Blocks Sweep. " << endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
   // update the static number of iterations

@@ -62,7 +62,7 @@ void ReadInput(char* conf)
   //read the config file
   pout << "INPUT FILE"<<endl;
   dmrginp = Input(configFile);
-
+  pout << "*****************************"<<endl<<endl;
   v_1.rhf= true; 
   v_2.rhf=true;
   if (sym != "dinfh")

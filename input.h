@@ -192,6 +192,7 @@ class Input {
   const bool &do_fci() const { return m_do_fci; }
   const int &max_iter() const { return m_maxiter; }
   const double &screen_tol() const { return m_screen_tol; }
+  double &screen_tol() { return m_screen_tol; }
   const int &total_spin() const {return m_total_spin;}
   const std::vector<int> &spin_vector() const { return m_spin_vector; }
   const std::string &save_prefix() const { return m_save_prefix; }

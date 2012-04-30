@@ -49,7 +49,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_do_fci = false;
   m_do_cd = false;
   m_maxiter = 1000;
-  m_screen_tol = 1.00.e-20;
+  m_screen_tol = 1.00e-20;
 
   m_load_prefix = ".";
   m_save_prefix = ".";

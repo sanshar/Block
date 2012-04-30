@@ -94,12 +94,52 @@ int main(int argc, char* argv [])
   case (FCI):
     Sweep::fullci(sweep_tol);
     break;
-    /*
+
   case (GENBLOCK):
     sweepParams.restorestate(direction, restartsize);
+    dmrginp.screen_tol() = 0.0; //need to turn screening off for genblocks
     SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
     SweepGenblock::do_one(sweepParams, false, direction, false, 0);
     break;
+  case (ONEPDM):
+    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
+    if (dmrginp.set_Sz()) {
+      if ( (dmrginp.total_spin_number() - dmrginp.Sz())%2 == 1 ) {
+	
+	if (dmrginp.outputlevel() != 0) {
+	  pout << "Given Sz is not valid" <<endl;
+	  pout << "Changing its value to: "<< dmrginp.total_spin_number()<<endl;
+	}
+	dmrginp.Sz() = dmrginp.total_spin_number();
+      }
+    }
+    else {
+      if (dmrginp.outputlevel() != 0) {      
+	pout << "Sz not specified" <<endl;
+	pout << "Using the value : "<< dmrginp.total_spin_number()<<endl;
+      }
+      dmrginp.Sz() = dmrginp.total_spin_number();
+    }
+    if (!dmrginp.do_cd()) {
+      pout << "Blocks must have all cd operators\n Please set the docd option in the configuration file\n"
+	   << "Don't forget to re-generate the blocks with the docd option if you have not done so already\n";
+      abort();
+    }
+    if(dmrginp.screen_tol() > 0.) {
+      pout << "Blocks must have all cd operators\n Please turn off screening in the configuration file\n"
+	   << "Don't forget to re-generate the blocks with the screening option off if you have not done so already\n";
+      abort();
+    }
+    sweepParams.restorestate(direction, restartsize);
+    
+    if(!sweepParams.get_onedot() || dmrginp.algorithm_method() == TWODOT) {
+      pout << "Onepdm only runs for the onedot algorithm" << endl;
+      abort();
+    }
+    
+    SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
+    break;
+    /*
   case (TWOPDM):
     if (dmrginp.set_Sz()) {
       if ( (dmrginp.total_spin_number() - dmrginp.Sz())%2 == 1) {
@@ -130,39 +170,6 @@ int main(int argc, char* argv [])
       abort();
     }
     SweepTwopdm::do_one(sweepParams, false, direction, false, 0);
-    break;
-  case (ONEPDM):
-    if (dmrginp.set_Sz()) {
-      if ( (dmrginp.total_spin_number() - dmrginp.Sz())%2 == 1) {
-	
-	pout << "Given Sz is not valid" <<endl;
-	pout << "Changing its value to: "<< dmrginp.total_spin_number()<<endl;
-	dmrginp.Sz() = dmrginp.total_spin_number();
-      }
-    }
-    else {
-      pout << "Sz not specified" <<endl;
-      pout << "Using the value : "<< dmrginp.total_spin_number()<<endl;
-      dmrginp.Sz() = dmrginp.total_spin_number();
-    }
-    if (!dmrginp.do_cd()) {
-      pout << "Blocks must have all cd operators\n Please set the docd option in the configuration file\n"
-	   << "Don't forget to re-generate the blocks with the docd option if you have not done so already\n";
-      abort();
-    }
-    if(dmrginp.screen_tol() > 0.) {
-      pout << "Blocks must have all cd operators\n Please turn off screening in the configuration file\n"
-	   << "Don't forget to re-generate the blocks with the screening option off if you have not done so already\n";
-      abort();
-    }
-    sweepParams.restorestate(direction, restartsize);
-    
-    if(!sweepParams.get_onedot() || dmrginp.algorithm_method() == TWODOT) {
-      pout << "Onepdm only runs for the onedot algorithm" << endl;
-      abort();
-    }
-    
-    SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
     break;
     */
   }
@@ -196,7 +203,9 @@ void restart(double sweep_tol, bool reset_iter)
     last_fe = Sweep::do_one(sweepParams, false, direction, true, restartsize);
 
 
-  while ((fabs(last_fe - old_fe) > sweep_tol) || (fabs(last_be - old_be) > sweep_tol))
+  //while ((fabs(last_fe - old_fe) > sweep_tol) || (fabs(last_be - old_be) > sweep_tol))
+  while ((fabs(last_fe - old_fe) > sweep_tol) || (fabs(last_be - old_be) > sweep_tol) || 
+	 (dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter()+1 >= sweepParams.get_sweep_iter()) )
   {
 
     //if (domoreIter == 2) {

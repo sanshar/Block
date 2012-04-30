@@ -83,7 +83,7 @@ double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   std::vector<double> finalEnergy_spins(nroots,0.);
   double finalError = 0.;
 
-  Matrix onepdm(dmrginp.last_site(), dmrginp.last_site());onepdm=0.0;
+  Matrix onepdm(2*dmrginp.last_site(), 2*dmrginp.last_site());onepdm=0.0;
   for (int i=0; i<nroots; i++)
     for (int j=0; j<=i; j++)      
       save_onepdm_binary(onepdm, i ,j);

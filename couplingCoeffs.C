@@ -46,6 +46,8 @@ double ninejCoeffs::operator() (int ja, int jb, int jc, int jd, int je, int jf, 
   //dmrginp.couplingcoeff.start();
   int a = jd, b=je, c=jf;
   int index = arrayindex(a, b, c);
+  if (index == -1)
+    return Ninej(ja, jb, jc, jd, je, jf, jg, jh, ji);
   if (ja > maxj || jb >maxj || jc >maxj) {
     cout << "should have used a larger maxj"<<endl;
     return Ninej(ja, jb, jc, jd, je, jf, jg, jh, ji);
@@ -97,8 +99,7 @@ int ninejCoeffs::arrayindex(int a, int b, int c) const
     return 9;
   else
     {
-      cout <<"a , b, c, of the operator tensors not valid: "<<a<<" "<<b<<" "<<c<<endl;
-      abort();
+      return -1;
     }
 }
 
