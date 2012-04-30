@@ -49,7 +49,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_do_fci = false;
   m_do_cd = false;
   m_maxiter = 1000;
-  m_screen_tol = 0.;
+  m_screen_tol = 1.00.e-20;
 
   m_load_prefix = ".";
   m_save_prefix = ".";
@@ -247,6 +247,7 @@ SpinAdapted::Input::Input(const string& config_name)
 	    m_spin_to_spatial[i] = m_num_spatial_orbs-1;
 	  }
         }
+	m_spatial_to_spin.push_back(m_norbs);
 	m_spin_to_spatial.push_back(m_norbs);
 	cout << endl;
 	cout <<"# spatial orbitals "<<m_num_spatial_orbs<<endl;

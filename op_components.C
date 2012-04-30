@@ -61,8 +61,6 @@ namespace SpinAdapted {
 	  pair<int, int> opair = m_op.unmap_local_index(i);
 	  orbs[0] = opair.first; orbs[1] = opair.second;
 	  std::vector<boost::shared_ptr<CreDes> >& vec = m_op.get_local_element(i);
-	  //SpinQuantum spin1 = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOfSpatialOrb(orbs[0]));
-	  //SpinQuantum spin2 = SpinQuantum(1, SpinOf(orbs[1]), SymmetryOfSpatialOrb(orbs[1]));
 	  SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
 	  SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
 	  std::vector<SpinQuantum> spinvec = spin1-spin2;
