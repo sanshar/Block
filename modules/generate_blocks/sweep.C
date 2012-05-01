@@ -1,4 +1,5 @@
 #include "sweepgenblock.h"
+#include "guess_wavefunction.h"
 
 namespace SpinAdapted{
 void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys)
@@ -32,6 +33,8 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
   system.addAdditionalCompOps();
   InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, dot_with_sys, true);
 
+
+
   pout << "\t\t\t System  Block"<<newSystem;
 
   std::vector<Matrix> rotateMatrix;
@@ -41,6 +44,23 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
   mpi::communicator world;
   broadcast(world, rotateMatrix, 0);
 #endif
+
+  if (!dmrginp.get_fullrestart()) {
+    //this should be done when we actually have wavefunctions stored, otherwise not!!
+    SpinBlock environment, environmentDot, newEnvironment;
+    int environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
+    InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
+					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
+					sweepParams.get_onedot(), nexact, useSlater, true, true, true);
+    SpinBlock big;
+    InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
+    DiagonalMatrix e;
+    std::vector<Wavefunction> solutions(dmrginp.nroots());
+    GuessWave::guess_wavefunctions(solutions, e, big, sweepParams.get_guesstype(), true, true); 
+    for(int i=0;i<dmrginp.nroots();++i)
+      solutions[i].SaveWavefunctionInfo (big.get_stateInfo(), big.get_leftBlock()->get_sites(), i);
+  }
+
 
   SaveRotationMatrix (newSystem.get_sites(), rotateMatrix);
 
@@ -77,6 +97,13 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
     SpinBlock::store (forward, system.get_sites(), system); // if restart, just restoring an existing block --
   sweepParams.savestate(forward, system.get_sites().size());
   bool dot_with_sys = true;
+  if (restart)
+  {
+    if (forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)
+      dot_with_sys = false;
+    if (!forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
+      dot_with_sys = false;
+  }
 
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
     {
