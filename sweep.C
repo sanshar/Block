@@ -94,7 +94,6 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 					sweepParams.get_onedot(), nexact, useSlater, !dot_with_sys, true, dot_with_sys);
   }
-
   SpinBlock big;
   if (dot_with_sys) {
     newSystem.set_loopblock(true);
@@ -131,6 +130,10 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   pout << "\t\t\t System  Block"<<newSystem;
   pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
   pout << "\t\t\t Solving wavefunction "<<endl;
+
+  //world.barrier();
+  //cout << "about to make big block"<<endl;
+
   newSystem.RenormaliseFrom (sweepParams.set_lowest_energy(), sweepParams.set_lowest_energy_spins(), sweepParams.set_lowest_error(), 
                              rotatematrix, sweepParams.get_keep_states(), 
                              sweepParams.get_keep_qstates(), sweepParams.get_davidson_tol(), big, sweepParams.get_guesstype(), sweepParams.get_noise(), 
@@ -285,6 +288,9 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       if (dmrginp.outputlevel() != 0)
 	pout << "\t\t\t saving state " << syssites.size() << endl;
       ++sweepParams.set_block_iter();
+      
+      mpi::communicator world;
+      world.barrier();
       sweepParams.savestate(forward, syssites.size());
       if (dmrginp.outputlevel() != 0)
 	mcheck("at the end of sweep iteration");
