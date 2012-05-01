@@ -261,13 +261,13 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
   e_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? e_array : e_distributed;
   indices = rightBlock->get_op_array(CRE).get_array();
   Functor f = boost::bind(&opxop::cxcddcomp_d, leftBlock, _1, this, e_add); 
-  for_all_multithread(rightBlock->get_op_array(CRE), f);
+  //for_all_multithread(rightBlock->get_op_array(CRE), f); //not needed in diagonal
 
 
   e_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? e_array : e_distributed;
   indices = leftBlock->get_op_array(CRE).get_array();
   f = boost::bind(&opxop::cxcddcomp_d, rightBlock, _1, this, e_add); 
-  for_all_multithread(leftBlock->get_op_array(CRE), f);  
+  //for_all_multithread(leftBlock->get_op_array(CRE), f);  //not needed in diagonal
 
 
 
@@ -282,7 +282,7 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
     e_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? e_array : e_distributed;
     indices = loopBlock->get_op_array(CRE_CRE).get_array();
     f = boost::bind(&opxop::ddxcccomp_d, otherBlock, _1, this, e_add);
-    for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);  
+    //for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);  //not needed in diagonal 
 
   }
   
