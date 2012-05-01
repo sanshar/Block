@@ -37,9 +37,8 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   if (dmrginp.outputlevel() != 0)
     mcheck("before davidson but after all blocks are built");
 
-  DiagonalMatrix e;
   dmrginp.solvewf.start();
-  Solver::solve_wavefunction(wave_solutions, energies, big, tol, guesswavetype, onedot, dot_with_sys, warmUp, e, additional_noise);
+  Solver::solve_wavefunction(wave_solutions, energies, big, tol, guesswavetype, onedot, dot_with_sys, warmUp, additional_noise);
 
   dmrginp.solvewf.stop();
   SpinBlock newsystem;
@@ -77,20 +76,6 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   tracedMatrix.allocate(stateInfo);
 
   //pout <<"\t\t\t System state Info\n"<< stateInfo<<endl;
-  // do post-solution density matrix modifications
-  if (dmrginp.outputlevel() != 0)
-    pout <<"\t\t\t Total left, right and keptstates quanta: "<<newbig.get_stateInfo().leftStateInfo->totalStates<<" "<<newbig.get_stateInfo().rightStateInfo->totalStates<<" "<<keptstates<<endl;
-  int leftQuantaUsed = 0;
-  for (int i=0; i<wave_solutions[0].nrows(); i++) {
-    int maxUsed = 0;
-    for (int j=0; j<wave_solutions[0].ncols(); j++)
-      if( wave_solutions[0].allowed(i, j))
-	if (maxUsed < min(wave_solutions[0](i,j).Nrows(), wave_solutions[0](i,j).Ncols()))
-	  maxUsed = min(wave_solutions[0](i,j).Nrows(), wave_solutions[0](i,j).Ncols());
-    leftQuantaUsed += maxUsed;
-  }
-  if (dmrginp.outputlevel() != 0)
-    pout <<"\t\t\t Left Quanta used in state 0: "<<leftQuantaUsed<<endl;
   bool normalnoise = warmUp;
   if (newbig.get_rightBlock()->size() < 2)
     normalnoise = true;

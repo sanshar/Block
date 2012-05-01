@@ -58,8 +58,8 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   std::vector<Wavefunction> solution(nroots);
   std::vector<double> energies(nroots);
   double tol = sweepParams.get_davidson_tol();
-  DiagonalMatrix e;
-  Solver::solve_wavefunction(solution, energies, big, tol, BASIC, false, true, false, e, sweepParams.get_additional_noise());
+
+  Solver::solve_wavefunction(solution, energies, big, tol, BASIC, false, true, false, sweepParams.get_additional_noise());
   for (int i=0; i<nroots; i++) {
     pout << "fullci energy "<< energies[i]<<endl;
   }

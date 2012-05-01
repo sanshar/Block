@@ -201,7 +201,6 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 		for (int i = 0; i < min((int)(b.size()), h_diag.Ncols()); ++i)
 		  h_diag.element(i) = subspace_eigenvalues.element(i);
 	      }
-	      mpi::broadcast(world, h_diag, 0);
 	      solved = true;
 	      break;
 	    }

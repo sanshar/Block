@@ -2,10 +2,14 @@
 #include "linear.h"
 #include "davidson.h"
 #include "guess_wavefunction.h"
+#ifndef SERIAL
+#include <boost/mpi.hpp>
+#endif
+
 
 void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vector<double>& energies, SpinBlock& big, const double tol, 
 				const guessWaveTypes& guesswavetype, const bool &onedot, const bool& dot_with_sys, const bool& warmUp,
-					     DiagonalMatrix& e, double additional_noise)
+					     double additional_noise)
 {
   const int nroots = solution.size();
 
@@ -14,8 +18,7 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
 
 
 
-  DiagonalMatrix etemp;
-
+  DiagonalMatrix e;
   bool useprecond = true;
   int iter = 0;
   bool solved = false;
@@ -38,10 +41,11 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
 
     pout << "\t\t\t Number of elements in wavefunction :: " << e.Ncols() << endl;
     multiply_h davidson_f(big, onedot);
-    etemp = e;
+    //etemp = e;
+    if (mpigetrank() != 0) e.ReSize(0);
     GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise); 
     Linear::block_davidson(solution, e, tol, warmUp, davidson_f, useprecond, solved);
-
+ 
     iter++;
   }
   if (iter == 2 && !solved)
@@ -52,11 +56,13 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
 
   solution.resize(nroots);
   energies.resize(nroots);
-  for (int i=0; i<nroots;i++) {
+  for (int i=0; i<nroots&& mpigetrank() == 0;i++) {
     energies[i] = e(i+1);
     //pout << "\t\t\t Energy of wavefunction "<<i<<"  =  "<<e(i+1)<<endl;
   }
+  mpi::communicator world;
+  broadcast(world, energies, 0);
+
   pout<<endl;
-  e = etemp;
 }
 
