@@ -130,7 +130,8 @@ void compute_two_pdm_0_4_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   bool start = leftBlock->get_sites().size() ==2 ? true : false;
   int dotindex = dotBlock->get_sites()[0];
 
-  boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_rep(CRE_CRE_S0, dotindex, dotindex);
+  SpinQuantum sq0 = (SpinQuantum(1,1,SymmetryOfSpatialOrb(dotindex))+SpinQuantum(1,1,SymmetryOfSpatialOrb(dotindex)))[0];
+  boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_rep(CRE_CRE, sq0, dotindex, dotindex);
   Cre dotop;
   dotop.set_orbs() = dotop0->get_orbs(); dotop.set_orbs().push_back(dotindex); dotop.set_orbs().push_back(dotindex);
   dotop.set_initialised() = true;
@@ -154,7 +155,9 @@ void compute_two_pdm_4_0_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   SpinBlock* dotBlock = leftBlock->get_rightBlock();
   int leftindex = leftBlock->get_sites()[0];
 
-  boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_rep(CRE_CRE_S0, leftindex, leftindex);
+  SpinQuantum sq0 = (SpinQuantum(1,1,SymmetryOfSpatialOrb(leftindex))+SpinQuantum(1,1,SymmetryOfSpatialOrb(leftindex)))[0];
+  boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_rep(CRE_CRE, sq0, leftindex, leftindex);
+
   Cre leftop;
   leftop.set_orbs() = leftop0->get_orbs(); leftop.set_orbs().push_back(leftindex); leftop.set_orbs().push_back(leftindex);
   leftop.set_initialised() = true;
@@ -180,7 +183,8 @@ void compute_two_pdm_0_0_4(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   bool start = leftBlock->get_sites().size() ==2 ? true : false;
   int rightindex = rightBlock->get_sites()[0];
 
-  boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_rep(CRE_CRE_S0, rightindex, rightindex);
+  SpinQuantum sq0 = (SpinQuantum(1,1,SymmetryOfSpatialOrb(rightindex))+SpinQuantum(1,1,SymmetryOfSpatialOrb(rightindex)))[0];
+  boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_rep(CRE_CRE, sq0, rightindex, rightindex);
   Cre rightop;
   rightop.set_orbs() = rightop0->get_orbs(); rightop.set_orbs().push_back(rightindex); rightop.set_orbs().push_back(rightindex);
   rightop.set_initialised() = true;
@@ -205,24 +209,27 @@ void compute_two_pdm_0_2_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   bool start = leftBlock->get_sites().size() ==2 ? true : false;
   int dotindex = dotBlock->get_sites()[0];
 
-  for (int ij = 0; ij < dotBlock->get_op_array(CRE_CRE_S2).get_size(); ++ij)
+  for (int ij = 0; ij < dotBlock->get_op_array(CRE_CRE).get_size(); ++ij)
   {
-    boost::shared_ptr<SparseMatrix> dotop2 = dotBlock->get_op_array(CRE_CRE_S2).get_local_element(ij).getworkingrepresentation(leftBlock);
+    boost::shared_ptr<SparseMatrix> dotop2 = dotBlock->get_op_array(CRE_CRE).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
     int ix = dotop2->get_orbs(0);
     int jx = dotop2->get_orbs(1);
-    boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_rep(CRE_CRE_S0, ix, jx);
+    SpinQuantum sq0 = (SpinQuantum(1,1,SymmetryOfSpatialOrb(ix))+SpinQuantum(1,1,SymmetryOfSpatialOrb(jx)))[0];
+    boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_rep(CRE_CRE, sq0, ix, jx);
     SparseMatrix* leftOp = 0;
         
 #pragma omp parallel default(shared)
     {
-      int ccsize = rightBlock->get_op_array(CRE_CRE_S2).get_size();
+      int ccsize = rightBlock->get_op_array(CRE_CRE).get_size();
 #pragma omp for schedule(guided) nowait
     for (int kl =0; kl <ccsize; kl++)
     {
-      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_CRE_S2).get_local_element(kl).getworkingrepresentation(rightBlock);
+      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_CRE).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
       int kx = rightop2->get_orbs(0);
       int lx = rightop2->get_orbs(1);
-      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_rep(CRE_CRE_S0, kx, lx);
+
+      SpinQuantum sq0 = (SpinQuantum(1,1,SymmetryOfSpatialOrb(kx))+SpinQuantum(1,1,SymmetryOfSpatialOrb(lx)))[0];
+      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_rep(CRE_CRE, sq0, kx, lx);
       vector<double> expectations;
       Transposeview rop0 = Transposeview(*rightop0), rop2 = Transposeview(*rightop2); 
       spinExpectation(wave1, wave2, *leftOp, *dotop0, rop0, big, expectations, false);
@@ -236,24 +243,24 @@ void compute_two_pdm_0_2_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   }      
 
 
-  for (int ij = 0; ij < dotBlock->get_op_array(CRE_DES_S2).get_size(); ++ij)
+  for (int ij = 0; ij < dotBlock->get_op_array(CRE_DES).get_size(); ++ij)
   {
-    boost::shared_ptr<SparseMatrix> dotop2 = dotBlock->get_op_array(CRE_DES_S2).get_local_element(ij).getworkingrepresentation(leftBlock);
+    boost::shared_ptr<SparseMatrix> dotop2 = dotBlock->get_op_array(CRE_DES).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
     int ix = dotop2->get_orbs(0);
     int jx = dotop2->get_orbs(1);
-    boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_rep(CRE_DES_S0, ix, jx);
+    boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_array(CRE_DES).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);//dotBlock->get_op_rep(CRE_DES_S0, ix, jx);
     SparseMatrix* leftOp = 0;
         
 #pragma omp parallel default(shared)
     {
-      int cdsize = rightBlock->get_op_array(CRE_DES_S2).get_size();
+      int cdsize = rightBlock->get_op_array(CRE_DES).get_size();
 #pragma omp for schedule(guided) nowait
     for (int kl =0; kl <cdsize; kl++)
     {
-      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_DES_S2).get_local_element(kl).getworkingrepresentation(rightBlock);
+      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
       int kx = rightop2->get_orbs(0);
       int lx = rightop2->get_orbs(1);
-      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_rep(CRE_DES_S0, kx, lx);
+      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);//rightBlock->get_op_rep(CRE_DES_S0, kx, lx);
       vector<double> expectations;
       spinExpectation(wave1, wave2, *leftOp, *dotop0, *rightop0, big, expectations, false);
       spinExpectation(wave1, wave2, *leftOp, *dotop2, *rightop2, big, expectations, false);
@@ -276,22 +283,22 @@ void compute_two_pdm_2_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 
 #pragma omp parallel default(shared)
   {
-  int ccsize = leftBlock->get_op_array(CRE_CRE_S2).get_size();
+  int ccsize = leftBlock->get_op_array(CRE_CRE).get_size();
 #pragma omp for schedule(guided) nowait
   for (int ij = 0; ij < ccsize; ++ij)
   {
-    boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_CRE_S2).get_local_element(ij).getworkingrepresentation(leftBlock);
+    boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_CRE).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
     int ix = leftop2->get_orbs(0);
     int jx = leftop2->get_orbs(1);
-    boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_rep(CRE_CRE_S0, ix, jx);
+    boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_array(CRE_CRE).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);//leftBlock->get_op_rep(CRE_CRE_S0, ix, jx);
     SparseMatrix* dotop = 0;
         
-    for (int kl =0; kl <rightBlock->get_op_array(CRE_CRE_S2).get_size(); kl++)
+    for (int kl =0; kl <rightBlock->get_op_array(CRE_CRE).get_size(); kl++)
     {
-      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_CRE_S2).get_local_element(kl).getworkingrepresentation(rightBlock);
+      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_CRE).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
       int kx = rightop2->get_orbs(0);
       int lx = rightop2->get_orbs(1);
-      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_rep(CRE_CRE_S0, kx, lx);
+      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE_CRE).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);
       vector<double> expectations;
       Transposeview rop0 = Transposeview(*rightop0), rop2 = Transposeview(*rightop2); 
       spinExpectation(wave1, wave2, *leftop0, *dotop, rop0, big, expectations, false);
@@ -306,22 +313,22 @@ void compute_two_pdm_2_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 
 #pragma omp parallel default(shared)
   {
-    int cdsize = leftBlock->get_op_array(CRE_DES_S2).get_size();
+    int cdsize = leftBlock->get_op_array(CRE_DES).get_size();
 #pragma omp for schedule(guided) nowait
   for (int ij = 0; ij < cdsize; ++ij)
   {
-    boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_DES_S2).get_local_element(ij).getworkingrepresentation(leftBlock);
+    boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_DES).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
     int ix = leftop2->get_orbs(0);
     int jx = leftop2->get_orbs(1);
-    boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_rep(CRE_DES_S0, ix, jx);
+    boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_array(CRE_DES).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);//leftBlock->get_op_rep(CRE_DES_S0, ix, jx);
     SparseMatrix* dotop = 0;
         
-    for (int kl =0; kl <rightBlock->get_op_array(CRE_DES_S2).get_size(); kl++)
+    for (int kl =0; kl <rightBlock->get_op_array(CRE_DES).get_size(); kl++)
     {
-      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_DES_S2).get_local_element(kl).getworkingrepresentation(rightBlock);
+      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
       int kx = rightop2->get_orbs(0);
       int lx = rightop2->get_orbs(1);
-      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_rep(CRE_DES_S0, kx, lx);
+      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);//rightBlock->get_op_rep(CRE_DES_S0, kx, lx);
       vector<double> expectations;
       spinExpectation(wave1, wave2, *leftop0, *dotop, *rightop0, big, expectations, false);
       spinExpectation(wave1, wave2, *leftop2, *dotop, *rightop2, big, expectations, false);
@@ -344,22 +351,22 @@ void compute_two_pdm_2_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 
 #pragma omp parallel default(shared)
   {
-    int ccsize = leftBlock->get_op_array(CRE_CRE_S2).get_size();
+    int ccsize = leftBlock->get_op_array(CRE_CRE).get_size();
 #pragma omp for schedule(guided) nowait
   for (int ij = 0; ij < ccsize; ++ij)
   {
-    boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_CRE_S2).get_local_element(ij).getworkingrepresentation(leftBlock);
+    boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_CRE).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
     int ix = leftop2->get_orbs(0);
     int jx = leftop2->get_orbs(1);
-    boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_rep(CRE_CRE_S0, ix, jx);
+    boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_array(CRE_CRE).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);//leftBlock->get_op_rep(CRE_CRE_S0, ix, jx);
     SparseMatrix* rightop = 0;
         
-    for (int kl =0; kl <dotBlock->get_op_array(CRE_CRE_S2).get_size(); kl++)
+    for (int kl =0; kl <dotBlock->get_op_array(CRE_CRE).get_size(); kl++)
     {
-      boost::shared_ptr<SparseMatrix> dotop2 = dotBlock->get_op_array(CRE_CRE_S2).get_local_element(kl).getworkingrepresentation(dotBlock);
+      boost::shared_ptr<SparseMatrix> dotop2 = dotBlock->get_op_array(CRE_CRE).get_local_element(kl)[1]->getworkingrepresentation(dotBlock);
       int kx = dotop2->get_orbs(0);
       int lx = dotop2->get_orbs(1);
-      boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_rep(CRE_CRE_S0, kx, lx);
+      boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_array(CRE_CRE).get_local_element(kl)[0]->getworkingrepresentation(dotBlock);//dotBlock->get_op_rep(CRE_CRE_S0, kx, lx);
       vector<double> expectations;
       Transposeview dop0 = Transposeview(*dotop0), dop2 = Transposeview(*dotop2); 
       spinExpectation(wave1, wave2, *leftop0, dop0, *rightop, big, expectations, false);
@@ -375,22 +382,22 @@ void compute_two_pdm_2_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 
 #pragma omp parallel default(shared)
   {
-    int cdsize = leftBlock->get_op_array(CRE_DES_S2).get_size();
+    int cdsize = leftBlock->get_op_array(CRE_DES).get_size();
 #pragma omp for schedule(guided) nowait
   for (int ij = 0; ij < cdsize; ++ij)
   {
-    boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_DES_S2).get_local_element(ij).getworkingrepresentation(leftBlock);
+    boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_DES).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
     int ix = leftop2->get_orbs(0);
     int jx = leftop2->get_orbs(1);
-    boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_rep(CRE_DES_S0, ix, jx);
+    boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_array(CRE_DES).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);//leftBlock->get_op_rep(CRE_DES_S0, ix, jx);
     SparseMatrix* rightop = 0;
         
-    for (int kl =0; kl <dotBlock->get_op_array(CRE_DES_S2).get_size(); kl++)
+    for (int kl =0; kl <dotBlock->get_op_array(CRE_DES).get_size(); kl++)
     {
-      boost::shared_ptr<SparseMatrix> dotop2 = dotBlock->get_op_array(CRE_DES_S2).get_local_element(kl).getworkingrepresentation(dotBlock);
+      boost::shared_ptr<SparseMatrix> dotop2 = dotBlock->get_op_array(CRE_DES).get_local_element(kl)[1]->getworkingrepresentation(dotBlock);
       int kx = dotop2->get_orbs(0);
       int lx = dotop2->get_orbs(1);
-      boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_rep(CRE_DES_S0, kx, lx);
+      boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_array(CRE_DES).get_local_element(kl)[0]->getworkingrepresentation(dotBlock);//dotBlock->get_op_rep(CRE_DES_S0, kx, lx);
       vector<double> expectations;
       spinExpectation(wave1, wave2, *leftop0, *dotop0, *rightop, big, expectations, false);
       spinExpectation(wave1, wave2, *leftop2, *dotop2, *rightop, big, expectations, false);
@@ -411,23 +418,23 @@ void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 
   int dotindex = dotBlock->get_sites()[0];
 
-  for (int j = 0; j < leftBlock->get_leftBlock()->get_op_array(CRE_S1).get_size(); ++j)
+  for (int j = 0; j < leftBlock->get_leftBlock()->get_op_array(CRE).get_size(); ++j)
   {
-    SparseMatrix* leftop = &leftBlock->get_leftBlock()->get_op_array(CRE_S1).get_local_element(j);
-    boost::shared_ptr<SparseMatrix> dotop  = dotBlock->get_op_rep(CRE_S1, dotindex);
+    boost::shared_ptr<SparseMatrix> leftop = leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(j)[0];
+    boost::shared_ptr<SparseMatrix> dotop  = dotBlock->get_op_rep(CRE, SpinQuantum(1,1,SymmetryOfSpatialOrb(dotindex)), dotindex);
     int ix = leftop->get_orbs(0);
     int jx = dotindex;
         
 #pragma omp parallel default(shared)
     {
-      int ccsize = rightBlock->get_op_array(CRE_CRE_S2).get_size();
+      int ccsize = rightBlock->get_op_array(CRE_CRE).get_size();
 #pragma omp for schedule(guided) nowait
     for (int kl =0; kl <ccsize; kl++)
     {
-      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_CRE_S2).get_local_element(kl).getworkingrepresentation(rightBlock);
+      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_CRE).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
       int kx = rightop2->get_orbs(0);
       int lx = rightop2->get_orbs(1);
-      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_rep(CRE_CRE_S0, kx, lx);
+      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE_CRE).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);//rightBlock->get_op_rep(CRE_CRE_S0, kx, lx);
       vector<double> expectations;
       Transposeview rop0 = Transposeview(*rightop0), rop2 = Transposeview(*rightop2); 
       spinExpectation(wave1, wave2, *leftop, *dotop, rop0, big, expectations, false);
@@ -441,23 +448,23 @@ void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   }      
 
 
-  for (int j = 0; j < leftBlock->get_leftBlock()->get_op_array(CRE_S1).get_size(); ++j)
+  for (int j = 0; j < leftBlock->get_leftBlock()->get_op_array(CRE).get_size(); ++j)
   {
-    SparseMatrix* leftop = &leftBlock->get_leftBlock()->get_op_array(CRE_S1).get_local_element(j);
-    boost::shared_ptr<SparseMatrix> dotop  = dotBlock->get_op_rep(CRE_S1, dotindex);
+    boost::shared_ptr<SparseMatrix> leftop = leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(j)[0];
+    boost::shared_ptr<SparseMatrix> dotop  = dotBlock->get_op_rep(CRE, SpinQuantum(1,1,SymmetryOfSpatialOrb(dotindex)) , dotindex);
     int ix = leftop->get_orbs(0);
     int jx = dotindex;
         
 #pragma omp parallel default(shared)
     {
-      int cdsize = rightBlock->get_op_array(CRE_DES_S2).get_size();
+      int cdsize = rightBlock->get_op_array(CRE_DES).get_size();
 #pragma omp for schedule(guided) nowait
     for (int kl =0; kl <cdsize; kl++)
     {
-      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_DES_S2).get_local_element(kl).getworkingrepresentation(rightBlock);
+      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
       int kx = rightop2->get_orbs(0);
       int lx = rightop2->get_orbs(1);
-      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_rep(CRE_DES_S0, kx, lx);
+      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);//rightBlock->get_op_rep(CRE_DES_S0, kx, lx);
       vector<double> expectations;
       Transposeview tdot = Transposeview(*dotop);
       spinExpectation(wave1, wave2, *leftop, tdot, *rightop0, big, expectations, true);
@@ -490,19 +497,19 @@ void compute_two_pdm_1_2_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 
 #pragma omp parallel default(shared)
   {
-    int csize = leftBlock->get_leftBlock()->get_op_array(CRE_S1).get_size();
+    int csize = leftBlock->get_leftBlock()->get_op_array(CRE).get_size();
 #pragma omp for schedule(guided) nowait
   for (int j = 0; j < csize; ++j)
   {
-    SparseMatrix* leftop = &leftBlock->get_leftBlock()->get_op_array(CRE_S1).get_local_element(j);
+    shared_ptr<SparseMatrix> leftop = leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(j)[0];
     int ix = leftop->get_orbs(0);
     if (ix == jx ) continue;
-    boost::shared_ptr<SparseMatrix> dotop0  = dotBlock->get_op_rep(CRE_CRE_S0, dotindex, dotindex);
-    boost::shared_ptr<SparseMatrix> dotop2  = dotBlock->get_op_rep(CRE_CRE_S2, dotindex, dotindex);
+    boost::shared_ptr<SparseMatrix> dotop0  = dotBlock->get_op_array(CRE_CRE).get_local_element(0)[0];
+    boost::shared_ptr<SparseMatrix> dotop2  = dotBlock->get_op_array(CRE_CRE).get_local_element(0)[1];//dotBlock->get_op_rep(CRE_CRE_S2, dotindex, dotindex);
         
-    for (int k =0; k <rightBlock->get_op_array(CRE_S1).get_size(); k++)
+    for (int k =0; k <rightBlock->get_op_array(CRE).get_size(); k++)
     {
-      SparseMatrix& rightop = rightBlock->get_op_array(CRE_S1).get_local_element(k);
+      SparseMatrix& rightop = *rightBlock->get_op_array(CRE).get_local_element(k)[0];
       int kx = rightop.get_orbs(0);
       Transposeview trop = Transposeview(rightop);
       Transposeview tlop = Transposeview(*leftop);
@@ -515,11 +522,11 @@ void compute_two_pdm_1_2_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       spin_to_nonspin(indices, expectations, twopdm, D_CC_D, true);
     }
 
-    dotop0  = dotBlock->get_op_rep(CRE_DES_S0, dotindex, dotindex);
-    dotop2  = dotBlock->get_op_rep(CRE_DES_S2, dotindex, dotindex);        
-    for (int k =0; k <rightBlock->get_op_array(CRE_S1).get_size(); k++)
+    dotop0  = dotBlock->get_op_array(CRE_DES).get_local_element(0)[0];//dotBlock->get_op_rep(CRE_DES_S0, dotindex, dotindex);
+    dotop2  = dotBlock->get_op_array(CRE_DES).get_local_element(0)[1];//dotBlock->get_op_rep(CRE_DES_S2, dotindex, dotindex);        
+    for (int k =0; k <rightBlock->get_op_array(CRE).get_size(); k++)
     {
-      SparseMatrix& rightop = rightBlock->get_op_array(CRE_S1).get_local_element(k);
+      SparseMatrix& rightop = *rightBlock->get_op_array(CRE).get_local_element(k)[0];
       int kx = rightop.get_orbs(0);
       Transposeview trop = Transposeview(rightop);
       Transposeview tlop = Transposeview(*leftop);
@@ -553,18 +560,18 @@ void compute_two_pdm_2_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   int leftindex = leftBlock->get_sites()[0];
   int ix = leftindex;
 
-  SparseMatrix& dotop = dotBlock->get_op_array(CRE_S1).get_local_element(0);
+  SparseMatrix& dotop = *dotBlock->get_op_array(CRE).get_local_element(0)[0];
 
-  boost::shared_ptr<SparseMatrix> leftop0  = leftBlock->get_op_rep(CRE_CRE_S0, leftindex, leftindex);
-  boost::shared_ptr<SparseMatrix> leftop2  = leftBlock->get_op_rep(CRE_CRE_S2, leftindex, leftindex);
+  boost::shared_ptr<SparseMatrix> leftop0  = leftBlock->get_op_array(CRE_CRE).get_local_element(0)[0];
+  boost::shared_ptr<SparseMatrix> leftop2  = leftBlock->get_op_array(CRE_CRE).get_local_element(0)[1];//leftBlock->get_op_rep(CRE_CRE_S2, leftindex, leftindex);
         
 #pragma omp parallel default(shared)
   {
-    int csize = rightBlock->get_op_array(CRE_S1).get_size();
+    int csize = rightBlock->get_op_array(CRE).get_size();
 #pragma omp for schedule(guided) nowait
   for (int k =0; k <csize; k++)
     {
-      SparseMatrix& rightop = rightBlock->get_op_array(CRE_S1).get_local_element(k);
+      SparseMatrix& rightop = *rightBlock->get_op_array(CRE).get_local_element(k)[0];
       int kx = rightop.get_orbs(0);
       Transposeview trop = Transposeview(rightop);
       Transposeview tdop = Transposeview(dotop);
@@ -578,15 +585,15 @@ void compute_two_pdm_2_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     }
   }
 
-  leftop0  = leftBlock->get_op_rep(CRE_DES_S0, leftindex, leftindex);
-  leftop2  = leftBlock->get_op_rep(CRE_DES_S2, leftindex, leftindex);        
+  leftop0  = leftBlock->get_op_array(CRE_DES).get_local_element(0)[0];//leftBlock->get_op_rep(CRE_DES_S0, leftindex, leftindex);
+  leftop2  = leftBlock->get_op_array(CRE_DES).get_local_element(0)[1];//leftBlock->get_op_rep(CRE_DES_S2, leftindex, leftindex);        
 #pragma omp parallel default(shared)
   {
-    int csize = rightBlock->get_op_array(CRE_S1).get_size();
+    int csize = rightBlock->get_op_array(CRE).get_size();
 #pragma omp for schedule(guided) nowait
   for (int k =0; k <csize; k++)
     {
-      SparseMatrix& rightop = rightBlock->get_op_array(CRE_S1).get_local_element(k);
+      SparseMatrix& rightop = *rightBlock->get_op_array(CRE).get_local_element(k)[0];
       int kx = rightop.get_orbs(0);
       Transposeview trop = Transposeview(rightop);
       Transposeview tdop = Transposeview(dotop);
@@ -611,9 +618,9 @@ void compute_two_pdm_0_3_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   int dotindex = dotBlock->get_sites()[0];
   int jx = dotindex;
 
-  boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_rep(CRE_S1, dotindex);
-  boost::shared_ptr<SparseMatrix> dotop1  = dotBlock->get_op_rep(CRE_CRE_S0, dotindex, dotindex);
-  boost::shared_ptr<SparseMatrix> dotop2  = dotBlock->get_op_rep(CRE_CRE_S2, dotindex, dotindex);
+  boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_array(CRE).get_local_element(0)[0];//dotBlock->get_op_rep(CRE_S1, dotindex);
+  boost::shared_ptr<SparseMatrix> dotop1  = dotBlock->get_op_array(CRE_CRE).get_local_element(0)[0];//dotBlock->get_op_rep(CRE_CRE_S0, dotindex, dotindex);
+  boost::shared_ptr<SparseMatrix> dotop2  = dotBlock->get_op_array(CRE_CRE).get_local_element(0)[1];//dotBlock->get_op_rep(CRE_CRE_S2, dotindex, dotindex);
 
   Cre Dotop1, Dotop2;
   Dotop1.set_orbs() = dotop0->get_orbs(); Dotop1.set_orbs().push_back(dotindex); Dotop1.set_orbs().push_back(dotindex);
@@ -633,11 +640,11 @@ void compute_two_pdm_0_3_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 #pragma omp parallel default(shared)
   {
   SparseMatrix *leftop = 0;
-  int csize = rightBlock->get_op_array(CRE_S1).get_size();
+  int csize = rightBlock->get_op_array(CRE).get_size();
 #pragma omp for schedule(guided) nowait
   for (int k =0; k <csize; k++)
     {
-      SparseMatrix& rightop = rightBlock->get_op_array(CRE_S1).get_local_element(k);
+      SparseMatrix& rightop = *rightBlock->get_op_array(CRE).get_local_element(k)[0];
       int kx = rightop.get_orbs(0);
       Transposeview trop = Transposeview(rightop);
 
@@ -693,9 +700,9 @@ void compute_two_pdm_3_0_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   int leftindex = leftBlock->get_sites()[0];
   int jx = leftindex;
 
-  boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_rep(CRE_S1, leftindex);
-  boost::shared_ptr<SparseMatrix> leftop1  = leftBlock->get_op_rep(CRE_CRE_S0, leftindex, leftindex);
-  boost::shared_ptr<SparseMatrix> leftop2  = leftBlock->get_op_rep(CRE_CRE_S2, leftindex, leftindex);
+  boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_array(CRE).get_local_element(0)[0];//leftBlock->get_op_rep(CRE_S1, leftindex);
+  boost::shared_ptr<SparseMatrix> leftop1  = leftBlock->get_op_array(CRE_CRE).get_local_element(0)[0];//leftBlock->get_op_rep(CRE_CRE_S0, leftindex, leftindex);
+  boost::shared_ptr<SparseMatrix> leftop2  = leftBlock->get_op_array(CRE_CRE).get_local_element(0)[1];//leftBlock->get_op_rep(CRE_CRE_S2, leftindex, leftindex);
 
   Cre Leftop1, Leftop2;
   Leftop1.set_orbs() = leftop0->get_orbs(); Leftop1.set_orbs().push_back(leftindex); Leftop1.set_orbs().push_back(leftindex);
@@ -715,11 +722,11 @@ void compute_two_pdm_3_0_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 #pragma omp parallel default(shared) 
   {
   SparseMatrix *dotop;
-  int cresize = rightBlock->get_op_array(CRE_S1).get_size();
+  int cresize = rightBlock->get_op_array(CRE).get_size();
 #pragma omp for schedule(guided) nowait private(dotop)
   for (int k =0; k <cresize; k++)
     {
-      SparseMatrix& rightop = rightBlock->get_op_array(CRE_S1).get_local_element(k);
+      SparseMatrix& rightop = *rightBlock->get_op_array(CRE).get_local_element(k)[0];
       int kx = rightop.get_orbs(0);
       Transposeview trop = Transposeview(rightop);
 
@@ -744,9 +751,9 @@ void compute_two_pdm_3_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   int leftindex = leftBlock->get_sites()[0];
   int jx = leftindex;
 
-  boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_rep(CRE_S1, leftindex);
-  boost::shared_ptr<SparseMatrix> leftop1  = leftBlock->get_op_rep(CRE_CRE_S0, leftindex, leftindex);
-  boost::shared_ptr<SparseMatrix> leftop2  = leftBlock->get_op_rep(CRE_CRE_S2, leftindex, leftindex);
+  boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_array(CRE).get_local_element(0)[0];//leftBlock->get_op_rep(CRE_S1, leftindex);
+  boost::shared_ptr<SparseMatrix> leftop1  = leftBlock->get_op_array(CRE_CRE).get_local_element(0)[0];//leftBlock->get_op_rep(CRE_CRE_S0, leftindex, leftindex);
+  boost::shared_ptr<SparseMatrix> leftop2  = leftBlock->get_op_array(CRE_CRE).get_local_element(0)[1];//leftBlock->get_op_rep(CRE_CRE_S2, leftindex, leftindex);
 
   Cre Leftop1, Leftop2;
   Leftop1.set_orbs() = leftop0->get_orbs(); Leftop1.set_orbs().push_back(leftindex); Leftop1.set_orbs().push_back(leftindex);
@@ -765,7 +772,7 @@ void compute_two_pdm_3_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 
   SparseMatrix *rightop = 0;
   {
-    SparseMatrix& dotop = dotBlock->get_op_array(CRE_S1).get_local_element(0);
+    SparseMatrix& dotop = *dotBlock->get_op_array(CRE).get_local_element(0)[0];
     int kx = dotop.get_orbs(0);
     Transposeview tdop = Transposeview(dotop);
     
@@ -822,9 +829,9 @@ void compute_two_pdm_1_3_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   int dotindex = dotBlock->get_sites()[0];
   int jx = dotindex;
 
-  boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_rep(CRE_S1, dotindex);
-  boost::shared_ptr<SparseMatrix> dotop1  = dotBlock->get_op_rep(CRE_CRE_S0, dotindex, dotindex);
-  boost::shared_ptr<SparseMatrix> dotop2  = dotBlock->get_op_rep(CRE_CRE_S2, dotindex, dotindex);
+  boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_array(CRE).get_local_element(0)[0];//dotBlock->get_op_rep(CRE_S1, dotindex);
+  boost::shared_ptr<SparseMatrix> dotop1  = dotBlock->get_op_array(CRE_CRE).get_local_element(0)[0];//dotBlock->get_op_rep(CRE_CRE_S0, dotindex, dotindex);
+  boost::shared_ptr<SparseMatrix> dotop2  = dotBlock->get_op_array(CRE_CRE).get_local_element(0)[1];//dotBlock->get_op_rep(CRE_CRE_S2, dotindex, dotindex);
 
   Cre Dotop1, Dotop2;
   Dotop1.set_orbs() = dotop0->get_orbs(); Dotop1.set_orbs().push_back(dotindex); Dotop1.set_orbs().push_back(dotindex);
@@ -844,11 +851,11 @@ void compute_two_pdm_1_3_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 #pragma omp parallel default(shared)
   {
   SparseMatrix *rightop = 0;
-  int csize = leftBlock->get_leftBlock()->get_op_array(CRE_S1).get_size();
+  int csize = leftBlock->get_leftBlock()->get_op_array(CRE).get_size();
 #pragma omp for schedule(guided) nowait
   for (int k =0; k <csize; k++)
     {
-      SparseMatrix& leftop = leftBlock->get_leftBlock()->get_op_array(CRE_S1).get_local_element(k);
+      SparseMatrix& leftop = *leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(k)[0];
       int kx = leftop.get_orbs(0);
       Transposeview tlop = Transposeview(leftop);
 
@@ -897,9 +904,9 @@ void compute_two_pdm_1_3(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
   int rightindex = rightBlock->get_sites()[0];
   int jx = rightindex;
 
-  boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_rep(CRE_S1, rightindex);
-  boost::shared_ptr<SparseMatrix> rightop1  = rightBlock->get_op_rep(CRE_DES_S0, rightindex, rightindex);
-  boost::shared_ptr<SparseMatrix> rightop2  = rightBlock->get_op_rep(CRE_DES_S2, rightindex, rightindex);
+  boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE).get_local_element(0)[0];//rightBlock->get_op_rep(CRE_S1, rightindex);
+  boost::shared_ptr<SparseMatrix> rightop1  = rightBlock->get_op_array(CRE_DES).get_local_element(0)[0];//rightBlock->get_op_rep(CRE_DES_S0, rightindex, rightindex);
+  boost::shared_ptr<SparseMatrix> rightop2  = rightBlock->get_op_array(CRE_DES).get_local_element(0)[1];//rightBlock->get_op_rep(CRE_DES_S2, rightindex, rightindex);
 
   Cre Rightop1, Rightop2;
   Rightop1.set_orbs() = rightop0->get_orbs(); Rightop1.set_orbs().push_back(rightindex); Rightop1.set_orbs().push_back(rightindex);
@@ -916,9 +923,9 @@ void compute_two_pdm_1_3(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
   Rightop2.allocate(rightBlock->get_stateInfo());
   operatorfunctions::Product(rightBlock, *rightop2, Transposeview(*rightop0), Rightop2, 1.0);
         
-  for (int k =0; k <leftBlock->get_leftBlock()->get_op_array(CRE_S1).get_size(); k++)
+  for (int k =0; k <leftBlock->get_leftBlock()->get_op_array(CRE).get_size(); k++)
     {
-      SparseMatrix& leftop = leftBlock->get_leftBlock()->get_op_array(CRE_S1).get_local_element(k);
+      SparseMatrix& leftop = *leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(k)[0];
       int kx = leftop.get_orbs(0);
       Transposeview tlop = Transposeview(leftop);
       SparseMatrix* dotop = 0;
@@ -932,7 +939,7 @@ void compute_two_pdm_1_3(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
       spin_to_nonspin(indices, expectations, twopdm, C_CD_D, true);
     }
 
-  SparseMatrix& dotop = dotBlock->get_op_array(CRE_S1).get_local_element(0);
+  SparseMatrix& dotop = *dotBlock->get_op_array(CRE).get_local_element(0)[0];
   int kx = dotop.get_orbs(0);
   Transposeview tdop = Transposeview(dotop);
   SparseMatrix* leftop = 0;
@@ -950,13 +957,13 @@ void compute_two_pdm_1_3(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
 
 
 std::vector<int> distribute_procs(const int numprocs, const int numjobs) {
-  // In this we are going to distribute the jobs between the procs.                                                                                                                                  
+  // In this we are going to distribute the jobs between the procs.
   std::vector<int> retval(numjobs);
 
   const int residual = numjobs%numprocs;
   const int jobsperproc = numjobs/numprocs;
 
-  // bad method... will think abt later                                                                                                                                                              
+  // bad method... will think abt later
   for(int i = 0; i < jobsperproc; ++i)
     for(int j = 0; j < numprocs; ++j)
       retval[i*numprocs+j] = j;

@@ -74,15 +74,21 @@ int main(int argc, char* argv [])
   switch(dmrginp.calc_type()) {
 
   case (DMRG):
-    if (RESTART)
+    if (RESTART && !FULLRESTART)
       restart(sweep_tol, reset_iter);
     else if (FULLRESTART) {
       sweepParams.restorestate(direction, restartsize);
       sweepParams.set_sweep_iter() = 0;
-      SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
-
+      if (!RESTART){ //this is a hidden option
+	restartsize = 0;
+	direction = !direction;
+      }
+      SweepGenblock::do_one(sweepParams, false, direction, RESTART, restartsize);
+      
       sweepParams.restorestate(direction, restartsize);
-      sweepParams.set_sweep_iter()--;
+      sweepParams.set_sweep_iter()=0;
+      sweepParams.set_block_iter() = 0;
+
       sweepParams.savestate(direction, restartsize);
 
       reset_iter = true;
@@ -102,6 +108,10 @@ int main(int argc, char* argv [])
     SweepGenblock::do_one(sweepParams, false, direction, false, 0);
     break;
   case (ONEPDM):
+    if(sym == "dinfh") {
+      pout << "One pdm not implemented with dinfh symmetry"<<endl;
+      abort();
+    }
     dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
     if (dmrginp.set_Sz()) {
       if ( (dmrginp.total_spin_number() - dmrginp.Sz())%2 == 1 ) {
@@ -139,8 +149,12 @@ int main(int argc, char* argv [])
     
     SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
     break;
-    /*
   case (TWOPDM):
+    if(sym == "dinfh") {
+      pout << "Two pdm not implemented with dinfh symmetry"<<endl;
+      abort();
+    }
+    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
     if (dmrginp.set_Sz()) {
       if ( (dmrginp.total_spin_number() - dmrginp.Sz())%2 == 1) {
 	pout << "Given Sz is not valid" <<endl;
@@ -171,7 +185,6 @@ int main(int argc, char* argv [])
     }
     SweepTwopdm::do_one(sweepParams, false, direction, false, 0);
     break;
-    */
   }
 
   return 0;

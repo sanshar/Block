@@ -71,10 +71,10 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   
   
   for(int i=0;i<nroots;++i)
-    {
-      StateInfo newInfo;
-      solutions[i].LoadWavefunctionInfo (newInfo, newSystem.get_sites(), i);
-    }
+  {
+    StateInfo newInfo;
+    solutions[i].LoadWavefunctionInfo (newInfo, newSystem.get_sites(), i);
+  }
 
 #ifndef SERIAL
   mpi::communicator world;
@@ -129,7 +129,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   sweepParams.savestate(forward, system.get_sites().size());
   bool dot_with_sys = true;
 
-  array_4d<double> twopdm(dmrginp.last_site(), dmrginp.last_site(), dmrginp.last_site(), dmrginp.last_site());
+  array_4d<double> twopdm(2*dmrginp.last_site(), 2*dmrginp.last_site(), 2*dmrginp.last_site(), 2*dmrginp.last_site());
   twopdm.Clear();
   for (int i=0; i<nroots; i++)
     for (int j=0; j<=i; j++)
@@ -194,7 +194,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
       int j = i;
     //for (int j=0; j<=i; j++) {
       load_twopdm_binary(twopdm, i, j); 
-      //save_twopdm_text(twopdm, i, j);
+      save_twopdm_text(twopdm, i, j);
       save_spatial_twopdm_text(twopdm, i, j);
       save_spatial_twopdm_binary(twopdm, i, j);
     }
