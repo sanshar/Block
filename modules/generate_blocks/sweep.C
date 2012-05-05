@@ -34,7 +34,6 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
   InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, dot_with_sys, true);
 
 
-
   pout << "\t\t\t System  Block"<<newSystem;
 
   std::vector<Matrix> rotateMatrix;
@@ -107,7 +106,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
 
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
     {
-      pout << "\t\t\t Sweep Iteration :: " << sweepParams.get_block_iter() << endl;
+      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
       if (dmrginp.outputlevel() != 0) {
       if (forward)
@@ -139,9 +138,9 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
       system = newSystem;
 
       //system size is going to be less than environment size
-      if (forward && system.get_complementary_sites()[0] >= dmrginp.last_site())
+      if (forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)
 	dot_with_sys = false;
-      if (!forward && system.get_sites()[0]-1 < dmrginp.last_site())
+      if (!forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
 	dot_with_sys = false;
 
       SpinBlock::store (forward, system.get_sites(), system);	 	
