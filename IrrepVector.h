@@ -37,6 +37,7 @@ class IrrepVector
     else {
       os<< iv.irrep;
     }
+    return os;
   }
       
 
