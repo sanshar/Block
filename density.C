@@ -215,6 +215,8 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
       onedot_noise.set_opType(CRE);
       for_all_multithread(leftBlock->get_op_array(CRE), onedot_noise);
     }
+    
+    if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
     if (leftBlock->has(CRE_CRE))
     {
       onedot_noise.set_opType(CRE_CRE);
@@ -233,6 +235,7 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
       onedot_noise.set_opType(CRE_DESCOMP);
       for_all_multithread(leftBlock->get_op_array(CRE_DESCOMP), onedot_noise);
 
+    }
     }
 
     onedot_noise.syncaccumulate();
@@ -258,112 +261,5 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
 
 }
 
-  /*
-// accumulates into dm
-void DensityMatrix::add_simulatedtwodot_noise(const std::vector<Wavefunction>& wave_solutions, SpinBlock& big, const double noise)
-{
-#ifndef SERIAL
-  mpi::communicator world;
-#endif
-
-  std::vector<int> environmentSites = big.get_rightBlock()->get_sites();
-  bool forward = true;
-  std::vector<int> envSites;
-  SpinBlock envdot, environment, newEnvironment, newbig;
-
-  if (environmentSites[0] == 0) {
-    forward = false;
-    envdot = SpinBlock(environmentSites[environmentSites.size()-1],environmentSites[environmentSites.size()-1]); 
-  }
-  else {
-    forward = true;
-    envdot = SpinBlock(environmentSites[0], environmentSites[0]);
-  }
-  environmentSites.pop_back();
-  SpinBlock::restore(!forward, environmentSites, environment);
-  newEnvironment.default_op_components(true, environment, envdot, !big.get_leftBlock()->is_loopblock(), true);
-  newEnvironment.get_op_array(CRE_CRE_DESCOMP_S1).set_core(false);
-  newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
-  newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, envdot);
-  
-  newbig.set_big_components(); 
-  newbig.BuildSumBlock(PARTICLE_SPIN_NUMBER_CONSTRAINT, *big.get_leftBlock(), newEnvironment);
-  
-  std::vector<Wavefunction> tempwave_solutions;
-  tempwave_solutions.resize(wave_solutions.size());
-
-  for (int i=0; i<tempwave_solutions.size(); i++) {
-    tempwave_solutions[i].AllowQuantaFor(*newbig.get_stateInfo().leftStateInfo,*newbig.get_stateInfo().rightStateInfo,wave_solutions[i].get_deltaQuantum());
-
-    if(mpigetrank() == 0)
-    {
-      std::vector<Matrix> rightRotationMatrix;
-      StateInfo oldStateInfo;
-      Wavefunction oldWave;
-
-      vector<int> rotsites;
-      rotsites = big.get_rightBlock()->get_sites();
-      sort(rotsites.begin(), rotsites.end());
-      
-      LoadRotationMatrix (rotsites, rightRotationMatrix);
-      rotsites.insert(rotsites.end(), big.get_leftBlock()->get_rightBlock()->get_sites().begin(), big.get_leftBlock()->get_rightBlock()->get_sites().end());
-      sort(rotsites.begin(), rotsites.end());
-      oldWave.LoadWavefunctionInfo (oldStateInfo, rotsites, i);
-      for (int a=0; a<wave_solutions[i].nrows(); a++)
-	for (int b=0; b<wave_solutions[i].ncols(); b++)
-	{      
-	  int transB = oldStateInfo.leftStateInfo->leftStateInfo->newQuantaMap[b];
-	  Matrix& nM = tempwave_solutions[i].operator_element(a, transB);
-	  const Matrix& oM = wave_solutions[i].operator_element(a, b);
-	  if(oM.Ncols() != 0)
-	  {
-	    Matrix rM = rightRotationMatrix[transB];
-	    rM = rM.t();
-	    MatrixMultiply(oM, 'n', rM, 'n', nM, 1.0);
-	  }
-	}
-    }
-
-#ifndef SERIAL
-    broadcast(world, tempwave_solutions[i], 0);
-#endif
-
-    
-    environment.set_loopblock(false);
-    if (big.get_leftBlock()->is_loopblock())
-      newEnvironment.set_loopblock(false);
-    else
-      newEnvironment.set_loopblock(true);
-    
-    
-
-    Wavefunction opxwave = Wavefunction(tempwave_solutions[i].get_deltaQuantum(), &newbig, true);
-    opxwave.Clear();
-
-    //newbig.act2siteindices(tempwave_solutions[i], &opxwave, MAX_THRD);
-    newbig.multiplyH(tempwave_solutions[i], &opxwave, MAX_THRD);
-    
-    double norm = DotProduct(opxwave, opxwave);
-    //Clear();
-    //if (abs(norm) > 1e-14) {
-    //Scale(1./sqrt(norm), opxwave);
-      MultiplyProduct(opxwave, Transpose(opxwave), *this, noise);
-      //}
-
-    
-    //std::vector<Wavefunction> temporarywave(1, opxwave);    
-    //this->add_onedot_noise(temporarywave, newbig, noise);
-
-    std::vector<Wavefunction> temporarywave(1, tempwave_solutions[i]);
-    this->add_onedot_noise(temporarywave, newbig, noise, false);
-
-  }
-  
-  
-  environment.clear();
-  newEnvironment.clear();
-  newbig.clear();
-}
-  */
 }
   
