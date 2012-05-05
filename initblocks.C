@@ -5,7 +5,7 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
                                     const int & forward_starting_size, const int &backward_starting_size,
                                     const int& restartSize, const bool &restart, const bool& warmUp)
 {
-  if (restart)
+  if (restart && restartSize != 1)
   {
     int len = restart? restartSize : forward_starting_size;
     vector<int> sites(len);

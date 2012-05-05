@@ -42,7 +42,9 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
     pout << "\t\t\t Number of elements in wavefunction :: " << e.Ncols() << endl;
     multiply_h davidson_f(big, onedot);
     //etemp = e;
+#ifndef SERIAL
     if (mpigetrank() != 0) e.ReSize(0);
+#endif
     GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise); 
     Linear::block_davidson(solution, e, tol, warmUp, davidson_f, useprecond, solved);
  
@@ -60,9 +62,10 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
     energies[i] = e(i+1);
     //pout << "\t\t\t Energy of wavefunction "<<i<<"  =  "<<e(i+1)<<endl;
   }
+#ifndef SERIAL
   mpi::communicator world;
   broadcast(world, energies, 0);
-
+#endif
   pout<<endl;
 }
 

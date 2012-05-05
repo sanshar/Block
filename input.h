@@ -19,7 +19,7 @@ enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD};
 enum solveTypes {SMALL_DAVIDSON, BIG_DAVIDSON};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
- enum calcType {DMRG, GENBLOCK, ONEPDM, TWOPDM, FCI};
+enum calcType {DMRG, GENBLOCK, ONEPDM, TWOPDM, FCI, TINY};
 
 class Input {
 
@@ -125,7 +125,9 @@ class Input {
   //Input() : m_ninej(ninejCoeffs::getinstance()){}
   Input() {}
   Input (const std::string& config_name);
-
+  void writeSummary();
+  void performSanityTest();
+  static void ReadMeaningfulLine(ifstream&, string&, int);
   cumulTimer guessgenT, multiplierT, operrotT, davidsonT, rotmatrixT, blockdavid, datatransfer;
   cumulTimer hmultiply, oneelecT, twoelecT, makeopsT, collectqT;
   cumulTimer opallocate, opcatenate, oprelease, opequateT, justmultiply;

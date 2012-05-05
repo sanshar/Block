@@ -138,7 +138,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
     {
-      pout << "\t\t\t Sweep Iteration :: " << sweepParams.get_block_iter() << endl;
+      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
       if (forward)
 	pout << "\t\t\t Current direction is :: Forwards " << endl;

@@ -6,6 +6,10 @@
 #include "MatrixBLAS.h"
 #include "spinblock.h"
 #include "couplingCoeffs.h"
+#include <boost/tokenizer.hpp>
+#include <string.h>
+#include <ctype.h>
+#include <boost/algorithm/string.hpp>
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
@@ -13,6 +17,27 @@ using namespace std;
 
 namespace SpinAdapted {
 string sym;
+}
+
+void SpinAdapted::Input::ReadMeaningfulLine(ifstream& input, string& msg, int msgsize)
+{
+  bool readmore = true;
+  while (readmore && !input.eof()) {
+    char msgctr[msgsize];
+    input.getline(msgctr, msgsize+1);
+
+    msg=string(msgctr);
+    if(msg.size() == msgsize) {
+      cerr << "in the process of reading line begining with "<<endl<<msg<<endl;
+      cerr<< "this line is too long"<<endl;
+      abort();
+    }
+    int pos = msg.find("!");
+    msg = msg.substr(0, pos);
+    trim(msg);
+    if (msg.size() != 0)
+      readmore = false;
+  }
 }
 
 void SpinAdapted::Input::initialize_defaults()
@@ -27,7 +52,11 @@ void SpinAdapted::Input::initialize_defaults()
   m_algorithm_type = TWODOT;
   m_noise_type = RANDOM;
   m_calc_type = DMRG;
-  
+
+  m_norbs = 0;
+  m_alpha = 0;
+  m_beta = 0;
+
   m_outputlevel = 0;
   m_nquanta = 2;
   m_sys_add = 1;
@@ -72,422 +101,441 @@ void SpinAdapted::Input::initialize_defaults()
   m_num_spatial_orbs = 0;
 }
 
-//SpinAdapted::Input::Input(const string& config_name) : m_ninej(ninejCoeffs::getinstance())
 SpinAdapted::Input::Input(const string& config_name)
 {
-  std::string symmetry;
+  //first collect all the data
+  sym = "c1";
   if(mpigetrank() == 0)
   {
+    pout << "Reading input file"<<endl;
+    bool PROVIDED_WEIGHTS = false;
+
     initialize_defaults();
 
-    ifstream conf_file(config_name.c_str());
-    conf_file >> m_norbs >> m_alpha >> m_beta;
-  
-    m_num_spatial_orbs = m_norbs/2;
-    m_spatial_to_spin.resize(m_norbs/2+1);
-    m_spin_to_spatial.resize(m_norbs);
-    for (int i=0; i<m_norbs; i++) {
-      m_spatial_to_spin[i/2] = i - i%2;
-      m_spin_to_spatial[i] = i/2;
-    }
-    m_spatial_to_spin[m_norbs/2] = m_norbs;
-    m_molecule_quantum = SpinQuantum(m_alpha + m_beta, abs(m_alpha - m_beta), m_total_symmetry_number);
-    m_total_spin = abs(m_alpha-m_beta);
+    ifstream input(config_name.c_str());
 
-    string order_type;
-    conf_file >> order_type;
-    m_spin_vector.resize(m_norbs);
-    for (int i=0; i<m_norbs; i++)
-      m_spin_vector[i] = (i&1) ? -1 : 1;
+    string msg; int msgsize = 5000;
+    ReadMeaningfulLine(input, msg, msgsize);
+    while(msg.size() != 0) {
+      vector<string> tok;
+      boost::split(tok, msg, is_any_of(" \t"), token_compress_on);
+      string keyword = *tok.begin();
 
-    /* for the moment disabled
-    if (order_type == "picklowest")
-    {
-      //make the hf determinant
-      std::vector<double> alpha_one_particle_energies(m_norbs/2);
-      std::vector<double> beta_one_particle_energies(m_norbs/2); 
-      for (int i = 0; i < m_norbs; i+=2)                         
-	alpha_one_particle_energies[i/2] = v_1(i, i);                                                                                                     
-      for (int i = 1; i < m_norbs; i+=2)                                                                                                                 
-	beta_one_particle_energies[i/2] = v_1(i, i);                                                       
-      std::vector<int> alpha_sorted_indices, beta_sorted_indices;  
-      get_sorted_indices(alpha_one_particle_energies, alpha_sorted_indices);                                                                                  
-      get_sorted_indices(beta_one_particle_energies, beta_sorted_indices);        
-      m_hf_occupancy.resize(m_norbs);                                       
-      for (int i = 0; i < m_alpha; ++i)                                     
-	m_hf_occupancy[2*alpha_sorted_indices[i]] = 1;                      
-      for (int i = 0; i < m_beta; ++i)                                      
-	m_hf_occupancy[2*beta_sorted_indices[i]+1] = 1;                           
-    }
-    */
-    if (order_type == "hfocc")
-    {
-      m_hf_occupancy.resize(m_norbs);
-      for (int i = 0; i < total_particle_number(); ++i)
-	{
-	  int occi;
-	  conf_file >> occi;
-	  m_hf_occupancy[occi] = 1;
-	}
-      int beta = 0, alpha = 0;
-      for (int i = 0; i < m_norbs; i+=2)
-	alpha += m_hf_occupancy[i];
-      for (int i = 1; i < m_norbs; i+=2)
-	beta += m_hf_occupancy[i];
-      if(m_alpha != alpha || m_beta != beta)
-	{
-	  cout << "Error :: hfocc beta and alpha particles do not match the state\n";
-	  cout << "Found " << alpha << " alpha particles from hfocc and expected " << m_alpha << endl;
-	  cout << "Found " << beta << " beta particles from hfocc and expected " << m_beta << endl;
+      if (boost::iequals(keyword,  "norbs") || boost::iequals(keyword,  "norb") || boost::iequals(keyword,  "norbitals"))
+      {
+	if (tok.size() != 2) {
+	  cerr << "keyword norbs should be followed by a single integer and then an end line"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
 	  abort();
 	}
-    }
-    else if (order_type == "defaulthf")
-    {
-      m_spin_vector.resize(m_norbs);
-      for (int i = 0; i < m_norbs; ++i)
-	m_spin_vector[i] = (i & 1) ? -1 : 1;
-      m_hf_occupancy.resize(m_norbs);
-      for (int i = 0; i < m_alpha; ++i)
-	m_hf_occupancy[2*i] = 1;
-      for (int i = 0; i < m_beta; ++i)
-	m_hf_occupancy[2*i+1] = 1;
-    }
-
-    else
-    {
-      cout << "Error :: Did not find a guess (e.g. hfocc, or defaulthf) " << endl;
-      abort();
-    }
-
-    string schedule;
-    conf_file >> schedule;
-    if (schedule != "schedule") 
-    { 
-      cout << "Error :: schedule must follow the guess (e.g. hfocc, picklowest, defaulthf)" << endl;
-      cout << "Instead keyword found: "<<schedule<<endl;
-
-      abort();
-    }
-    int nentry;
-    conf_file >> nentry;
-
-
-    m_sweep_iter_schedule.resize(nentry);
-    m_sweep_state_schedule.resize(nentry);
-    m_sweep_qstate_schedule.resize(nentry);
-    m_sweep_tol_schedule.resize(nentry);
-    m_sweep_noise_schedule.resize(nentry);
-    m_sweep_additional_noise_schedule.resize(nentry);
-
-    for (int i = 0; i < nentry; ++i)
-    {
-      int iter_val;
-      int state_val;
-      double tol_val;
-      double noise_val;
-      conf_file >> m_sweep_iter_schedule[i] >> m_sweep_state_schedule[i] >> m_sweep_qstate_schedule[i] >> m_sweep_tol_schedule[i] >> m_sweep_noise_schedule[i] >> m_sweep_additional_noise_schedule[i];
-      if (i>0 && m_sweep_additional_noise_schedule[i] != 0.0 && m_sweep_additional_noise_schedule[i] == 0.0) {
-	pout <<"Cannot have a non-zero additional noise after additional noise has been made zero in previous sweeps"<<endl; exit(0);}
-      pout << m_sweep_iter_schedule[i] << " " << m_sweep_state_schedule[i] << " " << m_sweep_qstate_schedule[i] << " " << m_sweep_tol_schedule[i] << " " << m_sweep_noise_schedule[i] << " "<<m_sweep_additional_noise_schedule[i]<<endl;
-    }
-
-    m_quantaToKeep.resize(m_sweep_state_schedule[0]);
-
-    string next_entry, discard;
-    m_spin_orbs_symmetry.resize(m_norbs);
-    symmetry = "c1";
-    sym = "c1";
-    while(conf_file >> next_entry)
-    {
-      size_t pos;
-      pos = next_entry.find("!");
-      if (int(pos) == 0) {
-	conf_file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	continue;
+	m_norbs = 2*atoi(tok[1].c_str());;
+	//set some default values 
+	m_num_spatial_orbs = m_norbs/2;
+	m_spatial_to_spin.resize(m_norbs/2+1);
+	m_spin_to_spatial.resize(m_norbs+1);
+	m_spin_orbs_symmetry.resize(m_norbs);
+	for (int i=0; i<m_norbs; i++) {
+	  m_spatial_to_spin[i/2] = i - i%2;
+	  m_spin_to_spatial[i] = i/2;
+	  m_spin_orbs_symmetry[i] = 0;
+	}
+	m_spatial_to_spin[m_norbs/2] = m_norbs;
+	m_spin_to_spatial[m_norbs] = m_norbs;
       }
-      if (pos != string::npos) {
-	next_entry = next_entry.substr(0,int(pos));
-	conf_file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+
+      else if (boost::iequals(keyword,  "schedule"))
+      {
+	if (tok.size() != 2) {
+	  cerr << "keyword schedule should be followed by a single number and then an end line"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}	
+	int nentry = atoi(tok[1].c_str());
+
+	m_sweep_iter_schedule.resize(nentry);
+	m_sweep_state_schedule.resize(nentry);
+	m_sweep_qstate_schedule.resize(nentry);
+	m_sweep_tol_schedule.resize(nentry);
+	m_sweep_noise_schedule.resize(nentry);
+	m_sweep_additional_noise_schedule.resize(nentry);
+
+
+	for (int i = 0; i < nentry; ++i)
+	  {
+	    ReadMeaningfulLine(input, msg, msgsize);
+	    vector<string> schd_tok;
+	    boost::split(schd_tok, msg, is_any_of(" \t"), token_compress_on);
+
+	    if (schd_tok.size() != 4) {
+	      cerr << "Each line of the schedule contain four entries sweep_iteration   #retained states   davidson tolerance     noise"<<endl;
+	      cerr << "error found at the following line "<<endl;
+	      cerr<< msg<<endl;
+	      abort();
+	    }
+
+	    m_sweep_iter_schedule[i] = atoi(schd_tok[0].c_str());
+	    m_sweep_state_schedule[i] = atoi(schd_tok[1].c_str());
+	    m_sweep_qstate_schedule[i] = 0;  //DEPRECATED OPTION
+	    m_sweep_tol_schedule[i] = atof(schd_tok[2].c_str());
+	    m_sweep_noise_schedule[i] = atof(schd_tok[3].c_str());
+	    m_sweep_additional_noise_schedule[i] = 0.0;  //DEPRECATED OPTION
+
+	    if (i>0 && m_sweep_iter_schedule[i] <= m_sweep_iter_schedule[i-1]) {
+	      cerr << "Sweep iteration at a given line should be higher than the previous sweep iteration"<<endl;
+	      cerr << "this sweep iteration "<<m_sweep_iter_schedule[i] <<endl;
+	      cerr << "previous sweep iteration "<<m_sweep_iter_schedule[i-1]<<endl;
+	      cerr << "error found in the following line "<<endl;
+	      cerr << msg<<endl;
+	      abort();
+	    }
+	  }
+
       }
-      if (next_entry == "sym")
+
+
+      else if (boost::iequals(keyword,  "sym") || boost::iequals(keyword,  "symmetry"))
       {
 	m_spatial_to_spin.clear();
 	m_spin_to_spatial.clear();
 
 	m_num_spatial_orbs = 0;
         //string sym;
-        conf_file >> sym;
-        symmetry = sym;
+	if (tok.size() !=  2) {
+	  cerr << "keyword sym should be followed by a single string and then an end line"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}	
+        sym = tok[1];
+	boost::algorithm::to_lower(sym); //store as lower case string
         Symmetry::InitialiseTable(sym);
-        pout << "Symmetry group " << sym << endl;
-	pout << "Irreps of spatial orbitals "<<endl;
-        for (int i = 0; i < m_norbs; ++i)
-        {
-          int ir;
-          conf_file >> ir;
-          m_spin_orbs_symmetry[i] = ir;
-	  pout << ir<<" ";
-	  if (sym == "dinfh") {
-	    if (ir < -1 && i%2 == 0) {
-	      m_num_spatial_orbs ++;
-	      m_spatial_to_spin.push_back(i);
+
+	ReadMeaningfulLine(input, msg, msgsize);
+	boost::split(tok, msg, is_any_of(" \t"), token_compress_on);
+
+	if (boost::iequals(tok[0], "orbsym") || boost::iequals(tok[0], "orbitalsymmmetry") || boost::iequals(tok[0], "orbsymmetry") || 
+	    boost::iequals(tok[0], "orb_sym") || boost::iequals(tok[0], "orbital_symmmetry") || boost::iequals(tok[0], "orb_symmetry"))
+	{
+	  if (m_norbs == 0) {
+	    cerr << "Need to define the number of orbitals before specifying their irreducible representations"<<endl;
+	    abort();
+	  }
+	  if (tok.size() != m_norbs/2+1) {
+	    cerr << "keyword orbsym should be followed by "<<m_norbs<<" irreducible representations for each orbital and then an endline"<<endl;
+	    cerr << "error found in the following line "<<endl;
+	    cerr << msg<<endl;
+	    abort();
+	  }
+
+	  for (int i=0; i < 2*(tok.size()-1); i+=2)
+	  {
+	    int ir = atoi(tok[i/2+1].c_str());
+	    m_spin_orbs_symmetry[i] = ir;
+	    m_spin_orbs_symmetry[i+1] = ir;
+
+	    if (sym == "dinfh") {
+	      if (ir < -1) {
+		m_num_spatial_orbs ++;
+		m_spatial_to_spin.push_back(i);
+	      }
+	      else if( (ir == 0 || ir ==1)) {
+		m_num_spatial_orbs++;
+		m_spatial_to_spin.push_back(i);
+	      }
+	      m_spin_to_spatial[i] = m_num_spatial_orbs-1;
+	      m_spin_to_spatial[i+1] = m_num_spatial_orbs-1;
 	    }
-	    else if( (ir == 0 || ir ==1) && i%2 == 0) {
+	    else {
 	      m_num_spatial_orbs++;
 	      m_spatial_to_spin.push_back(i);
+
+	      m_spin_to_spatial[i] = m_num_spatial_orbs-1;
+	      m_spin_to_spatial[i+1] = m_num_spatial_orbs-1;
 	    }
-	    m_spin_to_spatial[i] = m_num_spatial_orbs-1;
 	  }
-	  else {
-	    if (i%2 == 0) {
-	      m_num_spatial_orbs++;
-	      m_spatial_to_spin.push_back(i);
-	    }
-	    m_spin_to_spatial[i] = m_num_spatial_orbs-1;
-	  }
-        }
-	m_spatial_to_spin.push_back(m_norbs);
-	m_spin_to_spatial.push_back(m_norbs);
-	cout << endl;
-	cout <<"# spatial orbitals "<<m_num_spatial_orbs<<endl;
+	  m_spatial_to_spin.push_back(m_norbs);
+	  m_spin_to_spatial.push_back(m_norbs);
+	}
+	else {
+	  cerr << "Symmetry information of the molecule should follow by orbsym keyword and irreducible representations of all the orbitals"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}		  
       }
-      else if (next_entry == "Sz")
+
+
+      else if (boost::iequals(keyword,  "wave_sym") || boost::iequals(keyword,  "wave_symmetry"))
       {
-        std::string wave_sym_str;
-        conf_file >> wave_sym_str;
-        m_Sz = atoi (wave_sym_str.c_str()) ;
-	m_set_Sz = true;
-      }
-      else if (next_entry == "wave_sym")
-      {
-        std::string wave_sym_str;
-        conf_file >> wave_sym_str;
-        m_total_symmetry_number = IrrepSpace( atoi (wave_sym_str.c_str()) );
+	if (tok.size() < 2 || tok.size() >= 6) {
+	  cerr << "keyword wave_sym should be followed by symmetry of the wavefunction in the form of nelec:spin:irrep and then an end line."<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}	
+	string wavesymmetry = "";
+
+	for (int i=1; i<tok.size(); i++)
+	  wavesymmetry.append(tok[i]);
+
+	vector<string > symtokens;
+	boost::split(symtokens, wavesymmetry, is_any_of(": \t"), token_compress_on);
+
+	if (symtokens.size() != 2 && symtokens.size() != 3) {
+	  cerr<<"Symmetry string needs to have the form nelec:spin or nelec:spin:irrep"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}
+	string nelecstr = symtokens[0]; trim(nelecstr);
+	int n_elec = atoi(nelecstr.c_str());
+
+	string nspinstr = symtokens[1]; trim(nspinstr);
+	int n_spin = atoi(nspinstr.c_str());
+
+	if ( (n_elec-n_spin)%2 != 0) {
+	  cerr<< "cannot have a spin of "<<n_spin<<"  with "<<n_elec<<" electrons "<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}
+	if (symtokens.size() == 3) {
+	  string nirrepstr = symtokens[2]; trim(nirrepstr);
+	  m_total_symmetry_number = IrrepSpace(atoi(nirrepstr.c_str()));
+	}
+	else 
+	  m_total_symmetry_number = IrrepSpace(0);
+	m_alpha = (n_elec + n_spin)/2;
+	m_beta = (n_elec - n_spin)/2;
         m_molecule_quantum = SpinQuantum(m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number);
-        pout << "Solving for wave with symmetry :: " << m_molecule_quantum << endl;
       }
-      else if (next_entry == "hubbard")
+
+
+      else if (boost::iequals(keyword,  "hubbard"))
 	m_ham_type = HUBBARD;
-      else if (next_entry == "dmrg")
+      else if (boost::iequals(keyword,  "dmrg"))
 	m_calc_type = DMRG;
-      else if (next_entry == "maxj")
-	conf_file >> m_maxj;
-      else if (next_entry == "fci")
+      else if (boost::iequals(keyword,  "maxj")) {
+	if (tok.size() !=  2) {
+	  cerr << "keyword maxj should be followed by a single integer and then an end line."<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}	
+        m_maxj = atoi(tok[1].c_str());
+      }
+      else if (boost::iequals(keyword,  "fci"))
 	m_calc_type = FCI;
-      else if (next_entry == "genblock")
+      else if (boost::iequals(keyword,  "genblock")|| boost::iequals(keyword,  "genblocks") || boost::iequals(keyword,  "generateblock"))
 	m_calc_type = GENBLOCK;
-      else if (next_entry == "onepdm")
+      else if (boost::iequals(keyword,  "onepdm"))
 	m_calc_type = ONEPDM;
-      else if (next_entry == "twopdm")
+      else if (boost::iequals(keyword,  "twopdm"))
 	m_calc_type = TWOPDM;
-      else if (next_entry == "smalldavid")
+      else if(boost::iequals(keyword,  "prefix") || boost::iequals(keyword,  "scratch"))
       {
-        m_solve_type = SMALL_DAVIDSON;
-      }
-      else if (next_entry == "bigdavid")
-      {
-        m_solve_type = BIG_DAVIDSON;
-      }
-      else if(next_entry == "prefix")
-      {
-	conf_file >> m_load_prefix ;
+	m_load_prefix = tok[1];
 	m_save_prefix = m_load_prefix;
       }
-      else if (next_entry == "noisetype")
-      {
-	//we add perturbative or random and perturbative or excited and perturbative
-	std::string noise;
-	conf_file >> noise;
-	if (noise == "random")
-	  m_noise_type = RANDOM;
-	else if (noise == "excitedstate")
-	  m_noise_type = EXCITEDSTATE;
-	else {
-	  pout << "noise type can be either random or excitedstate"<<endl;exit(0);
-	}
-      }
-      else if (next_entry == "add_noninteracting_orbs")
-	m_add_noninteracting_orbs = true;
-      else if (next_entry == "diis_start_iter")
-	conf_file >> m_start_diis_iter; 
-      else if (next_entry == "diis_keep_states")
-	conf_file >> m_diis_keep_states; 
-      else if (next_entry == "diis_start_error")
-	conf_file >> m_diis_error;
-      else if (next_entry == "do_diis")
-	m_do_diis = true;
-      else if(next_entry == "nroots")
+
+
+      else if(boost::iequals(keyword,  "nroots"))
       {
         std::string nroots_str;
-        conf_file >> nroots_str;
-        m_nroots = atoi(nroots_str.c_str());
+	if (tok.size() != 2) {
+	  cerr << "keyword nroots should be followed by a single integer and then an end line."<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}	
+
+        m_nroots = atoi(tok[1].c_str());
         if(m_deflation_min_size < m_nroots)
           m_deflation_min_size = m_nroots;
-        //next entry must be nweights
-        std::string weights_str;
-        conf_file >> weights_str;
-        if(weights_str != "weights")
-        {
-          cout << "Error :: config file entry following nroots must be weights" << endl;
-          cout << "entry found was " << weights_str << endl;
-          abort();
-        }
+
+	ReadMeaningfulLine(input, msg, msgsize);
+	vector<string> weighttoken;
+	boost::split(weighttoken, msg, is_any_of(" \t"), token_compress_on);
+	
+	if (!boost::iequals(weighttoken[0],  "weights")) 
+	  continue;
+	PROVIDED_WEIGHTS = true;
+
         m_weights.resize(m_nroots);
+
+	if (weighttoken.size() != m_nroots +1 ) {
+	  cerr << "keyword weights should be followed by floating point numbers providing weights for "<<m_nroots<<" states."<<endl;
+	  cerr << "You could chose to omit the keyworkd weights in which case the weights will be distributed uniformly between the different roots"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}
         double norm = 0.;
-        for(int i=0;i<m_nroots;++i)
+	
+        for(int i=1;i<weighttoken.size();i++)
         {
-          conf_file >> weights_str;
-          m_weights[i] = atof(weights_str.c_str());  
-          norm += m_weights[i];
+          m_weights[i-1] = atof(weighttoken[i].c_str());  
+          norm += m_weights[i-1];
+	  if (m_weights[i-1] <1e-10) {
+	    cerr<< "Weight of a state cannot be less than 1e.0e-10"<<endl;
+	    cerr << "error found in the following line "<<endl;
+	    cerr << msg<<endl;
+	    abort();
+	  }
         }  
+	if (norm <= 1.e-10) {
+	  cerr<< "Weights should add up to approximately 1.0. Currently they add up to "<<norm<<endl;
+	  abort();
+	}
+
         for(int i=0;i<m_nroots;++i)
           m_weights[i] /= norm;
-        if(m_nroots > 1)
-          m_solve_type = BIG_DAVIDSON;
-        cout << "Using the following weightings..." << endl;
-        for(int i=0;i<m_nroots;++i)
-          cout << "\t State[" << i << "] :: " << m_weights[i] << endl;
       }
-      else if (next_entry == "guess_permutations")
-      {
-	conf_file >> m_guess_permutations;
-      }
-      else if (next_entry == "nquanta")
-      {
-        std::string nquanta_str;
-        conf_file >> nquanta_str;
-        m_nquanta = atoi (nquanta_str.c_str());
-        pout << "\t\t\t Maximum states per quanta for initial Slater guess :: " << m_nquanta << endl;
-      }
-      else if (next_entry == "sysadd")
-      {
-        std::string sys_add_str;
-        conf_file >> sys_add_str;
-        m_sys_add = atoi (sys_add_str.c_str());
-        pout << " \t\t\t System dot size :: " << m_sys_add << endl;
-      }
-      else if (next_entry == "envadd")
-      {
-        std::string env_add_str;
-        conf_file >> env_add_str;
-        m_env_add = atoi (env_add_str.c_str());
-        pout << "\t\t\t Environment dot size :: " << m_env_add << endl;
-      }
-      else if (next_entry == "dofci")
-      {
-        m_do_fci = true;
-      }
-      else if (next_entry == "docd")
+
+
+      else if (boost::iequals(keyword,  "docd") || boost::iequals(keyword,  "do_cd"))
       {
         m_do_cd = true;
       }
-      else if(next_entry == "deflation_min_size")
+
+
+      else if(boost::iequals(keyword,  "deflation_max_size") || boost::iequals(keyword,  "max_deflation_size"))
       {
-        std::string deflation_min_size_str;
-        conf_file >> deflation_min_size_str;
-        m_deflation_min_size = atoi(deflation_min_size_str.c_str());
+	if (tok.size() !=  2) {
+	  cerr << "keyword "<<keyword<<" should be followed by a single number and then an endline"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}
+        m_deflation_max_size = atoi(tok[1].c_str());
       }
-      else if(next_entry == "deflation_max_size")
+
+
+      else if(boost::iequals(keyword,  "maxiter"))
       {
-        std::string deflation_max_size_str;
-        conf_file >> deflation_max_size_str;
-        m_deflation_max_size = atoi(deflation_max_size_str.c_str());
+	if (tok.size() !=  2) {
+	  cerr << "keyword maxiter should be followed by a single integer and then an endline"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}
+        m_maxiter = atoi(tok[1].c_str());
       }
-      else if(next_entry == "maxiter")
+
+
+      else if(boost::iequals(keyword,  "screen_tol") || boost::iequals(keyword,  "screen_tolerance") || boost::iequals(keyword,  "screening_tol") || boost::iequals(keyword,  "screening_tolerance"))
       {
-        std::string maxiter_str;
-        conf_file >> maxiter_str;
-        m_maxiter = atoi(maxiter_str.c_str());
-        cout << "Maximum sweep iterations :: " << m_maxiter << endl;
+	if (tok.size() != 2) {
+	  cerr << "keyword screen_tol should be followed by a single number and then an endline"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}
+        m_screen_tol = atof(tok[1].c_str());
       }
-      else if(next_entry == "thrds_per_node")
-      {
-        std::string thrds_per_node_str;
-#ifndef SERIAL
-        mpi::communicator world;
-        for(int i=0;i<world.size();++i)
-        {
-          conf_file >> thrds_per_node_str;
-          m_thrds_per_node[i] = atoi(thrds_per_node_str.c_str());
-          cout << "Maximum threads for node[" << i << "] :: " << m_thrds_per_node[i] << endl;
-        }
-#else
-        for(int i=0;i<1;++i)
-        {
-          conf_file >> thrds_per_node_str;
-          m_thrds_per_node[i] = atoi(thrds_per_node_str.c_str());
-          cout << "Maximum threads for node[" << i << "] :: " << m_thrds_per_node[i] << endl;
-        }
-#endif
-      }
-      else if(next_entry == "screen_tol")
-      {
-        std::string screen_tol_str;
-        conf_file >> screen_tol_str;
-        m_screen_tol = atof(screen_tol_str.c_str());
-        cout << "Screen tolerance :: " << m_screen_tol << endl;
-      }
-      else if(next_entry == "onedot")
+
+
+      else if(boost::iequals(keyword,  "onedot"))
       {
         m_algorithm_type = ONEDOT;
         m_env_add = 0;
-        cout << "Using one dot DMRG algorithm" << endl;
       }
-      else if(next_entry == "twodot")
+
+
+      else if(boost::iequals(keyword,  "twodot"))
       {
         m_algorithm_type = TWODOT;
         m_env_add = 1;
-        cout << "Using two dot DMRG algorithm" << endl;
       }
-      else if(next_entry == "twodot_to_onedot")
+
+
+      else if(boost::iequals(keyword,  "twodot_to_onedot"))
       {
+	if (tok.size() !=  2) {
+	  cerr << "keyword twodot_to_onedot should be followed by a single number and then an endline"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}
         m_algorithm_type = TWODOT_TO_ONEDOT;
         m_env_add = 1;
-        std::string twodot_to_onedot_iter_str;
-        conf_file >> twodot_to_onedot_iter_str;
-        m_twodot_to_onedot_iter = atoi(twodot_to_onedot_iter_str.c_str());
-        cout << "Starting with two dot DMRG algorithm and switching to one dot DMRG algorithm on iteration " << m_twodot_to_onedot_iter << endl;
+        m_twodot_to_onedot_iter = atoi(tok[1].c_str());
       }
-      else if (next_entry == "sweep_tol")
-	{
-	  conf_file >> m_sweep_tol;
+
+
+      else if (boost::iequals(keyword,  "sweep_tol") || boost::iequals(keyword,  "sweep_tolerance"))
+      {
+	if (tok.size() !=  2) {
+	  cerr << "keyword sweep_tol should be followed by a single number and then an endline"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
 	}
-      else if (next_entry == "outputlevel")
-	{
-	  conf_file >> m_outputlevel;
+        m_sweep_tol = atof(tok[1].c_str());
+      }
+
+
+      else if (boost::iequals(keyword,  "outputlevel")) {
+	if (tok.size() != 2) {
+	  cerr << "keyword outputlevel should be followed by a single integer and then an endline"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
 	}
-      else if (next_entry == "restart")
-	{
-	  m_restart = true;
+        m_outputlevel = atoi(tok[1].c_str());
+      }
+
+
+      else if (boost::iequals(keyword,  "restart")) {
+	m_restart = true;
+      }
+
+
+      else if (boost::iequals(keyword,  "fullrestart")) {
+	m_fullrestart = true;	  
+      }
+
+
+      else if (boost::iequals(keyword,  "reset_iterations") || boost::iequals(keyword,  "reset_iter") || boost::iequals(keyword,  "reset_iters")) {
+	m_reset_iterations = true;
+      }
+
+
+      else if (boost::iequals(keyword,  "oneintegral")) {
+	if (tok.size() !=  2) {
+	  cerr << "keyword oneintegral should be followed by the name of the file containing one electron integrals."<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
 	}
-      else if (next_entry == "fullrestart")
-	{
-	  m_fullrestart = true;	  
+	m_oneintegral =tok[1];
+      }
+
+
+      else if (boost::iequals(keyword,  "twointegral")) {
+	if (tok.size() !=  2) {
+	  cerr << "keyword twointegral should be followed by the name of the file containing two electron integrals."<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
 	}
-      else if (next_entry == "restartwarm")
-	{
-	  m_restart_warm = true;
-	}
-      else if (next_entry == "reset_iterations")
-	{
-	  m_reset_iterations = true;
-	}
-      else if (next_entry== "oneintegral")
-	{
-	  conf_file >> m_oneintegral;
-	}
-      else if (next_entry == "twointegral")
-	{
-	  conf_file >> m_twointegral;
-	}
+	m_twointegral = tok[1];
+      }
       else
       {
-        cout << "Unrecognized option :: " << next_entry << endl;
+        pout << "Unrecognized option :: " << keyword << endl;
+	cerr << "error found in the following line "<<endl;
+	cerr << msg<<endl;
         abort();
       }
+      msg.resize(0);
+      ReadMeaningfulLine(input, msg, msgsize);
+      
     }
-    conf_file.close();
+
   }
 
 #ifndef SERIAL
@@ -496,9 +544,119 @@ SpinAdapted::Input::Input(const string& config_name)
   mpi::broadcast(world, sym, 0);
   if (sym != "c1")
     Symmetry::InitialiseTable(sym);
-  mpi::broadcast(world,symmetry,0);
+  if (mpigetrank() == 0) {
 #endif
+    
+    pout << "Checking Input for errors"<<endl;
+    performSanityTest();
+    pout << "Summary of Input"<<endl;
+    pout << "----------------"<<endl;
+    writeSummary();
+    pout << endl;
+#ifndef SERIAL
+  }
+#endif
+
 }
+
+void SpinAdapted::Input::writeSummary()
+{
+#ifndef SERIAL
+  if (mpigetrank() == 0) {
+#endif
+  printf("%-50s :   %-i\n", "Total number of orbitals", m_norbs);
+  printf("%-50s :   %-i:%-i:%-i\n", "Symmetry of the targetted wavefunctions",m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number.getirrep());
+  printf("%-50s :   %-i\n", "Number of wavefunctions targetted", m_nroots);
+  if (m_nroots >1) {
+    printf("%-50s :   ", "The weights of the wavefunctions");
+    for (int i=0; i<m_nroots; i++) 
+      printf("%-10.2e", m_weights[i]);
+    printf("\n");
+  }
+  printf("%-50s :   ", "Symmetry of the molecule"); cout << sym<<endl;;  
+  if (sym != "c1") {
+    printf("%-50s :   ", "Irreducible representations of the orbitals");
+    for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) 
+      cout << Symmetry::stringOfIrrep(m_spin_orbs_symmetry[i])<<"  ";
+    printf("\n");
+  }
+
+  printf("\nSchedule\n");
+  printf("--------\n");
+  printf("%-10s : %-20s  %-20s  %-20s\n", "Iter", "# States", "Davidson_tol",  "Random_noise");
+  for (int i=0; i<m_sweep_iter_schedule.size(); i++)
+    printf("%-10i : %-20i  %-20.4e  %-20.4e\n", m_sweep_iter_schedule[i], m_sweep_state_schedule[i], m_sweep_tol_schedule[i], m_sweep_noise_schedule[i]);
+  if (m_algorithm_type == TWODOT_TO_ONEDOT) 
+    printf("%-50s :   %-i\n", "Switching from twodot to onedot algorithm", m_twodot_to_onedot_iter);
+    
+  printf("%-50s :   %-i\n", "Maximum sweep iterations", m_maxiter);
+#ifndef SERIAL
+  }
+#endif
+  
+}
+
+void SpinAdapted::Input::performSanityTest()
+{
+#ifndef SERIAL
+  if (mpigetrank() == 0) {
+#endif
+  if (m_norbs <= 0) {
+    cerr << "total number of orbitals has to be a positive number"<<endl;
+    abort();
+  }
+  if (m_norbs > 100) {
+    cerr << "Number of orbitals cannot be greater than 100"<<endl;
+    abort();
+  }
+  if (m_alpha+m_beta <= 0) {
+    cerr << "Total number of electrons cannot be negative"<<endl;
+    abort();
+  }
+  if (m_alpha < m_beta) {
+    cerr << "DMRG requires the spin to a positive number and less than the total number of electrons"<<endl;
+    abort();
+  }
+  if (m_norbs < m_alpha+m_beta) {
+    cerr<< "No of spin orbitals has to be greater than total number of electrons"<<endl;
+    abort();
+  }
+  for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) {
+    Symmetry::irrepAllowed(m_spin_orbs_symmetry[i]);
+  }
+  if (m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter >= m_maxiter) {
+    cerr << "Switch from twodot to onedot algorithm cannot happen after maxiter"<<endl;
+    cerr << m_twodot_to_onedot_iter <<" < "<<m_maxiter<<endl;
+    abort();
+  }
+  if (m_maxiter <= m_sweep_iter_schedule.back()) {
+    cerr << "maximum iterations allowed is less than or equal to the last sweep iteration in your schedule."<<endl;
+    cerr << m_maxiter <<" <= "<< (m_sweep_iter_schedule.back())<<endl;
+    cerr << "either increase the max_iter or reduce the number of sweeps"<<endl;
+    abort();
+  }
+  Symmetry::irrepAllowed(m_total_symmetry_number.getirrep());
+  //this is important so the user cannot break the code
+#ifndef SERIAL
+  }
+#endif
+  if (m_norbs <= 3)
+    m_calc_type = TINY;
+
+  //make some initial hf guess
+  m_spin_vector.resize(m_norbs);
+  for (int i = 0; i < m_norbs; ++i)
+    m_spin_vector[i] = (i & 1) ? -1 : 1;
+  m_hf_occupancy.resize(m_norbs);
+  for (int i = 0; i < m_alpha; ++i)
+    m_hf_occupancy[2*i] = 1;
+  for (int i = 0; i < m_beta; ++i)
+    m_hf_occupancy[2*i+1] = 1;
+
+}
+
+
+
 
 int SpinAdapted::Input::nroots(int sweep_iter) const
 {

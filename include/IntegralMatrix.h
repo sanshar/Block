@@ -4,17 +4,24 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
-
+//#include "parser.h"
 #include <newmat.h>
 #include <newmatio.h>
-
+#include <boost/filesystem.hpp>
 #include <multiarray.h>
 #include <newmatutils.h>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include "blas_calls.h"
+#include <boost/algorithm/string.hpp>
+#include <string>
+#include <algorithm>
+#include "input.h"
+
+using namespace boost;
 
 namespace SpinAdapted{
+  
 class OneElectronArray
   {
   private:
@@ -140,7 +147,7 @@ class OneElectronArray
 	}
     }
     
-    void ReadFromDumpFile(ifstream& dumpFile)
+    void ReadFromDumpFile(ifstream& dumpFile, int norbs)
     {
       if (bin) {
         dumpFile.seekg (0, ios::end);
@@ -210,24 +217,59 @@ class OneElectronArray
 	}
       }
       else {
-	int n;
-	dumpFile >> n;
+	int n = 0;
+	string msg; int msgsize = 5000;
+	Input::ReadMeaningfulLine(dumpFile, msg, msgsize);
+	vector<string> tok;
+	boost::split(tok, msg, is_any_of(" \t"), token_compress_on);
+	if (tok.size() != 1) {
+	  cerr << "The first line of one electron integral file should be number of orbitals"<<endl;
+	  cerr << "Error at line :"<<msg<<endl;
+	  abort();
+	}
+	if (atoi(tok[0].c_str()) != norbs) {
+	  cerr << "Number of orbitals in one electron integral file should be equal to one given in input file"<<endl;
+	  cerr << "# orbs in input file : "<<norbs<<endl;
+	  cerr << "# orbs in one electron integral file : "<<atoi(tok[0].c_str())/2<<endl;
+	  abort();
+	}
+	n = norbs;
+	
 	if (rhf)
 	  {
 	    n=2*n;
 	  }
+
 	ReSize(n);
 	int i, j;
 	
-	while (dumpFile >> i >> j)
-	  {
-	    if (rhf)
-	      {
-		i=2*i;
-		j=2*j;
-	      }
-	    dumpFile >> (*this)(i, j);
+	Input::ReadMeaningfulLine(dumpFile, msg, msgsize);
+	while (msg.size() != 0)
+	{
+	  boost::split(tok, msg, is_any_of(" \t"), token_compress_on);
+	  if (tok.size() != 3) {
+	    cerr<< "The format of one electron integral file incorrect"<<endl;
+	    cerr <<"error at this line: "<<msg<<endl;
+	    abort();
 	  }
+	  i = atoi(tok[0].c_str());
+	  j = atoi(tok[1].c_str());
+	  if (i >= n || j >= n) {
+	    cerr << "index of orbitals in one electron integral file cannot be bigger than "<<n<<endl;
+	    cerr<< "error at this line: "<<msg<<endl;
+	    abort();
+	  }
+	  if (rhf)
+	  {
+	    i=2*i;
+	    j=2*j;
+	  }
+	  (*this)(i, j) = atof(tok[2].c_str());
+
+	  msg.resize(0);
+	  Input::ReadMeaningfulLine(dumpFile, msg, msgsize);
+
+	}
       }
     }
 
@@ -443,27 +485,64 @@ class TwoElectronArray // 2e integral, notation (12|12), symmetric matrix
         return rep(n + 1, m + 1);
       }
 
-    void ReadFromDumpFile(ifstream& dumpFile, int NOrbs)
+    void ReadFromDumpFile(ifstream& dumpFile, int norbs)
     {
-      int n;
-      dumpFile >> n;
+      int n = 0;
+      string msg; int msgsize = 5000;
+      Input::ReadMeaningfulLine(dumpFile, msg, msgsize);
+      vector<string> tok;
+      boost::split(tok, msg, is_any_of(" \t"), token_compress_on);
+	if (tok.size() != 1) {
+	  cerr << "The first line of two electron integral file should be number of orbitals"<<endl;
+	  cerr << "Error at line :"<<msg<<endl;
+	  abort();
+	}
+	if (atoi(tok[0].c_str()) != norbs) {
+	  cerr << "Number of orbitals in two electron integral file should be equal to one given in input file"<<endl;
+	  cerr << "# orbs in input file : "<<norbs<<endl;
+	  cerr << "# orbs in two electron integral file : "<<atoi(tok[0].c_str())<<endl;
+	  abort();
+	}
+
+	n = norbs;
+
       if (rhf)
 	{
 	  n=2*n;
 	}
       ReSize(n);  // this resizes the integral matrix with spin-convention
       int a, b, c, d;
-      while (dumpFile >> a >> b >> c >> d)
-	{
-	  if (rhf)
-	    {
-	      a=2*a;
-	      b=2*b;
-	      c=2*c;
-	      d=2*d;
-	    }
-	  dumpFile >> (*this)(a, b, c, d);
+      Input::ReadMeaningfulLine(dumpFile, msg, msgsize);
+      while (msg.size() != 0)
+      {
+	boost::split(tok, msg, is_any_of(" \t"), token_compress_on);
+	if (tok.size() != 5) {
+	  cerr<< "The format of two electron integral file incorrect"<<endl;
+	  cerr <<"error at this line: "<<msg<<endl;
+	  abort();
 	}
+	a = atoi(tok[0].c_str());
+	b = atoi(tok[1].c_str());
+	c = atoi(tok[2].c_str());
+	d = atoi(tok[3].c_str());
+	if (a >= n || b >= n || c >= n || d >= n) {
+	  cerr << "index of orbitals in two electron integral file cannot be bigger than "<<n<<endl;
+	  cerr<< "error at this line: "<<msg<<endl;
+	  abort();
+	}
+	
+	if (rhf)
+	  {
+	    a=2*a;
+	    b=2*b;
+	    c=2*c;
+	    d=2*d;
+	  }
+	(*this)(a, b, c, d) = atof(tok[4].c_str());
+	msg.resize(0);
+	Input::ReadMeaningfulLine(dumpFile, msg, msgsize);
+
+      }
       
     }
     void DumpToFile(ofstream& dumpFile) const

@@ -6,9 +6,10 @@
 #ifndef SERIAL
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi.hpp>
+#endif
 #include "rotationmat.h"
 #include "density.h"
-#endif
+
 
 using namespace boost;
 using namespace std;
@@ -127,9 +128,11 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 
   if (dmrginp.outputlevel() != 0)
     mcheck("");
-  pout << "\t\t\t System  Block"<<newSystem;
-  pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
-  pout << "\t\t\t Solving wavefunction "<<endl;
+  if (dmrginp.outputlevel() == 0) {
+    pout << "\t\t\t System  Block"<<newSystem;
+    pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
+    pout << "\t\t\t Solving wavefunction "<<endl;
+  }
 
   //world.barrier();
   //cout << "about to make big block"<<endl;
@@ -164,17 +167,17 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     mcheck("after rotation and transformation of block");
   //StateInfo::store(forward, newSystem.get_sites(), storeStates);
 
-  if (mpigetrank() == 0 &&  dmrginp.outputlevel() != 0){
-    cout << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
-    cout << dmrginp.makeopsT<<" makeops "<<endl;
-    cout << dmrginp.datatransfer<<" datatransfer "<<endl;
+  if (dmrginp.outputlevel() != 0){
+    pout << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+    pout << dmrginp.makeopsT<<" makeops "<<endl;
+    pout << dmrginp.datatransfer<<" datatransfer "<<endl;
     //cout << dmrginp.justmultiply<<" just multiply "<<endl;
     //cout << dmrginp.otherrotation<<" "<<dmrginp.spinrotation<<" "<<dmrginp.operrotT<<" rotations time "<<endl; 
-    cout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
-    cout << dmrginp.oneelecT<<" "<<dmrginp.twoelecT<<" "<<dmrginp.hmultiply<<" "<<dmrginp.couplingcoeff<<" hmult"<<endl;
-    cout << dmrginp.buildsumblock<<" "<<dmrginp.buildblockops<<" build block"<<endl;
-    cout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
-    cout << dmrginp.addnoise<<" "<<dmrginp.s0time<<" "<<dmrginp.s1time<<" "<<dmrginp.s2time<<endl;
+    pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
+    pout << dmrginp.oneelecT<<" "<<dmrginp.twoelecT<<" "<<dmrginp.hmultiply<<" "<<dmrginp.couplingcoeff<<" hmult"<<endl;
+    pout << dmrginp.buildsumblock<<" "<<dmrginp.buildblockops<<" build block"<<endl;
+    pout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
+    pout << dmrginp.addnoise<<" "<<dmrginp.s0time<<" "<<dmrginp.s1time<<" "<<dmrginp.s2time<<endl;
   }
 
   //mcheck("After renorm transform");
@@ -191,6 +194,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 
   sweepParams.set_sweep_parameters();
   // a new renormalisation sweep routine
+  pout << endl;
   if (forward)
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in forwards direction"<<endl;
   else
@@ -226,7 +230,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
     {
       
-      pout << "\t\t\t Sweep Iteration :: " << sweepParams.get_block_iter() << endl;
+      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
       if (dmrginp.outputlevel() != 0) {
 	
@@ -289,8 +293,10 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 	pout << "\t\t\t saving state " << syssites.size() << endl;
       ++sweepParams.set_block_iter();
       
+#ifndef SERIAL
       mpi::communicator world;
       world.barrier();
+#endif
       sweepParams.savestate(forward, syssites.size());
       if (dmrginp.outputlevel() != 0)
 	mcheck("at the end of sweep iteration");
@@ -344,7 +350,8 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   int nquanta = newSystem.get_stateInfo().quanta.size();
   std::vector<DiagonalMatrix > energies(nquanta);
   std::vector<Matrix> rotateMatrix(nquanta);
-  DensityMatrix transformmatrix; transformmatrix.allocate(newSystem.get_stateInfo());
+  DensityMatrix transformmatrix; 
+  transformmatrix.allocate(newSystem.get_stateInfo());
   SpinQuantum q(0,0,IrrepSpace(0));
 
   double minval = 1e12;
@@ -384,18 +391,18 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   mcheck("after rotation and transformation of block");
   
 
-  if (mpigetrank() == 0){
-    cout << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
-    cout << dmrginp.makeopsT<<" makeops "<<endl;
-    cout << dmrginp.datatransfer<<" datatransfer "<<endl;
+
+    pout << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+    pout << dmrginp.makeopsT<<" makeops "<<endl;
+    pout << dmrginp.datatransfer<<" datatransfer "<<endl;
     //cout << dmrginp.justmultiply<<" just multiply "<<endl;
     //cout << dmrginp.otherrotation<<" "<<dmrginp.spinrotation<<" "<<dmrginp.operrotT<<" rotations time "<<endl; 
-    cout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
-    cout << dmrginp.oneelecT<<" "<<dmrginp.twoelecT<<" "<<dmrginp.hmultiply<<" "<<dmrginp.couplingcoeff<<" hmult"<<endl;
-    cout << dmrginp.buildsumblock<<" "<<dmrginp.buildblockops<<" build block"<<endl;
-    cout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
-    cout << dmrginp.addnoise<<" "<<dmrginp.s0time<<" "<<dmrginp.s1time<<" "<<dmrginp.s2time<<endl;
-  }
+    pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
+    pout << dmrginp.oneelecT<<" "<<dmrginp.twoelecT<<" "<<dmrginp.hmultiply<<" "<<dmrginp.couplingcoeff<<" hmult"<<endl;
+    pout << dmrginp.buildsumblock<<" "<<dmrginp.buildblockops<<" build block"<<endl;
+    pout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
+    pout << dmrginp.addnoise<<" "<<dmrginp.s0time<<" "<<dmrginp.s1time<<" "<<dmrginp.s2time<<endl;
+
 
   //mcheck("After renorm transform");
 }

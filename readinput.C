@@ -22,7 +22,7 @@
 #include "density.h"
 #include "sweep.h"
 #include "BaseOperator.h"
-
+#include <boost/filesystem.hpp>
 #ifndef SERIAL
 #include <boost/mpi/environment.hpp>
 #include <boost/mpi/communicator.hpp>
@@ -30,6 +30,21 @@
 #endif
 
 using namespace SpinAdapted;
+void CheckFileExistance(string filename, string filetype)
+{
+  boost::filesystem::path p(filename);
+  if (boost::filesystem::exists(p)) {
+    if (!boost::filesystem::is_regular_file(p)) {
+      cerr << filetype<<" "<<filename<<" is not a regular file."<<endl;
+      abort();
+    }
+  }
+  else {
+    cerr << filetype<<" "<<filename<<" is not present."<<endl;
+    abort();
+  }
+}
+
 void ReadInput(char* conf)
 {
 #ifndef SERIAL
@@ -58,11 +73,11 @@ void ReadInput(char* conf)
   ifstream twoElectronIntegralFile;
   std::string configFile(conf);
 
+  CheckFileExistance(conf, "Input file ");
+
   //pout << "About to read Input File : "<< configFile<<endl;
   //read the config file
-  pout << "INPUT FILE"<<endl;
   dmrginp = Input(configFile);
-  pout << "*****************************"<<endl<<endl;
   v_1.rhf= true; 
   v_2.rhf=true;
   if (sym != "dinfh")
@@ -75,14 +90,17 @@ void ReadInput(char* conf)
   oneElectronIntegralFile.open(dmrginp.get_oneintegral().c_str(), ios::in);
   twoElectronIntegralFile.open(dmrginp.get_twointegral().c_str(),ios::in);
 
+  CheckFileExistance(dmrginp.get_oneintegral(), "Input file ");
+  CheckFileExistance(dmrginp.get_twointegral(), "Input file ");
+
   //pout << "About to read integrals"<<endl;
   //read integrals
   if (mpigetrank() == 0)
   {
     //cout << "v2bin "<<v_2.bin<<endl;
-    v_1.ReadFromDumpFile(oneElectronIntegralFile);
+    v_1.ReadFromDumpFile(oneElectronIntegralFile, dmrginp.slater_size()/2);
     //pout << "finished v1read" << endl;
-    v_2.ReadFromDumpFile(twoElectronIntegralFile, v_1.NOrbs());
+    v_2.ReadFromDumpFile(twoElectronIntegralFile, dmrginp.slater_size()/2);
     //pout << "finished v2read" << endl;
   }
 

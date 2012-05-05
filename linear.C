@@ -101,19 +101,24 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 
       int sigmasize, bsize;
 
+#ifndef SERIAL
       if (mpigetrank() == 0) {
 	sigmasize = sigma.size();
 	bsize = b.size();
       }
-
       mpi::broadcast(world, sigmasize, 0);
       mpi::broadcast(world, bsize, 0);
+#else
+      sigmasize = sigma.size();
+      bsize = b.size();
+#endif
       //multiply all guess vectors with hamiltonian c = Hv
 
       for(int i=sigmasize;i<bsize;++i)
 	{
 	  Wavefunction* sigmaptr, *bptr;
 	  Wavefunction sigmai;
+#ifndef SERIAL
 	  if (mpigetrank() == 0) {
 	    sigma.push_back(b[i]);
 	    sigma[i].Clear();
@@ -127,7 +132,13 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	    bptr = &b[converged_roots]; //b vector is not doing anything in procs with non-zero rank
 	  }
 	  mpi::broadcast(world, *bptr, 0);
-	   
+#else
+	  sigma.push_back(b[i]);
+	  sigma[i].Clear();
+	  sigmaptr = &sigma[i];
+	  bptr = &b[i];
+#endif
+
 	  h_multiply(*bptr, *sigmaptr);
 	  
 	}
@@ -135,7 +146,10 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 
       Wavefunction r;
       DiagonalMatrix subspace_eigenvalues;
+
+#ifndef SERIAL
       if (mpigetrank() == 0) {
+#endif
 	//generate the hamiltonian in b space h(i,j) = v_i H v_j
 	Matrix subspace_h(b.size(), b.size());
 	for (int i = 0; i < b.size(); ++i)
@@ -175,13 +189,18 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	// build residual                                                                                                              
 	r = sigma[converged_roots];
 	ScaleAdd(-subspace_eigenvalues(converged_roots+1), b[converged_roots], r);
+#ifndef SERIAL
       }
+#endif
 
       double rnorm;
+#ifndef SERIAL
       if (mpigetrank() == 0)
-	rnorm = DotProduct(r,r);
-  
+	rnorm = DotProduct(r,r);  
       mpi::broadcast(world, rnorm, 0);
+#else
+      rnorm = DotProduct(r,r);
+#endif
 
       if (useprecond && mpigetrank() == 0)
 	olsenPrecondition(r, b[converged_roots], subspace_eigenvalues(converged_roots+1), h_diag, levelshift);
@@ -193,14 +212,20 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	{
 	  if (dmrginp.outputlevel() != 0)
 	    pout << "\t\t\t Converged root " << converged_roots << endl;
+#ifndef SERIAL
 	  mpi::broadcast(world, b[converged_roots], 0);
+#endif
 	  ++converged_roots;	  
 	  if (converged_roots == nroots)
 	    {
+#ifndef SERIAL
 	      if (mpigetrank() == 0) {
+#endif
 		for (int i = 0; i < min((int)(b.size()), h_diag.Ncols()); ++i)
 		  h_diag.element(i) = subspace_eigenvalues.element(i);
+#ifndef SERIAL
 	      }
+#endif
 	      solved = true;
 	      break;
 	    }

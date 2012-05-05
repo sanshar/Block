@@ -116,9 +116,101 @@ void Symmetry::InitialiseTable(string psym)
     groupTable(3, 2) = 1;
     groupTable(3, 3) = 0;
   }
-  else
+  else {
+    cerr << "Symmetry of the molecule has to be one of c1, ci, c2h, c2v, d2h or dinfh"<<endl;
+    cerr << "Symmetry provided in the input file "<<sym<<endl;
     abort();
+  }
 
+}
+
+bool Symmetry::irrepAllowed(int irrep)
+{
+  if (sym == "dinfh" && ((irrep<0 && irrep >-4) || irrep == 2 || irrep == 3)) {
+    cerr << "Orbital cannot have an irreducible representation of "<<irrep<<"  with dinfh symmetry"<<endl;
+    abort();
+  }
+  if (sym == "d2h" && (irrep<0 || irrep >= 8)) {
+    cerr << "Orbital cannot have an irreducible representation of "<<irrep<<"  with "<<sym<<" symmetry"<<endl;
+    abort();
+  }
+  if ((sym == "c2v" || sym == "c2h") && (irrep<0 || irrep >= 4)) {
+    cerr << "Orbital cannot have an irreducible representation of "<<irrep<<"  with "<<sym<<" symmetry"<<endl;
+    abort();
+  }
+  if (sym == "ci" && (irrep <0 || irrep >=2)) {
+    cerr << "Orbital cannot have an irreducible representation of "<<irrep<<"  with "<<sym<<" symmetry"<<endl;
+    abort();
+  }
+  if (sym == "c1" && irrep != 0) {
+    cerr << "Orbital cannot have an irreducible representation of "<<irrep<<"  with "<<sym<<" symmetry"<<endl;
+    abort();
+  }
+  return true;
+}
+
+string Symmetry::stringOfIrrep(int irrep) 
+{
+  if (sym == "d2h") {
+    switch(irrep)
+      {
+      case(0): 
+	return "Ag";
+      case(1):
+	return "B3u";
+      case(2):
+	return "B2u";
+      case(3):
+	return "B1g";
+      case(4):
+	return "B1u";
+      case(5):
+	return "B2g";
+      case(6):
+	return "B3g";
+      case(7):
+	return "Au";
+      }
+  }
+  else if (sym == "c2v") {
+    switch(irrep)
+      {
+      case(0): 
+	return "A1";
+      case(1):
+	return "B1";
+      case(2):
+	return "B2";
+      case(3):
+	return "A2";
+      }
+    }
+  else if (sym == "c2h") {
+    switch(irrep)
+      {
+      case(0): 
+	return "Ag";
+      case(1):
+	return "Au";
+      case(2):
+	return "Bu";
+      case(3):
+	return "Bg";
+      }
+    }
+  else if (sym == "ci") 
+    return (irrep == 0) ? "Ag" : "Au";
+  else if (sym == "dinfh") {
+    string output = "";
+    char goru = irrep%2 == 0 ? 'g' : 'u';
+    output+= max(0,(irrep-2)/2);
+    output+=goru;
+    if (irrep <2) output+= '+';
+    else if (irrep >=2 && irrep <4 ) output+= '-';
+    return output;
+  }
+  else 
+    return "A";
 }
 
 int Symmetry::sizeofIrrep(int irrep)
