@@ -64,3 +64,36 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
     pout << "fullci energy "<< energies[i]<<endl;
   }
 }
+
+void SpinAdapted::Sweep::tiny(double sweep_tol)
+{
+#ifndef SERIAL
+  if(mpigetrank() == 0) {
+#endif
+    pout.precision(12);
+  int nroots = dmrginp.nroots(0);
+  SweepParams sweepParams;
+  sweepParams.set_sweep_parameters();
+  SpinBlock system(0,dmrginp.last_site()-1);
+  const StateInfo& sinfo = system.get_stateInfo();
+  SpinQuantum hq(0,0,IrrepSpace(0));
+  for (int i=0; i<sinfo.totalStates; i++) {
+    if (sinfo.quanta[i] == dmrginp.molecule_quantum()) {
+      Matrix& h = system.get_op_rep(HAM, hq)->operator_element(i,i);
+      DiagonalMatrix energies(h.Nrows()); energies = 0.0;
+      Matrix vec(h.Nrows(), h.Ncols()); vec = 0.0;
+      diagonalise(h, energies, vec);
+      
+      for (int i=0; i<nroots; i++) 
+	pout << "fullci energy  "<< energies(i+1)<<endl;
+      return;
+    }
+  }
+
+  pout << "The wavefunction symmetry is not possible with the orbitals supplied."<<endl;
+  abort();
+#ifndef SERIAL
+  }
+#endif
+}
+
