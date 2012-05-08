@@ -142,6 +142,11 @@ public:
     {
       for (int opind=0; opind<opvec.size(); opind++) {
 	SparseMatrix& op = *opvec[opind];
+#ifndef SERIAL
+	boost::mpi::communicator world;
+	if (op.get_orbs().size() == 1 && op.get_orbs()[0]%world.size() != mpigetrank())
+	  continue;
+#endif	  
 	SpinQuantum wQ = wavefunction.get_deltaQuantum();
 	SpinQuantum oQ = op.get_deltaQuantum();
 	vector<IrrepSpace> vec = wQ.get_symm() + oQ.get_symm();

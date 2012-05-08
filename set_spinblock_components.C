@@ -152,7 +152,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
   else
   {
     // op_components for a single dot block
-    ops[CRE] = make_new_op(CRE, false);
+    ops[CRE] = make_new_op(CRE, false); //this should definitely be false, we not have copies of CRE is all the procs
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
     ops[HAM] = make_new_op(HAM, true);
     if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {

@@ -178,10 +178,11 @@ void SpinAdapted::opxop::cxcddcomp(const SpinBlock* otherblock, std::vector<boos
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
 
   for (int opind=0; opind<opvec1.size(); opind++) {
-    boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind)->getworkingrepresentation(loopblock);
-    int i = op1->get_orbs(0);
+    boost::shared_ptr<SparseMatrix> o1 = opvec1.at(opind);
+    int i = o1->get_orbs(0);
     if (!otherblock->get_op_array(CRE_CRE_DESCOMP).has_local_index(i))
       return;
+    boost::shared_ptr<SparseMatrix> op1 = o1->getworkingrepresentation(loopblock);
     Transposeview top1 = Transposeview(*op1);
     boost::shared_ptr<SparseMatrix> op2 = otherblock->get_op_array(CRE_CRE_DESCOMP).get_element(i).at(opind)->getworkingrepresentation(otherblock);
 

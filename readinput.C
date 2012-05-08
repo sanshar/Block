@@ -90,8 +90,8 @@ void ReadInput(char* conf)
   oneElectronIntegralFile.open(dmrginp.get_oneintegral().c_str(), ios::in);
   twoElectronIntegralFile.open(dmrginp.get_twointegral().c_str(),ios::in);
 
-  CheckFileExistance(dmrginp.get_oneintegral(), "Input file ");
-  CheckFileExistance(dmrginp.get_twointegral(), "Input file ");
+  CheckFileExistance(dmrginp.get_oneintegral(), "One electron integral file ");
+  CheckFileExistance(dmrginp.get_twointegral(), "Two electron integral file ");
 
   //pout << "About to read integrals"<<endl;
   //read integrals
