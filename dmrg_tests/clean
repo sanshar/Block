@@ -3,7 +3,6 @@ rm Spin*
 rm Rotation*
 rm state*
 rm wave*
-rm *~
 rm dmrg.e
 rm spatial*
 rm twopdm.0.0
@@ -11,25 +10,12 @@ rm twopdm.1.1
 rm twopdm.1.0
 
 cd ../h2_tiny
-rm Spin*
-rm Rotation*
-rm state*
-rm wave*
-rm *~
 rm dmrg.e
-rm spatial*
-rm twopdm.0.0
-rm twopdm.1.1
-rm twopdm.1.0
 
 cd ../h2o_nosym
 rm Spin*
 rm Rotation*
 rm state*
 rm wave*
-rm *~
-rm dmrg.o
-rm spatial*
-rm twopdm.0.0
-rm twopdm.1.1
-rm twopdm.1.0
+rm dmrg.e
+
