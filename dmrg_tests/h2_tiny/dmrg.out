@@ -1,0 +1,19 @@
+Reading input file
+Checking Input for errors
+Summary of Input
+----------------
+Total number of orbitals                           :   2
+Symmetry of the targetted wavefunctions            :   2:0:0
+Number of wavefunctions targetted                  :   1
+Symmetry of the molecule                           :   d2h
+Irreducible representations of the orbitals        :   Ag  B1u  
+
+Schedule
+--------
+Iter       : # States              Davidson_tol          Random_noise        
+0          : 50                    1.0000e-10            1.0000e-06          
+Switching from twodot to onedot algorithm          :   4
+Maximum sweep iterations                           :   10
+
+
+fullci energy  -1.63032753852

@@ -1,0 +1,25 @@
+echo "testing energy for h2_tiny..."
+cd h2_tiny
+../../block.spin_adapted dmrg.conf >dmrg.out
+python ../test_energy.py 1  1.0e-6 -1.63032753852
+cd ../
+
+echo "testing energy for c2_d2h..."
+cd c2_d2h
+../../block.spin_adapted dmrg.conf >dmrg.out
+python ../test_energy.py 2  1.0e-6 -16.2257220233  -16.2212656616  
+echo "testing 2-pdm for c2_d2h..."
+../../block.spin_adapted genblock.conf >genblock.out
+../../block.spin_adapted twopdm.conf >twopdm.out
+python ../test_twopdm.py spatial_twopdm.0.0 spat_twopdm.0.0.bkp 1e-7
+python ../test_twopdm.py spatial_twopdm.1.1 spat_twopdm.1.1.bkp 1e-7
+cd ../
+
+
+echo "performing energy test on h2o..."
+cd h2o_nosym
+../../block.spin_adapted dmrg.conf >dmrg.out
+python ../test_energy.py 1  1.0e-6 -24.000320414
+cd ../
+
+./clean

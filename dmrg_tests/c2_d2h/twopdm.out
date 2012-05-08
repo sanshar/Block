@@ -1,0 +1,285 @@
+Reading input file
+Checking Input for errors
+Summary of Input
+----------------
+Total number of orbitals                           :   12
+Symmetry of the targetted wavefunctions            :   6:0:0
+Number of wavefunctions targetted                  :   2
+The weights of the wavefunctions                   :   5.00e-01  5.00e-01  
+Symmetry of the molecule                           :   d2h
+Irreducible representations of the orbitals        :   Ag  Ag  B3u  B3u  B2u  B2u  B1g  B1u  B1u  B2g  B3g  Au  
+
+Schedule
+--------
+Iter       : # States              Davidson_tol          Random_noise        
+0          : 50                    1.0000e-06            1.0000e-06          
+4          : 150                   1.0000e-06            1.0000e-06          
+6          : 200                   1.0000e-06            1.0000e-06          
+9          : 200                   1.0000e-09            0.0000e+00          
+Switching from twodot to onedot algorithm          :   10
+Maximum sweep iterations                           :   30
+
+Sz not specified
+Using the value : 0
+			 Restarting at sweep iteration: 15
+			 Restarting at block iterations: 0
+
+			 Starting renormalisation sweep in forwards direction
+			 ============================================================================ 
+			 Starting block is :: 
+ Sites ::  0     # states: 3
+
+			 Block Iteration :: 0
+			 ----------------------------
+			 Current direction is :: Forwards 
+			 Blocking and Decimating 
+Performing sweep calculation 
+compute 4_0_0
+compute 3_0_1
+compute 3_1_0
+compute 2_0_2
+compute 2_2_0
+compute 2_1_1
+Performing sweep calculation 
+compute 4_0_0
+compute 3_0_1
+compute 3_1_0
+compute 2_0_2
+compute 2_2_0
+compute 2_1_1
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+			 Total block energy for State [ 0 ] with 200 :: -16.2257
+			 Total block energy for State [ 1 ] with 200 :: -16.2213
+ Sites ::  0 1     # states: 10
+
+			 saving state 2
+			 Block Iteration :: 1
+			 ----------------------------
+			 Current direction is :: Forwards 
+			 Blocking and Decimating 
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+			 Total block energy for State [ 0 ] with 200 :: -16.2257
+			 Total block energy for State [ 1 ] with 200 :: -16.2213
+ Sites ::  0 1 2     # states: 33
+
+			 saving state 3
+			 Block Iteration :: 2
+			 ----------------------------
+			 Current direction is :: Forwards 
+			 Blocking and Decimating 
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+			 Total block energy for State [ 0 ] with 200 :: -16.2257
+			 Total block energy for State [ 1 ] with 200 :: -16.2213
+ Sites ::  0 1 2 3     # states: 79
+
+			 saving state 4
+			 Block Iteration :: 3
+			 ----------------------------
+			 Current direction is :: Forwards 
+			 Blocking and Decimating 
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+			 Total block energy for State [ 0 ] with 200 :: -16.2257
+			 Total block energy for State [ 1 ] with 200 :: -16.2213
+ Sites ::  0 1 2 3 4     # states: 145
+
+			 saving state 5
+			 Block Iteration :: 4
+			 ----------------------------
+			 Current direction is :: Forwards 
+			 Blocking and Decimating 
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+			 Total block energy for State [ 0 ] with 200 :: -16.2257
+			 Total block energy for State [ 1 ] with 200 :: -16.2213
+ Sites ::  0 1 2 3 4 5     # states: 161
+
+			 saving state 6
+			 Block Iteration :: 5
+			 ----------------------------
+			 Current direction is :: Forwards 
+			 Blocking and Decimating 
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+			 Total block energy for State [ 0 ] with 200 :: -16.2257
+			 Total block energy for State [ 1 ] with 200 :: -16.2213
+ Sites ::  0 1 2 3 4 5 6     # states: 102
+
+			 saving state 7
+			 Block Iteration :: 6
+			 ----------------------------
+			 Current direction is :: Forwards 
+			 Blocking and Decimating 
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+			 Total block energy for State [ 0 ] with 200 :: -16.2257
+			 Total block energy for State [ 1 ] with 200 :: -16.2213
+ Sites ::  0 1 2 3 4 5 6 7     # states: 133
+
+			 saving state 8
+			 Block Iteration :: 7
+			 ----------------------------
+			 Current direction is :: Forwards 
+			 Blocking and Decimating 
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+			 Total block energy for State [ 0 ] with 200 :: -16.2257
+			 Total block energy for State [ 1 ] with 200 :: -16.2213
+ Sites ::  0 1 2 3 4 5 6 7 8     # states: 63
+
+			 saving state 9
+			 Block Iteration :: 8
+			 ----------------------------
+			 Current direction is :: Forwards 
+			 Blocking and Decimating 
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+			 Total block energy for State [ 0 ] with 200 :: -16.2257
+			 Total block energy for State [ 1 ] with 200 :: -16.2213
+ Sites ::  0 1 2 3 4 5 6 7 8 9     # states: 20
+
+			 saving state 10
+			 Block Iteration :: 9
+			 ----------------------------
+			 Current direction is :: Forwards 
+			 Blocking and Decimating 
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+Performing sweep calculation 
+compute 1_3_0
+compute 0_4_0
+compute 0_3_1
+compute 1_2_1
+compute 0_2_2
+compute 1_1_2
+Performing sweep calculation 
+compute 0_0_4
+compute 1_3
+Performing sweep calculation 
+compute 0_0_4
+compute 1_3
+			 Total block energy for State [ 0 ] with 200 :: -16.2257
+			 Total block energy for State [ 1 ] with 200 :: -16.2213
+ Sites ::  0 1 2 3 4 5 6 7 8 9 10     # states: 6
+
+			 saving state 11
+			 Finished Sweep with 200 states and sweep energy for State [ 0 ] with Spin [ 0 ] :: -16.2257
+			 Finished Sweep with 200 states and sweep energy for State [ 1 ] with Spin [ 0 ] :: -16.2213
+			 Largest Error for Sweep with 200 states is 0
+			 ============================================================================ 
