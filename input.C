@@ -540,7 +540,6 @@ SpinAdapted::Input::Input(const string& config_name)
 
 #ifndef SERIAL
   boost::mpi::communicator world;
-  mpi::broadcast(world,*this,0);
   mpi::broadcast(world, sym, 0);
   if (sym != "c1")
     Symmetry::InitialiseTable(sym);
@@ -555,6 +554,7 @@ SpinAdapted::Input::Input(const string& config_name)
     pout << endl;
 #ifndef SERIAL
   }
+  mpi::broadcast(world,*this,0);
 #endif
 
 }
@@ -564,7 +564,7 @@ void SpinAdapted::Input::writeSummary()
 #ifndef SERIAL
   if (mpigetrank() == 0) {
 #endif
-  printf("%-50s :   %-i\n", "Total number of orbitals", m_norbs);
+  printf("%-50s :   %-i\n", "Total number of orbitals", m_norbs/2);
   printf("%-50s :   %-i:%-i:%-i\n", "Symmetry of the targetted wavefunctions",m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number.getirrep());
   printf("%-50s :   %-i\n", "Number of wavefunctions targetted", m_nroots);
   if (m_nroots >1) {
@@ -640,8 +640,8 @@ void SpinAdapted::Input::performSanityTest()
 #ifndef SERIAL
   }
 #endif
-  if (m_norbs <= 3)
-    m_calc_type = TINY;
+  if (m_norbs <= 6)
+    m_calc_type = TINYCALC;
 
   //make some initial hf guess
   m_spin_vector.resize(m_norbs);

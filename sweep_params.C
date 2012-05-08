@@ -12,6 +12,7 @@ using namespace boost;
 
 SpinAdapted::SweepParams::SweepParams()
 {
+  calculationType = DMRG;
   restart_iter = 0;
   block_iter = 0;
   sweep_iter = 0;
@@ -113,6 +114,13 @@ void SpinAdapted::SweepParams::restorestate(bool &forward, int &size)
   size = block_iter+1;
   restart_iter = sweep_iter;
 
+  if (set_calcType() == FCI || set_calcType() == TINYCALC) {
+    if (dmrginp.calc_type() != DMRG) 
+      pout << "Restart not supported after a FCI  or a TINYCALC calculation.";
+    else 
+      pout << "Cannot perform Genblock/Onepdm/Twopdm calculation after a FCI or a TINYCALC calculation."<<endl;
+    abort();
+  }
 
   /*
   if (dmrginp.algorithm_method() == TWODOT) 

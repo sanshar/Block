@@ -75,6 +75,7 @@ class SpinBlock
   void default_op_components(bool complementary_);
   void default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops);
   void set_big_components();
+  void printOperatorSummary();
 
   int size() const { return sites.size(); }
   //void build_comp_remove_normal_ops();

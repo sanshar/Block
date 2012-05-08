@@ -8,32 +8,6 @@
 #include <boost/mpi.hpp>
 #endif
 namespace SpinAdapted{
-ostream& operator<< (ostream& os, const SpinBlock& b)
-{
-  //os << "\t\t\t Block Name " << b.name << endl;
-  os << " Sites ::  ";
-  for (int i = 0; i < b.sites.size(); ++i) { os << b.sites[i] << " "; } 
-  if (dmrginp.outputlevel() != 0) {
-    os << endl;
-    os << b.stateInfo;
-    for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = b.ops.begin(); it != b.ops.end(); ++it)
-    {
-      if(it->second->is_core())
-        os << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators"<<endl;      
-      else
-        os << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators"<<endl;      
-    }
-    
-  }
-  else {
-    os <<"    # states: "<<b.stateInfo.totalStates<<endl;
-  }
-  return os;
-  /*if (b.is_normal())
-    pout << "\t\t\t Normal :: True " << endl;
-  else
-  pout << "\t\t\t Complementary :: True " << endl;*/
-}
 
 
 std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBlock& b)

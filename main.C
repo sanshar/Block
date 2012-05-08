@@ -72,7 +72,7 @@ int main(int argc, char* argv [])
   SweepParams sweepParams;
 
   switch(dmrginp.calc_type()) {
-
+    
   case (DMRG):
     if (RESTART && !FULLRESTART)
       restart(sweep_tol, reset_iter);
@@ -83,24 +83,33 @@ int main(int argc, char* argv [])
 	restartsize = 0;
 	direction = !direction;
       }
+      //direction = false;
       SweepGenblock::do_one(sweepParams, false, direction, RESTART, restartsize);
       
       sweepParams.restorestate(direction, restartsize);
       sweepParams.set_sweep_iter()=0;
       sweepParams.set_block_iter() = 0;
-
+      
       sweepParams.savestate(direction, restartsize);
-
+      
       reset_iter = true;
       restart(sweep_tol, reset_iter);
     }
-    else
+    else {
+      sweepParams.set_calcType() = DMRG;
       dmrg(sweep_tol);
+    }
     break;
   case (FCI):
+    sweepParams.set_calcType() = FCI;
     Sweep::fullci(sweep_tol);
     break;
-
+    
+  case (TINYCALC):
+    sweepParams.set_calcType() = TINYCALC;
+    Sweep::tiny(sweep_tol);
+    break;
+    
   case (GENBLOCK):
     sweepParams.restorestate(direction, restartsize);
     dmrginp.screen_tol() = 0.0; //need to turn screening off for genblocks

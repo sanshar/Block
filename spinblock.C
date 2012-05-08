@@ -13,6 +13,62 @@
 namespace SpinAdapted{
 using namespace operatorfunctions;
 
+void SpinBlock::printOperatorSummary()
+{
+#ifndef SERIAL
+  mpi::communicator world;
+
+  if (mpigetrank() != 0) {
+    for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
+      sendobject(it->second->get_size(), 0);
+  }
+  else {
+    for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
+    {
+      if(it->second->is_core()) 
+	cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
+      else
+	cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
+      
+      vector<int> numops(world.size(), 0);
+      for (int proc = 0; proc <world.size(); proc++) {
+	if (proc != 0) 
+	  receiveobject(numops[proc],proc);
+	  else 
+	    numops[proc] = it->second->get_size();
+	
+	cout <<numops[proc]<<"  ";
+      }
+      cout << endl;
+    }
+  }
+#else
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = b.ops.begin(); it != b.ops.end(); ++it)
+  {
+    if(it->second->is_core()) 
+      cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
+    else
+      cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
+  }
+#endif
+  
+}
+ostream& operator<< (ostream& os, const SpinBlock& b)
+{
+  os << " Sites ::  ";
+  for (int i = 0; i < b.sites.size(); ++i) { os << b.sites[i] << " "; } 
+  
+  if (dmrginp.outputlevel() != 0) {
+    os << endl;
+    os << b.stateInfo;
+  }
+  else {
+    os <<"    # states: "<<b.stateInfo.totalStates<<endl;
+  }
+  return os;
+}
+
+
 SpinBlock::SpinBlock () : 
   localstorage(false),
   name (rand()), 
@@ -285,7 +341,7 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
     //for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);  //not needed in diagonal 
 
   }
-  
+
   accumulateMultiThread(&e, e_array, e_distributed, MAX_THRD);
 
 }

@@ -10,6 +10,7 @@ namespace Sweep
   void Startup (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem);
   double do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize);
   void fullci(double sweep_tol);
+  void tiny(double sweep_tol);
 };
 }
 #endif

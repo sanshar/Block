@@ -14,9 +14,10 @@ private:
   {
     ar & block_iter & sweep_iter & n_iters & forward_starting_size & backward_starting_size & keep_states;
     ar & keep_qstates & sys_add & env_add & noise & additional_noise & davidson_tol & lowest_energy & lowest_energy_spins & guesstype;
-    ar & error & onedot;
+    ar & error & onedot & calculationType;
   }
 
+  int calculationType;
   int restart_iter;
   bool onedot;
   int block_iter;
@@ -61,6 +62,7 @@ public:
   const guessWaveTypes &get_guesstype() const { return guesstype; }
   const int &get_restart_iter() const {return restart_iter;}
 
+  int &set_calcType() {return calculationType;}
   int &set_restart_iter() {return restart_iter;}
   bool &set_onedot() { return onedot; }
   int &set_block_iter() { return block_iter; }

@@ -35,6 +35,8 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
 
 
   pout << "\t\t\t System  Block"<<newSystem;
+  if (dmrginp.outputlevel() != 0)
+    newSystem.printOperatorSummary();
 
   std::vector<Matrix> rotateMatrix;
   LoadRotationMatrix (newSystem.get_sites(), rotateMatrix);
@@ -69,6 +71,8 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
     mcheck("after rotation and transformation of block");
   if (dmrginp.outputlevel() != 0) 
     pout <<newSystem<<endl;
+  if (dmrginp.outputlevel() != 0)
+    newSystem.printOperatorSummary();
   //mcheck("After renorm transform");
 }
 
@@ -92,7 +96,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
 
   if (dmrginp.outputlevel() != 0) 
     pout << "\t\t\t Starting block is :: " << endl << system << endl;
-  if (!restart) 
+  //if (!restart) 
     SpinBlock::store (forward, system.get_sites(), system); // if restart, just restoring an existing block --
   sweepParams.savestate(forward, system.get_sites().size());
   bool dot_with_sys = true;

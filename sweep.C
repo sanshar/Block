@@ -191,6 +191,11 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   std::vector<double> finalEnergy(nroots,1.0e10);
   std::vector<double> finalEnergy_spins(nroots,0.);
   double finalError = 0.;
+  if (restart) {
+    finalEnergy = sweepParams.get_lowest_energy();
+    finalEnergy_spins = sweepParams.get_lowest_energy();
+    finalError = sweepParams.get_lowest_error();
+  }
 
   sweepParams.set_sweep_parameters();
   // a new renormalisation sweep routine
@@ -208,8 +213,8 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
  
   if (dmrginp.outputlevel() != 0)
     pout << "\t\t\t Starting block is :: " << endl << system << endl;
-  if (!restart) 
-    SpinBlock::store (forward, system.get_sites(), system); // if restart, just restoring an existing block --
+  //if (!restart) 
+  SpinBlock::store (forward, system.get_sites(), system); // if restart, just restoring an existing block --
   sweepParams.savestate(forward, system.get_sites().size());
   bool dot_with_sys = true;
   vector<int> syssites;
@@ -278,8 +283,10 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       }
       
       system = newSystem;
-      if (dmrginp.outputlevel() != 0)
+      if (dmrginp.outputlevel() != 0){
 	pout << system<<endl;
+	system.printOperatorSummary();
+      }
 
       //system size is going to be less than environment size
       if (forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)

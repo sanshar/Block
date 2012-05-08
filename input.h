@@ -19,7 +19,7 @@ enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD};
 enum solveTypes {SMALL_DAVIDSON, BIG_DAVIDSON};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
-enum calcType {DMRG, GENBLOCK, ONEPDM, TWOPDM, FCI, TINY};
+ enum calcType {DMRG, GENBLOCK, ONEPDM, TWOPDM, TINYCALC, FCI};
 
 class Input {
 

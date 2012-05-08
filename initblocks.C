@@ -61,8 +61,10 @@ void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &s
   newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, systemDot);
   //mcheck("after newSystem build **************");
 
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() != 0) {
     pout << "\t\t\t NewSystem block " << endl << newSystem << endl;
+    newSystem.printOperatorSummary();
+  }
 }
 
 void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, SpinBlock& environmentDot, SpinBlock &newEnvironment, 
@@ -213,11 +215,15 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
       newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, environmentDot);
       if (dmrginp.outputlevel() != 0) {
 	pout << "\t\t\t Environment block " << endl << environment << endl;
+	environment.printOperatorSummary();
 	pout << "\t\t\t NewEnvironment block " << endl << newEnvironment << endl;
+	newEnvironment.printOperatorSummary();
       }
   }
-  else  if (dmrginp.outputlevel() != 0)
+  else  if (dmrginp.outputlevel() != 0) {
     pout << "\t\t\t Environment block " << endl << newEnvironment << endl;
+    newEnvironment.printOperatorSummary();
+  }
 
 }
 
