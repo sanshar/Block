@@ -44,6 +44,8 @@ class Input {
   std::vector<double> m_sweep_tol_schedule;
   std::vector<double> m_sweep_noise_schedule;
   std::vector<double> m_sweep_additional_noise_schedule;
+  bool m_schedule_type_default;
+  int m_maxM;
 
   bool m_do_diis;
   double m_diis_error;
@@ -115,7 +117,7 @@ class Input {
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_fullrestart & m_restart_warm & m_reset_iterations & m_oneintegral & m_twointegral & m_calc_type & m_ham_type;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
-    ar & m_spatial_to_spin & m_spin_to_spatial;
+    ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_default;
   }
 
 

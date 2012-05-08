@@ -49,9 +49,10 @@ void SpinAdapted::Input::initialize_defaults()
   m_thrds_per_node = vector<int>(1,1);
 #endif
   m_ham_type = QUANTUM_CHEMISTRY;
-  m_algorithm_type = TWODOT;
+  m_algorithm_type = TWODOT_TO_ONEDOT;
   m_noise_type = RANDOM;
   m_calc_type = DMRG;
+  m_twodot_to_onedot_iter = 0;
 
   m_norbs = 0;
   m_alpha = 0;
@@ -77,7 +78,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_no_transform = false;
   m_do_fci = false;
   m_do_cd = false;
-  m_maxiter = 1000;
+  m_maxiter = 100;
   m_screen_tol = 1.00e-20;
 
   m_load_prefix = ".";
@@ -87,7 +88,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_ninej.init(m_maxj);
   m_set_Sz = false;
 
-  m_sweep_tol = 1e-8;
+  m_sweep_tol = 1.0e-5;
   m_restart = false;
   m_fullrestart = false;
   m_restart_warm = false;
@@ -99,6 +100,8 @@ void SpinAdapted::Input::initialize_defaults()
   m_diis_keep_states = 6;
   m_diis_error_tol = 1e-8;
   m_num_spatial_orbs = 0;
+  m_schedule_type_default = false;
+  m_maxM = 0;
 }
 
 SpinAdapted::Input::Input(const string& config_name)
@@ -144,6 +147,23 @@ SpinAdapted::Input::Input(const string& config_name)
 	m_spin_to_spatial[m_norbs] = m_norbs;
       }
 
+      else if (boost::iequals(keyword, "maxM")) {
+	if (tok.size() != 2) {
+	  cerr << "keyword maxM should be followed by a single number and then an end line"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}	
+	m_maxM = atoi(tok[1].c_str());
+
+	if (m_maxM <= 0) {
+	  cerr << "maxM cannot be less than equal to 0"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}	
+	  
+      }
 
       else if (boost::iequals(keyword,  "schedule"))
       {
@@ -153,6 +173,13 @@ SpinAdapted::Input::Input(const string& config_name)
 	  cerr << msg<<endl;
 	  abort();
 	}	
+	if (boost::iequals(tok[1], "default")) { 
+	  m_schedule_type_default = true;
+	  msg.resize(0);
+	  ReadMeaningfulLine(input, msg, msgsize);
+
+	  continue;
+	}
 	int nentry = atoi(tok[1].c_str());
 
 	m_sweep_iter_schedule.resize(nentry);
@@ -183,6 +210,11 @@ SpinAdapted::Input::Input(const string& config_name)
 	    m_sweep_noise_schedule[i] = atof(schd_tok[3].c_str());
 	    m_sweep_additional_noise_schedule[i] = 0.0;  //DEPRECATED OPTION
 
+	    if (m_sweep_state_schedule[i] <= 0) {
+	      cerr << "Number of retained states cannot be less than 0"<<endl;
+	      cerr << "error found in the following line "<<endl;
+	      cerr << msg<<endl;
+	    }
 	    if (i>0 && m_sweep_iter_schedule[i] <= m_sweep_iter_schedule[i-1]) {
 	      cerr << "Sweep iteration at a given line should be higher than the previous sweep iteration"<<endl;
 	      cerr << "this sweep iteration "<<m_sweep_iter_schedule[i] <<endl;
@@ -474,7 +506,18 @@ SpinAdapted::Input::Input(const string& config_name)
 	  cerr << msg<<endl;
 	  abort();
 	}
-        m_sweep_tol = atof(tok[1].c_str());
+	if (boost::iequals(tok[1], "loose"))
+	  m_sweep_tol = 1.0e-5;
+	else if (boost::iequals(tok[1], "tight"))
+	  m_sweep_tol = 1.0e-7;
+	else if (boost::iequals(tok[1], "verytight"))
+	  m_sweep_tol = 1.0e-9;
+	else
+	  m_sweep_tol = atof(tok[1].c_str());
+	if (m_sweep_tol <= 1.0e-10) {
+	  cerr << "Sweep tolerance of less than equal to 1.0e-10 may cause convergence problems. Changing it to from "<<m_sweep_tol<<" to 1.0e-9 instead."<<endl;
+	  m_sweep_tol = 1.0e-9;
+	}
       }
 
 
@@ -629,14 +672,69 @@ void SpinAdapted::Input::performSanityTest()
     cerr << m_twodot_to_onedot_iter <<" < "<<m_maxiter<<endl;
     abort();
   }
+  Symmetry::irrepAllowed(m_total_symmetry_number.getirrep());
+  //this is important so the user cannot break the code
+  if (m_schedule_type_default) {
+    if (m_maxM == 0) {
+      cerr << "With default schedule a non-zero maxM has to be specified"<<endl;
+      cerr << "Current m_maxM = "<<m_maxM<<endl;
+      abort();
+    }
+    if (m_maxM <= 0) {
+      pout << "WARNING:::maxM cannot be less than 0"<<endl;
+      pout << "WARNING:::Changing maxM to 50"<<endl;
+      abort();
+    }
+    if (m_sweep_tol <= 0.0) {
+      pout << "Using the default tolerance sweep tolerance of 1.0e-5."<<endl;
+      m_sweep_tol = 1.0e-5;
+    }
+    int nentry = 6;
+    m_sweep_iter_schedule.resize(nentry);
+    m_sweep_state_schedule.resize(nentry);
+    m_sweep_qstate_schedule.resize(nentry,0);
+    m_sweep_tol_schedule.resize(nentry);
+    m_sweep_noise_schedule.resize(nentry);
+    m_sweep_additional_noise_schedule.resize(nentry,0);
+    
+    int M = max(m_maxM/8, 1); M= min(M, 50);
+    double sweeptol = m_sweep_tol;
+    m_sweep_iter_schedule[0] = 0; m_sweep_state_schedule[0] = M; m_sweep_tol_schedule[0] = 1.0e-5;  m_sweep_noise_schedule[0] = 1.0e-4;
+    M = max(m_maxM/8, 1);
+    m_sweep_iter_schedule[1] = 4; m_sweep_state_schedule[1] = M; m_sweep_tol_schedule[1] = sweeptol;  m_sweep_noise_schedule[1] = 5.0e-5;
+    M = max(m_maxM/4, 1);
+    m_sweep_iter_schedule[2] = 8; m_sweep_state_schedule[2] = M; m_sweep_tol_schedule[2] = sweeptol;  m_sweep_noise_schedule[2] = 1.0e-5;
+    M = max(m_maxM/2, 1);
+    m_sweep_iter_schedule[3] = 12; m_sweep_state_schedule[3] = M; m_sweep_tol_schedule[3] = sweeptol;  m_sweep_noise_schedule[3] = 1.0e-5;
+    M = max(m_maxM/1, 1);
+    m_sweep_iter_schedule[4] = 16; m_sweep_state_schedule[4] = M; m_sweep_tol_schedule[4] = sweeptol;  m_sweep_noise_schedule[4] = 1.0e-5;
+    m_sweep_iter_schedule[5] = 18; m_sweep_state_schedule[5] = M; m_sweep_tol_schedule[5] = sweeptol/10.0;  m_sweep_noise_schedule[5] = 0.0e-5;    
+
+    if (m_twodot_to_onedot_iter < 18 && m_algorithm_type == TWODOT_TO_ONEDOT) {
+      if (m_twodot_to_onedot_iter <= 0)
+	pout << "WARNING:::Sweep at which the switch from twodot to onedot will happen -> 18"<<endl;
+      m_twodot_to_onedot_iter = 18;
+    }
+    if (m_maxiter <= m_sweep_iter_schedule.back()) {
+      pout << "With default schedule maxiter has to be atleast 22"<<endl;
+      pout << "changing maxiter to 22"<<endl;
+      m_maxiter = 22;
+    }
+  }
+  else {
+    if (m_maxM != 0) {
+      cerr << "With detailed schedule a non-zero maxM should not be specified"<<endl;
+      abort();
+    }
+  }
+
   if (m_maxiter <= m_sweep_iter_schedule.back()) {
     cerr << "maximum iterations allowed is less than or equal to the last sweep iteration in your schedule."<<endl;
     cerr << m_maxiter <<" <= "<< (m_sweep_iter_schedule.back())<<endl;
     cerr << "either increase the max_iter or reduce the number of sweeps"<<endl;
     abort();
   }
-  Symmetry::irrepAllowed(m_total_symmetry_number.getirrep());
-  //this is important so the user cannot break the code
+
 #ifndef SERIAL
   }
 #endif

@@ -85,7 +85,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
     else 
       found = true;
     int i1, i2;
-    cout.precision(15);
+
     for (i1=0; i1<iSz1.size(); i1++)
       for (i2 =0; i2<iSz2.size(); i2++) {
 	vector<int>& Ind1 = op1.opindices[i1], Ind2 = op2.opindices[i2]; 
@@ -128,7 +128,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
     else 
       found = true;
     int i1, i2;
-    cout.precision(15);
+
     for (i1=0; i1<iSz1.size(); i1++)
       for (i2 =0; i2<iSz2.size(); i2++) {
 	vector<int>& Ind1 = op1.opindices[i1], Ind2 = op2.opindices[i2]; 

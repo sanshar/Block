@@ -63,6 +63,15 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   for (int i=0; i<nroots; i++) {
     pout << "fullci energy "<< energies[i]<<endl;
   }
+  if (!mpigetrank())
+  {
+    FILE* f = fopen("dmrg.e", "wb");
+    
+    for(int j=0;j<nroots;++j)
+      fwrite( &energies[j], 1, sizeof(double), f);
+    fclose(f);
+  }
+
 }
 
 void SpinAdapted::Sweep::tiny(double sweep_tol)
@@ -84,8 +93,18 @@ void SpinAdapted::Sweep::tiny(double sweep_tol)
       Matrix vec(h.Nrows(), h.Ncols()); vec = 0.0;
       diagonalise(h, energies, vec);
       
-      for (int i=0; i<nroots; i++) 
-	pout << "fullci energy  "<< energies(i+1)<<endl;
+      for (int x=0; x<nroots; x++) 
+	pout << "fullci energy  "<< energies(x+1)<<endl;
+
+      if (mpigetrank() == 0)
+      {
+	FILE* f = fopen("dmrg.e", "wb");
+	
+	for(int j=0;j<nroots;++j)
+	  fwrite( &energies(j+1), 1, sizeof(double), f);
+	fclose(f);
+      }
+
       return;
     }
   }
