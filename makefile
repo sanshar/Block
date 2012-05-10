@@ -2,13 +2,14 @@
 BOOST = /home/sharma/boost_1_47_0/
 LAPACKBLAS = /srv/usr/local/opt/intel/mkl/10.2.1.017/lib/em64t/
 
-#use these variable to set if we will use mpi or not or intel compiler or not
+#use these variable to set if we will use mpi or not 
 USE_MPI = yes
+
+#use this variable to set if we will intel compiler or not
 INTEL = no
 
 
 CXX = g++
-F90 = gfortran
 HOME = .
 NEWMATINCLUDE = $(HOME)/newmat10/
 INCLUDE1 = $(HOME)/include/
@@ -20,10 +21,19 @@ FLAGS =  -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOST) -I$(HOME)/mod
 LIBS =  -L$(NEWMATLIB) -lnewmat -L$(BOOST)/lib/ -lboost_serialization -lboost_filesystem -L$(LAPACKBLAS) -lmkl_intel_lp64 -lmkl_sequential -lmkl_core 
 
 
+ifeq ($(INTEL), yes)
+	OPT = -O3 -funroll-loops -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP 
+#	OPT = -g -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) #-DFAST_MTP 
+	CXX = icc
+else
+	OPT = -O3 -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT)
+#	OPT = -g -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT)
+endif
+
 
 ifeq ($(USE_MPI), yes)
-	MPI_LIB = -L$(BOOST)/lib/ -lboost_mpi
 	MPI_OPT = 
+	MPI_LIB = -L$(BOOST)/lib/ -lboost_mpi
 	CXX = mpic++
 else
 	MPI_FLAG =
@@ -31,25 +41,12 @@ else
 	MPI_OPT = -DSERIAL
 endif
 
-ifeq ($(INTEL), yes)
-	OPT = -O3 -funroll-loops -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP 
-#	OPT = -g -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) #-DFAST_MTP 
-	F90 = ifort
-	LIBS += $(MPI_LIB)
-ifeq ($(USE_MPI), yes)
-	CXX = mpic++
-else
-	CXX = icc
-endif
-else
-	OPT = -O3 -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT)
-#	OPT = -g -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT)
-	LIBS += $(MPI_LIB)
-endif
+LIBS += $(MPI_LIB)
 
 
 
-SRC_spin_adapted =  set_spinblock_components.C linear.C main.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C anglib.C diis.C diis_updateError.C diis_updateHamiltonian.C diis_transformBlock.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C
+
+SRC_spin_adapted =  dmrg.C set_spinblock_components.C linear.C main.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C anglib.C diis.C diis_updateError.C diis_updateHamiltonian.C diis_transformBlock.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C
 
 
 SRC_spin_library =  dmrg.C readinput.C save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C spinblock.C StateInfo.C set_spinblock_components.C op_components.C Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C linear.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C anglib.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C  modules/onepdm/sweep.C modules/onepdm/onepdm.C  modules/generate_blocks/sweep.C diis.C diis_updateError.C diis_updateHamiltonian.C diis_transformBlock.C fci.C
@@ -62,8 +59,6 @@ OBJ_spin_library=$(SRC_spin_library:.C=.o)
 	$(CXX) -fPIC $(FLAGS) $(OPT) -c $< -o $@
 .cpp.o :
 	$(CXX) $(FLAGS) $(OPT) -c $< -o $@
-.f90.o :
-	$(F90) -c $< -o $@ 
 
 all	: block.spin_adapted libqcdmrg.so
 
