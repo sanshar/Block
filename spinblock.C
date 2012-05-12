@@ -43,7 +43,7 @@ void SpinBlock::printOperatorSummary()
     }
   }
 #else
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = b.ops.begin(); it != b.ops.end(); ++it)
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
   {
     if(it->second->is_core()) 
       cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
