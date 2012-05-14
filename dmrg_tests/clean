@@ -8,9 +8,11 @@ rm spatial*
 rm twopdm.0.0
 rm twopdm.1.1
 rm twopdm.1.0
+rm *.out
 
 cd ../h2_tiny
 rm dmrg.e
+rm *.out
 
 cd ../h2o_nosym
 rm Spin*
@@ -18,4 +20,4 @@ rm Rotation*
 rm state*
 rm wave*
 rm dmrg.e
-
+rm *.out

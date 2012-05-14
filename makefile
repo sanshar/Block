@@ -1,6 +1,9 @@
+#specify boost include file
+BOOSTINCLUDE = /home/sharma/boost_1_47_0/
+
 #specify boost and lapack-blas library locations
-BOOST = /home/sharma/boost_1_47_0/
-LAPACKBLAS = /srv/usr/local/opt/intel/mkl/10.2.1.017/lib/em64t/
+BOOSTLIB = -L/home/sharma/boost_1_47_0/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+LAPACKBLAS = -L/srv/usr/local/opt/intel/mkl/10.2.1.017/lib/em64t/ -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
@@ -17,8 +20,8 @@ INCLUDE2 = $(HOME)/
 NEWMATLIB = $(HOME)/newmat10/
 .SUFFIXES: .C .cpp
 
-FLAGS =  -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOST) -I$(HOME)/modules/twopdm/ -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(GSL)/ 
-LIBS =  -L$(NEWMATLIB) -lnewmat -L$(BOOST)/lib/ -lboost_serialization -lboost_filesystem -L$(LAPACKBLAS) -lmkl_intel_lp64 -lmkl_sequential -lmkl_core 
+FLAGS =  -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(HOME)/modules/twopdm/ -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm
+LIBS =  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS)  
 
 
 ifeq ($(INTEL), yes)
