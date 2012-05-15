@@ -18,6 +18,7 @@ using namespace std;
 namespace SpinAdapted {
 string sym;
 }
+void CheckFileExistance(string filename, string filetype);
 
 void SpinAdapted::Input::ReadMeaningfulLine(ifstream& input, string& msg, int msgsize)
 {
@@ -89,7 +90,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_set_Sz = false;
 
   m_sweep_tol = 1.0e-5;
-  m_restart = false;
+ m_restart = false;
   m_fullrestart = false;
   m_restart_warm = false;
   m_reset_iterations = false;
@@ -102,12 +103,14 @@ void SpinAdapted::Input::initialize_defaults()
   m_num_spatial_orbs = 0;
   m_schedule_type_default = false;
   m_maxM = 0;
+  m_core_energy = 0.0;
 }
 
 SpinAdapted::Input::Input(const string& config_name)
 {
   //first collect all the data
   sym = "c1";
+  string orbitalfile;
   if(mpigetrank() == 0)
   {
     pout << "Reading input file"<<endl;
@@ -121,32 +124,38 @@ SpinAdapted::Input::Input(const string& config_name)
     ReadMeaningfulLine(input, msg, msgsize);
     while(msg.size() != 0) {
       vector<string> tok;
-      boost::split(tok, msg, is_any_of(" \t"), token_compress_on);
+      boost::split(tok, msg, is_any_of(", \t"), token_compress_on);
       string keyword = *tok.begin();
 
-      if (boost::iequals(keyword,  "norbs") || boost::iequals(keyword,  "norb") || boost::iequals(keyword,  "norbitals"))
+      if (boost::iequals(keyword,  "orbs") || boost::iequals(keyword,  "orbitals"))
       {
 	if (tok.size() != 2) {
-	  cerr << "keyword norbs should be followed by a single integer and then an end line"<<endl;
+	  cerr << "keyword orbs should be followed by a single filename and then an end line"<<endl;
 	  cerr << "error found in the following line "<<endl;
 	  cerr << msg<<endl;
 	  abort();
 	}
-	m_norbs = 2*atoi(tok[1].c_str());;
-	//set some default values 
-	m_num_spatial_orbs = m_norbs/2;
-	m_spatial_to_spin.resize(m_norbs/2+1);
-	m_spin_to_spatial.resize(m_norbs+1);
-	m_spin_orbs_symmetry.resize(m_norbs);
-	for (int i=0; i<m_norbs; i++) {
-	  m_spatial_to_spin[i/2] = i - i%2;
-	  m_spin_to_spatial[i] = i/2;
-	  m_spin_orbs_symmetry[i] = 0;
-	}
-	m_spatial_to_spin[m_norbs/2] = m_norbs;
-	m_spin_to_spatial[m_norbs] = m_norbs;
-      }
+	orbitalfile = tok[1];
 
+      }
+      else if(boost::iequals(keyword, "format")) {
+	if (tok.size() != 2) {
+	  cerr << "keyword format should be followed by a single number and then an end line"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}	
+	if (boost::iequals(tok[1], "dmrg"))
+	  m_orbformat = DMRGFORM;
+	else if (boost::iequals(tok[1], "molpro"))
+	  m_orbformat = MOLPROFORM;
+	else {
+	  pout << "orbital format has to be DMRG or MOLPRO"<<endl;
+	  pout << "error found in the following line"<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}
+      }
       else if (boost::iequals(keyword, "maxM")) {
 	if (tok.size() != 2) {
 	  cerr << "keyword maxM should be followed by a single number and then an end line"<<endl;
@@ -228,7 +237,7 @@ SpinAdapted::Input::Input(const string& config_name)
       }
 
 
-      else if (boost::iequals(keyword,  "sym") || boost::iequals(keyword,  "symmetry"))
+      else if (boost::iequals(keyword,  "sym") || boost::iequals(keyword,  "symmetry")|| boost::iequals(keyword,  "point_group")|| boost::iequals(keyword,  "pg"))
       {
 	m_spatial_to_spin.clear();
 	m_spin_to_spatial.clear();
@@ -244,105 +253,60 @@ SpinAdapted::Input::Input(const string& config_name)
         sym = tok[1];
 	boost::algorithm::to_lower(sym); //store as lower case string
         Symmetry::InitialiseTable(sym);
-
-	ReadMeaningfulLine(input, msg, msgsize);
-	boost::split(tok, msg, is_any_of(" \t"), token_compress_on);
-
-	if (boost::iequals(tok[0], "orbsym") || boost::iequals(tok[0], "orbitalsymmmetry") || boost::iequals(tok[0], "orbsymmetry") || 
-	    boost::iequals(tok[0], "orb_sym") || boost::iequals(tok[0], "orbital_symmmetry") || boost::iequals(tok[0], "orb_symmetry"))
-	{
-	  if (m_norbs == 0) {
-	    cerr << "Need to define the number of orbitals before specifying their irreducible representations"<<endl;
-	    abort();
-	  }
-	  if (tok.size() != m_norbs/2+1) {
-	    cerr << "keyword orbsym should be followed by "<<m_norbs<<" irreducible representations for each orbital and then an endline"<<endl;
-	    cerr << "error found in the following line "<<endl;
-	    cerr << msg<<endl;
-	    abort();
-	  }
-
-	  for (int i=0; i < 2*(tok.size()-1); i+=2)
-	  {
-	    int ir = atoi(tok[i/2+1].c_str());
-	    m_spin_orbs_symmetry[i] = ir;
-	    m_spin_orbs_symmetry[i+1] = ir;
-
-	    if (sym == "dinfh") {
-	      if (ir < -1) {
-		m_num_spatial_orbs ++;
-		m_spatial_to_spin.push_back(i);
-	      }
-	      else if( (ir == 0 || ir ==1)) {
-		m_num_spatial_orbs++;
-		m_spatial_to_spin.push_back(i);
-	      }
-	      m_spin_to_spatial[i] = m_num_spatial_orbs-1;
-	      m_spin_to_spatial[i+1] = m_num_spatial_orbs-1;
-	    }
-	    else {
-	      m_num_spatial_orbs++;
-	      m_spatial_to_spin.push_back(i);
-
-	      m_spin_to_spatial[i] = m_num_spatial_orbs-1;
-	      m_spin_to_spatial[i+1] = m_num_spatial_orbs-1;
-	    }
-	  }
-	  m_spatial_to_spin.push_back(m_norbs);
-	  m_spin_to_spatial.push_back(m_norbs);
-	}
-	else {
-	  cerr << "Symmetry information of the molecule should follow by orbsym keyword and irreducible representations of all the orbitals"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
-	  abort();
-	}		  
       }
-
-
       else if (boost::iequals(keyword,  "wave_sym") || boost::iequals(keyword,  "wave_symmetry"))
       {
-	if (tok.size() < 2 || tok.size() >= 6) {
-	  cerr << "keyword wave_sym should be followed by symmetry of the wavefunction in the form of nelec:spin:irrep and then an end line."<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
-	  abort();
-	}	
-	string wavesymmetry = "";
+	vector<string > symtokens; ;
 
 	for (int i=1; i<tok.size(); i++)
-	  wavesymmetry.append(tok[i]);
+	  symtokens.push_back(tok[i]);
 
-	vector<string > symtokens;
-	boost::split(symtokens, wavesymmetry, is_any_of(": \t"), token_compress_on);
-
-	if (symtokens.size() != 2 && symtokens.size() != 3) {
-	  cerr<<"Symmetry string needs to have the form nelec:spin or nelec:spin:irrep"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	vector<string > name_value;
+	boost::split(name_value, symtokens[0], is_any_of("= \t"), token_compress_on);
+	if (!boost::iequals(name_value[0], "nelec")) {
+	  pout << "nelec should be specified after wave_sym keyword"<<endl;
+	  pout << "keyword wave_sym should be followed by symmetry of the wavefunction in the form of wave_sym, nelec=n,spin=s,irrep=ir and then an end line."<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}
-	string nelecstr = symtokens[0]; trim(nelecstr);
-	int n_elec = atoi(nelecstr.c_str());
+	int n_elec = atoi(name_value[1].c_str());
 
-	string nspinstr = symtokens[1]; trim(nspinstr);
-	int n_spin = atoi(nspinstr.c_str());
-
+	boost::split(name_value, symtokens[1], is_any_of("= \t"), token_compress_on);
+	if (!boost::iequals(name_value[0], "spin")) {
+	  pout << "spin should be specified after nelec"<<endl;
+	  pout << "keyword wave_sym should be followed by symmetry of the wavefunction in the form of wave_sym, nelec=n,spin=s,irrep=ir and then an end line."<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}
+	int n_spin = atoi(name_value[1].c_str());
 	if ( (n_elec-n_spin)%2 != 0) {
 	  cerr<< "cannot have a spin of "<<n_spin<<"  with "<<n_elec<<" electrons "<<endl;
 	  cerr << "error found in the following line "<<endl;
 	  cerr << msg<<endl;
 	  abort();
 	}
+
 	if (symtokens.size() == 3) {
-	  string nirrepstr = symtokens[2]; trim(nirrepstr);
-	  m_total_symmetry_number = IrrepSpace(atoi(nirrepstr.c_str()));
+	  boost::split(name_value, symtokens[2], is_any_of("= \t"), token_compress_on);
+	  if (!boost::iequals(name_value[0], "irrep")) {
+	    pout << "irrep should be specified after spin"<<endl;
+	    pout << "keyword wave_sym should be followed by symmetry of the wavefunction in the form of wave_sym, nelec=n,spin=s,irrep=ir and then an end line."<<endl;
+	    pout << "error found in the following line "<<endl;
+	    pout << msg<<endl;
+	    abort();
+	  }
+	  m_total_symmetry_number = IrrepSpace(atoi(name_value[1].c_str()));
 	}
 	else 
 	  m_total_symmetry_number = IrrepSpace(0);
+
 	m_alpha = (n_elec + n_spin)/2;
 	m_beta = (n_elec - n_spin)/2;
         m_molecule_quantum = SpinQuantum(m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number);
+
+
       }
 
 
@@ -546,27 +510,6 @@ SpinAdapted::Input::Input(const string& config_name)
 	m_reset_iterations = true;
       }
 
-
-      else if (boost::iequals(keyword,  "oneintegral")) {
-	if (tok.size() !=  2) {
-	  cerr << "keyword oneintegral should be followed by the name of the file containing one electron integrals."<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
-	  abort();
-	}
-	m_oneintegral =tok[1];
-      }
-
-
-      else if (boost::iequals(keyword,  "twointegral")) {
-	if (tok.size() !=  2) {
-	  cerr << "keyword twointegral should be followed by the name of the file containing two electron integrals."<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
-	  abort();
-	}
-	m_twointegral = tok[1];
-      }
       else
       {
         pout << "Unrecognized option :: " << keyword << endl;
@@ -586,8 +529,20 @@ SpinAdapted::Input::Input(const string& config_name)
   mpi::broadcast(world, sym, 0);
   if (sym != "c1")
     Symmetry::InitialiseTable(sym);
+
+  //read the orbitals
+  v_1.rhf= true; 
+  v_2.rhf=true;
+  if (sym != "dinfh")
+    v_2.permSymm = true;
+  ifstream orbitalFile;
+  orbitalFile.open(orbitalfile.c_str(), ios::in);
+
+  CheckFileExistance(orbitalfile, "Orbital file ");
+
   if (mpigetrank() == 0) {
 #endif
+    readorbitalsfile(orbitalFile, v_1, v_2);
     
     pout << "Checking Input for errors"<<endl;
     performSanityTest();
@@ -598,8 +553,95 @@ SpinAdapted::Input::Input(const string& config_name)
 #ifndef SERIAL
   }
   mpi::broadcast(world,*this,0);
+  mpi::broadcast(world,v_1,0);
+  mpi::broadcast(world,v_2,0);
 #endif
 
+}
+
+void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& v1, TwoElectronArray& v2)
+{
+  string msg; int msgsize = 5000;
+  ReadMeaningfulLine(dumpFile, msg, msgsize);
+  vector<string> tok;
+  boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
+  m_norbs = 2*atoi(tok[2].c_str());
+  m_num_spatial_orbs = 0;
+  m_spin_orbs_symmetry.resize(m_norbs);
+  m_spin_to_spatial.resize(m_norbs);
+
+  v2.ReSize(m_norbs);
+  v1.ReSize(m_norbs);
+
+  int offset = m_orbformat == DMRGFORM ? 0 : 1;
+  int orbindex = 0;
+  msg.resize(0);
+  ReadMeaningfulLine(dumpFile, msg, msgsize);
+  boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
+  
+  while (!boost::iequals(tok[0], "ISYM")) {
+    for (int i=0; i<tok.size(); i++) {
+      if (boost::iequals(tok[i], "ORBSYM") || tok[i].size() == 0) continue;
+
+      int ir = atoi(tok[i].c_str()) - offset;
+      m_spin_orbs_symmetry[orbindex] = ir;
+      m_spin_orbs_symmetry[orbindex+1] = ir;
+
+      if (sym == "dinfh") {
+	if (ir < -1) {
+	  m_num_spatial_orbs ++;
+	  m_spatial_to_spin.push_back(orbindex);
+	}
+	else if( (ir == 0 || ir ==1)) {
+	  m_num_spatial_orbs++;
+	  m_spatial_to_spin.push_back(orbindex);
+	}
+	m_spin_to_spatial[orbindex] = m_num_spatial_orbs-1;
+	m_spin_to_spatial[orbindex+1] = m_num_spatial_orbs-1;
+      }
+      else {
+	m_num_spatial_orbs++;
+	m_spatial_to_spin.push_back(orbindex);
+	
+	m_spin_to_spatial[orbindex] = m_num_spatial_orbs-1;
+	m_spin_to_spatial[orbindex+1] = m_num_spatial_orbs-1;
+      }
+      orbindex += 2;
+    }
+    msg.resize(0);
+    ReadMeaningfulLine(dumpFile, msg, msgsize);
+    boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
+  }
+  m_spatial_to_spin.push_back(m_norbs);
+  m_spin_to_spatial.push_back(m_norbs);
+
+  msg.resize(0);
+  ReadMeaningfulLine(dumpFile, msg, msgsize); //this line reads &END
+
+  msg.resize(0);
+  ReadMeaningfulLine(dumpFile, msg, msgsize); //this if the first line with integrals
+  int i, j, k, l;
+  double value;
+  while(msg.size() != 0) {
+    boost::split(tok, msg, is_any_of(" \t"), token_compress_on);
+    if (tok.size() != 5) {
+      pout << "error in reading orbital file"<<endl;
+      pout << "error encountered at line "<<endl;
+      pout << msg<<endl;
+      abort();
+    }
+    value = atof(tok[0].c_str());
+    i = atoi(tok[1].c_str())-offset;j = atoi(tok[2].c_str())-offset;k = atoi(tok[3].c_str())-offset;l = atoi(tok[4].c_str())-offset;
+
+    if (i==-1 && j==-1 && k==-1 && l==-1) m_core_energy = value;
+    else if (k==-1 && l==-1) v1(2*i,2*j) = value;
+    else {
+      if (offset == 0) v2(2*i,2*j,2*k,2*l) = value;
+      else v2(2*i,2*k,2*j,2*l) = value;
+    }
+    msg.resize(0);
+    ReadMeaningfulLine(dumpFile, msg, msgsize); //this if the first line with integrals
+  }
 }
 
 void SpinAdapted::Input::writeSummary()
@@ -624,15 +666,17 @@ void SpinAdapted::Input::writeSummary()
     printf("\n");
   }
 
-  printf("\nSchedule\n");
-  printf("--------\n");
-  printf("%-10s : %-20s  %-20s  %-20s\n", "Iter", "# States", "Davidson_tol",  "Random_noise");
-  for (int i=0; i<m_sweep_iter_schedule.size(); i++)
-    printf("%-10i : %-20i  %-20.4e  %-20.4e\n", m_sweep_iter_schedule[i], m_sweep_state_schedule[i], m_sweep_tol_schedule[i], m_sweep_noise_schedule[i]);
-  if (m_algorithm_type == TWODOT_TO_ONEDOT) 
-    printf("%-50s :   %-i\n", "Switching from twodot to onedot algorithm", m_twodot_to_onedot_iter);
+  if (m_calc_type == DMRG) {
+    printf("\nSchedule\n");
+    printf("--------\n");
+    printf("%-10s : %-20s  %-20s  %-20s\n", "Iter", "# States", "Davidson_tol",  "Random_noise");
+    for (int i=0; i<m_sweep_iter_schedule.size(); i++)
+      printf("%-10i : %-20i  %-20.4e  %-20.4e\n", m_sweep_iter_schedule[i], m_sweep_state_schedule[i], m_sweep_tol_schedule[i], m_sweep_noise_schedule[i]);
+    if (m_algorithm_type == TWODOT_TO_ONEDOT) 
+      printf("%-50s :   %-i\n", "Switching from twodot to onedot algorithm", m_twodot_to_onedot_iter);
     
-  printf("%-50s :   %-i\n", "Maximum sweep iterations", m_maxiter);
+    printf("%-50s :   %-i\n", "Maximum sweep iterations", m_maxiter);
+  }
 #ifndef SERIAL
   }
 #endif

@@ -14,12 +14,15 @@
 
 namespace SpinAdapted{
 class SpinBlock;
+class OneElectronArray;
+class TwoElectronArray;
 
 enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD};
 enum solveTypes {SMALL_DAVIDSON, BIG_DAVIDSON};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
- enum calcType {DMRG, GENBLOCK, ONEPDM, TWOPDM, TINYCALC, FCI};
+enum calcType {DMRG, GENBLOCK, ONEPDM, TWOPDM, TINYCALC, FCI};
+enum orbitalFormat{MOLPROFORM, DMRGFORM};
 
 class Input {
 
@@ -90,8 +93,6 @@ class Input {
   bool m_fullrestart;
   bool m_restart_warm;
   bool m_reset_iterations;
-  std::string m_oneintegral;
-  std::string m_twointegral;
 
   std::vector<int> m_spin_vector;
   std::vector<int> m_spin_orbs_symmetry;
@@ -100,7 +101,9 @@ class Input {
   std::vector<int> m_spin_to_spatial;
 
   int m_outputlevel;
-
+  double m_core_energy;
+  orbitalFormat m_orbformat;
+  
   friend class boost::serialization::access;
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
@@ -112,12 +115,12 @@ class Input {
     ar & m_molecule_quantum & m_total_symmetry_number & m_total_spin & m_orbenergies & m_add_noninteracting_orbs;
     ar & m_save_prefix & m_load_prefix & m_direct ;
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel;
-    ar & m_algorithm_type & m_twodot_to_onedot_iter;
+    ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_cd;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_screen_tol & m_quantaToKeep & m_noise_type;
-    ar & m_sweep_tol & m_restart & m_fullrestart & m_restart_warm & m_reset_iterations & m_oneintegral & m_twointegral & m_calc_type & m_ham_type;
+    ar & m_sweep_tol & m_restart & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
-    ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_default;
+    ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_default & m_core_energy;
   }
 
 
@@ -129,6 +132,8 @@ class Input {
   Input (const std::string& config_name);
   void writeSummary();
   void performSanityTest();
+  void readorbitalsfile(ifstream& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
+
   static void ReadMeaningfulLine(ifstream&, string&, int);
   cumulTimer guessgenT, multiplierT, operrotT, davidsonT, rotmatrixT, blockdavid, datatransfer;
   cumulTimer hmultiply, oneelecT, twoelecT, makeopsT, collectqT;
@@ -137,6 +142,7 @@ class Input {
   cumulTimer buildsumblock, buildblockops, addnoise;
   cumulTimer s0time, s1time, s2time;
 
+  const orbitalFormat& orbformat() const {return m_orbformat;}
   const int& outputlevel() const {return m_outputlevel;}
   const vector<int>& spatial_to_spin() const {return m_spatial_to_spin;}
   int spatial_to_spin(int i) const {return m_spatial_to_spin[i];}
@@ -147,13 +153,12 @@ class Input {
   const int& start_diis_iter() const {return m_start_diis_iter;}
   const int& diis_keep_states() const {return m_diis_keep_states;}
 
+  const double& get_coreenergy() const {return m_core_energy;}
   const bool& get_fullrestart() const {return m_fullrestart;}
   const double& get_sweep_tol() const {return m_sweep_tol;}
   const bool& get_restart() const {return m_restart;}
   const bool& get_restart_warm() const {return m_restart_warm;}
   const bool& get_reset_iterations() const {return m_reset_iterations;}
-  const std::string& get_oneintegral() const {return m_oneintegral;}
-  const std::string& get_twointegral() const {return m_twointegral;}
   const ninejCoeffs& get_ninej() const {return m_ninej;}
   const hamTypes &hamiltonian() const {return m_ham_type;}
   const int &guess_permutations() const { return m_guess_permutations; }

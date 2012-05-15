@@ -69,8 +69,6 @@ void ReadInput(char* conf)
 
 
 
-  ifstream oneElectronIntegralFile;
-  ifstream twoElectronIntegralFile;
   std::string configFile(conf);
 
   CheckFileExistance(conf, "Input file ");
@@ -78,36 +76,12 @@ void ReadInput(char* conf)
   //pout << "About to read Input File : "<< configFile<<endl;
   //read the config file
   dmrginp = Input(configFile);
-  v_1.rhf= true; 
-  v_2.rhf=true;
-  if (sym != "dinfh")
-    v_2.permSymm = true;
 
   RESTART = dmrginp.get_restart();
   FULLRESTART = dmrginp.get_fullrestart();
   restartwarm = dmrginp.get_restart_warm();
   reset_iter = dmrginp.get_reset_iterations();
-  oneElectronIntegralFile.open(dmrginp.get_oneintegral().c_str(), ios::in);
-  twoElectronIntegralFile.open(dmrginp.get_twointegral().c_str(),ios::in);
 
-  CheckFileExistance(dmrginp.get_oneintegral(), "One electron integral file ");
-  CheckFileExistance(dmrginp.get_twointegral(), "Two electron integral file ");
-
-  //pout << "About to read integrals"<<endl;
-  //read integrals
-  if (mpigetrank() == 0)
-  {
-    //cout << "v2bin "<<v_2.bin<<endl;
-    v_1.ReadFromDumpFile(oneElectronIntegralFile, dmrginp.slater_size()/2);
-    //pout << "finished v1read" << endl;
-    v_2.ReadFromDumpFile(twoElectronIntegralFile, dmrginp.slater_size()/2);
-    //pout << "finished v2read" << endl;
-  }
-
-#ifndef SERIAL
-  mpi::broadcast(world,v_1,0);
-  mpi::broadcast(world,v_2,0);
-#endif
 
 #ifndef SERIAL
   MAX_THRD=dmrginp.thrds_per_node()[rank];
