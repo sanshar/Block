@@ -11,7 +11,9 @@ namespace SpinAdapted {
   template<> void Op_component<Cre>::build_iterators(SpinBlock& b)
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
-      m_op.set_indices(b.get_sites(), dmrginp.last_site());  
+      const double screen_tol = dmrginp.screen_tol();
+      std::vector<int> screened_c_ix = screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1, screen_tol); 
+      m_op.set_indices(screened_c_ix, dmrginp.last_site());  
       std::vector<int> orbs(1);
       
       for (int i = 0; i < m_op.local_nnz(); ++i)
@@ -43,6 +45,16 @@ namespace SpinAdapted {
       return ret_val;
     }
   
+
+  template<> void Op_component<Cre>::add_local_indices(int i, int j , int k)
+    {
+      m_op.add_local_index(i);
+      
+      std::vector<boost::shared_ptr<Cre> >& vec = m_op(i);
+      vec.resize(1);
+      vec[0]=boost::shared_ptr<Cre>(new Cre);
+    }
+
   
   // -------------------- Cd_ ---------------------------  
   template<> string Op_component<CreDes>::get_op_string() const {

@@ -67,7 +67,7 @@ class Op_component_base
   const bool &is_core() const {return m_core;}
   const bool &is_deriv() const {return m_deriv;}
   void set_core(bool is_core) {m_core = is_core;}
-  virtual void add_local_indices(int i, int j, int k=-1) {};
+  virtual void add_local_indices(int i, int j=-1, int k=-1) {};
   virtual bool is_local() const = 0;
   virtual bool& set_local() = 0; 
   //virtual std::vector<SparseMatrix*> get_element(int i, int j=-1, int k=-1) = 0;
@@ -106,7 +106,7 @@ template <class Op> class Op_component : public Op_component_base
   int size() const  {return m_op.global_nnz();}
   bool has(int i, int j=-1, int k=-1) const {return m_op.has(i, j, k);}
   bool has_local_index(int i, int j=-1, int k=-1) const {return m_op.has_local_index(i, j, k);}
-  virtual void add_local_indices(int i, int j, int k=-1){};
+  virtual void add_local_indices(int i, int j=-1, int k=-1){};
   std::vector<boost::shared_ptr<SparseMatrix> > get_local_element(int i) 
   {
     std::vector<boost::shared_ptr<SparseMatrix> > vec(m_op.get_local_element(i).size());

@@ -24,7 +24,7 @@ void SpinBlock::setstoragetype(Storagetype st)
   {
     localstorage = false;
     if (has(CRE))
-      set_op_array(CRE).set_local() = true;
+      set_op_array(CRE).set_local() = false;
     if (has(CRE_DES))
       set_op_array(CRE_DES).set_local() = false;
     if (has(CRE_CRE))
