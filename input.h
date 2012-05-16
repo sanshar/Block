@@ -21,7 +21,7 @@ enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD};
 enum solveTypes {SMALL_DAVIDSON, BIG_DAVIDSON};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
-enum calcType {DMRG, GENBLOCK, ONEPDM, TWOPDM, TINYCALC, FCI};
+enum calcType {DMRG, ONEPDM, TWOPDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 
 class Input {
@@ -103,7 +103,9 @@ class Input {
   int m_outputlevel;
   double m_core_energy;
   orbitalFormat m_orbformat;
-  
+  bool m_reorder;
+  string m_reorderfile;
+
   friend class boost::serialization::access;
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
@@ -114,8 +116,8 @@ class Input {
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule;
     ar & m_molecule_quantum & m_total_symmetry_number & m_total_spin & m_orbenergies & m_add_noninteracting_orbs;
     ar & m_save_prefix & m_load_prefix & m_direct ;
-    ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel;
-    ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat;
+    ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
+    ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat & m_reorder;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_cd;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;
@@ -133,6 +135,7 @@ class Input {
   void writeSummary();
   void performSanityTest();
   void readorbitalsfile(ifstream& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
+  void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
 
   static void ReadMeaningfulLine(ifstream&, string&, int);
   cumulTimer guessgenT, multiplierT, operrotT, davidsonT, rotmatrixT, blockdavid, datatransfer;
@@ -210,6 +213,7 @@ class Input {
   std::vector<double>& get_orbenergies() {return m_orbenergies;}
   int getHFQuanta(const SpinBlock& b) const;
   const bool &do_cd() const {return m_do_cd;}
+  bool &do_cd() {return m_do_cd;}
   int slater_size() const {return m_norbs;}
 };
 }

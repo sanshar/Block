@@ -165,7 +165,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	
 	if (dmrginp.outputlevel() != 0) {
 	  for (int i = 1; i <= subspace_eigenvalues.Ncols (); ++i)
-	    pout << "\t\t\t " << i << " ::  " << subspace_eigenvalues(i,i) << endl;
+	    pout << "\t\t\t " << i << " ::  " << subspace_eigenvalues(i,i)+dmrginp.get_coreenergy() << endl;
 	}	
 	
 	//now calculate the ritz vectors which are approximate eigenvectors

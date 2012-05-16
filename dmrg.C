@@ -38,6 +38,7 @@
 void dmrg(double sweep_tol);
 void restart(double sweep_tol, bool reset_iter);
 void ReadInput(char* conf);
+void fullrestartGenblock();
 //void test(double sweep_tol);
 
 namespace SpinAdapted{
@@ -80,21 +81,7 @@ int callDmrg(char* input, char* output)
     if (RESTART && !FULLRESTART)
       restart(sweep_tol, reset_iter);
     else if (FULLRESTART) {
-      sweepParams.restorestate(direction, restartsize);
-      sweepParams.set_sweep_iter() = 0;
-      if (!RESTART){ //this is a hidden option
-	restartsize = 0;
-	direction = !direction;
-      }
-      //direction = false;
-      SweepGenblock::do_one(sweepParams, false, direction, RESTART, restartsize);
-      
-      sweepParams.restorestate(direction, restartsize);
-      sweepParams.set_sweep_iter()=0;
-      sweepParams.set_block_iter() = 0;
-      
-      sweepParams.savestate(direction, restartsize);
-      
+      fullrestartGenblock();
       reset_iter = true;
       restart(sweep_tol, reset_iter);
     }
@@ -103,6 +90,7 @@ int callDmrg(char* input, char* output)
       dmrg(sweep_tol);
     }
     break;
+
   case (FCI):
     sweepParams.set_calcType() = FCI;
     Sweep::fullci(sweep_tol);
@@ -112,89 +100,98 @@ int callDmrg(char* input, char* output)
     sweepParams.set_calcType() = TINYCALC;
     Sweep::tiny(sweep_tol);
     break;
-    
-  case (GENBLOCK):
+
+  case (ONEPDM):
+    if (RESTART && !FULLRESTART)
+      restart(sweep_tol, reset_iter);
+    else if (FULLRESTART) {
+      fullrestartGenblock();
+      reset_iter = true;
+      restart(sweep_tol, reset_iter);
+    }
+    else {
+      sweepParams.set_calcType() = DMRG;
+      dmrg(sweep_tol);
+    }
+
+    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
+    dmrginp.Sz() = dmrginp.total_spin_number();
+    dmrginp.do_cd() = true;
+    dmrginp.screen_tol() = 0.0;
     sweepParams.restorestate(direction, restartsize);
-    dmrginp.screen_tol() = 0.0; //need to turn screening off for genblocks
     SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
     SweepGenblock::do_one(sweepParams, false, direction, false, 0);
+        
+    sweepParams.restorestate(direction, restartsize);
+    SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
     break;
-  case (ONEPDM):
+
+  case (TWOPDM):
+    if (RESTART && !FULLRESTART)
+      restart(sweep_tol, reset_iter);
+    else if (FULLRESTART) {
+      fullrestartGenblock();
+      reset_iter = true;
+      restart(sweep_tol, reset_iter);
+    }
+    else {
+      sweepParams.set_calcType() = DMRG;
+      dmrg(sweep_tol);
+    }
+
+    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
+    dmrginp.Sz() = dmrginp.total_spin_number();
+    dmrginp.do_cd() = true;
+    dmrginp.screen_tol() = 0.0;
+    sweepParams.restorestate(direction, restartsize);
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
+    SweepGenblock::do_one(sweepParams, false, direction, false, 0);
+        
+    sweepParams.restorestate(direction, restartsize);
+    SweepTwopdm::do_one(sweepParams, false, direction, false, 0);
+    break;
+
+  case (RESTART_ONEPDM):
     if(sym == "dinfh") {
       pout << "One pdm not implemented with dinfh symmetry"<<endl;
       abort();
     }
-    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
-    if (dmrginp.set_Sz()) {
-      if ( (dmrginp.total_spin_number() - dmrginp.Sz())%2 == 1 ) {
-	
-	if (dmrginp.outputlevel() != 0) {
-	  pout << "Given Sz is not valid" <<endl;
-	  pout << "Changing its value to: "<< dmrginp.total_spin_number()<<endl;
-	}
-	dmrginp.Sz() = dmrginp.total_spin_number();
-      }
-    }
-    else {
-      if (dmrginp.outputlevel() != 0) {      
-	pout << "Sz not specified" <<endl;
-	pout << "Using the value : "<< dmrginp.total_spin_number()<<endl;
-      }
-      dmrginp.Sz() = dmrginp.total_spin_number();
-    }
-    if (!dmrginp.do_cd()) {
-      pout << "Blocks must have all cd operators\n Please set the docd option in the configuration file\n"
-	   << "Don't forget to re-generate the blocks with the docd option if you have not done so already\n";
-      abort();
-    }
-    if(dmrginp.screen_tol() > 0.) {
-      pout << "Blocks must have all cd operators\n Please turn off screening in the configuration file\n"
-	   << "Don't forget to re-generate the blocks with the screening option off if you have not done so already\n";
-      abort();
-    }
     sweepParams.restorestate(direction, restartsize);
-    
     if(!sweepParams.get_onedot() || dmrginp.algorithm_method() == TWODOT) {
       pout << "Onepdm only runs for the onedot algorithm" << endl;
       abort();
     }
+
+    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
+    dmrginp.Sz() = dmrginp.total_spin_number();
+    dmrginp.do_cd() = true;
+    dmrginp.screen_tol() = 0.0;
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
+    SweepGenblock::do_one(sweepParams, false, direction, false, 0);
     
+    sweepParams.restorestate(direction, restartsize);    
     SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
     break;
-  case (TWOPDM):
+
+  case (RESTART_TWOPDM):
     if(sym == "dinfh") {
       pout << "Two pdm not implemented with dinfh symmetry"<<endl;
       abort();
     }
-    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
-    if (dmrginp.set_Sz()) {
-      if ( (dmrginp.total_spin_number() - dmrginp.Sz())%2 == 1) {
-	pout << "Given Sz is not valid" <<endl;
-	pout << "Changing its value to: "<< abs(dmrginp.total_spin_number())<<endl;
-	dmrginp.Sz() = abs(dmrginp.total_spin_number());
-      }
-    }
-    else {
-      pout << "Sz not specified" <<endl;
-      pout << "Using the value : "<< abs(dmrginp.total_spin_number())<<endl;
-      dmrginp.Sz() = abs(dmrginp.total_spin_number());
-    }
-    if (!dmrginp.do_cd()) {
-      pout << "Blocks must have all cd operators\n Please set the docd option in the configuration file\n"
-	   << "Don't forget to re-generate the blocks with the docd option if you have not done so already\n";
-      abort();
-    }
-    if(dmrginp.screen_tol() > 0.) {
-      pout << "Blocks must have all cd operators\n Please turn off screening in the configuration file\n"
-	   << "Don't forget to re-generate the blocks with the screening option off if you have not done so already\n";
-      abort();
-    }
-    
     sweepParams.restorestate(direction, restartsize);
     if(!sweepParams.get_onedot() || dmrginp.algorithm_method() == TWODOT) {
       pout << "Twopdm only runs for the onedot algorithm" << endl;
       abort();
     }
+
+    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
+    dmrginp.Sz() = dmrginp.total_spin_number();
+    dmrginp.do_cd() = true;
+    dmrginp.screen_tol() = 0.0;    
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
+    SweepGenblock::do_one(sweepParams, false, direction, false, 0);
+
+    sweepParams.restorestate(direction, restartsize);
     SweepTwopdm::do_one(sweepParams, false, direction, false, 0);
     break;
   }
@@ -202,6 +199,22 @@ int callDmrg(char* input, char* output)
   return 0;
 
 }
+
+void fullrestartGenblock() {
+  SweepParams sweepParams;
+  bool direction; int restartsize;
+  sweepParams.restorestate(direction, restartsize);
+  sweepParams.set_sweep_iter() = 0;
+  restartsize = 0;
+
+  SweepGenblock::do_one(sweepParams, false, !direction, RESTART, restartsize);
+  
+  sweepParams.restorestate(direction, restartsize);
+  sweepParams.set_sweep_iter()=0;
+  sweepParams.set_block_iter() = 0;
+  
+  sweepParams.savestate(direction, restartsize);
+}  
 
 void restart(double sweep_tol, bool reset_iter)
 {
@@ -286,8 +299,10 @@ void restart(double sweep_tol, bool reset_iter)
   {
     FILE* f = fopen("dmrg.e", "wb");
     
-    for(int j=0;j<nroots;++j)
-      fwrite( &sweepParams.get_lowest_energy()[j], 1, sizeof(double), f);
+    for(int j=0;j<nroots;++j) {
+      double e = sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy(); 
+      fwrite( &e, 1, sizeof(double), f);
+    }
     fclose(f);
   }
 }
@@ -365,8 +380,10 @@ void dmrg(double sweep_tol)
   {
     FILE* f = fopen("dmrg.e", "wb");
     
-    for(int j=0;j<nroots;++j)
-      fwrite( &sweepParams.get_lowest_energy()[j], 1, sizeof(double), f);
+    for(int j=0;j<nroots;++j) {
+      double e = sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy(); 
+      fwrite( &e, 1, sizeof(double), f);
+    }
     fclose(f);
   }
 }

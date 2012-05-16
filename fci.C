@@ -27,31 +27,28 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
 
   for (int i=0; i<forwardsites-1; i++) {
     SpinBlock sysdot(i+1, i+1);
-    cout <<sysdot<<endl;
     SpinBlock newSystem;
     system.addAdditionalCompOps();
     newSystem.default_op_components(false, system, sysdot, false, true);
     newSystem.setstoragetype(DISTRIBUTED_STORAGE);
     newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, sysdot);
     system = newSystem;
-    pout << system<<endl;
   }
 
   SpinBlock environment;
   InitBlocks::InitStartingBlock(environment, false, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
-  cout << environment<<endl;
   for (int i=0;i <backwardsites-1; i++) {
     SpinBlock envdot(numsites-2-i, numsites-2-i);
-    cout << envdot<<endl;
     SpinBlock newEnvironment;
     environment.addAdditionalCompOps();
     newEnvironment.default_op_components(false, environment, envdot, true, true);
     newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
     newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, envdot);
     environment = newEnvironment;
-    pout << environment<<endl;
   }
 
+  pout <<"\t\t\t System Block :: "<< system;
+  pout <<"\t\t\t Environment Block :: "<< environment;
   SpinBlock big;
   InitBlocks::InitBigBlock(system, environment, big); 
   int nroots = dmrginp.nroots(0);
@@ -59,16 +56,19 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   std::vector<double> energies(nroots);
   double tol = sweepParams.get_davidson_tol();
 
+  pout << "\t\t\t Solving the Wavefunction "<<endl;
   Solver::solve_wavefunction(solution, energies, big, tol, BASIC, false, true, false, sweepParams.get_additional_noise());
   for (int i=0; i<nroots; i++) {
-    pout << "fullci energy "<< energies[i]<<endl;
+    pout << "fullci energy "<< energies[i]+dmrginp.get_coreenergy()<<endl;
   }
   if (!mpigetrank())
   {
     FILE* f = fopen("dmrg.e", "wb");
     
-    for(int j=0;j<nroots;++j)
-      fwrite( &energies[j], 1, sizeof(double), f);
+    for(int j=0;j<nroots;++j) {
+      double e = energies[j]+dmrginp.get_coreenergy(); 
+      fwrite( &e, 1, sizeof(double), f);
+    }
     fclose(f);
   }
 
@@ -94,14 +94,16 @@ void SpinAdapted::Sweep::tiny(double sweep_tol)
       diagonalise(h, energies, vec);
       
       for (int x=0; x<nroots; x++) 
-	pout << "fullci energy  "<< energies(x+1)<<endl;
+	pout << "fullci energy  "<< energies(x+1)+dmrginp.get_coreenergy()<<endl;
 
       if (mpigetrank() == 0)
       {
 	FILE* f = fopen("dmrg.e", "wb");
 	
-	for(int j=0;j<nroots;++j)
-	  fwrite( &energies(j+1), 1, sizeof(double), f);
+	for(int j=0;j<nroots;++j) {
+	  double e = energies(j+1)+dmrginp.get_coreenergy(); 
+	  fwrite( &e, 1, sizeof(double), f);
+	}
 	fclose(f);
       }
 

@@ -104,6 +104,9 @@ void SpinAdapted::Input::initialize_defaults()
   m_schedule_type_default = false;
   m_maxM = 0;
   m_core_energy = 0.0;
+  m_reorder = false;
+  m_reorderfile = "";
+  m_orbformat=DMRGFORM;
 }
 
 SpinAdapted::Input::Input(const string& config_name)
@@ -172,6 +175,17 @@ SpinAdapted::Input::Input(const string& config_name)
 	  abort();
 	}	
 	  
+      }
+      else if (boost::iequals(keyword,  "reorder"))
+      {
+	if (tok.size() != 2) {
+	  cerr << "keyword reorder should be followed by the filename and then an end line"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}	
+	m_reorder = true;
+	m_reorderfile = tok[1];
       }
 
       else if (boost::iequals(keyword,  "schedule"))
@@ -325,12 +339,14 @@ SpinAdapted::Input::Input(const string& config_name)
       }
       else if (boost::iequals(keyword,  "fci"))
 	m_calc_type = FCI;
-      else if (boost::iequals(keyword,  "genblock")|| boost::iequals(keyword,  "genblocks") || boost::iequals(keyword,  "generateblock"))
-	m_calc_type = GENBLOCK;
-      else if (boost::iequals(keyword,  "onepdm"))
+      else if (boost::iequals(keyword,  "onepdm") || boost::iequals(keyword,  "onerdm") || boost::iequals(keyword,  "ordm"))
 	m_calc_type = ONEPDM;
-      else if (boost::iequals(keyword,  "twopdm"))
+      else if (boost::iequals(keyword,  "twopdm") || boost::iequals(keyword,  "twordm") || boost::iequals(keyword,  "trdm"))
 	m_calc_type = TWOPDM;
+      else if (boost::iequals(keyword,  "restart_onepdm") || boost::iequals(keyword,  "restart_onerdm") || boost::iequals(keyword,  "restart_ordm"))
+	m_calc_type = RESTART_ONEPDM;
+      else if (boost::iequals(keyword,  "restart_twopdm") || boost::iequals(keyword,  "restart_twordm") || boost::iequals(keyword,  "restart_trdm"))
+	m_calc_type = RESTART_TWOPDM;
       else if(boost::iequals(keyword,  "prefix") || boost::iequals(keyword,  "scratch"))
       {
 	m_load_prefix = tok[1];
@@ -538,9 +554,9 @@ SpinAdapted::Input::Input(const string& config_name)
   ifstream orbitalFile;
   orbitalFile.open(orbitalfile.c_str(), ios::in);
 
-  CheckFileExistance(orbitalfile, "Orbital file ");
 
   if (mpigetrank() == 0) {
+    CheckFileExistance(orbitalfile, "Orbital file ");
 #endif
     readorbitalsfile(orbitalFile, v_1, v_2);
     
@@ -559,6 +575,45 @@ SpinAdapted::Input::Input(const string& config_name)
 
 }
 
+void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& preorder)
+{
+  std::vector<int> reorder; 
+  string msg; int msgsize = 5000;
+  ReadMeaningfulLine(dumpFile, msg, msgsize);
+  vector<string> tok;
+  boost::split(tok, msg, is_any_of(", \t"), token_compress_on);
+  while(msg.size() != 0) {
+    for (int i=0; i<tok.size(); i++)
+      if(tok[i].size() != 0) {
+	if (find(reorder.begin(), reorder.end(), atoi(tok[i].c_str())) != reorder.end()) {
+	  pout << "Orbital "<<atoi(tok[i].c_str())<<" appears twice in reorder file"<<endl;
+	  pout << "error found at the following line "<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}
+	reorder.push_back(atoi(tok[i].c_str()));
+      }
+    msg.resize(0);
+    ReadMeaningfulLine(dumpFile, msg, msgsize);
+    boost::split(tok, msg, is_any_of(", \t"), token_compress_on);
+  }
+
+  //p_reorder contains old to new mapping
+  if (reorder.size() != m_norbs/2) {
+    pout << "Numbers or orbitals in reorder file should be equal to "<<m_norbs/2<<" instead "<<preorder.size()<<" found "<<endl;
+    abort();
+  }
+
+  preorder.resize(m_norbs/2);
+  for (int i=0; i<m_norbs/2; i++) {
+    if (reorder[i] >= m_norbs/2 || reorder[i] < 0) {
+      pout << "Orbital indices in reorder file should be in range 0 to "<<m_norbs/2<<endl;
+      abort();
+    }
+    preorder.at(reorder[i]) = i;
+  }
+}
+
 void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& v1, TwoElectronArray& v2)
 {
   string msg; int msgsize = 5000;
@@ -573,6 +628,19 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   v2.ReSize(m_norbs);
   v1.ReSize(m_norbs);
 
+  std::vector<int> reorder;
+  // read the reorder file
+  if (m_reorder) {
+    ifstream reorderFile(m_reorderfile.c_str());
+    CheckFileExistance(m_reorderfile, "Reorder file ");
+    readreorderfile(reorderFile, reorder);
+  }
+
+  if(sym == "dinfh" && m_reorder) {
+    pout << "Cannot reorder with dinfh symmetry"<<endl;
+    abort();
+  }
+
   int offset = m_orbformat == DMRGFORM ? 0 : 1;
   int orbindex = 0;
   msg.resize(0);
@@ -583,9 +651,11 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     for (int i=0; i<tok.size(); i++) {
       if (boost::iequals(tok[i], "ORBSYM") || tok[i].size() == 0) continue;
 
+      int reorderOrbInd = m_reorder ? reorder.at(orbindex/2) : orbindex/2;
+
       int ir = atoi(tok[i].c_str()) - offset;
-      m_spin_orbs_symmetry[orbindex] = ir;
-      m_spin_orbs_symmetry[orbindex+1] = ir;
+      m_spin_orbs_symmetry[2*reorderOrbInd] = ir;
+      m_spin_orbs_symmetry[2*reorderOrbInd+1] = ir;
 
       if (sym == "dinfh") {
 	if (ir < -1) {
@@ -634,11 +704,17 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     i = atoi(tok[1].c_str())-offset;j = atoi(tok[2].c_str())-offset;k = atoi(tok[3].c_str())-offset;l = atoi(tok[4].c_str())-offset;
 
     if (i==-1 && j==-1 && k==-1 && l==-1) m_core_energy = value;
-    else if (k==-1 && l==-1) v1(2*i,2*j) = value;
+    else if (k==-1 && l==-1) { 
+      if(m_reorder){ v1(2*reorder.at(i),2*reorder.at(j)) = value;  v1(2*reorder.at(j),2*reorder.at(i)) = value;}
+      else {v1(2*i,2*j) = value;v1(2*j,2*i) = value;}
+    } 
     else {
-      if (offset == 0) v2(2*i,2*j,2*k,2*l) = value;
-      else v2(2*i,2*k,2*j,2*l) = value;
+      int I=i, J=j, K=k, L=l;
+      if(m_reorder) {I = reorder.at(i);J = reorder.at(j);K = reorder.at(k);L = reorder.at(l);}
+      if (offset == 0) v2(2*I,2*J,2*K,2*L) = value;
+      else v2(2*I,2*K,2*J,2*L) = value;
     }
+
     msg.resize(0);
     ReadMeaningfulLine(dumpFile, msg, msgsize); //this if the first line with integrals
   }

@@ -15,6 +15,36 @@
 using namespace boost;
 using namespace std;
 
+
+void calcenergy(array_4d<double>& twopdm, int state)
+{
+  using namespace SpinAdapted;
+  Matrix onepdm(2*dmrginp.last_site(), 2*dmrginp.last_site()); onepdm = 0.0;
+  int nelec = dmrginp.total_particle_number();
+
+  for (int i=0; i<dmrginp.last_site()*2; i++)
+  for (int j=0; j<dmrginp.last_site()*2; j++)
+  for (int k=0; k<dmrginp.last_site()*2; k++)
+    onepdm(i+1, j+1) += twopdm(i, k, k, j);
+
+  onepdm /= (nelec-1);
+
+  double energy = 0.0;
+  for (int i=0; i<dmrginp.last_site()*2; i++)
+  for (int j=0; j<dmrginp.last_site()*2; j++)
+  for (int k=0; k<dmrginp.last_site()*2; k++)
+  for (int l=0; l<dmrginp.last_site()*2; l++)
+    energy += v_2(i,j,k,l)*twopdm(i,j,l,k);
+
+  energy *= 0.5;
+
+  for (int i=0; i<dmrginp.last_site()*2; i++)
+  for (int j=0; j<dmrginp.last_site()*2; j++)
+    energy += v_1(i,j) * onepdm(i+1,j+1);
+
+  pout << "energy of state "<< state <<" = "<< energy+dmrginp.get_coreenergy()<<endl;
+}
+
 namespace SpinAdapted{
 void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys)
 {
@@ -107,7 +137,7 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 
 double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize)
 {
-
+  cout.precision(12);
   SpinBlock system;
   const int nroots = dmrginp.nroots();
   std::vector<double> finalEnergy(nroots,0.);
@@ -132,8 +162,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   array_4d<double> twopdm(2*dmrginp.last_site(), 2*dmrginp.last_site(), 2*dmrginp.last_site(), 2*dmrginp.last_site());
   twopdm.Clear();
   for (int i=0; i<nroots; i++)
-    for (int j=0; j<=i; j++)
-      save_twopdm_binary(twopdm, i, j); 
+    save_twopdm_binary(twopdm, i, i); 
 
 
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
@@ -166,7 +195,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
       for(int j=0;j<nroots;++j)
         pout << "\t\t\t Total block energy for State [ " << j << 
-	  " ] with " << sweepParams.get_keep_states()<<" :: " << sweepParams.get_lowest_energy()[j] <<endl;              
+	  " ] with " << sweepParams.get_keep_states()<<" :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
 
       finalEnergy_spins = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy_spins() : finalEnergy_spins);
       finalEnergy = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy() : finalEnergy);
@@ -184,7 +213,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
     }
   for(int j=0;j<nroots;++j)
     pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
-	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j] << endl;
+	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
@@ -194,6 +223,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
       int j = i;
     //for (int j=0; j<=i; j++) {
       load_twopdm_binary(twopdm, i, j); 
+      calcenergy(twopdm, i);
       save_twopdm_text(twopdm, i, j);
       save_spatial_twopdm_text(twopdm, i, j);
       save_spatial_twopdm_binary(twopdm, i, j);
@@ -205,4 +235,6 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
   return finalEnergy[0];
 }
+
+
 }

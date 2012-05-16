@@ -108,7 +108,7 @@ double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   SpinBlock newSystem;
   BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys);
   pout.precision(12);
-  pout << "\t\t\t The lowest sweep energy : "<< sweepParams.get_lowest_energy()[0]<<endl;
+  pout << "\t\t\t The lowest sweep energy : "<< sweepParams.get_lowest_energy()[0]+dmrginp.get_coreenergy()<<endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
   for (int i=0; i<nroots; i++)

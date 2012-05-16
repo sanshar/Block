@@ -221,6 +221,12 @@ public:
     store.resize(length);    
   }
 
+  void add_local_index(int i)
+  {
+    local_indices.push_back(i);
+    local_indices_map[i] = i;
+  }
+
   /// storage labels
   bool& set_local() { return stored_local; }
   bool is_local() const { return stored_local; }
