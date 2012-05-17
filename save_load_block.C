@@ -111,10 +111,12 @@ void SpinBlock::addAdditionalCompOps()
   int length = dmrginp.last_site();
   int dotopindex = (sites[0] == 0) ? complementary_sites[0] : complementary_sites[complementary_sites.size()-1];
 
-  for(int i=0; i<get_sites().size(); i++) {
-    if (processorindex(sites[i]) != mpigetrank()) 
-      ops[CRE]->add_local_indices(sites[i]);
-    mpi::broadcast(world, *(ops[CRE]->get_element(sites[i])[0]), processorindex(sites[i]));
+  if (!ops[CRE]->is_local()) {
+    for(int i=0; i<get_sites().size(); i++) {
+      if (processorindex(sites[i]) != mpigetrank()) 
+	ops[CRE]->add_local_indices(sites[i]);
+      mpi::broadcast(world, *(ops[CRE]->get_element(sites[i])[0]), processorindex(sites[i]));
+    }
   }
 
   for (int i=0; i<complementary_sites.size(); i++) {
