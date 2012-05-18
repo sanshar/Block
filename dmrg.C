@@ -83,6 +83,9 @@ int callDmrg(char* input, char* output)
     else if (FULLRESTART) {
       fullrestartGenblock();
       reset_iter = true;
+      sweepParams.restorestate(direction, restartsize);
+      sweepParams.calc_niter();
+      sweepParams.savestate(direction, restartsize);
       restart(sweep_tol, reset_iter);
     }
     else {
@@ -102,11 +105,18 @@ int callDmrg(char* input, char* output)
     break;
 
   case (ONEPDM):
+    if (dmrginp.algorithm_method() == TWODOT) {
+      pout << "Onepdm not allowed with twodot algorithm" << endl;
+      abort();
+    }
     if (RESTART && !FULLRESTART)
       restart(sweep_tol, reset_iter);
     else if (FULLRESTART) {
       fullrestartGenblock();
       reset_iter = true;
+      sweepParams.restorestate(direction, restartsize);
+      sweepParams.calc_niter();
+      sweepParams.savestate(direction, restartsize);
       restart(sweep_tol, reset_iter);
     }
     else {
@@ -119,19 +129,27 @@ int callDmrg(char* input, char* output)
     dmrginp.do_cd() = true;
     dmrginp.screen_tol() = 0.0;
     sweepParams.restorestate(direction, restartsize);
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
     SweepGenblock::do_one(sweepParams, false, direction, false, 0);
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
         
     sweepParams.restorestate(direction, restartsize);
     SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
     break;
 
   case (TWOPDM):
+    if (dmrginp.algorithm_method() == TWODOT) {
+      pout << "Twopdm not allowed with twodot algorithm" << endl;
+      abort();
+    }
+
     if (RESTART && !FULLRESTART)
       restart(sweep_tol, reset_iter);
     else if (FULLRESTART) {
       fullrestartGenblock();
       reset_iter = true;
+      sweepParams.restorestate(direction, restartsize);
+      sweepParams.calc_niter();
+      sweepParams.savestate(direction, restartsize);
       restart(sweep_tol, reset_iter);
     }
     else {
@@ -144,8 +162,8 @@ int callDmrg(char* input, char* output)
     dmrginp.do_cd() = true;
     dmrginp.screen_tol() = 0.0;
     sweepParams.restorestate(direction, restartsize);
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
     SweepGenblock::do_one(sweepParams, false, direction, false, 0);
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
         
     sweepParams.restorestate(direction, restartsize);
     SweepTwopdm::do_one(sweepParams, false, direction, false, 0);
@@ -166,8 +184,8 @@ int callDmrg(char* input, char* output)
     dmrginp.Sz() = dmrginp.total_spin_number();
     dmrginp.do_cd() = true;
     dmrginp.screen_tol() = 0.0;
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
     SweepGenblock::do_one(sweepParams, false, direction, false, 0);
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
     
     sweepParams.restorestate(direction, restartsize);    
     SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
@@ -188,8 +206,8 @@ int callDmrg(char* input, char* output)
     dmrginp.Sz() = dmrginp.total_spin_number();
     dmrginp.do_cd() = true;
     dmrginp.screen_tol() = 0.0;    
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
     SweepGenblock::do_one(sweepParams, false, direction, false, 0);
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
 
     sweepParams.restorestate(direction, restartsize);
     SweepTwopdm::do_one(sweepParams, false, direction, false, 0);

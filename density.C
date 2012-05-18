@@ -11,7 +11,7 @@ namespace SpinAdapted{
 using namespace operatorfunctions;
 
 void DensityMatrix::makedensitymatrix(const std::vector<Wavefunction>& wave_solutions, SpinBlock &big, 
-				      const std::vector<double> &wave_weights, const double noise, const double additional_noise, bool warmup, int sweepiter)
+				      const std::vector<double> &wave_weights, const double noise, const double additional_noise, bool warmup)
 {
   for(int i=0;i<wave_weights.size();++i) {
     MultiplyProduct (wave_solutions[i], Transpose(const_cast<Wavefunction&> (wave_solutions[i])), *this, wave_weights[i]);

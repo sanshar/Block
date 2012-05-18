@@ -15,6 +15,7 @@
 
 namespace SpinAdapted{
 class Wavefunction;
+class DensityMatrix;
 
 enum Storagetype {LOCAL_STORAGE, DISTRIBUTED_STORAGE};
 
@@ -129,6 +130,7 @@ class SpinBlock
                         const guessWaveTypes &guesswavetype, const double noise, const double additional_noise, const bool &onedot, SpinBlock& system, 
 			SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, const bool& warmUp, int sweepiter);
 
+  double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates);
   void transform_operators(std::vector<Matrix>& rotateMatrix);
 };
 }

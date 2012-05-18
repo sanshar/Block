@@ -85,41 +85,13 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   if (dmrginp.noise_type() == RANDOM)
     twodotnoise = additional_noise;
   
-  tracedMatrix.makedensitymatrix(wave_solutions, newbig, dmrginp.weights(sweepiter), noise, twodotnoise, normalnoise, sweepiter);
+  tracedMatrix.makedensitymatrix(wave_solutions, newbig, dmrginp.weights(sweepiter), noise, twodotnoise, normalnoise);
   dmrginp.addnoise.stop();
   if (dmrginp.outputlevel() != 0)
     mcheck("after density matrix before rotation matrix");
   if (!mpigetrank())
-    {
-      // find and sort weight info
-      DensityMatrix transformmatrix;
-      transformmatrix.allocate(stateInfo);
-      std::vector<DiagonalMatrix> eigenMatrix;
-      diagonalise_dm(tracedMatrix, transformmatrix, eigenMatrix);
+    error = makeRotateMatrix(tracedMatrix, rotateMatrix, keptstates, keptqstates);
 
-      vector<pair<int, int> > inorderwts;
-      vector<vector<int> > wtsbyquanta;
-
-      int sys_dot_size = *get_sites().rbegin ()+1 ;
-      sort_weights(eigenMatrix, inorderwts, wtsbyquanta);
-
-
-      // make transformation matrix by various algorithms
-      int totalstatesbydm = min(static_cast<int>(inorderwts.size()), keptstates);
-      int totalstatesbyquanta = min(static_cast<int>(inorderwts.size()), keptstates + keptqstates) - totalstatesbydm;
-      if (totalstatesbyquanta < 0) totalstatesbyquanta = 0;
-
-      if (dmrginp.outputlevel() != 0)
-	pout << "\t\t\t total states using dm and quanta " << totalstatesbydm << " " << totalstatesbyquanta << endl;
-
-      /*
-      for (int i=0; i<totalstatesbydm; i++)
-	cout << newbig.leftBlock->get_stateInfo().quanta[inorderwts[i].first]<<" "<<eigenMatrix[inorderwts[i].first].element(inorderwts[i].second, inorderwts[i].second)<<endl;
-      */
-
-      error = assign_matrix_by_dm(rotateMatrix, eigenMatrix, transformmatrix, inorderwts, wtsbyquanta, totalstatesbydm, 
-				  totalstatesbyquanta, newbig.get_leftBlock()->size(), newbig.get_rightBlock()->size());
-    }
 #ifndef SERIAL
   mpi::communicator world;
   broadcast(world, rotateMatrix, 0);
@@ -132,4 +104,37 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   if (dmrginp.outputlevel() != 0)
     mcheck("after noise and calulation of density matrix");
 }
+
+double SpinBlock::makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates)
+{
+  // find and sort weight info
+  DensityMatrix transformmatrix;
+  transformmatrix.allocate(stateInfo);
+  std::vector<DiagonalMatrix> eigenMatrix;
+  diagonalise_dm(tracedMatrix, transformmatrix, eigenMatrix);
+
+  vector<pair<int, int> > inorderwts;
+  vector<vector<int> > wtsbyquanta;
+  
+  int sys_dot_size = *get_sites().rbegin ()+1 ;
+  sort_weights(eigenMatrix, inorderwts, wtsbyquanta);
+  
+  
+  // make transformation matrix by various algorithms
+  int totalstatesbydm = min(static_cast<int>(inorderwts.size()), keptstates);
+  int totalstatesbyquanta = min(static_cast<int>(inorderwts.size()), keptstates + keptqstates) - totalstatesbydm;
+  if (totalstatesbyquanta < 0) totalstatesbyquanta = 0;
+  
+  if (dmrginp.outputlevel() != 0)
+    pout << "\t\t\t total states using dm and quanta " << totalstatesbydm << " " << totalstatesbyquanta << endl;
+  
+  /*
+    for (int i=0; i<totalstatesbydm; i++)
+    cout << newbig.leftBlock->get_stateInfo().quanta[inorderwts[i].first]<<" "<<eigenMatrix[inorderwts[i].first].element(inorderwts[i].second, inorderwts[i].second)<<endl;
+  */
+  
+  return assign_matrix_by_dm(rotateMatrix, eigenMatrix, transformmatrix, inorderwts, wtsbyquanta, totalstatesbydm, 
+			      totalstatesbyquanta, size(), dmrginp.last_site()-size());
+}
+
 }

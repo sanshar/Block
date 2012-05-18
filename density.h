@@ -20,7 +20,7 @@ public:
     deltaQuantum = SpinQuantum(0, 0, IrrepSpace(0));
   }
   void makedensitymatrix(const std::vector<Wavefunction>& wave_solutions, SpinBlock &big, const std::vector<double> &wave_weights,
-			 const double noise, const double additional_noise, bool warmup, int sweepiter);
+			 const double noise, const double additional_noise, bool warmup);
   DensityMatrix& operator+=(const DensityMatrix& other);
 
   //the last three are just there so transposeview is not a abstract class

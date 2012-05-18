@@ -12,7 +12,7 @@ using namespace boost;
 
 SpinAdapted::SweepParams::SweepParams()
 {
-  calculationType = DMRG;
+  //calculationType = DMRG;
   restart_iter = 0;
   block_iter = 0;
   sweep_iter = 0;
@@ -81,7 +81,10 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
 }
 
 
-
+void SpinAdapted::SweepParams::calc_niter()
+{
+  n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+}
 
 void SpinAdapted::SweepParams::savestate(const bool &forward, const int &size)
 {
@@ -114,6 +117,7 @@ void SpinAdapted::SweepParams::restorestate(bool &forward, int &size)
   size = block_iter+1;
   restart_iter = sweep_iter;
 
+  /*
   if (set_calcType() == FCI || set_calcType() == TINYCALC) {
     if (dmrginp.calc_type() != DMRG) 
       pout << "Restart not supported after a FCI  or a TINYCALC calculation.";
@@ -122,7 +126,7 @@ void SpinAdapted::SweepParams::restorestate(bool &forward, int &size)
     abort();
   }
 
-  /*
+
   if (dmrginp.algorithm_method() == TWODOT) 
     onedot = false;
   env_add = dmrginp.env_add();

@@ -14,10 +14,9 @@ private:
   {
     ar & block_iter & sweep_iter & n_iters & forward_starting_size & backward_starting_size & keep_states;
     ar & keep_qstates & sys_add & env_add & noise & additional_noise & davidson_tol & lowest_energy & lowest_energy_spins & guesstype;
-    ar & error & onedot & calculationType;
+    ar & error & onedot;
   }
 
-  int calculationType;
   int restart_iter;
   bool onedot;
   int block_iter;
@@ -42,6 +41,7 @@ public:
   void set_sweep_parameters();
   void savestate(const bool &forward, const int &size);
   void restorestate(bool &forward, int &size);
+  void calc_niter();
 
   const bool &get_onedot() const { return onedot; }
   const int &get_block_iter() const { return block_iter; }

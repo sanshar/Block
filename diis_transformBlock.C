@@ -30,7 +30,7 @@ void SpinAdapted::DIIS::transformBlock(SpinBlock& big, const std::vector<Wavefun
   tracedMatrix.allocate(stateInfo);
   double twodotnoise = 0.0;
   
-  tracedMatrix.makedensitymatrix(wave_solutions, big, dmrginp.weights(sweepiter), 0.0e0, 0.0e0, false, sweepParams.get_sweep_iter());
+  tracedMatrix.makedensitymatrix(wave_solutions, big, dmrginp.weights(sweepiter), 0.0e0, 0.0e0, false);
   std::vector<Matrix> prevRotation;
   LoadRotationMatrix (newSystem.get_sites(), prevRotation);
   if (!mpigetrank())

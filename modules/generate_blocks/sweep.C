@@ -1,5 +1,7 @@
 #include "sweepgenblock.h"
 #include "guess_wavefunction.h"
+#include "density.h"
+#include "davidson.h"
 
 namespace SpinAdapted{
 void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys)
@@ -41,10 +43,6 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
   std::vector<Matrix> rotateMatrix;
   LoadRotationMatrix (newSystem.get_sites(), rotateMatrix);
 
-#ifndef SERIAL
-  mpi::communicator world;
-  broadcast(world, rotateMatrix, 0);
-#endif
 
   if (!dmrginp.get_fullrestart()) {
     //this should be done when we actually have wavefunctions stored, otherwise not!!
@@ -60,8 +58,21 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
     GuessWave::guess_wavefunctions(solutions, e, big, sweepParams.get_guesstype(), true, true); 
     for(int i=0;i<dmrginp.nroots();++i)
       solutions[i].SaveWavefunctionInfo (big.get_stateInfo(), big.get_leftBlock()->get_sites(), i);
+
+
+    DensityMatrix tracedMatrix;
+    tracedMatrix.allocate(newSystem.get_stateInfo());
+    tracedMatrix.makedensitymatrix(solutions, big, dmrginp.weights(sweepParams.get_sweep_iter()), 0.0, 0.0, false);
+    rotateMatrix.clear();
+    if (!mpigetrank())
+      double error = newSystem.makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
+
   }
 
+#ifndef SERIAL
+  mpi::communicator world;
+  broadcast(world, rotateMatrix, 0);
+#endif
 
   SaveRotationMatrix (newSystem.get_sites(), rotateMatrix);
 

@@ -7,6 +7,8 @@
 #include "linear.h"
 #include "guess_wavefunction.h"
 #include "twopdm.h"
+#include "density.h"
+#include "davidson.h"
 
 #ifndef SERIAL
 #include <boost/mpi/communicator.hpp>
@@ -96,19 +98,21 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   const int nroots = dmrginp.nroots();
   std::vector<Wavefunction> solutions(nroots);
 
-  //DiagonalMatrix e;
-  //GuessWave::guess_wavefunctions(solutions, e, big, sweepParams.get_guesstype(), true, true); 
+  DiagonalMatrix e;
+  GuessWave::guess_wavefunctions(solutions, e, big, sweepParams.get_guesstype(), true, true); 
+
+  std::vector<Matrix> rotateMatrix;
+  DensityMatrix tracedMatrix;
+  tracedMatrix.allocate(newSystem.get_stateInfo());
+  tracedMatrix.makedensitymatrix(solutions, big, dmrginp.weights(sweepParams.get_sweep_iter()), 0.0, 0.0, false);
+  rotateMatrix.clear();
+  if (!mpigetrank())
+    double error = newSystem.makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
   
-  
-  for(int i=0;i<nroots;++i)
-  {
-    StateInfo newInfo;
-    solutions[i].LoadWavefunctionInfo (newInfo, newSystem.get_sites(), i);
-  }
 
 #ifndef SERIAL
   mpi::communicator world;
-  mpi::broadcast(world,solutions,0);
+  mpi::broadcast(world,rotateMatrix,0);
 #endif
 
 #ifdef SERIAL
@@ -125,11 +129,10 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   if (sweepParams.get_block_iter()  == sweepParams.get_n_iters() - 1)
     compute_twopdm_final(solutions, system, systemDot, newSystem, newEnvironment, big, numprocs);
 
-  std::vector<Matrix> rotateMatrix;
-  LoadRotationMatrix (newSystem.get_sites(), rotateMatrix);
-#ifndef SERIAL
-  broadcast(world, rotateMatrix, 0);
-#endif
+  SaveRotationMatrix (newSystem.get_sites(), rotateMatrix);
+
+  for(int i=0;i<dmrginp.nroots();++i)
+    solutions[i].SaveWavefunctionInfo (big.get_stateInfo(), big.get_leftBlock()->get_sites(), i);
 
   newSystem.transform_operators(rotateMatrix);
 
@@ -205,7 +208,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
       pout << system<<endl;
       
-      //SpinBlock::store (forward, system.get_sites(), system);	 	
+      SpinBlock::store (forward, system.get_sites(), system);	 	
 
       pout << "\t\t\t saving state " << system.get_sites().size() << endl;
       ++sweepParams.set_block_iter();
