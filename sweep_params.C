@@ -67,7 +67,7 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
   if (dmrginp.algorithm_method() == ONEDOT) {
     onedot = true;
     env_add = 0;
-    n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+    //n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
     pout << "\t\t\t Using the one dot algorithm ... " << endl;
   }  
   if(dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter() <= SpinAdapted::SweepParams::sweep_iter)

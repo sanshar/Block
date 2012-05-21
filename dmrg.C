@@ -89,18 +89,18 @@ int callDmrg(char* input, char* output)
       restart(sweep_tol, reset_iter);
     }
     else {
-      sweepParams.set_calcType() = DMRG;
+      //sweepParams.set_calcType() = DMRG;
       dmrg(sweep_tol);
     }
     break;
 
   case (FCI):
-    sweepParams.set_calcType() = FCI;
+    //sweepParams.set_calcType() = FCI;
     Sweep::fullci(sweep_tol);
     break;
     
   case (TINYCALC):
-    sweepParams.set_calcType() = TINYCALC;
+    //sweepParams.set_calcType() = TINYCALC;
     Sweep::tiny(sweep_tol);
     break;
 
@@ -120,7 +120,7 @@ int callDmrg(char* input, char* output)
       restart(sweep_tol, reset_iter);
     }
     else {
-      sweepParams.set_calcType() = DMRG;
+      //sweepParams.set_calcType() = DMRG;
       dmrg(sweep_tol);
     }
 
@@ -153,7 +153,7 @@ int callDmrg(char* input, char* output)
       restart(sweep_tol, reset_iter);
     }
     else {
-      sweepParams.set_calcType() = DMRG;
+      //sweepParams.set_calcType() = DMRG;
       dmrg(sweep_tol);
     }
 

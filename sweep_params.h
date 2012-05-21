@@ -62,7 +62,7 @@ public:
   const guessWaveTypes &get_guesstype() const { return guesstype; }
   const int &get_restart_iter() const {return restart_iter;}
 
-  int &set_calcType() {return calculationType;}
+  //int &set_calcType() {return calculationType;}
   int &set_restart_iter() {return restart_iter;}
   bool &set_onedot() { return onedot; }
   int &set_block_iter() { return block_iter; }

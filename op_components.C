@@ -12,7 +12,7 @@ namespace SpinAdapted {
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.screen_tol();
-      std::vector<int> screened_c_ix = screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1, screen_tol); 
+      std::vector<int> screened_c_ix = screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1, v_2, screen_tol); 
       m_op.set_indices(screened_c_ix, dmrginp.last_site());  
       std::vector<int> orbs(1);
       

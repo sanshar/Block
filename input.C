@@ -90,7 +90,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_set_Sz = false;
 
   m_sweep_tol = 1.0e-5;
- m_restart = false;
+  m_restart = false;
   m_fullrestart = false;
   m_restart_warm = false;
   m_reset_iterations = false;
@@ -620,7 +620,14 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   ReadMeaningfulLine(dumpFile, msg, msgsize);
   vector<string> tok;
   boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
-  m_norbs = 2*atoi(tok[2].c_str());
+
+  int offset = m_orbformat == DMRGFORM ? 0 : 1;
+
+  if(offset != 0)
+    m_norbs = 2*atoi(tok[2].c_str());
+  else
+    m_norbs = 2*atoi(tok[1].c_str());
+
   m_num_spatial_orbs = 0;
   m_spin_orbs_symmetry.resize(m_norbs);
   m_spin_to_spatial.resize(m_norbs);
@@ -641,13 +648,12 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     abort();
   }
 
-  int offset = m_orbformat == DMRGFORM ? 0 : 1;
   int orbindex = 0;
   msg.resize(0);
   ReadMeaningfulLine(dumpFile, msg, msgsize);
   boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
   
-  while (!boost::iequals(tok[0], "ISYM")) {
+  while (!(boost::iequals(tok[0], "ISYM") || boost::iequals(tok[0], "END"))) {
     for (int i=0; i<tok.size(); i++) {
       if (boost::iequals(tok[i], "ORBSYM") || tok[i].size() == 0) continue;
 
@@ -685,8 +691,10 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   m_spatial_to_spin.push_back(m_norbs);
   m_spin_to_spatial.push_back(m_norbs);
 
-  msg.resize(0);
-  ReadMeaningfulLine(dumpFile, msg, msgsize); //this line reads &END
+  if(offset != 0) {
+    msg.resize(0);
+    ReadMeaningfulLine(dumpFile, msg, msgsize); //this line reads &END
+  }
 
   msg.resize(0);
   ReadMeaningfulLine(dumpFile, msg, msgsize); //this if the first line with integrals
@@ -787,11 +795,7 @@ void SpinAdapted::Input::performSanityTest()
   for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) {
     Symmetry::irrepAllowed(m_spin_orbs_symmetry[i]);
   }
-  if (m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter >= m_maxiter) {
-    cerr << "Switch from twodot to onedot algorithm cannot happen after maxiter"<<endl;
-    cerr << m_twodot_to_onedot_iter <<" < "<<m_maxiter<<endl;
-    abort();
-  }
+
   Symmetry::irrepAllowed(m_total_symmetry_number.getirrep());
   //this is important so the user cannot break the code
   if (m_schedule_type_default) {
@@ -847,6 +851,16 @@ void SpinAdapted::Input::performSanityTest()
       abort();
     }
   }
+
+  if(m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter == 0)
+    m_twodot_to_onedot_iter = min(m_sweep_iter_schedule.back()+2, m_maxiter-1);
+
+  if (m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter >= m_maxiter) {
+    cerr << "Switch from twodot to onedot algorithm cannot happen after maxiter"<<endl;
+    cerr << m_twodot_to_onedot_iter <<" < "<<m_maxiter<<endl;
+    abort();
+  }
+
 
   if (m_maxiter <= m_sweep_iter_schedule.back()) {
     cerr << "maximum iterations allowed is less than or equal to the last sweep iteration in your schedule."<<endl;

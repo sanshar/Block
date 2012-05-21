@@ -129,8 +129,14 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   if (dmrginp.outputlevel() != 0)
     mcheck("");
   if (dmrginp.outputlevel() == 0) {
-    pout << "\t\t\t System  Block"<<newSystem;
-    pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
+    if (!dot_with_sys && sweepParams.get_onedot()) {
+      pout << "\t\t\t System  Block"<<system;
+      pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
+    }
+    else {
+      pout << "\t\t\t System  Block"<<newSystem;
+      pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
+    }
     pout << "\t\t\t Solving wavefunction "<<endl;
   }
 
