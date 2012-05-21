@@ -41,7 +41,6 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
     newSystem.printOperatorSummary();
 
   std::vector<Matrix> rotateMatrix;
-  LoadRotationMatrix (newSystem.get_sites(), rotateMatrix);
 
 
   if (!dmrginp.get_fullrestart()) {
@@ -68,6 +67,8 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
       double error = newSystem.makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
 
   }
+  else
+    LoadRotationMatrix (newSystem.get_sites(), rotateMatrix);
 
 #ifndef SERIAL
   mpi::communicator world;
