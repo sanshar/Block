@@ -45,10 +45,10 @@ bool screen_dd_interaction(int di, int dj, const std::vector<int, std::allocator
 
 std::vector<int, std::allocator<int> > screened_d_indices(const std::vector<int, std::allocator<int> >& indices,
 				    const std::vector<int, std::allocator<int> >& interactingix,
-				    const OneElectronArray& onee, double thresh);
+				    const OneElectronArray& onee, const TwoElectronArray& twoe, double thresh);
 
 bool screen_d_interaction(int index, const std::vector<int, std::allocator<int> >& interactingix,
-			  const OneElectronArray& onee, double thresh);
+			  const OneElectronArray& onee, const TwoElectronArray& twoe, double thresh);
 
 std::vector<int, std::allocator<int> > screened_cddcomp_indices(const std::vector<int, std::allocator<int> >& otherindices,
 					  const std::vector<int, std::allocator<int> >& selfindices,

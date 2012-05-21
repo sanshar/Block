@@ -8,18 +8,18 @@ namespace SpinAdapted{
 
 vector<int, std::allocator<int> > screened_d_indices(const vector<int, std::allocator<int> >& indices,
 			       const vector<int, std::allocator<int> >& interactingix,
-			       const OneElectronArray& onee, double thresh)
+			       const OneElectronArray& onee, const TwoElectronArray& twoe, double thresh)
 {
   vector<int, std::allocator<int> > screened_indices;
   for (int i = 0; i < indices.size(); ++i)
-    if (screen_d_interaction(indices[i], interactingix, onee, thresh))
+    if (screen_d_interaction(indices[i], interactingix, onee, twoe, thresh))
       screened_indices.push_back(indices[i]);
   //pout << "\t\t\tnumber of significant d and d_comp indices: " << screened_indices.size() << endl;
   return screened_indices;
 }
 
 bool screen_d_interaction(int index, const vector<int, std::allocator<int> >& interactingix,
-			  const OneElectronArray& onee, double thresh)
+			  const OneElectronArray& onee, const TwoElectronArray& twoe, double thresh)
 {
   for (int i = 0; i < interactingix.size(); ++i){
     const int ix = interactingix[i];
@@ -29,6 +29,23 @@ bool screen_d_interaction(int index, const vector<int, std::allocator<int> >& in
     if (fabs(onee(lxx, ixx)) >= thresh)
       return true;
   }
+
+  for (int i = 0; i < interactingix.size(); ++i)
+    for (int j = 0; j < interactingix.size(); ++j)
+      for (int k = 0; k < interactingix.size(); ++k)
+      {
+	const int ix = interactingix[i];
+	const int jx = interactingix[j];
+	const int kx = interactingix[k];
+	int xl = index;
+	for (int ixx = dmrginp.spatial_to_spin(ix); ixx <dmrginp.spatial_to_spin(ix+1); ixx++)
+	for (int jxx = dmrginp.spatial_to_spin(jx); jxx <dmrginp.spatial_to_spin(jx+1); jxx++)
+	for (int kxx = dmrginp.spatial_to_spin(kx); kxx <dmrginp.spatial_to_spin(kx+1); kxx++)
+	for (int lxx = dmrginp.spatial_to_spin(xl); lxx <dmrginp.spatial_to_spin(xl+1); lxx++)
+	if (fabs(twoe(lxx,ixx,jxx,kxx)) >= thresh)
+	  return true;
+      }
+
   if(interactingix.size() == 0)
     return true;
   else
