@@ -156,6 +156,7 @@ class Input {
   const int& start_diis_iter() const {return m_start_diis_iter;}
   const int& diis_keep_states() const {return m_diis_keep_states;}
 
+  bool& set_fullrestart() {return m_fullrestart;}
   const double& get_coreenergy() const {return m_core_energy;}
   const bool& get_fullrestart() const {return m_fullrestart;}
   const double& get_sweep_tol() const {return m_sweep_tol;}

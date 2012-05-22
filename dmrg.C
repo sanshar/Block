@@ -75,6 +75,10 @@ int callDmrg(char* input, char* output)
   int restartsize;
   SweepParams sweepParams;
 
+  SweepParams sweep_copy;
+  bool direction_copy; int restartsize_copy;
+
+
   switch(dmrginp.calc_type()) {
     
   case (DMRG):
@@ -128,12 +132,15 @@ int callDmrg(char* input, char* output)
     dmrginp.Sz() = dmrginp.total_spin_number();
     dmrginp.do_cd() = true;
     dmrginp.screen_tol() = 0.0;
-    sweepParams.restorestate(direction, restartsize);
-    SweepGenblock::do_one(sweepParams, false, direction, false, 0);
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
-        
-    sweepParams.restorestate(direction, restartsize);
+
+    sweep_copy.restorestate(direction_copy, restartsize_copy);
+    dmrginp.set_fullrestart() = true;
+    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
+    dmrginp.set_fullrestart() = false;    
+
     SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
+    sweep_copy.savestate(direction_copy, restartsize_copy);
     break;
 
   case (TWOPDM):
@@ -157,16 +164,24 @@ int callDmrg(char* input, char* output)
       dmrg(sweep_tol);
     }
 
+
     dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
     dmrginp.Sz() = dmrginp.total_spin_number();
     dmrginp.do_cd() = true;
     dmrginp.screen_tol() = 0.0;
-    sweepParams.restorestate(direction, restartsize);
-    SweepGenblock::do_one(sweepParams, false, direction, false, 0);
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
-        
-    sweepParams.restorestate(direction, restartsize);
-    SweepTwopdm::do_one(sweepParams, false, direction, false, 0);
+    sweep_copy.restorestate(direction_copy, restartsize_copy);
+
+    dmrginp.set_fullrestart() = true;
+    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
+    dmrginp.set_fullrestart() = false;    
+
+    for (int state=0; state<dmrginp.nroots(); state++) {
+
+      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+      SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
+    }
+    sweep_copy.savestate(direction_copy, restartsize_copy);
     break;
 
   case (RESTART_ONEPDM):
@@ -180,15 +195,21 @@ int callDmrg(char* input, char* output)
       abort();
     }
 
+
     dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
     dmrginp.Sz() = dmrginp.total_spin_number();
     dmrginp.do_cd() = true;
     dmrginp.screen_tol() = 0.0;
-    SweepGenblock::do_one(sweepParams, false, direction, false, 0);
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
-    
-    sweepParams.restorestate(direction, restartsize);    
+
+    sweep_copy.restorestate(direction_copy, restartsize_copy);
+    dmrginp.set_fullrestart() = true;
+    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
+    dmrginp.set_fullrestart() = false;    
+
     SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
+    sweep_copy.savestate(direction_copy, restartsize_copy);
+
     break;
 
   case (RESTART_TWOPDM):
@@ -206,11 +227,20 @@ int callDmrg(char* input, char* output)
     dmrginp.Sz() = dmrginp.total_spin_number();
     dmrginp.do_cd() = true;
     dmrginp.screen_tol() = 0.0;    
-    SweepGenblock::do_one(sweepParams, false, direction, false, 0);
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0);
+    sweep_copy.restorestate(direction_copy, restartsize_copy);
 
-    sweepParams.restorestate(direction, restartsize);
-    SweepTwopdm::do_one(sweepParams, false, direction, false, 0);
+    dmrginp.set_fullrestart() = true;
+    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
+    dmrginp.set_fullrestart() = false;    
+
+    for (int state=0; state<dmrginp.nroots(); state++) {
+
+      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+      SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
+    }
+    sweep_copy.savestate(direction_copy, restartsize_copy);
+
     break;
   }
 
@@ -225,7 +255,7 @@ void fullrestartGenblock() {
   sweepParams.set_sweep_iter() = 0;
   restartsize = 0;
 
-  SweepGenblock::do_one(sweepParams, false, !direction, RESTART, restartsize);
+  SweepGenblock::do_one(sweepParams, false, !direction, RESTART, restartsize, 0);
   
   sweepParams.restorestate(direction, restartsize);
   sweepParams.set_sweep_iter()=0;

@@ -399,7 +399,8 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
 
   dmrginp.operrotT.start();
   newSystem.transform_operators(rotateMatrix);
-  SaveRotationMatrix (newSystem.get_sites(), rotateMatrix);
+  for (int i=0; i<dmrginp.nroots(); i++)
+    SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, i);
   dmrginp.operrotT.stop();
   mcheck("after rotation and transformation of block");
   

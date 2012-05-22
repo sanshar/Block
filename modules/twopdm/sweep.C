@@ -45,10 +45,17 @@ void calcenergy(array_4d<double>& twopdm, int state)
     energy += v_1(i,j) * onepdm(i+1,j+1);
 
   pout << "energy of state "<< state <<" = "<< energy+dmrginp.get_coreenergy()<<endl;
+
+  ofstream out("onepdm_fromtpdm");
+  for (int i=0; i<dmrginp.last_site()*2; i++)
+  for (int j=0; j<dmrginp.last_site()*2; j++)
+    out<<i<<"  "<<j<<"  "<<onepdm(i+1,j+1)<<endl;
+  out.close();
+  
 }
 
 namespace SpinAdapted{
-void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys)
+void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys, int state)
 {
   //mcheck("at the start of block and decimate");
   // figure out if we are going forward or backwards
@@ -96,15 +103,15 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
 
   const int nroots = dmrginp.nroots();
-  std::vector<Wavefunction> solutions(nroots);
+  std::vector<Wavefunction> solution(1);
 
   DiagonalMatrix e;
-  GuessWave::guess_wavefunctions(solutions, e, big, sweepParams.get_guesstype(), true, true); 
+  GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, true, 0.0); 
 
   std::vector<Matrix> rotateMatrix;
   DensityMatrix tracedMatrix;
   tracedMatrix.allocate(newSystem.get_stateInfo());
-  tracedMatrix.makedensitymatrix(solutions, big, dmrginp.weights(sweepParams.get_sweep_iter()), 0.0, 0.0, false);
+  tracedMatrix.makedensitymatrix(solution, big, std::vector<double>(1,1.0), 0.0, 0.0, false);
   rotateMatrix.clear();
   if (!mpigetrank())
     double error = newSystem.makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
@@ -122,23 +129,23 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   const int numprocs = world.size();
 #endif
   if (sweepParams.get_block_iter() == 0)
-    compute_twopdm_initial(solutions, system, systemDot, newSystem, newEnvironment, big, numprocs);
+    compute_twopdm_initial(solution, system, systemDot, newSystem, newEnvironment, big, numprocs, state);
 
-  compute_twopdm_sweep(solutions, system, systemDot, newSystem, newEnvironment, big, numprocs);
+  compute_twopdm_sweep(solution, system, systemDot, newSystem, newEnvironment, big, numprocs, state);
 
   if (sweepParams.get_block_iter()  == sweepParams.get_n_iters() - 1)
-    compute_twopdm_final(solutions, system, systemDot, newSystem, newEnvironment, big, numprocs);
+    compute_twopdm_final(solution, system, systemDot, newSystem, newEnvironment, big, numprocs, state);
 
-  SaveRotationMatrix (newSystem.get_sites(), rotateMatrix);
+  SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
 
-  for(int i=0;i<dmrginp.nroots();++i)
-    solutions[i].SaveWavefunctionInfo (big.get_stateInfo(), big.get_leftBlock()->get_sites(), i);
+  //for(int i=0;i<dmrginp.nroots();++i)
+  solution[0].SaveWavefunctionInfo (big.get_stateInfo(), big.get_leftBlock()->get_sites(), state);
 
   newSystem.transform_operators(rotateMatrix);
 
 }
 
-double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize)
+double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state)
 {
   cout.precision(12);
   SpinBlock system;
@@ -194,7 +201,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 	  
       SpinBlock newSystem;
 
-      BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys);
+      BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys, state);
 
       for(int j=0;j<nroots;++j)
         pout << "\t\t\t Total block energy for State [ " << j << 
@@ -214,23 +221,23 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
       ++sweepParams.set_block_iter();
       sweepParams.savestate(forward, system.get_sites().size());
     }
-  for(int j=0;j<nroots;++j)
+  //for(int j=0;j<nroots;++j)
+  {int j = state;
     pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
 	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
+  }
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
 
-  for (int i=0; i<nroots; i++)
-    {
-      int j = i;
-    //for (int j=0; j<=i; j++) {
-      load_twopdm_binary(twopdm, i, j); 
-      calcenergy(twopdm, i);
-      save_twopdm_text(twopdm, i, j);
-      save_spatial_twopdm_text(twopdm, i, j);
-      save_spatial_twopdm_binary(twopdm, i, j);
-    }
+  int i = state, j = state;
+  //for (int j=0; j<=i; j++) {
+  load_twopdm_binary(twopdm, i, j); 
+  calcenergy(twopdm, i);
+  save_twopdm_text(twopdm, i, j);
+  save_spatial_twopdm_text(twopdm, i, j);
+  save_spatial_twopdm_binary(twopdm, i, j);
+  
 
   // update the static number of iterations
 

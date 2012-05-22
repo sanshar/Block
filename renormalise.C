@@ -97,7 +97,8 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   broadcast(world, rotateMatrix, 0);
 #endif
 
-  SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix);
+  for (int i=0; i<nroots; i++)
+    SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix, i);
   for(int i=0;i<nroots;++i)
     wave_solutions[i].SaveWavefunctionInfo (newbig.stateInfo, newbig.leftBlock->sites, i);
   dmrginp.rotmatrixT.stop();

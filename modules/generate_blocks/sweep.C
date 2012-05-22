@@ -4,7 +4,7 @@
 #include "davidson.h"
 
 namespace SpinAdapted{
-void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys)
+void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys, int state)
 {
   if (dmrginp.outputlevel() != 0) 
     mcheck("at the start of block and decimate");
@@ -53,29 +53,30 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
     SpinBlock big;
     InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
     DiagonalMatrix e;
-    std::vector<Wavefunction> solutions(dmrginp.nroots());
-    GuessWave::guess_wavefunctions(solutions, e, big, sweepParams.get_guesstype(), true, true); 
-    for(int i=0;i<dmrginp.nroots();++i)
-      solutions[i].SaveWavefunctionInfo (big.get_stateInfo(), big.get_leftBlock()->get_sites(), i);
+    std::vector<Wavefunction> solution(1);
+    
+    GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, true, 0.0); 
+    solution[0].SaveWavefunctionInfo (big.get_stateInfo(), big.get_leftBlock()->get_sites(), state);
 
 
     DensityMatrix tracedMatrix;
     tracedMatrix.allocate(newSystem.get_stateInfo());
-    tracedMatrix.makedensitymatrix(solutions, big, dmrginp.weights(sweepParams.get_sweep_iter()), 0.0, 0.0, false);
+    tracedMatrix.makedensitymatrix(solution, big, std::vector<double>(1, 1.0), 0.0, 0.0, false);
     rotateMatrix.clear();
     if (!mpigetrank())
       double error = newSystem.makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
-
+    
   }
   else
-    LoadRotationMatrix (newSystem.get_sites(), rotateMatrix);
+    LoadRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
 
 #ifndef SERIAL
   mpi::communicator world;
   broadcast(world, rotateMatrix, 0);
 #endif
 
-  SaveRotationMatrix (newSystem.get_sites(), rotateMatrix);
+  if (!dmrginp.get_fullrestart())
+    SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
 
   pout <<"\t\t\t Performing Renormalization "<<endl<<endl;
   newSystem.transform_operators(rotateMatrix);
@@ -88,7 +89,7 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
   //mcheck("After renorm transform");
 }
 
-double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize)
+double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state)
 {
 
   SpinBlock system;
@@ -148,7 +149,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
 	  
       SpinBlock newSystem;
 
-      BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys);
+      BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys, state);
 
       
       system = newSystem;

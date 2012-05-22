@@ -9,16 +9,16 @@
 #include "operatorfunctions.h"
 #include "execinfo.h"
 namespace SpinAdapted{
-void compute_twopdm_sweep(std::vector<Wavefunction>& wavefunctions, const SpinBlock& system, const SpinBlock& systemDot, const SpinBlock& newSystem, const SpinBlock& newEnvironment, const SpinBlock& big, const int numprocs)
+  void compute_twopdm_sweep(std::vector<Wavefunction>& wavefunctions, const SpinBlock& system, const SpinBlock& systemDot, const SpinBlock& newSystem, const SpinBlock& newEnvironment, const SpinBlock& big, const int numprocs, int state)
 {
   const int nroots = wavefunctions.size();
   array_4d<double> twopdm(big.size()*2, big.size()*2, big.size()*2, big.size()*2);
-  for(int i=0;i<nroots;++i)
     //for(int j=0;j<=i;++j)
       {
+	int i = state;
 	int j = i;
-	Wavefunction &wavefunction1 = wavefunctions[i];
-	Wavefunction &wavefunction2 = wavefunctions[j];
+	Wavefunction &wavefunction1 = wavefunctions[0];
+	Wavefunction &wavefunction2 = wavefunctions[0];
 	load_twopdm_binary(twopdm, i ,j);
 
 	const std::vector<int> distribute_work = distribute_procs(numprocs,4);
@@ -50,16 +50,17 @@ void compute_twopdm_sweep(std::vector<Wavefunction>& wavefunctions, const SpinBl
       }
 }
 
-void compute_twopdm_final(std::vector<Wavefunction>& wavefunctions, const SpinBlock& system, const SpinBlock& systemDot, const SpinBlock& newSystem, const SpinBlock& newEnvironment, const SpinBlock& big, const int numprocs)
+void compute_twopdm_final(std::vector<Wavefunction>& wavefunctions, const SpinBlock& system, const SpinBlock& systemDot, const SpinBlock& newSystem, const SpinBlock& newEnvironment, const SpinBlock& big, const int numprocs, int state)
 {
   const int nroots = wavefunctions.size();
   array_4d<double> twopdm(big.size()*2, big.size()*2, big.size()*2, big.size()*2);
-  for(int i=0;i<nroots;++i)
+  //for(int i=0;i<nroots;++i)
     //for(int j=0;j<=i;++j)
       {
+	int i = state;
 	int j = i;
-	Wavefunction &wavefunction1 = wavefunctions[i];
-	Wavefunction &wavefunction2 = wavefunctions[j];
+	Wavefunction &wavefunction1 = wavefunctions[0];
+	Wavefunction &wavefunction2 = wavefunctions[0];
 	load_twopdm_binary(twopdm, i ,j);
 	pout <<"Performing sweep calculation "<<endl;
 	const std::vector<int> distribute_work = distribute_procs(numprocs,2);
@@ -78,16 +79,17 @@ void compute_twopdm_final(std::vector<Wavefunction>& wavefunctions, const SpinBl
 }
 
 
-void compute_twopdm_initial(std::vector<Wavefunction>& wavefunctions, const SpinBlock& system, const SpinBlock& systemDot, const SpinBlock& newSystem, const SpinBlock& newEnvironment, const SpinBlock& big, const int numprocs)
+void compute_twopdm_initial(std::vector<Wavefunction>& wavefunctions, const SpinBlock& system, const SpinBlock& systemDot, const SpinBlock& newSystem, const SpinBlock& newEnvironment, const SpinBlock& big, const int numprocs, int state)
 {
   const int nroots = wavefunctions.size();
   array_4d<double> twopdm(big.size()*2, big.size()*2, big.size()*2, big.size()*2);
-  for(int i=0;i<nroots;++i)
+  //for(int i=0;i<nroots;++i)
     //for(int j=0;j<=i;++j)
       {
+	int i = state;
 	int j = i;
-	Wavefunction &wavefunction1 = wavefunctions[i];
-	Wavefunction &wavefunction2 = wavefunctions[j];
+	Wavefunction &wavefunction1 = wavefunctions[0];//there is only one wavefunction in the vector the 
+	Wavefunction &wavefunction2 = wavefunctions[0];
 	load_twopdm_binary(twopdm, i ,j);
 	const std::vector<int> distribute_work = distribute_procs(numprocs,2);
 

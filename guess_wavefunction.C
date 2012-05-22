@@ -235,7 +235,7 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
   mpi::communicator world;
 #endif
   solution.initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
-
+  
   if (!mpigetrank())
   {
     switch(guesswavetype)
@@ -394,11 +394,11 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
   std::vector<Matrix> inverseLeftRotationMatrix;
   if (transpose_guess_wave || !onedot){
     oldWave.LoadWavefunctionInfo (oldStateInfo, big.get_leftBlock()->get_leftBlock()->get_sites(), state);
-    LoadRotationMatrix (big.get_leftBlock()->get_leftBlock()->get_sites(), inverseLeftRotationMatrix);
+    LoadRotationMatrix (big.get_leftBlock()->get_leftBlock()->get_sites(), inverseLeftRotationMatrix, state);
   }
   else{
     oldWave.LoadWavefunctionInfo (oldStateInfo, big.get_leftBlock()->get_sites(), state);
-    LoadRotationMatrix (big.get_leftBlock()->get_sites(), inverseLeftRotationMatrix);
+    LoadRotationMatrix (big.get_leftBlock()->get_sites(), inverseLeftRotationMatrix, state);
   }
 
   for (int q = 0; q < inverseLeftRotationMatrix.size (); ++q)
@@ -445,7 +445,7 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
     tempnewStateInfo.CollectQuanta();
     onedot_shufflesysdot(tempoldStateInfo, tempnewStateInfo, tempoldWave, tempnewWave);
     
-    LoadRotationMatrix (big.get_rightBlock()->get_sites(), rightRotationMatrix);
+    LoadRotationMatrix (big.get_rightBlock()->get_sites(), rightRotationMatrix, state);
     trial.AllowQuantaFor(*big.get_stateInfo().leftStateInfo, *big.get_stateInfo().rightStateInfo, oldWave.get_deltaQuantum()); 
     TransformRightBlock(tempnewWave, oldStateInfo, rightRotationMatrix, trial);
     // from tensor product form |a>|b> group together blocks with same quantum numbers
@@ -458,11 +458,11 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
       rotsites = big.get_rightBlock()->get_sites();
       rotsites.insert(rotsites.end(), big.get_leftBlock()->get_rightBlock()->get_sites().begin(), big.get_leftBlock()->get_rightBlock()->get_sites().end());
       sort(rotsites.begin(), rotsites.end());
-      LoadRotationMatrix(rotsites, rightRotationMatrix);
+      LoadRotationMatrix(rotsites, rightRotationMatrix, state);
     }
     else {
       rotsites = big.get_rightBlock()->get_sites();
-      LoadRotationMatrix(rotsites, rightRotationMatrix);
+      LoadRotationMatrix(rotsites, rightRotationMatrix, state);
     }
     onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWave, inverseLeftRotationMatrix, rightRotationMatrix, trial, transpose_guess_wave);
   }

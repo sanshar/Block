@@ -805,8 +805,7 @@ void SpinAdapted::Input::performSanityTest()
       abort();
     }
     if (m_maxM <= 0) {
-      pout << "WARNING:::maxM cannot be less than 0"<<endl;
-      pout << "WARNING:::Changing maxM to 50"<<endl;
+      pout << "maxM cannot be less than 0"<<endl;
       abort();
     }
     if (m_sweep_tol <= 0.0) {

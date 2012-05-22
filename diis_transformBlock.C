@@ -32,7 +32,9 @@ void SpinAdapted::DIIS::transformBlock(SpinBlock& big, const std::vector<Wavefun
   
   tracedMatrix.makedensitymatrix(wave_solutions, big, dmrginp.weights(sweepiter), 0.0e0, 0.0e0, false);
   std::vector<Matrix> prevRotation;
-  LoadRotationMatrix (newSystem.get_sites(), prevRotation);
+
+  LoadRotationMatrix (newSystem.get_sites(), prevRotation, 0); //check if the rotation block of state 0 should be read?
+
   if (!mpigetrank())
     {
       // find and sort weight info
@@ -77,7 +79,8 @@ void SpinAdapted::DIIS::transformBlock(SpinBlock& big, const std::vector<Wavefun
 #endif
   maxOverlapPrevRotation(rotateMatrix, newSystem.get_sites(), prevRotation);
 
-  SaveRotationMatrix (newSystem.get_sites(), rotateMatrix);
+  for (int i=0; i<dmrginp.nroots(); i++)
+    SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, i);
   newSystem.transform_operators(rotateMatrix);
   mcheck("after rotation and transformation of block");
   pout <<newSystem<<endl;
