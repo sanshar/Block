@@ -6,7 +6,7 @@
 using namespace boost;
 using namespace std;
 
-void SpinAdapted::SaveRotationMatrix (const std::vector<int>& sites, const std::vector<Matrix>& m1)
+void SpinAdapted::SaveRotationMatrix (const std::vector<int>& sites, const std::vector<Matrix>& m1, int state)
 {
   Timer disktimer;
   int rank = mpigetrank();
@@ -14,7 +14,7 @@ void SpinAdapted::SaveRotationMatrix (const std::vector<int>& sites, const std::
     {
 
       char file [5000];
-      sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(), ".tmp");
+      sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(),".state",state, ".tmp");
       if (dmrginp.outputlevel() != 0) 
 	pout << "\t\t\t Saving Rotation Matrix :: " << file << endl;
       std::ofstream ofs(file, std::ios::binary);
@@ -24,14 +24,15 @@ void SpinAdapted::SaveRotationMatrix (const std::vector<int>& sites, const std::
     }
 }
 
-void SpinAdapted::LoadRotationMatrix (const std::vector<int>& sites, std::vector<Matrix>& m1)
+void SpinAdapted::LoadRotationMatrix (const std::vector<int>& sites, std::vector<Matrix>& m1, int state)
 {
   Timer disktimer;
   int rank = mpigetrank();
   if (rank == 0)
   {
     char file [5000];
-    sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.load_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(), ".tmp");
+    //sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.load_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(), ".tmp");
+    sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(),".state",state, ".tmp");
     if (dmrginp.outputlevel() != 0) 
       pout << "\t\t\t Loading Rotation Matrix :: " << file << endl;
     std::ifstream ifs(file, std::ios::binary);
