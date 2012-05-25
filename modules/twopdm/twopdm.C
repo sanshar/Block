@@ -24,24 +24,22 @@ namespace SpinAdapted{
 	const std::vector<int> distribute_work = distribute_procs(numprocs,4);
 	pout <<"Performing sweep calculation "<<endl;
 
-	pout << "compute 1_3_0"<<endl;
-	if(mpigetrank() == distribute_work[0])
-	  compute_two_pdm_1_3_0(wavefunction1, wavefunction2, big, twopdm);
-
 	pout << "compute 0_4_0"<<endl;
 	if(mpigetrank() == distribute_work[1])
 	  compute_two_pdm_0_4_0(wavefunction1, wavefunction2, big, twopdm);
 
+	pout << "compute 1_3_0"<<endl;
+	compute_two_pdm_1_3_0(wavefunction1, wavefunction2, big, twopdm);
+
 	pout << "compute 0_3_1"<<endl;
-	if(mpigetrank() == distribute_work[2])
-	  compute_two_pdm_0_3_1(wavefunction1, wavefunction2, big, twopdm);
+	compute_two_pdm_0_3_1(wavefunction1, wavefunction2, big, twopdm);
 
 	pout << "compute 1_2_1"<<endl;
-	if(mpigetrank() == distribute_work[3])
-	  compute_two_pdm_1_2_1(wavefunction1, wavefunction2, big, twopdm);
+	compute_two_pdm_1_2_1(wavefunction1, wavefunction2, big, twopdm);
 
 	pout << "compute 0_2_2"<<endl;
 	compute_two_pdm_0_2_2(wavefunction1, wavefunction2, big, twopdm);
+
 	pout << "compute 1_1_2"<<endl;
 	compute_two_pdm_1_1_2(wavefunction1, wavefunction2, big, twopdm);
 
@@ -100,8 +98,8 @@ void compute_twopdm_initial(std::vector<Wavefunction>& wavefunctions, const Spin
 	  compute_two_pdm_4_0_0(wavefunction1, wavefunction2, big, twopdm);
 
 	pout << "compute 3_0_1"<<endl;
-	if(mpigetrank() == distribute_work[1])
-	  compute_two_pdm_3_0_1(wavefunction1, wavefunction2, big, twopdm);
+	//if(mpigetrank() == distribute_work[1])
+	compute_two_pdm_3_0_1(wavefunction1, wavefunction2, big, twopdm);
 
 	pout << "compute 3_1_0"<<endl;
 	if(mpigetrank() == distribute_work[0])
@@ -115,8 +113,7 @@ void compute_twopdm_initial(std::vector<Wavefunction>& wavefunctions, const Spin
 	  compute_two_pdm_2_2_0(wavefunction1, wavefunction2, big, twopdm);
 
 	pout << "compute 2_1_1"<<endl;
-	if(mpigetrank() == distribute_work[0])
-	  compute_two_pdm_2_1_1(wavefunction1, wavefunction2, big, twopdm);
+	compute_two_pdm_2_1_1(wavefunction1, wavefunction2, big, twopdm);
 
 	accumulate_twopdm(twopdm);
 	save_twopdm_binary(twopdm, i ,j);
@@ -220,10 +217,8 @@ void compute_two_pdm_0_2_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_rep(CRE_CRE, sq0, ix, jx);
     SparseMatrix* leftOp = 0;
         
-#pragma omp parallel default(shared)
     {
       int ccsize = rightBlock->get_op_array(CRE_CRE).get_size();
-#pragma omp for schedule(guided) nowait
     for (int kl =0; kl <ccsize; kl++)
     {
       boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_CRE).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
@@ -253,10 +248,10 @@ void compute_two_pdm_0_2_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_array(CRE_DES).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);//dotBlock->get_op_rep(CRE_DES_S0, ix, jx);
     SparseMatrix* leftOp = 0;
         
-#pragma omp parallel default(shared)
+
     {
       int cdsize = rightBlock->get_op_array(CRE_DES).get_size();
-#pragma omp for schedule(guided) nowait
+
     for (int kl =0; kl <cdsize; kl++)
     {
       boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
@@ -283,10 +278,10 @@ void compute_two_pdm_2_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   bool start = leftBlock->get_sites().size() ==2 ? true : false;
   int leftindex = leftBlock->get_sites()[0];
 
-#pragma omp parallel default(shared)
+  //#pragma omp parallel default(shared)
   {
   int ccsize = leftBlock->get_op_array(CRE_CRE).get_size();
-#pragma omp for schedule(guided) nowait
+  //#pragma omp for schedule(guided) nowait
   for (int ij = 0; ij < ccsize; ++ij)
   {
     boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_CRE).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
@@ -313,10 +308,10 @@ void compute_two_pdm_2_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   }      
   }
 
-#pragma omp parallel default(shared)
+  //#pragma omp parallel default(shared)
   {
     int cdsize = leftBlock->get_op_array(CRE_DES).get_size();
-#pragma omp for schedule(guided) nowait
+    //#pragma omp for schedule(guided) nowait
   for (int ij = 0; ij < cdsize; ++ij)
   {
     boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_DES).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
@@ -351,10 +346,10 @@ void compute_two_pdm_2_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   bool start = leftBlock->get_sites().size() ==2 ? true : false;
   int leftindex = leftBlock->get_sites()[0];
 
-#pragma omp parallel default(shared)
+  //#pragma omp parallel default(shared)
   {
     int ccsize = leftBlock->get_op_array(CRE_CRE).get_size();
-#pragma omp for schedule(guided) nowait
+    //#pragma omp for schedule(guided) nowait
   for (int ij = 0; ij < ccsize; ++ij)
   {
     boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_CRE).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
@@ -382,10 +377,10 @@ void compute_two_pdm_2_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   }
 
 
-#pragma omp parallel default(shared)
+  //#pragma omp parallel default(shared)
   {
     int cdsize = leftBlock->get_op_array(CRE_DES).get_size();
-#pragma omp for schedule(guided) nowait
+    //#pragma omp for schedule(guided) nowait
   for (int ij = 0; ij < cdsize; ++ij)
   {
     boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_DES).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
@@ -427,10 +422,10 @@ void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     int ix = leftop->get_orbs(0);
     int jx = dotindex;
         
-#pragma omp parallel default(shared)
+    //#pragma omp parallel default(shared)
     {
       int ccsize = rightBlock->get_op_array(CRE_CRE).get_size();
-#pragma omp for schedule(guided) nowait
+      //#pragma omp for schedule(guided) nowait
     for (int kl =0; kl <ccsize; kl++)
     {
       boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_CRE).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
@@ -457,10 +452,10 @@ void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     int ix = leftop->get_orbs(0);
     int jx = dotindex;
         
-#pragma omp parallel default(shared)
+    //#pragma omp parallel default(shared)
     {
       int cdsize = rightBlock->get_op_array(CRE_DES).get_size();
-#pragma omp for schedule(guided) nowait
+      //#pragma omp for schedule(guided) nowait
     for (int kl =0; kl <cdsize; kl++)
     {
       boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
@@ -497,10 +492,10 @@ void compute_two_pdm_1_2_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   int dotindex = dotBlock->get_sites()[0];
   int jx = dotindex;
 
-#pragma omp parallel default(shared)
+  //#pragma omp parallel default(shared)
   {
     int csize = leftBlock->get_leftBlock()->get_op_array(CRE).get_size();
-#pragma omp for schedule(guided) nowait
+    //#pragma omp for schedule(guided) nowait
   for (int j = 0; j < csize; ++j)
   {
     shared_ptr<SparseMatrix> leftop = leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(j)[0];
@@ -850,15 +845,22 @@ void compute_two_pdm_1_3_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   Dotop2.allocate(dotBlock->get_stateInfo());
   operatorfunctions::Product(dotBlock, *dotop2, Transposeview(*dotop0), Dotop2, 1.0);
         
-#pragma omp parallel default(shared)
+  //#pragma omp parallel default(shared)
   {
   SparseMatrix *rightop = 0;
   int csize = leftBlock->get_leftBlock()->get_op_array(CRE).get_size();
-#pragma omp for schedule(guided) nowait
+
+  boost::mpi::communicator world;
+  const std::vector<int> distribute_work = distribute_procs(world.size(),leftBlock->get_leftBlock()->get_sites());
+  const std::vector<int>& sites =  leftBlock->get_leftBlock()->get_sites();
+  //#pragma omp for schedule(guided) nowait
   for (int k =0; k <csize; k++)
     {
       SparseMatrix& leftop = *leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(k)[0];
       int kx = leftop.get_orbs(0);
+      if (mpigetrank() != distribute_work[kx-sites[0]])
+        continue;
+
       Transposeview tlop = Transposeview(leftop);
 
       vector<double> expectations;
@@ -870,31 +872,6 @@ void compute_two_pdm_1_3_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       spin_to_nonspin(indices, expectations, twopdm, CC_D_D, true);
     }
   }
-  /*
-  dotop1  = dotBlock->get_op_rep(CRE_DES_S0, dotindex, dotindex);
-  dotop2  = dotBlock->get_op_rep(CRE_DES_S2, dotindex, dotindex);
-  Dotop1.set_deltaQuantum() = ( dotop1->get_deltaQuantum() - dotop0->get_deltaQuantum() )[0];
-  Dotop1.allocate(dotBlock->get_stateInfo());
-  operatorfunctions::Product(dotBlock, *dotop1, Transposeview(*dotop0), Dotop1, 1.0);
-
-  Dotop2.set_deltaQuantum() = ( dotop2->get_deltaQuantum() - dotop0->get_deltaQuantum() )[0];
-  Dotop2.allocate(dotBlock->get_stateInfo());
-  operatorfunctions::Product(dotBlock, *dotop2, Transposeview(*dotop0), Dotop2, 1.0);
-        
-  for (int k =0; k <leftBlock->get_leftBlock()->get_op_array(CRE_S1).get_size(); k++)
-    {
-      SparseMatrix& leftop = leftBlock->get_leftBlock()->get_op_array(CRE_S1).get_local_element(k);
-      int kx = leftop.get_orbs(0);
-
-      vector<double> expectations;
-      spinExpectation(wave1, wave2, leftop, Dotop1, *rightop, big, expectations, false);
-      spinExpectation(wave1, wave2, leftop, Dotop2, *rightop, big, expectations, false);
-
-      vector<int> indices(4,0);
-      indices[0] = kx; indices[1] = jx; indices[2] = jx; indices[3] = jx;
-      spin_to_nonspin(indices, expectations, twopdm, C_CD_D, false);
-    }
-  */
 }
 
 void compute_two_pdm_1_3(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, array_4d<double>& twopdm)
@@ -975,5 +952,18 @@ std::vector<int> distribute_procs(const int numprocs, const int numjobs) {
 
   return retval;
 }
+
+
+std::vector<int> distribute_procs(const int numprocs, const std::vector<int>& sites) {
+  // In this we are going to distribute the sites between the procs.
+  int numjobs = sites.size();
+  std::vector<int> retval(numjobs);
+
+  for (int i=0; i<sites.size(); i++) 
+    retval[i] = i%numprocs;
+
+  return retval;
+}
+
 
 }

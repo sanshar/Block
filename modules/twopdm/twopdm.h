@@ -46,5 +46,6 @@ void save_averaged_twopdm(const int &nroots);
 void accumulate_twopdm(array_4d<double>& twopdm);
 double DotProduct(const Wavefunction& w1, const Wavefunction& w2, double Sz, const SpinBlock& big);
 std::vector<int> distribute_procs(const int numprocs, const int numjobs);
+std::vector<int> distribute_procs(const int numprocs, const std::vector<int>& sites);
 }
 #endif
