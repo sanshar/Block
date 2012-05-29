@@ -51,7 +51,7 @@ namespace SpinAdapted{
       else if (s.irrep >=2 && s.irrep <4 ) os<< '-';
     }
     else {
-      os<< s.irrep;
+      os<< s.irrep+1;
     }
     return os;
   }
