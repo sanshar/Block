@@ -24,6 +24,10 @@ enum noiseTypes {RANDOM, EXCITEDSTATE};
 enum calcType {DMRG, ONEPDM, TWOPDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 
+enum keywords{ORBS, MAXM, REORDER, SCHEDULE, SYM, NELECS, SPIN, IRREP,
+	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, 
+	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NUMKEYWORDS};
+
 class Input {
 
  private:
@@ -136,6 +140,7 @@ class Input {
   void performSanityTest();
   void readorbitalsfile(ifstream& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
+  void usedkey_error(string& key, string& line);
 
   static void ReadMeaningfulLine(ifstream&, string&, int);
   cumulTimer guessgenT, multiplierT, operrotT, davidsonT, rotmatrixT, blockdavid, datatransfer;

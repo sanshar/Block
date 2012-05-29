@@ -47,14 +47,14 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
      }
   }
   keep_states = dmrginp.sweep_state_schedule()[current];
-  keep_qstates = dmrginp.sweep_qstate_schedule()[current];
+  keep_qstates = 0.0;//dmrginp.sweep_qstate_schedule()[current];
   davidson_tol = dmrginp.sweep_tol_schedule()[current];
   noise = dmrginp.sweep_noise_schedule()[current];
-  additional_noise = dmrginp.sweep_additional_noise_schedule()[current];
+  additional_noise = 0.0;//dmrginp.sweep_additional_noise_schedule()[current];
 
   if (dmrginp.outputlevel() != 0) {
    pout << "\t\t\t Sweep iteration ... " << SpinAdapted::SweepParams::sweep_iter;
-    pout<< " "  << SpinAdapted::SweepParams::keep_states << " " << SpinAdapted::SweepParams::davidson_tol << " " << SpinAdapted::SweepParams::noise << " "<< SpinAdapted::SweepParams::additional_noise <<endl; 
+   pout<< " "  << SpinAdapted::SweepParams::keep_states << " " << SpinAdapted::SweepParams::davidson_tol << " " << SpinAdapted::SweepParams::noise << " "<< SpinAdapted::SweepParams::additional_noise <<endl; 
   }
   else 
     pout << endl;

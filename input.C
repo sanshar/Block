@@ -79,7 +79,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_no_transform = false;
   m_do_fci = false;
   m_do_cd = false;
-  m_maxiter = 100;
+  m_maxiter = 50;
   m_screen_tol = 1.00e-20;
 
   m_load_prefix = ".";
@@ -106,12 +106,23 @@ void SpinAdapted::Input::initialize_defaults()
   m_core_energy = 0.0;
   m_reorder = false;
   m_reorderfile = "";
-  m_orbformat=DMRGFORM;
+
+  m_orbformat=MOLPROFORM;
+}
+
+void SpinAdapted::Input::usedkey_error(string& key, string& line) {
+  pout << "keyword "<<key<<" already used once"<<endl;
+  pout << "error found at line "<<endl;
+  pout << line<<endl;
+  abort();
 }
 
 SpinAdapted::Input::Input(const string& config_name)
 {
   //first collect all the data
+  std::vector<int> usedkey(NUMKEYWORDS, -1);
+  int n_elec = -1;
+  int n_spin = -1;
   sym = "c1";
   string orbitalfile;
   if(mpigetrank() == 0)
@@ -132,6 +143,9 @@ SpinAdapted::Input::Input(const string& config_name)
 
       if (boost::iequals(keyword,  "orbs") || boost::iequals(keyword,  "orbitals"))
       {
+	if(usedkey[ORBS] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[ORBS] = 0;
 	if (tok.size() != 2) {
 	  cerr << "keyword orbs should be followed by a single filename and then an end line"<<endl;
 	  cerr << "error found in the following line "<<endl;
@@ -139,27 +153,11 @@ SpinAdapted::Input::Input(const string& config_name)
 	  abort();
 	}
 	orbitalfile = tok[1];
-
-      }
-      else if(boost::iequals(keyword, "format")) {
-	if (tok.size() != 2) {
-	  cerr << "keyword format should be followed by a single number and then an end line"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
-	  abort();
-	}	
-	if (boost::iequals(tok[1], "dmrg"))
-	  m_orbformat = DMRGFORM;
-	else if (boost::iequals(tok[1], "molpro"))
-	  m_orbformat = MOLPROFORM;
-	else {
-	  pout << "orbital format has to be DMRG or MOLPRO"<<endl;
-	  pout << "error found in the following line"<<endl;
-	  pout << msg<<endl;
-	  abort();
-	}
       }
       else if (boost::iequals(keyword, "maxM")) {
+	if(usedkey[MAXM] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[MAXM] = 0;
 	if (tok.size() != 2) {
 	  cerr << "keyword maxM should be followed by a single number and then an end line"<<endl;
 	  cerr << "error found in the following line "<<endl;
@@ -178,6 +176,9 @@ SpinAdapted::Input::Input(const string& config_name)
       }
       else if (boost::iequals(keyword,  "reorder"))
       {
+	if(usedkey[REORDER] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[REORDER] = 0;
 	if (tok.size() != 2) {
 	  cerr << "keyword reorder should be followed by the filename and then an end line"<<endl;
 	  cerr << "error found in the following line "<<endl;
@@ -190,69 +191,77 @@ SpinAdapted::Input::Input(const string& config_name)
 
       else if (boost::iequals(keyword,  "schedule"))
       {
-	if (tok.size() != 2) {
-	  cerr << "keyword schedule should be followed by a single number and then an end line"<<endl;
+	if(usedkey[SCHEDULE] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[SCHEDULE] = 0;
+
+	if (tok.size() != 2 && tok.size() != 1) {
+	  cerr << "keyword schedule should be followed by the keyword \"default\" and then an end line or just an endline"<<endl;
 	  cerr << "error found in the following line "<<endl;
 	  cerr << msg<<endl;
 	  abort();
-	}	
+	}
+	
+	msg.resize(0);
+	ReadMeaningfulLine(input, msg, msgsize);
+	vector<string> schd_tok;
+	boost::split(schd_tok, msg, is_any_of(" \t"), token_compress_on);
 	if (boost::iequals(tok[1], "default")) { 
 	  m_schedule_type_default = true;
-	  msg.resize(0);
-	  ReadMeaningfulLine(input, msg, msgsize);
-
 	  continue;
 	}
-	int nentry = atoi(tok[1].c_str());
 
-	m_sweep_iter_schedule.resize(nentry);
-	m_sweep_state_schedule.resize(nentry);
-	m_sweep_qstate_schedule.resize(nentry);
-	m_sweep_tol_schedule.resize(nentry);
-	m_sweep_noise_schedule.resize(nentry);
-	m_sweep_additional_noise_schedule.resize(nentry);
+	m_sweep_iter_schedule.resize(0);
+	m_sweep_state_schedule.resize(0);
+	m_sweep_qstate_schedule.resize(0);
+	m_sweep_tol_schedule.resize(0);
+	m_sweep_noise_schedule.resize(0);
+	m_sweep_additional_noise_schedule.resize(0);
 
-
-	for (int i = 0; i < nentry; ++i)
-	  {
-	    ReadMeaningfulLine(input, msg, msgsize);
-	    vector<string> schd_tok;
-	    boost::split(schd_tok, msg, is_any_of(" \t"), token_compress_on);
-
-	    if (schd_tok.size() != 4) {
-	      cerr << "Each line of the schedule contain four entries sweep_iteration   #retained states   davidson tolerance     noise"<<endl;
-	      cerr << "error found at the following line "<<endl;
-	      cerr<< msg<<endl;
-	      abort();
-	    }
-
-	    m_sweep_iter_schedule[i] = atoi(schd_tok[0].c_str());
-	    m_sweep_state_schedule[i] = atoi(schd_tok[1].c_str());
-	    m_sweep_qstate_schedule[i] = 0;  //DEPRECATED OPTION
-	    m_sweep_tol_schedule[i] = atof(schd_tok[2].c_str());
-	    m_sweep_noise_schedule[i] = atof(schd_tok[3].c_str());
-	    m_sweep_additional_noise_schedule[i] = 0.0;  //DEPRECATED OPTION
-
-	    if (m_sweep_state_schedule[i] <= 0) {
-	      cerr << "Number of retained states cannot be less than 0"<<endl;
-	      cerr << "error found in the following line "<<endl;
-	      cerr << msg<<endl;
-	    }
-	    if (i>0 && m_sweep_iter_schedule[i] <= m_sweep_iter_schedule[i-1]) {
-	      cerr << "Sweep iteration at a given line should be higher than the previous sweep iteration"<<endl;
-	      cerr << "this sweep iteration "<<m_sweep_iter_schedule[i] <<endl;
-	      cerr << "previous sweep iteration "<<m_sweep_iter_schedule[i-1]<<endl;
-	      cerr << "error found in the following line "<<endl;
-	      cerr << msg<<endl;
-	      abort();
-	    }
+	int i = 0;
+	while(!boost::iequals(schd_tok[0], "END"))
+	{
+	  
+	  if (schd_tok.size() != 4) {
+	    cerr << "Each line of the schedule contain four entries sweep_iteration   #retained states   davidson tolerance     noise"<<endl;
+	    cerr << "error found at the following line "<<endl;
+	    cerr<< msg<<endl;
+	    abort();
 	  }
-
+	  
+	  m_sweep_iter_schedule.push_back( atoi(schd_tok[0].c_str()));
+	  m_sweep_state_schedule.push_back( atoi(schd_tok[1].c_str()));
+	  m_sweep_qstate_schedule.push_back( 0);  //DEPRECATED OPTION
+	  m_sweep_tol_schedule.push_back( atof(schd_tok[2].c_str()));
+	  m_sweep_noise_schedule.push_back( atof(schd_tok[3].c_str()));
+	  m_sweep_additional_noise_schedule.push_back( 0.0);  //DEPRECATED OPTION
+	  
+	  if (m_sweep_state_schedule[i] <= 0) {
+	    cerr << "Number of retained states cannot be less than 0"<<endl;
+	    cerr << "error found in the following line "<<endl;
+	    cerr << msg<<endl;
+	  }
+	  if (i>0 && m_sweep_iter_schedule[i] <= m_sweep_iter_schedule[i-1]) {
+	    cerr << "Sweep iteration at a given line should be higher than the previous sweep iteration"<<endl;
+	    cerr << "this sweep iteration "<<m_sweep_iter_schedule[i] <<endl;
+	    cerr << "previous sweep iteration "<<m_sweep_iter_schedule[i-1]<<endl;
+	    cerr << "error found in the following line "<<endl;
+	    cerr << msg<<endl;
+	    abort();
+	  }
+	  i++;
+	  ReadMeaningfulLine(input, msg, msgsize);
+	  boost::split(schd_tok, msg, is_any_of(" \t"), token_compress_on);
+	}
+	
       }
 
 
       else if (boost::iequals(keyword,  "sym") || boost::iequals(keyword,  "symmetry")|| boost::iequals(keyword,  "point_group")|| boost::iequals(keyword,  "pg"))
       {
+	if(usedkey[SYM] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[SYM] = 0;
 	m_spatial_to_spin.clear();
 	m_spin_to_spatial.clear();
 
@@ -268,62 +277,52 @@ SpinAdapted::Input::Input(const string& config_name)
 	boost::algorithm::to_lower(sym); //store as lower case string
         Symmetry::InitialiseTable(sym);
       }
-      else if (boost::iequals(keyword,  "wave_sym") || boost::iequals(keyword,  "wave_symmetry"))
-      {
-	vector<string > symtokens; ;
-
-	for (int i=1; i<tok.size(); i++)
-	  symtokens.push_back(tok[i]);
-
-	vector<string > name_value;
-	boost::split(name_value, symtokens[0], is_any_of("= \t"), token_compress_on);
-	if (!boost::iequals(name_value[0], "nelec")) {
-	  pout << "nelec should be specified after wave_sym keyword"<<endl;
-	  pout << "keyword wave_sym should be followed by symmetry of the wavefunction in the form of wave_sym, nelec=n,spin=s,irrep=ir and then an end line."<<endl;
-	  pout << "error found in the following line "<<endl;
-	  pout << msg<<endl;
-	  abort();
-	}
-	int n_elec = atoi(name_value[1].c_str());
-
-	boost::split(name_value, symtokens[1], is_any_of("= \t"), token_compress_on);
-	if (!boost::iequals(name_value[0], "spin")) {
-	  pout << "spin should be specified after nelec"<<endl;
-	  pout << "keyword wave_sym should be followed by symmetry of the wavefunction in the form of wave_sym, nelec=n,spin=s,irrep=ir and then an end line."<<endl;
-	  pout << "error found in the following line "<<endl;
-	  pout << msg<<endl;
-	  abort();
-	}
-	int n_spin = atoi(name_value[1].c_str());
-	if ( (n_elec-n_spin)%2 != 0) {
-	  cerr<< "cannot have a spin of "<<n_spin<<"  with "<<n_elec<<" electrons "<<endl;
+      else if (boost::iequals(keyword,  "nelecs") || boost::iequals(keyword,  "nelec")) {
+	if(usedkey[NELECS] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[NELECS] = 0;
+	if (tok.size() !=  2) {
+	  cerr << "keyword nelec should be followed by a single number and then an end line"<<endl;
 	  cerr << "error found in the following line "<<endl;
 	  cerr << msg<<endl;
 	  abort();
+	}	
+	n_elec = atoi(tok[1].c_str());
+	if(n_elec < 0) {
+	  pout << "Number of electrons cannot be less than 0."<<endl;
+	  pout << "See the manual for further details."<<endl;
+	  abort();
 	}
-
-	if (symtokens.size() == 3) {
-	  boost::split(name_value, symtokens[2], is_any_of("= \t"), token_compress_on);
-	  if (!boost::iequals(name_value[0], "irrep")) {
-	    pout << "irrep should be specified after spin"<<endl;
-	    pout << "keyword wave_sym should be followed by symmetry of the wavefunction in the form of wave_sym, nelec=n,spin=s,irrep=ir and then an end line."<<endl;
-	    pout << "error found in the following line "<<endl;
-	    pout << msg<<endl;
-	    abort();
-	  }
-	  m_total_symmetry_number = IrrepSpace(atoi(name_value[1].c_str()));
-	}
-	else 
-	  m_total_symmetry_number = IrrepSpace(0);
-
-	m_alpha = (n_elec + n_spin)/2;
-	m_beta = (n_elec - n_spin)/2;
-        m_molecule_quantum = SpinQuantum(m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number);
-
-
       }
-
-
+      else if (boost::iequals(keyword,  "nspin") || boost::iequals(keyword,  "spin")) {
+	if(usedkey[SPIN] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[SPIN] = 0;
+	if (tok.size() !=  2) {
+	  cerr << "keyword spin should be followed by a single number and then an end line"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}	
+	n_spin = atoi(tok[1].c_str());
+	if(n_spin < 0) {
+	  pout << "Spin of the wavefunction cannot be less than 0."<<endl;
+	  pout << "See the manual for further details."<<endl;
+	  abort();
+	}
+      }
+      else if (boost::iequals(keyword,  "nirrep") || boost::iequals(keyword,  "irrep")) {
+	if(usedkey[IRREP] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[IRREP] = 0;
+	if (tok.size() !=  2) {
+	  cerr << "keyword irrep should be followed by a single number and then an end line"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}	
+	m_total_symmetry_number = IrrepSpace(atoi(tok[1].c_str()));
+      }
       else if (boost::iequals(keyword,  "hubbard"))
 	m_ham_type = HUBBARD;
       else if (boost::iequals(keyword,  "dmrg"))
@@ -349,6 +348,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	m_calc_type = RESTART_TWOPDM;
       else if(boost::iequals(keyword,  "prefix") || boost::iequals(keyword,  "scratch"))
       {
+	if(usedkey[PREFIX] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[PREFIX] = 0;
 	m_load_prefix = tok[1];
 	m_save_prefix = m_load_prefix;
       }
@@ -356,6 +358,9 @@ SpinAdapted::Input::Input(const string& config_name)
 
       else if(boost::iequals(keyword,  "nroots"))
       {
+	if(usedkey[NROOTS] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[NROOTS] = 0;
         std::string nroots_str;
 	if (tok.size() != 2) {
 	  cerr << "keyword nroots should be followed by a single integer and then an end line."<<endl;
@@ -428,6 +433,9 @@ SpinAdapted::Input::Input(const string& config_name)
 
       else if(boost::iequals(keyword,  "maxiter"))
       {
+	if(usedkey[MAXITER] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[MAXITER] = 0;
 	if (tok.size() !=  2) {
 	  cerr << "keyword maxiter should be followed by a single integer and then an endline"<<endl;
 	  cerr << "error found in the following line "<<endl;
@@ -440,6 +448,9 @@ SpinAdapted::Input::Input(const string& config_name)
 
       else if(boost::iequals(keyword,  "screen_tol") || boost::iequals(keyword,  "screen_tolerance") || boost::iequals(keyword,  "screening_tol") || boost::iequals(keyword,  "screening_tolerance"))
       {
+	if(usedkey[SCREEN_TOL] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[SCREEN_TOL] = 0;
 	if (tok.size() != 2) {
 	  cerr << "keyword screen_tol should be followed by a single number and then an endline"<<endl;
 	  cerr << "error found in the following line "<<endl;
@@ -480,6 +491,9 @@ SpinAdapted::Input::Input(const string& config_name)
 
       else if (boost::iequals(keyword,  "sweep_tol") || boost::iequals(keyword,  "sweep_tolerance"))
       {
+	if(usedkey[SWEEP_TOL] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[SWEEP_TOL] = 0;
 	if (tok.size() !=  2) {
 	  cerr << "keyword sweep_tol should be followed by a single number and then an endline"<<endl;
 	  cerr << "error found in the following line "<<endl;
@@ -538,6 +552,19 @@ SpinAdapted::Input::Input(const string& config_name)
       
     }
 
+    if (n_elec == -1) {
+      pout << "number of electrons has to be specified using the keyword nelec"<<endl;
+      abort();
+    }
+    if (n_spin == -1) {
+      pout << "spin of the wavefunction has to be specified using the keyword spin"<<endl;
+      abort();
+    }
+    m_alpha = (n_elec + n_spin)/2;
+    m_beta = (n_elec - n_spin)/2;
+    m_molecule_quantum = SpinQuantum(m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number);
+
+
   }
 
 #ifndef SERIAL
@@ -585,13 +612,17 @@ void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& p
   while(msg.size() != 0) {
     for (int i=0; i<tok.size(); i++)
       if(tok[i].size() != 0) {
-	if (find(reorder.begin(), reorder.end(), atoi(tok[i].c_str())) != reorder.end()) {
+	if (find(reorder.begin(), reorder.end(), atoi(tok[i].c_str())-1) != reorder.end()) {
 	  pout << "Orbital "<<atoi(tok[i].c_str())<<" appears twice in reorder file"<<endl;
 	  pout << "error found at the following line "<<endl;
 	  pout << msg<<endl;
 	  abort();
 	}
-	reorder.push_back(atoi(tok[i].c_str()));
+	reorder.push_back(atoi(tok[i].c_str())-1); //reorder is starting from 1 to n, but internally we store it from 0 to n
+	if (reorder.back() >m_norbs || reorder.back() < 0) {
+	  pout << "Illegal orbital index "<<atoi(tok[i].c_str())<<" in reorder file"<<endl;
+	  abort();
+	}
       }
     msg.resize(0);
     ReadMeaningfulLine(dumpFile, msg, msgsize);
@@ -776,8 +807,12 @@ void SpinAdapted::Input::performSanityTest()
     cerr << "total number of orbitals has to be a positive number"<<endl;
     abort();
   }
-  if (m_norbs > 100) {
-    cerr << "Number of orbitals cannot be greater than 100"<<endl;
+  if (m_norbs/2 < 4) {
+    pout << "DMRG cannot be run with fewer than 4 orbitals!!"<<endl;
+    abort();
+  }
+  if (m_norbs/2 > 130) {
+    cerr << "Number of orbitals cannot be greater than 130"<<endl;
     abort();
   }
   if (m_alpha+m_beta <= 0) {
@@ -808,11 +843,20 @@ void SpinAdapted::Input::performSanityTest()
       pout << "maxM cannot be less than 0"<<endl;
       abort();
     }
+    if (m_maxM > 10000) {
+      pout << "default schedule only works for maxM less than 10000"<<endl;
+      abort();
+    }
+    if (m_maxM <= m_nroots) {
+      pout << "maxM cannot be less than 0"<<endl;
+      abort();
+    }
+
     if (m_sweep_tol <= 0.0) {
       pout << "Using the default tolerance sweep tolerance of 1.0e-5."<<endl;
       m_sweep_tol = 1.0e-5;
     }
-    int nentry = 6;
+    int nentry = 0;
     m_sweep_iter_schedule.resize(nentry);
     m_sweep_state_schedule.resize(nentry);
     m_sweep_qstate_schedule.resize(nentry,0);
@@ -820,33 +864,117 @@ void SpinAdapted::Input::performSanityTest()
     m_sweep_noise_schedule.resize(nentry);
     m_sweep_additional_noise_schedule.resize(nentry,0);
     
-    int M = max(m_maxM/8, 1); M= min(M, 50);
     double sweeptol = m_sweep_tol;
-    m_sweep_iter_schedule[0] = 0; m_sweep_state_schedule[0] = M; m_sweep_tol_schedule[0] = 1.0e-5;  m_sweep_noise_schedule[0] = 1.0e-4;
-    M = max(m_maxM/8, 1);
-    m_sweep_iter_schedule[1] = 4; m_sweep_state_schedule[1] = M; m_sweep_tol_schedule[1] = sweeptol;  m_sweep_noise_schedule[1] = 5.0e-5;
-    M = max(m_maxM/4, 1);
-    m_sweep_iter_schedule[2] = 8; m_sweep_state_schedule[2] = M; m_sweep_tol_schedule[2] = sweeptol;  m_sweep_noise_schedule[2] = 1.0e-5;
-    M = max(m_maxM/2, 1);
-    m_sweep_iter_schedule[3] = 12; m_sweep_state_schedule[3] = M; m_sweep_tol_schedule[3] = sweeptol;  m_sweep_noise_schedule[3] = 1.0e-5;
-    M = max(m_maxM/1, 1);
-    m_sweep_iter_schedule[4] = 16; m_sweep_state_schedule[4] = M; m_sweep_tol_schedule[4] = sweeptol;  m_sweep_noise_schedule[4] = 1.0e-5;
-    m_sweep_iter_schedule[5] = 18; m_sweep_state_schedule[5] = M; m_sweep_tol_schedule[5] = sweeptol/10.0;  m_sweep_noise_schedule[5] = 0.0e-5;    
+    if (m_maxM >= 50) {
+      m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(50); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(1.0e-4);
+    }
+    else {
+      m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(1.0e-6);  m_sweep_noise_schedule.push_back(1.0e-4);
+    }
+
+    if (m_maxM >50) {
+    if (m_maxM >= 100) {
+      m_sweep_iter_schedule.push_back(4); m_sweep_state_schedule.push_back(100); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    else {
+      m_sweep_iter_schedule.push_back(4); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    }
+
+    if (m_maxM >100) {
+    if (m_maxM >= 250) {
+      m_sweep_iter_schedule.push_back(8); m_sweep_state_schedule.push_back(250); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    else {
+      m_sweep_iter_schedule.push_back(8); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    }
+
+    if (m_maxM >250) {
+    if (m_maxM >= 500) {
+      m_sweep_iter_schedule.push_back(12); m_sweep_state_schedule.push_back(500); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    else {
+      m_sweep_iter_schedule.push_back(12); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    }
+
+    if (m_maxM >500) {
+    if (m_maxM >= 1000) {
+      m_sweep_iter_schedule.push_back(16); m_sweep_state_schedule.push_back(1000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    else {
+      m_sweep_iter_schedule.push_back(16); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    }
+
+    if (m_maxM >1000) {
+    if (m_maxM >= 2000) {
+      m_sweep_iter_schedule.push_back(19); m_sweep_state_schedule.push_back(2000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    else {
+      m_sweep_iter_schedule.push_back(19); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    }
+
+    if (m_maxM >2000) {
+    if (m_maxM >= 4000) {
+      m_sweep_iter_schedule.push_back(22); m_sweep_state_schedule.push_back(4000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    else {
+      m_sweep_iter_schedule.push_back(22); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    }
+
+    if (m_maxM >4000) {
+    if (m_maxM >= 6000) {
+      m_sweep_iter_schedule.push_back(25); m_sweep_state_schedule.push_back(6000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    else {
+      m_sweep_iter_schedule.push_back(25); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    }
+
+    if (m_maxM >6000) {
+    if (m_maxM >= 8000) {
+      m_sweep_iter_schedule.push_back(28); m_sweep_state_schedule.push_back(8000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    else {
+      m_sweep_iter_schedule.push_back(28); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    }
+
+    if (m_maxM >8000) {
+    if (m_maxM >= 10000) {
+      m_sweep_iter_schedule.push_back(31); m_sweep_state_schedule.push_back(10000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    else {
+      m_sweep_iter_schedule.push_back(31); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+    }
+    }    
+
+    int lastiter = m_sweep_iter_schedule.back();
+    m_sweep_iter_schedule.push_back(lastiter+2); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(sweeptol/10.0);  m_sweep_noise_schedule.push_back(0.0e-5);
+
 
     if (m_twodot_to_onedot_iter < 18 && m_algorithm_type == TWODOT_TO_ONEDOT) {
       if (m_twodot_to_onedot_iter <= 0)
-	pout << "WARNING:::Sweep at which the switch from twodot to onedot will happen -> 18"<<endl;
-      m_twodot_to_onedot_iter = 18;
+	pout << "Sweep at which the switch from twodot to onedot will happen -> "<<lastiter+4<<endl;
+      m_twodot_to_onedot_iter = lastiter+4;
     }
     if (m_maxiter <= m_sweep_iter_schedule.back()) {
-      pout << "With default schedule maxiter has to be atleast 22"<<endl;
-      pout << "changing maxiter to 22"<<endl;
-      m_maxiter = 22;
+      pout << "With the default schedule and maxM specified, maxiter has to be atleast "<<lastiter+6<<endl;
+      pout << "changing maxiter to "<<lastiter+6<<endl;
+      m_maxiter = lastiter+6;
     }
   }
   else {
     if (m_maxM != 0) {
-      cerr << "With detailed schedule a non-zero maxM should not be specified"<<endl;
+      pout << "With detailed schedule a non-zero maxM should not be specified"<<endl;
+      abort();
+    }
+    if (m_sweep_iter_schedule.size() == 0) {
+      pout << "Zero lines of schedule specified"<<endl;
       abort();
     }
   }
