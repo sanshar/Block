@@ -4,6 +4,7 @@
 #include <boost/mpi.hpp>
 #endif
 #include <pario.h>
+#include <cstdlib>
 
 using namespace std;
 int callDmrg(char*, char*);

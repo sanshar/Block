@@ -22,7 +22,7 @@ void calcenergy(array_4d<double>& twopdm, int state)
 {
   using namespace SpinAdapted;
   Matrix onepdm(2*dmrginp.last_site(), 2*dmrginp.last_site()); onepdm = 0.0;
-  int nelec = dmrginp.total_particle_number();
+  int nelec = dmrginp.real_particle_number();
 
   for (int i=0; i<dmrginp.last_site()*2; i++)
   for (int j=0; j<dmrginp.last_site()*2; j++)
@@ -30,6 +30,11 @@ void calcenergy(array_4d<double>& twopdm, int state)
     onepdm(i+1, j+1) += twopdm(i, k, k, j);
 
   onepdm /= (nelec-1);
+  double nel = 0.0, sz=0.0;
+  for (int i=0; i<dmrginp.last_site(); i++) {
+    nel += onepdm(2*i+1, 2*i+1)+onepdm(2*i+2, 2*i+2);
+    sz += onepdm(2*i+1, 2*i+1)-onepdm(2*i+2, 2*i+2);
+  }
 
   double energy = 0.0;
   for (int i=0; i<dmrginp.last_site()*2; i++)

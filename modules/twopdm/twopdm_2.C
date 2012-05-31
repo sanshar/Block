@@ -378,18 +378,10 @@ double DotProduct(const Wavefunction& w1, const Wavefunction& w2, double Sz, con
   double output = 0.0;
   for (int lQ =0; lQ < leftOpSz; lQ++)
     for (int rQ = 0; rQ < rightOpSz; rQ++) {
-      int lSp = lS->quanta[lQ].get_s(), rSp = rS->quanta[rQ].get_s();
       if (w1.allowed(lQ, rQ) && w2.allowed(lQ, rQ))
       {
-	double coeff = 0.0;
-	for (int lZ = -lSp; lZ <= lSp ; lZ=lZ+2)
-	  for (int rZ = -rSp; rZ <= rSp ; rZ=rZ+2) {
-	    if (lZ+rZ != Sz) continue;
-	    coeff += pow(cg(lSp, rSp, w1.get_spin(), lZ, rZ, Sz),2);
-	  }
-
 	double b1b2 = MatrixDotProduct(w1(lQ, rQ), w2(lQ, rQ));
-	output += b1b2*coeff;
+	output += b1b2;
        
       }	
     }

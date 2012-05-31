@@ -1,5 +1,5 @@
 #include "Symmetry.h"
-
+#include <boost/lexical_cast.hpp>
 // some explicit instantiations to prevent IBM linker from complaining
 #include <string>
 #include <newmat.h>
@@ -203,7 +203,9 @@ string Symmetry::stringOfIrrep(int irrep)
   else if (sym == "dinfh") {
     string output = "";
     char goru = irrep%2 == 0 ? 'g' : 'u';
-    output+= max(0,(irrep-2)/2);
+    int lz = max(0,(abs(irrep)-2)/2);
+    lz *= irrep<0 ? -1 : 1; 
+    output+= boost::lexical_cast<string>(lz);
     output+=goru;
     if (irrep <2) output+= '+';
     else if (irrep >=2 && irrep <4 ) output+= '-';

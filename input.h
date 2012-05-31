@@ -139,7 +139,7 @@ class Input {
   void writeSummary();
   void performSanityTest();
   void readorbitalsfile(ifstream& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
-  void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
+  void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder, std::vector<int>&);
   void usedkey_error(string& key, string& line);
 
   static void ReadMeaningfulLine(ifstream&, string&, int);
@@ -194,6 +194,7 @@ class Input {
   int& Sz() {return m_Sz;}
   int nroots(int sweep_iter) const;
   int nroots() const {return m_nroots;}
+  int real_particle_number() const { return (m_alpha + m_beta);}
   int total_particle_number() const { if(!m_add_noninteracting_orbs) return (m_alpha + m_beta); else return (2*m_alpha); }
   int total_spin_number() const { if (!m_add_noninteracting_orbs) return (m_alpha - m_beta); else return 0; }
   const int &last_site() const { return m_num_spatial_orbs; }

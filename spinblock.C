@@ -49,6 +49,7 @@ void SpinBlock::printOperatorSummary()
       cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
     else
       cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
+    cout << endl;
   }
 #endif
   

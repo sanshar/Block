@@ -567,24 +567,25 @@ SpinAdapted::Input::Input(const string& config_name)
 
   }
 
+
 #ifndef SERIAL
   boost::mpi::communicator world;
   mpi::broadcast(world, sym, 0);
+#endif
   if (sym != "c1")
     Symmetry::InitialiseTable(sym);
+
+  ifstream orbitalFile;
+  orbitalFile.open(orbitalfile.c_str(), ios::in);
 
   //read the orbitals
   v_1.rhf= true; 
   v_2.rhf=true;
   if (sym != "dinfh")
     v_2.permSymm = true;
-  ifstream orbitalFile;
-  orbitalFile.open(orbitalfile.c_str(), ios::in);
-
 
   if (mpigetrank() == 0) {
     CheckFileExistance(orbitalfile, "Orbital file ");
-#endif
     readorbitalsfile(orbitalFile, v_1, v_2);
     
     pout << "Checking Input for errors"<<endl;
@@ -593,8 +594,8 @@ SpinAdapted::Input::Input(const string& config_name)
     pout << "----------------"<<endl;
     writeSummary();
     pout << endl;
-#ifndef SERIAL
   }
+#ifndef SERIAL
   mpi::broadcast(world,*this,0);
   mpi::broadcast(world,v_1,0);
   mpi::broadcast(world,v_2,0);
@@ -602,9 +603,8 @@ SpinAdapted::Input::Input(const string& config_name)
 
 }
 
-void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& preorder)
+void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& preorder, std::vector<int>& oldtonew)
 {
-  std::vector<int> reorder; 
   string msg; int msgsize = 5000;
   ReadMeaningfulLine(dumpFile, msg, msgsize);
   vector<string> tok;
@@ -612,14 +612,14 @@ void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& p
   while(msg.size() != 0) {
     for (int i=0; i<tok.size(); i++)
       if(tok[i].size() != 0) {
-	if (find(reorder.begin(), reorder.end(), atoi(tok[i].c_str())-1) != reorder.end()) {
+	if (find(oldtonew.begin(), oldtonew.end(), atoi(tok[i].c_str())-1) != oldtonew.end()) {
 	  pout << "Orbital "<<atoi(tok[i].c_str())<<" appears twice in reorder file"<<endl;
 	  pout << "error found at the following line "<<endl;
 	  pout << msg<<endl;
 	  abort();
 	}
-	reorder.push_back(atoi(tok[i].c_str())-1); //reorder is starting from 1 to n, but internally we store it from 0 to n
-	if (reorder.back() >m_norbs || reorder.back() < 0) {
+	oldtonew.push_back(atoi(tok[i].c_str())-1); //reorder is starting from 1 to n, but internally we store it from 0 to n
+	if (oldtonew.back() >m_norbs || oldtonew.back() < 0) {
 	  pout << "Illegal orbital index "<<atoi(tok[i].c_str())<<" in reorder file"<<endl;
 	  abort();
 	}
@@ -630,18 +630,18 @@ void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& p
   }
 
   //p_reorder contains old to new mapping
-  if (reorder.size() != m_norbs/2) {
+  if (oldtonew.size() != m_norbs/2) {
     pout << "Numbers or orbitals in reorder file should be equal to "<<m_norbs/2<<" instead "<<preorder.size()<<" found "<<endl;
     abort();
   }
 
   preorder.resize(m_norbs/2);
   for (int i=0; i<m_norbs/2; i++) {
-    if (reorder[i] >= m_norbs/2 || reorder[i] < 0) {
+    if (oldtonew[i] >= m_norbs/2 || oldtonew[i] < 0) {
       pout << "Orbital indices in reorder file should be in range 0 to "<<m_norbs/2<<endl;
       abort();
     }
-    preorder.at(reorder[i]) = i;
+    preorder.at(oldtonew[i]) = i;
   }
 }
 
@@ -666,18 +666,20 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   v2.ReSize(m_norbs);
   v1.ReSize(m_norbs);
 
-  std::vector<int> reorder;
+  std::vector<int> reorder, oldtonew;
   // read the reorder file
   if (m_reorder) {
     ifstream reorderFile(m_reorderfile.c_str());
     CheckFileExistance(m_reorderfile, "Reorder file ");
-    readreorderfile(reorderFile, reorder);
+    readreorderfile(reorderFile, reorder, oldtonew);
   }
 
+  /*
   if(sym == "dinfh" && m_reorder) {
     pout << "Cannot reorder with dinfh symmetry"<<endl;
     abort();
   }
+  */
 
   int orbindex = 0;
   msg.resize(0);
@@ -690,17 +692,18 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
 
       int reorderOrbInd = m_reorder ? reorder.at(orbindex/2) : orbindex/2;
 
-      int ir = atoi(tok[i].c_str()) - offset;
+      int ir;
+      if (atoi(tok[i].c_str()) > 0 ) 
+	ir = atoi(tok[i].c_str()) - offset;
+      else if (atoi(tok[i].c_str()) < -1)
+	ir = atoi(tok[i].c_str()) + offset;
+
       m_spin_orbs_symmetry[2*reorderOrbInd] = ir;
       m_spin_orbs_symmetry[2*reorderOrbInd+1] = ir;
 
       if (sym == "dinfh") {
-	if (ir < -1) {
+	if (ir < -1 || ir == 0 || ir == 1) {
 	  m_num_spatial_orbs ++;
-	  m_spatial_to_spin.push_back(orbindex);
-	}
-	else if( (ir == 0 || ir ==1)) {
-	  m_num_spatial_orbs++;
 	  m_spatial_to_spin.push_back(orbindex);
 	}
 	m_spin_to_spatial[orbindex] = m_num_spatial_orbs-1;
@@ -719,8 +722,20 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     ReadMeaningfulLine(dumpFile, msg, msgsize);
     boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
   }
+
+  
+  if(sym == "dinfh" && m_reorder) {
+    m_spatial_to_spin.clear();
+    for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) {
+      int ir = m_spin_orbs_symmetry[i];
+      if (ir < -1 || ir == 0 || ir == 1) 
+	m_spatial_to_spin.push_back(i);
+    }
+  }
+
   m_spatial_to_spin.push_back(m_norbs);
   m_spin_to_spatial.push_back(m_norbs);
+
 
   if(offset != 0) {
     msg.resize(0);
@@ -750,8 +765,7 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     else {
       int I=i, J=j, K=k, L=l;
       if(m_reorder) {I = reorder.at(i);J = reorder.at(j);K = reorder.at(k);L = reorder.at(l);}
-      if (offset == 0) v2(2*I,2*J,2*K,2*L) = value;
-      else v2(2*I,2*K,2*J,2*L) = value;
+      v2(2*I,2*K,2*J,2*L) = value;
     }
 
     msg.resize(0);
