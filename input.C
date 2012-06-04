@@ -206,9 +206,11 @@ SpinAdapted::Input::Input(const string& config_name)
 	ReadMeaningfulLine(input, msg, msgsize);
 	vector<string> schd_tok;
 	boost::split(schd_tok, msg, is_any_of(" \t"), token_compress_on);
+	if (tok.size() != 1) {
 	if (boost::iequals(tok[1], "default")) { 
 	  m_schedule_type_default = true;
 	  continue;
+	}
 	}
 
 	m_sweep_iter_schedule.resize(0);
