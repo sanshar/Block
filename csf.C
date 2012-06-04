@@ -93,7 +93,7 @@ void SpinAdapted::Csf::applySminus(Csf& output)
 	  detsout[s] += (*it).second;
       }
     }
-  output.set_det_rep(detsout, S, output.irrep);
+  output.set_det_rep(detsout, S, irrep);
   output.set_S(S);
   output.set_Sz(Sz-2);
   output.set_n(n);

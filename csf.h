@@ -39,6 +39,7 @@ public:
   
   void set_det_rep(map<Slater, double> p_det, int pS, IrrepVector pirrep){  
     det_rep = p_det;
+    S = pS;
     map<Slater, double>::iterator it = det_rep.begin();
     n = it->first.n_is();
     Sz = it->first.Sz_is();
