@@ -11,8 +11,10 @@ USE_MPI = yes
 #use this variable to set if we will intel compiler or not
 INTEL = no
 
+EXECUTABLE = block.spin_adapted
 
 CXX = g++
+MPICXX = mpic++
 HOME = .
 NEWMATINCLUDE = $(HOME)/newmat10/
 INCLUDE1 = $(HOME)/include/
@@ -22,11 +24,19 @@ NEWMATLIB = $(HOME)/newmat10/
 
 FLAGS =  -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(HOME)/modules/twopdm/ -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm
 LIBS =  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS)  
+MPI_OPT = -DSERIAL
+
+
+ifeq ($(USE_MPI), yes)
+	MPI_OPT = 
+	MPI_LIB = -L$(BOOST)/lib/ -lboost_mpi
+	CXX = $(MPICXX)
+endif
 
 
 ifeq ($(INTEL), yes)
 	OPT = -O3 -funroll-loops -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP 
-#	OPT = -g -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) #-DFAST_MTP 
+#	OPT = -g -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP 
 	CXX = icc
 else
 	OPT = -O3 -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT)
@@ -34,15 +44,6 @@ else
 endif
 
 
-ifeq ($(USE_MPI), yes)
-	MPI_OPT = 
-	MPI_LIB = -L$(BOOST)/lib/ -lboost_mpi
-	CXX = mpic++
-else
-	MPI_FLAG =
-	MPI_LIB =
-	MPI_OPT = -DSERIAL
-endif
 
 LIBS += $(MPI_LIB)
 
@@ -63,17 +64,18 @@ OBJ_spin_library=$(SRC_spin_library:.C=.o)
 .cpp.o :
 	$(CXX) $(FLAGS) $(OPT) -c $< -o $@
 
-all	: block.spin_adapted libqcdmrg.so
+all	: $(EXECUTABLE) libqcdmrg.so
 
 libqcdmrg.so : $(OBJ_spin_library)
 	$(CXX) $(FLAGS) $(OPT) -shared -o libqcdmrg.so  $(OBJ_spin_library)
 
-block.spin_adapted : $(OBJ_spin_adapted) $(NEWMATLIB)/libnewmat.a
-	$(CXX)   $(FLAGS) $(OPT) -o  block.spin_adapted $(OBJ_spin_adapted) $(LIBS) -lnewmat
+$(EXECUTABLE) : $(OBJ_spin_adapted) $(NEWMATLIB)/libnewmat.a
+	$(CXX)   $(FLAGS) $(OPT) -o  $(EXECUTABLE) $(OBJ_spin_adapted) $(LIBS) -lnewmat
 
 $(NEWMATLIB)/libnewmat.a : 
 	cd $(NEWMATLIB) && $(MAKE) -f makefile libnewmat.a
 
 clean:
-	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o $(NEWMATLIB)*.o libqcdmrg.so block.spin_adapted
+	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o $(NEWMATLIB)*.o libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a
 
+# DO NOT DELETE

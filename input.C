@@ -321,7 +321,7 @@ SpinAdapted::Input::Input(const string& config_name)
 	  cerr << msg<<endl;
 	  abort();
 	}	
-	m_total_symmetry_number = IrrepSpace(atoi(tok[1].c_str()));
+	m_total_symmetry_number = IrrepSpace(atoi(tok[1].c_str())-1);
       }
       else if (boost::iequals(keyword,  "hubbard"))
 	m_ham_type = HUBBARD;
