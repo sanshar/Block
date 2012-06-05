@@ -27,13 +27,6 @@ LIBS =  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS)
 MPI_OPT = -DSERIAL
 
 
-ifeq ($(USE_MPI), yes)
-	MPI_OPT = 
-	MPI_LIB = -L$(BOOST)/lib/ -lboost_mpi
-	CXX = $(MPICXX)
-endif
-
-
 ifeq ($(INTEL), yes)
 	OPT = -O3 -funroll-loops -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP 
 #	OPT = -g -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP 
@@ -42,6 +35,14 @@ else
 	OPT = -O3 -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT)
 #	OPT = -g -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT)
 endif
+
+ifeq ($(USE_MPI), yes)
+	MPI_OPT = 
+	MPI_LIB = -L$(BOOST)/lib/ -lboost_mpi
+	CXX = $(MPICXX)
+endif
+
+
 
 
 
