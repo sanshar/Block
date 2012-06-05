@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include "IntegralMatrix.h"
 #include <fstream>
 #include "input.h"
@@ -54,7 +73,6 @@ void ReadInput(char* conf)
   if (dmrginp.outputlevel() != 0) 
     pout << " communication topology " << endl;
   vector<int> sendlist;
-  //makesendlist(sendlist);
 
   if (dmrginp.outputlevel() != 0) {
     for (int i = 0; i < sendlist.size(); ++i)
@@ -65,15 +83,11 @@ void ReadInput(char* conf)
   globaltimer.start();
   int randomseed = 243;
   srand(randomseed);
-  //pout << "\t\t\t random seed " <<  randomseed << endl;  
-
 
 
   std::string configFile(conf);
 
   CheckFileExistance(conf, "Input file ");
-
-  //pout << "About to read Input File : "<< configFile<<endl;
   //read the config file
   dmrginp = Input(configFile);
 
@@ -88,10 +102,8 @@ void ReadInput(char* conf)
 #else
   MAX_THRD=dmrginp.thrds_per_node()[0];
 #endif
-  //pout << "before omp "<<MAX_THRD<<endl;
 
   omp_set_num_threads(MAX_THRD);
-  //pout << "after omp"<<endl;
 
   //initialise the size of all Slater determinants equal to orbsize
   Orbstring::init(dmrginp.slater_size());

@@ -1,12 +1,24 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include "slater.h"
 #include "global.h"
-
-
-
-
-//// spin convention odd sites spin +1, even spin -1
-//bool Slater::operator< (const Slater& s) const
-//{return Quantum(n, spin, SymmetryOf(*this)) < Quantum(s.n, s.spin, SymmetryOf(s)); }
 
 bool SpinAdapted::Slater::operator< (const Slater& s) const
 {
@@ -21,7 +33,6 @@ bool SpinAdapted::Slater::operator< (const Slater& s) const
       return true;
   }
   return false;
-  //return (hash_value() < s.hash_value());
 }
 
 double SpinAdapted::Slater::hash_value() const
@@ -42,16 +53,12 @@ bool SpinAdapted::Slater::operator==(const Slater& s2) const
   if ( (!alpha.isempty() && s2.alpha.isempty()) || (alpha.isempty() && !s2.alpha.isempty()))
     return false;
 
-  //bool equal = (n == s2.n)&& (spin == s2.spin) && (symmetry == s2.symmetry);
-  //if (!equal) return false;
   if ((alpha.get_occ_rep().size() != s2.alpha.get_occ_rep().size()) ) return false;
   for (int i=0; i<alpha.get_occ_rep().size(); i++) 
     if (alpha[i] != s2.alpha[i])
       return false;
   return true;
 }
-
-//double SpinAdapted::largest_outside_interaction(int orb, int left, int right);
 
 SpinAdapted::Slater::Slater (const vector<bool>& occrep, int sign):alpha(occrep, sign)
 {

@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #ifndef PARA_ARRAY_H 
 #define PARA_ARRAY_H 
 #include <vector>
@@ -69,14 +88,6 @@ public:
   virtual bool has(int i, int j) const {};
   virtual bool has(int i=-1, int j=-1, int k=-1) const {};
   virtual bool has(const std::vector<int>& orbs) const {};
-  /*
-  virtual const T& operator()() const {};
-  virtual T& operator()() {};
-  virtual const T& operator()(int i) const {};
-  virtual T& operator()(int i) {};
-  virtual const T& operator()(int i, int j) const {};
-  virtual T& operator()(int i, int j) {};
-  */
   virtual const std::vector<T>& get_store() const {};
   virtual const std::vector<int>& get_indices() const {};
   virtual int trimap(int i, int j) const {};

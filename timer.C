@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include "global.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,8 +37,6 @@ void mcheck(const char* message)
    getrusage(RUSAGE_SELF, &usage);
    double totalmem = double(usage.ru_maxrss);
    double totalmem2 = 0.;
-   //pout << "\t\t\t " << message  << " used ordinary blocks:: " << mallinfo().uordblks/1.0e6 << " used small blocks " << mallinfo().usmblks/1.0e6 << " free ordinary blocks :: " << mallinfo().fordblks/1.0e6 << " " << " free small blocks:: " << mallinfo().fsmblks/1.0e6 << " holding size:: " << mallinfo().hblkhd/1.0e6 << " arena:: " << mallinfo().arena/1.0e6 << " " << mallinfo().keepcost/1.0e6 << " " <<endl;
-   //pout<< " \t\t\t getrusage size " << usage.ru_maxrss << " " << " " << totalmem*1.0/1000 << " " << usage.ru_minflt << " " << usage.ru_majflt << endl;
    
    //first get the pid number
    int procid= getpid();

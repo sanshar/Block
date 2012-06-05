@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include "rotationmat.h"
 #include "pario.h"
 #include "MatrixBLAS.h"
@@ -116,12 +135,6 @@ int SpinAdapted::get_total_states(const int &this_size, const int &other_size)
 
 double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::vector<DiagonalMatrix>& eigenmatrix, SparseMatrix& transformmatrix, vector<pair<int, int> >& inorderwts, vector<vector<int> >& wtsbyquanta, int totalstatesbydm, int totalstatesbyquanta, int left_block_size, int right_block_size)
 {
-  /*const int left_states = get_total_states(left_block_size*2, right_block_size*2);
-  pout << " \t\t\t possible left states " << left_states << endl;
-  const int right_states = get_total_states(right_block_size*2, left_block_size*2);
-  pout << " \t\t\t possible right states " << right_states << endl;
-  const int min_states = min(totalstatesbydm, min(left_states, right_states));
-  */
   const int min_states = totalstatesbydm;
 
   

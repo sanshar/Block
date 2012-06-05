@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include "spinblock.h"
 
 namespace SpinAdapted{
@@ -104,7 +123,6 @@ void SpinBlock::set_big_components()
 {
   setstoragetype(DISTRIBUTED_STORAGE);
 
-  // op_components for a single dot block
   ops[HAM] = make_new_op(HAM, false);
 }
 
@@ -125,9 +143,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
 
   if (!is_direct() )
   {
-    // op_components for a single dot block
     ops[CRE] = make_new_op(CRE, true);
-    //ops[CRE_DES_DESCOMP_S1] = make_new_op(CRE_DES_DESCOMP_S1, true);
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
     ops[HAM] = make_new_op(HAM, true);
     if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
@@ -140,7 +156,6 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
       if (haveCompops)
       {
 	ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
-	//ops[CRE_DESCOMP2_S0] = make_new_op(CRE_DESCOMP2_S0, true);
 	ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
       }
     }

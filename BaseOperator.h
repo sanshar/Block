@@ -1,3 +1,21 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
 #ifndef SPIN_BASEOPERATOR_HEADER
 #define SPIN_BASEOPERATOR_HEADER
 #include <cmath>
@@ -166,9 +184,8 @@ public:
   IrrepSpace get_symm()const  { return opdata->get_deltaQuantum().get_symm();}
   int get_orbs(int i) const {return opdata->get_orbs(i);}
   const std::vector<int>& get_orbs() const { return opdata->get_orbs(); }
-  //Matrix& operator_element(int i, int j) { return opdata->operator_element(j, i); }
-  const Matrix& operator()(int i, int j) const { return opdata->operator()(j, i); }///some controversey..original dmrg give element i,j
-  Matrix& operator()(int i, int j) { return opdata->operator()(j, i); }///some controversey..original dmrg give element i,j
+  const Matrix& operator()(int i, int j) const { return opdata->operator()(j, i); }
+  Matrix& operator()(int i, int j) { return opdata->operator()(j, i); }
   char conjugacy() const { if (opdata->conjugacy() == 'n') return 't'; else return 'n';}
   double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const 
   {
@@ -208,7 +225,6 @@ public:
     }
     return scale;
   }
-  //the last three are just there so transposeview is not a abstract class
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata;}
   void build(const SpinBlock& b){};
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b){return 0.0;}

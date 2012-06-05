@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #ifndef SPIN_MATRIX_DECLARATION_HEADER
 #define SPIN_MATRIX_DECLARATION_HEADER
 #include "pario.h"
@@ -67,12 +86,6 @@ public:
 
   ObjectMatrix<T>& operator= (const ObjectMatrix<T>& m) { if (this != &m); rep = m.rep; nrs = m.nrs; ncs = m.ncs; return *this; }
 
-  //  ObjectMatrix<T>& operator= (const T& t) { for (int i = 0; i < rep.size (); ++i) { rep [i] = t; } return *this; }
-
-//  ObjectMatrix<Matrix>& operator=(const ObjectMatrix<Matrix>& m)
-////  {
- //// }
-//  double CheckSum () { double val = 0.; for (int i = 0; i < nrs; ++i) for (int j = 0; j < ncs; ++j) val += ::CheckSum (rep [i *  ncs + j]); return val; }
   int ncols () const { return ncs; }
   int nrows () const { return nrs; }
   int Ncols () const { return ncs; }
@@ -127,8 +140,6 @@ public:
 
   int ncols () const { return n; }
   int nrows () const { return n; }
-  //  int Ncols () const { return n; }
-  //  int Nrows () const { return n; }
   // non-destructive resizing
   void Clear () { rep.clear (); n = 0; }
   void resize (int s) 

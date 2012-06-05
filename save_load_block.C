@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include "spinblock.h"
 #include "wavefunction.h"
 #include <boost/format.hpp>
@@ -60,16 +79,6 @@ void SpinBlock::Load (std::ifstream & ifs)
 {
   boost::archive::binary_iarchive load_block(ifs);
   load_block >> *this;
-
-#ifndef SERIAL
-  /*
-  mpi::communicator world;
-  for (std::map<opTypes, boost::shared_ptr<Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    for (int i = 0; i < it->second->get_array().size(); ++i)
-      if (has(it->first) && get_op_array(it->first).is_local())
-	mpi::broadcast(world, it->second->get_local_element(i), 0);
-  */
-#endif
 }
 
 
@@ -138,10 +147,6 @@ void SpinBlock::addAdditionalCompOps()
 	recvcompOps(*ops[CRE_DESCOMP], I, J, CRE_DESCOMP);
 	ops[DES_DESCOMP]->add_local_indices(I, J);
 	recvcompOps(*ops[DES_DESCOMP], I, J, DES_DESCOMP);
-	/*
-	world.recv(processorindex(trimap(I, J, length)), 1+10000*I+10*J, ops[CRE_DESCOMP]->get_element(I, J));
-	world.recv(processorindex(trimap(I, J, length)), 3+10000*I+10*J, ops[DES_DESCOMP]->get_element(I, J));
-	*/
       }
     }
     else
@@ -154,8 +159,6 @@ void SpinBlock::addAdditionalCompOps()
 	if (this_proc_has_ops) {
 	  sendcompOps(*ops[CRE_DESCOMP], I, J, CRE_DESCOMP, compsite);
 	  sendcompOps(*ops[DES_DESCOMP], I, J, DES_DESCOMP, compsite);
-	  //world.send(processorindex(compsite), 1+10000*I+10*J, ops[CRE_DESCOMP]->get_element(I, J));
-	  //world.send(processorindex(compsite), 3+10000*I+10*J, ops[DES_DESCOMP]->get_element(I, J));
 	}
       }
       else 

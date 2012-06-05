@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #ifndef SPIN_ORBSTRING_HEADER
 #define SPIN_ORBSTRING_HEADER
 #include <iostream>
@@ -75,17 +94,11 @@ public:
   Orbstring& d (int i);  // applies destruction operator i to ket
 
   inline int parity (int i)
-  // determines number of interchanges by number of
-  // occ states between end of ket and orb i
   {
     int p = 0;
     for (int j = 0; j < i; j++)
       if (occ_rep[j]) ++p;
     return (p%2) ? -1 : 1;
-    /*    for (int j = occ_rep.size() - 1; j > i; --j)
-      if (occ_rep[j]) ++p;
-    return (p%2) ? -1 : 1;
-    */
   }
 
   inline int trace (const Orbstring& s)

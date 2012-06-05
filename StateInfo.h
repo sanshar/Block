@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #ifndef SPIN_STATE_INFO_HEADER
 #define SPIN_STATE_INFO_HEADER
 #include "ObjectMatrix.h"
@@ -66,11 +85,10 @@ class StateInfo
  public:
   StateInfo();
   StateInfo (const int n, const SpinQuantum q [], const int qS []); 
-  //StateInfo (const std::vector<SpinQuantum>& q, const std::vector<int>& qS, const std::vector< std::vector<int> >& nMap);
   StateInfo(const std::vector< Csf >& dets, bool addWavefunctionQuanta = false);
   StateInfo (const std::vector<SpinQuantum>& q, const std::vector<int>& qS, const std::vector<int>& nMap);
   void UnBlockIndex();
-  //void operator=(const StateInfo& s);
+
   friend ostream& operator<<(ostream& os, const StateInfo& s);
 
   friend void TensorProduct (StateInfo& a, StateInfo& b, const SpinQuantum q, const int constraint, StateInfo& c, StateInfo* compState=0);

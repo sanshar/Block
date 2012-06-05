@@ -1,3 +1,21 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
 #include "couplingCoeffs.h"
 #include "global.h"
 namespace SpinAdapted{
@@ -43,18 +61,17 @@ ninejCoeffs::ninejCoeffs(int maxj_): maxj(maxj_)
 
 double ninejCoeffs::operator() (int ja, int jb, int jc, int jd, int je, int jf, int jg, int jh, int ji) const
 {
-  //dmrginp.couplingcoeff.start();
+
   int a = jd, b=je, c=jf;
   int index = arrayindex(a, b, c);
   if (index == -1)
     return Ninej(ja, jb, jc, jd, je, jf, jg, jh, ji);
-  if (ja > maxj || jb >maxj || jc >maxj) {
-    cout << "should have used a larger maxj"<<endl;
+  if (ja >= maxj || jb >=maxj || jc >=maxj) {
     return Ninej(ja, jb, jc, jd, je, jf, jg, jh, ji);
   }
   int imax = a+1, jmax = b+1, kmax = c+1;
   int ii = (jg+a-ja)/2, jj = (jh+b-jb)/2, kk = (ji+c-jc)/2;
-  //dmrginp.couplingcoeff.stop();
+
   return coeffs[index](ja*imax+ii, jb*jmax+jj, jc*kmax + kk);
 }
 

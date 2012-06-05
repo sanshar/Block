@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include "sweep.h"
 #include "global.h"
 #include "solver.h"
@@ -123,8 +142,6 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   dmrginp.guessgenT.stop();
   dmrginp.multiplierT.start();
   std::vector<Matrix> rotatematrix;
-  //cout <<"\t\t\t System memory: "<<system.memoryUsed()<<endl;
-  //cout <<"\t\t\t Environement memory: "<<newEnvironment.memoryUsed()<<endl;
 
   if (dmrginp.outputlevel() != 0)
     mcheck("");
@@ -139,9 +156,6 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     }
     pout << "\t\t\t Solving wavefunction "<<endl;
   }
-
-  //world.barrier();
-  //cout << "about to make big block"<<endl;
 
   newSystem.RenormaliseFrom (sweepParams.set_lowest_energy(), sweepParams.set_lowest_energy_spins(), sweepParams.set_lowest_error(), 
                              rotatematrix, sweepParams.get_keep_states(), 
@@ -171,14 +185,11 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   dmrginp.operrotT.stop();
   if (dmrginp.outputlevel() != 0)
     mcheck("after rotation and transformation of block");
-  //StateInfo::store(forward, newSystem.get_sites(), storeStates);
 
   if (dmrginp.outputlevel() != 0){
     pout << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
     pout << dmrginp.makeopsT<<" makeops "<<endl;
     pout << dmrginp.datatransfer<<" datatransfer "<<endl;
-    //cout << dmrginp.justmultiply<<" just multiply "<<endl;
-    //cout << dmrginp.otherrotation<<" "<<dmrginp.spinrotation<<" "<<dmrginp.operrotT<<" rotations time "<<endl; 
     pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
     pout << dmrginp.oneelecT<<" "<<dmrginp.twoelecT<<" "<<dmrginp.hmultiply<<" "<<dmrginp.couplingcoeff<<" hmult"<<endl;
     pout << dmrginp.buildsumblock<<" "<<dmrginp.buildblockops<<" build block"<<endl;
@@ -186,7 +197,6 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     pout << dmrginp.addnoise<<" "<<dmrginp.s0time<<" "<<dmrginp.s1time<<" "<<dmrginp.s2time<<endl;
   }
 
-  //mcheck("After renorm transform");
 }
 
 double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize)
@@ -211,7 +221,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   else
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
   pout << "\t\t\t ============================================================================ " << endl;
-  //mcheck("");
+
   InitBlocks::InitStartingBlock (system,forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
   if(!restart)
     sweepParams.set_block_iter() = 0;
@@ -219,7 +229,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
  
   if (dmrginp.outputlevel() != 0)
     pout << "\t\t\t Starting block is :: " << endl << system << endl;
-  //if (!restart) 
+
   SpinBlock::store (forward, system.get_sites(), system); // if restart, just restoring an existing block --
   sweepParams.savestate(forward, system.get_sites().size());
   bool dot_with_sys = true;
@@ -318,6 +328,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
 	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
+  pout << "\t\t\t M = "<<sweepParams.get_keep_states()<<"  Largest Discarded Weight = "<<finalError<<"  Sweep Energy = "<< finalEnergy[j]+dmrginp.get_coreenergy() << endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
   // update the static number of iterations
@@ -330,7 +341,6 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem)
 {
   mcheck("at the start of block and decimate");
-  // figure out if we are going forward or backwards
   dmrginp.guessgenT.start();
   bool forward = (system.get_sites() [0] == 0);
   SpinBlock systemDot;

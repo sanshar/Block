@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include "global.h"
 #include "Symmetry.h"
 #include "sweep_params.h"
@@ -117,23 +136,6 @@ void SpinAdapted::SweepParams::restorestate(bool &forward, int &size)
   size = block_iter+1;
   restart_iter = sweep_iter;
 
-  /*
-  if (set_calcType() == FCI || set_calcType() == TINYCALC) {
-    if (dmrginp.calc_type() != DMRG) 
-      pout << "Restart not supported after a FCI  or a TINYCALC calculation.";
-    else 
-      pout << "Cannot perform Genblock/Onepdm/Twopdm calculation after a FCI or a TINYCALC calculation."<<endl;
-    abort();
-  }
-
-
-  if (dmrginp.algorithm_method() == TWODOT) 
-    onedot = false;
-  env_add = dmrginp.env_add();
-  forward_starting_size = 1;
-  n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
-  backward_starting_size = forward_starting_size;
-  */
   if (block_iter >= get_n_iters()) {
     sweep_iter ++;
     block_iter = 0;
