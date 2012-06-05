@@ -145,23 +145,23 @@ void Symmetry::InitialiseTable(string psym)
 bool Symmetry::irrepAllowed(int irrep)
 {
   if (sym == "dinfh" && ((irrep<0 && irrep >-4) || irrep == 2 || irrep == 3)) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep<<"  with dinfh symmetry"<<endl;
+    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with dinfh symmetry"<<endl;
     abort();
   }
   if (sym == "d2h" && (irrep<0 || irrep >= 8)) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep<<"  with "<<sym<<" symmetry"<<endl;
+    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
   if ((sym == "c2v" || sym == "c2h") && (irrep<0 || irrep >= 4)) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep<<"  with "<<sym<<" symmetry"<<endl;
+    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
   if (sym == "ci" && (irrep <0 || irrep >=2)) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep<<"  with "<<sym<<" symmetry"<<endl;
+    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
   if (sym == "c1" && irrep != 0) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep<<"  with "<<sym<<" symmetry"<<endl;
+    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
   return true;
