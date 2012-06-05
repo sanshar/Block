@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include "linear.h"
 #include "pario.h"
 #include "global.h"
@@ -52,7 +71,6 @@ void SpinAdapted::Linear::olsenPrecondition(Wavefunction& op, Wavefunction& C0, 
 
 void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix& h_diag, double normtol, const bool &warmUp, Davidson_functor& h_multiply, bool& useprecond, bool& solved)
 {
-  //mcheck("************* Memory in davidson routine ");
 
   pout.precision (12);
 #ifndef SERIAL
@@ -95,7 +113,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
     {
       if (dmrginp.outputlevel() != 0)
 	pout << "\t\t\t Davidson Iteration :: " << iter << endl;
-      //mcheck(" ******************* ");
+
       ++iter;
       dmrginp.hmultiply.start();
 
@@ -150,7 +168,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 #ifndef SERIAL
       if (mpigetrank() == 0) {
 #endif
-	//generate the hamiltonian in b space h(i,j) = v_i H v_j
+
 	Matrix subspace_h(b.size(), b.size());
 	for (int i = 0; i < b.size(); ++i)
 	  for (int j = 0; j <= i; ++j)
@@ -158,8 +176,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	      subspace_h.element(i, j) = DotProduct(b[i], sigma[j]);
 	      subspace_h.element(j, i) = subspace_h.element(i, j);
 	    }
-	//diagonalise the h
-	//DiagonalMatrix subspace_eigenvalues;
+
 	Matrix alpha;
 	diagonalise(subspace_h, subspace_eigenvalues, alpha);
 	

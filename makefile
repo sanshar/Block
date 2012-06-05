@@ -1,3 +1,19 @@
+
+#Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+#Copyright (c) 2012, Garnet K.-L. Chan                                                                                                                     
+#This program is free software: you can redistribute it and/or modify         
+#it under the terms of the GNU General Public License as published by         
+#the Free Software Foundation, either version 3 of the License, or            
+#(at your option) any later version.                                                                                                                      
+#This program is distributed in the hope that it will be useful,              
+#but WITHOUT ANY WARRANTY; without even the implied warranty of               
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+#GNU General Public License for more details.                                                                                                              
+#You should have received a copy of the GNU General Public License            
+#along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+
+
+
 #specify boost include file
 BOOSTINCLUDE = /home/sharma/boost_1_47_0/
 
@@ -51,10 +67,10 @@ LIBS += $(MPI_LIB)
 
 
 
-SRC_spin_adapted =  dmrg.C set_spinblock_components.C linear.C main.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C anglib.C diis.C diis_updateError.C diis_updateHamiltonian.C diis_transformBlock.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C
+SRC_spin_adapted =  dmrg.C set_spinblock_components.C linear.C main.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C anglib.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C
 
 
-SRC_spin_library =  dmrg.C readinput.C save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C spinblock.C StateInfo.C set_spinblock_components.C op_components.C Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C linear.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C anglib.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C  modules/onepdm/sweep.C modules/onepdm/onepdm.C  modules/generate_blocks/sweep.C diis.C diis_updateError.C diis_updateHamiltonian.C diis_transformBlock.C fci.C
+SRC_spin_library =  dmrg.C readinput.C save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C spinblock.C StateInfo.C set_spinblock_components.C op_components.C Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C linear.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C anglib.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C  modules/onepdm/sweep.C modules/onepdm/onepdm.C  modules/generate_blocks/sweep.C fci.C
 
 
 OBJ_spin_adapted=$(SRC_spin_adapted:.C=.o)

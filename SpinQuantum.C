@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include "SpinQuantum.h"
 #include "global.h"
 
@@ -24,7 +43,6 @@ int SpinQuantum::insertionNum(const SpinQuantum& ql, const SpinQuantum& qr) cons
 
 vector<SpinQuantum> SpinQuantum::operator+ (const SpinQuantum q) const
 {
-  //it is important that this order always be from lowest spin to highest spin.
   vector<SpinQuantum> quanta;
   for (int i=abs(q.totalSpin- totalSpin); i<= q.totalSpin+totalSpin; i+=2) {
     vector<IrrepSpace> vec = orbitalSymmetry+q.orbitalSymmetry;
@@ -37,7 +55,6 @@ vector<SpinQuantum> SpinQuantum::operator+ (const SpinQuantum q) const
 
 vector<SpinQuantum> SpinQuantum::operator- (const SpinQuantum q) const
 {
-  //it is important that this order always be from lowest spin to highest spin.
   vector<SpinQuantum> quanta;
   for (int i=abs(q.totalSpin- totalSpin); i<= q.totalSpin+totalSpin; i+=2) {
     vector<IrrepSpace> vec = orbitalSymmetry+q.orbitalSymmetry;
@@ -110,7 +127,6 @@ void SpinQuantum::complementize ()
 
 vector<SpinQuantum> SpinQuantum::get_complement () const
 {
-  //it is important that this order always be from lowest spin to highest spin.
   vector<SpinQuantum> quanta;
   int n = dmrginp.total_particle_number() - particleNumber;
   vector<IrrepSpace> vec = dmrginp.total_symmetry_number() + orbitalSymmetry;

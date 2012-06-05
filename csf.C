@@ -1,3 +1,21 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
 #include "csf.h"
 #include "SpinQuantum.h"
 #include "global.h"
@@ -132,7 +150,7 @@ vector<SpinAdapted::Csf> SpinAdapted::Csf::spinLadder(int k)
 
   vector< Csf> ladder;
   ladder.push_back(*this);
-  //all csf are stored so that M=S, first expand all the csf so that M=-S,...,+S
+
   for (int j=0; j<2; j++) {
     Csf s = *this;
     if (j==0)
@@ -206,7 +224,6 @@ void SpinAdapted::CSFUTIL::TensorProduct(Csf& lhs, Csf& rhs, vector< Csf >& outp
 	  double clebsg = cg(J1, J2, J, M1, M2, J);
 	  double clebdinfh = Symmetry::spatial_cg(lirrep, rirrep, irrep, lhs_csfs[j1m1].irrep.getrow(), rhs_csfs[j2m2].irrep.getrow(), row);
 	  if( abs(clebsg) < 1.0e-12 || abs(clebdinfh) < 1.00e-14)
-	  //if( abs(clebsg) < 1.0e-12 || lhs_csfs[j1m1].Lz+ rhs_csfs[j2m2].Lz != Lz)
 	    continue;
 	  lhs_csfs[j1m1].outerProd(rhs_csfs[j2m2], clebsg*clebdinfh, dets); 
 	}
@@ -391,52 +408,32 @@ std::vector< SpinAdapted::Csf > SpinAdapted::Csf::distribute (const int n, const
 	std::vector<bool> lbuffer(dmrginp.spatial_to_spin()[left], 0);
 	std::vector<bool> rbuffer(dmrginp.spatial_to_spin()[edge] - dmrginp.spatial_to_spin()[right], 0);
 	
-	/*
-	std::vector< std::vector<bool> > occorbs;
-
-	vector<int> nonzeroLz;
-	for (int orbI = 0; orbI <(right-left); orbI++) 
-	  if (SymmetryOfSpatialOrb(orbI).getLz() > 0)
-	    nonzeroLz.push_back(orbI);
-	nonzeroLz.push_back(-1);
-	*/
-	//for(int j=0; j<nonzeroLz.size(); j++) {
-	  std::vector<bool> orbs(dmrginp.spatial_to_spin()[right] - dmrginp.spatial_to_spin()[left], 0);
-	  int alphaI = 0;
-	  int betaI = 0;
-	  //int addindex = 0;
-	  for (int orbI=0; orbI<(right-left); orbI++)
-	  {
-	    /*
-	    if (j>0) {
-	      if (nonzeroLz[j-1] == orbI)
-		addindex = 2;
-	    }
-	    else addindex = 0;
-	    */
-	    if (abList[i][alphaI]) {
-	      orbs[dmrginp.spatial_to_spin()[orbI]] = 1;
-	      if (betaI < min(na, nb)) {
-		orbs[ dmrginp.spatial_to_spin()[orbI]+1] = 1;
-		++betaI;
-	      }
-	    }
-	    ++alphaI;
-	  }
+	std::vector<bool> orbs(dmrginp.spatial_to_spin()[right] - dmrginp.spatial_to_spin()[left], 0);
+	int alphaI = 0;
+	int betaI = 0;
 	
-	  std::vector<bool> tmp = lbuffer;
-	  copy (orbs.begin(), orbs.end(), back_inserter(tmp));
-	  copy (rbuffer.begin(), rbuffer.end(), back_inserter(tmp));
-	  Slater new_det = Slater (Orbstring (tmp));
-	  map<Slater, double> m;
-	  m[new_det] = 1.0;
-	  last_det = new_det;
-	  //************************
-	  //if(sym == new_det.sym_is() && new_det.Lz >= 0)
-	  //if(new_det.Lz >= 0)
-	  //s.push_back ( Csf(m, n, sp, sp, new_det.Lz, new_det.goru, sym.getsign()) );
-	  if(sym.getirrep() == AbelianSymmetryOf(new_det).getirrep())
-	    s.push_back ( Csf(m, n, sp, sp, IrrepVector(sym.getirrep(), 0)) );
+	for (int orbI=0; orbI<(right-left); orbI++)
+	{
+	  if (abList[i][alphaI]) {
+	    orbs[dmrginp.spatial_to_spin()[orbI]] = 1;
+	    if (betaI < min(na, nb)) {
+	      orbs[ dmrginp.spatial_to_spin()[orbI]+1] = 1;
+	      ++betaI;
+	    }
+	  }
+	  ++alphaI;
+	}
+	
+	std::vector<bool> tmp = lbuffer;
+	copy (orbs.begin(), orbs.end(), back_inserter(tmp));
+	copy (rbuffer.begin(), rbuffer.end(), back_inserter(tmp));
+	Slater new_det = Slater (Orbstring (tmp));
+	map<Slater, double> m;
+	m[new_det] = 1.0;
+	last_det = new_det;
+
+	if(sym.getirrep() == AbelianSymmetryOf(new_det).getirrep())
+	  s.push_back ( Csf(m, n, sp, sp, IrrepVector(sym.getirrep(), 0)) );
       }
     
     if (s.size() == 0) {

@@ -1,3 +1,21 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
 #include "density.h"
 #include "wavefunction.h"
 #include "operatorloops.h"
@@ -20,9 +38,6 @@ void DensityMatrix::makedensitymatrix(const std::vector<Wavefunction>& wave_solu
   
   if(noise > 1.0e-14)
     this->add_onedot_noise(wave_solutions, big, noise);
-  if (additional_noise > 1.0e-14)
-    this->add_twodot_noise(big, additional_noise);
-
 
 }
 

@@ -1,3 +1,21 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
 #include "IntegralMatrix.h"
 #include <fstream>
 #include "input.h"
@@ -26,7 +44,6 @@
 #include "sweeponepdm.h"
 #include "sweeptwopdm.h"
 #include "BaseOperator.h"
-#include "diis.h"
 
 #ifndef SERIAL
 #include <boost/mpi/environment.hpp>
@@ -39,7 +56,13 @@ void dmrg(double sweep_tol);
 void restart(double sweep_tol, bool reset_iter);
 void ReadInput(char* conf);
 void fullrestartGenblock();
-//void test(double sweep_tol);
+void license() {
+  pout << "Block  Copyright (C) 2012  Garnet K.-L. Chan"<<endl;
+  pout << "This program comes with ABSOLUTELY NO WARRANTY; for details see license file."<<endl;
+  pout << "This is free software, and you are welcome to redistribute it"<<endl;
+  pout << "under certain conditions; see license file for details."<<endl;
+}
+
 
 namespace SpinAdapted{
   Timer globaltimer(false);
@@ -47,21 +70,19 @@ namespace SpinAdapted{
   bool DEBUG_MEMORY = false;
   bool restartwarm = false;
   OneElectronArray v_1;
-  //TwoElectronArray v_2(TwoElectronArray::restrictedPermSymm);
   TwoElectronArray v_2(TwoElectronArray::restrictedNonPermSymm);
   Input dmrginp;
   int MAX_THRD = 1;
   bool FULLRESTART;
   bool RESTART;
   bool reset_iter;
-  //ifstream* coutbuf;
 }
 
 using namespace SpinAdapted;
 
 int callDmrg(char* input, char* output)
 {
-
+  license();
   if (output != 0) {
     ofstream file;
     file.open(output);
@@ -93,18 +114,15 @@ int callDmrg(char* input, char* output)
       restart(sweep_tol, reset_iter);
     }
     else {
-      //sweepParams.set_calcType() = DMRG;
       dmrg(sweep_tol);
     }
     break;
 
   case (FCI):
-    //sweepParams.set_calcType() = FCI;
     Sweep::fullci(sweep_tol);
     break;
     
   case (TINYCALC):
-    //sweepParams.set_calcType() = TINYCALC;
     Sweep::tiny(sweep_tol);
     break;
 
@@ -124,7 +142,6 @@ int callDmrg(char* input, char* output)
       restart(sweep_tol, reset_iter);
     }
     else {
-      //sweepParams.set_calcType() = DMRG;
       dmrg(sweep_tol);
     }
 
@@ -160,7 +177,6 @@ int callDmrg(char* input, char* output)
       restart(sweep_tol, reset_iter);
     }
     else {
-      //sweepParams.set_calcType() = DMRG;
       dmrg(sweep_tol);
     }
 
@@ -289,15 +305,9 @@ void restart(double sweep_tol, bool reset_iter)
     last_fe = Sweep::do_one(sweepParams, false, direction, true, restartsize);
 
 
-  //while ((fabs(last_fe - old_fe) > sweep_tol) || (fabs(last_be - old_be) > sweep_tol))
   while ((fabs(last_fe - old_fe) > sweep_tol) || (fabs(last_be - old_be) > sweep_tol) || 
 	 (dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter()+1 >= sweepParams.get_sweep_iter()) )
   {
-
-    //if (domoreIter == 2) {
-    //dodiis = true;
-    //break;
-    //}
 
     old_fe = last_fe;
     old_be = last_be;
@@ -305,18 +315,6 @@ void restart(double sweep_tol, bool reset_iter)
       break;
     last_be = Sweep::do_one(sweepParams, false, !direction, false, 0);
 
-
-      if (dmrginp.do_diis() == true &&  sweepParams.get_sweep_iter()%2 == 0) {
-	if ( (fabs(last_fe-old_fe) < dmrginp.diis_error() && 
-	      fabs(last_be-old_be) < dmrginp.diis_error()) &&
-	    sweepParams.get_sweep_iter() >= dmrginp.start_diis_iter() ) {
-	  domoreIter += 2;
-	  for(int i=0; i<dmrginp.sweep_iter_schedule().size(); i++) {
-	    dmrginp.set_sweep_noise_schedule()[i] = 0.0;
-	    dmrginp.set_sweep_additional_noise_schedule()[i] = 0.0;
-	  }
-	}
-      }
 
     if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
       break;
@@ -328,19 +326,6 @@ void restart(double sweep_tol, bool reset_iter)
   if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
     pout << "Maximum sweep iterations acheived " << std::endl;
 
-  if (dodiis) {
-    cout << "STARTING DIIS CALCUKATION"<<endl;
-    DIIS diis;
-    double ferror = 1e6, berror = 1e6;
-    diis.keepStates = dmrginp.diis_keep_states();
-    diis.initialize(sweepParams);
-    while (ferror > dmrginp.diis_error_tol() ) {
-      ferror = diis.do_one(sweepParams, false, true, false, 0);
-      pout << "Total Error "<<ferror<<endl;
-      //berror = diis.do_one(sweepParams, false, false, false, 0);
-      //pout << "Total Error "<<berror<<endl;
-    }
-  }
  
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
   if (!mpigetrank())
@@ -381,19 +366,6 @@ void dmrg(double sweep_tol)
 	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
 
 
-      if (dmrginp.do_diis() == true &&  sweepParams.get_sweep_iter()%2 == 0) {
-	if ( (fabs(last_fe-old_fe) < dmrginp.diis_error() && 
-	      fabs(last_be-old_be) < dmrginp.diis_error()) ||
-	    sweepParams.get_sweep_iter() >= dmrginp.start_diis_iter() ) {
-	  domoreIter += 2;
-	  for(int i=0; i<dmrginp.sweep_iter_schedule().size(); i++) {
-	    dmrginp.set_sweep_noise_schedule()[i] = 0.0;
-	    dmrginp.set_sweep_additional_noise_schedule()[i] = 0.0;
-	  }
-	}
-      }
-
-
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
       last_fe = Sweep::do_one(sweepParams, false, true, false, 0);
@@ -408,20 +380,6 @@ void dmrg(double sweep_tol)
     }
   if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
     pout << "Maximum sweep iterations acheived " << std::endl;
-
-  if (dodiis) {
-    cout << "STARTING DIIS CALCULATION"<<endl;
-    DIIS diis;
-    double ferror = 1e6, berror = 1e6;
-    diis.keepStates = dmrginp.diis_keep_states();
-    diis.initialize(sweepParams);
-    while (ferror > dmrginp.diis_error_tol() && dmrginp.max_iter() >= sweepParams.get_sweep_iter()) {
-      ferror = diis.do_one(sweepParams, false, true, false, 0);
-      pout << "Total Error "<<ferror<<endl;
-      //berror = diis.do_one(sweepParams, false, false, false, 0);
-      //pout << "Total Error "<<berror<<endl;
-    }
-  }
 
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
   if (!mpigetrank())

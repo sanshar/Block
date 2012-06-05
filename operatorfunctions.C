@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include "operatorfunctions.h"
 #include "wavefunction.h"
 #include "couplingCoeffs.h"
@@ -39,7 +58,6 @@ void SpinAdapted::operatorfunctions::TensorTraceElement(const SpinBlock *ablock,
   const StateInfo* rS = cstateinfo->rightStateInfo, *lS = cstateinfo->leftStateInfo;
   int rowstride =0, colstride = 0;
 
-  //cout << "old to new size "<<oldToNewI.size()<<" "<<oldToNewJ.size()<<endl;
   for (int oldi =0; oldi < oldToNewI.size(); oldi++) {
     colstride = 0;
     for (int oldj = 0; oldj < oldToNewJ.size(); oldj++)
@@ -104,7 +122,6 @@ void SpinAdapted::operatorfunctions::TensorTraceElement(const SpinBlock *ablock,
 
 void SpinAdapted::operatorfunctions::Product (const SpinBlock *ablock, const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, Baseoperator<Matrix>& c, double scale)
 {
-  //this is the product of tensor operators c = [a^k1 b^k2]^k where k1 k2 and k are the angular momentum
   const StateInfo* astate = &ablock->get_stateInfo(); 
   if (fabs(scale) < TINY) return;
   int rows = c.nrows();
@@ -115,7 +132,6 @@ void SpinAdapted::operatorfunctions::Product (const SpinBlock *ablock, const Bas
 	  if (a.allowed(cq, aprime) && b.allowed(aprime, cqprime))
 	  {
 	    int apj = astate->quanta[aprime].get_s(), cqj = astate->quanta[cq].get_s(), cqpj = astate->quanta[cqprime].get_s();
-	    //int apl = astate->quanta[aprime].get_symm().getLz(), cql = astate->quanta[cq].get_symm().getLz(), cqpl = astate->quanta[cqprime].get_symm().getLz();
 	    double factor = a.get_scaling(astate->quanta[cq], astate->quanta[aprime]);
 	    factor *= b.get_scaling(astate->quanta[aprime], astate->quanta[cqprime]);
 

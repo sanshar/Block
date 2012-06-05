@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include "spinblock.h"
 #include <boost/bind.hpp>
 #include <boost/functional.hpp>
@@ -52,7 +71,6 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
     InitBlocks::InitBigBlock(newsystem, environment, newbig); 
     for (int i=0; i<nroots; i++) 
     {
-      //wave_solutions[i].clearTensors();
       Wavefunction tempwave = wave_solutions[i];
       GuessWave::onedot_shufflesysdot(big.get_stateInfo(), newbig.get_stateInfo(),wave_solutions[i], tempwave);  
       wave_solutions[i] = tempwave;
@@ -68,14 +86,13 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 
   if (dmrginp.outputlevel() != 0)
     mcheck("after davidson before noise");
-  //if (mpigetrank() == 0) system("free -m");
+
   dmrginp.davidsonT.stop();
 
   dmrginp.rotmatrixT.start();
   DensityMatrix tracedMatrix;
   tracedMatrix.allocate(stateInfo);
 
-  //pout <<"\t\t\t System state Info\n"<< stateInfo<<endl;
   bool normalnoise = warmUp;
   if (newbig.get_rightBlock()->size() < 2)
     normalnoise = true;
@@ -128,11 +145,6 @@ double SpinBlock::makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& 
   
   if (dmrginp.outputlevel() != 0)
     pout << "\t\t\t total states using dm and quanta " << totalstatesbydm << " " << totalstatesbyquanta << endl;
-  
-  /*
-    for (int i=0; i<totalstatesbydm; i++)
-    cout << newbig.leftBlock->get_stateInfo().quanta[inorderwts[i].first]<<" "<<eigenMatrix[inorderwts[i].first].element(inorderwts[i].second, inorderwts[i].second)<<endl;
-  */
   
   return assign_matrix_by_dm(rotateMatrix, eigenMatrix, transformmatrix, inorderwts, wtsbyquanta, totalstatesbydm, 
 			      totalstatesbyquanta, size(), dmrginp.last_site()-size());

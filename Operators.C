@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include "Operators.h"
 #include "csf.h"
 #include "spinblock.h"
@@ -289,7 +308,7 @@ double SpinAdapted::CreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const 
 
   TensorOp C(I, 1), D(J, -1);
   TensorOp CD = C.product(D, spin, irrep);
-  //cout <<"CD irrep "<<irrep<<"  "<< CD;
+
   for (int i=0; i<ladder.size(); i++)
   {
     int index = 0; double cleb=0.0;
@@ -892,8 +911,6 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
 {
   double element = 0.0;
   bool finish = false;
-  //if ((c1.S == 2 && c1.n ==2 && c1.Lz == 0 && c1.sign == '+' && c1.goru == 'g') &&
-  //(ladder[0].S == 2 && ladder[0].n ==2 && ladder[0].Lz == 0 && ladder[0].sign == '+' && ladder[0].goru == 'g') && b->get_sites().size() == 4) write = true;
   for (int i=0; i<ladder.size(); i++)
   {
     if (finish) break;
@@ -910,12 +927,11 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
 	
 	Slater s1 = (*it1).first, s2 = (*it2).first;
 	double d1 = (*it1).second, d2 = (*it2).second;
-	//if (write) cout <<s1<<s2<<matrixE<<endl;
+
 	std::vector<int> cv, dv;
 	s1.connect(s2, cv, dv);
 	if ((dv.size() == 2) && (cv.size() == 2))
 	{
-	  //if(write) cout << matrixE<<endl;
 	  int cI = cv[0]; 
 	  int cJ = cv[1]; 
 	  int dK = dv[0]; 
@@ -926,7 +942,6 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
 	}
 	if ((cv.size() == 1) && (dv.size() == 1))
 	{
-	  //if(write) cout << matrixE<<endl;
 	  int cI = cv[0]; 
 	  int dK = dv[0]; 
 	  int parity = s1.trace(s2.d(dK).c(cI));
@@ -942,10 +957,8 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
 	      parity = s1.trace(s2.d(dK).d(J).c(J).c(cI));
 	      factor = parity*d1*d2*0.5;
 	      matrixE += factor*(v_2(cI, J, dK, J) - v_2(J, cI, dK, J) - v_2(cI, J, J, dK) + v_2(J, cI, J, dK));
-	      //cout <<"1 1 "<< d1<<"  "<<d2<<"  "<<s1.trace(s2)<<"  "<<v_2(cI,J,J,dK)<<"  "<<matrixE<<endl;
 	    }
 	  }
-	  //if(write) cout << matrixE<<endl;
 	}
 	
 	if ((cv.size() == 0) && (dv.size() == 0))
@@ -976,8 +989,6 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
 		  double factor = 0.5*d1*d2; //if (ki == kk) factor = 1.0*d1*d2;
 		  s1 = (*it1).first; s2 = (*it2).first;
 		  matrixE += factor*s1.trace(s2.d(I).d(K).c(K).c(I))*(v_2(I, K, I, K) - v_2(K, I, I, K));
-		  //cout <<"0 0 "<< d1<<"  "<<d2<<"  "<<s1.trace(s2)<<"  "<<v_2(I,K,I,K)<<"  "<<matrixE<<endl;
-		  //cout << d1<<"  "<<d2<<"  "<<s1.trace(s2)<<"  "<<v_1(J,J)<<endl;
 
 		}
 	      }

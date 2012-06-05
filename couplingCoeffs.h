@@ -1,3 +1,21 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
 #ifndef COUPLING_COEFFS_H
 #define COUPLING_COEFFS_H
 #include "math.h"
@@ -57,7 +75,6 @@ class ninejCoeffs{
 
 inline double cg(int two_ja, int two_jb, int two_jc, int two_ma, int two_mb, int two_mc)
 {
-  //double rval= pow(-1.0,static_cast<int>((two_ja-two_jb+two_mc)/2))* gsl_sf_coupling_3j (two_ja, two_jb, two_jc, two_ma, two_mb, -1*two_mc)*pow((two_jc+1),0.5);
   double rval = cleb_(two_ja, two_ma, two_jb, two_mb, two_jc, two_mc);
   return rval;
 }
@@ -66,7 +83,6 @@ inline double cg(int two_ja, int two_jb, int two_jc, int two_ma, int two_mb, int
 inline double sixj(int two_ja, int two_jb, int two_jc, int two_jd, int two_je, int two_jf)
 {
   return sixj_(two_ja, two_jb, two_jc, two_jd, two_je, two_jf);
-  //return gsl_sf_coupling_6j (two_ja, two_jb, two_jc, two_jd, two_je, two_jf);
 }
 
 
@@ -75,12 +91,6 @@ inline double racah(int a, int b, int c, int d, int e, int f)
   double rval = pow(-1.0, static_cast<int>((a+b+c+d)/2))*sixj(a, b, e, d, c, f);
   return rval;
 }
-/*
-inline double threejm(int two_ja, int two_jb, int two_jc, int two_ma, int two_mb, int two_mc)
-{
-  return gsl_sf_coupling_3j (two_ja, two_jb, two_jc, two_ma, two_mb, -1*two_mc);
-}
-*/
 
 inline double Ninej(int two_ja, int two_jb, int two_jc, int two_jd, int two_je, int two_jf, int two_jg, int two_jh, int two_ji)
 {
@@ -89,11 +99,6 @@ inline double Ninej(int two_ja, int two_jb, int two_jc, int two_jd, int two_je, 
     *ninej_ (two_ja, two_jb, two_jc, 
 	     two_jd, two_je, two_jf, 
 	     two_jg, two_jh, two_ji);
-  /*
-    *gsl_sf_coupling_9j (two_ja, two_jb, two_jc, 
-			 two_jd, two_je, two_jf, 
-			 two_jg, two_jh, two_ji);
-  */
   return rval;
 }
 }

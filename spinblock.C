@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include "spinblock.h"
 #include "op_components.h"
 #include "operatorfunctions.h"
@@ -106,8 +125,6 @@ SpinBlock::SpinBlock(const StateInfo& s)
 
 void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
 {
-  // this makes a block covering the tensor product states (for valid particle and spin numbers)
-  // such a block is "normal" by default and comes replete with all operators built
   name = get_name();
 
   sites = new_sites;
@@ -238,10 +255,7 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   Wavefunction *v_array=0, *v_distributed=0, *v_add=0;
   
   int maxt = 1;
-  //MAX_THRD = 1;
-  //omp_set_num_threads(maxt);
   initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
-  //initiateMultiThread(v, v_array, v_distributed, maxt);
   dmrginp.oneelecT.start();
   dmrginp.s0time.start();
   boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0];
@@ -285,8 +299,6 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   }
   dmrginp.twoelecT.stop();
 
-  //accumulateMultiThread(v, v_array, v_distributed, maxt);
-  //omp_set_num_threads(MAX_THRD);
   accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
 
 }
@@ -301,7 +313,6 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 
   initiateMultiThread(&e, e_array, e_distributed, MAX_THRD);
 
-  //boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_rep(HAM);
   boost::shared_ptr<SparseMatrix> op =leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(this);
   TensorTrace(leftBlock, *op, this, &(get_stateInfo()), e, 1.0);
 
@@ -355,7 +366,6 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   sites = sts;
   complementary_sites = make_complement(sites);
 
-  // uses a list of quantum numbers                                                                                                       
   assert (sites.size () > 0);
   sort (sites.begin (), sites.end ());
 

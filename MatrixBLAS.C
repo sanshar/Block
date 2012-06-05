@@ -1,3 +1,22 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is free software: you can redistribute it and/or modify         
+it under the terms of the GNU General Public License as published by         
+the Free Software Foundation, either version 3 of the License, or            
+(at your option) any later version.                                          
+                                                                             
+This program is distributed in the hope that it will be useful,              
+but WITHOUT ANY WARRANTY; without even the implied warranty of               
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
+GNU General Public License for more details.                                 
+                                                                             
+You should have received a copy of the GNU General Public License            
+along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+*/
+
+
 #include <iostream>
 #include <cmath>
 #include <include/newmatutils.h>
@@ -112,9 +131,6 @@ void SpinAdapted::MatrixTensorProduct (const Matrix& a_ref, char conjA, Real sca
 
   int arows = a.Nrows();
   int acols = a.Ncols();
-  
-  //  int brows = b.Nrows();
-  //  int bcols = b.Ncols();
   
   // some specialisations
 #ifdef FAST_MTP
@@ -353,11 +369,8 @@ void SpinAdapted::diagonalise(Matrix& sym, DiagonalMatrix& d, Matrix& vec)
   DSYEV('V', 'L', nrows, workmat.Store(), nrows, dptr, &(workquery[0]), query, info); // do query to find best size
   
   int optlength = static_cast<int>(workquery[0]);
-  //pout << "optimal work length " << optlength << endl;
   vector<double> workspace(optlength);
 
-  //int optlength = 3 * nrows * nrows;
-  //double* workspace = new double[optlength];
   DSYEV('V', 'U', nrows, workmat.Store(), nrows, dptr, &(workspace[0]), optlength, info); // do query to find best size
 
 
@@ -368,7 +381,6 @@ void SpinAdapted::diagonalise(Matrix& sym, DiagonalMatrix& d, Matrix& vec)
       abort(); 
     }
   
-  // transpose matrix
   for (int i = 0; i < nrows; ++i)
     for (int j = 0; j < ncols; ++j)
       vec(j+1,i+1) = workmat(i+1,j+1);
@@ -460,11 +472,6 @@ void SpinAdapted::CatenateProduct (const ObjectMatrix<Matrix*>& a, Matrix& b, bo
 {
   try
     {
-      // precondition
-      //      for (int i = 0; i < a.Nrows (); ++i)
-      //	for (int j = 0; j < a.Ncols (); ++j)
-      //	  assert (a (i,j)->Nrows () == a (i,0)->Nrows () && a (i,j)->Ncols () == a (0,j)->Ncols ());
-      // make the row and column indices
       std::vector<int> indexRows (a.Nrows ());
       std::vector<int> indexCols (a.Ncols ());
       int rowLength = 0;
@@ -558,12 +565,3 @@ void SpinAdapted::DebugPrint (vector<double>& v)
     cout << v[i] << endl;
 }
 
-/*
-void SpinAdapted::savenewmat(const Matrix& m, ofstream& f)
-{
-  f << m.Nrows() << " " << m.Ncols() << endl;
-  for (int i = 0; i < m.Nrows(); ++i)
-    for (int j = 0; j < m.Ncols(); ++j)
-      f << i << " " << j << " " << m(i+1,j+1) << endl;
-}
-*/
