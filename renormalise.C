@@ -34,7 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "linear.h"
 #include "davidson.h"
 #include <stdlib.h>
-#include "diis.h"
+				    //#include "diis.h"
 
 #ifndef SERIAL
 #include <boost/mpi.hpp>
