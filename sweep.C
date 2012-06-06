@@ -328,8 +328,11 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
 	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
-  for(int j=0;j<nroots;++j)
-    pout << "\t\t\t M = "<<sweepParams.get_keep_states()<<"  Largest Discarded Weight = "<<finalError<<"  Sweep Energy = "<< finalEnergy[j]+dmrginp.get_coreenergy() << endl;
+  for(int j=0;j<nroots;++j){
+    //pout << "\t\t\t M = "<<sweepParams.get_keep_states()<<"  Largest Discarded Weight = "<<finalError<<"  Sweep Energy = "<< finalEnergy[j]+dmrginp.get_coreenergy() << endl;
+    if (mpigetrank() == 0)
+      printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
+  }
   pout << "\t\t\t ============================================================================ " << endl;
 
   // update the static number of iterations

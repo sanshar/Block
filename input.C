@@ -793,7 +793,7 @@ void SpinAdapted::Input::writeSummary()
   if (mpigetrank() == 0) {
 #endif
   printf("%-50s :   %-i\n", "Total number of orbitals", m_norbs/2);
-  printf("%-50s :   %-i:%-i:%-i\n", "Symmetry of the targetted wavefunctions",m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number.getirrep());
+  printf("%-50s :   %-i:%-i:%-i\n", "Symmetry of the targetted wavefunctions",m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number.getirrep()+1);
   printf("%-50s :   %-i\n", "Number of wavefunctions targetted", m_nroots);
   if (m_nroots >1) {
     printf("%-50s :   ", "The weights of the wavefunctions");
@@ -859,7 +859,15 @@ void SpinAdapted::Input::performSanityTest()
     Symmetry::irrepAllowed(m_spin_orbs_symmetry[i]);
   }
 
-  Symmetry::irrepAllowed(m_total_symmetry_number.getirrep());
+  if (sym == "dinfh") {
+    if (m_total_symmetry_number.getirrep() < 0) {
+      pout << "Wavefunction irrep cannot be less than 0"<<endl;
+      abort();
+    }
+  }
+  else
+    Symmetry::irrepAllowed(m_total_symmetry_number.getirrep());
+
   //this is important so the user cannot break the code
   if (m_schedule_type_default) {
     if (m_maxM == 0) {
