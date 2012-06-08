@@ -216,8 +216,8 @@ class OneElectronArray
 	  double scale=1.0, cfactor=0.0;
 	  double* inter = new double[nmo*nmo];
 	  char n='n', t='t';
-	  dgemm_ (&n, &n, &nmo, &nmo, &nmo, &scale, Aoints.data(), &nmo, CoeffMatrix.data (), &nmo, &cfactor, inter, &nmo);
-	  dgemm_ (&t, &n, &nmo, &nmo, &nmo, &scale, CoeffMatrix.data (), &nmo, inter, &nmo, &cfactor, Moints.data (), &nmo);
+	  dgemm_ (&n, &n, &nmo, &nmo, &nmo, &scale, Aoints.Store(), &nmo, CoeffMatrix.Store (), &nmo, &cfactor, inter, &nmo);
+	  dgemm_ (&t, &n, &nmo, &nmo, &nmo, &scale, CoeffMatrix.Store (), &nmo, inter, &nmo, &cfactor, Moints.Store (), &nmo);
 	  delete [] inter;
 
 
