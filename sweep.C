@@ -401,7 +401,7 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
     sort_weights(energies, inorderwts, wtsbyquanta);
     
     // make transformation matrix by various algorithms
-    int keptstates = sweepParams.get_keep_states(), keptqstates = sweepParams.get_keep_qstates();
+    int keptstates = sweepParams.get_keep_states()/2, keptqstates = sweepParams.get_keep_states()-keptstates;
     int totalstatesbydm = min(static_cast<int>(inorderwts.size()), keptstates);
     int totalstatesbyquanta = min(static_cast<int>(inorderwts.size()), keptstates + keptqstates) - totalstatesbydm;
     if (totalstatesbyquanta < 0) totalstatesbyquanta = 0;
