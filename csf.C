@@ -210,7 +210,8 @@ void SpinAdapted::CSFUTIL::TensorProduct(Csf& lhs, Csf& rhs, vector< Csf >& outp
   for (int l = 0; l<symvec.size(); l++)
   {
     int irrep = symvec[l].getirrep();
-    int row = Symmetry::sizeofIrrep(irrep);
+    int row = Symmetry::sizeofIrrep(irrep)-1;//***rows go from 0 to 1
+
     for (int J = abs(lhs.S-rhs.S); J<= lhs.S+rhs.S; J+=2)
     {
 

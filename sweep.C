@@ -381,35 +381,42 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   transformmatrix.allocate(newSystem.get_stateInfo());
   SpinQuantum q(0,0,IrrepSpace(0));
 
-  double minval = 1e12;
-  for (int i=0; i<nquanta; i++) {
-    diagonalise(newSystem.get_op_rep(HAM,q)->operator_element(i,i), energies[i], transformmatrix(i,i));
-    for (int j=0; j<energies[i].Nrows(); j++) 
-      if (minval > energies[i](j+1))
-	minval = energies[i](j+1);
+  if (mpigetrank() == 0) {
+    double minval = 1e12;
+    for (int i=0; i<nquanta; i++) {
+      diagonalise(newSystem.get_op_rep(HAM,q)->operator_element(i,i), energies[i], transformmatrix(i,i));
+      for (int j=0; j<energies[i].Nrows(); j++) 
+	if (minval > energies[i](j+1))
+	  minval = energies[i](j+1);
+    }
+    for (int i=0; i<nquanta; i++) {
+      for (int j=0; j<energies[i].Nrows(); j++) 
+	energies[i](j+1) = 1.0/(energies[i](j+1)-minval+1);
+    }
+
+
+    vector<pair<int, int> > inorderwts;
+    vector<vector<int> > wtsbyquanta;
+    
+    sort_weights(energies, inorderwts, wtsbyquanta);
+    
+    // make transformation matrix by various algorithms
+    int keptstates = sweepParams.get_keep_states(), keptqstates = sweepParams.get_keep_qstates();
+    int totalstatesbydm = min(static_cast<int>(inorderwts.size()), keptstates);
+    int totalstatesbyquanta = min(static_cast<int>(inorderwts.size()), keptstates + keptqstates) - totalstatesbydm;
+    if (totalstatesbyquanta < 0) totalstatesbyquanta = 0;
+    
+    pout << "\t\t\t total states using dm and quanta " << totalstatesbydm << " " << totalstatesbyquanta << endl;
+    
+    
+    double error = assign_matrix_by_dm(rotateMatrix, energies, transformmatrix, inorderwts, wtsbyquanta, totalstatesbydm, totalstatesbyquanta, newSystem.size(), 2*totalstatesbydm);
+    pout << "\t\t\t Total discarded weight "<<error<<endl;
   }
-  for (int i=0; i<nquanta; i++) {
-    for (int j=0; j<energies[i].Nrows(); j++) 
-      energies[i](j+1) = 1.0/(energies[i](j+1)-minval+1);
-  }
 
-
-  vector<pair<int, int> > inorderwts;
-  vector<vector<int> > wtsbyquanta;
-  
-  sort_weights(energies, inorderwts, wtsbyquanta);
-
-  // make transformation matrix by various algorithms
-  int keptstates = sweepParams.get_keep_states(), keptqstates = sweepParams.get_keep_qstates();
-  int totalstatesbydm = min(static_cast<int>(inorderwts.size()), keptstates);
-  int totalstatesbyquanta = min(static_cast<int>(inorderwts.size()), keptstates + keptqstates) - totalstatesbydm;
-  if (totalstatesbyquanta < 0) totalstatesbyquanta = 0;
-  
-  pout << "\t\t\t total states using dm and quanta " << totalstatesbydm << " " << totalstatesbyquanta << endl;
-  
-
-  double error = assign_matrix_by_dm(rotateMatrix, energies, transformmatrix, inorderwts, wtsbyquanta, totalstatesbydm, totalstatesbyquanta, newSystem.size(), 2*totalstatesbydm);
-  pout << "\t\t\t Total discarded weight "<<error<<endl;
+#ifndef SERIAL
+  mpi::communicator world;
+  broadcast(world, rotateMatrix, 0);
+#endif
 
   dmrginp.operrotT.start();
   newSystem.transform_operators(rotateMatrix);
@@ -420,17 +427,17 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   
 
 
-    pout << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
-    pout << dmrginp.makeopsT<<" makeops "<<endl;
-    pout << dmrginp.datatransfer<<" datatransfer "<<endl;
-    //cout << dmrginp.justmultiply<<" just multiply "<<endl;
-    //cout << dmrginp.otherrotation<<" "<<dmrginp.spinrotation<<" "<<dmrginp.operrotT<<" rotations time "<<endl; 
-    pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
-    pout << dmrginp.oneelecT<<" "<<dmrginp.twoelecT<<" "<<dmrginp.hmultiply<<" "<<dmrginp.couplingcoeff<<" hmult"<<endl;
-    pout << dmrginp.buildsumblock<<" "<<dmrginp.buildblockops<<" build block"<<endl;
-    pout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
-    pout << dmrginp.addnoise<<" "<<dmrginp.s0time<<" "<<dmrginp.s1time<<" "<<dmrginp.s2time<<endl;
-
+  pout << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+  pout << dmrginp.makeopsT<<" makeops "<<endl;
+  pout << dmrginp.datatransfer<<" datatransfer "<<endl;
+  //cout << dmrginp.justmultiply<<" just multiply "<<endl;
+  //cout << dmrginp.otherrotation<<" "<<dmrginp.spinrotation<<" "<<dmrginp.operrotT<<" rotations time "<<endl; 
+  pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
+  pout << dmrginp.oneelecT<<" "<<dmrginp.twoelecT<<" "<<dmrginp.hmultiply<<" "<<dmrginp.couplingcoeff<<" hmult"<<endl;
+  pout << dmrginp.buildsumblock<<" "<<dmrginp.buildblockops<<" build block"<<endl;
+  pout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
+  pout << dmrginp.addnoise<<" "<<dmrginp.s0time<<" "<<dmrginp.s1time<<" "<<dmrginp.s2time<<endl;
+  
 
   //mcheck("After renorm transform");
 }

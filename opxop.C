@@ -393,8 +393,12 @@ void SpinAdapted::opxop::dxcccomp(const SpinBlock* otherBlock, std::vector<boost
       double parity = 1.0;
       if (transpose)
 	parity*= getCommuteParity(iq, kq, top.get_deltaQuantum()); 
- 
-      
+
+      if (loopblock == b->get_leftBlock()) 
+	parity*= getCommuteParity(iq, top.get_deltaQuantum(), kq); 
+      //parity*= getCommuteParity(iq, kq, top.get_deltaQuantum()); 
+	
+
       SpinAdapted::operatorfunctions::TensorProduct(otherBlock, top, Transposeview(op1), b, &(b->get_stateInfo()), o[ilock], parity*factor*scale, numthrds);
 
     }
