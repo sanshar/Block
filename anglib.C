@@ -193,3 +193,4 @@ double binom(int n, int r)
     res = 1.0*n/(n-r)*binom(n-1,r);
   return res;
 }
+
