@@ -52,15 +52,14 @@ namespace SpinAdapted{
 	  compute_two_pdm_0_4_0(wavefunction1, wavefunction2, big, twopdm);
 
 	pout << "compute 0_3_1"<<endl;
-	if(mpigetrank() == distribute_work[2])
-	  compute_two_pdm_0_3_1(wavefunction1, wavefunction2, big, twopdm);
+	compute_two_pdm_0_3_1(wavefunction1, wavefunction2, big, twopdm);
 
 	pout << "compute 1_2_1"<<endl;
-	if(mpigetrank() == distribute_work[3])
-	  compute_two_pdm_1_2_1(wavefunction1, wavefunction2, big, twopdm);
+	compute_two_pdm_1_2_1(wavefunction1, wavefunction2, big, twopdm);
 
 	pout << "compute 0_2_2"<<endl;
 	compute_two_pdm_0_2_2(wavefunction1, wavefunction2, big, twopdm);
+
 	pout << "compute 1_1_2"<<endl;
 	compute_two_pdm_1_1_2(wavefunction1, wavefunction2, big, twopdm);
 
@@ -110,7 +109,7 @@ void compute_twopdm_initial(std::vector<Wavefunction>& wavefunctions, const Spin
 	Wavefunction &wavefunction1 = wavefunctions[0];//there is only one wavefunction in the vector the 
 	Wavefunction &wavefunction2 = wavefunctions[0];
 	load_twopdm_binary(twopdm, i ,j);
-	const std::vector<int> distribute_work = distribute_procs(numprocs,2);
+	const std::vector<int> distribute_work = distribute_procs(numprocs,3);
 
 	pout <<"Performing sweep calculation "<<endl;
 
@@ -118,24 +117,22 @@ void compute_twopdm_initial(std::vector<Wavefunction>& wavefunctions, const Spin
 	if(mpigetrank() == distribute_work[0])
 	  compute_two_pdm_4_0_0(wavefunction1, wavefunction2, big, twopdm);
 
-	pout << "compute 3_0_1"<<endl;
-	if(mpigetrank() == distribute_work[1])
-	  compute_two_pdm_3_0_1(wavefunction1, wavefunction2, big, twopdm);
-
 	pout << "compute 3_1_0"<<endl;
-	if(mpigetrank() == distribute_work[0])
+	if(mpigetrank() == distribute_work[1])
 	  compute_two_pdm_3_1_0(wavefunction1, wavefunction2, big, twopdm);
+
+	pout << "compute 2_2_0"<<endl;
+	if(mpigetrank() == distribute_work[2])
+	  compute_two_pdm_2_2_0(wavefunction1, wavefunction2, big, twopdm);
+
+	pout << "compute 3_0_1"<<endl;
+	compute_two_pdm_3_0_1(wavefunction1, wavefunction2, big, twopdm);
 
 	pout << "compute 2_0_2"<<endl;
 	compute_two_pdm_2_0_2(wavefunction1, wavefunction2, big, twopdm);
 
-	pout << "compute 2_2_0"<<endl;
-	if(mpigetrank() == distribute_work[0])
-	  compute_two_pdm_2_2_0(wavefunction1, wavefunction2, big, twopdm);
-
 	pout << "compute 2_1_1"<<endl;
-	if(mpigetrank() == distribute_work[0])
-	  compute_two_pdm_2_1_1(wavefunction1, wavefunction2, big, twopdm);
+	compute_two_pdm_2_1_1(wavefunction1, wavefunction2, big, twopdm);
 
 	accumulate_twopdm(twopdm);
 	save_twopdm_binary(twopdm, i ,j);
