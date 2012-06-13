@@ -1025,9 +1025,9 @@ void SpinAdapted::Input::performSanityTest()
   }
 
 
-  if (m_maxiter <= m_sweep_iter_schedule.back()) {
-    cerr << "maximum iterations allowed is less than or equal to the last sweep iteration in your schedule."<<endl;
-    cerr << m_maxiter <<" <= "<< (m_sweep_iter_schedule.back())<<endl;
+  if (m_maxiter < m_sweep_iter_schedule.back()) {
+    cerr << "maximum iterations allowed is less than the last sweep iteration in your schedule."<<endl;
+    cerr << m_maxiter <<" < "<< (m_sweep_iter_schedule.back())<<endl;
     cerr << "either increase the max_iter or reduce the number of sweeps"<<endl;
     abort();
   }
