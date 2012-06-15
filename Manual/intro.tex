@@ -1,0 +1,837 @@
+\documentclass[letterpaper,12pt,aps, pra]{revtex4-1}
+\renewcommand{\baselinestretch}{1.0}
+%\usepackage{times}
+\usepackage{amsmath} \usepackage{subfigure} \usepackage{graphicx}
+\usepackage{rotating}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{color}
+\bibliographystyle{abbrv}
+
+\usepackage{amsmath}
+\begin{document}
+
+\vfill
+{\LARGE
+  \begin{center}
+{Block}
+\end{center}
+}
+\vspace{0.5in}
+\begin{center}{\includegraphics[width=2in]{block_logo}}\\
+\end{center}
+\vspace{0.5in}
+\begin{center}
+{\Large \textsc{beta version}}
+\end{center}
+\vspace{1in}
+
+{\large
+\begin{center}
+Sandeep Sharma and Garnet Kin-Lic Chan\\
+\vspace{0.2in}
+with contributions from\\
+\vspace{0.2in}
+Jonathan Dorando and Debashree Ghosh
+\end{center}
+}
+\vspace{1in}
+
+\thispagestyle{empty}
+\newpage
+
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+\section{Introduction}
+
+Block implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry. 
+The DMRG is a variational wavefunction method. Compared to other quantum chemical methods, 
+{\it it  efficiently describes strong, multi-reference correlation in
+ a large number of active orbitals (occupancies far from 0 or 2)}.
+The method is also provably optimal for correlation with a one-dimensional topology, that is,
+where orbitals are arranged with a chain- or ring-like connectivity.
+However, with the possible exception of small molecules, for correlation that is dynamic in character, the DMRG may be less computationally
+efficient than other methods such as coupled cluster theory or multireference configuration interaction.
+
+We recommend the use of the DMRG in problems requiring active spaces too large for standard 
+complete active space (CAS) techniques. Thus, if you are interested in
+\begin{itemize}
+\item a CAS-like treatment of low-lying eigenstates in problems with 16-40 active orbitals,
+\item or, one-dimensional orbital topologies with up to 100 active orbitals,
+\item and, standard chemical accuracy (1 kcal/mol in energy differences),
+\end{itemize}
+then the DMRG may be the right method for you.
+
+\section{Capabilities}
+
+As of the current beta release, Block implements the following features:
+\begin{itemize}
+\item DMRG sweep algorithm for quantum chemistry Hamiltonians,
+\item Full spin-adaptation (SU(2) symmetry) and Abelian point-group symmetries,
+\item State-averaged excited states,
+\item Output of one- and two-particle density matrices,
+\item A convenient interface to the Molpro program package.
+\end{itemize}
+
+\section{Licence and how to cite}\label{sec:papers}
+
+Block is distributed under the GNU GPL licence which is reproduced in the file \texttt{LICENSE}. In addition, Block contains a 
+full copy of the Newmat C++ matrix library by Robert Davies.
+
+We would appreciate if you cite the following papers in publications resulting from the use of Block:
+\begin{itemize}
+ \item G. K.-L. Chan and M. Head-Gordon, \emph{J. Chem. Phys.} \textbf{116}, 4462 (2002),
+ \item G. K.-L. Chan, \emph{J. Chem. Phys.} \textbf{120}, 3172 (2004),
+ \item D. Ghosh, J. Hachmann, T. Yanai, and G. K.-L. Chan, \emph{J. Chem. Phys.}, {\bf 128}, 144117 (2008),
+ \item S. Sharma and G. K-.L. Chan, \emph{J. Chem. Phys.} \textbf{136}, 124121 (2012).
+\end{itemize}
+
+In addition, a useful list of DMRG references relevant to quantum chemistry
+can be found in the article above by Sharma and Chan.
+
+\section{Installation}\label{sec:install}
+Block is written in C++ and requires a C++ compiler. It has the following additional dependencies:
+\begin{itemize}
+\item Complete BLAS, LAPACK, and Boost C++ libraries,
+\item For parallel execution MPI must be installed, and the Boost MPI library must have been compiled with the same version of MPI,
+\item Depending on the operating system, you may wish to install a custom malloc (see below, and section \ref{sec:computation}),
+\item To run the tests, Python needs to be installed.
+\end{itemize}
+The program has been tested on Linux systems, although we expect it to run on other Unix type operating systems as well. 
+
+Block is compiled using the makefile supplied in the distribution. The following customizations need to be made to the makefile.
+\begin{itemize}
+ \item \textbf{Boost}\\The variable \texttt{BOOST} should be set to the location of the Boost installation. 
+\item \textbf{Lapack and Blas}\\ The variable \texttt{LAPACKBLAS} should be
+set to the linking command for the BLAS and LAPACK libraries.
+\item \textbf{Compiler}\\
+By default, Block is set up to use the gcc compiler. If you wish to use the Intel C++ compiler the variable \texttt{INTEL} should be set to \texttt{yes}. 
+While the code has not been tested with other compilers, the variables \texttt{CXX} 
+and \texttt{OPT} can be changed as appropriate for different compilers.
+\item \textbf{Custom malloc}\\
+DMRG calculations allocate and deallocate small blocks of memory a large number of times during a single calculation. For large scale calculations,
+this can lead to significant memory fragmentation over time. In some cases, this can be significantly ameliorated by installing a
+custom memory allocator. The linking command for the memory allocator is given by the variable \texttt{MALLOC},
+\item \textbf{Parallel execution}\\
+If one wishes to use only the serial version of Block, no more changes are necessary. To compile the
+parallel version of the code, \texttt{USE\_MPI} should be set to \texttt{true}.  If an mpi enabled c++ wrapper compiler ``mpic++'' is available then no further changes are necessary. If this is not the case then \texttt{MPICXX} should be changed to the name of the parallel C++ compiler.  Also in absence of the wrapper compiler additional mpi libraries need to be specified manually using the variable \texttt{MPI\_LIB}. %\texttt{CXX} should be changed to the name of the parallel C++ compiler or wrapper (e.g. mpic++). In general, the parallel wrapper will automatically link the appropriate MPI libraries. However, if MPI libraries need to be linked manually, \texttt{MPI\_LIB} should be set to the appropriate linking command.
+%% To install the parallel version of the code the variable \textsf{USE\_MPI} should be set to \textsf{yes}. If an mpi enabled c++ wrapper compiler ``mpic++'' is available then no further changes are necessary. If this is not the case then one needs to manually change two entries, line 36 and line 37, of the makefile. Line 36 defines the variable \textsf{MPI\_LIB}. In addition to the linking Qcdmrg with the mpi boost library, additional mpi libraries need to be specified. The location of these will depend on the platform and also the flavor of mpi installed. Line 37 defines the variable \textsf{CXX} as \textsf{mpic++}; this has to be changed to the usual c++ compiler one is interested in using e.g. g++ for the case of gcc compiler.
+\end{itemize}
+
+\section{Running and testing the code}
+Block can be tested by executing the script \texttt{runtest} in the  directory \texttt{dmrg\_tests}. The tests require Python to be installed on the system.
+
+The stand-alone code can be executed using the command
+\begin{verbatim}
+block.spin_adapted input.dat > output.dat
+\end{verbatim}
+\texttt{input.dat} is the input file and the output of the program is piped 
+into the output file \texttt{output.dat}.
+
+
+
+
+%% The variational freedom in the wavefunction is parameterized by $M$, the
+%% number of renormalized states. As $M$ is increased, the DMRG wavefunction becomes exact.
+
+
+
+
+%% There are two kinds of orbital correlation where it is especially beneficial to use the DMRG. These are
+%% \begin{enumerate}
+%% \item Orbitals with strong correlation. Here the occupancies are very different from 0 or 2. The
+%% DMRG is not built around a Hartree-Fock reference and thus treats highly multireference situations
+%% \item Orbitals  with a one-dimensional topology. These are found e.g. in chain-like or ring-like molecules. Here
+%% it can be proven that $M$ required for a given accuracy is {\it independent} of system size.
+%% in an even-handed way.
+%% \end{enumerate}
+
+%% While it is difficult to make a priori statements about the accuracy of a DMRG calculation on a given molecule,
+%% we have found that in pure one-dimensional topologies, more than 100 active orbitals can be treated, 
+%% while in general molecules, strongly correlated active spaces of between 30-40 orbitals can be treated
+%% with chemical accuracy (1 kcal/mol) using a modest number of cores (e.g. 12).
+
+
+%% In general
+
+
+
+%% ; formally
+%% FCI is always reproduced when $M \approx \sqrt{N_d}$, where $N_d$ is the full Hilbert space size. In many
+%% physical systems, however, it can be proven that $M$ can be much smaller than its maximal value
+%% and the DMRG wavefunction will still provide a faithful representation of the ground (or low-lying) states.
+%% For example, in systems with a 1D topology and with a physical Hamiltonian, it can be shown that
+%% a constant $M$ is required for a given accuracy in an observable such as the energy, regardless of
+%% the size of the system. For more general molecular structures, it is not simple to predict ahead 
+%% of time the $M$ required for a given accuracy, but the fact that the DMRG wavefunction converges
+%% rapidly to the exact wavefunction as a function of $M$ enables calculations on much larger
+%% active space
+
+%% Given a Hamiltonian $H$ defined over
+%% a set of orbitals $\phi_1, \ldots, \phi_k$, The DMRG
+%% defines a wavefunction ansatz. Consequently, it may be used
+%% to approximate eigenstates (e.g. the ground-state)
+%% of a many-body Hamiltonian $H$ defined over a set of orbitals $\phi_1, \ldots, \phi_k$.
+%% The variational freedom in the DMRG wavefunction is parameterized by  $M$, 
+%% which is referred to as the {\it renormalized states} or the {\it bond dimension},
+%% which governs the flexibility of the ansatz. As $M$ increases, the DMRG becomes exact. 
+%% The DMRG calculation scales as a low-order polynomial of $M$ and $k$, $O(M^3k^2) + O(M^2 k^4)$ time,
+%% $O(M^2 k^2)$ memory, and $O(M^2 k^3)$ disk.
+%% The rate of convergence of the DMRG wavefunction to the true wavefunction, is system
+%% dependent, and is intimately linked to the entanglement structure of the wavefunction.
+
+
+\section{Block input and calculations}
+
+\subsection{Overview}
+
+Block does not generate its own integrals and orbitals; these must be supplied externally. Block
+is currently distributed  with a Molpro interface. This makes running a DMRG calculation for a chemical problem a simple two-step process, e.g.
+\begin{verbatim}
+molpro input.mol > output.mol
+block.spin_adapted input.dat > output.dat
+\end{verbatim}
+
+Similarly to other multi-reference quantum chemistry methods, the DMRG
+is not a black-box technique. Thus while it is easy to setup a DMRG input file, understanding the theory will be helpful 
+to use the method in an optimal way. If you have not
+previously run other DMRG calculations, we highly recommend
+reading the discussion  in sections \ref{sec:appendix1} and \ref{sec:appendix2}. 
+Several aspects of the Block input also directly refer to the concepts in sections \ref{sec:appendix1} and \ref{sec:appendix2}. 
+
+We can break down the tasks needed to successfully setup, run, and monitor a DMRG calculation as follows:
+\begin{enumerate}
+\item {\bf Molpro} Generate orbitals and select an active space. 
+\item {\bf Molpro} Rotate the active space orbitals and choose an orbital ordering.
+\item {\bf Molpro} Dump the integrals for the Block program.
+\item {\bf Block} Set up Block input, execute Block program.
+\item {\bf Block} Monitor DMRG energy convergence as a function of $M$. For additional accuracy, extrapolate energy as a function of discarded weight. 
+\end{enumerate}
+
+The most common pitfalls are in steps 2 and 5. In step 2, a good choice of orbitals and ordering in DMRG is situation specific. Currently
+it requires some human input and recommended choices are given in section \ref{sec:appendix2}. In step 5,
+in difficult molecules it is possible for a DMRG calculation to get stuck in a local minimum. The theoretical reasons for this are discussed in section \ref{sec:appendix1};
+practical strategies to correct this are given in section \ref{sec:convergence1} and section \ref{sec:convergence2}.
+
+We now go through steps 1-5 in more detail. We will use the simple example of benzene in a minimal basis as our test example, and we will use Block
+to carry out a calculation in the CAS(6,6) space. As a more realistic application of the DMRG, we will next discuss a calculation on the Cr$_2$ molecule
+in a CAS(24,30) space.
+
+%% The current distribution of the Block program is provided with an interface to the Molpro package. Consequently, we shall
+%%  use Molpro in our examples below. 
+
+
+\subsection{Generating the orbitals and integrals using Molpro}
+
+We first generate the orbitals and integrals for DMRG using the Molpro 2010.2 package. 
+(Note that to use Block with another program package, you need to
+to generate integrals in the Molpro FCIDUMP text integral format. The format of the FCIDUMP file is described below in this section). We first identify
+the $\pi$ electron active space (step 1), localize the orbitals to make atomic like $p_z$ orbitals and prepare to reorder them as in Fig. \ref{fig:order} (step 2),
+and dump the corresponding one- and two-electron integrals for the Block program (step 3). All this may be carried out using the Molpro input file,
+{
+\begin{verbatim}
+angstrom
+symmetry, nosym
+geomtyp=xyz
+geometry={
+C  0.000  1.396  0.000
+C  1.209  0.698  0.000
+C  1.209 -0.698  0.000
+C  0.000 -1.396  0.000
+C -1.209 -0.698  0.000
+C -1.209  0.698  0.000
+H  0.000  2.479  0.000
+H  2.147  1.240  0.000
+H  2.147 -1.240  0.000
+H  0.000 -2.479  0.000
+H -2.147 -1.240  0.000
+H -2.147  1.240  0.000
+}
+basis=sto-3g
+{rhf
+wf, 42, 1, 0
+}
+{mcscf,
+occ, 21
+frozen, 20
+rotate, 19.1, 17.1, 0
+}
+
+{locali, pipek, locmethod=3
+thresh, 1d-12, 1e-5
+core, 18
+occ, 24
+}
+
+{fci,
+core, 18
+occ, 24
+dump
+}
+\end{verbatim}
+}
+
+\begin{enumerate}
+ \item First, a restricted Hartree-Fock calculation is performed. No symmetry is 
+used (\texttt{symmetry,nosym}), because we wish to generate atomic-like $p_z$ orbitals
+for the DMRG calculation, which requires localizing the orbitals across different irreducible representations. 
+
+In general, the Hartree-Fock orbitals need to be visualized to see which orbitals should be in the active space. For example, in this calculation, 
+we find that orbitals 17, 20 and 21 are $\pi$ orbitals, and orbitals 22, 23 and 24 are $\pi*$ orbitals. 
+At this stage, all the orbitals are delocalized.
+%% \begin{figure}
+%% \begin{center}
+%% \resizebox{80mm}{!}{\includegraphics{orb19.eps}}
+%% \end{center}
+%% \caption{17$^{th}$ canonical hartree fock molecular orbital of benzene molecule showing the lowest energy $\pi$ orbital.}
+%% \label{fig:orb19}
+%% \end{figure}
+
+\item We recognize that benzene is a ring-like molecule, and that a good orbital choice
+for the DMRG calculation is the set of localized orbitals (section \ref{sec:appendix2}). In Molpro, the orbitals to be localized need to be arranged
+contiguously. We thus exchange the 17th orbital with the 19th, using the \texttt{rotate} directive in the \texttt{mcscf} program. 
+
+%% \begin{figure}
+%% \begin{center}
+%% \resizebox{80mm}{!}{\includegraphics{orb19_loc.eps}}
+%% \end{center}
+%% \caption{A localized molecular orbital of benzene molecule obtained by localizing $\pi$ and $\pi^*$ molecular orbitals.}
+%% \label{fig:orb19_loc}
+%% \end{figure}
+
+\item The six $\pi$ and $\pi^*$ orbitals are localized using the \texttt{locali} command, yielding a set of 6 $p_z$ atomic-like orbitals. 
+
+\item The \texttt{fci} program is used to dump out one- and two-electron integrals and information on the irreducible representations of the orbitals. The resulting file is named \texttt{FCIDUMP}. This contains all the orbital information required by Block.
+\end{enumerate}
+
+For users who wish to generate their own \texttt{FCIDUMP} file using an external program, the first few lines of \texttt{FCIDUMP} are as follows:
+\begin{verbatim}
+&FCI NORB=  6
+ ORBSYM=1,1,1,1,1,1
+&END
+   0.692891195085      1  1  1  1
+   0.680896658317E-03  2  1  1  1
+\end{verbatim}
+The first line gives the total number of active orbitals using the keyword \texttt{NORB=}. The second line uses the keyword \texttt{ORBSYM=}, which is followed by the irreducible representation of the active orbitals. The irreps are labelled from 1 to 8 and are given in Table~\ref{tab:irrep}.
+Each line following the keyword \texttt{END} has 5 numbers, the first number is the one-electron or two-electron integral and the next 4 integers are the orbital indices. The two body integrals are given in chemists' notation, so a line containing two-body integrals will be\\
+\texttt{
+\\$( a b|cd)$ a b c d\\}
+ 
+The one-body integrals only need two indices, and the last two indices are just 0 and 0; so a typical line containing one body integral will be\\
+\texttt{
+\\$\langle a|b\rangle$ a b 0 0\\}
+
+Finally if one is performing an active space calculation, then the core energy can be specified with all four incides equal to 0, e.g.
+\begin{verbatim}
+core_energy 0 0 0 0
+\end{verbatim}
+
+\begin{table}\label{tab:irrep}
+\begin{center}
+\caption{Labels corresponding to the irreps of the various point groups allowed in Block.}
+ \begin{tabular}{cllll}
+ \hline
+\hline
+Label & \multicolumn{4}{c}{Point Groups}\\
+&$D_{2h}$&$C_{2h}$&$C_{2v}$&$C_i$\\
+\hline
+1&$A_g$&$A_g$&$A_1$&$A_g$\\
+2&$B_{3u}$&$A_u$&$B_1$&$A_u$\\
+3&$B_{2u}$&$B_u$&$B_2$&\\
+4&$B_{1g}$&$B_g$&$A_2$&\\
+5&$B_{1u}$&&&\\
+6&$B_{2g}$&&&\\
+7&$B_{3g}$&&&\\
+8&$A_u$&&&\\
+\hline
+\hline
+ \end{tabular}
+\end{center}
+\end{table}
+
+\subsection{Block input file}
+
+We are now ready to carry out a DMRG calculation. The simplest input file is shown below:
+
+\begin{verbatim}
+orbitals FCIDUMP
+reorder reorder.dat
+nelec 6 
+spin 0
+irrep 1
+schedule default
+maxM 50
+sweep_tol 1e-9
+\end{verbatim}
+
+We now discuss each line in turn.
+
+\subsubsection{Orbital file}
+The integral file is specified after the keyword \texttt{orbitals}. 
+If you use Molpro to generate integrals, the default filename is \texttt{FCIDUMP}.
+
+\subsubsection{Reordering orbitals}
+
+As discussed in section \ref{sec:appendix2}, an ordering of the orbitals which minimizes long-range
+entanglement can greatly increase the accuracy
+of a DMRG calculation for a given $M$. Orbital reordering is
+performed by Block using the keyword \texttt{reorder},
+followed by a filename containing the new orbital ordering.
+For example in our benzene example, the localized $p_z$ orbitals obtained from Molpro are centered on carbon atoms 
+(labelling them around the ring) as 5, 2, 1, 4, 3, 6. A better ordering  (see section \ref{sec:appendix2}) is to
+arrange them such that they are centred around carbon atoms 1, 2, 6, 5, 3, 4. 
+To achieve this, in the reorder file (\texttt{reorder.dat} in the above input), we write the line
+\begin{verbatim}
+3 2 6 1 5 4
+\end{verbatim}
+
+
+\subsubsection{Wavefunction specification}
+
+The point-group symmetry of the state is specified using the keyword \texttt{irrep} following the labels Table~\ref{tab:irrep}.
+If this is left blank, Block will assume that the wavefunction transforms according to the most symmetric representation.
+
+\subsubsection{Schedule}
+The schedule defines the renormalised states $M$ used in successive DMRG sweeps. It is more economical to perform the initial sweeps with small $M$ and
+then to gradually increase $M$. The simplest option to select \texttt{schedule default} and the maximum number of renormalized states, \texttt{maxM} as in the
+input file above. Block
+will then automatically choose a sweep schedule as well as set defaults for various tolerances. The default sweep schedule increases $M$ in 
+the increments 50, 100, 250, 500, 1000, 2500, 5000, 10000 every 3 sweep iterations until \texttt{maxM} is reached.
+For finer control over the sweeps, we recommend using a more advanced input. An example input is:
+\begin{verbatim}
+schedule 
+0 50 1e-5 1e-4
+4 200 1e-5 1e-4
+8 500 1e-5 1e-4
+12 1000 1e-5 1e-5
+16 1500 1e-5 1e-5
+20 2000 1e-9 0e-5
+end
+maxiter 30
+sweep_tol 1e-9
+twodot_to_onedot 22
+\end{verbatim}
+
+Between \texttt{schedule} and \texttt{end} each line
+has the format
+\begin{verbatim}
+sweep_iteration M davidson_tolerance noise
+\end{verbatim}
+sweep\_iteration is the sweep at which the new sweep parameters should take effect. For example, in the above, in  first 4 sweeps $M=50$, the tolerance of the Davidson algorithm is $1\times 10^{-5}$, the perturbative  noise is $1 \times 10^{-5}$; in the next 4 sweeps $M=200$, etc.
+
+\texttt{maxiter} gives the maximum number of sweep iterations to be performed. In the above example, in sweep iterations 20 to 30, $M=2000$, the davidson tolerance is $1\times 10^{-9}$, and the noise is 0. Notice, that the noise should be turned off in the last line if one wishes to obtain a converged Block energy.
+
+\texttt{sweep\_tol} gives the final tolerance on the DMRG energy. It is analogous to an energy convergence threshold in other quantum chemistry methods. 
+The DMRG program will exit if either \texttt{sweep\_tol} or \texttt{maxiter} is satisfied.
+
+\texttt{twodot\_to\_onedot} specifies the sweep at which the switch is made from a twodot to a onedot algorithm. The recommended choice is to 
+start with twodot algorithm and then switch to onedot algorithm a few sweeps after the maximum M has been reached (see Section~\ref{sec:appendix1}). 
+With the default schedule, the algorithm switches from twodot to onedot two sweeps after the maximum M has been reached. 
+To do a calculation entirely with the twodot or the onedot algorithm, replace the \texttt{twodot\_to\_onedot} line with \texttt{twodot}
+or \texttt{onedot} respectively (no additional number follows these commands). 
+
+\subsection{Additional options}
+
+\subsubsection{State-averaged calculations}
+Block is able to perform state-averaged calculations where more than a single state can be targeted in the same calculation. Currently 
+the states in the state-average must be \emph{of the same symmetry}. Once the symmetry of the states is specified using the keywords \texttt{nelec, spin} and \texttt{irrep} 
+all that needs to be done is to give the number of states and the weights of each state. This is specified using the keyword \texttt{nroots} and \texttt{weights} respectively. For example, to target two states with equal weights, one uses
+\begin{verbatim}
+nroots 2
+weights 0.5 0.5
+\end{verbatim}
+Currently, the implementation of the Davidson algorithm is somewhat inefficient for a large number of roots.
+
+\subsubsection{Reduced density matrices (RDM)}
+
+One-particle and two-particle density matrices can be calculated and output using the keywords \texttt{onerdm} or \texttt{twordm}.
+If a calculation has been completed, Block is able to use the scratch files from the previous calculation to compute
+the density matrices. To perform this kind of calculation,  use the keywords \texttt{restart\_onerdm} and \texttt{restart\_twordm}.
+
+The one-particle and two-particle density matrices of the $n$th state are calculated and stored in a text file name \texttt{spatial\_onepdm.n.n} and \texttt{spatial\_twopdm.n.n} respectively, starting with $n=0$. For example, the ground-state one-particle density matrix is stored in \texttt{spatial\_onepdm.0.0}.
+Each line of the one-particle density matrix file contains 3 numbers, the first two
+are the orbital indices and the last number is the density matrix element:\\
+\texttt{
+\\i j $<a_i^\dag a_j>$\\
+}
+\\and for the two-particle density matrix:\\
+\texttt{
+\\i j k l $<a_i^\dag a_j^\dag a_k a_l>$\\
+}
+\\Note that the orbital labels start from 0.
+
+\subsubsection{Restarting a calculation}
+ Calculations can be restarted, using the scratch files generated in the previous calculation, by specifying the keyword \texttt{restart}.
+
+\subsubsection{Scratch directory}
+The directory to which all the scratch files are written can be specified using the keyword \texttt{scratch}  followed by the directory name
+\begin{verbatim}
+scratch dirname
+\end{verbatim}
+
+\subsection{Monitoring and convergence of the DMRG calculation}
+
+\label{sec:dmrg_convergence}
+
+{\bf Note. Convergence monitoring is likely to be simplified in future DMRG releases. Currently
+it requires some careful manual work}.
+
+As described in section \ref{sec:appendix1}, a DMRG calculation consists of a number of sweeps (sweep iterations); each sweep
+is itself composed of a number of block iterations equal to $k-4$, where $k$ is the total number of orbitals. Within a DMRG calculation
+there are two concepts of convergence. The first is the convergence to the true FCI energy within the active space, as a function
+of the number of renormalised states $M$. The second is the convergence to the theoretical DMRG energy for a fixed $M$. The
+first is achieved by going to a sufficiently large $M$, while the second is achieved by performing a sufficient number of sweeps for a given $M$ and ensuring
+that one is not stuck in a local minimum.
+
+The local minimum problem in DMRG is a nuisance, but in practice can be avoided.
+This is done by checking the convergence of the energy as a function of $M$. 
+As a proxy for $M$, it is convenient to use the ``discarded weight'' quantity in the DMRG calculation, which is an
+estimate of the error of the DMRG calculation. The discarded weight is more convenient because the energy converges
+almost linearly as a function of the discarded weight. A strong deviation from this (e.g. a plateau behaviour followed by a sudden drop 
+of the energy as a function of discarded weight) indicates that the DMRG was stuck in a local minimum. In such cases,
+one can avoid being stuck in the local minimum by increasing the amount of noise in the DMRG sweep.
+
+The discarded weight for each sweep is output in a line as follows
+\begin{verbatim}
+M =   1500   Largest Discarded Weight = 1.358e-06  Sweep Energy =     -75.7850011688
+\end{verbatim}
+
+To check a DMRG calculation convergence, carry out the following steps:
+\begin{itemize}
+\item For every full sweep with a new $M$, note the sweep energy and discarded weight.
+\item A reasonable value for the noise is that it should be about 1-10 $\times$ the discarded weight. If the noise
+is too large, the DMRG will not converge (and extrapolation will be inaccurate); if it is too small, the calculation
+may get stuck.
+\item Plot the sweep energy vs. discarded weight. One should observe an almost linear dependence. 
+\item If desired, one can extrapolate the sweep energy as a function of the discarded weight using a 
+linear relationship. 
+\item If a smooth linear behaviour is not observed, then the calculation should be rerun with an increased noise.
+\end{itemize}
+%As an example of this, we plot the energies and  discarded weights (as obtained from the output) for the Cr$_2$ molecule calculation,
+%along with the associated noise settings, with a reasonable noise setting. Here we see the linear dependence of the energy as a function of the discarded weight.
+%Also plotted is an example of the same calculation without any noise, where one can observe the plateau-like behaviour, indicating poor convergence.
+
+
+
+\section{Computational considerations}\label{sec:computation}
+
+\begin{itemize}
+\item Memory: The scaling of DMRG calculations with the number of states $M$ and orbitals $k$ is roughly $M^2 k^2$.
+DMRG calculations are very memory intensive. We recommend systems with at least 4Gb per core, and preferably 8Gb per core. Most
+of the DMRG storage is distributed (not replicated) across processors (see Chan (2004) in section \ref{sec:papers} for more details
+on the parallelization strategy).
+
+Note that memory fragmentation is an issue in long-running DMRG calculations. This can be simply resolved by stopping the calculation and restarting it.
+\item CPU: DMRG CPU times scale as $M^3 k^3$ per sweep. For small $M$ (say, less than 1000), the implementation has a
+large $M^2$ overhead which can dominate the computational cost. The total time taken in a calculation can sometimes
+be significantly reduced by adjusting the schedule, for example performing more sweeps at smaller $M$.
+\item Parallelization: In general, DMRG calculations parallelise well up to a number of cores equal to the number of orbitals. Both
+memory and CPU usage is parallelised.
+\end{itemize}
+
+For benchmarking, some timing data per sweeps for the Cr$_2$ molecule (see Section~\ref{sec:cr2}), using 2.40GHz Intel Xeon Processor E5645 is provided in Table~\ref{tab:timing}.
+
+\begin{table}
+\caption{Wall clock time per sweep for the Cr$_2$ molecule with an active space of (24e, 30o), using 16 threads of 2.40GHz Intel Xeon Processor E5645. For these calculations the D$_{2h}$ point group symmetry was used.} \label{tab:timing}
+ \begin{tabular}{lr}
+  \hline
+M& Wall time\\
+&(sec)\\
+\hline
+1000	&1328\\
+2000	&1915\\
+4000	&5211\\
+6000	&11524\\
+8000	&20673\\
+10000	& \\
+\hline
+ \end{tabular}
+\end{table}
+
+
+\section{Other examples}
+In this section we give further example inputs to illustrate
+the use of the options above.
+
+\subsection{Cr$_2$}\label{sec:cr2}
+In J. Phys. Chem. \textbf{136} (2012), 124121, we published a calculation on the Cr$_2$ molecule using the Ahlrichs SVP basis set and an active space of (24e, 30o). The molpro input file that was used to generate the integrals is shown below. 
+\begin{verbatim}
+basis={
+s,CR,0.515280863E+05,0.773721035E+04,0.176037485E+04,0.496877065E+03;
+        0.161465206E+03,0.554663523E+02,0.107547330E+03,0.124086719E+02;
+        0.504236288E+01,0.854616402E+01,0.139004412E+01,0.560666029E+00;
+        0.714837060E-01,0.282506876E-01
+c,1.6, 0.144058231E-02, 0.110362023E-01, 0.546766518E-01;
+        0.189650381E+00, 0.382954129E+00, 0.290900507E+00
+c,7.9,-0.109322811E+00, 0.644725995E+00, 0.462627126E+00
+c,10.12,-0.227110133E+00, 0.733015276E+00, 0.442255654E+00
+c,13.13, 0.100000000E+01
+c,14.14, 0.100000000E+01
+p,CR,0.640485361E+03,0.150697112E+03,0.475037553E+02,0.169341202E+02;
+        0.624096806E+01,0.308854632E+01,0.117910478E+01,0.433697744E+00
+c,1.5, 0.961267152E-02, 0.708898347E-01, 0.270652590E+00, 0.524373434E+00;
+        0.341079947E+00
+c,6.8, 0.339739869E+00, 0.572720629E+00, 0.245827282E+00
+d,CR,0.275594794E+02,0.746870203E+01,0.243459036E+01,0.782447548E+00;
+        0.219957743E+00
+c,1.4, 0.306124880E-01, 0.155932709E+00, 0.369844213E+00, 0.470711181E+00
+c,5.5, 0.339416499E+00
+}
+
+
+geomtyp = xyz
+angstrom
+geometry={
+Cr    0.0 0.0  0.75
+Cr    0.0 0.0 -0.75
+}
+
+{hf; 
+wf,48,1,0; 
+occ, 8,3,3,1,5,2,2,0;
+}
+
+{fci;
+core,4,1,1,0,4,1,1,0;
+dump
+}
+\end{verbatim}
+
+The Block input file used to calculate the energies in the paper is shown below
+\begin{verbatim}
+ nelec 24
+spin 0
+irrep 1
+
+schedule
+0 50 1e-5 1e-4
+4 250 1e-5 1e-4
+8 500 1e-5 1e-5
+12 1000 1e-5 1e-5
+16 2000 1e-5 1e-5
+20 5000 1e-5 1e-5
+24 8000 1e-5 1e-5
+28 10000 1e-5 1e-5
+end
+maxiter 31
+twodot
+sweep_tol 1e-9
+
+orbitals FCIDUMP
+
+reorder reorder.dat
+
+point_group d2h
+\end{verbatim}
+
+The reorder.dat file is used to reorder orbitals to place the bonding and anti-bonding orbitals next to each other, i.e. {$\sigma, \sigma^*, \pi_x, \pi_x^*, \pi_y, \pi_y^*, \delta_{xy}, \delta_{xy}^*, \delta_{x^2-y^2}, \delta_{x^2-y^2}^*$}. The reorder.dat file is shown below\\
+
+%\begin{verbatim}
+ 7,  5,  4,  2,  1
+16, 17, 19, 20, 22
+10,  9,  8, 23, 24,
+25, 13, 12, 11, 26,
+27, 28, 15, 14, 29,
+30,  6,  3, 18, 21            
+%\end{verbatim}
+
+\section{Calling Block as an external subroutine}
+The makefile distributed with Block code can be used to generate a dynamic library file called \texttt{libqcdmrg.so}. To call Block as a subroutine from a C++ program, the library file has to be linked to the program. A DMRG calculation can be performed using the function call\\
+\texttt{
+callDMRG(inputf, outputf);\\
+} 
+where \texttt{inputf} and \texttt{outputf} are C-style character arrays specifying the Block input and output files respectively.
+
+\section{Appendix: Introduction to DMRG concepts}\label{sec:appendix1}
+
+Here, we briefly describe some of the theory and ideas behind the DMRG. 
+Like other multireference quantum chemistry methods, the DMRG
+is not a black-box technique. Understanding the theory is helpful
+to use the method in an optimal way. For further information, the
+ user is referred to the papers listed in Section \ref{sec:papers}.
+
+\subsection{The DMRG wavefunction}
+
+In a nutshell, the DMRG wavefunction is a non-linear ansatz, known as a {\it matrix product state}.
+There are a number of analogies between the matrix product state and Hartree-Fock theory which
+we shall refer to; further discussion of this is given in \url{http://arxiv.org/abs/1103.2155}.
+ The variational freedom in the DMRG wavefunction, and thus the accuracy, is controlled by a single parameter $M$, referred
+to as the number of renormalized states.
+Roughly speaking, when $M^2 \sim N_d$ (where $N_d$ is the total number
+of possible determinants) the DMRG wavefunction becomes exact, but typically the convergence with $M$
+is quite rapid and much smaller $M$ is used in practice. 
+
+One confusing aspect of the DMRG is that there are two related
+pictures used to describe it. Probably the more fundamental view is in
+terms of the ansatz.
+The historical view is in terms of the optimization or sweep algorithm,
+ which derives from the numerical renormalization group.
+The two pictures are intertwined, because
+in practice the existence of an efficient optimization scheme is
+key to the success of the DMRG. The close association between the wavefunction and optimization pictures in the DMRG
+resembles the relationship between the Hartree-Fock approximation and the
+self-consistent field algorithm used to optimize it.
+
+To confuse matters further, a single DMRG calculation will often use two distinct DMRG wavefunctions, a {\it one-site} and a {\it two-site}
+DMRG wavefunction. (Note that site is synonymous with orbital in the DMRG). The one-site
+ wavefunction is easier to define, manipulate, and converge to high precision, but the two-site wavefunction is
+easier to optimize without getting stuck in a local minimum. A standard strategy is 
+to start the DMRG calculation using the two-site wavefunction, and then to switch near convergence to a 
+one-site wavefunction description.
+
+
+%% Firstly, there is the language of wavefunctions. In
+%% this picture, the DMRG defines a particular variational form. There are in fact two common closely related DMRG
+%% wavefunction forms used: the one-site DMRG wavefunction and the two-site DMRG wavefunction. Note
+%% that the word site and orbital is synonymous in the DMRG terminology.
+%% Both 
+%% forms are implemented in the Block program. These wavefunctions
+%% are known in recent literature as matrix product states. Secondly, there is the language of the DMRG algorithm
+%% that uses terminology from the renormalization group, such as sweeping, blocking, and decimation.
+%% The DMRG sweep algorithm is an algorithm to efficiently {\it optimize} the DMRG wavefunction. However,
+%% because the existence of an efficient optimization for the DMRG wavefunction is central
+%% to the practical utility of the DMRG itself, many of the concepts of the sweep algorithm are
+%% therefore closely tied to the DMRG itself. For example, the utilization of the two-site
+%% This is analogous to the close association
+%% of the self-consistent field (an optimization technique) with the Hartree-Fock wavefunction
+%% in quantum chemistry. One issue with the DMRG optimization scheme is that it is possible
+%% to get trapped in local minima. 
+%% Thus, the usage of the two-site DMRG wavefunction is primarily because
+%% the optimization is less likely to get trapped in local minima. 
+
+To define the DMRG wavefunction we first order the orbitals 
+$\phi_1 \ldots \phi_k$. Then, the one-site DMRG wavefunction is
+\begin{align}
+|\Psi\rangle = \sum_{n} \mathbf{A}^{n_1} \mathbf{A}^{n_2} \ldots \mathbf{A}^{n_k} |n_1 \ldots n_k\rangle \label{eq:one_site}.
+\end{align}
+$n_i$ denotes the occupancy of orbital $\phi_i$ and takes four values corresponding to
+ the states $|-\rangle$, $|\uparrow\rangle$, $|\downarrow\rangle$, $|\uparrow\downarrow\rangle$.
+$\mathbf{A}^{n_i}$ is a 3 index tensor with elements $A^{n_i}_{pq}$. Fixing the index $n_i$, $\mathbf{A}^{n_i}$  
+is  an $M \times M$ matrix, except for the $i=1$ (first) and $i=k$ (last) tensors which are special;
+ $\mathbf{A}^{n_1}$ and $\mathbf{A}^{n_k}$ are vectors of dimension $1\times M$ and $M\times 1$ respectively.
+Thus, there are  $O(M^2k)$  variational parameters in the wavefunction.
+For a  given occupancy string $n_1 \ldots n_k$, performing the vector, matrix, matrix \ldots vector product
+defined by $\mathbf{A}^{n_1} \mathbf{A}^{n_2} \ldots \mathbf{A}^{n_k}$ yields
+a scalar wavefunction amplitude for the determinant $|n_1 \ldots n_k\rangle$. We see that the DMRG
+is a kind of product wavefunction, but unlike Hartree-Fock theory, there is a variational object
+associated with each {\it orbital}, rather than with each electron.
+
+
+The two-site DMRG wavefunction is defined similarly,
+but a pair of adjacent sites is chosen to have a special four-index tensor
+\begin{align}
+|\Psi\rangle = \sum_{n} \mathbf{A}^{n_1} \mathbf{A}^{n_2}\ldots \mathbf{T}^{n_i n_{i+1}} \ldots \mathbf{A}^{n}_k |n_1 \ldots n_k\rangle \label{eq:two_site}.
+\end{align}
+ $\mathbf{T}^{n_i n_{i+1}}$ is a 4-index tensor with elements $T^{n_i n_{i+1}}_{pq}$. Fixing the indices $n_i, n_{i+1}$, 
+ $\mathbf{T}^{n_i n_{i+1}}$ is a $M \times M$ matrix.
+The two-site DMRG wavefunction has slightly more variational freedom than the one-site DMRG wavefunction 
+and this  is useful to avoid local minima in the DMRG sweep optimization. Note, however
+that there is not a single two-site DMRG wavefunction, but rather $k-1$ of them, depending
+on where we choose to place the two sites $i, i+1$. Typically
+the lowest energy is obtained from a two-site wavefunction where the two sites are near the middle of the set of orbitals. 
+
+\subsection{Sweeps and Operators} 
+
+Consider the DMRG wavefunction in Eq. (\ref{eq:one_site}).
+In the DMRG sweep algorithm,
+the energy is optimized with respect to a single $\mathbf{A}^{n_i}$ tensor at a time. This resembles
+ the traditional SCF procedure in  Hartree-Fock theory where a single orbital is updated at a time.
+The sweep traverses the tensors from left to right (forwards) and from right to left (backwards)
+and multiple sweeps are carried out to converge the energy. To obtain the updated $\mathbf{A}^{n_i}$ tensor at each
+site, we solve an effective Schr\"odinger with an effective site Hamiltonian, analogous to the Fock equation, for the $O(M^2)$ coefficients in $\mathbf{A}^{n_i}$. 
+Because
+$M^2$ can be quite large, we use the Davidson algorithm.  This wavefunction solution step
+takes up the majority of the time in a DMRG calculation. It  has a formal scaling of $O(M^3 k^3)$ per sweep where $M^3$ derives
+from matrix multiplication, although in practice $O(M^2)$ scaling is often observed due to  small matrix block sizes.
+
+The effective Hamiltonian at each site is defined by tracing the usual Hamiltonian with
+ tensors from all the other  sites. The efficient construction of the effective Hamiltonian requires
+decomposing it into contributions from all orbitals to the left of $i$ (the left block), orbitals to the right of $i$ (the right block),
+and on $i$ (the single site). These components (renormalized operators) are stored in memory and on disk,
+and form the dominant memory cost of the DMRG calculation, with $O(M^2 k^2)$ memory and $O(M^2 k^3)$ disk. 
+
+Note that the sweeps are variational in nature, i.e. the DMRG energy should decrease monotonically between sweeps.
+In general, it is more efficient to carry out some DMRG sweeps with smaller values of $M$ to approximately
+converge the DMRG wavefunction and then to carry out later sweeps with increased $M$. The set of sweeps with different $M$ is
+called the DMRG {\it schedule}.
+
+\subsection{Quantum numbers and symmetries} \label{sec:convergence1}
+
+Global symmetries, such as particle number and spin symmetry as well as
+point-group symmetries, can be efficently used with the DMRG by assigning irreps
+to the indices of $\mathbf{A}^{n_i}$. This results in block
+structure in the $\mathbf{A}^{n_i}$ tensors. Choosing how to assign the irreps
+to the index values, which affects the sizes and distributions of the blocks of $\mathbf{A}^{n_i}$
+is, however,  a difficult  discrete optimization problem. An incorrect distribution 
+of block sizes leads to the local minimum problem in DMRG, where an optimization may converge to a state
+of too high energy. This is sometimes referred to as losing quantum numbers. 
+We can usually detect an incorrect
+convergence to a local minimum by examining the extrapolation of the DMRG energy, described below.
+
+The local minimum problem in DMRG can be partially remedied by using the two-site DMRG wavefunction
+together with perturbative noise, which provides some ability
+to dynamically search different block distributions. The perturbative noise is particularly important
+in the initial sweeps in the DMRG, but can be gradually reduced 
+in later sweeps in the schedule.
+
+
+\subsection{Truncation error and extrapolation}\label{sec:convergence2}
+
+As shown above, the two-site DMRG wavefunction provides some additional
+variational freedom over the one-site DMRG wavefunction, and this additional freedom
+can be used to estimate the overall accuracy of a DMRG calculation. The so-called DMRG truncation
+error is related to the difference in the one-site and two-site DMRG wavefunctions. 
+ It can be shown approximately, and it is empirically observed,
+that the error in the DMRG energy is almost linearly proportional to the truncation error. 
+In an exact
+(i.e. large $M$) DMRG calculation, the truncation error becomes 0, and thus
+the energy of an approximate DMRG calculation may be  extrapolated with respect to the truncation errors. %One way
+%to identify a DMRG calculation which has converged to a local minimum is the violation
+%of this linear energy relationship, which will instead show a plateau behaviour.
+Energy extrapolation should always be carried out using truncation errors defined near the middle of the two-site DMRG sweep.
+
+\section{Orbital choice and ordering in DMRG}\label{sec:appendix2}
+\begin{figure}
+ \begin{center}
+ \resizebox{50mm}{!}{\includegraphics{cyclic.eps}}
+ \end{center}
+ \caption{\emph{Snake-like} ordering of orbitals in a ring-like molecule.}
+ \label{fig:order}
+ \end{figure}
+
+{\bf Note. Orbital ordering is likely to be more automated in future Block releases. Currently it requires some careful manual work}.
+
+In common with many multi-reference methods, choosing an active space to correlate in DMRG can
+require some trial and error. However, unlike a standard CASCI wavefunction, the {\it DMRG wavefunction will also  change under both active space rotation and under reordering of the orbitals}.
+As $M$ increases, the DMRG wavefunction eventually becomes less sensitive to these choices, but
+a good choice of orbitals and ordering will greatly increase the accuracy of a DMRG calculation in typical applications. 
+
+The choice of orbitals should
+minimize entanglement, and entangled orbitals should be close to each other in the DMRG orderind.
+In a chain-like, or ring-like molecule, an obvious choice is to fully localize the active space and then order the orbitals in a 1D or snake-like fashion (see Fig. \ref{fig:order}). In
+more general molecules, an optimal choice is less clear-cut, but there are several general strategies that can be applied. Given an active space, the following rotations can be considered,
+\begin{enumerate}
+\item Canonical orbitals,
+\item Localized occupied and localized virtual orbitals. If using natural orbitals, the occupied orbitals are defined to be those with occupancies $>1$,
+\item Fully localized (atomic-like) orbitals.
+\end{enumerate}
+(1) is typically useful for small molecules (e.g. diatomics) and if the molecule has high symmetry, especially since high point group symmetry leads to significant speedups in the DMRG program.
+(3) is useful in TM systems where atomic-like $d$ orbitals are in the active space. (2) may be considered a general purpose choice. With these orbital choices,
+we recommend the following respective orderings,
+\begin{enumerate}
+\item Group bonding orbitals with their corresponding antibonding orbitals, then order the groups by average energy or average occupation number,
+\item Group bonding orbitals with their corresponding antibonding orbitals into clusters, then order in real-space,
+\item Order in real-space.
+\end{enumerate}
+Examples of (1) and (3) are given above in this manual. Currently, both orbital localisation and ordering is chosen manually in the Block program.
+
+
+%\section{Appendix: Orbital ordering}
+
+%\bibliography{reference}
+
+
+\end{document}
