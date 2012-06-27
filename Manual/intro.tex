@@ -532,25 +532,56 @@ be significantly reduced by adjusting the schedule, for example performing more 
 memory and CPU usage is parallelised.
 \end{itemize}
 
-%For benchmarking, some timing data per sweeps for the Cr$_2$ molecule (see Section~\ref{sec:cr2}), using 2.40GHz Intel Xeon Processor E5645 is provided in Table~\ref{tab:timing}.
+For benchmarking, some timing data per sweeps for the Cr$_2$ molecule (see
+Section~\ref{sec:cr2}), using 2.67GHz Intel Xeon Processor E5650 is provided in
+Table~\ref{tab:timing}, and Table~\ref{tab:thread}.
 
-%\begin{table}
-%\caption{Wall clock time per sweep for the Cr$_2$ molecule with an active space of (24e, 30o), using 16 threads of 2.40GHz Intel Xeon Processor E5645. For these calculations the D$_{2h}$ point group symmetry was used.} \label{tab:timing}
-% \begin{tabular}{lr}
-%  \hline
-%M& Wall time\\
-%&(sec)\\
-%\hline
-%1000	&1328\\
-%2000	&1915\\
-%4000	&5211\\
-%6000	&11524\\
-%8000	&20673\\
-%10000	&34583 \\
-%\hline
-% \end{tabular}
-%\end{table}
+\begin{table}
+\begin{center}
+\begin{tabular}{rr}
+\hline
+\hline
+M& Wall time (sec)\\
+\hline
+500     &567.33\\
+1000	&1080.09\\
+2000	&2361.30\\
+4000	&5056.88\\
+6000	&10001.75\\
+8000	&17240.69\\
+10000	&25964.46\\
+\hline
+\hline
+\end{tabular}
+\end{center}
+\caption{Wall clock time per sweep for the Cr$_2$ molecule with an active space
+of (24e, 30o), using 12 threads of 2.67GHz Intel Xeon Processor E5650. For
+these calculations the D$_{2h}$ point group symmetry was used, and a schedule
+of size M for all sweeps.} \label{tab:timing}
+\end{table}
 
+\begin{table}
+\begin{center}
+\begin{tabular}{llr}
+\hline
+\hline
+Threads && Wall time (sec)\\
+\hline
+1 proc &2 core  &18556.01\\
+1 proc &4 core  &10191.40\\
+1 proc &8 core  &6151.14\\
+1 proc &12 core &5056.88\\
+2 procs &8 core &3731.93\\
+\hline
+\hline
+\end{tabular}
+\end{center}
+\caption{Wall clock time per sweep for the Cr$_2$ molecule with an
+active space of (24e, 30o), using M=4000 and different amount of
+threads of 2.67GHz Intel Xeon Processor E5650. For these calculations
+the D$_{2h}$ point group symmetry was used.  of size M for all sweeps.
+} \label{tab:thread}
+\end{table}
 
 \section{Other examples}
 In this section we give further example inputs to illustrate
