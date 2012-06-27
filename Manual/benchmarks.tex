@@ -21,13 +21,13 @@
   \hline
 M& Wall time (sec)\\
 \hline
-500     &400.54\\
-1000	&673.91\\
-2000	&1383.42\\
-4000	&3273.55\\
-6000	&6952.05\\
-8000	&12641.99\\
-10000	&19662.21\\
+500     &567.33\\
+1000	&1080.09\\
+2000	&2361.30\\
+4000	&5056.88\\
+6000	&10001.75\\
+8000	&17240.69\\
+10000	&25964.46\\
 \hline
   \hline
  \end{tabular}
@@ -35,31 +35,9 @@ M& Wall time (sec)\\
 \caption{Wall clock time per sweep for the Cr$_2$ molecule with an active space
 of (24e, 30o), using 12 threads of 2.67GHz Intel Xeon Processor E5650. For
 these calculations the D$_{2h}$ point group symmetry was used, and a schedule
-of size M for all sweeps. The time per sweep is an average of 31 sweeps that
-took place in the calculation.} \label{tab:timing}
+of size M for all sweeps.} \label{tab:timing}
 \end{table}
-\begin{table}
-\begin{center}
- \begin{tabular}{rr}
-  \hline
-  \hline
-M& Wall time\\ (sec)\\
-\hline
-500     &400.54\\
-1000	&673.91\\
-2000	&1383.42\\
-4000	&3273.55\\
-8000	&12641.99\\
-\hline
-  \hline
- \end{tabular}
-\end{center}
-\caption{Wall clock time per sweep for the Cr$_2$ molecule with an active space
-of (24e, 30o), using 12 threads of 2.67GHz Intel Xeon Processor E5650. For
-these calculations the D$_{2h}$ point group symmetry was used, and a schedule
-of size M for all sweeps. The time per sweep is an average of 31 sweeps that
-took place in the calculation.} \label{tab:timing2}
-\end{table}
+
 \begin{table}
 		\begin{center}
 	\begin{tabular}{llr}
@@ -67,11 +45,11 @@ took place in the calculation.} \label{tab:timing2}
   \hline
   Threads && Wall time (sec)\\
   \hline
-1 core &2 procs  &11743.36\\
-1 core &4 procs  &6371.25\\
-1 core &8 procs  &3926.29\\
-1 core &12 procs &3273.55\\
-2 core &8 procs  &2478.90\\
+1 proc &2 core  &18556.01\\
+1 proc &4 core  &10191.40\\
+1 proc &8 core  &6151.14\\
+1 proc &12 core &5056.88\\
+2 procs &8 core &3731.93\\
   \hline
   \hline
 	\end{tabular}
@@ -80,8 +58,7 @@ took place in the calculation.} \label{tab:timing2}
 	active space of (24e, 30o), using M=4000 and different amount of
 	threads of 2.67GHz Intel Xeon Processor E5650. For these calculations
 	the D$_{2h}$ point group symmetry was used.  of size M for all sweeps.
-	The time per sweep is an average of 31 sweeps that took place in the
-	calculation.} \label{tab:timingthread}
+	} \label{tab:timingthread}
 \end{table}
 \begin{table}
 \begin{center}
@@ -104,12 +81,9 @@ M& Energy (a.u.)\\
 \caption{Energy for  the Cr$_2$ molecule with an active space
 of (24e, 30o), using 12 threads of 2.67GHz Intel Xeon Processor E5650. For
 these calculations the D$_{2h}$ point group symmetry was used, and a schedule
-of size M for all sweeps. } \label{tab:timing}
+of size M for all sweeps. The energy for a default schedule calculation
+is -2086.420808 Hartree.} \label{tab:timing}
 \end{table}
 \end{document}
 
-model name	: Intel(R) Xeon(R) CPU           X5650  @ 2.67GHz
-stepping	: 2
-cpu MHz		: 2660.080
-cache size	: 12288 KB
 
