@@ -228,6 +228,7 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
   {
     for(int j=0;j<MAX_THRD;++j)
       dmnoise[j].Clear();
+    //Is it here where the noise gets added?
     onedot_noise_f onedot_noise(dmnoise, wave_solutions[i], big, 1., MAX_THRD);
 
     if (leftBlock->has(CRE))
