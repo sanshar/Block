@@ -177,10 +177,12 @@ public:
 	  double norm = DotProduct(opxwave, opxwave);
 	  if (abs(norm) > 1e-14) {
 	    Scale(1./sqrt(norm), opxwave);
+	    // Obtain density matrix
 	    MultiplyProduct(opxwave, Transpose(opxwave), dm[omp_get_thread_num()], scale);
 	  }
 	  q = SpinQuantum(wQ.get_n()-oQ.get_n(), i, vec[j]);
 
+	  //Additional calculation to consider spin adaptation
 	  Wavefunction opxwave2 = Wavefunction(q, &big, wavefunction.get_onedot());
 	  opxwave2.Clear();
 	  TensorMultiply(big.get_leftBlock(),Transpose(*fullop),&big, const_cast<Wavefunction&> (wavefunction), opxwave2, dmrginp.molecule_quantum(), 1.0);
@@ -230,7 +232,7 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
   {
     for(int j=0;j<MAX_THRD;++j)
       dmnoise[j].Clear();
-    //Is it here where the noise gets added?
+    //it is here where the noise gets added
     onedot_noise_f onedot_noise(dmnoise, wave_solutions[i], big, 1., MAX_THRD);
 
     if (leftBlock->has(CRE))
@@ -268,6 +270,12 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
 	if(this->allowed(lQ,rQ))
 	  for(int i=0;i<(dmnoise[0])(lQ,rQ).Nrows();++i)
 	    norm += (dmnoise[0])(lQ,rQ)(i+1,i+1);
+    //In case you want to see how the variables play out
+    /*pout << "\t\t\t norm " << norm << endl;
+    pout << "\t\t\t noise " << noise << endl;
+    pout << "\t\t\t noise/norm " << noise/norm << endl;
+    pout << "\t\t\t dmnoise " <<endl << dmnoise[0] << endl;
+    pout << "\t\t\t this[0] " <<endl << this[0] << endl;*/
     if (norm > 1.0)
       ScaleAdd(noise/norm, dmnoise[0], *this);
   }
