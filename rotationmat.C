@@ -241,6 +241,7 @@ double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::
   if (dmrginp.outputlevel() != 0)
     pout << " \t\t\t total norm: " << norm <<"  norm after truncation: "<<totalnorm<< endl;
 
+  //ROA: the printout of the error
   return norm-totalnorm;
 
   //return (1. - totalnorm/norm);
