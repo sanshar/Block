@@ -270,15 +270,10 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
 	if(this->allowed(lQ,rQ))
 	  for(int i=0;i<(dmnoise[0])(lQ,rQ).Nrows();++i)
 	    norm += (dmnoise[0])(lQ,rQ)(i+1,i+1);
-    //In case you want to see how the variables play out
-    /*pout << "\t\t\t norm " << norm << endl;
-    pout << "\t\t\t noise " << noise << endl;
-    pout << "\t\t\t noise/norm " << noise/norm << endl;
-    pout << "\t\t\t dmnoise " <<endl << dmnoise[0] << endl;
-    pout << "\t\t\t this[0] " <<endl << this[0] << endl;*/
     if (norm > 1.0)
       ScaleAdd(noise/norm, dmnoise[0], *this);
   }
+  //pout << "\t\t\t this[0] " <<endl << this[0] << endl;//ROA: This shows the error matrix
   delete[] dmnoise;  
 
   norm = 0.0;
