@@ -38,7 +38,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 {
   if (dmrginp.outputlevel() != 0) {
     mcheck("at the start of block and decimate");
-    pout << "dot with system "<<dot_with_sys<<endl;
+    pout << "\t\t\t dot with system "<<dot_with_sys<<endl;
   }
   pout <<endl<< "\t\t\t Performing Blocking"<<endl;
   // figure out if we are going forward or backwards
