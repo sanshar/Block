@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "global.h"
 #include "initblocks.h"
 
+//ROA, FIX: I don't think the warmUp variable is used here.
 void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const bool &forward, 
                                     const int & forward_starting_size, const int &backward_starting_size,
                                     const int& restartSize, const bool &restart, const bool& warmUp)
