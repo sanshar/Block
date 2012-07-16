@@ -353,6 +353,7 @@ void dmrg(double sweep_tol)
 
   int domoreIter = 0;
 
+  //ROA: warmup; last_fe = last final energy
   last_fe = Sweep::do_one(sweepParams, true, true, false, 0);
   while ((fabs(last_fe - old_fe) > sweep_tol) || (fabs(last_be - old_be) > sweep_tol) || 
 	 (dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter()+1 >= sweepParams.get_sweep_iter()) )

@@ -223,6 +223,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
+  //ROA, FIX: I don't think the warmUp variable is used here.
   InitBlocks::InitStartingBlock (system,forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
   if(!restart)
     sweepParams.set_block_iter() = 0;

@@ -901,6 +901,9 @@ void SpinAdapted::Input::performSanityTest()
     m_sweep_additional_noise_schedule.resize(nentry,0);
     
     double sweeptol = m_sweep_tol;
+    // ROA: if maxM is greater than a certain amount, push the schedule to have certain parameters
+    // ROA: If it is smaller than the next step, then make sure you add the 'terminate' schedule. 
+    // ROA: That is why there are two ifs per directive.
     if (m_maxM >= 50) {
       m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(50); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(1.0e-4);
     }
