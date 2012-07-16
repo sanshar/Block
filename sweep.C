@@ -176,6 +176,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   newEnvironment.clear();
 
   pout <<"\t\t\t Performing Renormalization "<<endl;
+  pout <<"Noise\t" << sweepParams.get_noise()<< "\tTdw\t"<<sweepParams.set_lowest_error()<< endl;
   pout << "\t\t\t Total discarded weight "<<sweepParams.set_lowest_error()<<endl<<endl;
 
   dmrginp.multiplierT.stop();

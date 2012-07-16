@@ -223,7 +223,6 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
   SpinBlock* leftBlock = big.get_leftBlock();
   if (dmrginp.outputlevel() != 0) 
     pout << "\t\t\t Modifying density matrix " << endl;
-    pout << "\t\t\t noise before modification " << noise << endl;
   //int maxt = 1;
   DensityMatrix* dmnoise = new DensityMatrix[MAX_THRD];
   for(int j=0;j<MAX_THRD;++j)
