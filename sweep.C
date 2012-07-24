@@ -144,8 +144,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   std::vector<Matrix> rotatematrix;
 
   if (dmrginp.outputlevel() != 0)
-    mcheck("");
-  if (dmrginp.outputlevel() == 0) {
+    mcheck(""); if (dmrginp.outputlevel() == 0) {
     if (!dot_with_sys && sweepParams.get_onedot()) {
       pout << "\t\t\t System  Block"<<system;
       pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
@@ -175,9 +174,11 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   environment.clear();
   newEnvironment.clear();
 
+  pout <<"System:Noise " << system <<endl;
+  pout <<"Environment:Noise " << environment <<endl;
   pout <<"\t\t\t Performing Renormalization "<<endl;
-  pout <<"Noise\t" << sweepParams.get_noise()<< "\tTdw\t"<<sweepParams.set_lowest_error()<< endl;
   pout << "\t\t\t Total discarded weight "<<sweepParams.set_lowest_error()<<endl<<endl;
+  pout <<"States\t"<< sweepParams.get_keep_states()<< "\tNoise\t" << sweepParams.get_noise()<< "\ttdw\t"<<sweepParams.set_lowest_error()<< endl;
 
   dmrginp.multiplierT.stop();
   dmrginp.operrotT.start();
