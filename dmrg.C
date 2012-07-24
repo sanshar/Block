@@ -44,6 +44,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sweeponepdm.h"
 #include "sweeptwopdm.h"
 #include "BaseOperator.h"
+#include "dmrg_wrapper.h"
 
 #ifndef SERIAL
 #include <boost/mpi/environment.hpp>
@@ -80,7 +81,7 @@ namespace SpinAdapted{
 
 using namespace SpinAdapted;
 
-int callDmrg(char* input, char* output)
+int calldmrg(char* input, char* output)
 {
   license();
   if (output != 0) {
@@ -89,7 +90,9 @@ int callDmrg(char* input, char* output)
     cout.rdbuf(file.rdbuf());
   }
 
+      pout << "callmrg: Printing printing printing" << endl;
   ReadInput(input);
+      pout << "callmrg: Printing printing printing" << endl;
   double sweep_tol = 1e-7;
   sweep_tol = dmrginp.get_sweep_tol();
   bool direction;
@@ -262,6 +265,9 @@ int callDmrg(char* input, char* output)
 
   return 0;
 
+}
+int calldmrg_(char* input, char* output) {
+   return calldmrg("dmrg.inp", output);
 }
 
 void fullrestartGenblock() {
