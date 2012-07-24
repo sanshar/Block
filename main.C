@@ -24,9 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 #include <pario.h>
 #include <cstdlib>
+#include "dmrg_wrapper.h"
 
 using namespace std;
-int callDmrg(char*, char*);
+int calldmrg(char*, char*);
 
 int main(int argc, char* argv []) 
 {
@@ -38,5 +39,5 @@ int main(int argc, char* argv [])
     abort();
   }
   char* output = 0;
-  return callDmrg(argv[1], output);
+  return calldmrg(argv[1], output);
 }
