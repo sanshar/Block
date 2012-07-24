@@ -177,12 +177,10 @@ public:
 	  double norm = DotProduct(opxwave, opxwave);
 	  if (abs(norm) > 1e-14) {
 	    Scale(1./sqrt(norm), opxwave);
-	    // Obtain density matrix
 	    MultiplyProduct(opxwave, Transpose(opxwave), dm[omp_get_thread_num()], scale);
 	  }
 	  q = SpinQuantum(wQ.get_n()-oQ.get_n(), i, vec[j]);
 
-	  //Additional calculation to consider spin adaptation
 	  Wavefunction opxwave2 = Wavefunction(q, &big, wavefunction.get_onedot());
 	  opxwave2.Clear();
 	  TensorMultiply(big.get_leftBlock(),Transpose(*fullop),&big, const_cast<Wavefunction&> (wavefunction), opxwave2, dmrginp.molecule_quantum(), 1.0);
@@ -207,7 +205,6 @@ public:
 };
 
 // accumulates into dm
-// This is the noise that you set out in the schedule
 void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solutions, SpinBlock& big, const double noise, bool act2siteops)
 {
 /* check normalisation */
@@ -231,7 +228,6 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
   {
     for(int j=0;j<MAX_THRD;++j)
       dmnoise[j].Clear();
-    //it is here where the noise gets added
     onedot_noise_f onedot_noise(dmnoise, wave_solutions[i], big, 1., MAX_THRD);
 
     if (leftBlock->has(CRE))
@@ -272,7 +268,6 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
     if (norm > 1.0)
       ScaleAdd(noise/norm, dmnoise[0], *this);
   }
-  //pout << "\t\t\t this[0] " <<endl << this[0] << endl;//ROA: This shows the error matrix
   delete[] dmnoise;  
 
   norm = 0.0;

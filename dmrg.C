@@ -261,8 +261,6 @@ int calldmrg(char* input, char* output)
     break;
   }
 
-     printf("ROA: outside dmrg call, leaving block\n");
-
   return 0;
 
 }
@@ -360,7 +358,6 @@ void dmrg(double sweep_tol)
 
   int domoreIter = 0;
 
-  //ROA: warmup; last_fe = last final energy
 
   last_fe = Sweep::do_one(sweepParams, true, true, false, 0);
   while ((fabs(last_fe - old_fe) > sweep_tol) || (fabs(last_be - old_be) > sweep_tol) || 

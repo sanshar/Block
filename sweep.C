@@ -144,7 +144,8 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   std::vector<Matrix> rotatematrix;
 
   if (dmrginp.outputlevel() != 0)
-    mcheck(""); if (dmrginp.outputlevel() == 0) {
+    mcheck(""); 
+  if (dmrginp.outputlevel() == 0) {
     if (!dot_with_sys && sweepParams.get_onedot()) {
       pout << "\t\t\t System  Block"<<system;
       pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
@@ -224,7 +225,6 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
-  //ROA, FIX: I don't think the warmUp variable is used here.
   InitBlocks::InitStartingBlock (system,forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
   if(!restart)
     sweepParams.set_block_iter() = 0;
