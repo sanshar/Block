@@ -30,6 +30,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //Linking blas/lapack libraries: IBM: blas and /usr/local/lib/lapack.a 
 //                               DEC: dxml
 //                               SGI: sgimath
+
+/*# ifndef FORTINT
+# define FORTINT int
+# else
+*/
+#define FORTINT long
+//# endif
  
 #ifdef AIX
 extern "C"
@@ -59,28 +66,29 @@ extern "C"
 #else //SGI, Linux
 extern "C"
 {
-  void dgesvd_(char* JOBU, char* JOBVT, int* M, int* N, double* A, int* LDA, double* S, double* U, int* LDU, double* VT, int* LDVT, double* WORK, int* LWORK,
-	 int* INFO);
-  void daxpy_(int *ntot, double *coeff, double *copy_from, int *inc1,
-	     double *copy_to, int *inc2);
-  void dcopy_(int *ntot,double *copy_from,int *inc1, double *copy_to,int *inc2);
-  double ddot_(int *ntot, double *x, int *incx, double *y, int *incy);
-  void dgemm_(char *transa, char *transb, int *m, int *n, int *k, double *alpha,
-	     double *A, int *lda, double *B, int *ldb, double *beta, double *C,
-	     int *ldc);
-  void dscal_(int *size, double *coeff, double *matrix,int *inc);
+  void dgesvd_(char* JOBU, char* JOBVT, FORTINT* M, FORTINT* N, double* A, FORTINT* LDA, double* S, double* U, FORTINT* LDU, double* VT, FORTINT* LDVT, double* WORK, FORTINT* LWORK,
+	 FORTINT* INFO);
+  void daxpy_(FORTINT *ntot, double *coeff, double *copy_from, FORTINT *inc1,
+	     double *copy_to, FORTINT *inc2);
+  void dcopy_(FORTINT *ntot,double *copy_from,FORTINT *inc1, double *copy_to,FORTINT *inc2);
+  double ddot_(FORTINT *ntot, double *x, FORTINT *incx, double *y, FORTINT *incy);
+  void dgemm_(char *transa, char *transb, FORTINT *m, FORTINT *n, FORTINT *k, double *alpha,
+	     double *A, FORTINT *lda, double *B, FORTINT *ldb, double *beta, double *C,
+	     FORTINT *ldc);
+  void dscal_(FORTINT *size, double *coeff, double *matrix,FORTINT *inc);
 
-  void saxpy_(int *ntot, float *coeff, float *copy_from, int *inc1,
-	     float *copy_to, int *inc2);
-  void scopy_(int *ntot, float *copy_from, int *inc1, float *copy_to, int *inc2);
-  float sdot_(int *ntot, float *x, int *incx, float *y, int *incy);
-  void sgemm_(char *transa, char *transb, int *m, int *n, int *k, float *alpha,
-	     float *A, int *lda, float *B, int *ldb, float *beta, float *C,
-	     int *ldc);
-  void sscal_(int *size, float *coeff, float *matrix,int *inc);
-  void dsyev_(char* JOBZ,char* UPLO,int* N,double* A,int* LDA,double* W,double*WORK,int*LWORK,int* INFO);
-  void dgesv_(int *n, int *nrhs, double *a, int *lda, int *ipiv, double *b, int *ldb, int *info);
-  int idamax_(int &n, double* d, int &indx);
+  void saxpy_(FORTINT *ntot, float *coeff, float *copy_from, FORTINT *inc1,
+	     float *copy_to, FORTINT *inc2);
+  void scopy_(FORTINT *ntot, float *copy_from, FORTINT *inc1, float *copy_to, FORTINT *inc2);
+  float sdot_(FORTINT *ntot, float *x, FORTINT *incx, float *y, FORTINT *incy);
+  void sgemm_(char *transa, char *transb, FORTINT *m, FORTINT *n, FORTINT *k, float *alpha,
+	     float *A, FORTINT *lda, float *B, FORTINT *ldb, float *beta, float *C,
+	     FORTINT *ldc);
+  void sscal_(FORTINT *size, float *coeff, float *matrix,FORTINT *inc);
+  void dsyev_(char* JOBZ,char* UPLO,FORTINT* N,double* A,FORTINT* LDA,double* W,double*WORK,FORTINT*LWORK,FORTINT* INFO);
+  void dgesv_(FORTINT *n, FORTINT *nrhs, double *a, FORTINT *lda, FORTINT *ipiv, double *b, FORTINT *ldb, FORTINT *info);
+  int idamax_(FORTINT &n, double* d, FORTINT &indx);
+  //int idamax_(int &n, double* d, int &indx);
 }
 #endif
 
@@ -94,8 +102,8 @@ extern "C"
 ** int ntot: length of data
 ** int inc1,inc2: increments for copy_from, copy_to
 */
-inline void DAXPY(int ntot, double coeff, double *copy_from, int inc1,
-	   double *copy_to, int inc2)
+inline void DAXPY(FORTINT ntot, double coeff, double *copy_from, FORTINT inc1,
+	   double *copy_to, FORTINT inc2)
 {
 #ifdef AIX
   daxpy(&ntot,&coeff,copy_from,&inc1,copy_to,&inc2);
@@ -103,8 +111,8 @@ inline void DAXPY(int ntot, double coeff, double *copy_from, int inc1,
   daxpy_(&ntot,&coeff,copy_from,&inc1,copy_to,&inc2);
 #endif
 }
-inline void SAXPY(int ntot, float coeff, float *copy_from, int inc1,
-	   float *copy_to, int inc2)
+inline void SAXPY(FORTINT ntot, float coeff, float *copy_from, FORTINT inc1,
+	   float *copy_to, FORTINT inc2)
 {
 #ifdef AIX
   saxpy(&ntot,&coeff,copy_from,&inc1,copy_to,&inc2);
@@ -121,7 +129,7 @@ inline void SAXPY(int ntot, float coeff, float *copy_from, int inc1,
 ** int ntot: length of x,y
 ** int incx,incy: increments for x,y 
 */
-inline void DCOPY(int ntot,double *copy_from,int inc1,double *copy_to,int inc2)
+inline void DCOPY(FORTINT ntot,double *copy_from,FORTINT inc1,double *copy_to,FORTINT inc2)
 {
 #ifdef AIX
   dcopy(&ntot,copy_from,&inc1,copy_to,&inc2);
@@ -129,7 +137,7 @@ inline void DCOPY(int ntot,double *copy_from,int inc1,double *copy_to,int inc2)
   dcopy_(&ntot,copy_from,&inc1,copy_to,&inc2);
 #endif
 }
-inline void SCOPY(int ntot,float *copy_from,int inc1,float *copy_to,int inc2)
+inline void SCOPY(FORTINT ntot,float *copy_from,FORTINT inc1,float *copy_to,FORTINT inc2)
 {
 #ifdef AIX
   scopy(&ntot,copy_from,&inc1,copy_to,&inc2);
@@ -149,7 +157,7 @@ inline void SCOPY(int ntot,float *copy_from,int inc1,float *copy_to,int inc2)
 ** int ntot: length of x,y
 ** int incx,incy: increments for x,y 
 */
-inline double DDOT(int ntot, double *x, int incx, double *y, int incy)
+inline double DDOT(FORTINT ntot, double *x, FORTINT incx, double *y, FORTINT incy)
 {
 #ifdef AIX
   return ddot(&ntot,x,&incx,y,&incy);
@@ -157,7 +165,7 @@ inline double DDOT(int ntot, double *x, int incx, double *y, int incy)
   return ddot_(&ntot,x,&incx,y,&incy);
 #endif
 }
-inline float SDOT(int ntot, float *x, int incx, float *y, int incy)
+inline float SDOT(FORTINT ntot, float *x, FORTINT incx, float *y, FORTINT incy)
 {
 #ifdef AIX
   return sdot(&ntot,x,&incx,y,&incy);
@@ -224,9 +232,9 @@ inline float SDOT(int ntot, float *x, int incx, float *y, int incy)
 **                    On exit, ldc is unchanged.
 **
 */
-inline void DGEMM(char transa, char transb, int m, int n, int k, double alpha,
-	   double *A, int lda, double *B, int ldb, double beta, double *C,
-	   int ldc)
+inline void DGEMM(char transa, char transb, FORTINT m, FORTINT n, FORTINT k, double alpha,
+	   double *A, FORTINT lda, double *B, FORTINT ldb, double beta, double *C,
+	   FORTINT ldc)
 {
 #ifdef AIX
   dgemm(&transa,&transb,&m,&n,&k,&alpha,A,&lda,B,&ldb,&beta,C,&ldc);
@@ -235,7 +243,7 @@ inline void DGEMM(char transa, char transb, int m, int n, int k, double alpha,
 #endif
 }
 
-inline void DSYEV(char JOBZ, char UPLO, int N, double* A, int LDA, double* W, double* WORK, int LWORK, int INFO )
+inline void DSYEV(char JOBZ, char UPLO, FORTINT N, double* A, FORTINT LDA, double* W, double* WORK, FORTINT LWORK, FORTINT INFO )
 {
 #ifdef AIX
   dsyev(&JOBZ,&UPLO,&N,A,&LDA,W,WORK,&LWORK,&INFO);
@@ -244,7 +252,7 @@ inline void DSYEV(char JOBZ, char UPLO, int N, double* A, int LDA, double* W, do
 #endif
 }
 
-inline void GESV(int n, int nrhs, double* a, int lda, int* ipiv, double* b, int ldb, int& info)
+inline void GESV(FORTINT n, FORTINT nrhs, double* a, FORTINT lda, FORTINT* ipiv, double* b, FORTINT ldb, FORTINT info)
 {
 #ifdef AIX
   dgesv(&n, &nrhs, a, &lda, ipiv, b, &ldb, &info);
@@ -254,9 +262,9 @@ inline void GESV(int n, int nrhs, double* a, int lda, int* ipiv, double* b, int 
 }
 
 
-inline void SGEMM(char transa, char transb, int m, int n, int k, float alpha,
-	   float *A, int lda, float *B, int ldb, float beta, float *C,
-	   int ldc)
+inline void SGEMM(char transa, char transb, FORTINT m, FORTINT n, FORTINT k, float alpha,
+	   float *A, FORTINT lda, float *B, FORTINT ldb, float beta, float *C,
+	   FORTINT ldc)
 {
 #ifdef AIX
   sgemm(&transa,&transb,&m,&n,&k,&alpha,A,&lda,B,&ldb,&beta,C,&ldc);
@@ -266,9 +274,9 @@ inline void SGEMM(char transa, char transb, int m, int n, int k, float alpha,
 }
 
 // singular value decomposition
-inline void DGESVD(char JOBU, char JOBVT, int M, int N, double* A, 
-		   int LDA, double* S, double* U, int LDU, double* VT,
-		   int LDVT,double* WORK, int LWORK, int INFO)
+inline void DGESVD(char JOBU, char JOBVT, FORTINT M, FORTINT N, double* A, 
+		   FORTINT LDA, double* S, double* U, FORTINT LDU, double* VT,
+		   FORTINT LDVT,double* WORK, FORTINT LWORK, FORTINT INFO)
 {
 #ifdef AIX
   dgesvd(&JOBU, &JOBVT, &M, &N, A, &LDA, S, U, &LDU, VT, &LDVT, WORK, &LWORK,
@@ -289,7 +297,7 @@ inline void DGESVD(char JOBU, char JOBVT, int M, int N, double* A,
 ** double *data:  data to scale
 ** int inc:       increments for data
 */
-inline void DSCAL(int size, double coeff, double *data, int inc)
+inline void DSCAL(FORTINT size, double coeff, double *data, FORTINT inc)
 {
   if( 1.!=coeff )
 #ifdef AIX
@@ -298,7 +306,7 @@ inline void DSCAL(int size, double coeff, double *data, int inc)
   dscal_(&size,&coeff,data,&inc);
 #endif
 }
-inline void SSCAL(int size, float coeff, float *data, int inc)
+inline void SSCAL(FORTINT size, float coeff, float *data, FORTINT inc)
 {
   if( 1.!=coeff )
 #ifdef AIX
