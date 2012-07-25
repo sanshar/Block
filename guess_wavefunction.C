@@ -271,6 +271,7 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
     }
     
     double norm = DotProduct(solution, solution);
+    /*
     if (additional_noise >1e-14) {
       Wavefunction noiseMatrix = solution;
       noiseMatrix.Randomise();
@@ -284,6 +285,7 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
       }
       Normalise(solution);
     }
+    */
     Normalise(solution);
     norm = DotProduct(solution, solution);
     if (dmrginp.outputlevel() != 0) 

@@ -89,7 +89,8 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	}
       Normalise(b[i]);
     }
-  
+
+  /*  
   if(warmUp)
     {
       for(int i=0;i<nroots;++i)
@@ -106,7 +107,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	  Normalise(b[i+nroots], &success);
 	}
     }
-
+  */
   vector<Wavefunction> sigma;
   int converged_roots = 0;
   while(true)
