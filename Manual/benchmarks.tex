@@ -1,0 +1,89 @@
+\documentclass[letterpaper,12pt,notitlepage]{article}
+\renewcommand{\baselinestretch}{1.0}
+%\usepackage{times}
+\usepackage{amsmath} \usepackage{subfigure} \usepackage{graphicx}
+\usepackage{rotating}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{color}
+\bibliographystyle{abbrv}
+
+\title{Timing Benchmarks}
+\usepackage{amsmath}
+\begin{document}
+%\maketitle
+
+\begin{table}
+\begin{center}
+ \begin{tabular}{rr}
+  \hline
+  \hline
+M& Wall time (sec)\\
+\hline
+500     &567.33\\
+1000	&1080.09\\
+2000	&2361.30\\
+4000	&5056.88\\
+6000	&10001.75\\
+8000	&17240.69\\
+10000	&25964.46\\
+\hline
+  \hline
+ \end{tabular}
+\end{center}
+\caption{Wall clock time per sweep for the Cr$_2$ molecule with an active space
+of (24e, 30o), using 12 threads of 2.67GHz Intel Xeon Processor E5650. For
+these calculations the D$_{2h}$ point group symmetry was used, and a schedule
+of size M for all sweeps.} \label{tab:timing}
+\end{table}
+
+\begin{table}
+	\begin{center}
+	\begin{tabular}{llr}
+\hline
+\hline
+Threads && Wall time (sec)\\
+\hline
+1 proc &2 core  &18556.01\\
+1 proc &4 core  &10191.40\\
+1 proc &8 core  &6151.14\\
+1 proc &12 core &5056.88\\
+2 procs &8 core &3731.93\\
+  \hline
+  \hline
+	\end{tabular}
+		\end{center}
+	\caption{Wall clock time per sweep for the Cr$_2$ molecule with an
+	active space of (24e, 30o), using M=4000 and different amount of
+	threads of 2.67GHz Intel Xeon Processor E5650. For these calculations
+	the D$_{2h}$ point group symmetry was used.
+	} \label{tab:thread}
+\end{table}
+\begin{table}
+\begin{center}
+ \begin{tabular}{rr}
+  \hline
+  \hline
+M& Energy (a.u.)\\
+\hline
+500     &-2086.415066\\
+1000	&-2086.418239\\
+2000	&-2086.419739\\
+4000	&-2086.420450\\
+6000	&-2086.420666\\
+8000	&-2086.420762\\
+10000	&-2086.420812\\
+\hline
+  \hline
+ \end{tabular}
+\end{center}
+\caption{Energy for  the Cr$_2$ molecule with an active space
+of (24e, 30o), using 12 threads of 2.67GHz Intel Xeon Processor E5650. For
+these calculations the D$_{2h}$ point group symmetry was used, and a schedule
+of size M for all sweeps. The energy for a default schedule calculation
+is -2086.420808 Hartree.} \label{tab:Energy}
+\end{table}
+\end{document}
+
+

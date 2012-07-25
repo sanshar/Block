@@ -15,17 +15,17 @@
 
 
 #specify boost include file
-BOOSTINCLUDE = /home/sharma/boost_1_47_0/
+BOOSTINCLUDE = /usr/include/boost
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/home/sharma/boost_1_47_0/lib/ -lboost_serialization -lboost_system -lboost_filesystem
-LAPACKBLAS = -L/srv/usr/local/opt/intel/mkl/10.2.1.017/lib/em64t/ -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+BOOSTLIB = -L/usr/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+LAPACKBLAS = -L/opt/intel/mkl/lib/intel64/ -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
 
 #use this variable to set if we will intel compiler or not
-INTEL = no
+INTEL = yes
 
 EXECUTABLE = block.spin_adapted
 
@@ -39,12 +39,12 @@ NEWMATLIB = $(HOME)/newmat10/
 .SUFFIXES: .C .cpp
 
 FLAGS =  -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(HOME)/modules/twopdm/ -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm
-LIBS =  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS)  
+LIBS =  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp
 MPI_OPT = -DSERIAL
 
 
 ifeq ($(INTEL), yes)
-	OPT = -O3 -funroll-loops -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP 
+	OPT = -O3 -funroll-loops -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP  -fopenmp
 #	OPT = -g -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP 
 	CXX = icc
 else
