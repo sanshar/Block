@@ -45,6 +45,8 @@ class SpinBlock;
 
 template<class A> void singlethread_build(A& array, SpinBlock& b, std::vector< Csf >& s, vector< vector<Csf> >& ladders)
 {
+#pragma omp parallel default(shared)
+#pragma omp for schedule(guided) nowait
   for (int i = 0; i < array.get_size(); ++i) {
     //typedef typename A::OpType Op;
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
@@ -55,6 +57,8 @@ template<class A> void singlethread_build(A& array, SpinBlock& b, std::vector< C
 
 template<class A> void singlethread_build(A& array, SpinBlock& b)
 {
+#pragma omp parallel default(shared)
+#pragma omp for schedule(guided) nowait
   for (int i = 0; i < array.get_size(); ++i) {
     //typedef typename A::OpType Op;
     //std::vector<boost::shared_ptr<Op> >& vec = array.get_local_element(i);
@@ -82,8 +86,8 @@ template<typename T2, class A> void for_all_singlethread(A& array, const T2& fun
 
 template<typename T2, class A> void for_all_multithread(A& array, const T2& func)
 {
-  //  #pragma omp parallel default(shared)
-  //#pragma omp for schedule(guided) nowait
+#pragma omp parallel default(shared)
+#pragma omp for schedule(guided) nowait
     for (int i = 0; i < array.get_size(); ++i) {
       std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
       func(vec);

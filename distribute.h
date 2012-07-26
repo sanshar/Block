@@ -157,9 +157,9 @@ namespace SpinAdapted
 	op_distributed = op_array;
       }
       else {
-	op_array = new T[MAX_THRD];
-	for (int i=0; i<MAX_THRD; i++)
-	  op_array[i] = *op;
+	//op_array = new T[MAX_THRD];
+	//for (int i=0; i<MAX_THRD; i++)
+	//op_array[i] = *op;
 	op_distributed = new T[MAX_THRD];
 	for (int i=0; i<MAX_THRD; i++)
 	  op_distributed[i] = *op;
@@ -204,9 +204,9 @@ namespace SpinAdapted
 	delete [] op_array;
       }
       else {  //multithreaded and mpi
-	for (int i=0; i<MAX_THRD; i++)
-	  *op += op_array[i];
-	delete [] op_array;
+	//for (int i=0; i<MAX_THRD; i++)
+	//*op += op_array[i];
+	//delete [] op_array;
 
 	for (int i=1; i<MAX_THRD; i++)
 	  op_distributed[0] += op_distributed[i];

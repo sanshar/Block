@@ -298,6 +298,18 @@ SpinAdapted::Input::Input(const string& config_name)
 	boost::algorithm::to_lower(sym); //store as lower case string
         Symmetry::InitialiseTable(sym);
       }
+      else if (boost::iequals(keyword, "thrds_per_node") || boost::iequals(keyword, "threads_per_node")) {
+
+	mpi::communicator world;
+	if (tok.size() !=  world.size()+1) {
+	  cerr << "keyword number of threads for each of the "<<world.size()<<" processes should be specified!"<<endl;
+	  cerr << "error found in the following line "<<endl;
+	  cerr << msg<<endl;
+	  abort();
+	}	
+	for (int i=1; i<tok.size(); i++)
+	  m_thrds_per_node[i-1] = atoi(tok[i].c_str());
+      }
       else if (boost::iequals(keyword,  "nelecs") || boost::iequals(keyword,  "nelec")) {
 	if(usedkey[NELECS] == 0) 
 	  usedkey_error(keyword, msg);
