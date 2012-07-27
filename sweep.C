@@ -144,7 +144,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   std::vector<Matrix> rotatematrix;
 
   if (dmrginp.outputlevel() != 0)
-    mcheck("");
+    mcheck(""); 
   if (dmrginp.outputlevel() == 0) {
     if (!dot_with_sys && sweepParams.get_onedot()) {
       pout << "\t\t\t System  Block"<<system;
@@ -175,6 +175,8 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   environment.clear();
   newEnvironment.clear();
 
+  pout <<"System:Noise " << system <<endl;
+  pout <<"Environment:Noise " << environment <<endl;
   pout <<"\t\t\t Performing Renormalization "<<endl;
   pout << "\t\t\t Total discarded weight "<<sweepParams.set_lowest_error()<<endl<<endl;
 

@@ -290,10 +290,10 @@ void SpinAdapted::MatrixTensorProduct (const Matrix& a_ref, char conjA, Real sca
 
 void SpinAdapted::xsolve_AxeqB(const Matrix& a, const ColumnVector& b, ColumnVector& x)
 {
-  int ar = a.Nrows();
+  FORTINT ar = a.Nrows();
   int bc = 1;
   int info=0;
-  int* ipiv = new int[ar];
+  FORTINT* ipiv = new FORTINT[ar];
   double* bwork = new double[ar];
   for(int i = 0;i<ar;++i)
     bwork[i] = b.element(i);

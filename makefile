@@ -27,6 +27,14 @@ USE_MPI = yes
 #use this variable to set if we will intel compiler or not
 INTEL = yes
 
+# use this variable to set if we will use integer size of 8 or not.
+# molpro compilation requires I8, since their integers are long
+I8_OPT = yes
+
+ifeq ($(I8_OPT), yes)
+	I8 = -DI8
+endif
+
 EXECUTABLE = block.spin_adapted
 
 CXX = g++
@@ -44,17 +52,17 @@ MPI_OPT = -DSERIAL
 
 
 ifeq ($(INTEL), yes)
-	OPT = -O3 -funroll-loops -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP  -fopenmp
+	OPT = -O3 -funroll-loops -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) $(I8) -DFAST_MTP  -fopenmp
 #	OPT = -g -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP 
 	CXX = icc
 else
-	OPT = -O3 -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT)
+	OPT = -O3 -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT) $(I8) 
 #	OPT = -g -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT)
 endif
 
 ifeq ($(USE_MPI), yes)
 	MPI_OPT = 
-	MPI_LIB = -L$(BOOST)/lib/ -lboost_mpi
+	MPI_LIB = -L$(BOOSTINCLUDE)/lib/ -lboost_mpi
 	CXX = $(MPICXX)
 endif
 
@@ -70,7 +78,7 @@ LIBS += $(MPI_LIB)
 SRC_spin_adapted =  dmrg.C set_spinblock_components.C linear.C main.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C anglib.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C
 
 
-SRC_spin_library =  dmrg.C readinput.C save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C spinblock.C StateInfo.C set_spinblock_components.C op_components.C Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C linear.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C anglib.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C  modules/onepdm/sweep.C modules/onepdm/onepdm.C  modules/generate_blocks/sweep.C fci.C
+SRC_spin_library =  IrrepSpace.C dmrg.C readinput.C save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C spinblock.C StateInfo.C set_spinblock_components.C op_components.C Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C linear.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C anglib.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C  modules/onepdm/sweep.C modules/onepdm/onepdm.C  modules/generate_blocks/sweep.C fci.C
 
 
 OBJ_spin_adapted=$(SRC_spin_adapted:.C=.o)

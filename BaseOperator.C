@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "spinblock.h"
 #include "distribute.h"
 #include "tensor_operator.h"
+#include "blas_calls.h"
 
 namespace SpinAdapted{
 
@@ -232,7 +233,7 @@ void copy(const Matrix& a, Matrix& b)
     b.ReSize(a.Nrows(), a.Ncols());
 
 #ifdef BLAS
-  DCOPY(a.Storage(), a.Store(), 1, b.Store(), 1);
+  DCOPY((FORTINT) a.Storage(), a.Store(), (FORTINT) 1, b.Store(), (FORTINT) 1);
 #else
   b = a;
 #endif

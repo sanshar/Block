@@ -44,6 +44,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "sweeponepdm.h"
 #include "sweeptwopdm.h"
 #include "BaseOperator.h"
+#include "dmrg_wrapper.h"
 
 #ifndef SERIAL
 #include <boost/mpi/environment.hpp>
@@ -82,7 +83,7 @@ namespace SpinAdapted{
 
 using namespace SpinAdapted;
 
-int callDmrg(char* input, char* output)
+int calldmrg(char* input, char* output)
 {
   license();
   if (output != 0) {
@@ -269,6 +270,10 @@ int callDmrg(char* input, char* output)
   return 0;
 
 }
+void calldmrg_(char* input, char* output) {
+   int a;
+   a=calldmrg("dmrg.inp",0);//, output);
+}
 
 void fullrestartGenblock() {
   SweepParams sweepParams;
@@ -359,6 +364,7 @@ void dmrg(double sweep_tol)
 
   int domoreIter = 0;
 
+
   last_fe = Sweep::do_one(sweepParams, true, true, false, 0);
   while ((fabs(last_fe - old_fe) > sweep_tol) || (fabs(last_be - old_be) > sweep_tol) || 
 	 (dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter()+1 >= sweepParams.get_sweep_iter()) )
@@ -368,7 +374,7 @@ void dmrg(double sweep_tol)
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
       last_be = Sweep::do_one(sweepParams, false, false, false, 0);
-      if (dmrginp.outputlevel() != 0)
+      if (dmrginp.outputlevel() != 0) 
 	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
 
 

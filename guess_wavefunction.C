@@ -259,13 +259,13 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
   {
     switch(guesswavetype)
     {
-    case TRANSFORM:
+    case TRANSFORM: 
       transform_previous_wavefunction(solution, big, state, onedot, transpose_guess_wave);
       break;
-    case BASIC:
+    case BASIC: 
       basic_guess_wavefunction(e, solution, &big.get_stateInfo(), state);
       break;
-    case TRANSPOSE:
+    case TRANSPOSE: 
       transpose_previous_wavefunction(solution, big, state, onedot, transpose_guess_wave);
       break;
     }

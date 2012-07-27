@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "linear.h"
 #include "davidson.h"
 #include "guess_wavefunction.h"
+#include "blas_calls.h"
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
@@ -45,7 +46,7 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
     big.diagonalH ( e);
     if (dmrginp.outputlevel() != 0)
       pout << "\t\t\t Done building diagonal hamiltonian "<<endl;
-    int m, n=1, nsize=e.Storage();
+    FORTINT m, n=1, nsize=e.Storage();
     if (mpigetrank()==0) {
       m = idamax_(nsize,e.Store(), n); 
       if (dmrginp.outputlevel() != 0)
