@@ -69,6 +69,10 @@ namespace SpinAdapted{
       if (s.irrep <2) os<< '+';
       else if (s.irrep >=2 && s.irrep <4 ) os<< '-';
     }
+    else if (sym == "trans") {
+      std::vector<int> irreps = Symmetry::decompress(s.irrep);
+      os<<irreps[2]<<irreps[1]<<irreps[0];
+    }
     else {
       os<< s.irrep+1;
     }

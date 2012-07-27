@@ -45,7 +45,8 @@ class Symmetry
   static double spatial_cg(int a, int b, int c, int la, int lb, int lc) ;
   static double spatial_sixj(int a, int b, int c, int d, int e, int f) ;
   static double spatial_ninej(int j1, int j2, int j12, int j3, int j4, int j34, int j13, int j24, int j);
-
+  static std::vector<int> decompress(int irrep);
+  static int compress(std::vector<int>& irreps);
 };
 }
 #endif

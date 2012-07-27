@@ -134,6 +134,9 @@ void Symmetry::InitialiseTable(string psym)
     groupTable(3, 2) = 1;
     groupTable(3, 3) = 0;
   }
+  else if (sym == "trans") {
+    //do nothing;
+  }
   else {
     cerr << "Symmetry of the molecule has to be one of c1, ci, c2h, c2v, d2h or dinfh"<<endl;
     cerr << "Symmetry provided in the input file "<<sym<<endl;
@@ -164,8 +167,34 @@ bool Symmetry::irrepAllowed(int irrep)
     cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
+  if (sym == "trans") {
+    std::vector<int> irreps = decompress(irrep);
+    if (irreps[0] >= NPROP[0] || irreps[0]< 0 ||
+	irreps[1] >= NPROP[1] || irreps[1]< 0 ||
+	irreps[2] >= NPROP[2] || irreps[2]< 0 ) {
+      
+      cerr << "decompressing the irrep "<<irrep<<" leads to k points "<<irreps[0]<<"  "<<irreps[1]<<"  "<<irreps[2]<<endl;
+      abort();
+    }
+  }
   return true;
 }
+
+std::vector<int> Symmetry::decompress(int irrep) 
+{
+  //this is used to decompress the irrep to 3 k points
+  std::vector<int> out(3,0);
+  out[2] = irrep/PROPBITLEN/PROPBITLEN;
+  out[1] = (irrep - out[2]*PROPBITLEN*PROPBITLEN)/PROPBITLEN;
+  out[0] = irrep - out[2]*PROPBITLEN*PROPBITLEN - out[1]*PROPBITLEN;
+  return out;
+}
+
+int Symmetry::compress(std::vector<int>& irreps) 
+{
+  return irreps[0] + irreps[2]*PROPBITLEN*PROPBITLEN + irreps[1]*PROPBITLEN;
+}
+
 
 string Symmetry::stringOfIrrep(int irrep) 
 {
@@ -229,6 +258,14 @@ string Symmetry::stringOfIrrep(int irrep)
     else if (irrep >=2 && irrep <4 ) output+= '-';
     return output;
   }
+  else if(sym == "trans") {
+    std::vector<int> irreps = decompress(irrep);
+    string output = "";
+    output+=boost::lexical_cast<string>(irreps[2]);
+    output+=boost::lexical_cast<string>(irreps[1]);
+    output+=boost::lexical_cast<string>(irreps[0]);
+    return output;
+  }
   else 
     return "A";
 }
@@ -277,12 +314,23 @@ std::vector<int> Symmetry::add(int irrepl, int irrepr)
     vec.push_back(0);
     return vec;
   }
+  else if (sym == "trans") {
+    std::vector<int> vec;
+    std::vector<int> lirrep = decompress(irrepl);
+    std::vector<int> rirrep = decompress(irrepr);
+    std::vector<int> out(3,0);
+    out[0] = (lirrep[0]+rirrep[0])%NPROP[0];
+    out[1] = (lirrep[1]+rirrep[1])%NPROP[1];
+    out[2] = (lirrep[2]+rirrep[2])%NPROP[2];
+    int outirrep = compress(out);
+    vec.push_back(outirrep);
+    return vec;
+  }
   else {
     std::vector<int> vec;
     vec.push_back( groupTable(irrepl, irrepr));
     return vec;
   }
-  
 }
 
 
@@ -376,6 +424,12 @@ double Symmetry::spatial_cg(int a, int b, int c, int rowa, int rowb, int rowc) {
   }
   else if (sym == "c1") {
     return 1.0;
+  }
+  else if (sym == "trans") {
+    if (c == add(a,b)[0])
+      return 1.0;
+    else
+      return 0.0;
   }
   else {
     if (c == groupTable(a,b))

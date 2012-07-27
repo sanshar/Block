@@ -595,6 +595,8 @@ SpinAdapted::Input::Input(const string& config_name)
     }
     m_alpha = (n_elec + n_spin)/2;
     m_beta = (n_elec - n_spin)/2;
+    if (sym == "trans") 
+      m_total_symmetry_number = IrrepSpace(m_total_symmetry_number.getirrep()+1); //in translational symmetry lowest irrep is 0 and not 1
     m_molecule_quantum = SpinQuantum(m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number);
 
 
@@ -605,6 +607,7 @@ SpinAdapted::Input::Input(const string& config_name)
   boost::mpi::communicator world;
   mpi::broadcast(world, sym, 0);
 #endif
+    
   if (sym != "c1")
     Symmetry::InitialiseTable(sym);
 
@@ -632,6 +635,8 @@ SpinAdapted::Input::Input(const string& config_name)
   mpi::broadcast(world,*this,0);
   mpi::broadcast(world,v_1,0);
   mpi::broadcast(world,v_2,0);
+  mpi::broadcast(world, NPROP, 0);
+  mpi::broadcast(world, PROPBITLEN, 0);
 #endif
 
 }
@@ -686,7 +691,6 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
 
   int offset = m_orbformat == DMRGFORM ? 0 : 1;
-
   if(offset != 0)
     m_norbs = 2*atoi(tok[2].c_str());
   else
@@ -712,17 +716,19 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   ReadMeaningfulLine(dumpFile, msg, msgsize);
   boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
   
-  while (!(boost::iequals(tok[0], "ISYM") || boost::iequals(tok[0], "END"))) {
+  while (!(boost::iequals(tok[0], "ISYM") || boost::iequals(tok[0], "&END"))) {
     for (int i=0; i<tok.size(); i++) {
       if (boost::iequals(tok[i], "ORBSYM") || tok[i].size() == 0) continue;
 
       int reorderOrbInd = m_reorder ? reorder.at(orbindex/2) : orbindex/2;
 
       int ir;
-      if (atoi(tok[i].c_str()) > 0 ) 
+      if (atoi(tok[i].c_str()) >= 0 ) 
 	ir = atoi(tok[i].c_str()) - offset;
       else if (atoi(tok[i].c_str()) < -1)
 	ir = atoi(tok[i].c_str()) + offset;
+
+      if (sym == "trans") ir += 1; //for translational symmetry the lowest irrep is 0
 
       m_spin_orbs_symmetry[2*reorderOrbInd] = ir;
       m_spin_orbs_symmetry[2*reorderOrbInd+1] = ir;
@@ -762,14 +768,28 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   m_spatial_to_spin.push_back(m_norbs);
   m_spin_to_spatial.push_back(m_norbs);
 
+  while (!(boost::iequals(tok[0], "&END"))) {
+    int temp;
+    if (boost::iequals(tok[0], "NPROP") ) {
+      NPROP.push_back( atoi(tok[1].c_str()));
+      NPROP.push_back( atoi(tok[2].c_str()));
+      NPROP.push_back( atoi(tok[3].c_str()));
+    }
+    else if (boost::iequals(tok[0], "PROPBITLEN") ) {
+      temp = atoi(tok[1].c_str());
+    }
+    PROPBITLEN=1;
+    for (int i=0; i<temp; i++)
+      PROPBITLEN *= 2;
 
-  if(offset != 0) {
     msg.resize(0);
-    ReadMeaningfulLine(dumpFile, msg, msgsize); //this line reads &END
+    ReadMeaningfulLine(dumpFile, msg, msgsize);
+    boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
   }
 
   msg.resize(0);
   ReadMeaningfulLine(dumpFile, msg, msgsize); //this if the first line with integrals
+
   int i, j, k, l;
   double value;
   while(msg.size() != 0) {

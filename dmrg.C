@@ -76,6 +76,8 @@ namespace SpinAdapted{
   bool FULLRESTART;
   bool RESTART;
   bool reset_iter;
+  std::vector<int> NPROP;
+  int PROPBITLEN=1;
 }
 
 using namespace SpinAdapted;
