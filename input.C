@@ -98,7 +98,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_no_transform = false;
   m_do_fci = false;
   m_do_cd = false;
-  m_maxiter = 50;
+  m_maxiter = 10;
   m_screen_tol = 1.00e-20;
 
   m_load_prefix = ".";
@@ -839,7 +839,7 @@ void SpinAdapted::Input::performSanityTest()
     pout << "DMRG cannot be run with fewer than 4 orbitals!!"<<endl;
     abort();
   }
-  if (m_norbs/2 > 130) {
+  if (m_norbs/2 > 200) {
     cerr << "Number of orbitals cannot be greater than 130"<<endl;
     abort();
   }
