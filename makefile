@@ -28,7 +28,7 @@ USE_MPI = yes
 INTEL = yes
 
 # use this variable to set if we will use integer size of 8 or not.
-# molpro compilation requires I8
+# molpro compilation requires I8, since their integers are long
 I8_OPT = yes
 
 ifeq ($(I8_OPT), yes)
