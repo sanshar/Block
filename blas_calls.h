@@ -31,12 +31,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //                               DEC: dxml
 //                               SGI: sgimath
 
-/*# ifndef FORTINT
-# define FORTINT int
-# else
-*/
+#ifndef I8
+#define FORTINT int
+#else
 #define FORTINT long
-//# endif
+#endif
  
 #ifdef AIX
 extern "C"
