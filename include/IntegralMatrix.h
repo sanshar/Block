@@ -594,8 +594,8 @@ class PartialTwoElectronArray : public TwoElectronArray // 2e integral, notation
   {
   private:
 
-    std::vector<double> rep; //!< underlying storage 
-    int OrbIndex; //this is the orb i
+    std::vector<std::vector<double> > rep; //!< underlying storage 
+    std::vector<int> OrbIndex; //this is the orb i
     int dim;  //!< #spinorbs
     double dummyZero;
 
@@ -607,28 +607,32 @@ class PartialTwoElectronArray : public TwoElectronArray // 2e integral, notation
 
   public:
 
-    PartialTwoElectronArray(int pOrbIndex) : OrbIndex(pOrbIndex)
+    PartialTwoElectronArray(std::vector<int>& pOrbIndex) : OrbIndex(pOrbIndex)
     {}
 
-    PartialTwoElectronArray(int pOrbIndex, int pdim) : OrbIndex(pOrbIndex), dim(pdim)
+    PartialTwoElectronArray(std::vector<int>& pOrbIndex, int pdim) : OrbIndex(pOrbIndex), dim(pdim)
     {}
 
     void populate(TwoElectronArray& v2)
     {
       dim = v2.NOrbs()/2;
-      rep.resize(dim*dim*dim);
-      for (int i=0; i<dim; i++)
-      for (int j=0; j<dim; j++)
-      for (int k=0; k<dim; k++)
-	rep[i*dim*dim+j*dim+k] = v2(2*OrbIndex, 2*i, 2*j, 2*k);
+      rep.resize(OrbIndex.size());
+      for (int orb = 0; orb<OrbIndex.size(); orb++) {
+	rep[orb].resize(dim*dim*dim);
+	for (int i=0; i<dim; i++)
+	for (int j=0; j<dim; j++)
+	for (int k=0; k<dim; k++)
+	  rep.at(orb)[i*dim*dim+j*dim+k] = v2(2*OrbIndex[orb], 2*i, 2*j, 2*k);
+      }
     }
 
-    void setOrbIndex(int pOrbIndex) {OrbIndex = pOrbIndex;}
+    void setOrbIndex(std::vector<int>& pOrbIndex) {OrbIndex = pOrbIndex;}
 
     void Load(std::string prefix)
     {
       char file [5000];
-      sprintf (file, "%s%s%d%s%d%s", prefix.c_str(), "/integral-", OrbIndex, ".", mpigetrank(), ".tmp");
+      sprintf (file, "%s%s%d%s%d%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", mpigetrank(), ".tmp");
+      cout << "\t\t\t Reading Integral file "<<file <<endl;
       if(mpigetrank() == 0) {
 	std::ifstream ifs(file, std::ios::binary);
 	boost::archive::binary_iarchive load_integral(ifs);
@@ -639,7 +643,8 @@ class PartialTwoElectronArray : public TwoElectronArray // 2e integral, notation
     void Save(std::string prefix)
     {
       char file [5000];
-      sprintf (file, "%s%s%d%s%d%s", prefix.c_str(), "/integral-", OrbIndex, ".", mpigetrank(), ".tmp");
+      sprintf (file, "%s%s%d%s%d%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", mpigetrank(), ".tmp");
+      cout << "\t\t\t Saving Integral file "<<file <<endl;
       if(mpigetrank() == 0) {
 	std::ofstream ofs(file, std::ios::binary);
 	boost::archive::binary_oarchive save_integral(ofs);
@@ -667,18 +672,19 @@ class PartialTwoElectronArray : public TwoElectronArray // 2e integral, notation
 	k=k/2;
 	l=l/2;
 
-	if (i == OrbIndex)
-	  return rep[j*dim*dim+k*dim+l];
-	else if (j == OrbIndex)
-	  return rep[i*dim*dim+l*dim+k];
-	else if (k == OrbIndex)
-	  return rep[l*dim*dim+i*dim+j];
-	else if (l == OrbIndex)
-	  return rep[k*dim*dim+j*dim+i];
-	else {
-	  cout << "OrbIndex = "<< OrbIndex<< " does not match any of the indices "<<i<<"  "<<j<<"  "<<k<<"  "<<l<<endl;
-	  abort();
+	for (int orb=0; orb<OrbIndex.size(); orb++) {
+	  
+	  if (i == OrbIndex[orb])
+	    return rep[orb][j*dim*dim+k*dim+l];
+	  else if (j == OrbIndex[orb])
+	    return rep[orb][i*dim*dim+l*dim+k];
+	  else if (k == OrbIndex[orb])
+	    return rep[orb][l*dim*dim+i*dim+j];
+	  else if (l == OrbIndex[orb])
+	    return rep[orb][k*dim*dim+j*dim+i];
 	}
+	cout << "OrbIndex = "<< OrbIndex[0]<< " does not match any of the indices "<<i<<"  "<<j<<"  "<<k<<"  "<<l<<endl;
+	abort();
       }
 
     double& operator () (int i, int j, int k, int l) 
@@ -699,18 +705,19 @@ class PartialTwoElectronArray : public TwoElectronArray // 2e integral, notation
 	k=k/2;
 	l=l/2;
 
-	if (i == OrbIndex)
-	  return rep[j*dim*dim+k*dim+l];
-	else if (j == OrbIndex)
-	  return rep[i*dim*dim+l*dim+k];
-	else if (k == OrbIndex)
-	  return rep[l*dim*dim+i*dim+j];
-	else if (l == OrbIndex)
-	  return rep[k*dim*dim+j*dim+i];
-	else {
-	  cout << "OrbIndex = "<< OrbIndex<< " does not match any of the indices "<<i<<"  "<<j<<"  "<<k<<"  "<<l<<endl;
-	  abort();
+	for (int orb=0; orb<OrbIndex.size(); orb++) {
+	  
+	  if (i == OrbIndex[orb])
+	    return rep[orb][j*dim*dim+k*dim+l];
+	  else if (j == OrbIndex[orb])
+	    return rep[orb][i*dim*dim+l*dim+k];
+	  else if (k == OrbIndex[orb])
+	    return rep[orb][l*dim*dim+i*dim+j];
+	  else if (l == OrbIndex[orb])
+	    return rep[orb][k*dim*dim+j*dim+i];
 	}
+	cout << "OrbIndex = "<< OrbIndex[0]<< " does not match any of the indices "<<i<<"  "<<j<<"  "<<k<<"  "<<l<<endl;
+	abort();
       }
 
   };

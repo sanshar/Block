@@ -180,7 +180,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 
   dmrginp.multiplierT.stop();
   dmrginp.operrotT.start();
-  cout << "integral pointer "<<newSystem.get_twoInt().get()<<"  "<<endl;
+
   newSystem.transform_operators(rotatematrix);
   storeStates[2] = newSystem.get_stateInfo();
   dmrginp.operrotT.stop();

@@ -73,7 +73,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_noise_type = RANDOM;
   m_calc_type = DMRG;
   m_twodot_to_onedot_iter = 0;
-  m_integral_disk_storage_thresh = 100; //this is usually 100
+  m_integral_disk_storage_thresh = 4;//100; //this is usually 100
 
   m_norbs = 0;
   m_alpha = 0;
@@ -825,8 +825,12 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
 
   if (m_norbs/2 >= m_integral_disk_storage_thresh) //
   {
-    for (int i=0; i<m_norbs/2; i++) {
-      PartialTwoElectronArray vpart(i);
+    for (int i=0; i<m_spatial_to_spin.size()-1; i++) {
+      std::vector<int> orb;
+      for (int j=m_spatial_to_spin[i]; j<m_spatial_to_spin[i+1]; j+=2) {
+	orb.push_back(j/2);
+      }
+      PartialTwoElectronArray vpart(orb);
       vpart.populate(v2);
       vpart.Save(m_save_prefix);
     }

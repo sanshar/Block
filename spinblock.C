@@ -109,7 +109,10 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
       cout << "Cannot use partial two electron integrals, when making spin block with more than two orbitals"<<endl;
       abort();
     }
-    twoInt = boost::shared_ptr<PartialTwoElectronArray> (new PartialTwoElectronArray(start));
+    std::vector<int> o;
+    for (int i=dmrginp.spatial_to_spin()[start]; i<dmrginp.spatial_to_spin()[start+1]; i+=2)
+      o.push_back(i/2);
+    twoInt = boost::shared_ptr<PartialTwoElectronArray> (new PartialTwoElectronArray(o));
     twoInt->Load(dmrginp.load_prefix());
 #ifndef SERIAL
     mpi::communicator world;
@@ -143,7 +146,10 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
 {
 
   if (twoInt.get() == 0 && dmrginp.use_partial_two_integrals()) { //this is when dummy block is being added for non zero spin
-    twoInt = boost::shared_ptr<PartialTwoElectronArray> (new PartialTwoElectronArray(new_sites[0]));
+    std::vector<int> o;
+    for (int i=dmrginp.spatial_to_spin()[new_sites[0]]; i<dmrginp.spatial_to_spin()[new_sites[new_sites.size()-1]+1]; i+=2)
+      o.push_back(i/2);
+    twoInt = boost::shared_ptr<PartialTwoElectronArray> (new PartialTwoElectronArray(o));
     twoInt->Load(dmrginp.load_prefix());
 #ifndef SERIAL
     mpi::communicator world;
@@ -229,7 +235,10 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
 
   if (dmrginp.use_partial_two_integrals()) {
     if (rBlock.sites.size() == 1) {
-      twoInt = boost::shared_ptr<PartialTwoElectronArray> (new PartialTwoElectronArray(rBlock.sites[0]));
+      std::vector<int> o;
+      for (int i=dmrginp.spatial_to_spin().at(rBlock.sites[0]); i<dmrginp.spatial_to_spin().at(rBlock.sites[0]+1); i+=2)
+	o.push_back(i/2);
+      twoInt = boost::shared_ptr<PartialTwoElectronArray> (new PartialTwoElectronArray(o));
       twoInt->Load(dmrginp.load_prefix());
 #ifndef SERIAL
       mpi::communicator world;
