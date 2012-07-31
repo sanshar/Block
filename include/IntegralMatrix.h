@@ -599,6 +599,7 @@ class PartialTwoElectronArray : public TwoElectronArray // 2e integral, notation
     int dim;  //!< #spinorbs
     double dummyZero;
 
+    friend class boost::serialization::access;
     template<class Archive> void serialize(Archive & ar, const unsigned int version)
     {
       ar & rep & dim & OrbIndex;
