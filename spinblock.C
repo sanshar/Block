@@ -104,6 +104,22 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
   normal = !is_complement;
   default_op_components(is_complement);
   std::vector<int> sites; 
+  if (dmrginp.use_partial_two_integrals()) {
+    if (start != finish) {
+      cout << "Cannot use partial two electron integrals, when making spin block with more than two orbitals"<<endl;
+      abort();
+    }
+    twoInt = boost::shared_ptr<PartialTwoElectronArray> (new PartialTwoElectronArray(start));
+    twoInt->Load(dmrginp.load_prefix());
+#ifndef SERIAL
+    mpi::communicator world;
+    PartialTwoElectronArray& ar = dynamic_cast<PartialTwoElectronArray&>(*twoInt.get());
+    mpi::broadcast(world, ar, 0);
+#endif
+  }
+  else
+    twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
+
   int lower = min(start, finish);
   int higher = max(start, finish);
   sites.resize(higher - lower + 1);
@@ -125,6 +141,20 @@ SpinBlock::SpinBlock(const StateInfo& s)
 
 void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
 {
+
+  if (twoInt.get() == 0 && dmrginp.use_partial_two_integrals()) { //this is when dummy block is being added for non zero spin
+    twoInt = boost::shared_ptr<PartialTwoElectronArray> (new PartialTwoElectronArray(new_sites[0]));
+    twoInt->Load(dmrginp.load_prefix());
+#ifndef SERIAL
+    mpi::communicator world;
+    PartialTwoElectronArray& ar = dynamic_cast<PartialTwoElectronArray&>(*twoInt.get());
+    mpi::broadcast(world, ar, 0);
+    //world.broadcast(twoInt);
+#endif
+  }
+  else if (twoInt.get() == 0)
+    twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
+
   name = get_name();
 
   sites = new_sites;
@@ -196,6 +226,25 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
   rightBlock = &rBlock;
 
   sites.reserve (lBlock.sites.size () + rBlock.sites.size ());
+
+  if (dmrginp.use_partial_two_integrals()) {
+    if (rBlock.sites.size() == 1) {
+      twoInt = boost::shared_ptr<PartialTwoElectronArray> (new PartialTwoElectronArray(rBlock.sites[0]));
+      twoInt->Load(dmrginp.load_prefix());
+#ifndef SERIAL
+      mpi::communicator world;
+      PartialTwoElectronArray& ar = dynamic_cast<PartialTwoElectronArray&>(*twoInt.get());
+      mpi::broadcast(world, ar, 0);
+#endif
+
+    }
+    //cout << "Cannot use partial two electron integrals, when the dot block has more than one orbital"<<endl;
+    //abort();
+
+  }
+  else
+    twoInt = boost::shared_ptr<TwoElectronArray>( &v_2,  boostutils::null_deleter());
+
   sites = lBlock.sites;
   copy (rBlock.sites.begin(), rBlock.sites.end (), back_inserter (sites));
   sort(sites.begin(), sites.end());
@@ -242,7 +291,7 @@ void SpinBlock::operator= (const SpinBlock& b)
   stateInfo = b.stateInfo;
   leftBlock = b.leftBlock;
   rightBlock = b.rightBlock;
-
+  twoInt = b.twoInt;
   ops = b.ops;
 }
 

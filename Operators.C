@@ -84,7 +84,7 @@ std::vector<double> SpinAdapted::SparseMatrix::calcMatrixElements(Csf& c1, Tenso
 }
 
 
-double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, CompType comp)
+double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, CompType comp, const TwoElectronArray& v_2)
 {
   double factor = 0.0;
   vector<double>& iSz1 = op1.Szops[0];
@@ -127,7 +127,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
   return factor;
 }
 
-double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, CompType comp, int op2index)
+double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, CompType comp, int op2index, const TwoElectronArray& v_2)
 {
   double factor = 0.0;
   vector<double>& iSz2 = op2.Szops[op2index];
@@ -479,7 +479,7 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
       TensorOp CK(k,1), DL(l,-1);      
       TensorOp CD2 = CK.product(DL, spin, sym.getirrep());
       if (CD2.empty) continue;
-      double scaleV = calcCompfactor(CD1, CD2, CD);
+      double scaleV = calcCompfactor(CD1, CD2, CD,*(b.get_twoInt()));
 
       boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(k), k);
       Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(l), l));
@@ -489,7 +489,7 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
 
       CK=TensorOp(l,1); DL=TensorOp(k,-1);      
       CD2 = CK.product(DL, spin, sym.getirrep());
-      scaleV = calcCompfactor(CD1, CD2, CD);
+      scaleV = calcCompfactor(CD1, CD2, CD,*(b.get_twoInt()));
       op1 = rightBlock->get_op_rep(CRE, getSpinQuantum(l), l);
       top2 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(k), k));
 
@@ -529,7 +529,7 @@ double SpinAdapted::CreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder, co
 	TensorOp CD2 = CK.product(DL, spin, sym.getirrep());
 	if (CD2.empty) continue;
 	std::vector<double> MatElements = calcMatrixElements(c1, CD2, ladder[i]);
-	double factor = calcCompfactor(CD1, CD2, CD);
+	double factor = calcCompfactor(CD1, CD2, CD, *(b->get_twoInt()));
 	element += MatElements[index]*factor/cleb;
 	
       }
@@ -603,11 +603,11 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
       TensorOp DK(k,-1), DL(l,-1);
       TensorOp DD2 = DK.product(DL, spin, sym.getirrep(), k==l);
       if (DD2.empty) continue;
-      double scaleV = calcCompfactor(CC1, DD2, DD);
+      double scaleV = calcCompfactor(CC1, DD2, DD, *(b.get_twoInt()));
 
       DK=TensorOp(k,-1); DL=TensorOp(l,-1);
       DD2 = DL.product(DK, spin, sym.getirrep(), k==l);
-      double scaleV2 = calcCompfactor(CC1, DD2, DD);
+      double scaleV2 = calcCompfactor(CC1, DD2, DD, *(b.get_twoInt()));
 
       Transposeview top1 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(k), k));
       Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(l), l));
@@ -655,7 +655,7 @@ double SpinAdapted::DesDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder, co
 	if (DD2.empty) continue;
 
 	std::vector<double> MatElements = calcMatrixElements(c1, DD2, ladder[i]);
-	double scale = calcCompfactor(CC1, DD2, DD, index);
+	double scale = calcCompfactor(CC1, DD2, DD, index, *(b->get_twoInt()));
 
 	element += MatElements[index]*scale/cleb;
 	
@@ -795,7 +795,7 @@ double SpinAdapted::CreCreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
 	    if (CCDIJL.empty) continue;
 	    
 	    std::vector<double> MatElements = calcMatrixElements(c1, CCDIJL, ladder[i]);
-	    double scale = calcCompfactor(CCDIJL, D, CCD);
+	    double scale = calcCompfactor(CCDIJL, D, CCD, *(b->get_twoInt()));
 
 
 
@@ -809,7 +809,7 @@ double SpinAdapted::CreCreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
 	int _i = b->get_sites()[ki];
 	TensorOp CI(_i, 1);
 	std::vector<double> MatElements = calcMatrixElements(c1, CI, ladder[i]);
-	double factor = calcCompfactor(CI, D, C);
+	double factor = calcCompfactor(CI, D, C, *(b->get_twoInt()));
 	
 	element += factor*MatElements[index]/cleb;
       }
@@ -909,6 +909,7 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
 
 double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
+  const TwoElectronArray& v_2 = *(b->get_twoInt());
   double element = 0.0;
   bool finish = false;
   for (int i=0; i<ladder.size(); i++)

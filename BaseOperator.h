@@ -136,8 +136,8 @@ class SparseMatrix : public Baseoperator<Matrix>
   virtual void build(const SpinBlock& b) =0;
   void buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s) ;
   virtual double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b=0)=0;
-  double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp);
-  double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, int op2index);
+  double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, const TwoElectronArray& v_2);
+  double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, int op2index, const TwoElectronArray& v_2);
   bool nonZeroTensorComponent(Csf& c1, SpinQuantum& opsym, Csf& ladder, int& nonzeroindex, double& cleb);
   std::vector<double> calcMatrixElements(Csf& c1, TensorOp& Top, Csf& c2);
   friend ostream& operator<<(ostream& os, const SparseMatrix& a);

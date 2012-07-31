@@ -31,7 +31,7 @@ namespace SpinAdapted {
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.screen_tol();
-      std::vector<int> screened_c_ix = screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1, v_2, screen_tol); 
+      std::vector<int> screened_c_ix = screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1, *b.get_twoInt(), screen_tol); 
       m_op.set_indices(screened_c_ix, dmrginp.last_site());  
       std::vector<int> orbs(1);
       
@@ -84,7 +84,7 @@ namespace SpinAdapted {
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.screen_tol();
-      vector< pair<int, int> > screened_cd_ix = screened_cd_indices(b.get_sites(), b.get_complementary_sites(), v_2, screen_tol);
+      vector< pair<int, int> > screened_cd_ix = screened_cd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
       m_op.set_pair_indices(screened_cd_ix, dmrginp.last_site());      
       std::vector<int> orbs(2);
       for (int i = 0; i < m_op.local_nnz(); ++i)
@@ -118,7 +118,7 @@ namespace SpinAdapted {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.screen_tol();
       
-      vector< pair<int, int> > screened_dd_ix = screened_dd_indices(b.get_sites(), b.get_complementary_sites(), v_2, screen_tol);
+      vector< pair<int, int> > screened_dd_ix = screened_dd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
       m_op.set_pair_indices(screened_dd_ix, dmrginp.last_site());      
       std::vector<int> orbs(2);
       for (int i = 0; i < m_op.local_nnz(); ++i)
@@ -150,7 +150,7 @@ namespace SpinAdapted {
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.screen_tol();
-      vector< pair<int, int> > screened_cd_ix = screened_cd_indices( b.get_complementary_sites(), b.get_sites(), v_2, screen_tol);
+      vector< pair<int, int> > screened_cd_ix = screened_cd_indices( b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), screen_tol);
       m_op.set_pair_indices(screened_cd_ix, dmrginp.last_site());      
       
       std::vector<int> orbs(2);
@@ -199,7 +199,7 @@ namespace SpinAdapted {
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.screen_tol();
-      vector< pair<int, int> > screened_dd_ix = screened_dd_indices(b.get_complementary_sites(), b.get_sites(), v_2, screen_tol);
+      vector< pair<int, int> > screened_dd_ix = screened_dd_indices(b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), screen_tol);
       m_op.set_pair_indices(screened_dd_ix, dmrginp.last_site());      
       
       std::vector<int> orbs(2);
@@ -248,7 +248,7 @@ namespace SpinAdapted {
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.screen_tol();
-      vector< int > screened_cdd_ix = screened_cddcomp_indices(b.get_complementary_sites(), b.get_sites(), v_1, v_2, screen_tol);
+      vector< int > screened_cdd_ix = screened_cddcomp_indices(b.get_complementary_sites(), b.get_sites(), v_1, *b.get_twoInt(), screen_tol);
       m_op.set_indices(screened_cdd_ix, dmrginp.last_site());      
       std::vector<int> orbs(1);
       for (int i = 0; i < m_op.local_nnz(); ++i)

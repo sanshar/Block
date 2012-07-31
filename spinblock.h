@@ -52,6 +52,7 @@ class SpinBlock
   int name;
   SpinBlock* leftBlock;
   SpinBlock* rightBlock;
+  boost::shared_ptr<TwoElectronArray> twoInt;
   
   StateInfo stateInfo;
   std::vector<int> sites;
@@ -68,6 +69,7 @@ class SpinBlock
   void Save (std::ofstream &ofs);
   void Load (std::ifstream &ifs);
 
+  const boost::shared_ptr<TwoElectronArray> get_twoInt() const {return twoInt;}
   double memoryUsed();
   void addAdditionalCompOps();
   const StateInfo& get_stateInfo() const {return stateInfo;}

@@ -73,6 +73,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_noise_type = RANDOM;
   m_calc_type = DMRG;
   m_twodot_to_onedot_iter = 0;
+  m_integral_disk_storage_thresh = 100; //this is usually 100
 
   m_norbs = 0;
   m_alpha = 0;
@@ -817,6 +818,17 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     msg.resize(0);
     ReadMeaningfulLine(dumpFile, msg, msgsize); //this if the first line with integrals
   }
+
+  if (m_norbs/2 >= m_integral_disk_storage_thresh) //
+  {
+    for (int i=0; i<m_norbs/2; i++) {
+      PartialTwoElectronArray vpart(i);
+      vpart.populate(v2);
+      vpart.Save(m_save_prefix);
+    }
+    v2.ReSize(0);
+  }
+  
 }
 
 void SpinAdapted::Input::writeSummary()

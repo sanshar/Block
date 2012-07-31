@@ -36,6 +36,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <algorithm>
 #include "input.h"
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
 
 using namespace boost;
 
@@ -311,6 +313,7 @@ class OneElectronArray
     }
   };
 
+
 // ***************************************************************************
 // class TwoElectronArray
 // ***************************************************************************
@@ -455,7 +458,9 @@ class TwoElectronArray // 2e integral, notation (12|12), symmetric matrix
       return count;
     }
 
-    double& operator()(int i, int j, int k, int l)
+    virtual void Load(std::string prefix) {}
+    virtual void Save(std::string prefix) {}
+    virtual double& operator()(int i, int j, int k, int l)
     {
       assert(i >= 0 && i < dim && j >= 0 && j < dim && k >= 0 && k < dim && l >= 0 && l < dim);
       if (rhf)
@@ -479,7 +484,7 @@ class TwoElectronArray // 2e integral, notation (12|12), symmetric matrix
       return rep(n + 1, m + 1);
     }
 
-    double operator () (int i, int j, int k, int l) const
+    virtual double operator () (int i, int j, int k, int l) const
       {
         assert(i >= 0 && i < dim && j >= 0 && j < dim && k >= 0 && k < dim && l >= 0 && l < dim);
         if (rhf)
@@ -584,5 +589,133 @@ class TwoElectronArray // 2e integral, notation (12|12), symmetric matrix
   };
 
 
+
+class PartialTwoElectronArray : public TwoElectronArray // 2e integral, notation (OrbIndex2|12), where OrbIndex is given
+  {
+  private:
+
+    std::vector<double> rep; //!< underlying storage 
+    int OrbIndex; //this is the orb i
+    int dim;  //!< #spinorbs
+    double dummyZero;
+
+    template<class Archive> void serialize(Archive & ar, const unsigned int version)
+    {
+      ar & rep & dim & OrbIndex;
+    }
+
+
+  public:
+
+    PartialTwoElectronArray(int pOrbIndex) : OrbIndex(pOrbIndex)
+    {}
+
+    PartialTwoElectronArray(int pOrbIndex, int pdim) : OrbIndex(pOrbIndex), dim(pdim)
+    {}
+
+    void populate(TwoElectronArray& v2)
+    {
+      dim = v2.NOrbs()/2;
+      rep.resize(dim*dim*dim);
+      for (int i=0; i<dim; i++)
+      for (int j=0; j<dim; j++)
+      for (int k=0; k<dim; k++)
+	rep[i*dim*dim+j*dim+k] = v2(2*OrbIndex, 2*i, 2*j, 2*k);
+    }
+
+    void setOrbIndex(int pOrbIndex) {OrbIndex = pOrbIndex;}
+
+    void Load(std::string prefix)
+    {
+      char file [5000];
+      sprintf (file, "%s%s%d%s%d%s", prefix.c_str(), "/integral-", OrbIndex, ".", mpigetrank(), ".tmp");
+      if(mpigetrank() == 0) {
+	std::ifstream ifs(file, std::ios::binary);
+	boost::archive::binary_iarchive load_integral(ifs);
+	load_integral >> *this ;
+      }
+    }
+
+    void Save(std::string prefix)
+    {
+      char file [5000];
+      sprintf (file, "%s%s%d%s%d%s", prefix.c_str(), "/integral-", OrbIndex, ".", mpigetrank(), ".tmp");
+      if(mpigetrank() == 0) {
+	std::ofstream ofs(file, std::ios::binary);
+	boost::archive::binary_oarchive save_integral(ofs);
+	save_integral << *this ;
+      }
+    }
+
+
+
+    double operator () (int i, int j, int k, int l) const
+      {
+        assert(i >= 0 && i < 2*dim && j >= 0 && j < 2*dim && k >= 0 && k < 2*dim && l >= 0 && l < 2*dim);
+	
+	bool is_odd_i = (i & 1);
+	bool is_odd_j = (j & 1);
+	bool is_odd_k = (k & 1);
+	bool is_odd_l = (l & 1);
+	
+	bool zero = !((is_odd_i == is_odd_k) && (is_odd_j == is_odd_l));
+	if (zero)
+	  return 0.0;
+	
+	i=i/2;
+	j=j/2;
+	k=k/2;
+	l=l/2;
+
+	if (i == OrbIndex)
+	  return rep[j*dim*dim+k*dim+l];
+	else if (j == OrbIndex)
+	  return rep[i*dim*dim+l*dim+k];
+	else if (k == OrbIndex)
+	  return rep[l*dim*dim+i*dim+j];
+	else if (l == OrbIndex)
+	  return rep[k*dim*dim+j*dim+i];
+	else {
+	  cout << "OrbIndex = "<< OrbIndex<< " does not match any of the indices "<<i<<"  "<<j<<"  "<<k<<"  "<<l<<endl;
+	  abort();
+	}
+      }
+
+    double& operator () (int i, int j, int k, int l) 
+      {
+        assert(i >= 0 && i < 2*dim && j >= 0 && j < 2*dim && k >= 0 && k < 2*dim && l >= 0 && l < 2*dim);
+	
+	bool is_odd_i = (i & 1);
+	bool is_odd_j = (j & 1);
+	bool is_odd_k = (k & 1);
+	bool is_odd_l = (l & 1);
+	
+	bool zero = !((is_odd_i == is_odd_k) && (is_odd_j == is_odd_l));
+	if (zero)
+	  return dummyZero;
+	
+	i=i/2;
+	j=j/2;
+	k=k/2;
+	l=l/2;
+
+	if (i == OrbIndex)
+	  return rep[j*dim*dim+k*dim+l];
+	else if (j == OrbIndex)
+	  return rep[i*dim*dim+l*dim+k];
+	else if (k == OrbIndex)
+	  return rep[l*dim*dim+i*dim+j];
+	else if (l == OrbIndex)
+	  return rep[k*dim*dim+j*dim+i];
+	else {
+	  cout << "OrbIndex = "<< OrbIndex<< " does not match any of the indices "<<i<<"  "<<j<<"  "<<k<<"  "<<l<<endl;
+	  abort();
+	}
+      }
+
+  };
+
+
 }
+
 #endif

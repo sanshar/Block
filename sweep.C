@@ -175,13 +175,12 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   environment.clear();
   newEnvironment.clear();
 
-  pout <<"System:Noise " << system <<endl;
-  pout <<"Environment:Noise " << environment <<endl;
   pout <<"\t\t\t Performing Renormalization "<<endl;
   pout << "\t\t\t Total discarded weight "<<sweepParams.set_lowest_error()<<endl<<endl;
 
   dmrginp.multiplierT.stop();
   dmrginp.operrotT.start();
+  cout << "integral pointer "<<newSystem.get_twoInt().get()<<"  "<<endl;
   newSystem.transform_operators(rotatematrix);
   storeStates[2] = newSystem.get_stateInfo();
   dmrginp.operrotT.stop();
@@ -280,7 +279,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 	  
       SpinBlock newSystem;
 
-      if (warmUp && (sym=="dinfh"||sym=="trans"))
+      if (warmUp)// && (sym=="dinfh"||sym=="trans"))
 	Startup(sweepParams, system, newSystem);
       else {
 	if (sweepParams.set_sweep_iter() == 1 && sweepParams.get_block_iter() == 0)
@@ -288,7 +287,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 	BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys);
       }
       
-      if (!warmUp || !(sym == "dinfh"||sym=="trans") ){
+      if (!warmUp){// || !(sym == "dinfh"||sym=="trans") ){
 	
 	for(int j=0;j<nroots;++j)
 	  pout << "\t\t\t Total block energy for State [ " << j << 

@@ -72,6 +72,7 @@ class Input {
   std::vector<double> m_sweep_additional_noise_schedule;
   bool m_schedule_type_default;
   int m_maxM;
+  int m_integral_disk_storage_thresh;
 
   bool m_do_diis;
   double m_diis_error;
@@ -180,6 +181,7 @@ class Input {
   const int& start_diis_iter() const {return m_start_diis_iter;}
   const int& diis_keep_states() const {return m_diis_keep_states;}
 
+  bool use_partial_two_integrals() const {return (m_norbs/2 >= m_integral_disk_storage_thresh);}
   bool& set_fullrestart() {return m_fullrestart;}
   const double& get_coreenergy() const {return m_core_energy;}
   const bool& get_fullrestart() const {return m_fullrestart;}

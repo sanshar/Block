@@ -257,7 +257,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   int i = state, j = state;
   //for (int j=0; j<=i; j++) {
   load_twopdm_binary(twopdm, i, j); 
-  calcenergy(twopdm, i);
+  //calcenergy(twopdm, i);
   save_twopdm_text(twopdm, i, j);
   save_spatial_twopdm_text(twopdm, i, j);
   save_spatial_twopdm_binary(twopdm, i, j);

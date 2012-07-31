@@ -76,6 +76,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
       wave_solutions[i] = tempwave;
     }
     *this = newsystem;
+    cout << newsystem.get_twoInt().get()<<"  "<<get_twoInt().get()<<"  Ints "<<endl;
     envDot.clear();
     big.get_rightBlock()->clear();
     big.clear();
