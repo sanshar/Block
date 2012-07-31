@@ -633,8 +633,8 @@ class PartialTwoElectronArray : public TwoElectronArray // 2e integral, notation
     {
       char file [5000];
       sprintf (file, "%s%s%d%s%d%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", mpigetrank(), ".tmp");
-      cout << "\t\t\t Reading Integral file "<<file <<endl;
       if(mpigetrank() == 0) {
+	cout << "\t\t\t Reading Integral file "<<file <<endl;
 	std::ifstream ifs(file, std::ios::binary);
 	boost::archive::binary_iarchive load_integral(ifs);
 	load_integral >> *this ;
@@ -645,8 +645,8 @@ class PartialTwoElectronArray : public TwoElectronArray // 2e integral, notation
     {
       char file [5000];
       sprintf (file, "%s%s%d%s%d%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", mpigetrank(), ".tmp");
-      cout << "\t\t\t Saving Integral file "<<file <<endl;
       if(mpigetrank() == 0) {
+	cout << "\t\t\t Saving Integral file "<<file <<endl;
 	std::ofstream ofs(file, std::ios::binary);
 	boost::archive::binary_oarchive save_integral(ofs);
 	save_integral << *this ;

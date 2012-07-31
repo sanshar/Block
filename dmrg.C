@@ -95,7 +95,6 @@ int calldmrg(char* input, char* output)
   ReadInput(input);
   MAX_THRD = dmrginp.thrds_per_node()[mpigetrank()];
   omp_set_num_threads(MAX_THRD);
-  cout << "MAXTHRDS "<<MAX_THRD<<endl;
 
   double sweep_tol = 1e-7;
   sweep_tol = dmrginp.get_sweep_tol();
