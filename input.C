@@ -301,9 +301,13 @@ SpinAdapted::Input::Input(const string& config_name)
       }
       else if (boost::iequals(keyword, "thrds_per_node") || boost::iequals(keyword, "threads_per_node")) {
 
+	int nprocs = 1;
+#ifndef SERIAL       
 	mpi::communicator world;
-	if (tok.size() !=  world.size()+1) {
-	  cerr << "keyword number of threads for each of the "<<world.size()<<" processes should be specified!"<<endl;
+	nprocs = world.size();
+#endif
+	if (tok.size() !=  nprocs+1) {
+	  cerr << "keyword number of threads for each of the "<<nprocs<<" processes should be specified!"<<endl;
 	  cerr << "error found in the following line "<<endl;
 	  cerr << msg<<endl;
 	  abort();
