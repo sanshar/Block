@@ -73,7 +73,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_noise_type = RANDOM;
   m_calc_type = DMRG;
   m_twodot_to_onedot_iter = 0;
-  m_integral_disk_storage_thresh = 4;//100; //this is usually 100
+  m_integral_disk_storage_thresh = 100; //this is usually 100
 
   m_norbs = 0;
   m_alpha = 0;
