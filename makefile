@@ -93,6 +93,7 @@ all	: $(EXECUTABLE) libqcdmrg.so
 
 library : $(OBJ_spin_library)
 	$(CXX) $(FLAGS) $(OPT) -shared -o libqcdmrg.so  $(OBJ_spin_library)
+	cd $(NEWMATLIB) && $(MAKE) -f makefile libnewmat.a
 
 libqcdmrg.so : $(OBJ_spin_library)
 	$(CXX) $(FLAGS) $(OPT) -shared -o libqcdmrg.so  $(OBJ_spin_library)
