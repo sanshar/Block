@@ -91,6 +91,9 @@ OBJ_spin_library=$(SRC_spin_library:.C=.o)
 
 all	: $(EXECUTABLE) libqcdmrg.so
 
+library : $(OBJ_spin_library)
+	$(CXX) $(FLAGS) $(OPT) -shared -o libqcdmrg.so  $(OBJ_spin_library)
+
 libqcdmrg.so : $(OBJ_spin_library)
 	$(CXX) $(FLAGS) $(OPT) -shared -o libqcdmrg.so  $(OBJ_spin_library)
 
