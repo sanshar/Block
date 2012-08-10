@@ -24,9 +24,6 @@ LAPACKBLAS = -L/opt/intel/mkl/lib/intel64/ -lmkl_intel_lp64 -lmkl_sequential -lm
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
 
-#use this variable to set if we will intel compiler or not
-INTEL = yes
-
 # use this variable to set if we will use integer size of 8 or not.
 # molpro compilation requires I8, since their integers are long
 I8_OPT = yes
@@ -37,6 +34,7 @@ endif
 
 EXECUTABLE = block.spin_adapted
 
+# change to icpc for Intel
 CXX = g++
 MPICXX = mpic++
 HOME = .
@@ -51,11 +49,14 @@ LIBS =  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp
 MPI_OPT = -DSERIAL
 
 
-ifeq ($(INTEL), yes)
+ifeq ($(notdir $(firstword $(CXX))),icpc)
+# Intel compiler
 	OPT = -O3 -funroll-loops -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) $(I8) -DFAST_MTP  -fopenmp
 #	OPT = -g -openmp  -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP 
 	CXX = icc
-else
+endif
+ifeq ($(notdir $(firstword $(CXX))),g++)
+# GNU compiler
 	OPT = -O3 -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT) $(I8) 
 #	OPT = -g -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT)
 endif
@@ -91,9 +92,7 @@ OBJ_spin_library=$(SRC_spin_library:.C=.o)
 
 all	: $(EXECUTABLE) libqcdmrg.so
 
-library : $(OBJ_spin_library)
-	$(CXX) $(FLAGS) $(OPT) -shared -o libqcdmrg.so  $(OBJ_spin_library)
-	cd $(NEWMATLIB) && $(MAKE) -f makefile libnewmat.a
+library : libqcdmrg.so $(NEWMATLIB)/libnewmat.a
 
 libqcdmrg.so : $(OBJ_spin_library)
 	$(CXX) $(FLAGS) $(OPT) -shared -o libqcdmrg.so  $(OBJ_spin_library)
