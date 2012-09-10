@@ -14,6 +14,9 @@ GNU General Public License for more details.
                                                                              
 You should have received a copy of the GNU General Public License            
 along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #ifndef COUPLING_COEFFS_H
