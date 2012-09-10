@@ -282,7 +282,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 	  
       SpinBlock newSystem;
 
-      if (warmUp)// && (sym=="dinfh"||sym=="trans"))
+      if (warmUp && (sym=="dinfh"||sym=="trans"))
 	Startup(sweepParams, system, newSystem);
       else {
 	if (sweepParams.set_sweep_iter() == 1 && sweepParams.get_block_iter() == 0)
