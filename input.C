@@ -891,7 +891,7 @@ void SpinAdapted::Input::performSanityTest()
     abort();
   }
   if (m_norbs/2 < 4) {
-    pout << "DMRG cannot be run with fewer than 4 orbitals!!"<<endl;
+    pout << "DMRG cannot be run with fewer than 4 orbitals"<<endl;
     abort();
   }
   if (m_norbs/2 > 200) {
