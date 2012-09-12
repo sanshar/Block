@@ -324,7 +324,7 @@ void restart(double sweep_tol, bool reset_iter)
   }
 
   if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
-    pout << "Maximum sweep iterations acheived " << std::endl;
+    pout << "Maximum sweep iterations achieved " << std::endl;
 
  
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
