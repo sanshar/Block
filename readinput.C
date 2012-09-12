@@ -79,7 +79,9 @@ void ReadInput(char* conf)
 
   CheckFileExistance(conf, "Input file ");
   //read the config file
+   pout << "ROA" << "readingInput" <<endl;
   dmrginp = Input(configFile);
+   pout << "ROA" << "redInput" <<endl;
 
   RESTART = dmrginp.get_restart();
   FULLRESTART = dmrginp.get_fullrestart();
