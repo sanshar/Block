@@ -763,7 +763,7 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   m_spatial_to_spin.push_back(m_norbs);
   m_spin_to_spatial.push_back(m_norbs);
 
-  while (!(boost::iequals(tok[0], "&END"))) {
+  while (!((boost::iequals(tok[0], "&END")) || (boost::iequals(tok[0], "/")))) {
     int temp;
     if (boost::iequals(tok[0], "NPROP") ) {
       NPROP.push_back( atoi(tok[1].c_str()));
