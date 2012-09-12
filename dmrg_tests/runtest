@@ -1,6 +1,6 @@
 echo "testing energy for c2_d2h..."
 cd c2_d2h
-../../block.roa dmrg.conf >dmrg.out
+../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 2  1.0e-6 -74.1299567218  -74.1255003600
 echo "testing 2-pdm for c2_d2h..."
 python ../test_twopdm.py spatial_twopdm.0.0 spat_twopdm.0.0.bkp 1e-7
@@ -10,7 +10,7 @@ cd ../
 
 echo "performing energy test on h2o..."
 cd h2o_nosym
-../../block.roa dmrg.conf >dmrg.out
+../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 1  1.0e-6 -76.11460447
 cd ../
 
