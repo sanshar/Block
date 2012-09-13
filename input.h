@@ -147,6 +147,9 @@ class Input {
   Input() {}
   Input (const std::string& config_name);
   void writeSummary();
+#ifdef MOLPRO
+  void writeSummaryForMolpro();
+#endif
   void performSanityTest();
   void readorbitalsfile(ifstream& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder, std::vector<int>&);

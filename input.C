@@ -22,6 +22,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#endif
+
 using namespace std;
 
 namespace SpinAdapted {
@@ -619,12 +623,21 @@ SpinAdapted::Input::Input(const string& config_name)
     CheckFileExistance(orbitalfile, "Orbital file ");
     readorbitalsfile(orbitalFile, v_1, v_2);
     
+#ifndef MOLPRO
     pout << "Checking Input for errors"<<endl;
     performSanityTest();
     pout << "Summary of Input"<<endl;
     pout << "----------------"<<endl;
     writeSummary();
     pout << endl;
+#else
+    xout << "Checking Input for errors"<<endl;
+    performSanityTest();
+    xout << "Summary of Input"<<endl;
+    xout << "----------------"<<endl;
+    writeSummaryForMolpro();
+    pout << endl;
+#endif
   }
 #ifndef SERIAL
   mpi::broadcast(world,*this,0);
@@ -829,6 +842,57 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   
 }
 
+#ifdef MOLPRO
+void SpinAdapted::Input::writeSummaryForMolpro()
+{
+#ifndef SERIAL
+  if (mpigetrank() == 0) {
+#endif
+     xout << setw(50) << "Total number of orbitals : "  ;
+     xout << m_norbs/2 << endl;
+     xout << setw(50) << "Symmetry of tragetted wavefunctions : " ;
+     xout << m_alpha + m_beta << ":" << m_alpha-m_beta << ":" << m_total_symmetry_number.getirrep()+1 << endl;
+     xout << setw(50) << "Number of wavefunctions targetted : " ;
+     xout << m_nroots << endl;
+     if (m_nroots >1) {
+        xout << setw(50) << "The weights of the wavefunctions : ";
+    for (int i=0; i<m_nroots; i++) 
+       xout << scientific << setprecision(2) << m_weights[i];
+    xout << endl;
+     }
+     xout << setw(50) << "Symmetry of the molecule : " ;
+     xout << sym << endl;
+     if (sym != "c1") {
+       xout << setw(50) << "Irreducible representation of the orbitals : " ;
+       for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) 
+          xout << Symmetry::stringOfIrrep(m_spin_orbs_symmetry[i])<<"  "; 
+       xout << endl;
+     }
+
+  if (m_calc_type == DMRG) {
+    xout << endl << "Schedule" << endl;
+    xout << "--------" << endl;
+   // Need to add proper spacing here, with setw( n);
+    xout << setw(10) << "Iter" ;
+    xout << setw(20) <<  "# States" ;
+    xout << setw(20) <<  "Davidson_tol" ;
+    xout << setw(20) << "Random_noise" << endl;
+    for (int i=0; i<m_sweep_iter_schedule.size(); i++) {
+       xout << setw(10) << m_sweep_iter_schedule[i]; 
+       xout << setw(20) << m_sweep_state_schedule[i];
+       xout << setw(20) << scientific << setprecision(4) << m_sweep_tol_schedule[i] ;
+       xout << setw(20) << scientific << setprecision(4) << m_sweep_noise_schedule[i] << endl;
+    }
+    if (m_algorithm_type == TWODOT_TO_ONEDOT) 
+       xout << setw(50) << "Switching from twodot to onedot algorithm : " << m_twodot_to_onedot_iter << endl << endl;
+    xout << setw(50) << "Maximum sweep iterations : " << m_maxiter << endl << endl;
+  }
+#ifndef SERIAL
+  }
+#endif
+}
+#endif
+
 void SpinAdapted::Input::writeSummary()
 {
 #ifndef SERIAL
@@ -865,7 +929,6 @@ void SpinAdapted::Input::writeSummary()
 #ifndef SERIAL
   }
 #endif
-  
 }
 
 void SpinAdapted::Input::performSanityTest()

@@ -19,6 +19,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "rotationmat.h"
 #include "density.h"
 
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#endif
+
 
 using namespace boost;
 using namespace std;
@@ -325,8 +329,15 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
   for(int j=0;j<nroots;++j){
     //pout << "\t\t\t M = "<<sweepParams.get_keep_states()<<"  Largest Discarded Weight = "<<finalError<<"  Sweep Energy = "<< finalEnergy[j]+dmrginp.get_coreenergy() << endl;
-    if (mpigetrank() == 0)
+    if (mpigetrank() == 0) {
+#ifdef MOLPRO
+      xout << "\t\t\t M = " <<  sweepParams.get_keep_states() ; 
+      xout << "\t Largest Discarded Weight = " << scientific << setprecision(8) << finalError ;
+      xout << "\t Sweep Energy = " << fixed << setprecision(10) << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
+#else 
       printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
+#endif
+    }
   }
   pout << "\t\t\t ============================================================================ " << endl;
 
