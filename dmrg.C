@@ -261,7 +261,8 @@ int calldmrg(char* input, char* output)
 }
 void calldmrg_(char* input, char* output) {
    int a;
-   a=calldmrg("dmrg.inp",0);//, output);
+   //a=calldmrg("dmrg.inp",0);//, output);
+   a=calldmrg(input, output);
 }
 
 void fullrestartGenblock() {
