@@ -445,7 +445,7 @@ vector< vector<int> > SpinAdapted::CSFUTIL::generate_partitions(int n)
 {
   //n is the irrep of the symmetry element.
   if (Symmetry::sizeofIrrep(n) == 1) {
-    cerr << "cannot generate parition of irrep which a single row "<<endl;
+    pout << "cannot generate parition of irrep which a single row "<<endl;
     exit(0);
   }
 

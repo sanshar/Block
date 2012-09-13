@@ -44,12 +44,12 @@ void CheckFileExistance(string filename, string filetype)
   boost::filesystem::path p(filename);
   if (boost::filesystem::exists(p)) {
     if (!boost::filesystem::is_regular_file(p)) {
-      cerr << filetype<<" "<<filename<<" is not a regular file."<<endl;
+      pout << filetype<<" "<<filename<<" is not a regular file."<<endl;
       abort();
     }
   }
   else {
-    cerr << filetype<<" "<<filename<<" is not present."<<endl;
+    pout << filetype<<" "<<filename<<" is not present."<<endl;
     abort();
   }
 }

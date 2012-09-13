@@ -42,8 +42,8 @@ void SpinAdapted::Input::ReadMeaningfulLine(ifstream& input, string& msg, int ms
 
     msg=string(msgctr);
     if(msg.size() == msgsize) {
-      cerr << "in the process of reading line begining with "<<endl<<msg<<endl;
-      cerr<< "this line is too long"<<endl;
+      pout << "in the process of reading line begining with "<<endl<<msg<<endl;
+      pout<< "this line is too long"<<endl;
       abort();
     }
     int pos = msg.find("!");
@@ -161,9 +161,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	  usedkey_error(keyword, msg);
 	usedkey[ORBS] = 0;
 	if (tok.size() != 2) {
-	  cerr << "keyword orbs should be followed by a single filename and then an end line"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword orbs should be followed by a single filename and then an end line"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}
 	orbitalfile = tok[1];
@@ -173,17 +173,17 @@ SpinAdapted::Input::Input(const string& config_name)
 	  usedkey_error(keyword, msg);
 	usedkey[MAXM] = 0;
 	if (tok.size() != 2) {
-	  cerr << "keyword maxM should be followed by a single number and then an end line"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword maxM should be followed by a single number and then an end line"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}	
 	m_maxM = atoi(tok[1].c_str());
 
 	if (m_maxM <= 0) {
-	  cerr << "maxM cannot be less than equal to 0"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "maxM cannot be less than equal to 0"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}	
 	  
@@ -194,9 +194,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	  usedkey_error(keyword, msg);
 	usedkey[REORDER] = 0;
 	if (tok.size() != 2) {
-	  cerr << "keyword reorder should be followed by the filename and then an end line"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword reorder should be followed by the filename and then an end line"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}	
 	m_reorder = true;
@@ -210,9 +210,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	usedkey[SCHEDULE] = 0;
 
 	if (tok.size() != 2 && tok.size() != 1) {
-	  cerr << "keyword schedule should be followed by the keyword \"default\" and then an end line or just an endline"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword schedule should be followed by the keyword \"default\" and then an end line or just an endline"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}
 	
@@ -239,9 +239,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	{
 	  
 	  if (schd_tok.size() != 4) {
-	    cerr << "Each line of the schedule contain four entries sweep_iteration   #retained states   davidson tolerance     noise"<<endl;
-	    cerr << "error found at the following line "<<endl;
-	    cerr<< msg<<endl;
+	    pout << "Each line of the schedule contain four entries sweep_iteration   #retained states   davidson tolerance     noise"<<endl;
+	    pout << "error found at the following line "<<endl;
+	    pout<< msg<<endl;
 	    abort();
 	  }
 	  
@@ -253,16 +253,16 @@ SpinAdapted::Input::Input(const string& config_name)
 	  m_sweep_additional_noise_schedule.push_back( 0.0);  //DEPRECATED OPTION
 	  
 	  if (m_sweep_state_schedule[i] <= 0) {
-	    cerr << "Number of retained states cannot be less than 0"<<endl;
-	    cerr << "error found in the following line "<<endl;
-	    cerr << msg<<endl;
+	    pout << "Number of retained states cannot be less than 0"<<endl;
+	    pout << "error found in the following line "<<endl;
+	    pout << msg<<endl;
 	  }
 	  if (i>0 && m_sweep_iter_schedule[i] <= m_sweep_iter_schedule[i-1]) {
-	    cerr << "Sweep iteration at a given line should be higher than the previous sweep iteration"<<endl;
-	    cerr << "this sweep iteration "<<m_sweep_iter_schedule[i] <<endl;
-	    cerr << "previous sweep iteration "<<m_sweep_iter_schedule[i-1]<<endl;
-	    cerr << "error found in the following line "<<endl;
-	    cerr << msg<<endl;
+	    pout << "Sweep iteration at a given line should be higher than the previous sweep iteration"<<endl;
+	    pout << "this sweep iteration "<<m_sweep_iter_schedule[i] <<endl;
+	    pout << "previous sweep iteration "<<m_sweep_iter_schedule[i-1]<<endl;
+	    pout << "error found in the following line "<<endl;
+	    pout << msg<<endl;
 	    abort();
 	  }
 	  i++;
@@ -284,9 +284,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	m_num_spatial_orbs = 0;
         //string sym;
 	if (tok.size() !=  2) {
-	  cerr << "keyword sym should be followed by a single string and then an end line"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword sym should be followed by a single string and then an end line"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}	
         sym = tok[1];
@@ -301,9 +301,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	nprocs = world.size();
 #endif
 	if (tok.size() !=  nprocs+1) {
-	  cerr << "keyword number of threads for each of the "<<nprocs<<" processes should be specified!"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword number of threads for each of the "<<nprocs<<" processes should be specified!"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}	
 	for (int i=1; i<tok.size(); i++)
@@ -314,9 +314,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	  usedkey_error(keyword, msg);
 	usedkey[NELECS] = 0;
 	if (tok.size() !=  2) {
-	  cerr << "keyword nelec should be followed by a single number and then an end line"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword nelec should be followed by a single number and then an end line"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}	
 	n_elec = atoi(tok[1].c_str());
@@ -331,9 +331,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	  usedkey_error(keyword, msg);
 	usedkey[SPIN] = 0;
 	if (tok.size() !=  2) {
-	  cerr << "keyword spin should be followed by a single number and then an end line"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword spin should be followed by a single number and then an end line"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}	
 	n_spin = atoi(tok[1].c_str());
@@ -348,9 +348,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	  usedkey_error(keyword, msg);
 	usedkey[IRREP] = 0;
 	if (tok.size() !=  2) {
-	  cerr << "keyword irrep should be followed by a single number and then an end line"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword irrep should be followed by a single number and then an end line"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}	
 	m_total_symmetry_number = IrrepSpace(atoi(tok[1].c_str())-1);
@@ -361,9 +361,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	m_calc_type = DMRG;
       else if (boost::iequals(keyword,  "maxj")) {
 	if (tok.size() !=  2) {
-	  cerr << "keyword maxj should be followed by a single integer and then an end line."<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword maxj should be followed by a single integer and then an end line."<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}	
         m_maxj = atoi(tok[1].c_str());
@@ -395,9 +395,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	usedkey[NROOTS] = 0;
         std::string nroots_str;
 	if (tok.size() != 2) {
-	  cerr << "keyword nroots should be followed by a single integer and then an end line."<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword nroots should be followed by a single integer and then an end line."<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}	
 
@@ -416,10 +416,10 @@ SpinAdapted::Input::Input(const string& config_name)
         m_weights.resize(m_nroots);
 
 	if (weighttoken.size() != m_nroots +1 ) {
-	  cerr << "keyword weights should be followed by floating point numbers providing weights for "<<m_nroots<<" states."<<endl;
-	  cerr << "You could chose to omit the keyworkd weights in which case the weights will be distributed uniformly between the different roots"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword weights should be followed by floating point numbers providing weights for "<<m_nroots<<" states."<<endl;
+	  pout << "You could chose to omit the keyworkd weights in which case the weights will be distributed uniformly between the different roots"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}
         double norm = 0.;
@@ -429,14 +429,14 @@ SpinAdapted::Input::Input(const string& config_name)
           m_weights[i-1] = atof(weighttoken[i].c_str());  
           norm += m_weights[i-1];
 	  if (m_weights[i-1] <1e-10) {
-	    cerr<< "Weight of a state cannot be less than 1e.0e-10"<<endl;
-	    cerr << "error found in the following line "<<endl;
-	    cerr << msg<<endl;
+	    pout<< "Weight of a state cannot be less than 1e.0e-10"<<endl;
+	    pout << "error found in the following line "<<endl;
+	    pout << msg<<endl;
 	    abort();
 	  }
         }  
 	if (norm <= 1.e-10) {
-	  cerr<< "Weights should add up to approximately 1.0. Currently they add up to "<<norm<<endl;
+	  pout<< "Weights should add up to approximately 1.0. Currently they add up to "<<norm<<endl;
 	  abort();
 	}
 
@@ -454,9 +454,9 @@ SpinAdapted::Input::Input(const string& config_name)
       else if(boost::iequals(keyword,  "deflation_max_size") || boost::iequals(keyword,  "max_deflation_size"))
       {
 	if (tok.size() !=  2) {
-	  cerr << "keyword "<<keyword<<" should be followed by a single number and then an endline"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword "<<keyword<<" should be followed by a single number and then an endline"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}
         m_deflation_max_size = atoi(tok[1].c_str());
@@ -469,9 +469,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	  usedkey_error(keyword, msg);
 	usedkey[MAXITER] = 0;
 	if (tok.size() !=  2) {
-	  cerr << "keyword maxiter should be followed by a single integer and then an endline"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword maxiter should be followed by a single integer and then an endline"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}
         m_maxiter = atoi(tok[1].c_str());
@@ -484,9 +484,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	  usedkey_error(keyword, msg);
 	usedkey[SCREEN_TOL] = 0;
 	if (tok.size() != 2) {
-	  cerr << "keyword screen_tol should be followed by a single number and then an endline"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword screen_tol should be followed by a single number and then an endline"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}
         m_screen_tol = atof(tok[1].c_str());
@@ -510,9 +510,9 @@ SpinAdapted::Input::Input(const string& config_name)
       else if(boost::iequals(keyword,  "twodot_to_onedot"))
       {
 	if (tok.size() !=  2) {
-	  cerr << "keyword twodot_to_onedot should be followed by a single number and then an endline"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword twodot_to_onedot should be followed by a single number and then an endline"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}
         m_algorithm_type = TWODOT_TO_ONEDOT;
@@ -527,9 +527,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	  usedkey_error(keyword, msg);
 	usedkey[SWEEP_TOL] = 0;
 	if (tok.size() !=  2) {
-	  cerr << "keyword sweep_tol should be followed by a single number and then an endline"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword sweep_tol should be followed by a single number and then an endline"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}
 	if (boost::iequals(tok[1], "loose"))
@@ -541,7 +541,7 @@ SpinAdapted::Input::Input(const string& config_name)
 	else
 	  m_sweep_tol = atof(tok[1].c_str());
 	if (m_sweep_tol <= 1.0e-10) {
-	  cerr << "Sweep tolerance of less than equal to 1.0e-10 may cause convergence problems. Changing it to from "<<m_sweep_tol<<" to 1.0e-9 instead."<<endl;
+	  pout << "Sweep tolerance of less than equal to 1.0e-10 may cause convergence problems. Changing it to from "<<m_sweep_tol<<" to 1.0e-9 instead."<<endl;
 	  m_sweep_tol = 1.0e-9;
 	}
       }
@@ -549,9 +549,9 @@ SpinAdapted::Input::Input(const string& config_name)
 
       else if (boost::iequals(keyword,  "outputlevel")) {
 	if (tok.size() != 2) {
-	  cerr << "keyword outputlevel should be followed by a single integer and then an endline"<<endl;
-	  cerr << "error found in the following line "<<endl;
-	  cerr << msg<<endl;
+	  pout << "keyword outputlevel should be followed by a single integer and then an endline"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
 	  abort();
 	}
         m_outputlevel = atoi(tok[1].c_str());
@@ -575,8 +575,8 @@ SpinAdapted::Input::Input(const string& config_name)
       else
       {
         pout << "Unrecognized option :: " << keyword << endl;
-	cerr << "error found in the following line "<<endl;
-	cerr << msg<<endl;
+	pout << "error found in the following line "<<endl;
+	pout << msg<<endl;
         abort();
       }
       msg.resize(0);
@@ -937,7 +937,7 @@ void SpinAdapted::Input::performSanityTest()
   if (mpigetrank() == 0) {
 #endif
   if (m_norbs <= 0) {
-    cerr << "total number of orbitals has to be a positive number"<<endl;
+    pout << "total number of orbitals has to be a positive number"<<endl;
     abort();
   }
   if (m_norbs/2 < 4) {
@@ -945,19 +945,19 @@ void SpinAdapted::Input::performSanityTest()
     abort();
   }
   if (m_norbs/2 > 200) {
-    cerr << "Number of orbitals cannot be greater than 130"<<endl;
+    pout << "Number of orbitals cannot be greater than 130"<<endl;
     abort();
   }
   if (m_alpha+m_beta <= 0) {
-    cerr << "Total number of electrons cannot be negative"<<endl;
+    pout << "Total number of electrons cannot be negative"<<endl;
     abort();
   }
   if (m_alpha < m_beta) {
-    cerr << "DMRG requires the spin to a positive number and less than the total number of electrons"<<endl;
+    pout << "DMRG requires the spin to a positive number and less than the total number of electrons"<<endl;
     abort();
   }
   if (m_norbs < m_alpha+m_beta) {
-    cerr<< "No of spin orbitals has to be greater than total number of electrons"<<endl;
+    pout<< "No of spin orbitals has to be greater than total number of electrons"<<endl;
     abort();
   }
   for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) {
@@ -976,8 +976,8 @@ void SpinAdapted::Input::performSanityTest()
   //this is important so the user cannot break the code
   if (m_schedule_type_default) {
     if (m_maxM == 0) {
-      cerr << "With default schedule a non-zero maxM has to be specified"<<endl;
-      cerr << "Current m_maxM = "<<m_maxM<<endl;
+      pout << "With default schedule a non-zero maxM has to be specified"<<endl;
+      pout << "Current m_maxM = "<<m_maxM<<endl;
       abort();
     }
     if (m_maxM <= 0) {
@@ -1124,16 +1124,16 @@ void SpinAdapted::Input::performSanityTest()
     m_twodot_to_onedot_iter = min(m_sweep_iter_schedule.back()+2, m_maxiter-1);
 
   if (m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter >= m_maxiter) {
-    cerr << "Switch from twodot to onedot algorithm cannot happen after maxiter"<<endl;
-    cerr << m_twodot_to_onedot_iter <<" < "<<m_maxiter<<endl;
+    pout << "Switch from twodot to onedot algorithm cannot happen after maxiter"<<endl;
+    pout << m_twodot_to_onedot_iter <<" < "<<m_maxiter<<endl;
     abort();
   }
 
 
   if (m_maxiter < m_sweep_iter_schedule.back()) {
-    cerr << "maximum iterations allowed is less than the last sweep iteration in your schedule."<<endl;
-    cerr << m_maxiter <<" < "<< (m_sweep_iter_schedule.back())<<endl;
-    cerr << "either increase the max_iter or reduce the number of sweeps"<<endl;
+    pout << "maximum iterations allowed is less than the last sweep iteration in your schedule."<<endl;
+    pout << m_maxiter <<" < "<< (m_sweep_iter_schedule.back())<<endl;
+    pout << "either increase the max_iter or reduce the number of sweeps"<<endl;
     abort();
   }
 
