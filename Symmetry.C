@@ -128,8 +128,8 @@ void Symmetry::InitialiseTable(string psym)
     //do nothing;
   }
   else {
-    cerr << "Symmetry of the molecule has to be one of c1, ci, c2h, c2v, d2h or dinfh"<<endl;
-    cerr << "Symmetry provided in the input file "<<sym<<endl;
+    pout << "Symmetry of the molecule has to be one of c1, ci, c2h, c2v, d2h or dinfh"<<endl;
+    pout << "Symmetry provided in the input file "<<sym<<endl;
     abort();
   }
 
@@ -138,23 +138,23 @@ void Symmetry::InitialiseTable(string psym)
 bool Symmetry::irrepAllowed(int irrep)
 {
   if (sym == "dinfh" && ((irrep<0 && irrep >-4) || irrep == 2 || irrep == 3)) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with dinfh symmetry"<<endl;
+    pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with dinfh symmetry"<<endl;
     abort();
   }
   if (sym == "d2h" && (irrep<0 || irrep >= 8)) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
+    pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
   if ((sym == "c2v" || sym == "c2h") && (irrep<0 || irrep >= 4)) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
+    pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
   if (sym == "ci" && (irrep <0 || irrep >=2)) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
+    pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
   if (sym == "c1" && irrep != 0) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
+    pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
   if (sym == "trans") {
@@ -163,7 +163,7 @@ bool Symmetry::irrepAllowed(int irrep)
 	irreps[1] >= NPROP[1] || irreps[1]< 0 ||
 	irreps[2] >= NPROP[2] || irreps[2]< 0 ) {
       
-      cerr << "decompressing the irrep "<<irrep<<" leads to k points "<<irreps[0]<<"  "<<irreps[1]<<"  "<<irreps[2]<<endl;
+      pout << "decompressing the irrep "<<irrep<<" leads to k points "<<irreps[0]<<"  "<<irreps[1]<<"  "<<irreps[2]<<endl;
       abort();
     }
   }
@@ -376,11 +376,11 @@ double Symmetry::spatial_ninej(int j1, int j2, int j12, int j3, int j4, int j34,
 double Symmetry::spatial_cg(int a, int b, int c, int rowa, int rowb, int rowc) {
   if (sym == "dinfh") {
     if (a<4 && rowa != 0)
-      { cerr<<"a= "<<a<<" and row = "<<rowa<<endl; exit(0);} 
+      { pout<<"a= "<<a<<" and row = "<<rowa<<endl; exit(0);} 
     if (b<4 && rowb != 0)
-      { cerr<<"b= "<<b<<" and row = "<<rowb<<endl; exit(0);} 
+      { pout<<"b= "<<b<<" and row = "<<rowb<<endl; exit(0);} 
     if (c<4 && rowc != 0)
-      { cerr<<"c= "<<c<<" and row = "<<rowc<<endl; exit(0);} 
+      { pout<<"c= "<<c<<" and row = "<<rowc<<endl; exit(0);} 
     int la, lb, lc;
     la = (2*rowa-1) * (max(0,a-2))/2; 
     lb = (2*rowb-1) * (max(0,b-2))/2; 
