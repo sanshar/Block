@@ -263,8 +263,8 @@ int calldmrg(char* input, char* output)
 }
 void calldmrg_(char* input, char* output) {
    int a;
-   //a=calldmrg("dmrg.inp",0);//, output);
-   a=calldmrg(input, output);
+   a=calldmrg("dmrg.inp",0);//, output);
+   //a=calldmrg(input, output);
 }
 
 void fullrestartGenblock() {
@@ -383,7 +383,7 @@ void dmrg(double sweep_tol)
 
     }
   if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
-    pout << "Maximum sweep iterations acheived " << std::endl;
+    pout << "Maximum sweep iterations achieved " << std::endl;
 
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
   if (!mpigetrank())

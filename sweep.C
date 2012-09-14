@@ -288,8 +288,15 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       if (!warmUp){// || !(sym == "dinfh"||sym=="trans") ){
 	
 	for(int j=0;j<nroots;++j)
+#ifndef MOLPRO
 	  pout << "\t\t\t Total block energy for State [ " << j << 
 	    " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+#else 
+      //if (dmrginp.molpro_output_level() != 0) {
+	  xout << "\t\t\t Total block energy for State [ " << j << 
+	    " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+      //}
+#endif
 	
 	finalEnergy_spins = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy_spins() : finalEnergy_spins);
 	finalEnergy = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy() : finalEnergy);
@@ -328,14 +335,13 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
   for(int j=0;j<nroots;++j){
-    //pout << "\t\t\t M = "<<sweepParams.get_keep_states()<<"  Largest Discarded Weight = "<<finalError<<"  Sweep Energy = "<< finalEnergy[j]+dmrginp.get_coreenergy() << endl;
     if (mpigetrank() == 0) {
-#ifdef MOLPRO
+#ifndef MOLPRO
+      printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
+#else 
       xout << "\t\t\t M = " <<  sweepParams.get_keep_states() ; 
       xout << "\t Largest Discarded Weight = " << scientific << setprecision(8) << finalError ;
       xout << "\t Sweep Energy = " << fixed << setprecision(10) << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
-#else 
-      printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
 #endif
     }
   }
