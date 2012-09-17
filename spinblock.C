@@ -463,6 +463,7 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   }
 
   stateInfo = StateInfo (dets);
+  twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
   build_iterators();
 
   if (dmrginp.outputlevel() != 0) 
