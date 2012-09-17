@@ -15,6 +15,10 @@ LAPACKBLAS = -L/opt/intel/mkl/lib/intel64/ -lmkl_intel_lp64 -lmkl_sequential -lm
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
 
+AR=ar
+ARFLAGS=-qs
+RANLIB=ranlib
+
 # use this variable to set if we will use integer size of 8 or not.
 # molpro compilation requires I8, since their integers are long
 I8_OPT = yes
@@ -86,12 +90,13 @@ OBJ_spin_library=$(SRC_spin_library:.C=.o)
 .cpp.o :
 	$(CXX) $(FLAGS) $(OPT) -c $< -o $@
 
-all	: $(EXECUTABLE) libqcdmrg.so
+all	: $(EXECUTABLE) libqcdmrg.a
 
-library : libqcdmrg.so $(NEWMATLIB)/libnewmat.a
+library : libqcdmrg.a $(NEWMATLIB)/libnewmat.a
 
-libqcdmrg.so : $(OBJ_spin_library)
-	$(CXX) $(FLAGS) $(OPT) -shared -o libqcdmrg.so  $(OBJ_spin_library)
+libqcdmrg.a : $(OBJ_spin_library)
+	$(AR) $(ARFLAGS) $@ $^
+	$(RANLIB) $@
 
 $(EXECUTABLE) : $(OBJ_spin_adapted) $(NEWMATLIB)/libnewmat.a
 	$(CXX)   $(FLAGS) $(OPT) -o  $(EXECUTABLE) $(OBJ_spin_adapted) $(LIBS) -lnewmat
