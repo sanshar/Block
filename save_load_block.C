@@ -155,6 +155,7 @@ void SpinBlock::addAdditionalCompOps()
 	continue;
     }
     //dmrginp.datatransfer.stop();
+    //dmrginp.datatransfer -> stop(); //ROA
       
   }
 #endif

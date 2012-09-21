@@ -261,15 +261,15 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
 
 void SpinBlock::BuildSumBlock(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState)
 {
-  dmrginp.buildsumblock.start();
+  dmrginp.buildsumblock -> start();
   BuildSumBlockSkeleton(condition, lBlock, rBlock, compState);
 
   build_iterators();
 
-  dmrginp.buildblockops.start();
+  dmrginp.buildblockops -> start();
   build_operators();
-  dmrginp.buildblockops.stop();
-  dmrginp.buildsumblock.stop();
+  dmrginp.buildblockops -> stop();
+  dmrginp.buildsumblock -> stop();
 }
 
 
@@ -304,21 +304,21 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   
   int maxt = 1;
   initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
-  dmrginp.oneelecT.start();
-  dmrginp.s0time.start();
+  dmrginp.oneelecT -> start();
+  dmrginp.s0time -> start();
   boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0];
   TensorMultiply(leftBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);
 
   op = rightBlock->get_op_array(HAM).get_local_element(0)[0];
   TensorMultiply(rightBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum(), 1.0, MAX_THRD);  
 
-  dmrginp.s0time.stop();
+  dmrginp.s0time -> stop();
 #ifndef SERIAL
   boost::mpi::communicator world;
   int size = world.size();
 #endif
 
-  dmrginp.s1time.start();
+  dmrginp.s1time -> start();
   v_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
   Functor f = boost::bind(&opxop::cxcddcomp, leftBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
   for_all_multithread(rightBlock->get_op_array(CRE), f);
@@ -327,15 +327,15 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   f = boost::bind(&opxop::cxcddcomp, rightBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
   for_all_multithread(leftBlock->get_op_array(CRE), f);  
 
-  dmrginp.s1time.stop();
+  dmrginp.s1time -> stop();
 
-  dmrginp.oneelecT.stop();
+  dmrginp.oneelecT -> stop();
 
-  dmrginp.twoelecT.start();
+  dmrginp.twoelecT -> start();
 
   if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
     
-    dmrginp.s0time.start();
+    dmrginp.s0time -> start();
     v_add =  otherBlock->get_op_array(CRE_DESCOMP).is_local() ? v_array : v_distributed;
     f = boost::bind(&opxop::cdxcdcomp, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
     for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
@@ -343,9 +343,9 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
     v_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? v_array : v_distributed;
     f = boost::bind(&opxop::ddxcccomp, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
     for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);
-    dmrginp.s0time.stop();
+    dmrginp.s0time -> stop();
   }
-  dmrginp.twoelecT.stop();
+  dmrginp.twoelecT -> stop();
 
   accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
 

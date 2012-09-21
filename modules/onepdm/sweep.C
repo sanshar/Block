@@ -14,7 +14,7 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 {
   //mcheck("at the start of block and decimate");
   // figure out if we are going forward or backwards
-  dmrginp.guessgenT.start();
+  dmrginp.guessgenT -> start();
   bool forward = (system.get_sites() [0] == 0);
   SpinBlock systemDot;
   SpinBlock envDot;

@@ -401,6 +401,7 @@ double SpinAdapted::CheckSum (Matrix& a)
 void SpinAdapted::MatrixMultiply (const Matrix& a, char conjA, const Matrix& b, char conjB, Matrix& c, Real scale, double cfactor)
 {
   //dmrginp.justmultiply.start();
+  //dmrginp.justmultiply -> start(); //ROA
   Matrix& a_ref = const_cast<Matrix&>(a); // for BLAS calls
   Matrix& b_ref = const_cast<Matrix&>(b);
   try
@@ -456,6 +457,7 @@ void SpinAdapted::MatrixMultiply (const Matrix& a, char conjA, const Matrix& b, 
       abort ();
    }
   //dmrginp.justmultiply.stop();
+  //dmrginp.justmultiply -> stop(); //ROA
 }
 
 void SpinAdapted::CatenateProduct (const ObjectMatrix<Matrix*>& a, Matrix& b, bool allocate)

@@ -42,18 +42,18 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 {
   int nroots = dmrginp.nroots(sweepiter);
   vector<Wavefunction> wave_solutions(nroots);
-  dmrginp.davidsonT.start();
+  dmrginp.davidsonT -> start();
   if (dmrginp.outputlevel() != 0)
     mcheck("before davidson but after all blocks are built");
 
-  dmrginp.solvewf.start();
+  dmrginp.solvewf -> start();
   Solver::solve_wavefunction(wave_solutions, energies, big, tol, guesswavetype, onedot, dot_with_sys, warmUp, additional_noise);
 
-  dmrginp.solvewf.stop();
+  dmrginp.solvewf -> stop();
   SpinBlock newsystem;
   SpinBlock newenvironment;
   SpinBlock newbig;
-  dmrginp.postwfrearrange.start();
+  dmrginp.postwfrearrange -> start();
 
   if (onedot && !dot_with_sys)
   {
@@ -73,14 +73,14 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   }
   else
     newbig = big;
-  dmrginp.postwfrearrange.stop();
+  dmrginp.postwfrearrange -> stop();
 
   if (dmrginp.outputlevel() != 0)
     mcheck("after davidson before noise");
 
-  dmrginp.davidsonT.stop();
+  dmrginp.davidsonT -> stop();
 
-  dmrginp.rotmatrixT.start();
+  dmrginp.rotmatrixT -> start();
   DensityMatrix tracedMatrix;
   tracedMatrix.allocate(stateInfo);
 
@@ -88,13 +88,13 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   if (newbig.get_rightBlock()->size() < 2)
     normalnoise = true;
   
-  dmrginp.addnoise.start();
+  dmrginp.addnoise -> start();
   double twodotnoise = 0.0;
   if (dmrginp.noise_type() == RANDOM)
     twodotnoise = additional_noise;
   
   tracedMatrix.makedensitymatrix(wave_solutions, newbig, dmrginp.weights(sweepiter), noise, twodotnoise, normalnoise);
-  dmrginp.addnoise.stop();
+  dmrginp.addnoise -> stop();
   if (dmrginp.outputlevel() != 0)
     mcheck("after density matrix before rotation matrix");
   if (!mpigetrank())
@@ -109,7 +109,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
     SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix, i);
   for(int i=0;i<nroots;++i)
     wave_solutions[i].SaveWavefunctionInfo (newbig.stateInfo, newbig.leftBlock->sites, i);
-  dmrginp.rotmatrixT.stop();
+  dmrginp.rotmatrixT -> stop();
   if (dmrginp.outputlevel() != 0)
     mcheck("after noise and calulation of density matrix");
 }

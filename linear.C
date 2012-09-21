@@ -106,7 +106,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	pout << "\t\t\t Davidson Iteration :: " << iter << endl;
 
       ++iter;
-      dmrginp.hmultiply.start();
+      dmrginp.hmultiply -> start();
 
       int sigmasize, bsize;
 
@@ -151,7 +151,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	  h_multiply(*bptr, *sigmaptr);
 	  
 	}
-      dmrginp.hmultiply.stop();
+      dmrginp.hmultiply -> stop();
 
       Wavefunction r;
       DiagonalMatrix subspace_eigenvalues;

@@ -212,9 +212,9 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
   // now initialise newEnvironment
   if (!dot_with_sys || !onedot)
   {
-    dmrginp.datatransfer.start();
+    dmrginp.datatransfer -> start();
     environment.addAdditionalCompOps();
-    dmrginp.datatransfer.stop();
+    dmrginp.datatransfer -> stop();
 
       newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops);
       newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);

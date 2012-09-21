@@ -88,6 +88,9 @@ int calldmrg(char* input, char* output)
   MAX_THRD = dmrginp.thrds_per_node()[mpigetrank()];
   omp_set_num_threads(MAX_THRD);
 
+   //Initializing timer calls
+  dmrginp.initCumulTimer();
+
   double sweep_tol = 1e-7;
   sweep_tol = dmrginp.get_sweep_tol();
   bool direction;

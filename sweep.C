@@ -36,7 +36,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   }
   pout <<endl<< "\t\t\t Performing Blocking"<<endl;
   // figure out if we are going forward or backwards
-  dmrginp.guessgenT.start();
+  dmrginp.guessgenT -> start();
   bool forward = (system.get_sites() [0] == 0);
   SpinBlock systemDot;
   SpinBlock envDot;
@@ -82,9 +82,9 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 
   //before halfway put the sysdot with system otherwise with environment
   if (!sweepParams.get_onedot()) {
-      dmrginp.datatransfer.start();
+      dmrginp.datatransfer -> start();
       system.addAdditionalCompOps();
-      dmrginp.datatransfer.stop();
+      dmrginp.datatransfer -> stop();
       InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), 
       			     DISTRIBUTED_STORAGE, dot_with_sys, true);
       if (dmrginp.outputlevel() != 0)
@@ -97,9 +97,9 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 	mcheck("");
   }
   else {
-    dmrginp.datatransfer.start();
+    dmrginp.datatransfer -> start();
     system.addAdditionalCompOps();
-    dmrginp.datatransfer.stop();
+    dmrginp.datatransfer -> stop();
     if (dot_with_sys) {
       InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, dot_with_sys, true);
 
@@ -133,8 +133,8 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     }
   }
   //analyse_operator_distribution(big);
-  dmrginp.guessgenT.stop();
-  dmrginp.multiplierT.start();
+  dmrginp.guessgenT -> stop();
+  dmrginp.multiplierT -> start();
   std::vector<Matrix> rotatematrix;
 
   if (dmrginp.outputlevel() != 0)
@@ -172,12 +172,12 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   pout <<"\t\t\t Performing Renormalization "<<endl;
   pout << "\t\t\t Total discarded weight "<<sweepParams.set_lowest_error()<<endl<<endl;
 
-  dmrginp.multiplierT.stop();
-  dmrginp.operrotT.start();
+  dmrginp.multiplierT -> stop();
+  dmrginp.operrotT -> start();
 
   newSystem.transform_operators(rotatematrix);
   storeStates[2] = newSystem.get_stateInfo();
-  dmrginp.operrotT.stop();
+  dmrginp.operrotT -> stop();
   if (dmrginp.outputlevel() != 0)
     mcheck("after rotation and transformation of block");
 
@@ -362,7 +362,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem)
 {
   mcheck("at the start of block and decimate");
-  dmrginp.guessgenT.start();
+  dmrginp.guessgenT -> start();
   bool forward = (system.get_sites() [0] == 0);
   SpinBlock systemDot;
   int systemDotStart, systemDotEnd;
@@ -384,9 +384,9 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
-  dmrginp.datatransfer.start();
+  dmrginp.datatransfer -> start();
   system.addAdditionalCompOps();
-  dmrginp.datatransfer.stop();
+  dmrginp.datatransfer -> stop();
   InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), 
 				 DISTRIBUTED_STORAGE, true, true);
 
@@ -435,11 +435,11 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   broadcast(world, rotateMatrix, 0);
 #endif
 
-  dmrginp.operrotT.start();
+  dmrginp.operrotT -> start();
   newSystem.transform_operators(rotateMatrix);
   for (int i=0; i<dmrginp.nroots(); i++)
     SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, i);
-  dmrginp.operrotT.stop();
+  dmrginp.operrotT -> stop();
   mcheck("after rotation and transformation of block");
   
 
