@@ -14,7 +14,12 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <iostream>
 #include <cstdlib>
 #include <cassert>
+#include <execinfo.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 #ifndef SERIAL
+#include <boost/serialization/shared_ptr.hpp>
 #include <boost/mpi/timer.hpp>
 #endif
 
@@ -25,8 +30,8 @@ class cumulTimer
  public:
 
 #ifndef SERIAL
-  cumulTimer() : localStart(0), cumulativeSum(0){ t = boost::mpi::timer();};
-  void start() {if(!omp_get_thread_num()) {localStart = t.elapsed();}}
+ cumulTimer() : localStart(0), cumulativeSum(0){t = boost::shared_ptr<boost::mpi::timer> (new boost::mpi::timer());};
+  void start() {if(!omp_get_thread_num()) {localStart = t->elapsed();}}
 #else
   cumulTimer() : localStart(0), cumulativeSum(0) {};
   void start() {localStart = clock();}
@@ -43,7 +48,7 @@ class cumulTimer
 	  abort();
 	}
 #ifndef SERIAL
-      cumulativeSum = cumulativeSum + t.elapsed() - localStart;
+      cumulativeSum = cumulativeSum + t->elapsed() - localStart;
 #else
       cumulativeSum = cumulativeSum + clock() - localStart;
 #endif
@@ -59,7 +64,7 @@ class cumulTimer
 
  private:
 #ifndef SERIAL
-  boost::mpi::timer t;
+  boost::shared_ptr<boost::mpi::timer> t;
 #endif
   double localStart;
   double cumulativeSum;
@@ -71,10 +76,10 @@ public:
   Timer(bool s) { if (s) start(); }
   Timer() { start(); }
 #ifndef SERIAL
-  void start() { t = boost::mpi::timer(); walltime = t.elapsed(); lastwalltime = walltime; wallstarttime = walltime; cputime = clock(); lastcputime = cputime; cpustarttime = cputime; }  
-  double elapsedwalltime() { walltime = t.elapsed(); double elapsed = walltime - lastwalltime; lastwalltime = walltime; return elapsed; }
+  void start() { t = boost::shared_ptr<boost::mpi::timer>(new boost::mpi::timer()); walltime = t->elapsed(); lastwalltime = walltime; wallstarttime = walltime; cputime = clock(); lastcputime = cputime; cpustarttime = cputime; }  
+  double elapsedwalltime() { walltime = t->elapsed(); double elapsed = walltime - lastwalltime; lastwalltime = walltime; return elapsed; }
   double elapsedcputime() { cputime = clock(); double elapsed = double(cputime - lastcputime) / double(CLOCKS_PER_SEC); lastcputime = cputime; return elapsed; }
-  double totalwalltime() { return t.elapsed() - wallstarttime; }
+  double totalwalltime() { return t->elapsed() - wallstarttime; }
   double totalcputime() { return (double)(clock() - cpustarttime) / double(CLOCKS_PER_SEC); }
 #else
   void start() { walltime = time(NULL); lastwalltime = walltime; wallstarttime = walltime; cputime = clock(); lastcputime = cputime; cpustarttime = cputime; }  
@@ -85,7 +90,7 @@ public:
 #endif
 private:
 #ifndef SERIAL
-  boost::mpi::timer t;
+  boost::shared_ptr<boost::mpi::timer> t;
   double  walltime;
   double lastwalltime;
   double wallstarttime;

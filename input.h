@@ -146,6 +146,39 @@ class Input {
   //Input() : m_ninej(ninejCoeffs::getinstance()){}
   Input() {}
   Input (const std::string& config_name);
+  // ROA
+  void initCumulTimer()
+  {
+     
+  guessgenT       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  multiplierT     = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  operrotT        = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  davidsonT       = boost::shared_ptr<cumulTimer> (new cumulTimer()); 
+  rotmatrixT      = boost::shared_ptr<cumulTimer> (new cumulTimer()); 
+  blockdavid      = boost::shared_ptr<cumulTimer> (new cumulTimer()); 
+  datatransfer    = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  hmultiply       = boost::shared_ptr<cumulTimer> (new cumulTimer()); 
+  oneelecT        = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  twoelecT        = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  makeopsT        = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  collectqT       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  opallocate      = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  opcatenate      = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  oprelease       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  opequateT       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  justmultiply    = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  spinrotation    = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  otherrotation   = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  solvewf         = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  postwfrearrange = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  couplingcoeff   = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  buildsumblock   = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  buildblockops   = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  addnoise        = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  s0time          = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  s1time          = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  s2time          = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  }
   void writeSummary();
 #ifdef MOLPRO
   void writeSummaryForMolpro();
@@ -156,12 +189,42 @@ class Input {
   void usedkey_error(string& key, string& line);
 
   static void ReadMeaningfulLine(ifstream&, string&, int);
-  cumulTimer guessgenT, multiplierT, operrotT, davidsonT, rotmatrixT, blockdavid, datatransfer;
-  cumulTimer hmultiply, oneelecT, twoelecT, makeopsT, collectqT;
-  cumulTimer opallocate, opcatenate, oprelease, opequateT, justmultiply;
-  cumulTimer spinrotation, otherrotation, solvewf, postwfrearrange, couplingcoeff;
-  cumulTimer buildsumblock, buildblockops, addnoise;
-  cumulTimer s0time, s1time, s2time;
+
+  boost::shared_ptr<cumulTimer> guessgenT; 
+  boost::shared_ptr<cumulTimer> multiplierT; 
+  boost::shared_ptr<cumulTimer> operrotT; 
+  boost::shared_ptr<cumulTimer> davidsonT; 
+  boost::shared_ptr<cumulTimer> rotmatrixT; 
+  boost::shared_ptr<cumulTimer> blockdavid; 
+  boost::shared_ptr<cumulTimer> datatransfer; 
+  boost::shared_ptr<cumulTimer> hmultiply; 
+  boost::shared_ptr<cumulTimer> oneelecT; 
+  boost::shared_ptr<cumulTimer> twoelecT; 
+  boost::shared_ptr<cumulTimer> makeopsT; 
+  boost::shared_ptr<cumulTimer> collectqT; 
+  boost::shared_ptr<cumulTimer> opallocate; 
+  boost::shared_ptr<cumulTimer> opcatenate; 
+  boost::shared_ptr<cumulTimer> oprelease; 
+  boost::shared_ptr<cumulTimer> opequateT; 
+  boost::shared_ptr<cumulTimer> justmultiply; 
+  boost::shared_ptr<cumulTimer> spinrotation; 
+  boost::shared_ptr<cumulTimer> otherrotation; 
+  boost::shared_ptr<cumulTimer> solvewf; 
+  boost::shared_ptr<cumulTimer> postwfrearrange; 
+  boost::shared_ptr<cumulTimer> couplingcoeff; 
+  boost::shared_ptr<cumulTimer> buildsumblock; 
+  boost::shared_ptr<cumulTimer> buildblockops; 
+  boost::shared_ptr<cumulTimer> addnoise; 
+  boost::shared_ptr<cumulTimer> s0time; 
+  boost::shared_ptr<cumulTimer> s1time; 
+  boost::shared_ptr<cumulTimer> s2time; 
+
+  //cumulTimer guessgenT, multiplierT, operrotT, davidsonT, rotmatrixT, blockdavid, datatransfer;
+  //cumulTimer hmultiply, oneelecT, twoelecT, makeopsT, collectqT;
+  //cumulTimer opallocate, opcatenate, oprelease, opequateT, justmultiply;
+  //cumulTimer spinrotation, otherrotation, solvewf, postwfrearrange, couplingcoeff;
+  //cumulTimer buildsumblock, buildblockops, addnoise;
+  //cumulTimer s0time, s1time, s2time; 
 
   const orbitalFormat& orbformat() const {return m_orbformat;}
   const int& outputlevel() const {return m_outputlevel;}
