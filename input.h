@@ -149,7 +149,6 @@ class Input {
   // ROA
   void initCumulTimer()
   {
-     
   guessgenT       = boost::shared_ptr<cumulTimer> (new cumulTimer());
   multiplierT     = boost::shared_ptr<cumulTimer> (new cumulTimer());
   operrotT        = boost::shared_ptr<cumulTimer> (new cumulTimer());

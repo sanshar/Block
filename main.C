@@ -15,6 +15,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <pario.h>
 #include <cstdlib>
 #include "dmrg_wrapper.h"
+//#include "input.h"
+//#include "global.h"
 
 using namespace std;
 int calldmrg(char*, char*);
@@ -24,6 +26,10 @@ int main(int argc, char* argv [])
 #ifndef SERIAL
   boost::mpi::environment env(argc, argv);
 #endif
+
+  //This needs to be added
+  //SpinAdapted::dmrginp.initCumulTimer();
+
   if (argc == 1) {
     pout << "No command line argument found, expects an input file"<<endl;
     abort();
