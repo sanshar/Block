@@ -41,6 +41,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi.hpp>
 #endif
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#endif
 
 
 void dmrg(double sweep_tol);
@@ -369,15 +373,15 @@ void dmrg(double sweep_tol)
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
       last_be = Sweep::do_one(sweepParams, false, false, false, 0);
-      if (dmrginp.outputlevel() != 0) 
-	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      if (dmrginp.outputlevel() > 0) 
+         pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
 
 
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
       last_fe = Sweep::do_one(sweepParams, false, true, false, 0);
-      if (dmrginp.outputlevel() != 0)
-	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      if (dmrginp.outputlevel() > 0)
+         pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       if (domoreIter == 2) {
 	dodiis = true;
 	break;

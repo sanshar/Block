@@ -18,6 +18,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#endif
 using namespace boost;
 
 const double EPS=1.e-20;
@@ -102,7 +106,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
   int converged_roots = 0;
   while(true)
     {
-      if (dmrginp.outputlevel() != 0)
+      if (dmrginp.outputlevel() > 0)
 	pout << "\t\t\t Davidson Iteration :: " << iter << endl;
 
       ++iter;
@@ -171,7 +175,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	Matrix alpha;
 	diagonalise(subspace_h, subspace_eigenvalues, alpha);
 	
-	if (dmrginp.outputlevel() != 0) {
+	if (dmrginp.outputlevel() > 0) {
 	  for (int i = 1; i <= subspace_eigenvalues.Ncols (); ++i)
 	    pout << "\t\t\t " << i << " ::  " << subspace_eigenvalues(i,i)+dmrginp.get_coreenergy() << endl;
 	}	
@@ -214,11 +218,11 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	olsenPrecondition(r, b[converged_roots], subspace_eigenvalues(converged_roots+1), h_diag, levelshift);
 
 
-      if (dmrginp.outputlevel() != 0)
+      if (dmrginp.outputlevel() > 0)
 	pout << "\t \t \t residual :: " << rnorm << endl;
       if (rnorm < normtol)
 	{
-	  if (dmrginp.outputlevel() != 0)
+	  if (dmrginp.outputlevel() > 0)
 	    pout << "\t\t\t Converged root " << converged_roots << endl;
 #ifndef SERIAL
 	  mpi::broadcast(world, b[converged_roots], 0);
@@ -242,7 +246,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	{
 	  if(b.size() >= dmrginp.deflation_max_size())
 	    {
-	      if (dmrginp.outputlevel() != 0)
+	      if (dmrginp.outputlevel() > 0)
 		pout << "\t\t\t Deflating block davidson...\n";
 	      b.resize(dmrginp.deflation_min_size());
 	      sigma.resize(dmrginp.deflation_min_size());

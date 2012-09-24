@@ -8,6 +8,11 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include "couplingCoeffs.h"
 #include "global.h"
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#endif
+
 namespace SpinAdapted{
 
 ninejCoeffs& ninejCoeffs::getinstance()
@@ -28,7 +33,7 @@ void ninejCoeffs::init(int maxj_)
 
 void ninejCoeffs::buildArray()
 {
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "Building Array with maxj: "<<maxj<<endl;
   coeffs.resize(10);
   initarray(0, 0, 0, 0);

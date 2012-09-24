@@ -12,6 +12,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "SpinQuantum.h"
 #include "MatrixBLAS.h"
 #include <boost/serialization/vector.hpp>
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#endif
 
 void SpinAdapted::Wavefunction::initialise(const SpinQuantum dQ, const SpinBlock* b, const bool &onedot_)
 {
@@ -90,7 +94,7 @@ void SpinAdapted::Wavefunction::SaveWavefunctionInfo (const StateInfo &waveInfo,
 {
   char file [5000];
   sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/wave-", sites [0], "-", *(sites.rbegin()), ".", mpigetrank(), ".", wave_num, ".tmp");
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Saving Wavefunction " << file << endl;
   if (mpigetrank() == 0)
     {
@@ -109,7 +113,7 @@ void SpinAdapted::Wavefunction::LoadWavefunctionInfo (StateInfo &waveInfo, const
 {
   char file [5000];
   sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.load_prefix().c_str(), "/wave-", sites [0], "-", *(sites.rbegin()), ".", mpigetrank(), ".", wave_num, ".tmp");
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Loading Wavefunction " << file << endl;
   waveInfo.Allocate ();
   if (mpigetrank() == 0)

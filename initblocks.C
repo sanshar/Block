@@ -9,6 +9,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include "global.h"
 #include "initblocks.h"
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#endif
 
 void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const bool &forward, 
                                     const int & forward_starting_size, const int &backward_starting_size,
@@ -68,7 +72,7 @@ void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &s
   newSystem.setstoragetype(storage);
   newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, systemDot);
 
-  if (dmrginp.outputlevel() != 0) {
+  if (dmrginp.outputlevel() > 0) {
     pout << "\t\t\t NewSystem block " << endl << newSystem << endl;
     newSystem.printOperatorSummary();
   }
@@ -170,7 +174,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 	else
 	  quantaDist[quantumNumbers[i]] = distribution[i];
       }
-      if (dmrginp.outputlevel() != 0)
+      if (dmrginp.outputlevel() > 0)
 	pout << "\t\t\t Quantum numbers and states used for warm up :: " << endl << "\t\t\t ";
       quantumNumbers.clear(); quantumNumbers.reserve(distribution.size());
       distribution.clear();distribution.reserve(quantumNumbers.size());
@@ -179,7 +183,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
       for (; qit != quantaDist.end(); qit++)
       {
 	quantumNumbers.push_back( qit->first); distribution.push_back(qit->second); 
-	if (dmrginp.outputlevel() != 0) {
+	if (dmrginp.outputlevel() > 0) {
 	  pout << quantumNumbers.back() << " = " << distribution.back() << ", ";
 	  if (! (quantumNumbers.size() - 6) % 6) pout << endl << "\t\t\t ";
 	}
@@ -199,13 +203,13 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
   }
   else
   {
-    if (dmrginp.outputlevel() != 0)
+    if (dmrginp.outputlevel() > 0)
       pout << "\t\t\t Restoring block of size " << environmentSites.size () << " from previous iteration" << endl;
     if(dot_with_sys && onedot)
       SpinBlock::restore (!forward, environmentSites, newEnvironment);
     else
       SpinBlock::restore (!forward, environmentSites, environment);
-    if (dmrginp.outputlevel() != 0)
+    if (dmrginp.outputlevel() > 0)
       mcheck("");
   }
 
@@ -220,14 +224,14 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
       newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
       
       newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, environmentDot);
-      if (dmrginp.outputlevel() != 0) {
+      if (dmrginp.outputlevel() > 0) {
 	pout << "\t\t\t Environment block " << endl << environment << endl;
 	environment.printOperatorSummary();
 	pout << "\t\t\t NewEnvironment block " << endl << newEnvironment << endl;
 	newEnvironment.printOperatorSummary();
       }
   }
-  else  if (dmrginp.outputlevel() != 0) {
+  else  if (dmrginp.outputlevel() > 0) {
     pout << "\t\t\t Environment block " << endl << newEnvironment << endl;
     newEnvironment.printOperatorSummary();
   }

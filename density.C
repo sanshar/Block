@@ -14,6 +14,11 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "guess_wavefunction.h"
 #include "distribute.h"
 #include <boost/format.hpp>
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#endif
+
 
 namespace SpinAdapted{
 using namespace operatorfunctions;
@@ -33,7 +38,7 @@ void DensityMatrix::makedensitymatrix(const std::vector<Wavefunction>& wave_solu
 
 void DensityMatrix::add_twodot_noise(const SpinBlock &big, const double noise)
 {
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t adding noise " << noise << endl;
   double norm = 0.0;
   for(int lQ=0;lQ<this->nrows();++lQ)
@@ -41,7 +46,7 @@ void DensityMatrix::add_twodot_noise(const SpinBlock &big, const double noise)
       if(this->allowed(lQ,rQ))
         for(int i=0;i<(*this)(lQ,rQ).Nrows();++i)
           norm += (*this)(lQ,rQ)(i+1,i+1);
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t norm before modification " << norm << endl;
 
   Wavefunction noiseMatrix;
@@ -101,7 +106,7 @@ void DensityMatrix::add_twodot_noise(const SpinBlock &big, const double noise)
       if(this->allowed(lQ,rQ))
         for(int i=0;i<(*this)(lQ,rQ).Nrows();++i)
           norm += (*this)(lQ,rQ)(i+1,i+1);
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t norm after modification " << norm << endl;
 
 }
@@ -204,11 +209,11 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
       if(this->allowed(lQ,rQ))
         for(int i=0;i<(*this)(lQ,rQ).Nrows();++i)
           norm += (*this)(lQ,rQ)(i+1,i+1);
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t norm before modification " << norm << endl;
 
   SpinBlock* leftBlock = big.get_leftBlock();
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Modifying density matrix " << endl;
   //int maxt = 1;
   DensityMatrix* dmnoise = new DensityMatrix[MAX_THRD];
@@ -266,7 +271,7 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
       if(this->allowed(lQ,rQ))
         for(int i=0;i<(*this)(lQ,rQ).Nrows();++i)
           norm += (*this)(lQ,rQ)(i+1,i+1);
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t norm after modification " << norm << endl;
 
 }

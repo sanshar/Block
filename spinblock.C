@@ -19,6 +19,12 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/mpi.hpp>
 #endif
 
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#define cout xout
+#endif
+
 namespace SpinAdapted{
 using namespace operatorfunctions;
 
@@ -35,18 +41,17 @@ void SpinBlock::printOperatorSummary()
     for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core()) 
-	cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
+         cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
       else
-	cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
+         cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
       
       vector<int> numops(world.size(), 0);
       for (int proc = 0; proc <world.size(); proc++) {
-	if (proc != 0) 
-	  receiveobject(numops[proc],proc);
-	  else 
-	    numops[proc] = it->second->get_size();
-	
-	cout <<numops[proc]<<"  ";
+         if (proc != 0) 
+            receiveobject(numops[proc],proc);
+         else 
+            numops[proc] = it->second->get_size();
+         cout <<numops[proc]<<"  ";
       }
       cout << endl;
     }
@@ -68,7 +73,7 @@ ostream& operator<< (ostream& os, const SpinBlock& b)
   os << " Sites ::  ";
   for (int i = 0; i < b.sites.size(); ++i) { os << b.sites[i] << " "; } 
   
-  if (dmrginp.outputlevel() != 0) {
+  if (dmrginp.outputlevel() > 0) {
     os << endl;
     os << b.stateInfo;
   }
@@ -216,7 +221,7 @@ void SpinBlock::clear()
 void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState)
 {
   name = get_name();
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Building Sum Block " << name << endl;
   leftBlock = &lBlock;
   rightBlock = &rBlock;
@@ -248,7 +253,7 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
   copy (rBlock.sites.begin(), rBlock.sites.end (), back_inserter (sites));
   sort(sites.begin(), sites.end());
   complementary_sites = make_complement(sites);
-  if (dmrginp.outputlevel() != 0) {
+  if (dmrginp.outputlevel() > 0) {
     pout << "\t\t\t ";
     for (int i = 0; i < sites.size(); ++i) pout << sites[i] << " ";
     pout << endl;
@@ -466,7 +471,7 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
   build_iterators();
 
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t time in slater distribution " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
 
   std::vector< std::vector<Csf> > ladders; ladders.resize(dets.size());
@@ -475,7 +480,7 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
 
 
   build_operators(dets, ladders);
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t time in slater operator build " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
 }
 

@@ -60,14 +60,14 @@ void ReadInput(char* conf)
   mpi::communicator world;
   int rank = world.rank();
   int size = world.size();
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << " communication topology " << endl;
   vector<int> sendlist;
 
-  if (dmrginp.outputlevel() != 0) {
+  if (dmrginp.outputlevel() > 0) {
     for (int i = 0; i < sendlist.size(); ++i)
       pout << "processor " << rank << " to " << sendlist[i] << endl;
-    pout << "\t\t\t proc " << rank << " of " << size << endl;
+      pout << "\t\t\t proc " << rank << " of " << size << endl;
   }
 #endif
   globaltimer.start();

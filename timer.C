@@ -17,6 +17,11 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <unistd.h>
 #include <errno.h>
 #include "malloc.h"
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout xout
+#define cout xout
+#endif
 
 namespace SpinAdapted{
 

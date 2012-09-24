@@ -16,6 +16,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#endif
 namespace SpinAdapted{
 
 
@@ -28,7 +32,7 @@ std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBloc
   else
     file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
 
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Restoring block file :: " << file << endl;
 
   std::ifstream ifs(file.c_str(), std::ios::binary);
@@ -48,7 +52,7 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b)
     file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
   else
     file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Saving block file :: " << file << endl;
 
 
@@ -189,7 +193,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   for (int i = 0; i < newQuantaMap.size (); ++i)
     assert (stateInfo.quanta [i] == oldStateInfo.quanta [newQuantaMap [i]]);
 
-  if (dmrginp.outputlevel() != 0) {
+  if (dmrginp.outputlevel() > 0) {
     pout << "\t\t\t total elapsed time " << globaltimer.totalwalltime() << " " << globaltimer.totalcputime() << " ... " 
 	 << globaltimer.elapsedwalltime() << " " << globaltimer.elapsedcputime() << endl;
     pout << "\t\t\t Transforming to new basis " << endl;
@@ -206,7 +210,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
       ops[it->first]->set_core(true);
 
   this->direct = false;
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     pout << "\t\t\t transform time " << transformtimer.elapsedwalltime() << " " << transformtimer.elapsedcputime() << endl;
 
   if (leftBlock)

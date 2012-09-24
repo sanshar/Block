@@ -25,6 +25,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifdef MOLPRO
 #include "global/CxOutputStream.h"
 #define pout if (mpigetrank() == 0) xout
+//#define pout if (dmrginp.outputlevel() < 0) xout
 #endif
 
 using namespace std;
@@ -556,6 +557,13 @@ SpinAdapted::Input::Input(const string& config_name)
 	  abort();
 	}
         m_outputlevel = atoi(tok[1].c_str());
+#ifndef MOLPRO
+   if (m_outputlevel < 0) {
+      pout << "outputlevel must be 0, or greater when not running through molpro" << endl;
+      pout << msg << endl;
+      abort();
+   }
+#endif
       }
 
 
@@ -624,22 +632,18 @@ SpinAdapted::Input::Input(const string& config_name)
     CheckFileExistance(orbitalfile, "Orbital file ");
     readorbitalsfile(orbitalFile, v_1, v_2);
     
-//#ifndef MOLPRO
     pout << "Checking input for errors"<<endl;
     performSanityTest();
     pout << "Summary of input"<<endl;
     pout << "----------------"<<endl;
+#ifndef MOLPRO
     writeSummary();
-    pout << endl;
-/*#else
-    xout << "Checking input for errors"<<endl;
-    performSanityTest();
-    xout << "Summary of input"<<endl;
-    xout << "----------------"<<endl;
+#else
     writeSummaryForMolpro();
+#endif
     pout << endl;
-#endif*/
   }
+
 #ifndef SERIAL
   mpi::broadcast(world,*this,0);
   mpi::broadcast(world,v_1,0);

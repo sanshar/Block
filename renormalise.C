@@ -30,6 +30,12 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/mpi.hpp>
 #endif
 
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#define cout xout
+#endif
+
 using namespace boost;
 using namespace std;
 
@@ -43,7 +49,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   int nroots = dmrginp.nroots(sweepiter);
   vector<Wavefunction> wave_solutions(nroots);
   dmrginp.davidsonT -> start();
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     mcheck("before davidson but after all blocks are built");
 
   dmrginp.solvewf -> start();
@@ -66,7 +72,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
       wave_solutions[i] = tempwave;
     }
     *this = newsystem;
-    if (dmrginp.outputlevel() != 0)
+    if (dmrginp.outputlevel() > 0)
        cout << newsystem.get_twoInt().get()<<"  "<<get_twoInt().get()<<"  Ints "<<endl;
     envDot.clear();
     big.get_rightBlock()->clear();
@@ -76,7 +82,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
     newbig = big;
   dmrginp.postwfrearrange -> stop();
 
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     mcheck("after davidson before noise");
 
   dmrginp.davidsonT -> stop();
@@ -96,7 +102,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   
   tracedMatrix.makedensitymatrix(wave_solutions, newbig, dmrginp.weights(sweepiter), noise, twodotnoise, normalnoise);
   dmrginp.addnoise -> stop();
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     mcheck("after density matrix before rotation matrix");
   if (!mpigetrank())
     error = makeRotateMatrix(tracedMatrix, rotateMatrix, keptstates, keptqstates);
@@ -111,7 +117,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   for(int i=0;i<nroots;++i)
     wave_solutions[i].SaveWavefunctionInfo (newbig.stateInfo, newbig.leftBlock->sites, i);
   dmrginp.rotmatrixT -> stop();
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     mcheck("after noise and calulation of density matrix");
 }
 
@@ -135,7 +141,7 @@ double SpinBlock::makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& 
   int totalstatesbyquanta = min(static_cast<int>(inorderwts.size()), keptstates + keptqstates) - totalstatesbydm;
   if (totalstatesbyquanta < 0) totalstatesbyquanta = 0;
   
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     pout << "\t\t\t total states using dm and quanta " << totalstatesbydm << " " << totalstatesbyquanta << endl;
   
   return assign_matrix_by_dm(rotateMatrix, eigenMatrix, transformmatrix, inorderwts, wtsbyquanta, totalstatesbydm, 

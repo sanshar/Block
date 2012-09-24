@@ -16,6 +16,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#endif
 
 using namespace boost;
 
@@ -61,14 +65,14 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
   noise = dmrginp.sweep_noise_schedule()[current];
   additional_noise = 0.0;//dmrginp.sweep_additional_noise_schedule()[current];
 
-  if (dmrginp.outputlevel() != 0) {
+  if (dmrginp.outputlevel() > 0) {
    pout << "\t\t\t Sweep iteration ... " << SpinAdapted::SweepParams::sweep_iter;
    pout<< " "  << SpinAdapted::SweepParams::keep_states << " " << SpinAdapted::SweepParams::davidson_tol << " " << SpinAdapted::SweepParams::noise << " "<< SpinAdapted::SweepParams::additional_noise <<endl; 
   }
   else 
     pout << endl;
   //now figure out number of iterations and starting size, during first call only
-  if (dmrginp.outputlevel() != 0) {
+  if (dmrginp.outputlevel() > 0) {
     pout << "\t\t\t forward system starting size ... " << forward_starting_size << " " << n_iters << endl;
     pout << "\t\t\t backward system starting size ... " << backward_starting_size << " " << n_iters << endl;
     //pout << "onedot or twodot "<<dmrginp.algorithm_method()<<endl;
@@ -101,7 +105,7 @@ void SpinAdapted::SweepParams::savestate(const bool &forward, const int &size)
   {
     char file[5000];
     sprintf (file, "%s%s%d%s", dmrginp.save_prefix().c_str(), "/statefile.", mpigetrank(), ".tmp");
-    if (dmrginp.outputlevel() != 0)
+    if (dmrginp.outputlevel() > 0)
       pout << "\t\t\t Saving state "<<file<<endl;
     std::ofstream ofs(file, std::ios::binary);
     boost::archive::binary_oarchive save_wave(ofs);
@@ -116,7 +120,7 @@ void SpinAdapted::SweepParams::restorestate(bool &forward, int &size)
   {
     char file[5000];
     sprintf (file, "%s%s%d%s", dmrginp.load_prefix().c_str(), "/statefile.", mpigetrank(), ".tmp");
-    if (dmrginp.outputlevel() != 0)
+    if (dmrginp.outputlevel() > 0)
       pout << "\t\t\t Loading state "<<file<<endl;
     std::ifstream ifs(file, std::ios::binary);
     boost::archive::binary_iarchive load_wave(ifs);

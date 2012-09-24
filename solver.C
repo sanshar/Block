@@ -15,6 +15,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#endif
 
 
 void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vector<double>& energies, SpinBlock& big, const double tol, 
@@ -31,16 +35,16 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
   while (iter <= 1 && !solved) {
     solution.resize(nroots);
     e.ReSize(big.get_stateInfo().totalStates); e= 0;
-    if (dmrginp.outputlevel() != 0)
+    if (dmrginp.outputlevel() > 0)
       pout << "\t\t\t Building Diagonal Hamiltonian " << endl;
     big.diagonalH ( e);
-    if (dmrginp.outputlevel() != 0)
+    if (dmrginp.outputlevel() > 0)
       pout << "\t\t\t Done building diagonal hamiltonian "<<endl;
     FORTINT m, n=1, nsize=e.Storage();
     if (mpigetrank()==0) {
       m = idamax_(nsize,e.Store(), n); 
-      if (dmrginp.outputlevel() != 0)
-	pout << "highest diagonal value "<<m<<" "<<e(m)<<endl;
+      if (dmrginp.outputlevel() > 0)
+         pout << "highest diagonal value "<<m<<" "<<e(m)<<endl;
     }
 
 
