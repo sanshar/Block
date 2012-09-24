@@ -218,13 +218,6 @@ class Input {
   boost::shared_ptr<cumulTimer> s1time; 
   boost::shared_ptr<cumulTimer> s2time; 
 
-  //cumulTimer guessgenT, multiplierT, operrotT, davidsonT, rotmatrixT, blockdavid, datatransfer;
-  //cumulTimer hmultiply, oneelecT, twoelecT, makeopsT, collectqT;
-  //cumulTimer opallocate, opcatenate, oprelease, opequateT, justmultiply;
-  //cumulTimer spinrotation, otherrotation, solvewf, postwfrearrange, couplingcoeff;
-  //cumulTimer buildsumblock, buildblockops, addnoise;
-  //cumulTimer s0time, s1time, s2time; 
-
   const orbitalFormat& orbformat() const {return m_orbformat;}
   const int& outputlevel() const {return m_outputlevel;}
   const vector<int>& spatial_to_spin() const {return m_spatial_to_spin;}
