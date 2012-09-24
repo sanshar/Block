@@ -24,6 +24,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #endif
 #ifdef MOLPRO
 #include "global/CxOutputStream.h"
+#define pout if (mpigetrank() == 0) xout
 #endif
 
 using namespace std;
@@ -623,21 +624,21 @@ SpinAdapted::Input::Input(const string& config_name)
     CheckFileExistance(orbitalfile, "Orbital file ");
     readorbitalsfile(orbitalFile, v_1, v_2);
     
-#ifndef MOLPRO
-    pout << "Checking Input for errors"<<endl;
+//#ifndef MOLPRO
+    pout << "Checking input for errors"<<endl;
     performSanityTest();
-    pout << "Summary of Input"<<endl;
+    pout << "Summary of input"<<endl;
     pout << "----------------"<<endl;
     writeSummary();
     pout << endl;
-#else
-    xout << "Checking Input for errors"<<endl;
+/*#else
+    xout << "Checking input for errors"<<endl;
     performSanityTest();
-    xout << "Summary of Input"<<endl;
+    xout << "Summary of input"<<endl;
     xout << "----------------"<<endl;
     writeSummaryForMolpro();
     pout << endl;
-#endif
+#endif*/
   }
 #ifndef SERIAL
   mpi::broadcast(world,*this,0);

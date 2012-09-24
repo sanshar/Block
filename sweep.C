@@ -21,6 +21,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #ifdef MOLPRO
 #include "global/CxOutputStream.h"
+//#define pout if (mpigetrank() == 0) xout
 #endif
 
 
@@ -297,7 +298,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 	    " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
       //if (dmrginp.molpro_output_level() != 0) {
 	  xout << "\t\t\t Total block energy for State [ " << j << 
-	    " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+	    " ] with " << sweepParams.get_keep_states()<<" States :: " << fixed << setprecision(10) << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
       //}
 #endif
    }
