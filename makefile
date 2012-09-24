@@ -22,7 +22,7 @@ RANLIB=ranlib
 # use this variable to set if we will use integer size of 8 or not.
 # molpro compilation requires I8, since their integers are long
 I8_OPT = yes
-MOLPRO = yes
+MOLPRO = no
 
 ifeq ($(I8_OPT), yes)
 	I8 = -DI8
