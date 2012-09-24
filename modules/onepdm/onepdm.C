@@ -19,6 +19,11 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "execinfo.h"
 #include "include/newmatutils.h"
 
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#endif
+
 namespace SpinAdapted{
 void compute_onepdm(std::vector<Wavefunction>& wavefunctions, const SpinBlock& system, const SpinBlock& systemDot, const SpinBlock& newSystem, const SpinBlock& newEnvironment, const SpinBlock& big, const int numprocs)
 {
@@ -32,19 +37,26 @@ void compute_onepdm(std::vector<Wavefunction>& wavefunctions, const SpinBlock& s
 	Wavefunction &wavefunction1 = wavefunctions[i];
 	Wavefunction &wavefunction2 = wavefunctions[j];
 
-	pout <<"Performing sweep calculation "<<endl;
+#ifndef MOLPRO
+	pout <<"Performing sweep calculation: 1PDM "<<endl;
+#else
+	xout <<"Performing sweep calculation: 1PDM "<<endl;
+#endif
 
 	//if (big.get_leftBlock()->size() == 2) {
-	cout << "compute 2_0 "<<mpigetrank()<<endl;
-	  compute_one_pdm_2_0(wavefunction1, wavefunction2, big, onepdm);
+	if (dmrginp.outputlevel() > 0)
+      pout << "compute 2_0 "<<mpigetrank()<<endl;
+   compute_one_pdm_2_0(wavefunction1, wavefunction2, big, onepdm);
 	  //}
 
 	  //if (big.get_rightBlock()->size() == 1) {
-	  cout << "compute 0_2 "<<mpigetrank()<<endl;
-	  compute_one_pdm_0_2(wavefunction1, wavefunction2, big, onepdm);
+	if (dmrginp.outputlevel() > 0)
+	  pout << "compute 0_2 "<<mpigetrank()<<endl;
+   compute_one_pdm_0_2(wavefunction1, wavefunction2, big, onepdm);
 	  //}
 
-	  cout << "compute 1_1 "<<mpigetrank()<<endl;
+	if (dmrginp.outputlevel() > 0)
+      pout << "compute 1_1 "<<mpigetrank()<<endl;
 	compute_one_pdm_1_1(wavefunction1, wavefunction2, big, onepdm);
 	accumulate_onepdm(onepdm);
 	save_onepdm_binary(onepdm, i, j);

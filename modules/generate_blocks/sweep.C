@@ -12,10 +12,15 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "density.h"
 #include "davidson.h"
 
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#endif
+
 namespace SpinAdapted{
 void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys, int state)
 {
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     mcheck("at the start of block and decimate");
   // figure out if we are going forward or backwards
   pout << "\t\t\t Performing Blocking"<<endl;
@@ -46,7 +51,7 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
 
 
   pout << "\t\t\t System  Block"<<newSystem;
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     newSystem.printOperatorSummary();
 
   std::vector<Matrix> rotateMatrix;
@@ -89,11 +94,11 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
 
   pout <<"\t\t\t Performing Renormalization "<<endl<<endl;
   newSystem.transform_operators(rotateMatrix);
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     mcheck("after rotation and transformation of block");
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout <<newSystem<<endl;
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     newSystem.printOperatorSummary();
   //mcheck("After renorm transform");
 }
@@ -116,7 +121,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
   if(!restart)
     sweepParams.set_block_iter() = 0;
 
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Starting block is :: " << endl << system << endl;
   //if (!restart) 
     SpinBlock::store (forward, system.get_sites(), system); // if restart, just restoring an existing block --
@@ -134,7 +139,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
     {
       pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
-      if (dmrginp.outputlevel() != 0) {
+      if (dmrginp.outputlevel() > 0) {
       if (forward)
 	pout << "\t\t\t Current direction is :: Forwards " << endl;
       else
@@ -153,7 +158,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
       else
         sweepParams.set_guesstype() = BASIC;
       
-      if (dmrginp.outputlevel() != 0) 
+      if (dmrginp.outputlevel() > 0) 
 	pout << "\t\t\t Blocking and Decimating " << endl;
 	  
       SpinBlock newSystem;
@@ -171,7 +176,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
 
       SpinBlock::store (forward, system.get_sites(), system);	 	
 
-      if (dmrginp.outputlevel() != 0) 
+      if (dmrginp.outputlevel() > 0) 
 	pout << "\t\t\t saving state " << system.get_sites().size() << endl;
       ++sweepParams.set_block_iter();
       //if (sweepParams.get_onedot())

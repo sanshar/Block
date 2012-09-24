@@ -9,6 +9,11 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include "sweeponepdm.h"
 
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#endif
+
 namespace SpinAdapted{
 void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys)
 {

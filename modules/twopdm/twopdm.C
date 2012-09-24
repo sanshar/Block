@@ -17,6 +17,11 @@ Sandeep Sharma and Garnet K.-L. Chan
 #endif
 #include "operatorfunctions.h"
 #include "execinfo.h"
+
+#ifdef MOLPRO
+#include "global/CxOutputStream.h"
+#define pout if (dmrginp.outputlevel() < 0) xout
+#endif
 namespace SpinAdapted{
   void compute_twopdm_sweep(std::vector<Wavefunction>& wavefunctions, const SpinBlock& system, const SpinBlock& systemDot, const SpinBlock& newSystem, const SpinBlock& newEnvironment, const SpinBlock& big, const int numprocs, int state)
 {
@@ -31,7 +36,11 @@ namespace SpinAdapted{
 	load_twopdm_binary(twopdm, i ,j);
 
 	const std::vector<int> distribute_work = distribute_procs(numprocs,4);
+#ifndef MOLPRO
 	pout <<"Performing sweep calculation "<<endl;
+#else
+	xout <<"Performing sweep calculation "<<endl;
+#endif
 
 	pout << "compute 1_3_0"<<endl;
 	if(mpigetrank() == distribute_work[0])
