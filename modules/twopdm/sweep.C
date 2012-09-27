@@ -28,7 +28,7 @@ using namespace std;
 
 #ifdef MOLPRO
 #include "global/CxOutputStream.h"
-#define pout if (dmrginp.outputlevel() < 0) xout
+#define pout if (dmrginp.outputlevel() != 0) xout
 #endif
 
 void calcenergy(array_4d<double>& twopdm, int state)

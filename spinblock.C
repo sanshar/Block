@@ -21,7 +21,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #ifdef MOLPRO
 #include "global/CxOutputStream.h"
-#define pout if (dmrginp.outputlevel() < 0) xout
+#define pout if (dmrginp.outputlevel() != 0) xout
 #define cout xout
 #endif
 

@@ -21,7 +21,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #ifdef MOLPRO
 #include "global/CxOutputStream.h"
-#define pout if (dmrginp.outputlevel() < 0) xout
+#define pout if (dmrginp.outputlevel() != 0) xout
 #endif
 
 namespace SpinAdapted{
@@ -44,19 +44,16 @@ void compute_onepdm(std::vector<Wavefunction>& wavefunctions, const SpinBlock& s
 #endif
 
 	//if (big.get_leftBlock()->size() == 2) {
-	if (dmrginp.outputlevel() > 0)
-      pout << "compute 2_0 "<<mpigetrank()<<endl;
+   pout << "compute 2_0 "<<mpigetrank()<<endl;
    compute_one_pdm_2_0(wavefunction1, wavefunction2, big, onepdm);
 	  //}
 
 	  //if (big.get_rightBlock()->size() == 1) {
-	if (dmrginp.outputlevel() > 0)
-	  pout << "compute 0_2 "<<mpigetrank()<<endl;
+   pout << "compute 0_2 "<<mpigetrank()<<endl;
    compute_one_pdm_0_2(wavefunction1, wavefunction2, big, onepdm);
 	  //}
 
-	if (dmrginp.outputlevel() > 0)
-      pout << "compute 1_1 "<<mpigetrank()<<endl;
+   pout << "compute 1_1 "<<mpigetrank()<<endl;
 	compute_one_pdm_1_1(wavefunction1, wavefunction2, big, onepdm);
 	accumulate_onepdm(onepdm);
 	save_onepdm_binary(onepdm, i, j);
