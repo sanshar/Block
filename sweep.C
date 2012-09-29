@@ -341,10 +341,10 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   for(int j=0;j<nroots;++j){
     if (mpigetrank() == 0) {
 #ifndef MOLPRO
-      printf("\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
+      printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
 #else 
       //printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
-      xout << "\t\t M = " <<  setw(6) << sweepParams.get_keep_states() ; 
+      xout << "\t\t\t M = " <<  setw(6) << sweepParams.get_keep_states() ; 
       xout << "\t Largest Discarded Weight = " << scientific << setprecision(8) << finalError ;
       xout << "\t Sweep Energy = " << fixed << setprecision(10) << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
 #endif

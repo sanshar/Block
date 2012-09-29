@@ -270,8 +270,8 @@ int calldmrg(char* input, char* output)
 }
 void calldmrg_(char* input, char* output) {
    int a;
-   a=calldmrg("dmrg.inp",0);//, output);
-   //a=calldmrg(input, output);
+   //a=calldmrg("dmrg.inp",0);//, output);
+   a=calldmrg(input,0);//, output);
 }
 
 void fullrestartGenblock() {
@@ -334,7 +334,11 @@ void restart(double sweep_tol, bool reset_iter)
   }
 
   if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+#ifndef MOLPRO
     pout << "Maximum sweep iterations achieved " << std::endl;
+#else
+    xout << "Maximum sweep iterations achieved " << std::endl;
+#endif
 
  
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
