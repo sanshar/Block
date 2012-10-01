@@ -118,7 +118,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
     wave_solutions[i].SaveWavefunctionInfo (newbig.stateInfo, newbig.leftBlock->sites, i);
   dmrginp.rotmatrixT -> stop();
   if (dmrginp.outputlevel() > 0)
-    mcheck("after noise and calulation of density matrix");
+    mcheck("after noise and calculation of density matrix");
 }
 
 double SpinBlock::makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates)
