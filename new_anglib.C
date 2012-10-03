@@ -9,6 +9,60 @@
 #include <iostream>
 using namespace std;
 
+double nine_j(int na, int nb, int nc, int nd, int ne, int nf, int ng, int nh, int ni){
+//In this case, we are not dividing by two because that will be done by the
+//sixj routine.
+
+   //Initializing
+   double a=na;
+   double b=nb;
+   double c=nc;
+   double d=nd;
+   double e=ne;
+   double f=nf;
+   double g=ng;
+   double h=nh;
+   double i=ni;
+	double ninej=0.0;
+
+   //Checking triangle rules
+   if(na+nb < nc || abs(na-nb) > nc) 
+      return ninej;
+   if(nd + ne < nf || abs(nd-ne) > nf)
+      return ninej;
+   if(ng+nh < ni || abs(ng-nh) > ni)
+      return ninej;
+   if(na+nd < ng || abs(na-nd) > ng)
+      return ninej;
+   if(nb+ne < nh || abs(nb-ne) > nh)
+      return ninej;
+   if(nc+nf < ni || abs(nc-nf) > ni)
+      return ninej;
+
+   double  num = 0.0;
+   double num1 = 0.0;
+   double num2 = 0.0;
+   double num3 = 0.0;
+   double num4 = 0.0;
+   int kmin =  max(max(abs(h-d), abs(b-f)), abs(a-i));
+   int kmax =  min(min( h + d, b + f), a + i);
+   int k;
+   cout << "kmin " << kmin << endl;
+   cout << "kmax " << kmax << endl;
+
+   for (k = kmin; k <= kmax; k++) {
+      num1 = k+1;
+      num2 = six_j(a, b, c, f, i, k);
+      num3 = six_j(d, e, f, b, k, h);
+      num4 = six_j(g, h, i, k, a, d);
+
+      num=mone(k)*num1*num2*num3*num4;
+
+      ninej = ninej + num;
+   }
+   return ninej;
+}
+
 double six_j(int na, int nb, int nc, int nd, int ne, int nf){
 
    //Initializing
@@ -38,7 +92,6 @@ double six_j(int na, int nb, int nc, int nd, int ne, int nf){
    double e=ne/2.;
    double f=nf/2.;
 
-
    double num1 = j6_delta(a, b, c);
    double num2 = j6_delta(c, d, e);
    double num3 = j6_delta(b, d, f);
@@ -53,8 +106,6 @@ double six_j(int na, int nb, int nc, int nd, int ne, int nf){
    return sixj;
 }
 //end six_j
-
-
 
 double three_j(int j1, int j2, int j3, int m1, int m2, int m3) {
    double cleb =0.0;
