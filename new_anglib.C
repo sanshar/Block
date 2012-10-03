@@ -9,19 +9,52 @@
 #include <iostream>
 using namespace std;
 
-/*
-double six-j(int j1, int j2, int j3, int l1, int l2, int l3) {
-	double sixj;
-	
-   sixj=delta(j1, j2, j3)*delta(j1, l2, l3) * delta(l1, j2, j3) *
-         delta(l1,j2,j3) * w6j(j1, j2, j3, l1, l2, l3); 
-}
-//end six-j
+double six_j(int na, int nb, int nc, int nd, int ne, int nf){
 
-double w6j(j1, j2, j3, l1, l2, l3) {
+   //Initializing
+	double sixj=0.0;
+   if((na+nb)%2 != nc%2) 
+      return sixj;
+   if((nc+nd)%2 != ne%2) 
+      return sixj;
+   if((na+ne)%2 != nf%2) 
+      return sixj;
+   if((nb+nd)%2 != nf%2) 
+      return sixj;
+   if(na + nb < nc || abs(na-nb)>nc) 
+      return sixj;
+   if(nc+nd<ne || abs(nc-nd)>ne) 
+      return sixj;
+   if(na+ne<nf || abs(na-ne)>nf) 
+      return sixj;
+   if(nb+nd<nf || abs(nb-nd)>nf) 
+      return sixj;
+
+   //Converting to half its value
+   double a=na/2.;
+   double b=nb/2.;
+   double c=nc/2.;
+   double d=nd/2.;
+   double e=ne/2.;
+   double f=nf/2.;
+
+
+   double num1 = j6_delta(a, b, c);
+   double num2 = j6_delta(c, d, e);
+   double num3 = j6_delta(b, d, f);
+   double den1 = j6_delta(a, e, f);
+
+   double pref = num1*num2*num3/den1;
+
+   double square = square_six(a, b, c, d, e, f);
+
+   sixj=pref*square;
+
+   return sixj;
 }
-//end w6j
-*/
+//end six_j
+
+
 
 double three_j(int j1, int j2, int j3, int m1, int m2, int m3) {
    double cleb =0.0;
@@ -88,20 +121,80 @@ double clebsch(int nj1, int nm1, int nj2, int nm2, int nj3, int nm3) {
          bin3=fbinom(j3+m3,     j2+m2-t);
          sum = sum + mone(t)*bin1*bin2*bin3;
 
-         cout << "t " << t << endl;
-         cout << "sum " << sum << endl;
-         cout << "bin1 " << bin1 << endl;
-         cout << "bin2 " << bin2 << endl;
-         cout << "bin3 " << bin3 << endl;
+         //cout << "t " << t << endl;
+         //cout << "sum " << sum << endl;
+         //cout << "bin1 " << bin1 << endl;
+         //cout << "bin2 " << bin2 << endl;
+         //cout << "bin3 " << bin3 << endl;
       }
 
       cleb = factor*sum;
-      cout << "factor: " << factor << endl;
-      cout << "sum: " << sum << endl;
-      cout << "Clebsch: " << cleb << endl;
+      //cout << "factor: " << factor << endl;
+      //cout << "sum: " << sum << endl;
+      //cout << "Clebsch: " << cleb << endl;
    }
       return cleb;
 }
+
+
+
+double j6_delta(double a, double b, double c) {
+	double prefac = 0.0;
+
+   double den1 = fbinom(a+b+c+1,a+b-c);
+   //den2 can be substituted to just den=2*c+1, since binom(2*c+1, 2*c) = 2*c+1
+   //double den2 = fbinom(2*c+1, 2*c);
+   double den2 = 2*c+1;
+   double den3 = fbinom(2*c, b+c-a);
+
+   double den = den1*den2*den3;
+   prefac = 1/sqrt(den);
+	return prefac;
+}
+
+double square_six(double a, double b, double c, double d, double e, double f){ 
+/*
+[a b c] 
+[d e f]
+*/
+
+   int nmin = max(max(max(a+e+f, b+d+f), c+d+e), a+b+c);
+   int nmax = min(min(a+b+d+e, a+c+d+f), b+c+e+f);
+   int n;
+   double num1=0.0;
+   double num2=0.0;
+   double num3=0.0;
+   double num4=0.0;
+   double num=0.0;
+   double sum=0.0;
+   for (n=nmin; n<=nmax; n++){
+      num1=fbinom(n+1, n-a-e-f);
+      num2=fbinom(a+e-f, n-b-d-f);
+      num3=fbinom(a-e+f, n-c-d-e);
+      num4=fbinom(-a+e+f, n-a-b-c); 
+
+      num=mone(n)*num1*num2*num3*num4;
+
+      sum=sum+num;
+   }
+   return sum;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 double facto(double n) {
 	double fac;
