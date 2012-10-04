@@ -15,7 +15,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <multiarray.h>
-#include "anglib.h"
+//#include "anglib.h"
+#include "new_anglib.h"
 #include "Symmetry.h"
 
 using namespace std;
@@ -65,14 +66,16 @@ class ninejCoeffs{
 
 inline double cg(int two_ja, int two_jb, int two_jc, int two_ma, int two_mb, int two_mc)
 {
-  double rval = cleb_(two_ja, two_ma, two_jb, two_mb, two_jc, two_mc);
+  //double rval = cleb_(two_ja, two_ma, two_jb, two_mb, two_jc, two_mc);
+  double rval = clebsch(two_ja, two_ma, two_jb, two_mb, two_jc, two_mc);
   return rval;
 }
 
 
 inline double sixj(int two_ja, int two_jb, int two_jc, int two_jd, int two_je, int two_jf)
 {
-  return sixj_(two_ja, two_jb, two_jc, two_jd, two_je, two_jf);
+  //return sixj_(two_ja, two_jb, two_jc, two_jd, two_je, two_jf);
+  return six_j(two_ja, two_jb, two_jc, two_jd, two_je, two_jf);
 }
 
 
@@ -86,9 +89,10 @@ inline double Ninej(int two_ja, int two_jb, int two_jc, int two_jd, int two_je, 
 {
 
   double rval= pow((two_jg+1)*(two_jh+1)*(two_jc+1)*(two_jf+1),0.5)
-    *ninej_ (two_ja, two_jb, two_jc, 
-	     two_jd, two_je, two_jf, 
-	     two_jg, two_jh, two_ji);
+    *nine_j(two_ja, two_jb, two_jc, two_jd, two_je, two_jf, two_jg, two_jh, two_ji);
+    //*ninej_ (two_ja, two_jb, two_jc, 
+	  //   two_jd, two_je, two_jf, 
+	   //  two_jg, two_jh, two_ji);
   return rval;
 }
 }

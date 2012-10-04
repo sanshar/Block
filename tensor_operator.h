@@ -14,7 +14,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <string>
 #include <iostream>
 #include <stdio.h>
-#include "anglib.h"
+//#include "anglib.h"
+#include "new_anglib.h"
 #include <stdlib.h>
 #include <cmath>
 #include "Symmetry.h"
@@ -155,7 +156,8 @@ class TensorOp {
 	std::vector<double>&  iSz1 = Szops[ilz1*(Spin+1)+(-sz1+Spin)/2];
 	std::vector<double>&  iSz2 = op1.Szops[ilz2*(op1.Spin+1)+(-sz2+op1.Spin)/2];
 
-	double cleb = cleb_(Spin, sz1, op1.Spin, sz2, pspin, sz);
+	//double cleb = cleb_(Spin, sz1, op1.Spin, sz2, pspin, sz);
+	double cleb = clebsch(Spin, sz1, op1.Spin, sz2, pspin, sz);
 	double clebdinfh = Symmetry::spatial_cg(irrep, op1.irrep, pirrep, ilz1, ilz2, ilz);
 	if (fabs(cleb) <= 1.0e-14 || fabs(clebdinfh) <= 1.0e-14)
 	  continue;

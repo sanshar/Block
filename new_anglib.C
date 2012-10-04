@@ -1,3 +1,10 @@
+/*                                                                           
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Copyright (c) 2012, Garnet K.-L. Chan                                        
+                                                                             
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma, Garnet K.-L. Chan and Roberto Olivares-Amaya
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,8 +54,8 @@ double nine_j(int na, int nb, int nc, int nd, int ne, int nf, int ng, int nh, in
    int kmin =  max(max(abs(h-d), abs(b-f)), abs(a-i));
    int kmax =  min(min( h + d, b + f), a + i);
    int k;
-   cout << "kmin " << kmin << endl;
-   cout << "kmax " << kmax << endl;
+   //cout << "kmin " << kmin << endl;
+   //cout << "kmax " << kmax << endl;
 
    for (k = kmin; k <= kmax; k++) {
       num1 = k+1;
@@ -161,8 +168,8 @@ double clebsch(int nj1, int nm1, int nj2, int nm2, int nj3, int nm3) {
       double mint = max(max(0., j1-m1-(j3-m3)), j2 + m2 - (j3 + m3)); 
       double maxt = min(min(j1-m1, j2+m2),j1+j2-j3);
       
-      cout << "mint " << mint << endl;
-      cout << "maxt " << maxt << endl;
+      //cout << "mint " << mint << endl;
+      //cout << "maxt " << maxt << endl;
       double bin1;
       double bin2;
       double bin3;
@@ -260,7 +267,7 @@ double facto(double n) {
 	return fac;
 }
 
-int mone (double n) {
+int mone(double n) {
 	int value;
    int nint;
    nint = get_cast(n);

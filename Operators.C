@@ -87,7 +87,9 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
     //int lz1 = op1.lz[0], lz2 = op2.lz[ilz2];
     std::vector<double>&  iSz2 = op2.Szops[ilz2*(op2.Spin+1)+(-sz2+op2.Spin)/2];
     
-    double cleb = cleb_(op1.Spin, op1.Spin, op2.Spin, sz2, 0, 0);
+    //double cleb = cleb_(op1.Spin, op1.Spin, op2.Spin, sz2, 0, 0);
+    double cleb = clebsch(op1.Spin, op1.Spin, op2.Spin, sz2, 0, 0);
+    //pout << "cleb " <<  cleb << " op1.Spin " <<  op1.Spin << " m1 "<< op1.Spin << " op2.Spin " << op2.Spin << " m2 " << sz2 << endl;
     cleb *= Symmetry::spatial_cg(op1.irrep, op2.irrep, 0, ilz1, ilz2, 0);
     if (fabs(cleb) <= 1.0e-14)
       continue;
@@ -130,7 +132,8 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
     int sz2index = (op2index - ilz2*(op2.Spin+1)), sz2 = op2.Spin - 2*sz2index;
     std::vector<double>&  iSz1 = op1.Szops[ilz1*(op1.Spin+1)+(-sz1+op1.Spin)/2];
     
-    double cleb = cleb_(op1.Spin, sz1, op2.Spin, sz2, 0, 0);
+    //double cleb = cleb_(op1.Spin, sz1, op2.Spin, sz2, 0, 0);
+    double cleb = clebsch(op1.Spin, sz1, op2.Spin, sz2, 0, 0);
     cleb *= Symmetry::spatial_cg(op1.irrep, op2.irrep, 0, ilz1, ilz2, 0);
     if (fabs(cleb) <= 1.0e-14)
       continue;

@@ -34,6 +34,7 @@ the license agreement is reproduced below
 #include <cmath>
 #include <algorithm>
 
+#include <iostream>
 using namespace std;
 
 double cleb_(int j1, int m1, int j2, int m2, int j, int m)
@@ -47,7 +48,9 @@ double cleb_(int j1, int m1, int j2, int m2, int j, int m)
          2*(j/2)-int(2*(j/2.0)) != 2*(abs(m)/2)-int(2*(abs(m)/2.0)) ||
          j1<0 || j2<0 || j<0 || abs(m1)>j1 || abs(m2)>j2 ||
       abs(m)>j || j1+j2<j || abs(j1-j2)>j || m1+m2!=m)
+  {
     cleb= 0.0;
+  }
   else
   {  
     factor = 0.0;
@@ -55,9 +58,11 @@ double cleb_(int j1, int m1, int j2, int m2, int j, int m)
     factor = factor * binom(j2,(j1+j2-j)/2) / binom(j1,(j1-m1)/2);
     factor = factor / binom(j2,(j2-m2)/2) / binom(j,(j-m)/2);
     factor = sqrt(factor);
+
        
     zmin = max(max(0,j2+(j1-m1)/2-(j1+j2+j)/2),j1+(j2+m2)/2-(j1+j2+j)/2);
     zmax = min(min((j1+j2-j)/2,(j1-m1)/2),(j2+m2)/2);
+
        
     sum=0.0;
     for (z = zmin; z<=zmax; z++) {
@@ -68,6 +73,7 @@ double cleb_(int j1, int m1, int j2, int m2, int j, int m)
     }
     cleb = factor*sum;
   }
+  
   return cleb;
 }
 
@@ -129,7 +135,7 @@ double ninej_(int a, int b, int c, int d, int e, int f, int g, int h, int i)
 {
   double ninej, sum;
   int xlo, xhi, term;
-  int x;
+  //int x;
 
   ninej=0.0;
 
@@ -142,6 +148,7 @@ double ninej_(int a, int b, int c, int d, int e, int f, int g, int h, int i)
   
   xlo = max(max(abs(b-f),abs(a-i)),abs(h-d));
   xhi = min(min(b+f,a+i),h+d);
+
     
   sum=0.0;
   for (int x=xlo; x<=xhi; x=x+2)

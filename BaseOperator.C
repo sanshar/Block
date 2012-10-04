@@ -28,12 +28,14 @@ double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
   for (int al = 0; al<Symmetry::sizeofIrrep(airrep); al++)
   for (int bl = 0; bl<Symmetry::sizeofIrrep(birrep); bl++)
   {
-    double cleb = cleb_(aspin, asz, bspin, bsz, cspin, cspin);
+    //double cleb = cleb_(aspin, asz, bspin, bsz, cspin, cspin);
+    double cleb = clebsch(aspin, asz, bspin, bsz, cspin, cspin);
     double clebdinfh = Symmetry::spatial_cg(airrep, birrep, cirrep, al, bl, 0);
     if (fabs(cleb) <= 1.0e-14 || fabs(clebdinfh) <= 1.0e-14)
       continue;
     else
-      return parity*cleb*clebdinfh/cleb_(bspin, bsz, aspin, asz, cspin, cspin)/Symmetry::spatial_cg(birrep, airrep, cirrep, bl, al, 0);
+      //return parity*cleb*clebdinfh/cleb_(bspin, bsz, aspin, asz, cspin, cspin)/Symmetry::spatial_cg(birrep, airrep, cirrep, bl, al, 0);
+      return parity*cleb*clebdinfh/clebsch(bspin, bsz, aspin, asz, cspin, cspin)/Symmetry::spatial_cg(birrep, airrep, cirrep, bl, al, 0);
   }
   cout << "Major trouble, getCommuteParity asked for three inappropriate operators"<<endl;
   cout << a<<"  "<<b<<"  "<<c<<endl;
