@@ -20,6 +20,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/export.hpp>
+#include <boost/format.hpp>
 #include "spinblock.h"
 #include "StateInfo.h"
 #include "operatorfunctions.h"
@@ -341,10 +342,16 @@ void restart(double sweep_tol, bool reset_iter)
 #endif
 
  
-  const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
+  const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter()); 
   if (!mpigetrank())
   {
+#ifndef MOLPRO
     FILE* f = fopen("dmrg.e", "wb");
+#else
+    std::string efile;
+    efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
+    FILE* f = fopen(efile.c_str(), "wb");
+#endif
     
     for(int j=0;j<nroots;++j) {
       double e = sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy(); 
@@ -399,7 +406,13 @@ void dmrg(double sweep_tol)
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
   if (!mpigetrank())
   {
+#ifndef MOLPRO
     FILE* f = fopen("dmrg.e", "wb");
+#else
+    std::string efile;
+    efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
+    FILE* f = fopen(efile.c_str(), "wb");
+#endif
     
     for(int j=0;j<nroots;++j) {
       double e = sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy(); 

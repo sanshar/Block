@@ -12,6 +12,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "initblocks.h"
 #include "initblocks.h"
 #include "MatrixBLAS.h"
+#include <boost/format.hpp>
 #ifndef SERIAL
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi.hpp>
@@ -71,7 +72,13 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   }
   if (!mpigetrank())
   {
+#ifndef MOLPRO
     FILE* f = fopen("dmrg.e", "wb");
+#else
+    std::string efile;
+    efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
+    FILE* f = fopen(efile.c_str(), "wb");
+#endif
     
     for(int j=0;j<nroots;++j) {
       double e = energies[j]+dmrginp.get_coreenergy(); 
@@ -106,7 +113,13 @@ void SpinAdapted::Sweep::tiny(double sweep_tol)
 
       if (mpigetrank() == 0)
       {
+#ifndef MOLPRO
 	FILE* f = fopen("dmrg.e", "wb");
+#else
+	std::string efile;
+	efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
+	FILE* f = fopen(efile.c_str(), "wb");
+#endif
 	
 	for(int j=0;j<nroots;++j) {
 	  double e = energies(j+1)+dmrginp.get_coreenergy(); 
