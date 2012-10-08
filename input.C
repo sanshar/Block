@@ -157,7 +157,7 @@ SpinAdapted::Input::Input(const string& config_name)
       boost::split(tok, msg, is_any_of(", \t"), token_compress_on);
       string keyword = *tok.begin();
 
-      if (boost::iequals(keyword,  "orbs") || boost::iequals(keyword,  "orbitals"))
+      if (boost::iequals(keyword,  "orbs") || boost::iequals(keyword,  "orbitals") || boost::iequals(keyword, " orbitals"))
       {
 	if(usedkey[ORBS] == 0) 
 	  usedkey_error(keyword, msg);
