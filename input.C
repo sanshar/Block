@@ -862,7 +862,7 @@ void SpinAdapted::Input::writeSummaryForMolpro()
      if (m_nroots >1) {
         xout << setw(50) << "The weights of the wavefunctions : ";
     for (int i=0; i<m_nroots; i++) 
-       xout << scientific << setprecision(2) << m_weights[i];
+       xout << setprecision(2) << m_weights[i];
     xout << endl;
      }
      xout << setw(50) << "Symmetry of the molecule : " ;
@@ -885,7 +885,7 @@ void SpinAdapted::Input::writeSummaryForMolpro()
     for (int i=0; i<m_sweep_iter_schedule.size(); i++) {
        xout << setw(10) << m_sweep_iter_schedule[i]; 
        xout << setw(20) << m_sweep_state_schedule[i];
-       xout << setw(20) << scientific << setprecision(4) << m_sweep_tol_schedule[i] ;
+       xout << setw(20) << setprecision(4) << m_sweep_tol_schedule[i] ;
        xout << setw(20) << scientific << setprecision(4) << m_sweep_noise_schedule[i] << endl;
     }
     if (m_algorithm_type == TWODOT_TO_ONEDOT) 
