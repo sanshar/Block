@@ -24,17 +24,13 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "linear.h"
 #include "davidson.h"
 #include <stdlib.h>
-				    //#include "diis.h"
+//#include "diis.h"
 
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
 
-#ifdef MOLPRO
-#include "global/CxOutputStream.h"
-#define pout if (dmrginp.outputlevel() < 0) xout
-#define cout xout
-#endif
+#include "pario.h"
 
 using namespace boost;
 using namespace std;

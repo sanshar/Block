@@ -104,7 +104,27 @@ $(EXECUTABLE) : $(OBJ_spin_adapted) $(NEWMATLIB)/libnewmat.a
 $(NEWMATLIB)/libnewmat.a : 
 	cd $(NEWMATLIB) && $(MAKE) -f makefile libnewmat.a
 
+depend: 
+	makedepend $(FLAGS) $(SRC_spin_adapted)
+
 clean:
 	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o $(NEWMATLIB)*.o libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a
 
+
 # DO NOT DELETE
+
+anglib.o: /usr/include/stdio.h /usr/include/features.h
+anglib.o: /usr/include/bits/predefs.h /usr/include/sys/cdefs.h
+anglib.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
+anglib.o: /usr/include/gnu/stubs-64.h /usr/include/bits/types.h
+anglib.o: /usr/include/bits/typesizes.h /usr/include/libio.h
+anglib.o: /usr/include/_G_config.h /usr/include/wchar.h
+anglib.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
+anglib.o: /usr/include/stdlib.h /usr/include/bits/waitflags.h
+anglib.o: /usr/include/bits/waitstatus.h /usr/include/endian.h
+anglib.o: /usr/include/bits/endian.h /usr/include/bits/byteswap.h
+anglib.o: /usr/include/sys/types.h /usr/include/time.h
+anglib.o: /usr/include/sys/select.h /usr/include/bits/select.h
+anglib.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
+anglib.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
+anglib.o: /usr/include/alloca.h anglib.h

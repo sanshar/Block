@@ -11,10 +11,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
-#ifdef MOLPRO
-#include "global/CxOutputStream.h"
-#define pout if (dmrginp.outputlevel() < 0) xout
-#endif
+#include "pario.h"
 
 namespace SpinAdapted{
 void GuessWave::TransformLeftBlock(Wavefunction& oldwavefunction, const StateInfo& newstateinfo, const std::vector<Matrix>& RotationMatrix, Wavefunction& tempoldWave)

@@ -18,6 +18,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "twopdm.h"
 #include "density.h"
 #include "davidson.h"
+#include "pario.h"
 
 #ifndef SERIAL
 #include <boost/mpi/communicator.hpp>
@@ -26,10 +27,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 using namespace boost;
 using namespace std;
 
-#ifdef MOLPRO
-#include "global/CxOutputStream.h"
-#define pout if (dmrginp.outputlevel() != 0) xout
-#endif
 
 void calcenergy(array_4d<double>& twopdm, int state)
 {

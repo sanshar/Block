@@ -16,10 +16,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
-#ifdef MOLPRO
-#include "global/CxOutputStream.h"
-#define pout if (dmrginp.outputlevel() < 0) xout
-#endif
+#include "pario.h"
 
 using namespace boost;
 

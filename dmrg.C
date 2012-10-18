@@ -42,10 +42,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi.hpp>
 #endif
-#ifdef MOLPRO
-#include "global/CxOutputStream.h"
-#define pout if (dmrginp.outputlevel() < 0) xout
-#endif
+#include "pario.h"
 
 
 void dmrg(double sweep_tol);

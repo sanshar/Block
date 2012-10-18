@@ -18,11 +18,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #endif
 #include "rotationmat.h"
 #include "density.h"
-
-#ifdef MOLPRO
-#include "global/CxOutputStream.h"
-#define pout if (dmrginp.outputlevel() != 0) xout
-#endif
+#include "pario.h"
 
 
 using namespace boost;

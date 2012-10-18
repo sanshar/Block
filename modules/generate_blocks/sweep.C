@@ -11,11 +11,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "guess_wavefunction.h"
 #include "density.h"
 #include "davidson.h"
-
-#ifdef MOLPRO
-#include "global/CxOutputStream.h"
-#define pout if (dmrginp.outputlevel() < 0) xout
-#endif
+#include "pario.h"
 
 namespace SpinAdapted{
 void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys, int state)

@@ -9,10 +9,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include "global.h"
 #include "initblocks.h"
-#ifdef MOLPRO
-#include "global/CxOutputStream.h"
-#define pout if (dmrginp.outputlevel() < 0) xout
-#endif
+#include "pario.h"
 
 void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const bool &forward, 
                                     const int & forward_starting_size, const int &backward_starting_size,

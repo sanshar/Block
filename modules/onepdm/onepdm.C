@@ -18,11 +18,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "operatorfunctions.h"
 #include "execinfo.h"
 #include "include/newmatutils.h"
-
-#ifdef MOLPRO
-#include "global/CxOutputStream.h"
-#define pout if (dmrginp.outputlevel() != 0) xout
-#endif
+#include "pario.h"
 
 namespace SpinAdapted{
 void compute_onepdm(std::vector<Wavefunction>& wavefunctions, const SpinBlock& system, const SpinBlock& systemDot, const SpinBlock& newSystem, const SpinBlock& newEnvironment, const SpinBlock& big, const int numprocs)

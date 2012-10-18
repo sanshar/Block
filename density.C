@@ -14,10 +14,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "guess_wavefunction.h"
 #include "distribute.h"
 #include <boost/format.hpp>
-#ifdef MOLPRO
-#include "global/CxOutputStream.h"
-#define pout if (dmrginp.outputlevel() < 0) xout
-#endif
+#include "pario.h"
 
 
 namespace SpinAdapted{

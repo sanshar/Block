@@ -14,6 +14,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/archive/binary_oarchive.hpp>
 #include "MatrixBLAS.h"
 #include "pario.h"
+#include "global.h"
 #ifdef BLAS
 #include "blas_calls.h"
 #endif

@@ -17,11 +17,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #endif
 #include "operatorfunctions.h"
 #include "execinfo.h"
+#include "pario.h"
 
-#ifdef MOLPRO
-#include "global/CxOutputStream.h"
-#define pout if (dmrginp.outputlevel() < 0) xout
-#endif
 namespace SpinAdapted{
   void compute_twopdm_sweep(std::vector<Wavefunction>& wavefunctions, const SpinBlock& system, const SpinBlock& systemDot, const SpinBlock& newSystem, const SpinBlock& newEnvironment, const SpinBlock& big, const int numprocs, int state)
 {
