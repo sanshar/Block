@@ -15,6 +15,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "MatrixBLAS.h"
 #include "spinblock.h"
 #include "couplingCoeffs.h"
+#include "genetic/GAOptimize.h"
 #include <boost/tokenizer.hpp>
 #include <string.h>
 #include <ctype.h>
@@ -118,6 +119,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_core_energy = 0.0;
   m_reorder = false;
   m_reorderfile = "";
+  m_gaopt = false;
 
   m_orbformat=MOLPROFORM;
 }
@@ -137,6 +139,7 @@ SpinAdapted::Input::Input(const string& config_name)
   int n_spin = -1;
   sym = "c1";
   string orbitalfile;
+  string gaconffile;
   if(mpigetrank() == 0)
   {
     pout << "Reading input file"<<endl;
@@ -199,6 +202,20 @@ SpinAdapted::Input::Input(const string& config_name)
 	}	
 	m_reorder = true;
 	m_reorderfile = tok[1];
+      }
+      else if (boost::iequals(keyword,  "gaopt"))
+      {
+        if(usedkey[GAORDER] == 0) 
+          usedkey_error(keyword, msg);
+        usedkey[GAORDER] = 0;
+        if (tok.size() != 2) {
+          cerr << "keyword gaopt should be followed by the filename and then an end line"<<endl;
+          cerr << "error found in the following line "<<endl;
+          cerr << msg<<endl;
+          abort();
+        }       
+        m_gaopt = true;
+        gaconffile = tok[1];
       }
 
       else if (boost::iequals(keyword,  "schedule"))
@@ -624,6 +641,16 @@ SpinAdapted::Input::Input(const string& config_name)
   if (sym != "dinfh")
     v_2.permSymm = true;
 
+  // Kij-based ordering by GA opt.
+#ifndef SERIAL
+  mpi::broadcast(world,m_gaopt,0);
+#endif
+  if (m_gaopt) {
+    ifstream gaconfFile;
+    if(gaconffile != "default") gaconfFile.open(gaconffile.c_str(), ios::in);
+    getgaorder(gaconfFile, orbitalFile);
+  }
+
   if (mpigetrank() == 0) {
     CheckFileExistance(orbitalfile, "Orbital file ");
     readorbitalsfile(orbitalFile, v_1, v_2);
@@ -718,6 +745,19 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     ifstream reorderFile(m_reorderfile.c_str());
     CheckFileExistance(m_reorderfile, "Reorder file ");
     readreorderfile(reorderFile, reorder, oldtonew);
+  }
+  // use Kij-based ordering
+  else if (m_gaopt) {
+    m_reorder = true;
+    oldtonew = m_gaorder;
+    if (oldtonew.size() != m_norbs/2) {
+      pout << "Size of gaorder "<<oldtonew.size()<<" is different from number of orbitals "<<m_norbs/2<<endl;
+      abort();
+    }
+    reorder.resize(m_norbs/2);
+    for (int i=0; i<m_norbs/2; i++) {
+      reorder.at(oldtonew[i]) = i;
+    }
   }
 
   int orbindex = 0;
@@ -841,6 +881,26 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     v2.ReSize(0);
   }
   
+}
+
+void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
+{
+#ifndef SERIAL
+  mpi::communicator world;
+#endif
+  pout << "---------- Kij-based ordering by GA opt. ----------" << endl;
+  m_gaorder = genetic::gaordering(gaconfFile, dumpFile).Gen().Sequence();
+  pout << "------ pick the best ordering up to reorder -------" << endl;
+  pout << "sites are reordered by: ";
+#ifndef SERIAL
+  if(mpigetrank() == 0) {
+#endif
+    int n = m_gaorder.size() - 1;
+    for(int i = 0; i < n; ++i) pout << m_gaorder[i]+1 << ","; pout << m_gaorder[n]+1 << endl;
+#ifndef SERIAL
+  }
+  mpi::broadcast(world,m_gaorder,0);
+#endif
 }
 
 #ifdef MOLPRO
