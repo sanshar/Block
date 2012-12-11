@@ -128,7 +128,7 @@ void Symmetry::InitialiseTable(string psym)
     //do nothing;
   }
   else {
-    pout << "Symmetry of the molecule has to be one of c1, ci, c2h, c2v, d2h or dinfh"<<endl;
+    pout << "Symmetry of the molecule has to be one of c1, ci, cs, c2, c2h, c2v, d2, d2h or dinfh"<<endl;
     pout << "Symmetry provided in the input file "<<sym<<endl;
     abort();
   }
@@ -145,11 +145,11 @@ bool Symmetry::irrepAllowed(int irrep)
     pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
-  if ((sym == "c2v" || sym == "c2h") && (irrep<0 || irrep >= 4)) {
+  if ((sym == "c2v" || sym == "c2h" || sym == "d2") && (irrep<0 || irrep >= 4)) {
     pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
-  if (sym == "ci" && (irrep <0 || irrep >=2)) {
+  if ((sym == "ci" || sym == "c2" || sym == "cs" ) && (irrep <0 || irrep >=2)) {
     pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
@@ -234,7 +234,24 @@ string Symmetry::stringOfIrrep(int irrep)
       case(3):
 	return "Bg";
       }
+  }
+  else if (sym == "d2") {
+    switch(irrep)
+      {
+      case(0): 
+	return "A";
+      case(1):
+	return "B1";
+      case(2):
+	return "B2";
+      case(3):
+	return "B3";
+      }
     }
+  else if (sym == "cs") 
+    return (irrep == 0) ? "A'" : "A''";
+  else if (sym == "c2") 
+    return (irrep == 0) ? "A" : "B";
   else if (sym == "ci") 
     return (irrep == 0) ? "Ag" : "Au";
   else if (sym == "dinfh") {
