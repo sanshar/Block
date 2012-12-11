@@ -30,7 +30,7 @@ void Symmetry::InitialiseTable(string psym)
       groupTable.resize(1, 1);
       groupTable(0, 0) = 0;
     }
-  else if (sym == "ci")
+  else if (sym == "ci" || sym == "cs" || sym == "c2")
     {
       /*
 	inversion symmetry table
@@ -43,7 +43,7 @@ void Symmetry::InitialiseTable(string psym)
       groupTable(1, 0) = 1;
       groupTable(1, 1) = 0;
     }
-  else if (sym == "c2v" || sym == "c2h")
+  else if (sym == "c2v" || sym == "c2h" || sym == "d2")
     {
       /*
 	c2v symmetry table
