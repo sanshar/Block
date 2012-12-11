@@ -33,7 +33,7 @@ enum noiseTypes {RANDOM, EXCITEDSTATE};
 enum calcType {DMRG, ONEPDM, TWOPDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 
-enum keywords{ORBS, MAXM, REORDER, SCHEDULE, SYM, NELECS, SPIN, IRREP,
+enum keywords{ORBS, MAXM, REORDER, GAORDER, SCHEDULE, SYM, NELECS, SPIN, IRREP,
 	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, 
 	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NUMKEYWORDS};
 
@@ -120,6 +120,9 @@ class Input {
   bool m_reorder;
   string m_reorderfile;
 
+  bool m_gaopt;
+  std::vector<int> m_gaorder;
+
   friend class boost::serialization::access;
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
@@ -131,7 +134,7 @@ class Input {
     ar & m_molecule_quantum & m_total_symmetry_number & m_total_spin & m_orbenergies & m_add_noninteracting_orbs;
     ar & m_save_prefix & m_load_prefix & m_direct ;
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
-    ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat & m_reorder;
+    ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat & m_reorder & m_gaopt & m_gaorder;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_cd;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;
@@ -185,6 +188,7 @@ class Input {
   void performSanityTest();
   void readorbitalsfile(ifstream& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder, std::vector<int>&);
+  void getgaorder(ifstream& gaconfFile, ifstream& dumpFile);
   void usedkey_error(string& key, string& line);
 
   static void ReadMeaningfulLine(ifstream&, string&, int);
