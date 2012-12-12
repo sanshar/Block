@@ -22,7 +22,7 @@ RANLIB=ranlib
 # use this variable to set if we will use integer size of 8 or not.
 # molpro compilation requires I8, since their integers are long
 I8_OPT = yes
-MOLPRO = yes
+MOLPRO = no
 
 ifeq ($(I8_OPT), yes)
 	I8 = -DI8
@@ -51,13 +51,13 @@ MPI_OPT = -DSERIAL
 
 ifeq ($(notdir $(firstword $(CXX))),icpc)
 # Intel compiler
-	OPT = -O3 -funroll-loops  -DBLAS -DUSELAPACK  $(MPI_OPT) $(I8) -DFAST_MTP $(MOLPRO_BLOCK)
+	OPT = -O3 -funroll-loops -openmp -DBLAS -DUSELAPACK  $(MPI_OPT) $(I8) -DFAST_MTP $(MOLPRO_BLOCK)
 #	OPT = -g -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP 
 	CXX = icc
 endif
 ifeq ($(notdir $(firstword $(CXX))),g++)
 # GNU compiler
-	OPT = -O3 -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)
+	OPT = -O3 -fopenmp -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)
 #	OPT = -g -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT)
 endif
 
