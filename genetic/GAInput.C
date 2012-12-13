@@ -24,7 +24,6 @@ genetic::GAInput::GAInput(ifstream& config)
 void genetic::GAInput::Configure(ifstream& config)
 {
   string entry;
-
   while(config >> entry)
   {
     if(entry == "maxcomm")  config >> max_community;
@@ -40,7 +39,7 @@ void genetic::GAInput::Configure(ifstream& config)
     {
       config >> entry;
       if(entry == "gauss")    select = GAUSS;
-      if(entry == "boltzman") select = BOLTZMAN;
+      if(entry == "boltzmann") select = BOLTZMANN;
       if(entry == "uniform")  select = UNIFORM;
     }
   }

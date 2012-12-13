@@ -21,7 +21,7 @@ namespace genetic
 
     void ComputeProbability(void);
 
-    void BoltzmanProb(void);
+    void BoltzmannProb(void);
     void GaussProb(void);
     void UniformProb(void);
 

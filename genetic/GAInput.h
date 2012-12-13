@@ -8,7 +8,7 @@ using namespace std;
 
 namespace genetic
 {
-  enum SELECT_TYPE { GAUSS, BOLTZMAN, UNIFORM };
+  enum SELECT_TYPE { GAUSS, BOLTZMANN, UNIFORM };
 
   struct GAInput
   {

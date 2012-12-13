@@ -8,7 +8,7 @@ void genetic::Generation::ComputeProbability(void)
   // Sort by Fitness
   sort(m_cells.begin(), m_cells.end());
        if(gainput.select == genetic::GAUSS)    GaussProb();
-  else if(gainput.select == genetic::BOLTZMAN) BoltzmanProb();
+  else if(gainput.select == genetic::BOLTZMANN) BoltzmannProb();
   else                                         UniformProb();
 }
 
@@ -25,7 +25,7 @@ void genetic::Generation::GaussProb(void)
   }
 }
 
-void genetic::Generation::BoltzmanProb(void)
+void genetic::Generation::BoltzmannProb(void)
 {
   int nCells = m_cells.size();
   m_prob = vector< double >(nCells, 0.0);
