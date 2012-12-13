@@ -16,7 +16,11 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <sys/wait.h>
 #include <unistd.h>
 #include <errno.h>
-#include "malloc.h"
+#if defined(__APPLE__)
+   #include <sys/malloc.h>
+#else
+   #include <malloc.h>
+#endif
 #include "pario.h"
 
 namespace SpinAdapted{
