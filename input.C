@@ -888,15 +888,16 @@ void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
 #ifndef SERIAL
   mpi::communicator world;
 #endif
-  pout << "---------- Kij-based ordering by GA opt. ----------" << endl;
+  cout << "---------- Kij-based ordering by GA opt. ----------" << endl;
   m_gaorder = genetic::gaordering(gaconfFile, dumpFile).Gen().Sequence();
-  pout << "------ pick the best ordering up to reorder -------" << endl;
-  pout << "sites are reordered by: ";
+  cout << "------ pick the best ordering up to reorder -------" << endl;
+  cout << setw(50) << "sites are reordered by: ";
 #ifndef SERIAL
   if(mpigetrank() == 0) {
 #endif
+
     int n = m_gaorder.size() - 1;
-    for(int i = 0; i < n; ++i) pout << m_gaorder[i]+1 << ","; pout << m_gaorder[n]+1 << endl;
+    for(int i = 0; i < n; ++i) cout << m_gaorder[i]+1 << ","; cout << m_gaorder[n]+1 << endl;
 #ifndef SERIAL
   }
   mpi::broadcast(world,m_gaorder,0);
