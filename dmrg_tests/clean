@@ -8,7 +8,6 @@ rm spatial*
 rm twopdm.0.0
 rm twopdm.1.1
 rm *.out
-rm onepdm_fromtpdm
 
 cd ../h2o_nosym
 rm Spin*
