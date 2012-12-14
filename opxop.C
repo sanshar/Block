@@ -3,6 +3,12 @@
 #include "wavefunction.h"
 #include "BaseOperator.h"
 #include "tensor_operator.h"
+#ifdef _OPENMP
+#include <omp.h>
+#else
+#define omp_get_thread_num() 0 
+#endif
+#include "guess_wavefunction.h"
 
 //using namespace operatorfunctions;
 

@@ -10,7 +10,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "operatorfunctions.h"
 #include "wavefunction.h"
 #include "couplingCoeffs.h"
-#include "omp.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 
 void SpinAdapted::operatorfunctions::TensorTrace(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const SpinBlock *cblock, const StateInfo *cstateinfo, Baseoperator<Matrix>& c, double scale, int num_thrds)
@@ -18,9 +20,13 @@ void SpinAdapted::operatorfunctions::TensorTrace(const SpinBlock *ablock, const 
   
   if (fabs(scale) < TINY) return;
   assert (a.get_initialised() && c.get_initialised());
+#ifdef _OPENMP
 #pragma omp parallel default(shared) num_threads(num_thrds) 
+#endif
   {
+#ifdef _OPENMP
 #pragma omp for schedule(dynamic)
+#endif
   for (int cq = 0; cq < c.nrows(); ++cq)
     for (int cqprime = 0; cqprime < c.ncols(); ++cqprime)
       if (c.allowed(cq, cqprime)) 
@@ -138,9 +144,13 @@ void SpinAdapted::operatorfunctions::TensorProduct (const SpinBlock *ablock, con
 {
   if (fabs(scale) < TINY) return;
   int rows = c.nrows();
+#ifdef _OPENMP
 #pragma omp parallel default(shared) num_threads(num_thrds) 
+#endif
   {
+#ifdef _OPENMP
 #pragma omp for schedule(dynamic)
+#endif
   for (int cq = 0; cq < rows; ++cq)
     for (int cqprime = 0; cqprime < rows; ++cqprime)
       if (c.allowed(cq, cqprime)) {

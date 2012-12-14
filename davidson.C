@@ -7,7 +7,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include "davidson.h"
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 #include "BaseOperator.h"
 #include "MatrixBLAS.h"
 

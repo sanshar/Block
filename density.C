@@ -10,7 +10,11 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "wavefunction.h"
 #include "operatorloops.h"
 #include "operatorfunctions.h"
+#ifdef _OPENMP
 #include <omp.h>
+#else
+#define omp_get_thread_num() 0 
+#endif
 #include "guess_wavefunction.h"
 #include "distribute.h"
 #include <boost/format.hpp>

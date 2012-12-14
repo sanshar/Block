@@ -10,7 +10,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef SPIN_TIMER_HEADER_H
 #define SPIN_TIMER_HEADER_H
 #include <ctime>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 #include <iostream>
 #include <cstdlib>
 #include <cassert>
@@ -31,7 +33,11 @@ class cumulTimer
 
 #ifndef SERIAL
  cumulTimer() : localStart(0), cumulativeSum(0){t = boost::shared_ptr<boost::mpi::timer> (new boost::mpi::timer());};
+#ifdef _OPENMP
   void start() {if(!omp_get_thread_num()) {localStart = t->elapsed();}}
+#else
+  void start() {localStart = t->elapsed();}
+#endif
 #else
   cumulTimer() : localStart(0), cumulativeSum(0) {};
   void start() {localStart = clock();}
@@ -39,7 +45,9 @@ class cumulTimer
 
   void stop() 
   {
+#ifdef _OPENMP
     if(!omp_get_thread_num()){
+#endif
       if (localStart == 0) 
 	{
 	  cout << "local stop called without starting first"<<endl;
@@ -53,7 +61,9 @@ class cumulTimer
       cumulativeSum = cumulativeSum + clock() - localStart;
 #endif
       localStart = 0;
+#ifdef _OPENMP
     }
+#endif
   }
 
   friend ostream& operator<<(ostream& os, const cumulTimer& t)

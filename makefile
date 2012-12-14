@@ -23,6 +23,7 @@ RANLIB=ranlib
 # molpro compilation requires I8, since their integers are long
 I8_OPT = yes
 MOLPRO = no
+OMP = yes
 
 ifeq ($(I8_OPT), yes)
 	I8 = -DI8
@@ -40,6 +41,8 @@ INCLUDE2 = $(HOME)/
 NEWMATLIB = $(HOME)/newmat10/
 .SUFFIXES: .C .cpp
 
+   
+
 ifeq ($(MOLPRO), yes)
    MOLPROINCLUDE=$(HOME)/../
    MOLPRO_BLOCK= -DMOLPRO
@@ -50,14 +53,20 @@ MPI_OPT = -DSERIAL
 
 
 ifeq ($(notdir $(firstword $(CXX))),icpc)
+   ifeq ($(OPENMP), yes)
+      OPENMP_FLAGS= -openmp -D_OPENMP 
+   endif
 # Intel compiler
-	OPT = -O3 -funroll-loops -openmp -DBLAS -DUSELAPACK  $(MPI_OPT) $(I8) -DFAST_MTP $(MOLPRO_BLOCK)
+	OPT = -O3 -funroll-loops $(OPENMP_INC) -DBLAS -DUSELAPACK  $(MPI_OPT) $(I8) -DFAST_MTP $(MOLPRO_BLOCK)
 #	OPT = -g -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP 
 	CXX = icc
 endif
 ifeq ($(notdir $(firstword $(CXX))),g++)
+   ifeq ($(OPENMP), yes)
+      OPENMP_INC= -fopenmp -D_OPENMP 
+   endif
 # GNU compiler
-	OPT = -O3 -fopenmp -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)
+	OPT = -O3 $(OPENMP_FLAGS) -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)
 #	OPT = -g -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT)
 endif
 

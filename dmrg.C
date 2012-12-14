@@ -13,7 +13,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "global.h"
 #include "orbstring.h"
 #include <include/communicate.h>
-#include "omp.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 //the following can be removed later
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -88,7 +90,9 @@ int calldmrg(char* input, char* output)
 
   ReadInput(input);
   MAX_THRD = dmrginp.thrds_per_node()[mpigetrank()];
+#ifdef _OPENMP
   omp_set_num_threads(MAX_THRD);
+#endif
 
    //Initializing timer calls
   dmrginp.initCumulTimer();

@@ -14,7 +14,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "global.h"
 #include "orbstring.h"
 #include <include/communicate.h>
+#ifdef _OPENMP
 #include "omp.h"
+#endif
 //the following can be removed later
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -93,7 +95,9 @@ void ReadInput(char* conf)
   MAX_THRD=dmrginp.thrds_per_node()[0];
 #endif
 
+#ifdef _OPENMP
   omp_set_num_threads(MAX_THRD);
+#endif
 
   //initialise the size of all Slater determinants equal to orbsize
   Orbstring::init(dmrginp.slater_size());
