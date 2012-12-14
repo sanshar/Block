@@ -1068,101 +1068,192 @@ void SpinAdapted::Input::performSanityTest()
     m_sweep_additional_noise_schedule.resize(nentry,0);
     
     double sweeptol = m_sweep_tol;
-    if (m_maxM >= 50) {
-      m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(50); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(1.0e-4);
-    }
-    else {
-      m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(1.0e-6);  m_sweep_noise_schedule.push_back(1.0e-4);
-    }
+    int lastiter = 0;
+    if (m_norbs <32) {
+       if (m_maxM >= 50) {
+         m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(50); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(1.0e-4);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(1.0e-6);  m_sweep_noise_schedule.push_back(1.0e-4);
+       }
+       if (m_maxM >50) {
+       if (m_maxM >= 100) {
+         m_sweep_iter_schedule.push_back(4); m_sweep_state_schedule.push_back(100); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(4); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
+       if (m_maxM >100) {
+       if (m_maxM >= 250) {
+         m_sweep_iter_schedule.push_back(8); m_sweep_state_schedule.push_back(250); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(8); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
+       if (m_maxM >250) {
+       if (m_maxM >= 500) {
+         m_sweep_iter_schedule.push_back(12); m_sweep_state_schedule.push_back(500); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(12); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
+       if (m_maxM >500) {
+       if (m_maxM >= 1000) {
+         m_sweep_iter_schedule.push_back(16); m_sweep_state_schedule.push_back(1000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(16); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
+       if (m_maxM >1000) {
+       if (m_maxM >= 2000) {
+         m_sweep_iter_schedule.push_back(19); m_sweep_state_schedule.push_back(2000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(19); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
 
-    if (m_maxM >50) {
-    if (m_maxM >= 100) {
-      m_sweep_iter_schedule.push_back(4); m_sweep_state_schedule.push_back(100); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    else {
-      m_sweep_iter_schedule.push_back(4); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    }
+       if (m_maxM >2000) {
+       if (m_maxM >= 4000) {
+         m_sweep_iter_schedule.push_back(22); m_sweep_state_schedule.push_back(4000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(22); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
+       if (m_maxM >4000) {
+       if (m_maxM >= 6000) {
+         m_sweep_iter_schedule.push_back(25); m_sweep_state_schedule.push_back(6000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(25); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
 
-    if (m_maxM >100) {
-    if (m_maxM >= 250) {
-      m_sweep_iter_schedule.push_back(8); m_sweep_state_schedule.push_back(250); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    else {
-      m_sweep_iter_schedule.push_back(8); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    }
+       if (m_maxM >6000) {
+       if (m_maxM >= 8000) {
+         m_sweep_iter_schedule.push_back(28); m_sweep_state_schedule.push_back(8000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(28); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
 
-    if (m_maxM >250) {
-    if (m_maxM >= 500) {
-      m_sweep_iter_schedule.push_back(12); m_sweep_state_schedule.push_back(500); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       if (m_maxM >8000) {
+       if (m_maxM >= 10000) {
+         m_sweep_iter_schedule.push_back(31); m_sweep_state_schedule.push_back(10000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(31); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }    
+       lastiter = m_sweep_iter_schedule.back();
+       m_sweep_iter_schedule.push_back(lastiter+2); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(sweeptol/10.0);  m_sweep_noise_schedule.push_back(0.0e-5);
     }
+    // Greater than 16 orbitals
     else {
-      m_sweep_iter_schedule.push_back(12); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    }
+       if (m_maxM < 500) {
+         pout << "The default schedule for an orbital space larger than 16 starts at M=500" << endl;
+         m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(500); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(1.0e-4);
+       }
+       if (m_maxM >= 500) {
+         m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(500); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(1.0e-4);
+       }
+       if (m_maxM >500) {
+       if (m_maxM >= 1000) {
+         m_sweep_iter_schedule.push_back(8); m_sweep_state_schedule.push_back(1000); m_sweep_tol_schedule.push_back(5.0e-5);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(8); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-5);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
+       if (m_maxM >1000) {
+       if (m_maxM >= 2000) {
+         m_sweep_iter_schedule.push_back(16); m_sweep_state_schedule.push_back(2000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(16); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
 
-    if (m_maxM >500) {
-    if (m_maxM >= 1000) {
-      m_sweep_iter_schedule.push_back(16); m_sweep_state_schedule.push_back(1000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    else {
-      m_sweep_iter_schedule.push_back(16); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    }
+       if (m_maxM >2000) {
+       if (m_maxM >= 3000) {
+         m_sweep_iter_schedule.push_back(20); m_sweep_state_schedule.push_back(3000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(20); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
+       if (m_maxM >3000) {
+       if (m_maxM >= 4000) {
+         m_sweep_iter_schedule.push_back(24); m_sweep_state_schedule.push_back(4000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(24); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
 
-    if (m_maxM >1000) {
-    if (m_maxM >= 2000) {
-      m_sweep_iter_schedule.push_back(19); m_sweep_state_schedule.push_back(2000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    else {
-      m_sweep_iter_schedule.push_back(19); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    }
+       if (m_maxM >4000) {
+       if (m_maxM >= 5000) {
+         m_sweep_iter_schedule.push_back(28); m_sweep_state_schedule.push_back(5000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(28); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
+       if (m_maxM >5000) {
+       if (m_maxM >= 6000) {
+         m_sweep_iter_schedule.push_back(32); m_sweep_state_schedule.push_back(6000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(32); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
+       if (m_maxM >6000) {
+       if (m_maxM >= 7000) {
+         m_sweep_iter_schedule.push_back(36); m_sweep_state_schedule.push_back(7000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(36); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
+       if (m_maxM >7000) {
+       if (m_maxM >= 8000) {
+         m_sweep_iter_schedule.push_back(40); m_sweep_state_schedule.push_back(8000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(40); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
+       if (m_maxM >8000) {
+       if (m_maxM >= 9000) {
+         m_sweep_iter_schedule.push_back(44); m_sweep_state_schedule.push_back(9000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(44); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
+       if (m_maxM >9000) {
+       if (m_maxM >= 10000) {
+         m_sweep_iter_schedule.push_back(48); m_sweep_state_schedule.push_back(10000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       else {
+         m_sweep_iter_schedule.push_back(48); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
+       }
 
-    if (m_maxM >2000) {
-    if (m_maxM >= 4000) {
-      m_sweep_iter_schedule.push_back(22); m_sweep_state_schedule.push_back(4000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
+       lastiter = m_sweep_iter_schedule.back();
+       m_sweep_iter_schedule.push_back(lastiter+2); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(sweeptol/10.0);  m_sweep_noise_schedule.push_back(0.0e-5);
     }
-    else {
-      m_sweep_iter_schedule.push_back(22); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    }
-
-    if (m_maxM >4000) {
-    if (m_maxM >= 6000) {
-      m_sweep_iter_schedule.push_back(25); m_sweep_state_schedule.push_back(6000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    else {
-      m_sweep_iter_schedule.push_back(25); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    }
-
-    if (m_maxM >6000) {
-    if (m_maxM >= 8000) {
-      m_sweep_iter_schedule.push_back(28); m_sweep_state_schedule.push_back(8000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    else {
-      m_sweep_iter_schedule.push_back(28); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    }
-
-    if (m_maxM >8000) {
-    if (m_maxM >= 10000) {
-      m_sweep_iter_schedule.push_back(31); m_sweep_state_schedule.push_back(10000); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    else {
-      m_sweep_iter_schedule.push_back(31); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
-    }
-    }    
-
-    int lastiter = m_sweep_iter_schedule.back();
-    m_sweep_iter_schedule.push_back(lastiter+2); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(sweeptol/10.0);  m_sweep_noise_schedule.push_back(0.0e-5);
 
 
     if (m_twodot_to_onedot_iter < 18 && m_algorithm_type == TWODOT_TO_ONEDOT) {
       if (m_twodot_to_onedot_iter <= 0)
-	pout << "Sweep at which the switch from twodot to onedot will happen -> "<<lastiter+4<<endl;
+         pout << "Sweep at which the switch from twodot to onedot will happen -> "<<lastiter+4<<endl;
       m_twodot_to_onedot_iter = lastiter+4;
     }
     if (m_maxiter <= m_sweep_iter_schedule.back()) {
