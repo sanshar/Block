@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012
 Copyright (c) 2012, Garnet K.-L. Chan
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -44,6 +34,7 @@ the license agreement is reproduced below
 #include <cmath>
 #include <algorithm>
 
+#include <iostream>
 using namespace std;
 
 double cleb_(int j1, int m1, int j2, int m2, int j, int m)
@@ -57,7 +48,9 @@ double cleb_(int j1, int m1, int j2, int m2, int j, int m)
          2*(j/2)-int(2*(j/2.0)) != 2*(abs(m)/2)-int(2*(abs(m)/2.0)) ||
          j1<0 || j2<0 || j<0 || abs(m1)>j1 || abs(m2)>j2 ||
       abs(m)>j || j1+j2<j || abs(j1-j2)>j || m1+m2!=m)
+  {
     cleb= 0.0;
+  }
   else
   {  
     factor = 0.0;
@@ -65,9 +58,11 @@ double cleb_(int j1, int m1, int j2, int m2, int j, int m)
     factor = factor * binom(j2,(j1+j2-j)/2) / binom(j1,(j1-m1)/2);
     factor = factor / binom(j2,(j2-m2)/2) / binom(j,(j-m)/2);
     factor = sqrt(factor);
+
        
     zmin = max(max(0,j2+(j1-m1)/2-(j1+j2+j)/2),j1+(j2+m2)/2-(j1+j2+j)/2);
     zmax = min(min((j1+j2-j)/2,(j1-m1)/2),(j2+m2)/2);
+
        
     sum=0.0;
     for (z = zmin; z<=zmax; z++) {
@@ -78,6 +73,7 @@ double cleb_(int j1, int m1, int j2, int m2, int j, int m)
     }
     cleb = factor*sum;
   }
+  
   return cleb;
 }
 
@@ -139,7 +135,7 @@ double ninej_(int a, int b, int c, int d, int e, int f, int g, int h, int i)
 {
   double ninej, sum;
   int xlo, xhi, term;
-  int x;
+  //int x;
 
   ninej=0.0;
 
@@ -152,6 +148,7 @@ double ninej_(int a, int b, int c, int d, int e, int f, int g, int h, int i)
   
   xlo = max(max(abs(b-f),abs(a-i)),abs(h-d));
   xhi = min(min(b+f,a+i),h+d);
+
     
   sum=0.0;
   for (int x=xlo; x<=xhi; x=x+2)

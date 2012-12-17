@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -21,15 +11,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "guess_wavefunction.h"
 #include "density.h"
 #include "davidson.h"
+#include "pario.h"
 
 namespace SpinAdapted{
 void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys, int state)
 {
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     mcheck("at the start of block and decimate");
   // figure out if we are going forward or backwards
   pout << "\t\t\t Performing Blocking"<<endl;
-  dmrginp.guessgenT.start();
+  dmrginp.guessgenT -> start();
   bool forward = (system.get_sites() [0] == 0);
   SpinBlock systemDot;
   int systemDotStart, systemDotEnd;
@@ -56,7 +47,7 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
 
 
   pout << "\t\t\t System  Block"<<newSystem;
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     newSystem.printOperatorSummary();
 
   std::vector<Matrix> rotateMatrix;
@@ -99,11 +90,11 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
 
   pout <<"\t\t\t Performing Renormalization "<<endl<<endl;
   newSystem.transform_operators(rotateMatrix);
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     mcheck("after rotation and transformation of block");
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout <<newSystem<<endl;
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     newSystem.printOperatorSummary();
   //mcheck("After renorm transform");
 }
@@ -126,7 +117,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
   if(!restart)
     sweepParams.set_block_iter() = 0;
 
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Starting block is :: " << endl << system << endl;
   //if (!restart) 
     SpinBlock::store (forward, system.get_sites(), system); // if restart, just restoring an existing block --
@@ -144,7 +135,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
     {
       pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
-      if (dmrginp.outputlevel() != 0) {
+      if (dmrginp.outputlevel() > 0) {
       if (forward)
 	pout << "\t\t\t Current direction is :: Forwards " << endl;
       else
@@ -163,7 +154,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
       else
         sweepParams.set_guesstype() = BASIC;
       
-      if (dmrginp.outputlevel() != 0) 
+      if (dmrginp.outputlevel() > 0) 
 	pout << "\t\t\t Blocking and Decimating " << endl;
 	  
       SpinBlock newSystem;
@@ -181,7 +172,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
 
       SpinBlock::store (forward, system.get_sites(), system);	 	
 
-      if (dmrginp.outputlevel() != 0) 
+      if (dmrginp.outputlevel() > 0) 
 	pout << "\t\t\t saving state " << system.get_sites().size() << endl;
       ++sweepParams.set_block_iter();
       //if (sweepParams.get_onedot())

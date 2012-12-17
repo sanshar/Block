@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -22,7 +12,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <iostream>
 #include <communicate.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 #include <boost/shared_ptr.hpp>
 
 
@@ -45,8 +37,10 @@ class SpinBlock;
 
 template<class A> void singlethread_build(A& array, SpinBlock& b, std::vector< Csf >& s, vector< vector<Csf> >& ladders)
 {
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
 #pragma omp for schedule(guided) nowait
+#endif
   for (int i = 0; i < array.get_size(); ++i) {
     //typedef typename A::OpType Op;
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
@@ -57,8 +51,10 @@ template<class A> void singlethread_build(A& array, SpinBlock& b, std::vector< C
 
 template<class A> void singlethread_build(A& array, SpinBlock& b)
 {
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
 #pragma omp for schedule(guided) nowait
+#endif
   for (int i = 0; i < array.get_size(); ++i) {
     //typedef typename A::OpType Op;
     //std::vector<boost::shared_ptr<Op> >& vec = array.get_local_element(i);
@@ -86,8 +82,10 @@ template<typename T2, class A> void for_all_singlethread(A& array, const T2& fun
 
 template<typename T2, class A> void for_all_multithread(A& array, const T2& func)
 {
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
 #pragma omp for schedule(guided) nowait
+#endif
     for (int i = 0; i < array.get_size(); ++i) {
       std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
       func(vec);
@@ -97,9 +95,13 @@ template<typename T2, class A> void for_all_multithread(A& array, const T2& func
 template<typename T2, class A> void for_all_operators_multithread(A& array, const T2& func)
 {
   int i;
+#ifdef _OPENMP
   #pragma omp parallel default(shared) private(i)
+#endif
   {
+#ifdef _OPENMP
     #pragma omp for schedule(guided) nowait
+#endif
     for (i = 0; i < array.get_size(); ++i) {
       std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
       for (int j=0; j<vec.size(); j++){

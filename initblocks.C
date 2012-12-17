@@ -2,23 +2,14 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
 #include "global.h"
 #include "initblocks.h"
+#include "pario.h"
 
 void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const bool &forward, 
                                     const int & forward_starting_size, const int &backward_starting_size,
@@ -78,7 +69,7 @@ void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &s
   newSystem.setstoragetype(storage);
   newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, systemDot);
 
-  if (dmrginp.outputlevel() != 0) {
+  if (dmrginp.outputlevel() > 0) {
     pout << "\t\t\t NewSystem block " << endl << newSystem << endl;
     newSystem.printOperatorSummary();
   }
@@ -180,7 +171,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 	else
 	  quantaDist[quantumNumbers[i]] = distribution[i];
       }
-      if (dmrginp.outputlevel() != 0)
+      if (dmrginp.outputlevel() > 0)
 	pout << "\t\t\t Quantum numbers and states used for warm up :: " << endl << "\t\t\t ";
       quantumNumbers.clear(); quantumNumbers.reserve(distribution.size());
       distribution.clear();distribution.reserve(quantumNumbers.size());
@@ -189,7 +180,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
       for (; qit != quantaDist.end(); qit++)
       {
 	quantumNumbers.push_back( qit->first); distribution.push_back(qit->second); 
-	if (dmrginp.outputlevel() != 0) {
+	if (dmrginp.outputlevel() > 0) {
 	  pout << quantumNumbers.back() << " = " << distribution.back() << ", ";
 	  if (! (quantumNumbers.size() - 6) % 6) pout << endl << "\t\t\t ";
 	}
@@ -209,35 +200,35 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
   }
   else
   {
-    if (dmrginp.outputlevel() != 0)
+    if (dmrginp.outputlevel() > 0)
       pout << "\t\t\t Restoring block of size " << environmentSites.size () << " from previous iteration" << endl;
     if(dot_with_sys && onedot)
       SpinBlock::restore (!forward, environmentSites, newEnvironment);
     else
       SpinBlock::restore (!forward, environmentSites, environment);
-    if (dmrginp.outputlevel() != 0)
+    if (dmrginp.outputlevel() > 0)
       mcheck("");
   }
 
   // now initialise newEnvironment
   if (!dot_with_sys || !onedot)
   {
-    dmrginp.datatransfer.start();
+    dmrginp.datatransfer -> start();
     environment.addAdditionalCompOps();
-    dmrginp.datatransfer.stop();
+    dmrginp.datatransfer -> stop();
 
       newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops);
       newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
       
       newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, environmentDot);
-      if (dmrginp.outputlevel() != 0) {
+      if (dmrginp.outputlevel() > 0) {
 	pout << "\t\t\t Environment block " << endl << environment << endl;
 	environment.printOperatorSummary();
 	pout << "\t\t\t NewEnvironment block " << endl << newEnvironment << endl;
 	newEnvironment.printOperatorSummary();
       }
   }
-  else  if (dmrginp.outputlevel() != 0) {
+  else  if (dmrginp.outputlevel() > 0) {
     pout << "\t\t\t Environment block " << endl << newEnvironment << endl;
     newEnvironment.printOperatorSummary();
   }

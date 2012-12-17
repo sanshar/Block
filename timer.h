@@ -2,29 +2,26 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
 #ifndef SPIN_TIMER_HEADER_H
 #define SPIN_TIMER_HEADER_H
 #include <ctime>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 #include <iostream>
 #include <cstdlib>
 #include <cassert>
+#include <execinfo.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 #ifndef SERIAL
+#include <boost/serialization/shared_ptr.hpp>
 #include <boost/mpi/timer.hpp>
 #endif
 
@@ -35,8 +32,12 @@ class cumulTimer
  public:
 
 #ifndef SERIAL
-  cumulTimer() : localStart(0), cumulativeSum(0){ t = boost::mpi::timer();};
-  void start() {if(!omp_get_thread_num()) {localStart = t.elapsed();}}
+ cumulTimer() : localStart(0), cumulativeSum(0){t = boost::shared_ptr<boost::mpi::timer> (new boost::mpi::timer());};
+#ifdef _OPENMP
+  void start() {if(!omp_get_thread_num()) {localStart = t->elapsed();}}
+#else
+  void start() {localStart = t->elapsed();}
+#endif
 #else
   cumulTimer() : localStart(0), cumulativeSum(0) {};
   void start() {localStart = clock();}
@@ -44,7 +45,9 @@ class cumulTimer
 
   void stop() 
   {
+#ifdef _OPENMP
     if(!omp_get_thread_num()){
+#endif
       if (localStart == 0) 
 	{
 	  cout << "local stop called without starting first"<<endl;
@@ -53,12 +56,14 @@ class cumulTimer
 	  abort();
 	}
 #ifndef SERIAL
-      cumulativeSum = cumulativeSum + t.elapsed() - localStart;
+      cumulativeSum = cumulativeSum + t->elapsed() - localStart;
 #else
       cumulativeSum = cumulativeSum + clock() - localStart;
 #endif
       localStart = 0;
+#ifdef _OPENMP
     }
+#endif
   }
 
   friend ostream& operator<<(ostream& os, const cumulTimer& t)
@@ -69,7 +74,7 @@ class cumulTimer
 
  private:
 #ifndef SERIAL
-  boost::mpi::timer t;
+  boost::shared_ptr<boost::mpi::timer> t;
 #endif
   double localStart;
   double cumulativeSum;
@@ -81,10 +86,10 @@ public:
   Timer(bool s) { if (s) start(); }
   Timer() { start(); }
 #ifndef SERIAL
-  void start() { t = boost::mpi::timer(); walltime = t.elapsed(); lastwalltime = walltime; wallstarttime = walltime; cputime = clock(); lastcputime = cputime; cpustarttime = cputime; }  
-  double elapsedwalltime() { walltime = t.elapsed(); double elapsed = walltime - lastwalltime; lastwalltime = walltime; return elapsed; }
+  void start() { t = boost::shared_ptr<boost::mpi::timer>(new boost::mpi::timer()); walltime = t->elapsed(); lastwalltime = walltime; wallstarttime = walltime; cputime = clock(); lastcputime = cputime; cpustarttime = cputime; }  
+  double elapsedwalltime() { walltime = t->elapsed(); double elapsed = walltime - lastwalltime; lastwalltime = walltime; return elapsed; }
   double elapsedcputime() { cputime = clock(); double elapsed = double(cputime - lastcputime) / double(CLOCKS_PER_SEC); lastcputime = cputime; return elapsed; }
-  double totalwalltime() { return t.elapsed() - wallstarttime; }
+  double totalwalltime() { return t->elapsed() - wallstarttime; }
   double totalcputime() { return (double)(clock() - cpustarttime) / double(CLOCKS_PER_SEC); }
 #else
   void start() { walltime = time(NULL); lastwalltime = walltime; wallstarttime = walltime; cputime = clock(); lastcputime = cputime; cpustarttime = cputime; }  
@@ -95,7 +100,7 @@ public:
 #endif
 private:
 #ifndef SERIAL
-  boost::mpi::timer t;
+  boost::shared_ptr<boost::mpi::timer> t;
   double  walltime;
   double lastwalltime;
   double wallstarttime;

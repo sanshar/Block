@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include "IntegralMatrix.h"
@@ -23,13 +13,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "global.h"
 #include "orbstring.h"
 #include <include/communicate.h>
-#include "omp.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 //the following can be removed later
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/serialization/export.hpp>
+#include <boost/format.hpp>
 #include "spinblock.h"
 #include "StateInfo.h"
 #include "operatorfunctions.h"
@@ -51,6 +44,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi.hpp>
 #endif
+#include "pario.h"
 
 
 void dmrg(double sweep_tol);
@@ -58,10 +52,12 @@ void restart(double sweep_tol, bool reset_iter);
 void ReadInput(char* conf);
 void fullrestartGenblock();
 void license() {
+#ifndef MOLPRO
   pout << "Block  Copyright (C) 2012  Garnet K.-L. Chan"<<endl;
   pout << "This program comes with ABSOLUTELY NO WARRANTY; for details see license file."<<endl;
   pout << "This is free software, and you are welcome to redistribute it"<<endl;
   pout << "under certain conditions; see license file for details."<<endl;
+#endif
 }
 
 
@@ -94,7 +90,12 @@ int calldmrg(char* input, char* output)
 
   ReadInput(input);
   MAX_THRD = dmrginp.thrds_per_node()[mpigetrank()];
+#ifdef _OPENMP
   omp_set_num_threads(MAX_THRD);
+#endif
+
+   //Initializing timer calls
+  dmrginp.initCumulTimer();
 
   double sweep_tol = 1e-7;
   sweep_tol = dmrginp.get_sweep_tol();
@@ -271,7 +272,8 @@ int calldmrg(char* input, char* output)
 }
 void calldmrg_(char* input, char* output) {
    int a;
-   a=calldmrg("dmrg.inp",0);//, output);
+   //a=calldmrg("dmrg.inp",0);//, output);
+   a=calldmrg(input,0);//, output);
 }
 
 void fullrestartGenblock() {
@@ -334,13 +336,23 @@ void restart(double sweep_tol, bool reset_iter)
   }
 
   if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
-    pout << "Maximum sweep iterations acheived " << std::endl;
+#ifndef MOLPRO
+    pout << "Maximum sweep iterations achieved " << std::endl;
+#else
+    xout << "Maximum sweep iterations achieved " << std::endl;
+#endif
 
  
-  const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
+  const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter()); 
   if (!mpigetrank())
   {
+#ifndef MOLPRO
     FILE* f = fopen("dmrg.e", "wb");
+#else
+    std::string efile;
+    efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
+    FILE* f = fopen(efile.c_str(), "wb");
+#endif
     
     for(int j=0;j<nroots;++j) {
       double e = sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy(); 
@@ -373,15 +385,15 @@ void dmrg(double sweep_tol)
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
       last_be = Sweep::do_one(sweepParams, false, false, false, 0);
-      if (dmrginp.outputlevel() != 0) 
-	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      if (dmrginp.outputlevel() > 0) 
+         pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
 
 
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
       last_fe = Sweep::do_one(sweepParams, false, true, false, 0);
-      if (dmrginp.outputlevel() != 0)
-	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      if (dmrginp.outputlevel() > 0)
+         pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       if (domoreIter == 2) {
 	dodiis = true;
 	break;
@@ -390,12 +402,18 @@ void dmrg(double sweep_tol)
 
     }
   if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
-    pout << "Maximum sweep iterations acheived " << std::endl;
+    pout << "Maximum sweep iterations achieved " << std::endl;
 
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
   if (!mpigetrank())
   {
+#ifndef MOLPRO
     FILE* f = fopen("dmrg.e", "wb");
+#else
+    std::string efile;
+    efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
+    FILE* f = fopen(efile.c_str(), "wb");
+#endif
     
     for(int j=0;j<nroots;++j) {
       double e = sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy(); 

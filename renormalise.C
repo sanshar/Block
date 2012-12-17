@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -34,11 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "linear.h"
 #include "davidson.h"
 #include <stdlib.h>
-				    //#include "diis.h"
+//#include "diis.h"
 
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
+
+#include "pario.h"
 
 using namespace boost;
 using namespace std;
@@ -52,18 +44,18 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 {
   int nroots = dmrginp.nroots(sweepiter);
   vector<Wavefunction> wave_solutions(nroots);
-  dmrginp.davidsonT.start();
-  if (dmrginp.outputlevel() != 0)
+  dmrginp.davidsonT -> start();
+  if (dmrginp.outputlevel() > 0)
     mcheck("before davidson but after all blocks are built");
 
-  dmrginp.solvewf.start();
+  dmrginp.solvewf -> start();
   Solver::solve_wavefunction(wave_solutions, energies, big, tol, guesswavetype, onedot, dot_with_sys, warmUp, additional_noise);
 
-  dmrginp.solvewf.stop();
+  dmrginp.solvewf -> stop();
   SpinBlock newsystem;
   SpinBlock newenvironment;
   SpinBlock newbig;
-  dmrginp.postwfrearrange.start();
+  dmrginp.postwfrearrange -> start();
 
   if (onedot && !dot_with_sys)
   {
@@ -76,21 +68,22 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
       wave_solutions[i] = tempwave;
     }
     *this = newsystem;
-    cout << newsystem.get_twoInt().get()<<"  "<<get_twoInt().get()<<"  Ints "<<endl;
+    if (dmrginp.outputlevel() > 0)
+       cout << newsystem.get_twoInt().get()<<"  "<<get_twoInt().get()<<"  Ints "<<endl;
     envDot.clear();
     big.get_rightBlock()->clear();
     big.clear();
   }
   else
     newbig = big;
-  dmrginp.postwfrearrange.stop();
+  dmrginp.postwfrearrange -> stop();
 
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     mcheck("after davidson before noise");
 
-  dmrginp.davidsonT.stop();
+  dmrginp.davidsonT -> stop();
 
-  dmrginp.rotmatrixT.start();
+  dmrginp.rotmatrixT -> start();
   DensityMatrix tracedMatrix;
   tracedMatrix.allocate(stateInfo);
 
@@ -98,14 +91,14 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   if (newbig.get_rightBlock()->size() < 2)
     normalnoise = true;
   
-  dmrginp.addnoise.start();
+  dmrginp.addnoise -> start();
   double twodotnoise = 0.0;
   if (dmrginp.noise_type() == RANDOM)
     twodotnoise = additional_noise;
   
   tracedMatrix.makedensitymatrix(wave_solutions, newbig, dmrginp.weights(sweepiter), noise, twodotnoise, normalnoise);
-  dmrginp.addnoise.stop();
-  if (dmrginp.outputlevel() != 0)
+  dmrginp.addnoise -> stop();
+  if (dmrginp.outputlevel() > 0)
     mcheck("after density matrix before rotation matrix");
   if (!mpigetrank())
     error = makeRotateMatrix(tracedMatrix, rotateMatrix, keptstates, keptqstates);
@@ -119,9 +112,9 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
     SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix, i);
   for(int i=0;i<nroots;++i)
     wave_solutions[i].SaveWavefunctionInfo (newbig.stateInfo, newbig.leftBlock->sites, i);
-  dmrginp.rotmatrixT.stop();
-  if (dmrginp.outputlevel() != 0)
-    mcheck("after noise and calulation of density matrix");
+  dmrginp.rotmatrixT -> stop();
+  if (dmrginp.outputlevel() > 0)
+    mcheck("after noise and calculation of density matrix");
 }
 
 double SpinBlock::makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates)
@@ -144,7 +137,7 @@ double SpinBlock::makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& 
   int totalstatesbyquanta = min(static_cast<int>(inorderwts.size()), keptstates + keptqstates) - totalstatesbydm;
   if (totalstatesbyquanta < 0) totalstatesbyquanta = 0;
   
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     pout << "\t\t\t total states using dm and quanta " << totalstatesbydm << " " << totalstatesbyquanta << endl;
   
   return assign_matrix_by_dm(rotateMatrix, eigenMatrix, transformmatrix, inorderwts, wtsbyquanta, totalstatesbydm, 

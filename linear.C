@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -28,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
+#include "pario.h"
 using namespace boost;
 
 const double EPS=1.e-20;
@@ -112,11 +103,11 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
   int converged_roots = 0;
   while(true)
     {
-      if (dmrginp.outputlevel() != 0)
+      if (dmrginp.outputlevel() > 0)
 	pout << "\t\t\t Davidson Iteration :: " << iter << endl;
 
       ++iter;
-      dmrginp.hmultiply.start();
+      dmrginp.hmultiply -> start();
 
       int sigmasize, bsize;
 
@@ -161,7 +152,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	  h_multiply(*bptr, *sigmaptr);
 	  
 	}
-      dmrginp.hmultiply.stop();
+      dmrginp.hmultiply -> stop();
 
       Wavefunction r;
       DiagonalMatrix subspace_eigenvalues;
@@ -181,7 +172,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	Matrix alpha;
 	diagonalise(subspace_h, subspace_eigenvalues, alpha);
 	
-	if (dmrginp.outputlevel() != 0) {
+	if (dmrginp.outputlevel() > 0) {
 	  for (int i = 1; i <= subspace_eigenvalues.Ncols (); ++i)
 	    pout << "\t\t\t " << i << " ::  " << subspace_eigenvalues(i,i)+dmrginp.get_coreenergy() << endl;
 	}	
@@ -224,11 +215,11 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	olsenPrecondition(r, b[converged_roots], subspace_eigenvalues(converged_roots+1), h_diag, levelshift);
 
 
-      if (dmrginp.outputlevel() != 0)
+      if (dmrginp.outputlevel() > 0)
 	pout << "\t \t \t residual :: " << rnorm << endl;
       if (rnorm < normtol)
 	{
-	  if (dmrginp.outputlevel() != 0)
+	  if (dmrginp.outputlevel() > 0)
 	    pout << "\t\t\t Converged root " << converged_roots << endl;
 #ifndef SERIAL
 	  mpi::broadcast(world, b[converged_roots], 0);
@@ -252,7 +243,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	{
 	  if(b.size() >= dmrginp.deflation_max_size())
 	    {
-	      if (dmrginp.outputlevel() != 0)
+	      if (dmrginp.outputlevel() > 0)
 		pout << "\t\t\t Deflating block davidson...\n";
 	      b.resize(dmrginp.deflation_min_size());
 	      sigma.resize(dmrginp.deflation_min_size());

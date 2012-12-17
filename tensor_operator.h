@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -24,7 +14,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <iostream>
 #include <stdio.h>
-#include "anglib.h"
+//#include "anglib.h"
+#include "new_anglib.h"
 #include <stdlib.h>
 #include <cmath>
 #include "Symmetry.h"
@@ -165,7 +156,8 @@ class TensorOp {
 	std::vector<double>&  iSz1 = Szops[ilz1*(Spin+1)+(-sz1+Spin)/2];
 	std::vector<double>&  iSz2 = op1.Szops[ilz2*(op1.Spin+1)+(-sz2+op1.Spin)/2];
 
-	double cleb = cleb_(Spin, sz1, op1.Spin, sz2, pspin, sz);
+	//double cleb = cleb_(Spin, sz1, op1.Spin, sz2, pspin, sz);
+	double cleb = clebsch(Spin, sz1, op1.Spin, sz2, pspin, sz);
 	double clebdinfh = Symmetry::spatial_cg(irrep, op1.irrep, pirrep, ilz1, ilz2, ilz);
 	if (fabs(cleb) <= 1.0e-14 || fabs(clebdinfh) <= 1.0e-14)
 	  continue;

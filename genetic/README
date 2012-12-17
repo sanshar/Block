@@ -1,0 +1,22 @@
+Simple Genetic Algorithm (GA) code to get site-ordering / written by Naoki Nakatani
+
+(1) Specifying "gaopt [filename]" in Block input, automatically find a reliable site-ordering using exchange integral,
+    called Kij-based ordering.  Parameters of GA opt can be controled by GA config file given by [filename].
+    If you specify "default" as [filename], GA employs default parameters.
+
+(2) To make with genetic/makefile, gives stand-alone GA program "gaopt" and run with
+
+         gaopt -config [filename] -integral [dumpfile]
+
+    where [filename] is GA config file and [dumpfile] is MOLPRO FCIDUMP file. 
+
+GA config file contains ( see also "ga.conf" in this directory ),
+
+maxcomm  : # of trajectories
+maxgen   : # of steps of 1 trajectory
+maxcell  : # of individuals in a generation, normally be "2 x (# of active orbitals)"
+cloning  : probability for crossover ( cloning if random # is larger than this threshold, otherwise taking crossover )
+mutation : probability for mutation
+elite    : # of elites kept for generation
+scale    : scaling factor of a selection probability
+method   : type of distribution function on selection ( gauss, boltzmann, uniform )

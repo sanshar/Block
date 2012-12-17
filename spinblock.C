@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -28,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
+#include "pario.h"
 
 namespace SpinAdapted{
 using namespace operatorfunctions;
@@ -45,18 +36,17 @@ void SpinBlock::printOperatorSummary()
     for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core()) 
-	cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
+         cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
       else
-	cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
+         cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
       
       vector<int> numops(world.size(), 0);
       for (int proc = 0; proc <world.size(); proc++) {
-	if (proc != 0) 
-	  receiveobject(numops[proc],proc);
-	  else 
-	    numops[proc] = it->second->get_size();
-	
-	cout <<numops[proc]<<"  ";
+         if (proc != 0) 
+            receiveobject(numops[proc],proc);
+         else 
+            numops[proc] = it->second->get_size();
+         cout <<numops[proc]<<"  ";
       }
       cout << endl;
     }
@@ -78,7 +68,7 @@ ostream& operator<< (ostream& os, const SpinBlock& b)
   os << "\t\t\t Sites ::  ";
   for (int i = 0; i < b.sites.size(); ++i) { os << b.sites[i] << " "; } 
   
-  if (dmrginp.outputlevel() != 0) {
+  if (dmrginp.outputlevel() > 0) {
     os << endl;
     os << b.stateInfo;
   }
@@ -226,7 +216,7 @@ void SpinBlock::clear()
 void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState)
 {
   name = get_name();
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Building Sum Block " << name << endl;
   leftBlock = &lBlock;
   rightBlock = &rBlock;
@@ -259,7 +249,7 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
   copy (rBlock.sites.begin(), rBlock.sites.end (), back_inserter (sites));
   sort(sites.begin(), sites.end());
   complementary_sites = make_complement(sites);
-  if (dmrginp.outputlevel() != 0) {
+  if (dmrginp.outputlevel() > 0) {
     pout << "\t\t\t ";
     for (int i = 0; i < sites.size(); ++i) pout << sites[i] << " ";
     pout << endl;
@@ -272,15 +262,15 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
 
 void SpinBlock::BuildSumBlock(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState)
 {
-  dmrginp.buildsumblock.start();
+  dmrginp.buildsumblock -> start();
   BuildSumBlockSkeleton(condition, lBlock, rBlock, compState);
 
   build_iterators();
 
-  dmrginp.buildblockops.start();
+  dmrginp.buildblockops -> start();
   build_operators();
-  dmrginp.buildblockops.stop();
-  dmrginp.buildsumblock.stop();
+  dmrginp.buildblockops -> stop();
+  dmrginp.buildsumblock -> stop();
 }
 
 
@@ -315,21 +305,21 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   
   int maxt = 1;
   initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
-  dmrginp.oneelecT.start();
-  dmrginp.s0time.start();
+  dmrginp.oneelecT -> start();
+  dmrginp.s0time -> start();
   boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0];
   TensorMultiply(leftBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);
 
   op = rightBlock->get_op_array(HAM).get_local_element(0)[0];
   TensorMultiply(rightBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum(), 1.0, MAX_THRD);  
 
-  dmrginp.s0time.stop();
+  dmrginp.s0time -> stop();
 #ifndef SERIAL
   boost::mpi::communicator world;
   int size = world.size();
 #endif
 
-  dmrginp.s1time.start();
+  dmrginp.s1time -> start();
   v_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
   Functor f = boost::bind(&opxop::cxcddcomp, leftBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
   for_all_multithread(rightBlock->get_op_array(CRE), f);
@@ -338,15 +328,15 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   f = boost::bind(&opxop::cxcddcomp, rightBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
   for_all_multithread(leftBlock->get_op_array(CRE), f);  
 
-  dmrginp.s1time.stop();
+  dmrginp.s1time -> stop();
 
-  dmrginp.oneelecT.stop();
+  dmrginp.oneelecT -> stop();
 
-  dmrginp.twoelecT.start();
+  dmrginp.twoelecT -> start();
 
   if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
     
-    dmrginp.s0time.start();
+    dmrginp.s0time -> start();
     v_add =  otherBlock->get_op_array(CRE_DESCOMP).is_local() ? v_array : v_distributed;
     f = boost::bind(&opxop::cdxcdcomp, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
     for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
@@ -354,9 +344,9 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
     v_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? v_array : v_distributed;
     f = boost::bind(&opxop::ddxcccomp, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
     for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);
-    dmrginp.s0time.stop();
+    dmrginp.s0time -> stop();
   }
-  dmrginp.twoelecT.stop();
+  dmrginp.twoelecT -> stop();
 
   accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
 
@@ -474,9 +464,10 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   }
 
   stateInfo = StateInfo (dets);
+  twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
   build_iterators();
 
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t time in slater distribution " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
 
   std::vector< std::vector<Csf> > ladders; ladders.resize(dets.size());
@@ -485,7 +476,7 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
 
 
   build_operators(dets, ladders);
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t time in slater operator build " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
 }
 

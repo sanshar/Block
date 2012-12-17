@@ -2,25 +2,17 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
 #include "operatorfunctions.h"
 #include "wavefunction.h"
 #include "couplingCoeffs.h"
-#include "omp.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 
 void SpinAdapted::operatorfunctions::TensorTrace(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const SpinBlock *cblock, const StateInfo *cstateinfo, Baseoperator<Matrix>& c, double scale, int num_thrds)
@@ -28,9 +20,13 @@ void SpinAdapted::operatorfunctions::TensorTrace(const SpinBlock *ablock, const 
   
   if (fabs(scale) < TINY) return;
   assert (a.get_initialised() && c.get_initialised());
+#ifdef _OPENMP
 #pragma omp parallel default(shared) num_threads(num_thrds) 
+#endif
   {
+#ifdef _OPENMP
 #pragma omp for schedule(dynamic)
+#endif
   for (int cq = 0; cq < c.nrows(); ++cq)
     for (int cqprime = 0; cqprime < c.ncols(); ++cqprime)
       if (c.allowed(cq, cqprime)) 
@@ -148,9 +144,13 @@ void SpinAdapted::operatorfunctions::TensorProduct (const SpinBlock *ablock, con
 {
   if (fabs(scale) < TINY) return;
   int rows = c.nrows();
+#ifdef _OPENMP
 #pragma omp parallel default(shared) num_threads(num_thrds) 
+#endif
   {
+#ifdef _OPENMP
 #pragma omp for schedule(dynamic)
+#endif
   for (int cq = 0; cq < rows; ++cq)
     for (int cqprime = 0; cqprime < rows; ++cqprime)
       if (c.allowed(cq, cqprime)) {

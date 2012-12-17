@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -21,6 +11,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
+#include "pario.h"
+
 namespace SpinAdapted{
 void GuessWave::TransformLeftBlock(Wavefunction& oldwavefunction, const StateInfo& newstateinfo, const std::vector<Matrix>& RotationMatrix, Wavefunction& tempoldWave)
 {  
@@ -228,7 +220,7 @@ void GuessWave::onedot_threeindex_to_twoindex_wavefunction(const StateInfo& twos
 
 void GuessWave::basic_guess_wavefunction(DiagonalMatrix& e, Wavefunction& trial, const StateInfo *stateinfo, const int state)
 {
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t No trial vector" << endl;
   multimap<double, int> e_sort;
   for (int i = 0; i < e.Nrows (); ++i)
@@ -279,7 +271,7 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
       ScaleAdd(-overlap, solution, noiseMatrix);
       double norm = DotProduct(noiseMatrix, noiseMatrix);
       if (abs(norm) >= 1e-14) {
-	if (dmrginp.outputlevel() != 0) 
+	if (dmrginp.outputlevel() > 0) 
 	  pout << "\t\t\t Norm is "<<norm<<". Adding noise of "<<additional_noise<<" to wavefunction "<<endl;
 	ScaleAdd(additional_noise/sqrt(norm), noiseMatrix, solution);
       }
@@ -288,7 +280,7 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
     */
     Normalise(solution);
     norm = DotProduct(solution, solution);
-    if (dmrginp.outputlevel() != 0) 
+    if (dmrginp.outputlevel() > 0) 
       pout << "\t\t\t Norm of wavefunction :: "<<norm<<endl;
     
   }
@@ -403,7 +395,7 @@ void GuessWave::onedot_twoindex_to_threeindex_shufflesysdot(const StateInfo& sta
 
 void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state, const bool &onedot, const bool& transpose_guess_wave)
 {
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Transforming previous wavefunction " << endl;
   ObjectMatrix3D< vector<Matrix> > oldTrialWavefunction;
   ObjectMatrix3D< vector<Matrix> > newTrialWavefunction;

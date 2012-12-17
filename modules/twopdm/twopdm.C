@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -27,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 #include "operatorfunctions.h"
 #include "execinfo.h"
+#include "pario.h"
+
 namespace SpinAdapted{
   void compute_twopdm_sweep(std::vector<Wavefunction>& wavefunctions, const SpinBlock& system, const SpinBlock& systemDot, const SpinBlock& newSystem, const SpinBlock& newEnvironment, const SpinBlock& big, const int numprocs, int state)
 {
@@ -41,7 +33,6 @@ namespace SpinAdapted{
 	load_twopdm_binary(twopdm, i ,j);
 
 	const std::vector<int> distribute_work = distribute_procs(numprocs,4);
-	pout <<"Performing sweep calculation "<<endl;
 
 	pout << "compute 1_3_0"<<endl;
 	if(mpigetrank() == distribute_work[0])
@@ -111,7 +102,11 @@ void compute_twopdm_initial(std::vector<Wavefunction>& wavefunctions, const Spin
 	load_twopdm_binary(twopdm, i ,j);
 	const std::vector<int> distribute_work = distribute_procs(numprocs,3);
 
-	pout <<"Performing sweep calculation "<<endl;
+#ifndef MOLPRO
+	pout <<"Performing sweep calculation: 2PDM "<<endl;
+#else
+	xout <<"Performing sweep calculation: 2PDM "<<endl;
+#endif
 
 	pout << "compute 4_0_0"<<endl;	
 	if(mpigetrank() == distribute_work[0])
@@ -236,10 +231,14 @@ void compute_two_pdm_0_2_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_rep(CRE_CRE, sq0, ix, jx);
     SparseMatrix* leftOp = 0;
         
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
+#endif
     {
       int ccsize = rightBlock->get_op_array(CRE_CRE).get_size();
+#ifdef _OPENMP
 #pragma omp for schedule(guided) nowait
+#endif
     for (int kl =0; kl <ccsize; kl++)
     {
       boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_CRE).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
@@ -269,10 +268,14 @@ void compute_two_pdm_0_2_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_array(CRE_DES).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);//dotBlock->get_op_rep(CRE_DES_S0, ix, jx);
     SparseMatrix* leftOp = 0;
         
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
+#endif
     {
       int cdsize = rightBlock->get_op_array(CRE_DES).get_size();
+#ifdef _OPENMP
 #pragma omp for schedule(guided) nowait
+#endif
     for (int kl =0; kl <cdsize; kl++)
     {
       boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
@@ -299,10 +302,14 @@ void compute_two_pdm_2_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   bool start = leftBlock->get_sites().size() ==2 ? true : false;
   int leftindex = leftBlock->get_sites()[0];
 
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
+#endif
   {
   int ccsize = leftBlock->get_op_array(CRE_CRE).get_size();
+#ifdef _OPENMP
 #pragma omp for schedule(guided) nowait
+#endif
   for (int ij = 0; ij < ccsize; ++ij)
   {
     boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_CRE).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
@@ -329,10 +336,14 @@ void compute_two_pdm_2_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   }      
   }
 
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
+#endif
   {
     int cdsize = leftBlock->get_op_array(CRE_DES).get_size();
+#ifdef _OPENMP
 #pragma omp for schedule(guided) nowait
+#endif
   for (int ij = 0; ij < cdsize; ++ij)
   {
     boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_DES).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
@@ -367,10 +378,14 @@ void compute_two_pdm_2_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   bool start = leftBlock->get_sites().size() ==2 ? true : false;
   int leftindex = leftBlock->get_sites()[0];
 
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
+#endif
   {
     int ccsize = leftBlock->get_op_array(CRE_CRE).get_size();
+#ifdef _OPENMP
 #pragma omp for schedule(guided) nowait
+#endif
   for (int ij = 0; ij < ccsize; ++ij)
   {
     boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_CRE).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
@@ -398,10 +413,14 @@ void compute_two_pdm_2_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   }
 
 
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
+#endif
   {
     int cdsize = leftBlock->get_op_array(CRE_DES).get_size();
+#ifdef _OPENMP
 #pragma omp for schedule(guided) nowait
+#endif
   for (int ij = 0; ij < cdsize; ++ij)
   {
     boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(CRE_DES).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
@@ -473,10 +492,14 @@ void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     int ix = leftop->get_orbs(0);
     int jx = dotindex;
         
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
+#endif
     {
       int cdsize = rightBlock->get_op_array(CRE_DES).get_size();
+#ifdef _OPENMP
 #pragma omp for schedule(guided) nowait
+#endif
     for (int kl =0; kl <cdsize; kl++)
     {
       boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
@@ -513,10 +536,14 @@ void compute_two_pdm_1_2_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   int dotindex = dotBlock->get_sites()[0];
   int jx = dotindex;
 
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
+#endif
   {
     int csize = leftBlock->get_leftBlock()->get_op_array(CRE).get_size();
+#ifdef _OPENMP
 #pragma omp for schedule(guided) nowait
+#endif
   for (int j = 0; j < csize; ++j)
   {
     shared_ptr<SparseMatrix> leftop = leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(j)[0];
@@ -583,10 +610,14 @@ void compute_two_pdm_2_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   boost::shared_ptr<SparseMatrix> leftop0  = leftBlock->get_op_array(CRE_CRE).get_local_element(0)[0];
   boost::shared_ptr<SparseMatrix> leftop2  = leftBlock->get_op_array(CRE_CRE).get_local_element(0)[1];//leftBlock->get_op_rep(CRE_CRE_S2, leftindex, leftindex);
         
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
+#endif
   {
     int csize = rightBlock->get_op_array(CRE).get_size();
+#ifdef _OPENMP
 #pragma omp for schedule(guided) nowait
+#endif
   for (int k =0; k <csize; k++)
     {
       SparseMatrix& rightop = *rightBlock->get_op_array(CRE).get_local_element(k)[0];
@@ -605,10 +636,14 @@ void compute_two_pdm_2_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 
   leftop0  = leftBlock->get_op_array(CRE_DES).get_local_element(0)[0];//leftBlock->get_op_rep(CRE_DES_S0, leftindex, leftindex);
   leftop2  = leftBlock->get_op_array(CRE_DES).get_local_element(0)[1];//leftBlock->get_op_rep(CRE_DES_S2, leftindex, leftindex);        
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
+#endif
   {
     int csize = rightBlock->get_op_array(CRE).get_size();
+#ifdef _OPENMP
 #pragma omp for schedule(guided) nowait
+#endif
   for (int k =0; k <csize; k++)
     {
       SparseMatrix& rightop = *rightBlock->get_op_array(CRE).get_local_element(k)[0];
@@ -655,11 +690,15 @@ void compute_two_pdm_0_3_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   Dotop2.allocate(dotBlock->get_stateInfo());
   operatorfunctions::Product(dotBlock, *dotop2, Transposeview(*dotop0), Dotop2, 1.0);
         
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
+#endif
   {
   SparseMatrix *leftop = 0;
   int csize = rightBlock->get_op_array(CRE).get_size();
+#ifdef _OPENMP
 #pragma omp for schedule(guided) nowait
+#endif
   for (int k =0; k <csize; k++)
     {
       SparseMatrix& rightop = *rightBlock->get_op_array(CRE).get_local_element(k)[0];
@@ -737,11 +776,15 @@ void compute_two_pdm_3_0_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   Leftop2.allocate(leftBlock->get_stateInfo());
   operatorfunctions::Product(leftBlock, *leftop2, Transposeview(*leftop0), Leftop2, 1.0);
         
+#ifdef _OPENMP
 #pragma omp parallel default(shared) 
+#endif
   {
   SparseMatrix *dotop;
   int cresize = rightBlock->get_op_array(CRE).get_size();
+#ifdef _OPENMP
 #pragma omp for schedule(guided) nowait private(dotop)
+#endif
   for (int k =0; k <cresize; k++)
     {
       SparseMatrix& rightop = *rightBlock->get_op_array(CRE).get_local_element(k)[0];
@@ -866,11 +909,15 @@ void compute_two_pdm_1_3_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   Dotop2.allocate(dotBlock->get_stateInfo());
   operatorfunctions::Product(dotBlock, *dotop2, Transposeview(*dotop0), Dotop2, 1.0);
         
+#ifdef _OPENMP
 #pragma omp parallel default(shared)
+#endif
   {
   SparseMatrix *rightop = 0;
   int csize = leftBlock->get_leftBlock()->get_op_array(CRE).get_size();
+#ifdef _OPENMP
 #pragma omp for schedule(guided) nowait
+#endif
   for (int k =0; k <csize; k++)
     {
       SparseMatrix& leftop = *leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(k)[0];

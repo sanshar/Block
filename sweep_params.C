@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -26,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
+#include "pario.h"
 
 using namespace boost;
 
@@ -71,14 +62,14 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
   noise = dmrginp.sweep_noise_schedule()[current];
   additional_noise = 0.0;//dmrginp.sweep_additional_noise_schedule()[current];
 
-  if (dmrginp.outputlevel() != 0) {
+  if (dmrginp.outputlevel() > 0) {
    pout << "\t\t\t Sweep iteration ... " << SpinAdapted::SweepParams::sweep_iter;
    pout<< " "  << SpinAdapted::SweepParams::keep_states << " " << SpinAdapted::SweepParams::davidson_tol << " " << SpinAdapted::SweepParams::noise << " "<< SpinAdapted::SweepParams::additional_noise <<endl; 
   }
   else 
     pout << endl;
   //now figure out number of iterations and starting size, during first call only
-  if (dmrginp.outputlevel() != 0) {
+  if (dmrginp.outputlevel() > 0) {
     pout << "\t\t\t forward system starting size ... " << forward_starting_size << " " << n_iters << endl;
     pout << "\t\t\t backward system starting size ... " << backward_starting_size << " " << n_iters << endl;
     //pout << "onedot or twodot "<<dmrginp.algorithm_method()<<endl;
@@ -111,7 +102,7 @@ void SpinAdapted::SweepParams::savestate(const bool &forward, const int &size)
   {
     char file[5000];
     sprintf (file, "%s%s%d%s", dmrginp.save_prefix().c_str(), "/statefile.", mpigetrank(), ".tmp");
-    if (dmrginp.outputlevel() != 0)
+    if (dmrginp.outputlevel() > 0)
       pout << "\t\t\t Saving state "<<file<<endl;
     std::ofstream ofs(file, std::ios::binary);
     boost::archive::binary_oarchive save_wave(ofs);
@@ -126,7 +117,7 @@ void SpinAdapted::SweepParams::restorestate(bool &forward, int &size)
   {
     char file[5000];
     sprintf (file, "%s%s%d%s", dmrginp.load_prefix().c_str(), "/statefile.", mpigetrank(), ".tmp");
-    if (dmrginp.outputlevel() != 0)
+    if (dmrginp.outputlevel() > 0)
       pout << "\t\t\t Loading state "<<file<<endl;
     std::ifstream ifs(file, std::ios::binary);
     boost::archive::binary_iarchive load_wave(ifs);

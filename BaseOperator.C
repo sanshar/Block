@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include "BaseOperator.h"
@@ -38,12 +28,14 @@ double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
   for (int al = 0; al<Symmetry::sizeofIrrep(airrep); al++)
   for (int bl = 0; bl<Symmetry::sizeofIrrep(birrep); bl++)
   {
-    double cleb = cleb_(aspin, asz, bspin, bsz, cspin, cspin);
+    //double cleb = cleb_(aspin, asz, bspin, bsz, cspin, cspin);
+    double cleb = clebsch(aspin, asz, bspin, bsz, cspin, cspin);
     double clebdinfh = Symmetry::spatial_cg(airrep, birrep, cirrep, al, bl, 0);
     if (fabs(cleb) <= 1.0e-14 || fabs(clebdinfh) <= 1.0e-14)
       continue;
     else
-      return parity*cleb*clebdinfh/cleb_(bspin, bsz, aspin, asz, cspin, cspin)/Symmetry::spatial_cg(birrep, airrep, cirrep, bl, al, 0);
+      //return parity*cleb*clebdinfh/cleb_(bspin, bsz, aspin, asz, cspin, cspin)/Symmetry::spatial_cg(birrep, airrep, cirrep, bl, al, 0);
+      return parity*cleb*clebdinfh/clebsch(bspin, bsz, aspin, asz, cspin, cspin)/Symmetry::spatial_cg(birrep, airrep, cirrep, bl, al, 0);
   }
   cout << "Major trouble, getCommuteParity asked for three inappropriate operators"<<endl;
   cout << a<<"  "<<b<<"  "<<c<<endl;

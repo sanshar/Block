@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -40,7 +30,7 @@ void Symmetry::InitialiseTable(string psym)
       groupTable.resize(1, 1);
       groupTable(0, 0) = 0;
     }
-  else if (sym == "ci")
+  else if (sym == "ci" || sym == "cs" || sym == "c2")
     {
       /*
 	inversion symmetry table
@@ -53,7 +43,7 @@ void Symmetry::InitialiseTable(string psym)
       groupTable(1, 0) = 1;
       groupTable(1, 1) = 0;
     }
-  else if (sym == "c2v" || sym == "c2h")
+  else if (sym == "c2v" || sym == "c2h" || sym == "d2")
     {
       /*
 	c2v symmetry table
@@ -138,8 +128,8 @@ void Symmetry::InitialiseTable(string psym)
     //do nothing;
   }
   else {
-    cerr << "Symmetry of the molecule has to be one of c1, ci, c2h, c2v, d2h or dinfh"<<endl;
-    cerr << "Symmetry provided in the input file "<<sym<<endl;
+    pout << "Symmetry of the molecule has to be one of c1, ci, cs, c2, c2h, c2v, d2, d2h or dinfh"<<endl;
+    pout << "Symmetry provided in the input file "<<sym<<endl;
     abort();
   }
 
@@ -148,23 +138,23 @@ void Symmetry::InitialiseTable(string psym)
 bool Symmetry::irrepAllowed(int irrep)
 {
   if (sym == "dinfh" && ((irrep<0 && irrep >-4) || irrep == 2 || irrep == 3)) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with dinfh symmetry"<<endl;
+    pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with dinfh symmetry"<<endl;
     abort();
   }
   if (sym == "d2h" && (irrep<0 || irrep >= 8)) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
+    pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
-  if ((sym == "c2v" || sym == "c2h") && (irrep<0 || irrep >= 4)) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
+  if ((sym == "c2v" || sym == "c2h" || sym == "d2") && (irrep<0 || irrep >= 4)) {
+    pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
-  if (sym == "ci" && (irrep <0 || irrep >=2)) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
+  if ((sym == "ci" || sym == "c2" || sym == "cs" ) && (irrep <0 || irrep >=2)) {
+    pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
   if (sym == "c1" && irrep != 0) {
-    cerr << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
+    pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
   if (sym == "trans") {
@@ -173,7 +163,7 @@ bool Symmetry::irrepAllowed(int irrep)
 	irreps[1] >= NPROP[1] || irreps[1]< 0 ||
 	irreps[2] >= NPROP[2] || irreps[2]< 0 ) {
       
-      cerr << "decompressing the irrep "<<irrep<<" leads to k points "<<irreps[0]<<"  "<<irreps[1]<<"  "<<irreps[2]<<endl;
+      pout << "decompressing the irrep "<<irrep<<" leads to k points "<<irreps[0]<<"  "<<irreps[1]<<"  "<<irreps[2]<<endl;
       abort();
     }
   }
@@ -250,7 +240,24 @@ string Symmetry::stringOfIrrep(int irrep)
       case(3):
 	return "Bg";
       }
+  }
+  else if (sym == "d2") {
+    switch(irrep)
+      {
+      case(0): 
+	return "A";
+      case(1):
+	return "B1";
+      case(2):
+	return "B2";
+      case(3):
+	return "B3";
+      }
     }
+  else if (sym == "cs") 
+    return (irrep == 0) ? "A'" : "A''";
+  else if (sym == "c2") 
+    return (irrep == 0) ? "A" : "B";
   else if (sym == "ci") 
     return (irrep == 0) ? "Ag" : "Au";
   else if (sym == "dinfh") {
@@ -406,11 +413,11 @@ double Symmetry::spatial_ninej(int j1, int j2, int j12, int j3, int j4, int j34,
 double Symmetry::spatial_cg(int a, int b, int c, int rowa, int rowb, int rowc) {
   if (sym == "dinfh") {
     if (a<4 && rowa != 0)
-      { cerr<<"a= "<<a<<" and row = "<<rowa<<endl; exit(0);} 
+      { pout<<"a= "<<a<<" and row = "<<rowa<<endl; exit(0);} 
     if (b<4 && rowb != 0)
-      { cerr<<"b= "<<b<<" and row = "<<rowb<<endl; exit(0);} 
+      { pout<<"b= "<<b<<" and row = "<<rowb<<endl; exit(0);} 
     if (c<4 && rowc != 0)
-      { cerr<<"c= "<<c<<" and row = "<<rowc<<endl; exit(0);} 
+      { pout<<"c= "<<c<<" and row = "<<rowc<<endl; exit(0);} 
     int la, lb, lc;
     la = (2*rowa-1) * (max(0,a-2))/2; 
     lb = (2*rowb-1) * (max(0,b-2))/2; 

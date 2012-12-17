@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -28,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "operatorfunctions.h"
 #include "execinfo.h"
 #include "include/newmatutils.h"
+#include "pario.h"
 
 namespace SpinAdapted{
 void compute_onepdm(std::vector<Wavefunction>& wavefunctions, const SpinBlock& system, const SpinBlock& systemDot, const SpinBlock& newSystem, const SpinBlock& newEnvironment, const SpinBlock& big, const int numprocs)
@@ -42,19 +33,23 @@ void compute_onepdm(std::vector<Wavefunction>& wavefunctions, const SpinBlock& s
 	Wavefunction &wavefunction1 = wavefunctions[i];
 	Wavefunction &wavefunction2 = wavefunctions[j];
 
-	pout <<"Performing sweep calculation "<<endl;
+#ifndef MOLPRO
+	pout <<"Performing sweep calculation: 1PDM "<<endl;
+#else
+	xout <<"Performing sweep calculation: 1PDM "<<endl;
+#endif
 
 	//if (big.get_leftBlock()->size() == 2) {
-	cout << "compute 2_0 "<<mpigetrank()<<endl;
-	  compute_one_pdm_2_0(wavefunction1, wavefunction2, big, onepdm);
+   pout << "compute 2_0 "<<mpigetrank()<<endl;
+   compute_one_pdm_2_0(wavefunction1, wavefunction2, big, onepdm);
 	  //}
 
 	  //if (big.get_rightBlock()->size() == 1) {
-	  cout << "compute 0_2 "<<mpigetrank()<<endl;
-	  compute_one_pdm_0_2(wavefunction1, wavefunction2, big, onepdm);
+   pout << "compute 0_2 "<<mpigetrank()<<endl;
+   compute_one_pdm_0_2(wavefunction1, wavefunction2, big, onepdm);
 	  //}
 
-	  cout << "compute 1_1 "<<mpigetrank()<<endl;
+   pout << "compute 1_1 "<<mpigetrank()<<endl;
 	compute_one_pdm_1_1(wavefunction1, wavefunction2, big, onepdm);
 	accumulate_onepdm(onepdm);
 	save_onepdm_binary(onepdm, i, j);

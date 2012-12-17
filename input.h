@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -43,7 +33,7 @@ enum noiseTypes {RANDOM, EXCITEDSTATE};
 enum calcType {DMRG, ONEPDM, TWOPDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 
-enum keywords{ORBS, MAXM, REORDER, SCHEDULE, SYM, NELECS, SPIN, IRREP,
+enum keywords{ORBS, MAXM, REORDER, GAORDER, SCHEDULE, SYM, NELECS, SPIN, IRREP,
 	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, 
 	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NUMKEYWORDS};
 
@@ -130,6 +120,9 @@ class Input {
   bool m_reorder;
   string m_reorderfile;
 
+  bool m_gaopt;
+  std::vector<int> m_gaorder;
+
   friend class boost::serialization::access;
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
@@ -141,7 +134,7 @@ class Input {
     ar & m_molecule_quantum & m_total_symmetry_number & m_total_spin & m_orbenergies & m_add_noninteracting_orbs;
     ar & m_save_prefix & m_load_prefix & m_direct ;
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
-    ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat & m_reorder;
+    ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat & m_reorder & m_gaopt & m_gaorder;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_cd;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;
@@ -156,19 +149,78 @@ class Input {
   //Input() : m_ninej(ninejCoeffs::getinstance()){}
   Input() {}
   Input (const std::string& config_name);
+  // ROA
+  void initCumulTimer()
+  {
+  guessgenT       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  multiplierT     = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  operrotT        = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  davidsonT       = boost::shared_ptr<cumulTimer> (new cumulTimer()); 
+  rotmatrixT      = boost::shared_ptr<cumulTimer> (new cumulTimer()); 
+  blockdavid      = boost::shared_ptr<cumulTimer> (new cumulTimer()); 
+  datatransfer    = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  hmultiply       = boost::shared_ptr<cumulTimer> (new cumulTimer()); 
+  oneelecT        = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  twoelecT        = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  makeopsT        = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  collectqT       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  opallocate      = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  opcatenate      = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  oprelease       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  opequateT       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  justmultiply    = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  spinrotation    = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  otherrotation   = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  solvewf         = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  postwfrearrange = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  couplingcoeff   = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  buildsumblock   = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  buildblockops   = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  addnoise        = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  s0time          = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  s1time          = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  s2time          = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  }
   void writeSummary();
+#ifdef MOLPRO
+  void writeSummaryForMolpro();
+#endif
   void performSanityTest();
   void readorbitalsfile(ifstream& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder, std::vector<int>&);
+  void getgaorder(ifstream& gaconfFile, ifstream& dumpFile);
   void usedkey_error(string& key, string& line);
 
   static void ReadMeaningfulLine(ifstream&, string&, int);
-  cumulTimer guessgenT, multiplierT, operrotT, davidsonT, rotmatrixT, blockdavid, datatransfer;
-  cumulTimer hmultiply, oneelecT, twoelecT, makeopsT, collectqT;
-  cumulTimer opallocate, opcatenate, oprelease, opequateT, justmultiply;
-  cumulTimer spinrotation, otherrotation, solvewf, postwfrearrange, couplingcoeff;
-  cumulTimer buildsumblock, buildblockops, addnoise;
-  cumulTimer s0time, s1time, s2time;
+
+  boost::shared_ptr<cumulTimer> guessgenT; 
+  boost::shared_ptr<cumulTimer> multiplierT; 
+  boost::shared_ptr<cumulTimer> operrotT; 
+  boost::shared_ptr<cumulTimer> davidsonT; 
+  boost::shared_ptr<cumulTimer> rotmatrixT; 
+  boost::shared_ptr<cumulTimer> blockdavid; 
+  boost::shared_ptr<cumulTimer> datatransfer; 
+  boost::shared_ptr<cumulTimer> hmultiply; 
+  boost::shared_ptr<cumulTimer> oneelecT; 
+  boost::shared_ptr<cumulTimer> twoelecT; 
+  boost::shared_ptr<cumulTimer> makeopsT; 
+  boost::shared_ptr<cumulTimer> collectqT; 
+  boost::shared_ptr<cumulTimer> opallocate; 
+  boost::shared_ptr<cumulTimer> opcatenate; 
+  boost::shared_ptr<cumulTimer> oprelease; 
+  boost::shared_ptr<cumulTimer> opequateT; 
+  boost::shared_ptr<cumulTimer> justmultiply; 
+  boost::shared_ptr<cumulTimer> spinrotation; 
+  boost::shared_ptr<cumulTimer> otherrotation; 
+  boost::shared_ptr<cumulTimer> solvewf; 
+  boost::shared_ptr<cumulTimer> postwfrearrange; 
+  boost::shared_ptr<cumulTimer> couplingcoeff; 
+  boost::shared_ptr<cumulTimer> buildsumblock; 
+  boost::shared_ptr<cumulTimer> buildblockops; 
+  boost::shared_ptr<cumulTimer> addnoise; 
+  boost::shared_ptr<cumulTimer> s0time; 
+  boost::shared_ptr<cumulTimer> s1time; 
+  boost::shared_ptr<cumulTimer> s2time; 
 
   const orbitalFormat& orbformat() const {return m_orbformat;}
   const int& outputlevel() const {return m_outputlevel;}

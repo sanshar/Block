@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include "sweep.h"
@@ -22,6 +12,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "initblocks.h"
 #include "initblocks.h"
 #include "MatrixBLAS.h"
+#include <boost/format.hpp>
 #ifndef SERIAL
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi.hpp>
@@ -81,7 +72,13 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   }
   if (!mpigetrank())
   {
+#ifndef MOLPRO
     FILE* f = fopen("dmrg.e", "wb");
+#else
+    std::string efile;
+    efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
+    FILE* f = fopen(efile.c_str(), "wb");
+#endif
     
     for(int j=0;j<nroots;++j) {
       double e = energies[j]+dmrginp.get_coreenergy(); 
@@ -116,7 +113,13 @@ void SpinAdapted::Sweep::tiny(double sweep_tol)
 
       if (mpigetrank() == 0)
       {
+#ifndef MOLPRO
 	FILE* f = fopen("dmrg.e", "wb");
+#else
+	std::string efile;
+	efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
+	FILE* f = fopen(efile.c_str(), "wb");
+#endif
 	
 	for(int j=0;j<nroots;++j) {
 	  double e = energies(j+1)+dmrginp.get_coreenergy(); 

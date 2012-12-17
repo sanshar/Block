@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -22,6 +12,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "SpinQuantum.h"
 #include "MatrixBLAS.h"
 #include <boost/serialization/vector.hpp>
+#include "pario.h"
 
 void SpinAdapted::Wavefunction::initialise(const SpinQuantum dQ, const SpinBlock* b, const bool &onedot_)
 {
@@ -100,7 +91,7 @@ void SpinAdapted::Wavefunction::SaveWavefunctionInfo (const StateInfo &waveInfo,
 {
   char file [5000];
   sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/wave-", sites [0], "-", *(sites.rbegin()), ".", mpigetrank(), ".", wave_num, ".tmp");
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Saving Wavefunction " << file << endl;
   if (mpigetrank() == 0)
     {
@@ -119,7 +110,7 @@ void SpinAdapted::Wavefunction::LoadWavefunctionInfo (StateInfo &waveInfo, const
 {
   char file [5000];
   sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.load_prefix().c_str(), "/wave-", sites [0], "-", *(sites.rbegin()), ".", mpigetrank(), ".", wave_num, ".tmp");
-  if (dmrginp.outputlevel() != 0) 
+  if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Loading Wavefunction " << file << endl;
   waveInfo.Allocate ();
   if (mpigetrank() == 0)

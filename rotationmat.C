@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -22,6 +12,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "MatrixBLAS.h"
 #include <include/sortutils.h>
 #include <boost/serialization/vector.hpp>
+#include "pario.h"
 using namespace boost;
 using namespace std;
 
@@ -34,7 +25,7 @@ void SpinAdapted::SaveRotationMatrix (const std::vector<int>& sites, const std::
 
       char file [5000];
       sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(),".state",state, ".tmp");
-      if (dmrginp.outputlevel() != 0) 
+      if (dmrginp.outputlevel() > 0) 
 	pout << "\t\t\t Saving Rotation Matrix :: " << file << endl;
       std::ofstream ofs(file, std::ios::binary);
       boost::archive::binary_oarchive save_mat(ofs);
@@ -52,7 +43,7 @@ void SpinAdapted::LoadRotationMatrix (const std::vector<int>& sites, std::vector
     char file [5000];
     //sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.load_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(), ".tmp");
     sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(),".state",state, ".tmp");
-    if (dmrginp.outputlevel() != 0) 
+    if (dmrginp.outputlevel() > 0) 
       pout << "\t\t\t Loading Rotation Matrix :: " << file << endl;
     std::ifstream ifs(file, std::ios::binary);
     boost::archive::binary_iarchive load_mat(ifs);
@@ -139,7 +130,7 @@ double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::
 
   
 
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     pout << " \t\t\t assigning a total of " << min_states << " states using the dm alone " << endl;
   double totalnorm = 0.;
   rotatematrix.resize(eigenmatrix.size());
@@ -167,7 +158,7 @@ double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::
       }
     }
 
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     pout << " \t\t\t assigning a total of " << totalstatesbyquanta << " states using quanta selection " << " for a norm of " << totalnorm << endl;
 
   int assignedbyq = 0;
@@ -180,7 +171,7 @@ double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::
       totalstatesleft += wtsbyquanta[i].size();
     }
 
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     pout << " \t\t\t a total of " << totalstatesleft << " to be assigned " << endl;
   
   // now sort quanta in order of importance
@@ -238,7 +229,7 @@ double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::
   for(int i=0;i<eigenmatrix.size();++i)
     for(int j=0;j<eigenmatrix[i].Nrows();++j)
       norm += eigenmatrix[i].element(j, j);
-  if (dmrginp.outputlevel() != 0)
+  if (dmrginp.outputlevel() > 0)
     pout << " \t\t\t total norm: " << norm <<"  norm after truncation: "<<totalnorm<< endl;
 
   return norm-totalnorm;

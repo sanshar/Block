@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -97,7 +87,9 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
     //int lz1 = op1.lz[0], lz2 = op2.lz[ilz2];
     std::vector<double>&  iSz2 = op2.Szops[ilz2*(op2.Spin+1)+(-sz2+op2.Spin)/2];
     
-    double cleb = cleb_(op1.Spin, op1.Spin, op2.Spin, sz2, 0, 0);
+    //double cleb = cleb_(op1.Spin, op1.Spin, op2.Spin, sz2, 0, 0);
+    double cleb = clebsch(op1.Spin, op1.Spin, op2.Spin, sz2, 0, 0);
+    //pout << "cleb " <<  cleb << " op1.Spin " <<  op1.Spin << " m1 "<< op1.Spin << " op2.Spin " << op2.Spin << " m2 " << sz2 << endl;
     cleb *= Symmetry::spatial_cg(op1.irrep, op2.irrep, 0, ilz1, ilz2, 0);
     if (fabs(cleb) <= 1.0e-14)
       continue;
@@ -140,7 +132,8 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
     int sz2index = (op2index - ilz2*(op2.Spin+1)), sz2 = op2.Spin - 2*sz2index;
     std::vector<double>&  iSz1 = op1.Szops[ilz1*(op1.Spin+1)+(-sz1+op1.Spin)/2];
     
-    double cleb = cleb_(op1.Spin, sz1, op2.Spin, sz2, 0, 0);
+    //double cleb = cleb_(op1.Spin, sz1, op2.Spin, sz2, 0, 0);
+    double cleb = clebsch(op1.Spin, sz1, op2.Spin, sz2, 0, 0);
     cleb *= Symmetry::spatial_cg(op1.irrep, op2.irrep, 0, ilz1, ilz2, 0);
     if (fabs(cleb) <= 1.0e-14)
       continue;
@@ -175,7 +168,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 
 void SpinAdapted::Cre::build(const SpinBlock& b)
 {
-  dmrginp.makeopsT.start();
+  dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
 
@@ -187,14 +180,14 @@ void SpinAdapted::Cre::build(const SpinBlock& b)
   {      
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE, deltaQuantum, i);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
-    dmrginp.makeopsT.stop();
+    dmrginp.makeopsT -> stop();
     return;
   }
   if (rightBlock->get_op_array(CRE).has(i))
   {
     const boost::shared_ptr<SparseMatrix>& op = rightBlock->get_op_rep(CRE, deltaQuantum, i);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
-    dmrginp.makeopsT.stop();
+    dmrginp.makeopsT -> stop();
     return;
   }  
   else
@@ -253,7 +246,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Cre::getworkingreprese
 
 void SpinAdapted::CreDes::build(const SpinBlock& b)
 {
-  dmrginp.makeopsT.start();
+  dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
   Sign = 1;
@@ -268,14 +261,14 @@ void SpinAdapted::CreDes::build(const SpinBlock& b)
   {      
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
-    dmrginp.makeopsT.stop();
+    dmrginp.makeopsT -> stop();
     return;
   }
   if (rightBlock->get_op_array(CRE_DES).has(i, j))
   {
     const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_DES, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
-    dmrginp.makeopsT.stop();
+    dmrginp.makeopsT -> stop();
     return;
   }  
   if (leftBlock->get_op_array(CRE).has(i))
@@ -293,7 +286,7 @@ void SpinAdapted::CreDes::build(const SpinBlock& b)
   }
   else
     abort();  
-  dmrginp.makeopsT.stop();
+  dmrginp.makeopsT -> stop();
 }
 
 
@@ -344,7 +337,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDes::getworkingrepr
 
 void SpinAdapted::CreCre::build(const SpinBlock& b)
 {
-  dmrginp.makeopsT.start();
+  dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
   Sign = 1;
@@ -359,14 +352,14 @@ void SpinAdapted::CreCre::build(const SpinBlock& b)
   {      
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
-    dmrginp.makeopsT.stop();
+    dmrginp.makeopsT -> stop();
     return;
   }
   if (rightBlock->get_op_array(CRE_CRE).has(i, j))
   {
     const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_CRE, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
-    dmrginp.makeopsT.stop();
+    dmrginp.makeopsT -> stop();
     return;
   }  
   if (leftBlock->get_op_array(CRE).has(i))
@@ -384,7 +377,7 @@ void SpinAdapted::CreCre::build(const SpinBlock& b)
   }
   else
     abort();  
-  dmrginp.makeopsT.stop();
+  dmrginp.makeopsT -> stop();
 }
 
 
@@ -440,7 +433,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCre::getworkingrepr
 
 void SpinAdapted::CreDesComp::build(const SpinBlock& b)
 {
-  dmrginp.makeopsT.start();
+  dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
   IrrepSpace sym = deltaQuantum.get_symm();
@@ -497,7 +490,7 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
       if (fabs(scaleV) > dmrginp.screen_tol())
 	SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV*parity);
     }
-  dmrginp.makeopsT.stop();
+  dmrginp.makeopsT -> stop();
 }
 
 
@@ -565,7 +558,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesComp::getworking
 
 void SpinAdapted::DesDesComp::build(const SpinBlock& b)
 {
-  dmrginp.makeopsT.start();
+  dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
   int spin = deltaQuantum.get_s();
@@ -619,7 +612,7 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
 	SpinAdapted::operatorfunctions::TensorProduct(leftBlock, top1, top2, &b, &(b.get_stateInfo()), *this, scaleV);
 
     }
-  dmrginp.makeopsT.stop();
+  dmrginp.makeopsT -> stop();
 
 }
 
@@ -695,7 +688,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::DesDesComp::getworking
 
 void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
 {
-  dmrginp.makeopsT.start();
+  dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
 
@@ -747,7 +740,7 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
 	cout << "I should not be here"<<endl;exit(0);
       }
   }
-  dmrginp.makeopsT.stop();
+  dmrginp.makeopsT -> stop();
 
 
 }
@@ -844,7 +837,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreDesComp::getwork
 
 void SpinAdapted::Ham::build(const SpinBlock& b)
 {
-  dmrginp.makeopsT.start();
+  dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
 
@@ -875,7 +868,7 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
   if (rightBlock->get_sites().size() == 0) {
     //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
     accumulateMultiThread(this, op_array, op_distributed, MAX_THRD);
-    dmrginp.makeopsT.stop();    
+    dmrginp.makeopsT -> stop();    
     return;
   }
 
@@ -903,7 +896,7 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
   //accumulateMultiThread(this, op_array, op_distributed, maxt);
   accumulateMultiThread(this, op_array, op_distributed, MAX_THRD);
 
-  dmrginp.makeopsT.stop();    
+  dmrginp.makeopsT -> stop();    
 }
 
 

@@ -2,18 +2,8 @@
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
-This program is free software: you can redistribute it and/or modify         
-it under the terms of the GNU General Public License as published by         
-the Free Software Foundation, either version 3 of the License, or            
-(at your option) any later version.                                          
-                                                                             
-This program is distributed in the hope that it will be useful,              
-but WITHOUT ANY WARRANTY; without even the implied warranty of               
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the                
-GNU General Public License for more details.                                 
-                                                                             
-You should have received a copy of the GNU General Public License            
-along with this program.  If not, see <http://www.gnu.org/licenses/>.        
+This program is integrated in Molpro with the permission of 
+Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
@@ -25,6 +15,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <pario.h>
 #include <cstdlib>
 #include "dmrg_wrapper.h"
+//#include "input.h"
+//#include "global.h"
 
 using namespace std;
 int calldmrg(char*, char*);
@@ -34,6 +26,10 @@ int main(int argc, char* argv [])
 #ifndef SERIAL
   boost::mpi::environment env(argc, argv);
 #endif
+
+  //This needs to be added
+  //SpinAdapted::dmrginp.initCumulTimer();
+
   if (argc == 1) {
     pout << "No command line argument found, expects an input file"<<endl;
     abort();
