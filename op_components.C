@@ -153,7 +153,7 @@ namespace SpinAdapted {
 	  //SpinQuantum spin2 = SpinQuantum(1, SpinOf(orbs[1]), SymmetryOfSpatialOrb(orbs[1]));
 	  SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
 	  SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
-	  std::vector<SpinQuantum> spinvec = spin1-spin2;
+	  std::vector<SpinQuantum> spinvec = -spin1+spin2;
 	  vec.resize(spinvec.size());
 	  for (int j=0; j<spinvec.size(); j++) {
 	    vec[j]=boost::shared_ptr<CreDesComp>(new CreDesComp);
@@ -173,7 +173,7 @@ namespace SpinAdapted {
       std::vector<boost::shared_ptr<CreDesComp> >& vec = m_op(i,j);
       SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(i));
       SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(j));
-      std::vector<SpinQuantum> spinvec = spin1-spin2;
+      std::vector<SpinQuantum> spinvec = -spin1+spin2;
       vec.resize(spinvec.size());
       for (int j=0; j<spinvec.size(); j++) 
 	vec[j]=boost::shared_ptr<CreDesComp>(new CreDesComp);

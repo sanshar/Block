@@ -37,6 +37,7 @@ class Symmetry
   static double spatial_ninej(int j1, int j2, int j12, int j3, int j4, int j34, int j13, int j24, int j);
   static std::vector<int> decompress(int irrep);
   static int compress(std::vector<int>& irreps);
+  static int negativeof(int irrep);
 };
 }
 #endif

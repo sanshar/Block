@@ -38,6 +38,15 @@ namespace SpinAdapted{
     return lhs+=rhs;
   }
   
+  IrrepSpace operator-(const IrrepSpace lhs)
+  {
+    if (sym == "trans") {
+      int outirrep = Symmetry::negativeof(lhs.irrep);
+      return IrrepSpace(outirrep);
+    }
+    else
+      return lhs;
+  }
   
   void IrrepSpace::Save(std::ofstream &ofs) 
   {

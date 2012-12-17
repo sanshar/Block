@@ -170,13 +170,19 @@ bool Symmetry::irrepAllowed(int irrep)
   return true;
 }
 
-std::vector<int> Symmetry::decompress(int irrep) 
+std::vector<int> Symmetry::decompress(int pirrep) 
 {
   //this is used to decompress the irrep to 3 k points
   std::vector<int> out(3,0);
+  int irrep = abs(pirrep);
   out[2] = irrep/PROPBITLEN/PROPBITLEN;
   out[1] = (irrep - out[2]*PROPBITLEN*PROPBITLEN)/PROPBITLEN;
   out[0] = irrep - out[2]*PROPBITLEN*PROPBITLEN - out[1]*PROPBITLEN;
+  if (irrep == -pirrep) {
+    out[0] *=-1;
+    out[1] *=-1;
+    out[2] *=-1;
+  }
   return out;
 }
 
@@ -283,6 +289,20 @@ int Symmetry::sizeofIrrep(int irrep)
     return irrep > 3 ? 2 : 1;
   else
     return 1;
+}
+
+int Symmetry::negativeof(int irrep)
+{
+  if (sym == "trans") {
+    std::vector<int> lirrep = decompress(irrep);
+    for (int i=0; i<lirrep.size(); i++) 
+      lirrep[i] = (NPROP[i] - lirrep[i])%NPROP[i];
+    
+    int outirrep = compress(lirrep);
+    return outirrep;
+  }
+  else
+    return irrep;
 }
 
 std::vector<int> Symmetry::add(int irrepl, int irrepr)
