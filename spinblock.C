@@ -75,7 +75,7 @@ void SpinBlock::printOperatorSummary()
 }
 ostream& operator<< (ostream& os, const SpinBlock& b)
 {
-  os << " Sites ::  ";
+  os << "\t\t\t Sites ::  ";
   for (int i = 0; i < b.sites.size(); ++i) { os << b.sites[i] << " "; } 
   
   if (dmrginp.outputlevel() != 0) {
@@ -251,8 +251,9 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
     //abort();
 
   }
-  else
+  else 
     twoInt = boost::shared_ptr<TwoElectronArray>( &v_2,  boostutils::null_deleter());
+
 
   sites = lBlock.sites;
   copy (rBlock.sites.begin(), rBlock.sites.end (), back_inserter (sites));

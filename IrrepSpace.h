@@ -43,6 +43,8 @@ class IrrepSpace
   bool operator!=(IrrepSpace rhs) const;
   bool operator<(IrrepSpace rhs) const;
   friend std::vector<IrrepSpace> operator+(IrrepSpace lhs, IrrepSpace rhs);
+  friend std::vector<IrrepSpace> operator-(IrrepSpace lhs, IrrepSpace rhs);
+  friend IrrepSpace operator-(IrrepSpace lhs);
   void Save(std::ofstream &ofs);
   void Load(std::ifstream &ifs);
   friend ostream& operator<<(ostream& os, const IrrepSpace s);
