@@ -23,7 +23,7 @@ RANLIB=ranlib
 # molpro compilation requires I8, since their integers are long
 I8_OPT = yes
 MOLPRO = no
-OMP = yes
+OPENMP = no
 
 ifeq ($(I8_OPT), yes)
 	I8 = -DI8
