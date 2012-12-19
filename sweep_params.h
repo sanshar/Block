@@ -48,6 +48,8 @@ private:
 
 public:
   SweepParams();
+  vector<double> ls_dw;
+  vector<double> ls_energy;
   void set_sweep_parameters();
   void savestate(const bool &forward, const int &size);
   void restorestate(bool &forward, int &size);

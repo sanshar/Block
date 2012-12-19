@@ -12,6 +12,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "pario.h"
 #include "global.h"
 #include "orbstring.h"
+#include "least_squares.h"
 #include <include/communicate.h>
 #ifdef _OPENMP
 #include <omp.h>
@@ -368,9 +369,10 @@ void dmrg(double sweep_tol)
   double last_be = 10.e6;
   double old_fe = 0.;
   double old_be = 0.;
-  int iter = 0;
-  int iterrob = 0;
+  int ls_count=0;
   SweepParams sweepParams;
+  sweepParams.ls_dw.resize(0);
+  sweepParams.ls_energy.resize(0);
   int old_states=sweepParams.get_keep_states();
   int new_states;
   double old_error=0.0;
@@ -404,9 +406,18 @@ void dmrg(double sweep_tol)
       last_fe = Sweep::do_one(sweepParams, false, true, false, 0);
 
       new_states=sweepParams.get_keep_states();
+
+      //For obtaining the extrapolated energy
       if (old_states != new_states) 
       {
-         //pout << "ROA ROA ROA States "<<  sweepParams.get_keep_states()<< " old DW " << old_error << " old energy " << old_energy << " fe " << last_fe << endl;
+         sweepParams.ls_dw.push_back(old_error);
+         sweepParams.ls_energy.push_back(old_energy);
+         ls_count++;
+
+         if (ls_count >=3) {
+            cout << "Calling least squares " << endl;
+            least_squares(sweepParams.ls_dw, sweepParams.ls_energy);
+         }
       }
 
       if (dmrginp.outputlevel() > 0)
@@ -416,12 +427,19 @@ void dmrg(double sweep_tol)
 	break;
       }
 
-
     }
   if(dmrginp.max_iter() <= sweepParams.get_sweep_iter()) {
+
+    //For obtaining the extrapolated energy
     old_energy = last_be+dmrginp.get_coreenergy();
     old_error = sweepParams.get_largest_dw();
-    //pout << "ROA ROA ROA States "<<  sweepParams.get_keep_states()<< " old DW " << old_error << " old energy " << old_energy << " fe " << last_fe << endl;
+    sweepParams.ls_dw.push_back(old_error);
+    sweepParams.ls_energy.push_back(old_energy);
+    ls_count++;
+    if (ls_count >=3) {
+       least_squares(sweepParams.ls_dw, sweepParams.ls_energy);
+    }
+
     pout << "Maximum sweep iterations achieved " << std::endl;
   }
 
@@ -443,7 +461,4 @@ void dmrg(double sweep_tol)
     fclose(f);
   }
 }
-
-
-
 
