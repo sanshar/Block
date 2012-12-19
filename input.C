@@ -1158,9 +1158,10 @@ void SpinAdapted::Input::performSanityTest()
     else {
        if (m_maxM < 500) {
          pout << "The default schedule for an orbital space larger than 16 starts at M=500" << endl;
-         m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(500); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(1.0e-4);
+         m_maxM=500;
        }
        if (m_maxM >= 500) {
+          pout << "ROA ROA here" << endl;
          m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(500); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(1.0e-4);
        }
        if (m_maxM >500) {
@@ -1282,13 +1283,13 @@ void SpinAdapted::Input::performSanityTest()
     abort();
   }
 
-
   if (m_maxiter < m_sweep_iter_schedule.back()) {
     pout << "maximum iterations allowed is less than the last sweep iteration in your schedule."<<endl;
     pout << m_maxiter <<" < "<< (m_sweep_iter_schedule.back())<<endl;
     pout << "either increase the max_iter or reduce the number of sweeps"<<endl;
     abort();
   }
+  
 
 #ifndef SERIAL
   }
