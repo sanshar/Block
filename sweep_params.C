@@ -28,6 +28,7 @@ SpinAdapted::SweepParams::SweepParams()
   sweep_iter = 0;
   n_iters = 0;
   error = 0.0;
+  largest_dw = 0.0;
   forward_starting_size = 1;
   backward_starting_size = 1;
   keep_states = 0;

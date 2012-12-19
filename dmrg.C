@@ -369,11 +369,18 @@ void dmrg(double sweep_tol)
   double old_fe = 0.;
   double old_be = 0.;
   int iter = 0;
+  int iterrob = 0;
   SweepParams sweepParams;
+  int old_states=sweepParams.get_keep_states();
+  int new_states;
+  double old_error=0.0;
+  double old_energy=0.0;
   // warm up sweep ...
   bool dodiis = false;
 
   int domoreIter = 0;
+
+  //initialize array of size m_maxiter or dmrginp.max_iter() for dw and energy
 
 
   last_fe = Sweep::do_one(sweepParams, true, true, false, 0);
@@ -388,10 +395,20 @@ void dmrg(double sweep_tol)
       if (dmrginp.outputlevel() > 0) 
          pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
 
-
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
-	break;
+         break;
+      old_states=sweepParams.get_keep_states();
+      old_energy = last_fe+dmrginp.get_coreenergy();
+      old_error = sweepParams.get_largest_dw();
+
       last_fe = Sweep::do_one(sweepParams, false, true, false, 0);
+
+      new_states=sweepParams.get_keep_states();
+      if (old_states != new_states) 
+      {
+         //pout << "ROA ROA ROA States "<<  sweepParams.get_keep_states()<< " old DW " << old_error << " old energy " << old_energy << " fe " << last_fe << endl;
+      }
+
       if (dmrginp.outputlevel() > 0)
          pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       if (domoreIter == 2) {
@@ -401,8 +418,12 @@ void dmrg(double sweep_tol)
 
 
     }
-  if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+  if(dmrginp.max_iter() <= sweepParams.get_sweep_iter()) {
+    old_energy = last_be+dmrginp.get_coreenergy();
+    old_error = sweepParams.get_largest_dw();
+    //pout << "ROA ROA ROA States "<<  sweepParams.get_keep_states()<< " old DW " << old_error << " old energy " << old_energy << " fe " << last_fe << endl;
     pout << "Maximum sweep iterations achieved " << std::endl;
+  }
 
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
   if (!mpigetrank())

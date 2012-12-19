@@ -23,7 +23,7 @@ private:
   {
     ar & block_iter & sweep_iter & n_iters & forward_starting_size & backward_starting_size & keep_states;
     ar & keep_qstates & sys_add & env_add & noise & additional_noise & davidson_tol & lowest_energy & lowest_energy_spins & guesstype;
-    ar & error & onedot;
+    ar & error & largest_dw & onedot;
   }
 
   int restart_iter;
@@ -41,6 +41,7 @@ private:
   double additional_noise;
   double davidson_tol;
   double error;
+  double largest_dw;
   vector<double> lowest_energy;
   vector<double> lowest_energy_spins;
   guessWaveTypes guesstype;
@@ -66,6 +67,7 @@ public:
   const double &get_additional_noise() const {return additional_noise;}
   const double &get_davidson_tol() const { return davidson_tol; }
   const double &get_lowest_error() const { return error; }
+  const double &get_largest_dw() const { return largest_dw; }
   const vector<double> &get_lowest_energy() const { return lowest_energy; }
   const vector<double> &get_lowest_energy_spins() const { return lowest_energy_spins; }
   const guessWaveTypes &get_guesstype() const { return guesstype; }
@@ -86,6 +88,7 @@ public:
   double &set_additional_noise() {return additional_noise;}
   double &set_davidson_tol() { return davidson_tol; }
   double &set_lowest_error() { return error; }
+  double &set_largest_dw() { return largest_dw; }
   vector<double> &set_lowest_energy() { return lowest_energy; }
   vector<double> &set_lowest_energy_spins() { return lowest_energy_spins; }
   guessWaveTypes &set_guesstype() { return guesstype; }
