@@ -2,11 +2,14 @@
 #include <algorithm>
 
 #include <iostream>
+#include <iomanip>
+#include <fstream>
 //#include <vector>
 #include <boost/serialization/vector.hpp>
 
 #include "least_squares.h"
 #include "pario.h"
+
 using namespace std;
 
 vector<double> dw;
@@ -60,8 +63,9 @@ void least_squares(vector<double> x, vector<double> y){//, double* a){
    //cout << "beta " << beta << " alpha " << alpha << " r2 " << r2 << endl;
    //pout << "Extrapolated energy: " << alpha << " a.u." << endl;
 #ifndef MOLPRO
-   printf("\n\t\t\tExtrapolated Energy = %20.10f \n",alpha);
+   printf("\n\t\t\tExtrapolated Energy = %20.10f a.u.\n",alpha);
+   cout << "\n\t\t\tExtrapolated Energy = " << fixed << setprecision(10) << alpha << " a.u." << endl << endl;
 #else 
-   xout << "\n\t\t\tExtrapolated Energy = " << fixed << setprecision(10) << alpha << endl;
+   xout << "\n\t\t\tExtrapolated Energy = " << fixed << setprecision(10) << alpha << " a.u." << endl << endl;
 #endif
 }
