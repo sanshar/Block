@@ -415,7 +415,6 @@ void dmrg(double sweep_tol)
          ls_count++;
 
          if (ls_count >=3) {
-            cout << "Calling least squares " << endl;
             least_squares(sweepParams.ls_dw, sweepParams.ls_energy);
          }
       }
