@@ -1161,7 +1161,6 @@ void SpinAdapted::Input::performSanityTest()
          m_maxM=500;
        }
        if (m_maxM >= 500) {
-          pout << "ROA ROA here" << endl;
          m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(500); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(1.0e-4);
        }
        if (m_maxM >500) {
