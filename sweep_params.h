@@ -1,5 +1,4 @@
-/*                                                                           
-Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+/*                                                                           Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
 This program is integrated in Molpro with the permission of 
@@ -21,7 +20,7 @@ private:
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & block_iter & sweep_iter & n_iters & forward_starting_size & backward_starting_size & keep_states;
+    ar & block_iter & sweep_iter & n_iters & forward_starting_size & backward_starting_size & keep_states & keep_states_ls;
     ar & keep_qstates & sys_add & env_add & noise & additional_noise & davidson_tol & lowest_energy & lowest_energy_spins & guesstype;
     ar & error & largest_dw & onedot;
   }
@@ -34,6 +33,7 @@ private:
   int forward_starting_size;
   int backward_starting_size;
   int keep_states;
+  int keep_states_ls;
   int keep_qstates;
   int sys_add;
   int env_add;
@@ -62,6 +62,7 @@ public:
   const int &get_forward_starting_size() const { return forward_starting_size; }
   const int &get_backward_starting_size() const { return backward_starting_size; }
   const int &get_keep_states() const { return keep_states; }
+  const int &get_keep_states_ls() const { return keep_states_ls; }
   const int &get_keep_qstates() const { return keep_qstates; }
   const int &get_sys_add() const { return sys_add; }
   const int &get_env_add() const { return env_add; }
@@ -83,6 +84,7 @@ public:
   int &set_forward_starting_size() { return forward_starting_size; }
   int &set_backward_starting_size() { return backward_starting_size; }
   int &set_keep_states() { return keep_states; }
+  int &set_keep_states_ls() { return keep_states_ls; }
   int &set_keep_qstates() { return keep_qstates; }
   int &set_sys_add() { return sys_add; }
   int &set_env_add() { return env_add; }

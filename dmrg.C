@@ -399,17 +399,14 @@ void dmrg(double sweep_tol)
 
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
          break;
-      old_states=sweepParams.get_keep_states();
-      old_energy = last_fe+dmrginp.get_coreenergy();
-      old_error = sweepParams.get_largest_dw();
-
-      last_fe = Sweep::do_one(sweepParams, false, true, false, 0);
-
-      new_states=sweepParams.get_keep_states();
 
       //For obtaining the extrapolated energy
+      old_states=sweepParams.get_keep_states();
+      new_states=sweepParams.get_keep_states_ls();
       if (old_states != new_states) 
       {
+         old_energy = last_fe+dmrginp.get_coreenergy();
+         old_error = sweepParams.get_largest_dw();
          sweepParams.ls_dw.push_back(old_error);
          sweepParams.ls_energy.push_back(old_energy);
          ls_count++;
@@ -418,6 +415,11 @@ void dmrg(double sweep_tol)
             least_squares(sweepParams.ls_dw, sweepParams.ls_energy);
          }
       }
+
+      last_fe = Sweep::do_one(sweepParams, false, true, false, 0);
+
+      new_states=sweepParams.get_keep_states();
+
 
       if (dmrginp.outputlevel() > 0)
          pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
