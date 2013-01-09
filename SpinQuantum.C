@@ -120,7 +120,7 @@ vector<SpinQuantum> SpinQuantum::get_complement () const
 {
   vector<SpinQuantum> quanta;
   int n = dmrginp.total_particle_number() - particleNumber;
-  vector<IrrepSpace> vec = dmrginp.total_symmetry_number() + orbitalSymmetry;
+  vector<IrrepSpace> vec = dmrginp.total_symmetry_number() + (- orbitalSymmetry);
   for (int i=abs(dmrginp.total_spin_number()- totalSpin); i<= dmrginp.total_spin_number()+totalSpin; i+=2) {
     if (i <= n) {
       for (int j=0; j<vec.size(); j++)

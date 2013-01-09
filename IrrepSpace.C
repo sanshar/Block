@@ -44,6 +44,8 @@ namespace SpinAdapted{
       int outirrep = Symmetry::negativeof(lhs.irrep);
       return IrrepSpace(outirrep);
     }
+    else if (sym == "lzsym")
+      return IrrepSpace(-lhs.irrep);
     else
       return lhs;
   }
@@ -72,6 +74,8 @@ namespace SpinAdapted{
       std::vector<int> irreps = Symmetry::decompress(s.irrep);
       os<<irreps[2]<<irreps[1]<<irreps[0];
     }
+    else if (sym == "lzsym")
+      os << s.irrep;
     else {
       os<< s.irrep+1;
     }

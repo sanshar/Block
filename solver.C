@@ -53,6 +53,7 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
 #endif
     GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise); 
     Linear::block_davidson(solution, e, tol, warmUp, davidson_f, useprecond, solved);
+
  
     iter++;
   }

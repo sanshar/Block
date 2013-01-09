@@ -323,9 +323,9 @@ void SpinAdapted::opxop::cxcdcomp(const SpinBlock* otherBlock, std::vector<boost
 
 	SpinQuantum op2q = op2->get_deltaQuantum(), op1q = op1->get_deltaQuantum(), oq = o->get_deltaQuantum();
 	int j2 = op2q.get_s(), j1 = op1q.get_s(), j21 = oq.get_s();
-	int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = SymmetryOfSpatialOrb(I).getirrep();
+	int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = (-SymmetryOfSpatialOrb(I)).getirrep();
 	double factor = pow(-1.0, static_cast<int>((2+op2q.get_s())/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1));
-	factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, l2);
+	factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
 
 	double parity = 1.0;
 	if (otherBlock == b->get_rightBlock())
@@ -349,9 +349,9 @@ void SpinAdapted::opxop::cxcdcomp(const SpinBlock* otherBlock, std::vector<boost
 
 	SpinQuantum op2q = op2->get_deltaQuantum(), op1q = op1->get_deltaQuantum(), oq = o->get_deltaQuantum();
 	int j2 = op2q.get_s(), j1 = op1q.get_s(), j21 = oq.get_s();
-	int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = SymmetryOfSpatialOrb(I).getirrep();
+	int l2 = (-op2q.get_symm()).getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = (-SymmetryOfSpatialOrb(I)).getirrep();
 	double factor = pow(-1.0, static_cast<int>((1+1+0+op2q.get_s())/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1));
-	factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, l2);
+	factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
 
 	double parity = 1.0;
 	if (otherBlock == b->get_rightBlock())
@@ -392,9 +392,9 @@ void SpinAdapted::opxop::dxcccomp(const SpinBlock* otherBlock, std::vector<boost
 
       SpinQuantum op2q = top.get_deltaQuantum(), op1q = op1->get_deltaQuantum(), oq = o->get_deltaQuantum();
       int j2 = op2q.get_s(), j1 = op1q.get_s(), j21 = oq.get_s();
-      int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = SymmetryOfSpatialOrb(K).getirrep();
+      int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = (-SymmetryOfSpatialOrb(K)).getirrep();
       double factor = pow(-1.0, static_cast<int>((2+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1));
-      factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, l2);
+      factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
       factor*=-1.0;
 
       double parity = 1.0;

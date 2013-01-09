@@ -127,6 +127,9 @@ void Symmetry::InitialiseTable(string psym)
   else if (sym == "trans") {
     //do nothing;
   }
+  else if (sym == "lzsym") {
+    //do nothing;
+  }
   else {
     pout << "Symmetry of the molecule has to be one of c1, ci, cs, c2, c2h, c2v, d2, d2h or dinfh"<<endl;
     pout << "Symmetry provided in the input file "<<sym<<endl;
@@ -166,6 +169,9 @@ bool Symmetry::irrepAllowed(int irrep)
       pout << "decompressing the irrep "<<irrep<<" leads to k points "<<irreps[0]<<"  "<<irreps[1]<<"  "<<irreps[2]<<endl;
       abort();
     }
+  }
+  if (sym == "lzsym") {
+    return true;
   }
   return true;
 }
@@ -279,6 +285,9 @@ string Symmetry::stringOfIrrep(int irrep)
     output+=boost::lexical_cast<string>(irreps[0]);
     return output;
   }
+  else if (sym == "lzsym") {
+    return boost::lexical_cast<string>(irrep);
+  }
   else 
     return "A";
 }
@@ -300,6 +309,9 @@ int Symmetry::negativeof(int irrep)
     
     int outirrep = compress(lirrep);
     return outirrep;
+  }
+  else if (sym == "lzsym") {
+    return -irrep;
   }
   else
     return irrep;
@@ -341,6 +353,11 @@ std::vector<int> Symmetry::add(int irrepl, int irrepr)
     vec.push_back(0);
     return vec;
   }
+  else if(sym == "lzsym") {
+    std::vector<int> vec;
+    vec.push_back(irrepl+irrepr);
+    return vec;
+  }
   else if (sym == "trans") {
     std::vector<int> vec;
     std::vector<int> lirrep = decompress(irrepl);
@@ -363,12 +380,31 @@ std::vector<int> Symmetry::add(int irrepl, int irrepr)
 
 
 double Symmetry::spatial_sixj(int j1, int j2, int j3, int j5, int j4, int j7) {
+  if (sym == "trans" || sym == "lzsym") {
+    if (j3 != add(j1,j2)[0]) return 0.0;
+    if (j7 != add(j2,j5)[0]) return 0.0;
+    if (j4 != add(j3,j5)[0]) return 0.0;
+    return 1.0;
+  }
+  else {
     double out = spatial_ninej(j1, j2, j3, j4, j5, j3, j7, j7, 0);
     return out;
+  }
 }
 
 double Symmetry::spatial_ninej(int j1, int j2, int j12, int j3, int j4, int j34, int j13, int j24, int j) {
   
+  if (sym == "trans" || sym == "lzsym") {
+    return 1.0;
+    if (j12 != add(j1,j2)[0]) return 0.0;
+    if (j34 != add(j3,j4)[0]) return 0.0;
+    if (j != add(j12,j34)[0]) return 0.0;
+    if (j13 != add(j1,j3)[0]) return 0.0;
+    if (j24 != add(j2,j4)[0]) return 0.0;
+    if (j != add(j13,j24)[0]) return 0.0;
+    return 1.0;
+  }
+
     // all the numbers are irreps
     int m = 0; //since 9-j does not depend on m, we use m=j/2 to calculate the coefficient
     
@@ -452,7 +488,7 @@ double Symmetry::spatial_cg(int a, int b, int c, int rowa, int rowb, int rowc) {
   else if (sym == "c1") {
     return 1.0;
   }
-  else if (sym == "trans") {
+  else if (sym == "trans" || sym == "lzsym") {
     if (c == add(a,b)[0])
       return 1.0;
     else

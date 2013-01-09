@@ -39,8 +39,8 @@ class TensorOp {
   std::vector<int> optypes; //cre corresponds to 1 and des corresponds to -1
  public:
   const std::vector< std::vector<double> >& get_Szops() const {return Szops;}
- TensorOp():Spin(0), irrep(0), empty(true) {}
- TensorOp(int k, int sign) :empty(false) 
+  TensorOp():Spin(0), irrep(0), empty(true) {}
+  TensorOp(int k, int sign) :empty(false) 
   {
     int K = dmrginp.spatial_to_spin()[k]; //convert spatial id to spin id because slaters need that
     int Kirrep = SymmetryOfSpatialOrb(k).getirrep();
@@ -69,7 +69,10 @@ class TensorOp {
     if (!(sgn == 1 || sgn == -1)) {
       cerr<<"sign not correct";exit(0);}
     Spin = 1;
-    irrep = pirrep;
+    if (sgn == -1)
+      irrep = (-IrrepSpace(pirrep)).getirrep();
+    else
+      irrep = pirrep;
     optypes.push_back(sgn);
     if ( Symmetry::sizeofIrrep(irrep) == 1) {
       std::vector<double> vec1(2,0);

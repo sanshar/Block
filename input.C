@@ -78,7 +78,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_env_add = 1;
   m_total_symmetry_number = IrrepSpace( 0 );
   m_total_spin = 0;
-  m_guess_permutations = 25;
+  m_guess_permutations = 10;
 
   m_direct = true;
   m_nroots = 1;
@@ -616,7 +616,7 @@ SpinAdapted::Input::Input(const string& config_name)
     }
     m_alpha = (n_elec + n_spin)/2;
     m_beta = (n_elec - n_spin)/2;
-    if (sym == "trans") 
+    if (sym == "trans" || sym == "lzsym") 
       m_total_symmetry_number = IrrepSpace(m_total_symmetry_number.getirrep()+1); //in translational symmetry lowest irrep is 0 and not 1
     m_molecule_quantum = SpinQuantum(m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number);
 
@@ -638,8 +638,11 @@ SpinAdapted::Input::Input(const string& config_name)
   //read the orbitals
   v_1.rhf= true; 
   v_2.rhf=true;
-  if (sym != "dinfh")
+  if (sym != "dinfh" && sym != "lzsym") {
     v_2.permSymm = true;
+  }
+  else
+    v_2.permSymm = false;
 
   // Kij-based ordering by GA opt.
 #ifndef SERIAL
@@ -777,7 +780,7 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
       else if (atoi(tok[i].c_str()) < -1)
 	ir = atoi(tok[i].c_str()) + offset;
 
-      if (sym == "trans") ir += 1; //for translational symmetry the lowest irrep is 0
+      if (sym == "trans" || sym == "lzsym") ir += 1; //for translational symmetry the lowest irrep is 0
 
       m_spin_orbs_symmetry[2*reorderOrbInd] = ir;
       m_spin_orbs_symmetry[2*reorderOrbInd+1] = ir;

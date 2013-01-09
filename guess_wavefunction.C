@@ -213,7 +213,6 @@ void GuessWave::onedot_threeindex_to_twoindex_wavefunction(const StateInfo& twos
 	    }
 	  }
 
-
   // from tensor product form |a>|b> group together blocks with same quantum numbers                                                      
   twowavefunction.CollectQuantaAlongRows(uncollectedstateinfo, *twostateinfo.rightStateInfo);
 }
@@ -384,6 +383,7 @@ void GuessWave::onedot_twoindex_to_threeindex_shufflesysdot(const StateInfo& sta
 	  parity *= pow(-1.0, static_cast<int>( (3*j1 - j2 + J)/2));
 	  int insertionNum = uncollectedstateinfo.quanta[bc].insertionNum(stateinfo.rightStateInfo->rightStateInfo->quanta[b], stateinfo.rightStateInfo->leftStateInfo->quanta[c]);
 	  vector<SpinQuantum> spq = stateinfo.rightStateInfo->rightStateInfo->quanta[b]+ stateinfo.rightStateInfo->leftStateInfo->quanta[c];
+
 	  if(threewavefunction(a, b, c).size() != spq.size())
 	    threewavefunction(a, b, c).resize(spq.size());
           copy(uncollectedwf(a, bc), threewavefunction(a, b, c)[insertionNum]);
@@ -445,6 +445,7 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
     tempoldWave.AllowQuantaFor(*big.get_stateInfo().leftStateInfo->leftStateInfo, *oldStateInfo.rightStateInfo, oldWave.get_deltaQuantum()); 
     TransformLeftBlock(oldWave, big.get_stateInfo(), inverseLeftRotationMatrix, tempoldWave);
 
+
     StateInfo tempoldStateInfo;
     TensorProduct (*(big.get_stateInfo().leftStateInfo->leftStateInfo), *oldStateInfo.rightStateInfo, tempoldStateInfo,
 		   PARTICLE_SPIN_NUMBER_CONSTRAINT);
@@ -455,6 +456,9 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
     StateInfo tempnewStateInfo;
     TensorProduct (*(big.get_stateInfo().leftStateInfo), *oldStateInfo.rightStateInfo->leftStateInfo, tempnewStateInfo,
 		   PARTICLE_SPIN_NUMBER_CONSTRAINT);
+
+
+    
     tempnewStateInfo.CollectQuanta();
     onedot_shufflesysdot(tempoldStateInfo, tempnewStateInfo, tempoldWave, tempnewWave);
     
