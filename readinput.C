@@ -41,7 +41,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #endif
 
 using namespace SpinAdapted;
-void CheckFileExistance(string filename, string filetype)
+void CheckFileExistence(string filename, string filetype)
 {
   boost::filesystem::path p(filename);
   if (boost::filesystem::exists(p)) {
@@ -55,6 +55,17 @@ void CheckFileExistance(string filename, string filetype)
     abort();
   }
 }
+void CheckFileInexistence(string filename, string filetype){
+   boost::filesystem::path p(filename);
+   if (boost::filesystem::exists(p)) {
+      pout << filetype<<" "<<filename<<" is present."<<endl;
+      if (filetype=="genetic algorithm reorder")
+         pout << "You already ran the genetic algorithm reordering and the ordering is present in the location above." << endl;
+      abort();
+   }
+}
+
+
 
 void ReadInput(char* conf)
 {
@@ -79,7 +90,7 @@ void ReadInput(char* conf)
 
   std::string configFile(conf);
 
-  CheckFileExistance(conf, "Input file ");
+  CheckFileExistence(conf, "Input file ");
   //read the config file
   dmrginp = Input(configFile);
 

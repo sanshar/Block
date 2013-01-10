@@ -30,7 +30,8 @@ using namespace std;
 namespace SpinAdapted {
 string sym;
 }
-void CheckFileExistance(string filename, string filetype);
+void CheckFileExistence(string filename, string filetype);
+void CheckFileInexistence(string filename, string filetype);
 
 void SpinAdapted::Input::ReadMeaningfulLine(ifstream& input, string& msg, int msgsize)
 {
@@ -652,7 +653,7 @@ SpinAdapted::Input::Input(const string& config_name)
   }
 
   if (mpigetrank() == 0) {
-    CheckFileExistance(orbitalfile, "Orbital file ");
+    CheckFileExistence(orbitalfile, "Orbital file ");
     readorbitalsfile(orbitalFile, v_1, v_2);
     
     pout << "Checking input for errors"<<endl;
@@ -743,7 +744,7 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   // read the reorder file
   if (m_reorder) {
     ifstream reorderFile(m_reorderfile.c_str());
-    CheckFileExistance(m_reorderfile, "Reorder file ");
+    CheckFileExistence(m_reorderfile, "Reorder file ");
     readreorderfile(reorderFile, reorder, oldtonew);
   }
   // use Kij-based ordering
@@ -886,21 +887,34 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
 void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
 {
 #ifndef SERIAL
-  mpi::communicator world;
+   mpi::communicator world;
+   char gaoptfile[5000];
+   std::ofstream gaFILE;
+   sprintf(gaoptfile, "%s%s", save_prefix().c_str(), "/genetic_reorder.dat");
+   CheckFileInexistence(gaoptfile, "genetic algorithm reorder");
+   gaFILE.open(gaoptfile);
 #endif
-  cout << "---------- Kij-based ordering by GA opt. ----------" << endl;
-  m_gaorder = genetic::gaordering(gaconfFile, dumpFile).Gen().Sequence();
-  cout << "------ pick the best ordering up to reorder -------" << endl;
-  cout << setw(50) << "sites are reordered by: ";
+   cout << "---------- Kij-based ordering by GA opt. ----------" << endl;
+   m_gaorder = genetic::gaordering(gaconfFile, dumpFile).Gen().Sequence();
+   cout << "------ pick the best ordering up to reorder -------" << endl;
+   cout << setw(50) << "sites are reordered by: ";
+  
+
 #ifndef SERIAL
   if(mpigetrank() == 0) {
 #endif
 
     int n = m_gaorder.size() - 1;
-    for(int i = 0; i < n; ++i) cout << m_gaorder[i]+1 << ","; cout << m_gaorder[n]+1 << endl;
+    for(int i = 0; i < n; ++i) {
+       cout << m_gaorder[i]+1 << ",";
+       gaFILE << m_gaorder[i]+1 << ",";
+    }
+    cout << m_gaorder[n]+1 << endl;
+    gaFILE << m_gaorder[n]+1 << endl;
 #ifndef SERIAL
   }
   mpi::broadcast(world,m_gaorder,0);
+  gaFILE.close();
 #endif
 }
 
