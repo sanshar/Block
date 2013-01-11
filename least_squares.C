@@ -63,7 +63,13 @@ void least_squares(vector<double> x, vector<double> y){//, double* a){
    //cout << "beta " << beta << " alpha " << alpha << " r2 " << r2 << endl;
    //pout << "Extrapolated energy: " << alpha << " a.u." << endl;
 #ifndef MOLPRO
+#ifndef SERIAL
+  if (mpigetrank() == 0) {
+#endif
    printf("\n\t\t\tExtrapolated Energy = %20.10f a.u.\n",alpha);
+#ifndef SERIAL
+  }
+#endif
 #else 
    xout << "\n\t\t\tExtrapolated Energy = " << fixed << setprecision(10) << alpha << " a.u." << endl << endl;
 #endif
