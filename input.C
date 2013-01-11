@@ -894,11 +894,15 @@ void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
    boost::filesystem::path p(gaoptfile);
    if (boost::filesystem::exists(p)) {
 #ifndef MOLPRO
+      pout << "----------------"<<endl;
       pout << "The GAOPT routine for finding the orbital ordering has been run before." << endl;
       pout << "Using the reorder file " << gaoptfile << endl;
+      pout << "----------------"<<endl;
 #else
+      xout << "----------------"<<endl;
       xout << "The GAOPT routine for finding the orbital ordering has been run before." << endl;
       xout << "Using the reorder file " << gaoptfile << endl;
+      xout << "----------------"<<endl;
 #endif
       m_reorder = true;
       m_reorderfile = gaoptfile;
@@ -906,10 +910,22 @@ void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
    }
    gaFILE.open(gaoptfile);
 #endif
+#ifndef SERIAL
+  if(mpigetrank() == 0) {
+#endif
    cout << "---------- Kij-based ordering by GA opt. ----------" << endl;
+#ifndef SERIAL
+  }
+#endif
    m_gaorder = genetic::gaordering(gaconfFile, dumpFile).Gen().Sequence();
+#ifndef SERIAL
+  if(mpigetrank() == 0) {
+#endif
    cout << "------ pick the best ordering up to reorder -------" << endl;
    cout << setw(50) << "sites are reordered by: ";
+#ifndef SERIAL
+  }
+#endif
   
 
 #ifndef SERIAL
