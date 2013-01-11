@@ -895,10 +895,10 @@ void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
    if (boost::filesystem::exists(p)) {
 #ifndef MOLPRO
       pout << "The GAOPT routine for finding the orbital ordering has been run before." << endl;
-      pout << "Using the reorder file " << gaoptfile  << " as reorder." << endl;
+      pout << "Using the reorder file " << gaoptfile << endl;
 #else
       xout << "The GAOPT routine for finding the orbital ordering has been run before." << endl;
-      xout << "Using the reorder file " << gaoptfile  << " as reorder." << endl;
+      xout << "Using the reorder file " << gaoptfile << endl;
 #endif
       m_reorder = true;
       m_reorderfile = gaoptfile;
