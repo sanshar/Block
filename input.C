@@ -893,8 +893,13 @@ void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
    sprintf(gaoptfile, "%s%s", save_prefix().c_str(), "/genetic_reorder.dat");
    boost::filesystem::path p(gaoptfile);
    if (boost::filesystem::exists(p)) {
+#ifndef MOLPRO
       pout << "The GAOPT routine for finding the orbital ordering has been run before." << endl;
       pout << "Using the reorder file " << gaoptfile  << " as reorder." << endl;
+#else
+      xout << "The GAOPT routine for finding the orbital ordering has been run before." << endl;
+      xout << "Using the reorder file " << gaoptfile  << " as reorder." << endl;
+#endif
       m_reorder = true;
       m_reorderfile = gaoptfile;
       return;
