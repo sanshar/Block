@@ -215,8 +215,29 @@ SpinAdapted::Input::Input(const string& config_name)
           cerr << msg<<endl;
           abort();
         }       
-        m_gaopt = true;
-        gaconffile = tok[1];
+        char gaoptfile[5000];
+        std::ofstream gaFILE;
+        sprintf(gaoptfile, "%s%s", save_prefix().c_str(), "/genetic_reorder.dat");
+        boost::filesystem::path p(gaoptfile);
+        if (boost::filesystem::exists(p)) {
+           m_reorder = true;
+           m_reorderfile = gaoptfile;
+#ifndef MOLPRO
+           pout << "----------------"<<endl;
+           pout << "The GAOPT routine for finding the orbital ordering has already been run." << endl;
+           pout << "Using the reorder file " << gaoptfile << endl;
+           pout << "----------------"<<endl;
+#else
+           xout << "----------------"<<endl;
+           xout << "The GAOPT routine for finding the orbital ordering has already been run." << endl;
+           xout << "Using the reorder file " << gaoptfile << endl;
+           xout << "----------------"<<endl;
+#endif
+        }
+        else{
+           m_gaopt = true;
+           gaconffile = tok[1];
+        }
       }
 
       else if (boost::iequals(keyword,  "schedule"))
@@ -892,22 +913,6 @@ void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
    std::ofstream gaFILE;
    sprintf(gaoptfile, "%s%s", save_prefix().c_str(), "/genetic_reorder.dat");
    boost::filesystem::path p(gaoptfile);
-   if (boost::filesystem::exists(p)) {
-#ifndef MOLPRO
-      pout << "----------------"<<endl;
-      pout << "The GAOPT routine for finding the orbital ordering has been run before." << endl;
-      pout << "Using the reorder file " << gaoptfile << endl;
-      pout << "----------------"<<endl;
-#else
-      xout << "----------------"<<endl;
-      xout << "The GAOPT routine for finding the orbital ordering has been run before." << endl;
-      xout << "Using the reorder file " << gaoptfile << endl;
-      xout << "----------------"<<endl;
-#endif
-      m_reorder = true;
-      m_reorderfile = gaoptfile;
-      return;
-   }
    gaFILE.open(gaoptfile);
 #endif
 #ifndef SERIAL
