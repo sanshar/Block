@@ -30,7 +30,8 @@ using namespace std;
 namespace SpinAdapted {
 string sym;
 }
-void CheckFileExistance(string filename, string filetype);
+void CheckFileExistence(string filename, string filetype);
+void CheckFileInexistence(string filename, string filetype);
 
 void SpinAdapted::Input::ReadMeaningfulLine(ifstream& input, string& msg, int msgsize)
 {
@@ -214,8 +215,29 @@ SpinAdapted::Input::Input(const string& config_name)
           cerr << msg<<endl;
           abort();
         }       
-        m_gaopt = true;
-        gaconffile = tok[1];
+        char gaoptfile[5000];
+        std::ofstream gaFILE;
+        sprintf(gaoptfile, "%s%s", save_prefix().c_str(), "/genetic_reorder.dat");
+        boost::filesystem::path p(gaoptfile);
+        if (boost::filesystem::exists(p)) {
+           m_reorder = true;
+           m_reorderfile = gaoptfile;
+#ifndef MOLPRO
+           pout << "----------------"<<endl;
+           pout << "The GAOPT routine for finding the orbital ordering has already been run." << endl;
+           pout << "Using the reorder file " << gaoptfile << endl;
+           pout << "----------------"<<endl;
+#else
+           xout << "----------------"<<endl;
+           xout << "The GAOPT routine for finding the orbital ordering has already been run." << endl;
+           xout << "Using the reorder file " << gaoptfile << endl;
+           xout << "----------------"<<endl;
+#endif
+        }
+        else{
+           m_gaopt = true;
+           gaconffile = tok[1];
+        }
       }
 
       else if (boost::iequals(keyword,  "schedule"))
@@ -655,7 +677,7 @@ SpinAdapted::Input::Input(const string& config_name)
   }
 
   if (mpigetrank() == 0) {
-    CheckFileExistance(orbitalfile, "Orbital file ");
+    CheckFileExistence(orbitalfile, "Orbital file ");
     readorbitalsfile(orbitalFile, v_1, v_2);
     
     pout << "Checking input for errors"<<endl;
@@ -746,7 +768,7 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   // read the reorder file
   if (m_reorder) {
     ifstream reorderFile(m_reorderfile.c_str());
-    CheckFileExistance(m_reorderfile, "Reorder file ");
+    CheckFileExistence(m_reorderfile, "Reorder file ");
     readreorderfile(reorderFile, reorder, oldtonew);
   }
   // use Kij-based ordering
@@ -889,21 +911,46 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
 void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
 {
 #ifndef SERIAL
-  mpi::communicator world;
+   mpi::communicator world;
+   char gaoptfile[5000];
+   std::ofstream gaFILE;
+   sprintf(gaoptfile, "%s%s", save_prefix().c_str(), "/genetic_reorder.dat");
+   boost::filesystem::path p(gaoptfile);
+   gaFILE.open(gaoptfile);
 #endif
-  cout << "---------- Kij-based ordering by GA opt. ----------" << endl;
-  m_gaorder = genetic::gaordering(gaconfFile, dumpFile).Gen().Sequence();
-  cout << "------ pick the best ordering up to reorder -------" << endl;
-  cout << setw(50) << "sites are reordered by: ";
+#ifndef SERIAL
+  if(mpigetrank() == 0) {
+#endif
+   cout << "---------- Kij-based ordering by GA opt. ----------" << endl;
+#ifndef SERIAL
+  }
+#endif
+   m_gaorder = genetic::gaordering(gaconfFile, dumpFile).Gen().Sequence();
+#ifndef SERIAL
+  if(mpigetrank() == 0) {
+#endif
+   cout << "------ pick the best ordering up to reorder -------" << endl;
+   cout << setw(50) << "sites are reordered by: ";
+#ifndef SERIAL
+  }
+#endif
+  
+
 #ifndef SERIAL
   if(mpigetrank() == 0) {
 #endif
 
     int n = m_gaorder.size() - 1;
-    for(int i = 0; i < n; ++i) cout << m_gaorder[i]+1 << ","; cout << m_gaorder[n]+1 << endl;
+    for(int i = 0; i < n; ++i) {
+       cout << m_gaorder[i]+1 << ",";
+       gaFILE << m_gaorder[i]+1 << ",";
+    }
+    cout << m_gaorder[n]+1 << endl;
+    gaFILE << m_gaorder[n]+1 << endl;
 #ifndef SERIAL
   }
   mpi::broadcast(world,m_gaorder,0);
+  gaFILE.close();
 #endif
 }
 
@@ -1161,7 +1208,7 @@ void SpinAdapted::Input::performSanityTest()
     else {
        if (m_maxM < 500) {
          pout << "The default schedule for an orbital space larger than 16 starts at M=500" << endl;
-         m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(500); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(1.0e-4);
+         m_maxM=500;
        }
        if (m_maxM >= 500) {
          m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(500); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(1.0e-4);
@@ -1285,13 +1332,13 @@ void SpinAdapted::Input::performSanityTest()
     abort();
   }
 
-
   if (m_maxiter < m_sweep_iter_schedule.back()) {
     pout << "maximum iterations allowed is less than the last sweep iteration in your schedule."<<endl;
     pout << m_maxiter <<" < "<< (m_sweep_iter_schedule.back())<<endl;
     pout << "either increase the max_iter or reduce the number of sweeps"<<endl;
     abort();
   }
+  
 
 #ifndef SERIAL
   }

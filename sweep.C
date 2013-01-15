@@ -334,6 +334,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
 	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
+  sweepParams.set_largest_dw() = finalError;
   for(int j=0;j<nroots;++j){
     if (mpigetrank() == 0) {
 #ifndef MOLPRO
@@ -341,7 +342,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 #else 
       //printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
       xout << "\t\t\t M = " <<  setw(6) << sweepParams.get_keep_states() ; 
-      xout << "\t Largest Discarded Weight = " << fixed << setprecision(8) << finalError ;
+      xout << "\t Largest Discarded Weight = " << scientific << setprecision(3) << finalError ;
       xout << "\t Sweep Energy = " << fixed << setprecision(10) << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
 #endif
     }
