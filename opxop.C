@@ -390,7 +390,7 @@ void SpinAdapted::opxop::dxcccomp(const SpinBlock* otherBlock, std::vector<boost
       
       Transposeview top = Transposeview(opvec2.at(opind2)->getworkingrepresentation(otherBlock));
 
-      SpinQuantum op2q = top.get_deltaQuantum(), op1q = op1->get_deltaQuantum(), oq = o->get_deltaQuantum();
+      SpinQuantum op2q = top.get_deltaQuantum(), op1q = -op1->get_deltaQuantum(), oq = o->get_deltaQuantum();
       int j2 = op2q.get_s(), j1 = op1q.get_s(), j21 = oq.get_s();
       int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = (-SymmetryOfSpatialOrb(K)).getirrep();
       double factor = pow(-1.0, static_cast<int>((2+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1));

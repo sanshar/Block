@@ -13,6 +13,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "initblocks.h"
 #include "MatrixBLAS.h"
 #include <boost/format.hpp>
+#include "op_components.h"
 #ifndef SERIAL
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi.hpp>
@@ -55,6 +56,12 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
     newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, envdot);
     environment = newEnvironment;
   }
+
+  /*
+  Op_component_base& oparray = system.get_op_array(CRE_CRE_DESCOMP);
+  for (int i=0; i<oparray.get_size(); i++)
+    cout <<oparray.get_local_element(i)[0]->get_orbs(0)<<endl<< *(oparray.get_local_element(i)[0]->getworkingrepresentation(&system))<<endl;
+  */
 
   pout <<"\t\t\t System Block :: "<< system;
   pout <<"\t\t\t Environment Block :: "<< environment;

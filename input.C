@@ -638,7 +638,7 @@ SpinAdapted::Input::Input(const string& config_name)
   //read the orbitals
   v_1.rhf= true; 
   v_2.rhf=true;
-  if (sym != "dinfh" && sym != "lzsym") {
+  if (sym != "dinfh" && sym != "lzsym" && sym != "dinfh_abelian") {
     v_2.permSymm = true;
   }
   else
@@ -780,8 +780,8 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
       else if (atoi(tok[i].c_str()) < -1)
 	ir = atoi(tok[i].c_str()) + offset;
 
-      if (sym == "trans" || sym == "lzsym") ir += 1; //for translational symmetry the lowest irrep is 0
-
+      if (sym == "trans") ir += 1; //for translational symmetry the lowest irrep is 0
+      if (sym == "lzsym") ir = atoi(tok[i].c_str());
       m_spin_orbs_symmetry[2*reorderOrbInd] = ir;
       m_spin_orbs_symmetry[2*reorderOrbInd+1] = ir;
 
