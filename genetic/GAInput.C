@@ -13,7 +13,8 @@ genetic::GAInput::GAInput(void)
   scaling        = 1.0;
   exponent       = 2.0;
   select         = GAUSS;
-  random_seed    = time(NULL);
+  //random_seed    = time(NULL);
+  random_seed    = 1414; //setting default seed
 }
 
 genetic::GAInput::GAInput(ifstream& config)
