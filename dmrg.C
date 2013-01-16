@@ -429,7 +429,7 @@ void dmrg(double sweep_tol)
       }
 
     }
-  if(dmrginp.max_iter() <= sweepParams.get_sweep_iter()) {
+    if(dmrginp.max_iter() <= sweepParams.get_sweep_iter()) {
 
     //For obtaining the extrapolated energy
     old_energy = last_be+dmrginp.get_coreenergy();
@@ -445,21 +445,5 @@ void dmrg(double sweep_tol)
   }
 
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
-  if (!mpigetrank())
-  {
-#ifndef MOLPRO
-    FILE* f = fopen("dmrg.e", "wb");
-#else
-    std::string efile;
-    efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
-    FILE* f = fopen(efile.c_str(), "wb");
-#endif
-    
-    for(int j=0;j<nroots;++j) {
-      double e = sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy(); 
-      fwrite( &e, 1, sizeof(double), f);
-    }
-    fclose(f);
-  }
 }
 

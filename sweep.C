@@ -352,6 +352,24 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   // update the static number of iterations
 
   ++sweepParams.set_sweep_iter();
+  if (!mpigetrank())
+  {
+#ifndef MOLPRO
+    FILE* f = fopen("dmrg.e", "wb");
+#else
+    std::string efile;
+    efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
+    FILE* f = fopen(efile.c_str(), "wb");
+#endif
+    
+    for(int j=0;j<nroots;++j) {
+      double e = finalEnergy[j]+dmrginp.get_coreenergy(); 
+      //pout << "ROA ROA get_lowest_energy()[" << j << "]" <<  sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() << " " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
+      fwrite( &e, 1, sizeof(double), f);
+    }
+    fclose(f);
+  }
+
 
   return finalEnergy[0];
 }
