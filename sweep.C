@@ -13,6 +13,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "initblocks.h"
 #include "MatrixBLAS.h"
 #ifndef SERIAL
+#include <boost/format.hpp>
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi.hpp>
 #endif
