@@ -299,9 +299,16 @@ void restart(double sweep_tol, bool reset_iter)
   double last_be = 100.;
   double old_fe = 0.;
   double old_be = 0.;
+  int ls_count=0;
   bool direction;
   int restartsize;
   SweepParams sweepParams;
+  sweepParams.ls_dw.resize(0);
+  sweepParams.ls_energy.resize(0);
+  int old_states=sweepParams.get_keep_states();
+  int new_states;
+  double old_error=0.0;
+  double old_energy=0.0;
   bool dodiis = false;
 
   int domoreIter = 2;
@@ -329,6 +336,23 @@ void restart(double sweep_tol, bool reset_iter)
     last_be = Sweep::do_one(sweepParams, false, !direction, false, 0);
 
 
+    //For obtaining the extrapolated energy
+    old_states=sweepParams.get_keep_states();
+    new_states=sweepParams.get_keep_states_ls();
+    if (old_states != new_states) 
+    {
+       old_energy = last_be+dmrginp.get_coreenergy();
+       old_error = sweepParams.get_largest_dw();
+       sweepParams.ls_dw.push_back(old_error);
+       sweepParams.ls_energy.push_back(old_energy);
+       ls_count++;
+
+       if (ls_count >=3) {
+          least_squares(sweepParams.ls_dw, sweepParams.ls_energy);
+       }
+    }
+
+
     if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
       break;
     last_fe = Sweep::do_one(sweepParams, false, direction, false, 0);
@@ -336,31 +360,23 @@ void restart(double sweep_tol, bool reset_iter)
 
   }
 
-  if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+  if(dmrginp.max_iter() <= sweepParams.get_sweep_iter()){
+    //For obtaining the extrapolated energy
+    old_energy = last_be+dmrginp.get_coreenergy();
+    old_error = sweepParams.get_largest_dw();
+    sweepParams.ls_dw.push_back(old_error);
+    sweepParams.ls_energy.push_back(old_energy);
+    ls_count++;
+    if (ls_count >=3) {
+       least_squares(sweepParams.ls_dw, sweepParams.ls_energy);
+    }
 #ifndef MOLPRO
     pout << "Maximum sweep iterations achieved " << std::endl;
 #else
     xout << "Maximum sweep iterations achieved " << std::endl;
 #endif
-
- 
-  const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter()); 
-  if (!mpigetrank())
-  {
-#ifndef MOLPRO
-    FILE* f = fopen("dmrg.e", "wb");
-#else
-    std::string efile;
-    efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
-    FILE* f = fopen(efile.c_str(), "wb");
-#endif
-    
-    for(int j=0;j<nroots;++j) {
-      double e = sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy(); 
-      fwrite( &e, 1, sizeof(double), f);
-    }
-    fclose(f);
   }
+
 }
 
 void dmrg(double sweep_tol)
@@ -405,7 +421,7 @@ void dmrg(double sweep_tol)
       new_states=sweepParams.get_keep_states_ls();
       if (old_states != new_states) 
       {
-         old_energy = last_fe+dmrginp.get_coreenergy();
+         old_energy = last_be+dmrginp.get_coreenergy();
          old_error = sweepParams.get_largest_dw();
          sweepParams.ls_dw.push_back(old_error);
          sweepParams.ls_energy.push_back(old_energy);
