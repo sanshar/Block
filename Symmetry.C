@@ -127,6 +127,32 @@ void Symmetry::InitialiseTable(string psym)
   else if (sym == "trans") {
     //do nothing;
   }
+  else if (sym == "lzsym") {
+    //do nothing;
+  }
+  else if (sym == "dinfh_abelian") {
+    groupTable.resize(4, 4);
+    groupTable(0, 0) = 0;
+    groupTable(0, 1) = 1;
+    groupTable(0, 2) = 2;
+    groupTable(0, 3) = 3;
+    
+    groupTable(1, 0) = 1;
+    groupTable(1, 1) = 0;
+    groupTable(1, 2) = 3;
+    groupTable(1, 3) = 2;
+    
+    groupTable(2, 0) = 2;
+    groupTable(2, 1) = 3;
+    groupTable(2, 2) = 0;
+    groupTable(2, 3) = 1;
+    
+    groupTable(3, 0) = 3;
+    groupTable(3, 1) = 2;
+    groupTable(3, 2) = 1;
+    groupTable(3, 3) = 0;
+
+  }
   else {
     pout << "Symmetry of the molecule has to be one of c1, ci, cs, c2, c2h, c2v, d2, d2h or dinfh"<<endl;
     pout << "Symmetry provided in the input file "<<sym<<endl;
@@ -137,7 +163,7 @@ void Symmetry::InitialiseTable(string psym)
 
 bool Symmetry::irrepAllowed(int irrep)
 {
-  if (sym == "dinfh" && ((irrep<0 && irrep >-4) || irrep == 2 || irrep == 3)) {
+  if ( (sym == "dinfh"|| sym == "dinfh_abelian") && ((irrep<0 && irrep >-4) || irrep == 2 || irrep == 3)) {
     pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with dinfh symmetry"<<endl;
     abort();
   }
@@ -167,16 +193,25 @@ bool Symmetry::irrepAllowed(int irrep)
       abort();
     }
   }
+  if (sym == "lzsym") {
+    return true;
+  }
   return true;
 }
 
-std::vector<int> Symmetry::decompress(int irrep) 
+std::vector<int> Symmetry::decompress(int pirrep) 
 {
   //this is used to decompress the irrep to 3 k points
   std::vector<int> out(3,0);
+  int irrep = abs(pirrep);
   out[2] = irrep/PROPBITLEN/PROPBITLEN;
   out[1] = (irrep - out[2]*PROPBITLEN*PROPBITLEN)/PROPBITLEN;
   out[0] = irrep - out[2]*PROPBITLEN*PROPBITLEN - out[1]*PROPBITLEN;
+  if (irrep == -pirrep) {
+    out[0] *=-1;
+    out[1] *=-1;
+    out[2] *=-1;
+  }
   return out;
 }
 
@@ -273,6 +308,20 @@ string Symmetry::stringOfIrrep(int irrep)
     output+=boost::lexical_cast<string>(irreps[0]);
     return output;
   }
+  else if (sym == "lzsym") {
+    return boost::lexical_cast<string>(irrep);
+  }
+  else if (sym == "dinfh_abelian") {
+    string output = "";
+    char goru = irrep%2 == 0 ? 'g' : 'u';
+    int lz = max(0,(abs(irrep)-2)/2);
+    lz *= irrep<0 ? -1 : 1; 
+    output+= boost::lexical_cast<string>(lz);
+    output+=goru;
+    if (irrep <2) output+= '+';
+    else if (irrep >=2 && irrep <4 ) output+= '-';
+    return output;
+  }
   else 
     return "A";
 }
@@ -283,6 +332,29 @@ int Symmetry::sizeofIrrep(int irrep)
     return irrep > 3 ? 2 : 1;
   else
     return 1;
+}
+
+int Symmetry::negativeof(int irrep)
+{
+  if (sym == "trans") {
+    std::vector<int> lirrep = decompress(irrep);
+    for (int i=0; i<lirrep.size(); i++) 
+      lirrep[i] = (NPROP[i] - lirrep[i])%NPROP[i];
+    
+    int outirrep = compress(lirrep);
+    return outirrep;
+  }
+  else if (sym == "lzsym") {
+    return -irrep;
+  }
+  else if (sym == "dinfh_abelian") {
+    if (irrep >= 0 && irrep < 4)
+      return irrep;
+    else
+      return -irrep;
+  }
+  else
+    return irrep;
 }
 
 std::vector<int> Symmetry::add(int irrepl, int irrepr)
@@ -316,9 +388,67 @@ std::vector<int> Symmetry::add(int irrepl, int irrepr)
       return vec;
     }
   }
+  else if (sym == "dinfh_abelian") {
+    std::vector<int> vec;
+    int goru = ((abs(irrepl)%2==0 && abs(irrepr)%2==0) || (abs(irrepl)%2==1 && abs(irrepr)%2==1)) ? 0 : 1;
+    
+    if (abs(irrepl) < 4 && abs(irrepr)< 4) {
+      vec.push_back( groupTable(irrepl, irrepr));
+      return vec;
+    }
+    else if (abs(irrepl) <4 && abs(irrepr) >= 4) {
+      int irrepout = 2*(abs(irrepr)/2) + goru;
+      if (irrepr <0)
+	vec.push_back(-irrepout);
+      else 
+	vec.push_back(irrepout);
+      return vec;
+    } 
+    else if (abs(irrepl) >= 4 && abs(irrepr) <4) {
+      int irrepout = 2*(abs(irrepl)/2) + goru;
+      if (irrepl <0)
+	vec.push_back(-irrepout);
+      else 
+	vec.push_back(irrepout);
+      return vec;
+    }
+    else {
+      int irrep1 = 2*abs(abs(irrepl)/2 - abs(irrepr)/2) + goru;
+      int irrep2 = 2*abs(abs(irrepl)/2 + abs(irrepr)/2) + goru - 2;
+
+      int irrep3 = 0;
+      if (irrep1 >=2) irrep1 += 2;
+
+      if (irrepl*irrepr > 0) {
+	if (irrepl <0)
+	  vec.push_back(-irrep2);
+	else
+	  vec.push_back(irrep2);
+      }
+      else {
+	if (irrepl + irrepr > 0) {
+	  if (irrep1 >=2 ) vec.push_back(irrep1);
+	  else vec.push_back(abs(irrep1));
+	}
+	else {
+	  if (irrep1 >=2 ) vec.push_back(-irrep1);
+	  else vec.push_back(abs(irrep1));
+	}
+	
+      }
+      
+      return vec;
+
+    }
+  }
   else if (sym == "c1") {
     std::vector<int> vec;
     vec.push_back(0);
+    return vec;
+  }
+  else if(sym == "lzsym") {
+    std::vector<int> vec;
+    vec.push_back(irrepl+irrepr);
     return vec;
   }
   else if (sym == "trans") {
@@ -343,12 +473,24 @@ std::vector<int> Symmetry::add(int irrepl, int irrepr)
 
 
 double Symmetry::spatial_sixj(int j1, int j2, int j3, int j5, int j4, int j7) {
+  if (sym != "dinfh") {
+    if (j3 != add(j1,j2)[0]) return 0.0;
+    if (j7 != add(j2,j5)[0]) return 0.0;
+    if (j4 != add(j3,j5)[0]) return 0.0;
+    return 1.0;
+  }
+  else {
     double out = spatial_ninej(j1, j2, j3, j4, j5, j3, j7, j7, 0);
     return out;
+  }
 }
 
 double Symmetry::spatial_ninej(int j1, int j2, int j12, int j3, int j4, int j34, int j13, int j24, int j) {
   
+  if (sym != "dinfh") {
+    return 1.0;
+  }
+
     // all the numbers are irreps
     int m = 0; //since 9-j does not depend on m, we use m=j/2 to calculate the coefficient
     
@@ -429,17 +571,8 @@ double Symmetry::spatial_cg(int a, int b, int c, int rowa, int rowb, int rowc) {
     
     return out;
   }
-  else if (sym == "c1") {
-    return 1.0;
-  }
-  else if (sym == "trans") {
-    if (c == add(a,b)[0])
-      return 1.0;
-    else
-      return 0.0;
-  }
   else {
-    if (c == groupTable(a,b))
+    if (c == add(a,b)[0])
       return 1.0;
     else
       return 0.0;

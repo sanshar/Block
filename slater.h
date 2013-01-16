@@ -26,9 +26,11 @@ inline int SymmetryOfSpinOrb (const int i)
   //this is the irrep orbital index
 inline IrrepSpace SymmetryOfSpatialOrb(const int i)
 {
-  int sym = SymmetryOfSpinOrb(dmrginp.spatial_to_spin()[i]);
-  int irrep = abs(sym); 
-  return IrrepSpace(irrep);
+  int symm = dmrginp.spin_orbs_symmetry()[dmrginp.spatial_to_spin()[i]];
+  if (sym == "dinfh")
+    symm = abs(symm);
+
+  return IrrepSpace(symm);
 }
 
 inline int SpinOf (const int i)

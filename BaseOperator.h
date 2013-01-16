@@ -171,7 +171,7 @@ public:
   const Matrix& operator_element(int i, int j) const { return opdata->operator_element(j, i); }
   Matrix& operator_element(int i, int j) { return opdata->operator_element(j, i); }
   int get_spin()const  { return opdata->get_deltaQuantum().get_s();}
-  IrrepSpace get_symm()const  { return opdata->get_deltaQuantum().get_symm();}
+  IrrepSpace get_symm()const  { return -opdata->get_deltaQuantum().get_symm();}
   int get_orbs(int i) const {return opdata->get_orbs(i);}
   const std::vector<int>& get_orbs() const { return opdata->get_orbs(); }
   const Matrix& operator()(int i, int j) const { return opdata->operator()(j, i); }

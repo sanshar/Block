@@ -443,7 +443,7 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
   const int j = get_orbs()[1];
 
   TensorOp C(i,1), D(j,-1);
-  TensorOp CD1 = C.product(D, spin, sym.getirrep());
+  TensorOp CD1 = C.product(D, spin, (-sym).getirrep());
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
@@ -471,24 +471,27 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
 
       TensorOp CK(k,1), DL(l,-1);      
       TensorOp CD2 = CK.product(DL, spin, sym.getirrep());
-      if (CD2.empty) continue;
-      double scaleV = calcCompfactor(CD1, CD2, CD,*(b.get_twoInt()));
-
-      boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(k), k);
-      Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(l), l));
-
-      if (fabs(scaleV) > dmrginp.screen_tol())
-	SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV);
+      if (!CD2.empty) {
+	double scaleV = calcCompfactor(CD1, CD2, CD,*(b.get_twoInt()));
+	
+	boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(k), k);
+	Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(l), l));
+	
+	if (fabs(scaleV) > dmrginp.screen_tol())
+	  SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV);
+      }
 
       CK=TensorOp(l,1); DL=TensorOp(k,-1);      
       CD2 = CK.product(DL, spin, sym.getirrep());
-      scaleV = calcCompfactor(CD1, CD2, CD,*(b.get_twoInt()));
-      op1 = rightBlock->get_op_rep(CRE, getSpinQuantum(l), l);
-      top2 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(k), k));
+      if (!CD2.empty) {
+	double scaleV = calcCompfactor(CD1, CD2, CD,*(b.get_twoInt()));
+	boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE, getSpinQuantum(l), l);
+	Transposeview top2 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(k), k));
 
-      double parity = getCommuteParity(op1->get_deltaQuantum(), top2.get_deltaQuantum(), get_deltaQuantum());
-      if (fabs(scaleV) > dmrginp.screen_tol())
-	SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV*parity);
+	double parity = getCommuteParity(op1->get_deltaQuantum(), top2.get_deltaQuantum(), get_deltaQuantum());
+	if (fabs(scaleV) > dmrginp.screen_tol())
+	  SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV*parity);
+      }
     }
   dmrginp.makeopsT -> stop();
 }
@@ -505,7 +508,7 @@ double SpinAdapted::CreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder, co
 
   TensorOp C(I,1), D(J,-1);
 
-  TensorOp CD1 = C.product(D, spin, sym.getirrep());
+  TensorOp CD1 = C.product(D, spin, (-sym).getirrep());
 
   for (int i=0; i<ladder.size(); i++)
   {
@@ -568,7 +571,7 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
   const int j = get_orbs()[1];
 
   TensorOp C(i,1), C2(j,1);
-  TensorOp CC1 = C.product(C2, spin, sym.getirrep(), i==j);
+  TensorOp CC1 = C.product(C2, spin, (-sym).getirrep(), i==j);
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
@@ -628,7 +631,7 @@ double SpinAdapted::DesDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder, co
 
   TensorOp C(I,1), C2(J,1);
 
-  TensorOp CC1 = C.product(C2, spin, sym.getirrep(), I==J);
+  TensorOp CC1 = C.product(C2, spin, (-sym).getirrep(), I==J);
  
 
   std::vector<double> values(2,0.0);
@@ -770,7 +773,7 @@ double SpinAdapted::CreCreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
 	int _l = b->get_sites()[kl];
 	
 	
-	SpinQuantum si(1,1,SymmetryOfSpatialOrb(_i)), sj(1,1,SymmetryOfSpatialOrb(_j)), sl(-1,1,SymmetryOfSpatialOrb(_l));
+	SpinQuantum si(1,1,SymmetryOfSpatialOrb(_i)), sj(1,1,SymmetryOfSpatialOrb(_j)), sl(-1,1,-SymmetryOfSpatialOrb(_l));
 
 	std::vector<SpinQuantum> sij = si+sj;
 	for (int ij=0; ij<sij.size(); ij++) {

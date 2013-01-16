@@ -38,6 +38,7 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
     if (dmrginp.outputlevel() > 0)
       pout << "\t\t\t Done building diagonal hamiltonian "<<endl;
     FORTINT m, n=1, nsize=e.Storage();
+    pout << "\t\t\t Number of elements in wavefunction :: " << e.Ncols() << endl;
     if (mpigetrank()==0) {
       m = idamax_(nsize,e.Store(), n); 
       if (dmrginp.outputlevel() > 0)
@@ -45,7 +46,6 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
     }
 
 
-    pout << "\t\t\t Number of elements in wavefunction :: " << e.Ncols() << endl;
     multiply_h davidson_f(big, onedot);
     //etemp = e;
 #ifndef SERIAL
@@ -53,6 +53,7 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
 #endif
     GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise); 
     Linear::block_davidson(solution, e, tol, warmUp, davidson_f, useprecond, solved);
+
  
     iter++;
   }

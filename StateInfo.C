@@ -153,6 +153,7 @@ void SpinAdapted::TensorProduct (StateInfo& a, StateInfo& b, StateInfo& c, const
 {
   ObjectMatrix<char> dummy;
   assert (constraint != WITH_LIST);
+
   if (constraint == NO_PARTICLE_SPIN_NUMBER_CONSTRAINT)
     TensorProduct (a, b, dmrginp.effective_molecule_quantum(), LessThanQ, c, compState);
   else if (constraint == PARTICLE_SPIN_NUMBER_CONSTRAINT)

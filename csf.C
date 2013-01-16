@@ -214,10 +214,10 @@ void SpinAdapted::CSFUTIL::TensorProduct(Csf& lhs, Csf& rhs, vector< Csf >& outp
 	  int J1 = lhs.S, M1 = lhs_csfs[j1m1].Sz, J2 = rhs.S, M2 = rhs_csfs[j2m2].Sz;
 	
 	  double clebsg = cg(J1, J2, J, M1, M2, J);
-	  double clebdinfh = Symmetry::spatial_cg(lirrep, rirrep, irrep, lhs_csfs[j1m1].irrep.getrow(), rhs_csfs[j2m2].irrep.getrow(), row);
-	  if( abs(clebsg) < 1.0e-12 || abs(clebdinfh) < 1.00e-14)
+	  double clebspatial = Symmetry::spatial_cg(lirrep, rirrep, irrep, lhs_csfs[j1m1].irrep.getrow(), rhs_csfs[j2m2].irrep.getrow(), row);
+	  if( abs(clebsg) < 1.0e-12 || abs(clebspatial) < 1.00e-14)
 	    continue;
-	  lhs_csfs[j1m1].outerProd(rhs_csfs[j2m2], clebsg*clebdinfh, dets); 
+	  lhs_csfs[j1m1].outerProd(rhs_csfs[j2m2], clebsg*clebspatial, dets); 
 	}
       
       if (dets.size() == 0)

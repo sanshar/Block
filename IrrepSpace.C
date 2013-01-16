@@ -38,6 +38,11 @@ namespace SpinAdapted{
     return lhs+=rhs;
   }
   
+  IrrepSpace operator-(const IrrepSpace lhs)
+  {
+    int outirrep = Symmetry::negativeof(lhs.irrep);
+    return IrrepSpace(outirrep);
+  }
   
   void IrrepSpace::Save(std::ofstream &ofs) 
   {
@@ -53,19 +58,7 @@ namespace SpinAdapted{
   
   ostream& operator<< (ostream& os, const IrrepSpace s)
   {
-    if (sym == "dinfh") {
-      char goru = s.irrep%2 == 0 ? 'g' : 'u';
-      os<< max(0,(s.irrep-2)/2)<<goru;
-      if (s.irrep <2) os<< '+';
-      else if (s.irrep >=2 && s.irrep <4 ) os<< '-';
-    }
-    else if (sym == "trans") {
-      std::vector<int> irreps = Symmetry::decompress(s.irrep);
-      os<<irreps[2]<<irreps[1]<<irreps[0];
-    }
-    else {
-      os<< s.irrep+1;
-    }
+    os << Symmetry::stringOfIrrep(s.irrep);
     return os;
   }
   

@@ -271,7 +271,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       SpinBlock newSystem;
 
       //Need to substitute by:
-      if (warmUp && (sym=="dinfh"||sym=="trans"))
+      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian"))
       //if (warmUp)// && (sym=="dinfh"||sym=="trans"))
          Startup(sweepParams, system, newSystem);
       else {
@@ -281,7 +281,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       }
       
       //Need to substitute by?
-      if (!warmUp || !(sym == "dinfh"||sym=="trans") ){
+      if (!warmUp || !(sym == "dinfh"||sym=="trans" || sym=="dinfh_abelian") ){
       //if (!warmUp){// || !(sym == "dinfh"||sym=="trans") ){
 	
 	for(int j=0;j<nroots;++j)
