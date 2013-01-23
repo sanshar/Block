@@ -58,11 +58,11 @@ genetic::Cell genetic::gaordering(ifstream& confFile, ifstream& dumpFile)
 #ifndef SERIAL
   int ntask = 1 + gainput.max_community / world.size();
 
-  Cell comm_best = gaoptimize(time(NULL) + world.rank());
+  Cell comm_best = gaoptimize();
   cout << "Order #" << world.rank() << ": " << comm_best << endl;
   for(int i = 1; i < ntask; ++i)
   {
-    Cell comm_cell = gaoptimize(time(NULL) + world.rank());
+    Cell comm_cell = gaoptimize();
     cout << "Order #" << i * world.size() + world.rank() << ": " << comm_cell << endl;
     if(comm_cell < comm_best) comm_best = comm_cell;
   }
@@ -74,11 +74,11 @@ genetic::Cell genetic::gaordering(ifstream& confFile, ifstream& dumpFile)
 
 #else
   int ntask = gainput.max_community;
-  best = gaoptimize(time(NULL));;
+  best = gaoptimize();
   cout << "Order #" << 0 << ": " << best << endl;
   for(int i = 1; i < ntask; ++i)
   {
-    Cell comm_cell = gaoptimize(time(NULL));
+    Cell comm_cell = gaoptimize();
     cout << "Order #" << i << ": " << comm_cell << endl;
     if(comm_cell < best) best = comm_cell;
   }
@@ -88,9 +88,9 @@ genetic::Cell genetic::gaordering(ifstream& confFile, ifstream& dumpFile)
   return best;
 }
 
-genetic::Cell genetic::gaoptimize(const int& seed)
+genetic::Cell genetic::gaoptimize()
 {
-  srand(seed);
+  //srand(seed);
   Generation ancestor;
 
   for(int g = 0; g < gainput.max_generation; ++g)
