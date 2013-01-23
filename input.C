@@ -42,7 +42,7 @@ void SpinAdapted::Input::ReadMeaningfulLine(ifstream& input, string& msg, int ms
 
     msg=string(msgctr);
     if(msg.size() == msgsize) {
-      pout << "in the process of reading line begining with "<<endl<<msg<<endl;
+      pout << "in the process of reading line beginning with "<<endl<<msg<<endl;
       pout<< "this line is too long"<<endl;
       abort();
     }
@@ -276,7 +276,7 @@ SpinAdapted::Input::Input(const string& config_name)
 	{
 	  
 	  if (schd_tok.size() != 4) {
-	    pout << "Each line of the schedule contain four entries sweep_iteration   #retained states   davidson tolerance     noise"<<endl;
+	    pout << "Each line of the schedule contain four entries sweep_iteration   #retained states   Davidson tolerance     noise"<<endl;
 	    pout << "error found at the following line "<<endl;
 	    pout<< msg<<endl;
 	    abort();
@@ -454,7 +454,7 @@ SpinAdapted::Input::Input(const string& config_name)
 
 	if (weighttoken.size() != m_nroots +1 ) {
 	  pout << "keyword weights should be followed by floating point numbers providing weights for "<<m_nroots<<" states."<<endl;
-	  pout << "You could chose to omit the keyworkd weights in which case the weights will be distributed uniformly between the different roots"<<endl;
+	  pout << "You could chose to omit the keyword weights in which case the weights will be distributed uniformly between the different roots"<<endl;
 	  pout << "error found in the following line "<<endl;
 	  pout << msg<<endl;
 	  abort();
@@ -962,9 +962,9 @@ void SpinAdapted::Input::writeSummaryForMolpro()
 #endif
      xout << setw(50) << "Total number of orbitals : "  ;
      xout << m_norbs/2 << endl;
-     xout << setw(50) << "Symmetry of tragetted wavefunctions : " ;
+     xout << setw(50) << "Symmetry of targeted wavefunctions : " ;
      xout << m_alpha + m_beta << ":" << m_alpha-m_beta << ":" << m_total_symmetry_number.getirrep()+1 << endl;
-     xout << setw(50) << "Number of wavefunctions targetted : " ;
+     xout << setw(50) << "Number of wavefunctions targeted : " ;
      xout << m_nroots << endl;
      if (m_nroots >1) {
         xout << setw(50) << "The weights of the wavefunctions : ";
@@ -1011,8 +1011,8 @@ void SpinAdapted::Input::writeSummary()
   if (mpigetrank() == 0) {
 #endif
   printf("%-50s :   %-i\n", "Total number of orbitals", m_norbs/2);
-  printf("%-50s :   %-i:%-i:%-i\n", "Symmetry of the targetted wavefunctions",m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number.getirrep()+1);
-  printf("%-50s :   %-i\n", "Number of wavefunctions targetted", m_nroots);
+  printf("%-50s :   %-i:%-i:%-i\n", "Symmetry of the targeted wavefunctions",m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number.getirrep()+1);
+  printf("%-50s :   %-i\n", "Number of wavefunctions targeted", m_nroots);
   if (m_nroots >1) {
     printf("%-50s :   ", "The weights of the wavefunctions");
     for (int i=0; i<m_nroots; i++) 
@@ -1307,7 +1307,7 @@ void SpinAdapted::Input::performSanityTest()
       m_twodot_to_onedot_iter = lastiter+4;
     }
     if (m_maxiter <= m_sweep_iter_schedule.back()) {
-      pout << "With the default schedule and maxM specified, maxiter has to be atleast "<<lastiter+6<<endl;
+      pout << "With the default schedule and maxM specified, maxiter has to be at least "<<lastiter+6<<endl;
       pout << "changing maxiter to "<<lastiter+6<<endl;
       m_maxiter = lastiter+6;
     }

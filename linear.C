@@ -223,7 +223,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	  if(b.size() >= dmrginp.deflation_max_size())
 	    {
 	      if (dmrginp.outputlevel() > 0)
-		pout << "\t\t\t Deflating block davidson...\n";
+		pout << "\t\t\t Deflating block Davidson...\n";
 	      b.resize(dmrginp.deflation_min_size());
 	      sigma.resize(dmrginp.deflation_min_size());
 	    }

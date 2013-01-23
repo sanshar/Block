@@ -1,5 +1,6 @@
 /*                                                                           
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+n
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
 This program is integrated in Molpro with the permission of 
@@ -21,7 +22,7 @@ SpinAdapted::Csf::Csf( const map<Slater, double>& p_dets, const int p_n, const i
 	cout << it->first<<endl;
 	cout << (*it).first.n<<" "<<n<<endl;
 	cout << (*it).first.Sz<<" "<<Sz<<endl;
-	cout<<" all slaters in Csf dont have the same n, spin or symmetry"<<endl;
+	cout<<" all slaters in Csf do not have the same n, spin or symmetry"<<endl;
 	cout << *this<<endl;
 	throw 20;
       }
@@ -445,7 +446,7 @@ vector< vector<int> > SpinAdapted::CSFUTIL::generate_partitions(int n)
 {
   //n is the irrep of the symmetry element.
   if (Symmetry::sizeofIrrep(n) == 1) {
-    pout << "cannot generate parition of irrep which a single row "<<endl;
+    pout << "cannot generate partition of irrep which a single row "<<endl;
     exit(0);
   }
 
