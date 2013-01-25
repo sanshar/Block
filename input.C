@@ -1119,7 +1119,7 @@ void SpinAdapted::Input::performSanityTest()
     
     double sweeptol = m_sweep_tol;
     int lastiter = 0;
-    if (m_norbs <32) {
+    if (m_norbs <24) {
        if (m_maxM >= 50) {
          m_sweep_iter_schedule.push_back(0); m_sweep_state_schedule.push_back(50); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(1.0e-4);
        }
@@ -1204,7 +1204,7 @@ void SpinAdapted::Input::performSanityTest()
        lastiter = m_sweep_iter_schedule.back();
        m_sweep_iter_schedule.push_back(lastiter+2); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(sweeptol/10.0);  m_sweep_noise_schedule.push_back(0.0e-5);
     }
-    // Greater than 16 orbitals
+    // Greater than 12 orbitals
     else {
        if (m_maxM < 500) {
          pout << "The default schedule for an orbital space larger than 16 starts at M=500" << endl;
