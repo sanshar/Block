@@ -59,8 +59,124 @@ void SpinAdapted::Linear::olsenPrecondition(Wavefunction& op, Wavefunction& C0, 
 
 }
 
+void SpinAdapted::Linear::Lanczos(vector<Wavefunction>& b, DiagonalMatrix& e, double normtol, Davidson_functor& h_multiply, int nroots)
+{
+  int iter = 0;
+  pout.precision(12);
 
-void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix& h_diag, double normtol, const bool &warmUp, Davidson_functor& h_multiply, bool& useprecond, bool& solved)
+
+  if(mpigetrank() == 0) {
+    //b[0].Randomise();
+    Normalise(b[0]);
+    b.resize(dmrginp.max_lanczos_dimension());
+  }
+
+
+  double beta_minus = 1.0;
+  std::vector<double> diagonal(dmrginp.max_lanczos_dimension(), 0);
+  std::vector<double> offdiagonal(dmrginp.max_lanczos_dimension(), 0);
+
+  Wavefunction b0;
+  Wavefunction* bptr = &b0;
+  if (mpigetrank() == 0)
+    bptr = &b[0];
+  else
+    bptr = &b0;
+  
+#ifndef SERIAL
+  mpi::communicator world;
+  mpi::broadcast(world, *bptr, 0);
+#endif
+  Wavefunction r(*bptr);
+  
+  bool notconverged = true;
+  while (notconverged && iter < dmrginp.max_lanczos_dimension()) {
+    r.Clear();
+    pout << "\t\t\t Lanczos Iteration :: "<<iter<<endl;
+    iter ++;
+
+#ifndef SERIAL
+    mpi::broadcast(world, *bptr, 0);
+#endif
+
+    h_multiply(*bptr, r);
+
+
+    if(mpigetrank() == 0) {
+      if (iter > 1)
+        ScaleAdd(-beta_minus, b[iter-2], r);
+
+
+      diagonal[iter-1] = DotProduct(*bptr, r);
+
+
+      double alphai = diagonal[iter-1];
+
+      Matrix alpha;
+      std::vector<double> diagonal_temporary(iter,0);
+      std::vector<double> offdiagonal_temporary(iter,0);
+      for (int i=0; i<iter; i++) {
+        diagonal_temporary[i] = diagonal[i];
+        offdiagonal_temporary[i] = offdiagonal[i];
+      }
+
+      diagonalise_tridiagonal(diagonal_temporary, offdiagonal_temporary, iter, alpha);
+
+      ScaleAdd(-alphai, *bptr, r);
+      for (int i=iter-1; i>=0; i--) {
+	double overlap = DotProduct(b[i], r);
+	ScaleAdd(-overlap, b[i], r);
+      }
+      offdiagonal[iter-1]  = sqrt(DotProduct(r, r));
+
+      if (dmrginp.outputlevel() > 0) {
+        if (iter > 1)
+          notconverged = false;
+        for (int i = 1; i <= min(iter-1, nroots); ++i) {
+          pout << "\t\t\t " << i << " ::  " << diagonal_temporary[i-1]+dmrginp.get_coreenergy() <<"  "<<pow(offdiagonal[iter-1]*alpha(iter,i),2)<<endl;
+          if (pow(offdiagonal[iter-1]*alpha(iter,i),2) >= normtol) {
+            notconverged = true;
+            break;
+          }
+        }
+
+      }
+      if (iter == dmrginp.max_lanczos_dimension()) {
+        pout << "Reached the maximum number of allowed iterations!!"<<endl;
+        exit(0);
+      }
+
+
+      //cout << offdiagonal[iter-1]<<"  "<<iter<<endl;                                                                                                                       
+      if(!notconverged) {
+	for (int i=0; i<nroots; i++)
+	  e(i+1) = diagonal_temporary[i];
+
+	vector<Wavefunction> btmp = b;
+	for (int i=0; i<nroots; i++)
+	  Scale(alpha.element(i,i), b[i]);
+	for (int i=0; i<nroots; i++)
+	  for (int j=0; j<iter; j++) 
+	    if (i != j)
+	      ScaleAdd(alpha.element(j,i), btmp[j], b[i]);
+
+	break;
+      }
+
+      Normalise(r);
+      b[iter] = r;
+      if(mpigetrank() == 0)
+	bptr = &b[iter];
+    }
+#ifndef SERIAL
+    mpi::broadcast(world, notconverged, 0);
+#endif
+    r.Clear();
+  }
+}
+
+
+void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix& h_diag, double normtol, const bool &warmUp, Davidson_functor& h_multiply, bool& useprecond)
 {
 
   pout.precision (12);
@@ -71,6 +187,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
   double levelshift = 0.0;
   int nroots = b.size();
   //normalise all the guess roots
+  if(mpigetrank() == 0) {
   for(int i=0;i<nroots;++i)
     {
       for(int j=0;j<i;++j)
@@ -80,7 +197,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	}
       Normalise(b[i]);
     }
-
+  }
 
   vector<Wavefunction> sigma;
   int converged_roots = 0;
@@ -106,8 +223,8 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 
       for(int i=sigmasize;i<bsize;++i)
 	{
-	  Wavefunction* sigmaptr, *bptr;
-	  Wavefunction sigmai;
+	  Wavefunction sigmai, bi;
+	  Wavefunction* sigmaptr=&sigmai, *bptr = &bi;
 
 	  if (mpigetrank() == 0) {
 	    sigma.push_back(b[i]);
@@ -115,15 +232,14 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	    sigmaptr = &sigma[i];
 	    bptr = &b[i];
 	  }
-	  else {
-	    sigmai = b[0];
-	    sigmai.Clear();
-	    sigmaptr = &sigmai;
-	    bptr = &b[converged_roots]; //b vector is not doing anything in procs with non-zero rank
-	  }
+
 #ifndef SERIAL
 	  mpi::broadcast(world, *bptr, 0);
 #endif
+	  if (mpigetrank() != 0) {
+	    sigmai = bi;
+	    sigmai.Clear();
+	  }
 
 	  h_multiply(*bptr, *sigmaptr);
 	  
@@ -203,9 +319,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	{
 	  if (dmrginp.outputlevel() > 0)
 	    pout << "\t\t\t Converged root " << converged_roots << endl;
-#ifndef SERIAL
-	  mpi::broadcast(world, b[converged_roots], 0);
-#endif
+
 	  ++converged_roots;	  
 	  if (converged_roots == nroots)
 	    {
@@ -214,7 +328,6 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 		for (int i = 0; i < min((int)(b.size()), h_diag.Ncols()); ++i)
 		  h_diag.element(i) = subspace_eigenvalues.element(i);
 	      }
-	      solved = true;
 	      break;
 	    }
 	}
