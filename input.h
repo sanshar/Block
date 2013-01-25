@@ -27,7 +27,7 @@ class OneElectronArray;
 class TwoElectronArray;
 
 enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD};
-enum solveTypes {SMALL_DAVIDSON, BIG_DAVIDSON};
+enum solveTypes {LANCZOS, DAVIDSON};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
 enum calcType {DMRG, ONEPDM, TWOPDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI};
@@ -101,6 +101,7 @@ class Input {
 
   int m_maxj;
   ninejCoeffs m_ninej;
+  int m_max_lanczos_dimension;
 
   double m_sweep_tol;
   bool m_restart;
@@ -132,7 +133,7 @@ class Input {
     ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule;
     ar & m_molecule_quantum & m_total_symmetry_number & m_total_spin & m_orbenergies & m_add_noninteracting_orbs;
-    ar & m_save_prefix & m_load_prefix & m_direct ;
+    ar & m_save_prefix & m_load_prefix & m_direct & m_max_lanczos_dimension;
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat & m_reorder & m_gaopt & m_gaorder;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_cd;
@@ -244,6 +245,7 @@ class Input {
   const ninejCoeffs& get_ninej() const {return m_ninej;}
   const hamTypes &hamiltonian() const {return m_ham_type;}
   const int &guess_permutations() const { return m_guess_permutations; }
+  const int &max_lanczos_dimension() const {return m_max_lanczos_dimension;}
   std::vector<int> thrds_per_node() const { return m_thrds_per_node; }
   const calcType &calc_type() const { return m_calc_type; }
   const solveTypes &solve_method() const { return m_solve_type; }

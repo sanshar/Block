@@ -26,42 +26,36 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
 
   DiagonalMatrix e;
   bool useprecond = true;
-  int iter = 0;
-  bool solved = false;
 
-  while (iter <= 1 && !solved) {
+  e.ReSize(big.get_stateInfo().totalStates); e= 0;
+  if (dmrginp.outputlevel() > 0)
+    pout << "\t\t\t Building Diagonal Hamiltonian " << endl;
+  big.diagonalH ( e);
+  if (dmrginp.outputlevel() > 0)
+    pout << "\t\t\t Done building diagonal hamiltonian "<<endl;
+  FORTINT m, n=1, nsize=e.Storage();
+  pout << "\t\t\t Number of elements in wavefunction :: " << e.Ncols() << endl;
+  if (mpigetrank()==0) {
+    m = idamax_(nsize,e.Store(), n); 
+    if (dmrginp.outputlevel() > 0)
+      pout << "highest diagonal value "<<m<<" "<<e(m)<<endl;
+  }
+  else 
+    e.ReSize(0);
+  
+  if(dmrginp.solve_method() == DAVIDSON) {
     solution.resize(nroots);
-    e.ReSize(big.get_stateInfo().totalStates); e= 0;
-    if (dmrginp.outputlevel() > 0)
-      pout << "\t\t\t Building Diagonal Hamiltonian " << endl;
-    big.diagonalH ( e);
-    if (dmrginp.outputlevel() > 0)
-      pout << "\t\t\t Done building diagonal hamiltonian "<<endl;
-    FORTINT m, n=1, nsize=e.Storage();
-    pout << "\t\t\t Number of elements in wavefunction :: " << e.Ncols() << endl;
-    if (mpigetrank()==0) {
-      m = idamax_(nsize,e.Store(), n); 
-      if (dmrginp.outputlevel() > 0)
-         pout << "highest diagonal value "<<m<<" "<<e(m)<<endl;
-    }
-
-
     multiply_h davidson_f(big, onedot);
-    //etemp = e;
-#ifndef SERIAL
-    if (mpigetrank() != 0) e.ReSize(0);
-#endif
     GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise); 
-    Linear::block_davidson(solution, e, tol, warmUp, davidson_f, useprecond, solved);
-
+    Linear::block_davidson(solution, e, tol, warmUp, davidson_f, useprecond);
+  }
+  else {
+    solution.resize(1);
+    multiply_h davidson_f(big, onedot);
+    GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise); 
+    Linear::Lanczos(solution, e, tol, davidson_f, nroots);
+  }
  
-    iter++;
-  }
-  if (iter == 2 && !solved)
-  {
-    cout << "Unable to solve the eigenvalue equation and bailing!!"<<endl;
-    exit(2);
-  }
 
   solution.resize(nroots);
   energies.resize(nroots);

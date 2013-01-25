@@ -25,7 +25,8 @@ namespace Linear
 {
   void precondition(Wavefunction& op, double e, DiagonalMatrix& diagonal, double levelshift=0.0);
   void olsenPrecondition(Wavefunction& op, Wavefunction& C0, double e, DiagonalMatrix& diagonal, double levelshift=0.0);
-  void block_davidson(vector<Wavefunction>& b, DiagonalMatrix& e, double normtol, const bool &warmUp, Davidson_functor& h_mult, bool& useprecond, bool& solved);
+  void block_davidson(vector<Wavefunction>& b, DiagonalMatrix& e, double normtol, const bool &warmUp, Davidson_functor& h_mult, bool& useprecond);
+  void Lanczos(vector<Wavefunction>& b, DiagonalMatrix& e, double normtol, Davidson_functor& h_multiply, int nroots);
 };
 }
 #endif

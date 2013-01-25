@@ -49,6 +49,7 @@ extern "C"
 	     float *A, int *lda, float *B, int *ldb, float *beta, float *C,
 	     int *ldc);
   void sscal(int *size, float *coeff, float *matrix,int *inc);
+  void dstev(char* JOBZ,FORTINT* N,double* A,double* E, double* W, FORTINT* Wlen, double*WORK, FORTINT* INFO);
   void dsyev(char* JOBZ,char* UPLO,int* N,double* A,int* LDA,double* W,double*WORK,int*LWORK,int* INFO);
   void dgesv(int *n, int *nrhs, double *a, int *lda, int *ipiv, double *b, int *ldb, int *info);
 }
@@ -74,6 +75,7 @@ extern "C"
 	     float *A, FORTINT *lda, float *B, FORTINT *ldb, float *beta, float *C,
 	     FORTINT *ldc);
   void sscal_(FORTINT *size, float *coeff, float *matrix,FORTINT *inc);
+  void dstev_(char* JOBZ,FORTINT* N,double* A,double* E, double* W, FORTINT* Wlen, double*WORK, FORTINT* INFO);
   void dsyev_(char* JOBZ,char* UPLO,FORTINT* N,double* A,FORTINT* LDA,double* W,double*WORK,FORTINT*LWORK,FORTINT* INFO);
   void dgesv_(FORTINT *n, FORTINT *nrhs, double *a, FORTINT *lda, FORTINT *ipiv, double *b, FORTINT *ldb, FORTINT *info);
   int idamax_(FORTINT &n, double* d, FORTINT &indx);
@@ -238,6 +240,15 @@ inline void DSYEV(char JOBZ, char UPLO, FORTINT N, double* A, FORTINT LDA, doubl
   dsyev(&JOBZ,&UPLO,&N,A,&LDA,W,WORK,&LWORK,&INFO);
 #else
   dsyev_(&JOBZ,&UPLO,&N,A,&LDA,W,WORK,&LWORK,&INFO);
+#endif
+}
+
+inline void DSTEV(char JOBZ, FORTINT N, double* D, double* E, double* vec, FORTINT LDA, double* W, FORTINT INFO )
+{
+#ifdef AIX
+  dstev(&JOBZ,&N,D,E,vec,&LDA,W,&INFO);
+#else
+  dstev_(&JOBZ,&N,D,E,vec,&LDA,W,&INFO);
 #endif
 }
 
