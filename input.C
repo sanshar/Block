@@ -922,11 +922,11 @@ void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
    std::ofstream gaFILE;
 #ifndef SERIAL
    mpi::communicator world;
+#endif
    char gaoptfile[5000];
    sprintf(gaoptfile, "%s%s", save_prefix().c_str(), "/genetic_reorder.dat");
    boost::filesystem::path p(gaoptfile);
    gaFILE.open(gaoptfile);
-#endif
 
   if(mpigetrank() == 0) {
    cout << "---------- Kij-based ordering by GA opt. ----------" << endl;
