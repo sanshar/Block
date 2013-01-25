@@ -342,6 +342,31 @@ void SpinAdapted::svd(Matrix& M, DiagonalMatrix& d, Matrix& U, Matrix& V)
   delete[] workspace;
 }
 
+void SpinAdapted::diagonalise_tridiagonal(std::vector<double>& diagonal, std::vector<double>& offdiagonal, int numelements, Matrix& vec)
+{
+  int nrows = numelements;
+  int ncols = numelements;
+
+  vec.ReSize(nrows, nrows);
+
+  Matrix vec_transpose; vec_transpose = vec;
+  vector<double> workarray(4*nrows-2,0);
+  int info = 0;
+
+  DSTEV('V', nrows, &(diagonal[0]), &(offdiagonal[0]), vec_transpose.Store(), nrows,  &(workarray[0]), info);
+
+  if (info != 0)
+    {
+      pout << "failed to converge :: " <<info<< endl;
+      abort();
+    }
+
+  for (int i = 0; i < nrows; ++i)
+    for (int j = 0; j < ncols; ++j)
+      vec(j+1,i+1) = vec_transpose(i+1,j+1);
+}
+
+
 void SpinAdapted::diagonalise(Matrix& sym, DiagonalMatrix& d, Matrix& vec)
 {
   int nrows = sym.Nrows();

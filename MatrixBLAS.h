@@ -44,6 +44,7 @@ double dotproduct(const ColumnVector& a, const ColumnVector& b);
 double dotproduct(const RowVector& a, const RowVector& b);
 double rowdoubleproduct(Matrix& a, int rowa, Matrix& b, int rowb);
 void diagonalise(Matrix& sym, DiagonalMatrix& d, Matrix& vec);
+void diagonalise_tridiagonal(std::vector<double>& diagonal, std::vector<double>& offdiagonal, int numelements, Matrix& vec);
 
 template<class T> void Clear (T& a)
 {

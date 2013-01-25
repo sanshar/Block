@@ -283,9 +283,11 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
       pout << "\t\t\t Norm of wavefunction :: "<<norm<<endl;
     
   }
+  /*
 #ifndef SERIAL
   broadcast(world, solution, 0);
 #endif
+  */
 }
 
 

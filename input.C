@@ -66,8 +66,11 @@ void SpinAdapted::Input::initialize_defaults()
   m_algorithm_type = TWODOT_TO_ONEDOT;
   m_noise_type = RANDOM;
   m_calc_type = DMRG;
+  m_solve_type = DAVIDSON;
+
   m_twodot_to_onedot_iter = 0;
   m_integral_disk_storage_thresh = 100; //this is usually 100
+  m_max_lanczos_dimension = 5000;
 
   m_norbs = 0;
   m_alpha = 0;
@@ -330,6 +333,10 @@ SpinAdapted::Input::Input(const string& config_name)
 	boost::algorithm::to_lower(sym); //store as lower case string
         Symmetry::InitialiseTable(sym);
       }
+      else if (boost::iequals(keyword, "davidson")) 
+	m_solve_type = DAVIDSON;
+      else if (boost::iequals(keyword, "lanczos")) 
+	m_solve_type = LANCZOS;
       else if (boost::iequals(keyword, "thrds_per_node") || boost::iequals(keyword, "threads_per_node")) {
 
 	int nprocs = 1;
@@ -439,8 +446,10 @@ SpinAdapted::Input::Input(const string& config_name)
 	}	
 
         m_nroots = atoi(tok[1].c_str());
-        if(m_deflation_min_size < m_nroots)
+        if(m_deflation_min_size < m_nroots) 
           m_deflation_min_size = m_nroots;
+	  
+	m_deflation_max_size = max(20, m_nroots+20);
 
 	ReadMeaningfulLine(input, msg, msgsize);
 	vector<string> weighttoken;
@@ -910,35 +919,28 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
 
 void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
 {
+   std::ofstream gaFILE;
 #ifndef SERIAL
    mpi::communicator world;
    char gaoptfile[5000];
-   std::ofstream gaFILE;
    sprintf(gaoptfile, "%s%s", save_prefix().c_str(), "/genetic_reorder.dat");
    boost::filesystem::path p(gaoptfile);
    gaFILE.open(gaoptfile);
 #endif
-#ifndef SERIAL
+
   if(mpigetrank() == 0) {
-#endif
    cout << "---------- Kij-based ordering by GA opt. ----------" << endl;
-#ifndef SERIAL
   }
-#endif
+
    m_gaorder = genetic::gaordering(gaconfFile, dumpFile).Gen().Sequence();
-#ifndef SERIAL
+
   if(mpigetrank() == 0) {
-#endif
    cout << "------ pick the best ordering up to reorder -------" << endl;
    cout << setw(50) << "sites are reordered by: ";
-#ifndef SERIAL
   }
-#endif
   
 
-#ifndef SERIAL
   if(mpigetrank() == 0) {
-#endif
 
     int n = m_gaorder.size() - 1;
     for(int i = 0; i < n; ++i) {
@@ -947,8 +949,8 @@ void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
     }
     cout << m_gaorder[n]+1 << endl;
     gaFILE << m_gaorder[n]+1 << endl;
-#ifndef SERIAL
   }
+#ifndef SERIAL
   mpi::broadcast(world,m_gaorder,0);
   gaFILE.close();
 #endif

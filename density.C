@@ -27,11 +27,15 @@ using namespace operatorfunctions;
 void DensityMatrix::makedensitymatrix(const std::vector<Wavefunction>& wave_solutions, SpinBlock &big, 
 				      const std::vector<double> &wave_weights, const double noise, const double additional_noise, bool warmup)
 {
-  for(int i=0;i<wave_weights.size();++i) {
+  for(int i=0;i<wave_weights.size()&& mpigetrank() == 0;++i) {
     MultiplyProduct (wave_solutions[i], Transpose(const_cast<Wavefunction&> (wave_solutions[i])), *this, wave_weights[i]);
   }
 
-  
+#ifndef SERIAL
+  boost::mpi::communicator world;
+  boost::mpi::broadcast(world, *this, 0);
+#endif
+
   if(noise > 1.0e-14)
     this->add_onedot_noise(wave_solutions, big, noise);
 
@@ -220,11 +224,30 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
   DensityMatrix* dmnoise = new DensityMatrix[MAX_THRD];
   for(int j=0;j<MAX_THRD;++j)
     dmnoise[j].allocate(big.get_leftBlock()->get_stateInfo());
-  for(int i=0;i<wave_solutions.size();++i)
+  int nroots = wave_solutions.size();
+
+#ifndef SERIAL
+  boost::mpi::communicator world;
+  boost::mpi::broadcast(world, nroots, 0);
+#endif
+
+  for(int i=0;i<nroots;++i)
   {
     for(int j=0;j<MAX_THRD;++j)
       dmnoise[j].Clear();
-    onedot_noise_f onedot_noise(dmnoise, wave_solutions[i], big, 1., MAX_THRD);
+
+    Wavefunction wave;
+    Wavefunction *wvptr = &wave;
+    if(mpigetrank() == 0)
+      wvptr = const_cast<Wavefunction*> (&wave_solutions[i]);
+    else
+      wvptr = &wave;
+
+#ifndef SERIAL
+    boost::mpi::broadcast(world, *wvptr, 0);
+#endif
+
+    onedot_noise_f onedot_noise(dmnoise, *wvptr, big, 1., MAX_THRD);
 
     if (leftBlock->has(CRE))
     {
@@ -262,7 +285,7 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
 	  for(int i=0;i<(dmnoise[0])(lQ,rQ).Nrows();++i)
 	    norm += (dmnoise[0])(lQ,rQ)(i+1,i+1);
     if (norm > 1.0)
-      ScaleAdd(noise/norm, dmnoise[0], *this);
+      ScaleAdd(noise/norm/nroots, dmnoise[0], *this);
   }
   delete[] dmnoise;  
 
