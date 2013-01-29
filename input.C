@@ -923,12 +923,12 @@ void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
 #ifndef SERIAL
    mpi::communicator world;
 #endif
+  if(mpigetrank() == 0) {
    char gaoptfile[5000];
    sprintf(gaoptfile, "%s%s", save_prefix().c_str(), "/genetic_reorder.dat");
    boost::filesystem::path p(gaoptfile);
    gaFILE.open(gaoptfile);
 
-  if(mpigetrank() == 0) {
    cout << "---------- Kij-based ordering by GA opt. ----------" << endl;
   }
 
@@ -937,10 +937,6 @@ void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
   if(mpigetrank() == 0) {
    cout << "------ pick the best ordering up to reorder -------" << endl;
    cout << setw(50) << "sites are reordered by: ";
-  }
-  
-
-  if(mpigetrank() == 0) {
 
     int n = m_gaorder.size() - 1;
     for(int i = 0; i < n; ++i) {
@@ -952,8 +948,10 @@ void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
   }
 #ifndef SERIAL
   mpi::broadcast(world,m_gaorder,0);
-  gaFILE.close();
 #endif
+  if(mpigetrank() == 0) {
+  gaFILE.close();
+  }
 }
 
 #ifdef MOLPRO
