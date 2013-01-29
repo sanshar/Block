@@ -43,7 +43,7 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
   system.addAdditionalCompOps();
-  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, true, true);
+  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), LOCAL_STORAGE, true, true);
   
   InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
 				      sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
@@ -57,17 +57,15 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   const int nroots = dmrginp.nroots();
   std::vector<Wavefunction> solutions(nroots);
 
-  
-  for(int i=0;i<nroots;++i)
-    {
-      StateInfo newInfo;
-      solutions[i].LoadWavefunctionInfo (newInfo, newSystem.get_sites(), i);
-    }
-  
+  DiagonalMatrix e;
+  GuessWave::guess_wavefunctions(solutions, e, big, sweepParams.get_guesstype(), true, true, 0.0); 
+
 #ifndef SERIAL
   mpi::communicator world;
-  mpi::broadcast(world,solutions,0);
+  mpi::broadcast(world, solutions, 0);
 #endif
+
+
 
 #ifdef SERIAL
   const int numprocs = 1;
