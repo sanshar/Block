@@ -123,6 +123,11 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   DiagonalMatrix e;
   GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, true, 0.0); 
 
+#ifndef SERIAL
+  mpi::communicator world;
+  mpi::broadcast(world, solution, 0);
+#endif
+
   std::vector<Matrix> rotateMatrix;
   DensityMatrix tracedMatrix;
   tracedMatrix.allocate(newSystem.get_stateInfo());
@@ -133,10 +138,8 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   
 
 #ifndef SERIAL
-  mpi::communicator world;
   mpi::broadcast(world,rotateMatrix,0);
 #endif
-
 #ifdef SERIAL
   const int numprocs = 1;
 #endif

@@ -57,11 +57,11 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   SpinBlock newbig;
   dmrginp.postwfrearrange -> start();
 
-  if (onedot && !dot_with_sys && mpigetrank() == 0)
+  if (onedot && !dot_with_sys)
   {
     InitBlocks::InitNewSystemBlock(System, sysDot, newsystem, sysDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true);
     InitBlocks::InitBigBlock(newsystem, environment, newbig); 
-    for (int i=0; i<nroots; i++) 
+    for (int i=0; i<nroots&& mpigetrank()==0; i++) 
     {
       Wavefunction tempwave = wave_solutions[i];
       GuessWave::onedot_shufflesysdot(big.get_stateInfo(), newbig.get_stateInfo(),wave_solutions[i], tempwave);  
