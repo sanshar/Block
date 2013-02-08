@@ -276,11 +276,11 @@ string Symmetry::stringOfIrrep(int irrep)
       case(0): 
 	return "A";
       case(1):
-	return "B2";
+	return "B3";//B3
       case(2):
-	return "B3";
+	return "B2";//B1
       case(3):
-	return "B1";
+	return "B1";//B2
       }
     }
   else if (sym == "cs") 
