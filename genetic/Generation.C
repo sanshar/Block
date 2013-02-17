@@ -114,9 +114,3 @@ void genetic::Generation::Generate(const genetic::Generation& ancestor)
 
   ComputeProbability();
 }
-
-ostream& genetic::operator<< (ostream& ost, const genetic::Generation& g)
-{
-  for(int i = 0; i < g.m_cells.size(); ++i) ost << setw(4) << i << ": " << g.m_cells[i] << " ( " << g.m_prob[i] << " ) " << endl;
-  return ost;
-}

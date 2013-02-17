@@ -74,8 +74,8 @@ void SpinAdapted::StateInfo::UnBlockIndex ()
     unBlockedIndex [i] = (i > 0) ? unBlockedIndex [i - 1] + quantaStates [i - 1] : 0; 
 }
 
-ostream& SpinAdapted::operator<< (ostream& os, const StateInfo& s)
-{
+namespace SpinAdapted {
+ostream& operator<< (ostream& os, const StateInfo& s) {
   os <<"\t\t\t Total number of Quanta and States : "<< s.quanta.size()<<" "<<s.totalStates<<endl;
     os <<  "\t\t\t States per Quantum :: \t";
     for (int i = 0; i < s.quanta.size(); ++i) os << s.quanta[i] << " =  "<<s.quantaStates[i]<<", ";
@@ -83,8 +83,7 @@ ostream& SpinAdapted::operator<< (ostream& os, const StateInfo& s)
   return os;
 }
 
-void SpinAdapted::TensorProduct (StateInfo& a, StateInfo& b, const SpinQuantum q, const int constraint, StateInfo& c, StateInfo* compState)
-{
+void TensorProduct (StateInfo& a, StateInfo& b, const SpinQuantum q, const int constraint, StateInfo& c, StateInfo* compState) {
   c.leftStateInfo = &a;
   c.rightStateInfo = &b;
   c.allowedQuanta.ReSize (a.quanta.size (), b.quanta.size ());
@@ -149,7 +148,7 @@ void SpinAdapted::TensorProduct (StateInfo& a, StateInfo& b, const SpinQuantum q
 }
 
 
-void SpinAdapted::TensorProduct (StateInfo& a, StateInfo& b, StateInfo& c, const int constraint, StateInfo* compState)
+void TensorProduct (StateInfo& a, StateInfo& b, StateInfo& c, const int constraint, StateInfo* compState)
 {
   ObjectMatrix<char> dummy;
   assert (constraint != WITH_LIST);
@@ -160,6 +159,7 @@ void SpinAdapted::TensorProduct (StateInfo& a, StateInfo& b, StateInfo& c, const
     TensorProduct (a, b, dmrginp.effective_molecule_quantum(), EqualQ, c);
 }
 
+}
 
 void SpinAdapted::StateInfo::CollectQuanta ()
 {

@@ -46,7 +46,13 @@ namespace genetic
 
     void Generate(const Generation& ancestor);
 
-    friend ostream& operator<< (ostream& ost, const Generation& g);
+    friend ostream& operator<< (ostream& ost, const Generation& g){
+      using std::setw;
+      using std::endl;
+      for(int i = 0; i < g.m_cells.size(); ++i)
+        ost << setw(4) << i << ": " << g.m_cells[i] << " ( " << g.m_prob[i] << " ) " << endl;
+      return ost;
+    }
   };
 };
 
