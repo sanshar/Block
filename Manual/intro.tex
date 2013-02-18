@@ -108,9 +108,8 @@ Block is compiled using the makefile supplied in the distribution. The following
 \item \textbf{Lapack and Blas}\\ The variable \texttt{LAPACKBLAS} should be
 set to the linking command for the BLAS and LAPACK libraries.
 \item \textbf{Compiler}\\
-By default, Block is set up to use the gcc compiler. If you wish to use the Intel C++ compiler the variable \texttt{INTEL} should be set to \texttt{yes}. 
-While the code has not been tested with other compilers, the variables \texttt{CXX} 
-and \texttt{OPT} can be changed as appropriate for different compilers.
+   By default, Block is set up to use the gcc compiler. If you wish to use the Intel C++ compiler you should modify the variable \texttt{CXX} to \texttt{icpc}.
+While the code has not been tested with other compilers, the variable \texttt{CXX}  can be changed as appropriate for different compilers.
 \item \textbf{Custom malloc}\\
 DMRG calculations allocate and deallocate small blocks of memory a large number of times during a single calculation. For large scale calculations,
 this can lead to significant memory fragmentation over time. In some cases, this can be significantly ameliorated by installing a
