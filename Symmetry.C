@@ -223,72 +223,76 @@ int Symmetry::compress(std::vector<int>& irreps)
 
 string Symmetry::stringOfIrrep(int irrep) 
 {
+   string symbol;
   if (sym == "d2h") {
     switch(irrep)
       {
       case(0): 
-	return "Ag";
+	symbol = "Ag"; break;
       case(1):
-	return "B3u";
+	symbol = "B3u"; break;
       case(2):
-	return "B2u";
+	symbol = "B2u"; break;
       case(3):
-	return "B1g";
+	symbol = "B1g"; break;
       case(4):
-	return "B1u";
+	symbol = "B1u"; break;
       case(5):
-	return "B2g";
+	symbol = "B2g"; break;
       case(6):
-	return "B3g";
+	symbol = "B3g"; break;
       case(7):
-	return "Au";
+	symbol = "Au"; break;
       }
   }
   else if (sym == "c2v") {
     switch(irrep)
       {
       case(0): 
-	return "A1";
+	symbol = "A1"; break;
       case(1):
-	return "B1";
+	symbol = "B1"; break;
       case(2):
-	return "B2";
+	symbol = "B2"; break;
       case(3):
-	return "A2";
+	symbol = "A2"; break;
       }
     }
   else if (sym == "c2h") {
     switch(irrep)
       {
       case(0): 
-	return "Ag";
+	symbol = "Ag"; break;
       case(1):
-	return "Au";
+	symbol = "Au"; break;
       case(2):
-	return "Bu";
+	symbol = "Bu"; break;
       case(3):
-	return "Bg";
+	symbol = "Bg"; break;
       }
   }
   else if (sym == "d2") {
     switch(irrep)
       {
       case(0): 
-	return "A";
+	symbol = "A"; break;
       case(1):
-	return "B3";//B3
+	symbol = "B3";//B3
+   break;
       case(2):
-	return "B2";//B1
+	symbol = "B2";//B1
+   break;
       case(3):
-	return "B1";//B2
+	symbol = "B1";//B2
+   break;
       }
     }
   else if (sym == "cs") 
-    return (irrep == 0) ? "A'" : "A''";
+    symbol = (irrep == 0) ? "A'" : "A''";
   else if (sym == "c2") 
-    return (irrep == 0) ? "A" : "B";
+    symbol = (irrep == 0) ? "A" : "B";
   else if (sym == "ci") 
-    return (irrep == 0) ? "Ag" : "Au";
+    symbol = (irrep == 0) ? "Ag" : "Au";
   else if (sym == "dinfh") {
     string output = "";
     char goru = irrep%2 == 0 ? 'g' : 'u';
@@ -298,7 +302,7 @@ string Symmetry::stringOfIrrep(int irrep)
     output+=goru;
     if (irrep <2) output+= '+';
     else if (irrep >=2 && irrep <4 ) output+= '-';
-    return output;
+    symbol = output;
   }
   else if(sym == "trans") {
     std::vector<int> irreps = decompress(irrep);
@@ -306,10 +310,10 @@ string Symmetry::stringOfIrrep(int irrep)
     output+=boost::lexical_cast<string>(irreps[2]);
     output+=boost::lexical_cast<string>(irreps[1]);
     output+=boost::lexical_cast<string>(irreps[0]);
-    return output;
+    symbol = output;
   }
   else if (sym == "lzsym") {
-    return boost::lexical_cast<string>(irrep);
+    symbol = boost::lexical_cast<string>(irrep);
   }
   else if (sym == "dinfh_abelian") {
     string output = "";
@@ -320,10 +324,11 @@ string Symmetry::stringOfIrrep(int irrep)
     output+=goru;
     if (irrep <2) output+= '+';
     else if (irrep >=2 && irrep <4 ) output+= '-';
-    return output;
+    symbol = output;
   }
   else 
-    return "A";
+    symbol = "A";
+  return symbol;
 }
 
 int Symmetry::sizeofIrrep(int irrep)
