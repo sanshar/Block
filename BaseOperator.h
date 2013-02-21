@@ -26,7 +26,25 @@ class TensorOp;
 namespace SpinAdapted{
 class SpinBlock;
 
-enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP};
+//enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP};
+typedef unsigned int opTypes;
+
+enum OP_COMPONENT_TYPE
+{
+  HAM             = 0x01000000,
+  CRE             = 0x02000000,
+  CRE_CRE_DESCOMP = 0x03000000,
+  CRE_CRE         = 0x04000000,
+  DES_DESCOMP     = 0x05000000,
+  CRE_DES         = 0x06000000,
+  CRE_DESCOMP     = 0x07000000
+};
+
+const opTypes OP_TYPE_MASK  = 0xff000000;
+const opTypes GENERIC_MASK  = 0x00ffffff;
+const opTypes BRAROOT_MASK  = 0x00fff000;
+const opTypes KETROOT_MASK  = 0x00000fff;
+const opTypes MAXROOT_BITS  = 12;
 
 enum CompType{CD, DD, CCD, C};
 

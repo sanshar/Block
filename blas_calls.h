@@ -51,6 +51,7 @@ extern "C"
   void sscal(int *size, float *coeff, float *matrix,int *inc);
   void dstev(char* JOBZ,FORTINT* N,double* A,double* E, double* W, FORTINT* Wlen, double*WORK, FORTINT* INFO);
   void dsyev(char* JOBZ,char* UPLO,int* N,double* A,int* LDA,double* W,double*WORK,int*LWORK,int* INFO);
+  void dsygv(FORTINT* ITYPE, char* JOBZ, char* UPLO, FORTINT* N, double* A, FORTINT* LDA, double* B, FORTINT* LDB, double* W, double* WORK, FORTINT* LWORK, FORTINT* INFO);
   void dgesv(int *n, int *nrhs, double *a, int *lda, int *ipiv, double *b, int *ldb, int *info);
 }
 #else //SGI, Linux
@@ -77,6 +78,7 @@ extern "C"
   void sscal_(FORTINT *size, float *coeff, float *matrix,FORTINT *inc);
   void dstev_(char* JOBZ,FORTINT* N,double* A,double* E, double* W, FORTINT* Wlen, double*WORK, FORTINT* INFO);
   void dsyev_(char* JOBZ,char* UPLO,FORTINT* N,double* A,FORTINT* LDA,double* W,double*WORK,FORTINT*LWORK,FORTINT* INFO);
+  void dsygv_(FORTINT* ITYPE, char* JOBZ, char* UPLO, FORTINT* N, double* A, FORTINT* LDA, double* B, FORTINT* LDB, double* W, double* WORK, FORTINT* LWORK, FORTINT* INFO);
   void dgesv_(FORTINT *n, FORTINT *nrhs, double *a, FORTINT *lda, FORTINT *ipiv, double *b, FORTINT *ldb, FORTINT *info);
   int idamax_(FORTINT &n, double* d, FORTINT &indx);
   //int idamax_(int &n, double* d, int &indx);
@@ -249,6 +251,15 @@ inline void DSTEV(char JOBZ, FORTINT N, double* D, double* E, double* vec, FORTI
   dstev(&JOBZ,&N,D,E,vec,&LDA,W,&INFO);
 #else
   dstev_(&JOBZ,&N,D,E,vec,&LDA,W,&INFO);
+#endif
+}
+
+inline void DSYGV(FORTINT ITYPE, char JOBZ, char UPLO, FORTINT N, double* A, FORTINT LDA, double* B, FORTINT LDB, double* W, double* WORK, FORTINT LWORK, FORTINT INFO)
+{
+#ifdef AIX
+  dsygv (&ITYPE, &JOBZ, &UPLO, &N, A, &LDA, B, &LDB, W, WORK, &LWORK, &INFO);
+#else
+  dsygv_(&ITYPE, &JOBZ, &UPLO, &N, A, &LDA, B, &LDB, W, WORK, &LWORK, &INFO);
 #endif
 }
 

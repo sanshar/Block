@@ -422,6 +422,8 @@ SpinAdapted::Input::Input(const string& config_name)
 	m_calc_type = RESTART_ONEPDM;
       else if (boost::iequals(keyword,  "restart_twopdm") || boost::iequals(keyword,  "restart_twordm") || boost::iequals(keyword,  "restart_trdm"))
 	m_calc_type = RESTART_TWOPDM;
+      else if (boost::iequals(keyword,  "dmrg_lrt") || boost::iequals(keyword,  "lrt"))
+        m_calc_type = DMRG_LRT;
       else if(boost::iequals(keyword,  "prefix") || boost::iequals(keyword,  "scratch"))
       {
 	if(usedkey[PREFIX] == 0) 

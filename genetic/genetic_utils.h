@@ -7,7 +7,11 @@
 namespace genetic
 {
   // random number generator
-  inline int irand(const int& n) { return (int) (((double)(rand())) * n / RAND_MAX); }
+  inline int irand(const int& n)
+  { 
+    int r = (int) (((double)(rand())) * n / RAND_MAX);
+    return (r < n) ? r : n - 1;
+  }
 
   inline int irand(const int& nmin, const int& nmax)
   {

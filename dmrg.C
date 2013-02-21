@@ -266,6 +266,44 @@ int calldmrg(char* input, char* output)
     sweep_copy.savestate(direction_copy, restartsize_copy);
 
     break;
+
+  // Run into DMRG Linear-Response Theory for Excited State
+  case (DMRG_LRT):
+    if (dmrginp.algorithm_method() == TWODOT) {
+      pout << "DMRG-LRT not allowed with twodot algorithm" << endl;
+      abort();
+    }
+
+    // TODO: followings are just copied from other calc_type().
+    //       figure out all necessary setup before DMRG-LRT
+    if (RESTART && !FULLRESTART)
+      restart(sweep_tol, reset_iter);
+    else if (FULLRESTART) {
+      fullrestartGenblock();
+      reset_iter = true;
+      sweepParams.restorestate(direction, restartsize);
+      sweepParams.calc_niter();
+      sweepParams.savestate(direction, restartsize);
+      restart(sweep_tol, reset_iter);
+    }
+
+    dmrginp.screen_tol() = 0.0;
+    dmrginp.Sz() = dmrginp.total_spin_number();
+    dmrginp.do_cd() = true;
+    dmrginp.screen_tol() = 0.0;
+
+    sweep_copy.restorestate(direction_copy, restartsize_copy);
+
+    dmrginp.set_fullrestart() = true;
+    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
+    dmrginp.set_fullrestart() = false;    
+
+//  // DMRG-LRT: turned off
+//  SweepDmrgLrt::do_one(sweepParams, false, direction, false, 0, dmrginp.nroots());
+//  sweep_copy.savestate(direction_copy, restartsize_copy);
+
+    break;
   }
 
   return 0;

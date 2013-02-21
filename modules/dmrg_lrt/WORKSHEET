@@ -1,0 +1,124 @@
+DMRG Linear-Response Theory Code for Excited State: N. Nakatani wrote
+
+this is a chart of implementation:
+
+(1) modules to be changed
+ + Evaluation of < 0 | H | I > cannot be exploited transpose symmetry, such like 'Des_i = (Cre_i)^(T)'
+ - opxop and op_components are hacked?
+
+ + 1-st order wavefunctions, rotation matrices, and renormalized operators are rotated by Ritz vector through sweeping
+ - do_one may contains control function to perform Krylov solver
+
+ + To compute 1-st order rotation matrices, Jon's code might be re-usable
+
+ + Setting initial guesses for excited states
+
+ + Gauge-transfer in 1-st order wavefunction
+
+ + Input specifications
+
+(2) storages
+ + All addtional storages are
+ - 1-st order wavefunctions, rotation matrices, and renormalized operators (transposed operators, too)
+ - Hamiltonian and overlap matrices spanned by Krylov trial vectors
+ - Ritz vectors
+ - Residual norms
+
+(*) concerns
+ + pseudo-code
+ 1 suppose, one-site ground state wavefunction is computed in usual way.
+ 2 run program again to perform lrt calculation.
+ 3 call genblock? to fix the 0-th gauge. set guess wavefunctions.
+ 4 solve generalized-eigenvalue problem to get Ritz vector.
+ 5 rotate storages, compute contribution for each site, solve correction equation, and compute 1-st order rotation matrix.
+ 6 transfer gauge to next site = similar to compute guess wavefunction.
+ 7 check convergence, and continue 4-6 until convergence.
+
+ + new class?
+ - SpinBlockDerived : public SpinBlock
+   may contain i-th root info (to use save & load), and derived operators (explicitly compute transposed operators, too).
+
+ + new function
+ - rotate storages by Ritz vector
+   load previous storages to rotate and save; O(M^2 N^2 k^2) for CPU, O(M^2 N k^2) for MEM
+
+In 'Sweep***::do_one'
+
+{
+  Matrix & subspace_h;
+  Matrix & subspace_s;
+
+  int & nroots; // # of roots to be solved
+  int & mroots; // # of trial vectors in Krylov subspace
+  int & lroots; // # of trial vectors to be updated
+
+  std::vector<double> R_norm(nroots, 0.0);
+  Matrix alpha;
+
+  solve_generalized_eigenvalue_problem(subspace_h, subspace_s, eigenvalue, alpha);
+
+  subspace_h.resize(mroots+lroots, mroots+lroots, 0.0);
+  subspace_s.resize(mroots+lroots, mroots+lroots, 0.0);
+
+  *** DO SWEEP ***
+
+  int n_conv_roots = 1;
+  for(; n_conv_roots < nroots; ++n_conv_roots) {
+    if(R_norm[n_conv_roots] >= tolerance) break;
+  }
+
+  return n_conv_roots;
+}
+
+
+
+Initialization / Create Guesses --- hack SweepGenblock and fullrestart?
+ + fix gauge of 0-th wavefunctions
+   - can be done in fullrestart?
+ + compute Krylov trial vectors (nroots) for initial guess
+   - can be shared with LRT main routine?
+ + compute contributions to subspace H and S
+   - this is shared with LRT main routine
+ + compute 1-st rotation matrices and renormalize
+   - this is shared with LRT main routine
+
+1-st order renormalized operator ( Operator_deriv ? )
+ + change 'opTypes' (defined in BaseOperator.h) will be hacked
+ + in Jon's code, '***_DERIV' components are added, e.g. CRE_DES_DERIV etc.
+   however, LRT needs to store OPS[0, I] and OPS[I, 0] for each operator component
+ - thus, storage type 'map<opTypes, shared_ptr<Op_components> >'
+
+   typedef uinsigned int opTypes;
+
+   enum OP_COMPONENT_TYPE
+   {
+     HAM             = 0x01000000,
+     CRE             = 0x02000000,
+     CRE_CRE_DESCOMP = 0x03000000,
+     CRE_CRE         = 0x04000000,
+     DES_DESCOMP     = 0x05000000,
+     CRE_DES         = 0x06000000,
+     CRE_DESCOMP     = 0x07000000,
+
+     OP_TYPE_MASK    = 0x11000000,
+     BRASTAT_MASK    = 0x00111000,
+     KETSTAT_MASK    = 0x00000111,
+     GENERIC_MASK    = 0x00111111
+   };
+
+   first  12 bits: describe state # of ket (up to 4095)
+   second 12 bits: describe state # of bra (up to 4095)
+   third   8 bits: describe operator type
+
+   if another operator type such like Sz, other than LRT calculation,
+   upper 8 bits must set to be 0x00****** to use lower 24 bits to define generic operator
+
+
+
+
+
+
+
+
+
+

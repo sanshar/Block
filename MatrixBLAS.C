@@ -402,6 +402,43 @@ void SpinAdapted::diagonalise(Matrix& sym, DiagonalMatrix& d, Matrix& vec)
       vec(j+1,i+1) = workmat(i+1,j+1);
 }
 
+// solve generalized eigenvalue problem on symmetric matrices: A * x = d B * x ( A = sya, B = syb, x = vec )
+void SpinAdapted::diagonalise(Matrix& sya, Matrix& syb, DiagonalMatrix& d, Matrix& vec)
+{
+  int nrows = sya.Nrows();
+  int ncols = sya.Ncols();
+  assert(nrows == ncols);
+  assert(nrows == syb.Nrows());
+  assert(ncols == syb.Ncols());
+  d.ReSize(nrows);
+  vec.ReSize(nrows, nrows);
+
+  Matrix awork;
+  awork = sya;
+  Matrix bwork;
+  bwork = syb;
+  vector<double> workquery(1);
+  int info = 0;
+  double* dptr = d.Store();
+
+  int query = -1;
+  DSYGV(1, 'V', 'L', nrows, awork.Store(), nrows, bwork.Store(), nrows, dptr, &(workquery[0]), query, info); // do query to find best size
+  
+  int optlength = static_cast<int>(workquery[0]);
+  vector<double> workspace(optlength);
+
+  DSYGV(1, 'V', 'U', nrows, awork.Store(), nrows, bwork.Store(), nrows, dptr, &(workspace[0]), optlength, info); // do query to find best size
+
+  if (info > 0) 
+    {
+      pout << "failed to converge " << endl;
+      abort(); 
+    }
+  
+  for (int i = 0; i < nrows; ++i)
+    for (int j = 0; j < ncols; ++j)
+      vec(j+1,i+1) = awork(i+1,j+1);
+}
 
 
 void SpinAdapted::MatrixMultiply (double d, const Matrix& a, Matrix& b)
