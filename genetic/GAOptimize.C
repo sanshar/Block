@@ -74,11 +74,11 @@ genetic::Cell genetic::gaordering(ifstream& confFile, ifstream& dumpFile)
 
 #else
   int ntask = gainput.max_community;
-  best = gaoptimize();
+  best = gaoptimize(genetic::gainput.random_seed);
   cout << "Order #" << 0 << ": " << best << endl;
   for(int i = 1; i < ntask; ++i)
   {
-    Cell comm_cell = gaoptimize();
+    Cell comm_cell = gaoptimize(genetic::gainput.random_seed+i);
     cout << "Order #" << i << ": " << comm_cell << endl;
     if(comm_cell < best) best = comm_cell;
   }
