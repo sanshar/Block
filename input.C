@@ -860,10 +860,10 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     }
     else if (boost::iequals(tok[0], "PROPBITLEN") ) {
       temp = atoi(tok[1].c_str());
-    }
     PROPBITLEN=1;
     for (int i=0; i<temp; i++)
       PROPBITLEN *= 2;
+    }
 
     msg.resize(0);
     ReadMeaningfulLine(dumpFile, msg, msgsize);
@@ -1019,7 +1019,7 @@ void SpinAdapted::Input::writeSummary()
       printf("%-10.2e", m_weights[i]);
     printf("\n");
   }
-  printf("%-50s :   ", "Symmetry of the molecule"); cout << sym<<endl;;  
+  printf("%-50s :   %s\n", "Symmetry of the molecule", sym.c_str());
   if (sym != "c1") {
     printf("%-50s :   ", "Irreducible representations of the orbitals");
     for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) 
