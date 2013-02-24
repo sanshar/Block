@@ -433,6 +433,7 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
         abort();
       }
       Matrix vd = V;
+pout << "\tDEBUG @ transform guesswave: singular value = " << D << endl;
       vd *= D.i();
       inverseLeftRotationMatrix[q].ReSize(V.Nrows(), U.Nrows());
       SpinAdapted::Clear(inverseLeftRotationMatrix[q]);

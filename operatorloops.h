@@ -92,6 +92,20 @@ template<typename T2, class A> void for_all_multithread(A& array, const T2& func
     }
 }
  
+template<typename T2, class A> void for_all_multithread(A& array1, A& array2, const T2& func)
+{
+    assert(array1.get_size() == array2.get_size());
+#ifdef _OPENMP
+#pragma omp parallel default(shared)
+#pragma omp for schedule(guided) nowait
+#endif
+    for (int i = 0; i < array1.get_size(); ++i) {
+      std::vector<boost::shared_ptr<SparseMatrix> > vec1 = array1.get_local_element(i);
+      std::vector<boost::shared_ptr<SparseMatrix> > vec2 = array2.get_local_element(i);
+      func(vec1, vec2);
+    }
+}
+ 
 template<typename T2, class A> void for_all_operators_multithread(A& array, const T2& func)
 {
   int i;
@@ -106,6 +120,28 @@ template<typename T2, class A> void for_all_operators_multithread(A& array, cons
       std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
       for (int j=0; j<vec.size(); j++){
 	func(*vec[j]);
+      }
+    }
+  }
+}
+
+template<typename T2, class A> void for_all_operators_multithread(A& array1, A& array2, const T2& func)
+{
+  assert(array1.get_size() == array2.get_size());
+  int i;
+#ifdef _OPENMP
+  #pragma omp parallel default(shared) private(i)
+#endif
+  {
+#ifdef _OPENMP
+    #pragma omp for schedule(guided) nowait
+#endif
+    for (i = 0; i < array1.get_size(); ++i) {
+      std::vector<boost::shared_ptr<SparseMatrix> > vec1 = array1.get_local_element(i);
+      std::vector<boost::shared_ptr<SparseMatrix> > vec2 = array2.get_local_element(i);
+      assert(vec1.size() == vec2.size());
+      for (int j=0; j<vec1.size(); j++){
+	func(*vec1[j], *vec2[j]);
       }
     }
   }

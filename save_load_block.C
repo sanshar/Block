@@ -79,24 +79,24 @@ void SpinBlock::remove_normal_ops()
   ops.erase(CRE_DES);
 }
 
-void SpinBlock::sendcompOps(Op_component_base& opcomp, int I, int J, int optype, int compsite)
+void SpinBlock::sendcompOps(Op_component_base& opcomp, int I, int J, opTypes optype, int compsite)
 {
 #ifndef SERIAL
   boost::mpi::communicator world;
   std::vector<boost::shared_ptr<SparseMatrix> > oparray = opcomp.get_element(I,J);
   for(int i=0; i<oparray.size(); i++) {
-    world.send(processorindex(compsite), optype+i*10+1000*J+100000*I, *oparray[i]);
+    world.send(processorindex(compsite), (optype & OP_TYPE_MASK)+i+100*J+10000*I, *oparray[i]);
   }  
 #endif
 }
 
-void SpinBlock::recvcompOps(Op_component_base& opcomp, int I, int J, int optype)
+void SpinBlock::recvcompOps(Op_component_base& opcomp, int I, int J, opTypes optype)
 {
 #ifndef SERIAL
   boost::mpi::communicator world;
   std::vector<boost::shared_ptr<SparseMatrix> > oparray = opcomp.get_element(I,J);
   for(int i=0; i<oparray.size(); i++) {
-    world.recv(processorindex(trimap(I, J, dmrginp.last_site())), optype+i*10+1000*J+100000*I, *oparray[i]);
+    world.recv(processorindex(trimap(I, J, dmrginp.last_site())), (optype & OP_TYPE_MASK)+i+100*J+10000*I, *oparray[i]);
   }
 #endif
 }

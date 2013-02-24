@@ -133,7 +133,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   //analyse_operator_distribution(big);
   dmrginp.guessgenT -> stop();
   dmrginp.multiplierT -> start();
-  std::vector<Matrix> rotatematrix;
+  std::vector< std::vector<Matrix> > rotatematrices;
 
   if (dmrginp.outputlevel() > 0)
     mcheck(""); 
@@ -150,7 +150,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   }
 
   newSystem.RenormaliseFrom (sweepParams.set_lowest_energy(), sweepParams.set_lowest_energy_spins(), sweepParams.set_lowest_error(), 
-                             rotatematrix, sweepParams.get_keep_states(), 
+                             rotatematrices, sweepParams.get_keep_states(), 
                              sweepParams.get_keep_qstates(), sweepParams.get_davidson_tol(), big, sweepParams.get_guesstype(), sweepParams.get_noise(), 
                              sweepParams.get_additional_noise(), sweepParams.get_onedot(), system, systemDot, environmentDot, environment, 
 			     dot_with_sys, useSlater, sweepParams.get_sweep_iter());
@@ -173,7 +173,8 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   dmrginp.multiplierT -> stop();
   dmrginp.operrotT -> start();
 
-  newSystem.transform_operators(rotatematrix);
+//newSystem.transform_operators(rotatematrix);
+  newSystem.transform_operators_deriv(rotatematrices);
   storeStates[2] = newSystem.get_stateInfo();
   dmrginp.operrotT -> stop();
   if (dmrginp.outputlevel() > 0)

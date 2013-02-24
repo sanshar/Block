@@ -124,8 +124,8 @@ class SpinBlock
   void multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) const;
   void diagonalH(DiagonalMatrix& e) const;
   void clear();
-  void sendcompOps(Op_component_base& opcomp, int I, int J, int optype, int compsite);
-  void recvcompOps(Op_component_base& opcomp, int I, int J, int optype);
+  void sendcompOps(Op_component_base& opcomp, int I, int J, opTypes optype, int compsite);
+  void recvcompOps(Op_component_base& opcomp, int I, int J, opTypes optype);
 
   void RenormaliseFrom (std::vector<double> &energies, std::vector<double> &spins, double &error, std::vector<Matrix>& rotateMatrix,
                         const int keptstates, const int keptqstates, const double tol, SpinBlock& big,

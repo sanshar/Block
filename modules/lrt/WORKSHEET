@@ -100,10 +100,10 @@ Initialization / Create Guesses --- hack SweepGenblock and fullrestart?
      CRE_DES         = 0x06000000,
      CRE_DESCOMP     = 0x07000000,
 
-     OP_TYPE_MASK    = 0x11000000,
-     BRASTAT_MASK    = 0x00111000,
-     KETSTAT_MASK    = 0x00000111,
-     GENERIC_MASK    = 0x00111111
+     OP_TYPE_MASK    = 0xff000000,
+     BRASTAT_MASK    = 0x00fff000,
+     KETSTAT_MASK    = 0x00000fff,
+     GENERIC_MASK    = 0x00ffffff
    };
 
    first  12 bits: describe state # of ket (up to 4095)
@@ -113,9 +113,69 @@ Initialization / Create Guesses --- hack SweepGenblock and fullrestart?
    if another operator type such like Sz, other than LRT calculation,
    upper 8 bits must set to be 0x00****** to use lower 24 bits to define generic operator
 
+####################################################################################################
+	Pseudo Code for implementation in BLOCK code
+####################################################################################################
 
++ initialize storages
 
-
++ Davidson iteration
+| + solve generalized eigenvalue problem: H*U = E*S*U
+|   - save eigen values E
+|   - state rotation matrix U
+|   - resize H (mroots + kroots, mroots + kroots) = 0
+|   - resize S (mroots + kroots, mroots + kroots) = 0
+|
+| - resize residual norm Q (nroots) = 0
+|
+| + loop over sites (sweeping)
+| | + rotate state vectors
+| |   - rotate 1-st order right rotate matrix R by U
+| |   - if ( block_iter == 0 )
+| |     rotate wavefunction W by U
+| |   - else
+| |     transform gauge condition (hack guess wavefunction)
+| |
+| |   - rotate environment block B by U
+| |
+| | + solve correction equation
+| |   - compute error vector, add norm to Q(iroot) { iroot = 1...nroots }
+| |     if (iroot > nroots - kroots)
+| |     - orthogonalize to W(0), add to W(mroots + iroot)
+| |
+| | + project out 0-th system space from wavefunction W(iroot)
+| |   and store X(iroot) intermediately { iroot = 1...mroots+kroots }
+| |   - if ( block_iter < N )
+| |     X(iroot) = (1 - A(0) A(0)') W(iroot)
+| |   - else
+| |     X(iroot) = W(iroot)
+| |
+| | + compute elements of H and S { I > J = 1...mroots+kroots }
+| |   - VX(J)  = A(00) B(00) X(J) + A(00)^(T) B(00)^(T) X(J) // reuse multiply_h
+| |
+| |   - V0(J)  = A(0J) B(00) X(0) + A(J0)^(T) B(00)^(T) X(0)
+| |
+| |   - H(II) += X(I) VX(I) + X(I) V0(I) * 2
+| |   - H(IJ) += X(I) VX(J) + X(I) V0(J) + X(J) V0(I)
+| |
+| |   - S(II) += X(I) X(I)
+| |   - S(IJ) += X(I) X(J)
+| |
+| | + if ( block_iter < N )
+| |   - compute 1-st order left rotate matrices L(iroot) { iroot = 1...mroots+kroots }
+| |
+| | + renormalize 1-st order operators / transposed operators are not computed
+| |   - A(I0)' = L(0) A(I0) L(0) + L(0) A(0I)^(T) L(0) + L(I) A(00) L(0)
+| |
+| |   - A(0I)' = L(0) A(0I) L(0) + L(0) A(I0)^(T) L(0) + L(0) A(00) L(I)
+| |
+| | - save block state
+| |
+| + end sweep
+|
+| - check convergence by Q and set kroots = # of roots not converged
+|
++ end iteration
 
 
 

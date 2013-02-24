@@ -13,11 +13,16 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "sweep_params.h"
 
 namespace SpinAdapted{
-namespace SweepDmrgLrt
+
+namespace LRT
 {
-  void BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys);
-  double do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize);
+
+void BlockAndDecimate(SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys);
+
+double do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize);
+
 };
-}
+
+};
 #endif
 
