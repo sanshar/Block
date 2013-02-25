@@ -433,7 +433,9 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
         abort();
       }
       Matrix vd = V;
-pout << "\tDEBUG @ transform guesswave: singular value = " << D << endl;
+// pout << "\tDEBUG @ transform guesswave: singular value = " << D << endl;
+// comment: singular values of rotatematrix are all equal to 1.0,
+//          thus, inverse rotatematrix = transposed rotatematrix?
       vd *= D.i();
       inverseLeftRotationMatrix[q].ReSize(V.Nrows(), U.Nrows());
       SpinAdapted::Clear(inverseLeftRotationMatrix[q]);

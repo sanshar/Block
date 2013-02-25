@@ -8,8 +8,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 // written by N.N. for DMRG-LRT
 
-#ifndef LRT_SOLVER_HEADER_H
-#define LRT_SOLVER_HEADER_H
+#ifndef LRT_SPIN_SOLVER_HEADER_H
+#define LRT_SPIN_SOLVER_HEADER_H
 
 #include "spinblock.h"
 #include "wavefunction.h"

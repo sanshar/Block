@@ -139,6 +139,10 @@ Initialization / Create Guesses --- hack SweepGenblock and fullrestart?
 | |   - rotate environment block B by U
 | |
 | | + solve correction equation
+| |   - VX(J) = A(00) B(00) W(J) + A(00)^(T) B(00)^(T) W(J)
+| |           + A(0J) B(00) W(0) + A(J0)^(T) B(00)^(T) W(0)
+| |           + A(00) B(0J) W(0) + A(00)^(T) B(0J)^(T) W(0)
+| |
 | |   - compute error vector, add norm to Q(iroot) { iroot = 1...nroots }
 | |     if (iroot > nroots - kroots)
 | |     - orthogonalize to W(0), add to W(mroots + iroot)
@@ -165,9 +169,9 @@ Initialization / Create Guesses --- hack SweepGenblock and fullrestart?
 | |   - compute 1-st order left rotate matrices L(iroot) { iroot = 1...mroots+kroots }
 | |
 | | + renormalize 1-st order operators / transposed operators are not computed
-| |   - A(I0)' = L(0) A(I0) L(0) + L(0) A(0I)^(T) L(0) + L(I) A(00) L(0)
+| |   - A(I0)' = L(0) A(I0) L(0) + L(I) A(00) L(0)
 | |
-| |   - A(0I)' = L(0) A(0I) L(0) + L(0) A(I0)^(T) L(0) + L(0) A(00) L(I)
+| |   - A(0I)' = L(0) A(0I) L(0) + L(0) A(00) L(I)
 | |
 | | - save block state
 | |
