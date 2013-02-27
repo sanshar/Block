@@ -27,69 +27,8 @@ namespace SpinAdapted{
 //  ops.erase(CRE_DES);
 //}
 
-void SpinBlock::addAdditionalCompOpsDeriv(int iState, int jState)
-{
-#ifndef SERIAL
-  boost::mpi::communicator world;
-  if (world.size() == 1)
-    return; //there is no need to have additional compops
-
-  // make op-type index for < iState | O | jState >
-  int state_index = GENERIC_MASK & (jState + (iState << MAXROOT_BITS));
-
-  int length = dmrginp.last_site();
-  int dotopindex = (sites[0] == 0) ? complementary_sites[0] : complementary_sites[complementary_sites.size()-1];
-
-  if (!ops[CRE+state_index]->is_local()) {
-    for(int i=0; i<get_sites().size(); i++) {
-      if (ops[CRE+state_index]->has(sites[i])) {
-        if (processorindex(sites[i]) != mpigetrank()) 
-          ops[CRE+state_index]->add_local_indices(sites[i]);
-        mpi::broadcast(world, *(ops[CRE+state_index]->get_element(sites[i])[0]), processorindex(sites[i]));
-      }
-    }
-  }
-
-  for (int i=0; i<complementary_sites.size(); i++) {
-    int compsite = complementary_sites[i];
-    if (compsite == dotopindex) continue;
-    int I = (compsite > dotopindex) ? compsite : dotopindex;
-    int J = (compsite > dotopindex) ? dotopindex : compsite;
-    if (processorindex(compsite) == processorindex(trimap(I, J, length)))
-      continue;
-    if (processorindex(compsite) == mpigetrank())
-    {
-      bool other_proc_has_ops = true;
-      world.recv(processorindex(trimap(I, J, length)), 0, other_proc_has_ops);
-      //this will potentially receive some ops
-      if (other_proc_has_ops) {
-        ops[CRE_DESCOMP+state_index]->add_local_indices(I, J);
-        recvcompOps(*ops[CRE_DESCOMP+state_index], I, J, CRE_DESCOMP);
-        ops[DES_DESCOMP]->add_local_indices(I, J);
-        recvcompOps(*ops[DES_DESCOMP+state_index], I, J, DES_DESCOMP);
-      }
-    }
-    else
-    {
-      
-      //this will potentially send some ops
-      if (processorindex(trimap(I, J, length)) == mpigetrank()) {
-        bool this_proc_has_ops = ops[CRE_DESCOMP+state_index]->has_local_index(I, J);
-        world.send(processorindex(compsite), 0, this_proc_has_ops);
-        if (this_proc_has_ops) {
-          sendcompOps(*ops[CRE_DESCOMP+state_index], I, J, CRE_DESCOMP, compsite);
-          sendcompOps(*ops[DES_DESCOMP+state_index], I, J, DES_DESCOMP, compsite);
-        }
-      }
-      else 
-        continue;
-    }
-  }
-#endif
-}
-
 // rotateMatrices: rotation matrix for each state
-void SpinBlock::transform_operators_deriv(std::vector< std::vector<Matrix> >& rotateMatrices)
+void SpinBlock::transform_operators_lrt(std::vector< std::vector<Matrix> >& rotateMatrices)
 {
   StateInfo oldStateInfo = stateInfo;
   std::vector<SpinQuantum> newQuanta;

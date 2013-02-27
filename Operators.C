@@ -13,6 +13,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "couplingCoeffs.h"
 #include "operatorfunctions.h"
 #include "opxop.h"
+#include "opxop_generic.h"
 #include "operatorloops.h"
 #include "distribute.h"
 #include "tensor_operator.h"
@@ -54,16 +55,16 @@ std::vector<double> SpinAdapted::SparseMatrix::calcMatrixElements(Csf& c1, Tenso
     
     for (int j=0; j<sz.size(); j++) {
       if (fabs(sz[j]) < 1.0e-14)
-	continue;
+        continue;
       vector<int>& Ind = Top.opindices[j]; //Indices of c and d operators
       Slater s1 = (*it1).first, s2 = (*it2).first;
       double d1 = (*it1).second, d2 = (*it2).second;
 
       for (int k=Ind.size()-1; k>=0; k--) { //go from high to low
-	if (optypes[k] == 1) s2.c(Ind[k]);
-	else s2.d(Ind[k]);
-	if (s2.isempty())
-	  break;
+        if (optypes[k] == 1) s2.c(Ind[k]);
+        else s2.d(Ind[k]);
+        if (s2.isempty())
+          break;
       }
 
       elements[isz] += sz[j]*d1*d2*(s1.trace(s2));
@@ -79,7 +80,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
   double factor = 0.0;
   vector<double>& iSz1 = op1.Szops[0];
   bool found = false;
-  for (int ilz2=0; ilz2 <op2.rows; ilz2++)	
+  for (int ilz2=0; ilz2 <op2.rows; ilz2++)        
   for (int sz2=-op2.Spin; sz2< op2.Spin+1; sz2+=2) {
     if (found) break;
     
@@ -99,20 +100,20 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 
     for (i1=0; i1<iSz1.size(); i1++)
       for (i2 =0; i2<iSz2.size(); i2++) {
-	vector<int>& Ind1 = op1.opindices[i1], Ind2 = op2.opindices[i2]; 
-	if (comp == CD) {
-	  factor += (-v_2(Ind1[0], Ind2[0], Ind2[1], Ind1[1]) + 
-		     v_2(Ind2[0], Ind1[0], Ind2[1], Ind1[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
-	}
-	else if (comp == DD) {
-	  factor += 0.5*(v_2(Ind1[0], Ind1[1], Ind2[1], Ind2[0]))*iSz1.at(i1)*iSz2.at(i2)/cleb;	  
-	}
-	else if (comp == CCD) {
-	  factor += v_2(Ind1[0], Ind1[1], Ind2[0], Ind1[2])*iSz1.at(i1)*iSz2.at(i2)/cleb;
-	}
-	else if (comp == C) {
-	  factor += 0.5*v_1(Ind1[0], Ind2[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;
-	}
+        vector<int>& Ind1 = op1.opindices[i1], Ind2 = op2.opindices[i2]; 
+        if (comp == CD) {
+          factor += (-v_2(Ind1[0], Ind2[0], Ind2[1], Ind1[1]) + 
+                     v_2(Ind2[0], Ind1[0], Ind2[1], Ind1[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
+        }
+        else if (comp == DD) {
+          factor += 0.5*(v_2(Ind1[0], Ind1[1], Ind2[1], Ind2[0]))*iSz1.at(i1)*iSz2.at(i2)/cleb;          
+        }
+        else if (comp == CCD) {
+          factor += v_2(Ind1[0], Ind1[1], Ind2[0], Ind1[2])*iSz1.at(i1)*iSz2.at(i2)/cleb;
+        }
+        else if (comp == C) {
+          factor += 0.5*v_1(Ind1[0], Ind2[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;
+        }
       }
   }
   
@@ -124,7 +125,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
   double factor = 0.0;
   vector<double>& iSz2 = op2.Szops[op2index];
   bool found = false;
-  for (int ilz1=0; ilz1 <op1.rows; ilz1++)	
+  for (int ilz1=0; ilz1 <op1.rows; ilz1++)        
   for (int sz1=-op1.Spin; sz1< op1.Spin+1; sz1+=2) {
     if (found) break;
     
@@ -143,26 +144,31 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 
     for (i1=0; i1<iSz1.size(); i1++)
       for (i2 =0; i2<iSz2.size(); i2++) {
-	vector<int>& Ind1 = op1.opindices[i1], Ind2 = op2.opindices[i2]; 
-	if (comp == CD) {
-	  factor += (-v_2(Ind1[0], Ind2[0], Ind2[1], Ind1[1]) + 
-		     v_2(Ind2[0], Ind1[0], Ind2[1], Ind1[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
-	}
-	else if (comp == DD) {
-	  factor += 0.5*(v_2(Ind1[0], Ind1[1], Ind2[1], Ind2[0]))*iSz1.at(i1)*iSz2.at(i2)/cleb;	  
-	}
-	else if (comp == CCD) {
-	  factor += v_2(Ind1[0], Ind1[1], Ind2[0], Ind1[2])*iSz1.at(i1)*iSz2.at(i2)/cleb;
-	}
-	else if (comp == C) {
-	  factor += 0.5*v_1(Ind1[0], Ind2[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;
-	}
+        vector<int>& Ind1 = op1.opindices[i1], Ind2 = op2.opindices[i2]; 
+        if (comp == CD) {
+          factor += (-v_2(Ind1[0], Ind2[0], Ind2[1], Ind1[1]) + 
+                     v_2(Ind2[0], Ind1[0], Ind2[1], Ind1[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
+        }
+        else if (comp == DD) {
+          factor += 0.5*(v_2(Ind1[0], Ind1[1], Ind2[1], Ind2[0]))*iSz1.at(i1)*iSz2.at(i2)/cleb;          
+        }
+        else if (comp == CCD) {
+          factor += v_2(Ind1[0], Ind1[1], Ind2[0], Ind1[2])*iSz1.at(i1)*iSz2.at(i2)/cleb;
+        }
+        else if (comp == C) {
+          factor += 0.5*v_1(Ind1[0], Ind2[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;
+        }
       }
   }
   
   return factor;
 }
 
+
+/*******************************************************************************************************************
+FIXME: @ SpinAdapted::X::build, N.N. supposes those construct [ <I|A|J> x <n|B|n> ] on generalization of operators
+         since dot block has no state index, has(optype+m_state_index) entry needs to avoid assertion at get_op_array
+*******************************************************************************************************************/
 
 //******************CRE*****************
 
@@ -175,17 +181,18 @@ void SpinAdapted::Cre::build(const SpinBlock& b)
   const int i = get_orbs()[0];
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
+/* DEBUG */ pout << "DEBUG @ Cre::build  leftBlock = " << *leftBlock << " / rightBlock = " << *rightBlock << endl;
 
-  if (leftBlock->get_op_array(CRE).has(i))
-  {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE, deltaQuantum, i);
+  if (leftBlock->has(CRE+m_state_index) && leftBlock->get_op_array(CRE+m_state_index).has(i))
+  {
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE+m_state_index, deltaQuantum, i);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }
-  if (rightBlock->get_op_array(CRE).has(i))
+  if (rightBlock->has(CRE+m_state_index) && rightBlock->get_op_array(CRE+m_state_index).has(i))
   {
-    const boost::shared_ptr<SparseMatrix>& op = rightBlock->get_op_rep(CRE, deltaQuantum, i);
+    const boost::shared_ptr<SparseMatrix>& op = rightBlock->get_op_rep(CRE+m_state_index, deltaQuantum, i);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
@@ -233,7 +240,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Cre::getworkingreprese
     }
   else
     {
-      boost::shared_ptr<SparseMatrix> rep(new Cre);
+      boost::shared_ptr<SparseMatrix> rep(new Cre(m_state_index));
       *rep = *this;
       rep->build(*block);
       return rep;
@@ -256,31 +263,32 @@ void SpinAdapted::CreDes::build(const SpinBlock& b)
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
+/* DEBUG */ pout << "DEBUG @ CreDes::build  leftBlock = " << *leftBlock << " / rightBlock = " << *rightBlock << endl;
 
-  if (leftBlock->get_op_array(CRE_DES).has(i, j))
+  if (leftBlock->has(CRE_DES+m_state_index) && leftBlock->get_op_array(CRE_DES+m_state_index).has(i, j))
   {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES, deltaQuantum, i,j);
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES+m_state_index, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }
-  if (rightBlock->get_op_array(CRE_DES).has(i, j))
+  if (rightBlock->has(CRE_DES+m_state_index) && rightBlock->get_op_array(CRE_DES+m_state_index).has(i, j))
   {
-    const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_DES, deltaQuantum, i,j);
+    const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_DES+m_state_index, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }  
-  if (leftBlock->get_op_array(CRE).has(i))
+  if (leftBlock->has(CRE+m_state_index) && leftBlock->get_op_array(CRE+m_state_index).has(i))
   {
-    const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(i), i);
-    Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(j), j));
+    const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE+m_state_index, getSpinQuantum(i), i);
+    Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(j), j)); // this is dot
     SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, 1.0);
   }
-  else if (rightBlock->get_op_array(CRE).has(i))
+  else if (rightBlock->has(CRE+m_state_index) && rightBlock->get_op_array(CRE+m_state_index).has(i))
   {
-    const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE, getSpinQuantum(i), i);
-    Transposeview top2 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(j), j));
+    const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE+m_state_index, getSpinQuantum(i), i);
+    Transposeview top2 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(j), j)); // this is dot
     double parity = getCommuteParity(op1->get_deltaQuantum(), top2.get_deltaQuantum(), get_deltaQuantum());
     SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
@@ -325,7 +333,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDes::getworkingrepr
     }
   else
     {
-      boost::shared_ptr<SparseMatrix> rep(new CreDes);
+      boost::shared_ptr<SparseMatrix> rep(new CreDes(m_state_index));
       *rep = *this;
       rep->build(*block);
       return rep;
@@ -347,30 +355,31 @@ void SpinAdapted::CreCre::build(const SpinBlock& b)
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
+/* DEBUG */ pout << "DEBUG @ CreCre::build  leftBlock = " << *leftBlock << " / rightBlock = " << *rightBlock << endl;
 
-  if (leftBlock->get_op_array(CRE_CRE).has(i, j))
+  if (leftBlock->has(CRE_CRE+m_state_index) && leftBlock->get_op_array(CRE_CRE+m_state_index).has(i, j))
   {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE, deltaQuantum, i,j);
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE+m_state_index, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }
-  if (rightBlock->get_op_array(CRE_CRE).has(i, j))
+  if (rightBlock->has(CRE_CRE+m_state_index) && rightBlock->get_op_array(CRE_CRE+m_state_index).has(i, j))
   {
-    const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_CRE, deltaQuantum, i,j);
+    const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_CRE+m_state_index, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }  
-  if (leftBlock->get_op_array(CRE).has(i))
+  if (leftBlock->has(CRE+m_state_index) && leftBlock->get_op_array(CRE+m_state_index).has(i))
   {
-    const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(i), i);
-    const boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(j), j);
+    const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE+m_state_index, getSpinQuantum(i), i);
+    const boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(j), j); // this is dot
     SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, 1.0);
   }
-  else if (rightBlock->get_op_array(CRE).has(i))
+  else if (rightBlock->has(CRE+m_state_index) && rightBlock->get_op_array(CRE+m_state_index).has(i))
   {
-    const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE, getSpinQuantum(i), i);
+    const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE+m_state_index, getSpinQuantum(i), i);
     const boost::shared_ptr<SparseMatrix> op2 = leftBlock->get_op_rep(CRE, getSpinQuantum(j), j);
     double parity = getCommuteParity(op1->get_deltaQuantum(), op2->get_deltaQuantum(), get_deltaQuantum());
     SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
@@ -418,7 +427,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCre::getworkingrepr
     }
   else
     {
-      boost::shared_ptr<SparseMatrix> rep(new CreCre);
+      boost::shared_ptr<SparseMatrix> rep(new CreCre(m_state_index));
       *rep = *this;
       rep->build(*block);
       return rep;
@@ -447,21 +456,26 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
+/* DEBUG */ pout << "DEBUG @ CreDesComp::build  leftBlock = " << *leftBlock << " / rightBlock = " << *rightBlock << endl;
 
-  if (leftBlock->get_op_array(CRE_DESCOMP).has(i, j))
+  if (leftBlock->has(CRE_DESCOMP+m_state_index) && leftBlock->get_op_array(CRE_DESCOMP+m_state_index).has(i, j))
   {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DESCOMP, deltaQuantum, i,j);
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DESCOMP+m_state_index, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   if (rightBlock->get_sites().size() == 0) {
     //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
     return;
   }
-  if (rightBlock->get_op_array(CRE_DESCOMP).has(i, j))
+  if (rightBlock->has(CRE_DESCOMP+m_state_index) && rightBlock->get_op_array(CRE_DESCOMP+m_state_index).has(i, j))
   {
-    const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_DESCOMP, deltaQuantum, i,j);
+    const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_DESCOMP+m_state_index, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
-  }  
+  }
+
+  opTypes lst_index = leftBlock->has(CRE+m_state_index) ? m_state_index : 0;
+  opTypes rst_index = rightBlock->has(CRE+m_state_index) ? m_state_index : 0;
+  if(m_state_index && !(lst_index | rst_index)) { dmrginp.makeopsT -> stop(); return; }
 
   for (int kx = 0; kx < leftBlock->get_sites().size(); ++kx)
     for (int lx = 0; lx < rightBlock->get_sites().size(); ++lx)
@@ -472,25 +486,25 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
       TensorOp CK(k,1), DL(l,-1);      
       TensorOp CD2 = CK.product(DL, spin, sym.getirrep());
       if (!CD2.empty) {
-	double scaleV = calcCompfactor(CD1, CD2, CD,*(b.get_twoInt()));
-	
-	boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(k), k);
-	Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(l), l));
-	
-	if (fabs(scaleV) > dmrginp.screen_tol())
-	  SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV);
+        double scaleV = calcCompfactor(CD1, CD2, CD,*(b.get_twoInt()));
+        
+        boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE+lst_index, getSpinQuantum(k), k);
+        Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE+get_transbit(rst_index), getSpinQuantum(l), l));
+        
+        if (fabs(scaleV) > dmrginp.screen_tol())
+          SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV);
       }
 
       CK=TensorOp(l,1); DL=TensorOp(k,-1);      
       CD2 = CK.product(DL, spin, sym.getirrep());
       if (!CD2.empty) {
-	double scaleV = calcCompfactor(CD1, CD2, CD,*(b.get_twoInt()));
-	boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE, getSpinQuantum(l), l);
-	Transposeview top2 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(k), k));
+        double scaleV = calcCompfactor(CD1, CD2, CD,*(b.get_twoInt()));
+        boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE+rst_index, getSpinQuantum(l), l);
+        Transposeview top2 = Transposeview(leftBlock->get_op_rep(CRE+get_transbit(lst_index), getSpinQuantum(k), k));
 
-	double parity = getCommuteParity(op1->get_deltaQuantum(), top2.get_deltaQuantum(), get_deltaQuantum());
-	if (fabs(scaleV) > dmrginp.screen_tol())
-	  SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV*parity);
+        double parity = getCommuteParity(op1->get_deltaQuantum(), top2.get_deltaQuantum(), get_deltaQuantum());
+        if (fabs(scaleV) > dmrginp.screen_tol())
+          SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV*parity);
       }
     }
   dmrginp.makeopsT -> stop();
@@ -518,16 +532,16 @@ double SpinAdapted::CreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder, co
       for (int kl =0; kl<b->get_sites().size(); kl++) 
       for (int kk =0; kk<b->get_sites().size(); kk++) {
 
-	int k = b->get_sites()[kk];
-	int l = b->get_sites()[kl];
-	
-	TensorOp CK(k,1), DL(l,-1);      
-	TensorOp CD2 = CK.product(DL, spin, sym.getirrep());
-	if (CD2.empty) continue;
-	std::vector<double> MatElements = calcMatrixElements(c1, CD2, ladder[i]);
-	double factor = calcCompfactor(CD1, CD2, CD, *(b->get_twoInt()));
-	element += MatElements[index]*factor/cleb;
-	
+        int k = b->get_sites()[kk];
+        int l = b->get_sites()[kl];
+        
+        TensorOp CK(k,1), DL(l,-1);      
+        TensorOp CD2 = CK.product(DL, spin, sym.getirrep());
+        if (CD2.empty) continue;
+        std::vector<double> MatElements = calcMatrixElements(c1, CD2, ladder[i]);
+        double factor = calcCompfactor(CD1, CD2, CD, *(b->get_twoInt()));
+        element += MatElements[index]*factor/cleb;
+        
       }
       break;
     }
@@ -547,7 +561,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesComp::getworking
     }
   else
     {
-      boost::shared_ptr<SparseMatrix> rep(new CreDesComp);
+      boost::shared_ptr<SparseMatrix> rep(new CreDesComp(m_state_index));
       *rep = *this;
 
       rep->build(*block);
@@ -575,21 +589,27 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
+/* DEBUG */ pout << "DEBUG @ DesDesComp::build  leftBlock = " << *leftBlock << " / rightBlock = " << *rightBlock << endl;
 
-  if (leftBlock->get_op_array(DES_DESCOMP).has(i, j))
+  if (leftBlock->has(DES_DESCOMP+m_state_index) && leftBlock->get_op_array(DES_DESCOMP+m_state_index).has(i, j))
   {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(DES_DESCOMP, deltaQuantum, i,j);
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(DES_DESCOMP+m_state_index, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   if (rightBlock->get_sites().size() == 0) {
     //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
     return;
   }
-  if (rightBlock->get_op_array(DES_DESCOMP).has(i, j))
+  if (rightBlock->has(DES_DESCOMP+m_state_index) && rightBlock->get_op_array(DES_DESCOMP+m_state_index).has(i, j))
   {
-    const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(DES_DESCOMP, deltaQuantum, i,j);
+    const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(DES_DESCOMP+m_state_index, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
   }  
+
+  opTypes lst_index = leftBlock->has(CRE+get_transbit(m_state_index)) ? m_state_index : 0;
+  opTypes rst_index = rightBlock->has(CRE+get_transbit(m_state_index)) ? m_state_index : 0;
+  if(m_state_index && !(lst_index | rst_index)) { dmrginp.makeopsT -> stop(); return; }
+
   for (int kx = 0; kx < leftBlock->get_sites().size(); ++kx)
     for (int lx = 0; lx < rightBlock->get_sites().size(); ++lx)
     {
@@ -605,14 +625,14 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
       DD2 = DL.product(DK, spin, sym.getirrep(), k==l);
       double scaleV2 = calcCompfactor(CC1, DD2, DD, *(b.get_twoInt()));
 
-      Transposeview top1 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(k), k));
-      Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(l), l));
+      Transposeview top1 = Transposeview(leftBlock->get_op_rep(CRE+lst_index, getSpinQuantum(k), k));
+      Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE+rst_index, getSpinQuantum(l), l));
 
       double parity = getCommuteParity(top1.get_deltaQuantum(), top2.get_deltaQuantum(), get_deltaQuantum());      
       scaleV += parity*scaleV2;
 
       if (fabs(scaleV) > dmrginp.screen_tol())
-	SpinAdapted::operatorfunctions::TensorProduct(leftBlock, top1, top2, &b, &(b.get_stateInfo()), *this, scaleV);
+        SpinAdapted::operatorfunctions::TensorProduct(leftBlock, top1, top2, &b, &(b.get_stateInfo()), *this, scaleV);
 
     }
   dmrginp.makeopsT -> stop();
@@ -643,18 +663,18 @@ double SpinAdapted::DesDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder, co
       for (int kl =0; kl<b->get_sites().size(); kl++) 
       for (int kk =0; kk<b->get_sites().size(); kk++) {
 
-	int k = b->get_sites()[kk];
-	int l = b->get_sites()[kl];	
-	
-	TensorOp DK(k,-1), DL(l,-1);
-	TensorOp DD2 = DK.product(DL, spin, sym.getirrep(), k==l);
-	if (DD2.empty) continue;
+        int k = b->get_sites()[kk];
+        int l = b->get_sites()[kl];        
+        
+        TensorOp DK(k,-1), DL(l,-1);
+        TensorOp DD2 = DK.product(DL, spin, sym.getirrep(), k==l);
+        if (DD2.empty) continue;
 
-	std::vector<double> MatElements = calcMatrixElements(c1, DD2, ladder[i]);
-	double scale = calcCompfactor(CC1, DD2, DD, index, *(b->get_twoInt()));
+        std::vector<double> MatElements = calcMatrixElements(c1, DD2, ladder[i]);
+        double scale = calcCompfactor(CC1, DD2, DD, index, *(b->get_twoInt()));
 
-	element += MatElements[index]*scale/cleb;
-	
+        element += MatElements[index]*scale/cleb;
+        
       }
       break;
     }
@@ -675,7 +695,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::DesDesComp::getworking
     }
   else
     {
-      boost::shared_ptr<SparseMatrix> rep(new DesDesComp);
+      boost::shared_ptr<SparseMatrix> rep(new DesDesComp(m_state_index));
       *rep = *this;
       rep->build(*block);
       return rep;
@@ -702,46 +722,68 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
+/* DEBUG */ pout << "DEBUG @ CreCreDesComp::build  leftBlock = " << *leftBlock << " / rightBlock = " << *rightBlock << endl;
 
   SpinBlock* loopBlock, *otherBlock;
   assignloopblock(loopBlock, otherBlock, leftBlock, rightBlock);
 
-  if (leftBlock->get_op_array(CRE_CRE_DESCOMP).has(k))
-    {      
-      const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DESCOMP, deltaQuantum, k);
-      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
-    }
+  if (leftBlock->has(CRE_CRE_DESCOMP+m_state_index) && leftBlock->get_op_array(CRE_CRE_DESCOMP+m_state_index).has(k))
+  {      
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DESCOMP+m_state_index, deltaQuantum, k);
+    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
+  }
   if (rightBlock->get_sites().size() == 0) {
     //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
     return;
   }
-  if (rightBlock->get_op_array(CRE_CRE_DESCOMP).has(k))
-    {
-      const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_CRE_DESCOMP, deltaQuantum, k);
-      SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
-    }  
+  if (rightBlock->has(CRE_CRE_DESCOMP+m_state_index) && rightBlock->get_op_array(CRE_CRE_DESCOMP+m_state_index).has(k))
+  {
+    const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_CRE_DESCOMP+m_state_index, deltaQuantum, k);
+    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
+  }  
+
+  opTypes lst_index = loopBlock->has(CRE+m_state_index) ? m_state_index : 0;
+  opTypes ost_index = otherBlock->has(CRE+m_state_index) ? m_state_index : 0;
 
   if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY){
-    if (loopBlock->has(CRE_DESCOMP))
-      {
-
-	Functor f = boost::bind(&opxop::cxcdcomp, otherBlock, _1, &b, k, this, 1.0); 
-	for_all_singlethread(loopBlock->get_op_array(CRE), f);
-	
-	f = boost::bind(&opxop::dxcccomp, otherBlock, _1, &b, k, this, 2.0);
-	for_all_singlethread(loopBlock->get_op_array(CRE), f);
-        
-	f = boost::bind(&opxop::cxcdcomp, loopBlock, _1, &b, k, this, 1.0); 
-	for_all_singlethread(otherBlock->get_op_array(CRE), f);
-	
-	f = boost::bind(&opxop::dxcccomp, loopBlock, _1, &b, k, this, 2.0);
-	for_all_singlethread(otherBlock->get_op_array(CRE), f);
-	
+    Functor f;
+    if (!m_state_index && loopBlock->has(CRE_DESCOMP))
+    {
+      f = boost::bind(&opxop::cxcdcomp, otherBlock, _1, &b, k, this, 1.0); 
+      for_all_singlethread(loopBlock->get_op_array(CRE), f);
+      
+      f = boost::bind(&opxop::dxcccomp, otherBlock, _1, &b, k, this, 2.0);
+      for_all_singlethread(loopBlock->get_op_array(CRE), f);
+      
+      f = boost::bind(&opxop::cxcdcomp, loopBlock, _1, &b, k, this, 1.0); 
+      for_all_singlethread(otherBlock->get_op_array(CRE), f);
+      
+      f = boost::bind(&opxop::dxcccomp, loopBlock, _1, &b, k, this, 2.0);
+      for_all_singlethread(otherBlock->get_op_array(CRE), f);
+    }
+    else if (m_state_index && (lst_index | ost_index))
+    {
+      if(otherBlock->has(CRE_DESCOMP+ost_index)) {
+        f = boost::bind(&opxop::generic::cxcdcomp, otherBlock, _1, &b, k, this, 1.0, ost_index); 
+        for_all_singlethread(loopBlock->get_op_array(CRE+lst_index), f);
       }
+      if(otherBlock->has(DES_DESCOMP+ost_index)) {
+        f = boost::bind(&opxop::generic::dxcccomp, otherBlock, _1, &b, k, this, 2.0, ost_index);
+        for_all_singlethread(loopBlock->get_op_array(CRE+get_transbit(lst_index)), f);
+      }
+      if(loopBlock->has(CRE_DESCOMP+lst_index)) {
+        f = boost::bind(&opxop::generic::cxcdcomp, loopBlock, _1, &b, k, this, 1.0, lst_index); 
+        for_all_singlethread(otherBlock->get_op_array(CRE+ost_index), f);
+      }
+      if(loopBlock->has(DES_DESCOMP+lst_index)) {
+        f = boost::bind(&opxop::generic::dxcccomp, loopBlock, _1, &b, k, this, 2.0, lst_index);
+        for_all_singlethread(otherBlock->get_op_array(CRE+get_transbit(ost_index)), f);
+      }
+    }
     else
-      {
-	cout << "I should not be here"<<endl;exit(0);
-      }
+    {
+      cout << "I should not be here"<<endl;exit(0);
+    }
   }
   dmrginp.makeopsT -> stop();
 
@@ -768,46 +810,46 @@ double SpinAdapted::CreCreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
       for (int kj =0; kj<b->get_sites().size(); kj++) 
       for (int kl =0; kl<b->get_sites().size(); kl++) {
 
-	int _i = b->get_sites()[ki];
-	int _j = b->get_sites()[kj];
-	int _l = b->get_sites()[kl];
-	
-	
-	SpinQuantum si(1,1,SymmetryOfSpatialOrb(_i)), sj(1,1,SymmetryOfSpatialOrb(_j)), sl(-1,1,-SymmetryOfSpatialOrb(_l));
+        int _i = b->get_sites()[ki];
+        int _j = b->get_sites()[kj];
+        int _l = b->get_sites()[kl];
+        
+        
+        SpinQuantum si(1,1,SymmetryOfSpatialOrb(_i)), sj(1,1,SymmetryOfSpatialOrb(_j)), sl(-1,1,-SymmetryOfSpatialOrb(_l));
 
-	std::vector<SpinQuantum> sij = si+sj;
-	for (int ij=0; ij<sij.size(); ij++) {
-	  SpinQuantum symij = sij[ij];
-	  std::vector<SpinQuantum> sijk = symij+sl;
-	  for (int ijk=0; ijk<sijk.size(); ijk++) {
-	    SpinQuantum symijk = sijk[ijk];
-	    if (symijk != deltaQuantum) continue;
-	    
-	    TensorOp CI(_i, 1), CJ(_j, 1), DL(_l, -1);
-	    
-	    TensorOp CCIJ = CI.product(CJ, symij.get_s(), symij.get_symm().getirrep(), _i==_j);
+        std::vector<SpinQuantum> sij = si+sj;
+        for (int ij=0; ij<sij.size(); ij++) {
+          SpinQuantum symij = sij[ij];
+          std::vector<SpinQuantum> sijk = symij+sl;
+          for (int ijk=0; ijk<sijk.size(); ijk++) {
+            SpinQuantum symijk = sijk[ijk];
+            if (symijk != deltaQuantum) continue;
+            
+            TensorOp CI(_i, 1), CJ(_j, 1), DL(_l, -1);
+            
+            TensorOp CCIJ = CI.product(CJ, symij.get_s(), symij.get_symm().getirrep(), _i==_j);
 
-	    TensorOp CCDIJL = CCIJ.product(DL, symijk.get_s(), symijk.get_symm().getirrep());
-	    if (CCDIJL.empty) continue;
-	    
-	    std::vector<double> MatElements = calcMatrixElements(c1, CCDIJL, ladder[i]);
-	    double scale = calcCompfactor(CCDIJL, D, CCD, *(b->get_twoInt()));
-
-
-
-      	    element += MatElements[index]*scale/cleb;
+            TensorOp CCDIJL = CCIJ.product(DL, symijk.get_s(), symijk.get_symm().getirrep());
+            if (CCDIJL.empty) continue;
+            
+            std::vector<double> MatElements = calcMatrixElements(c1, CCDIJL, ladder[i]);
+            double scale = calcCompfactor(CCDIJL, D, CCD, *(b->get_twoInt()));
 
 
-	  }
-	}
+
+                  element += MatElements[index]*scale/cleb;
+
+
+          }
+        }
       }
       for (int ki =0; ki<b->get_sites().size(); ki++) {
-	int _i = b->get_sites()[ki];
-	TensorOp CI(_i, 1);
-	std::vector<double> MatElements = calcMatrixElements(c1, CI, ladder[i]);
-	double factor = calcCompfactor(CI, D, C, *(b->get_twoInt()));
-	
-	element += factor*MatElements[index]/cleb;
+        int _i = b->get_sites()[ki];
+        TensorOp CI(_i, 1);
+        std::vector<double> MatElements = calcMatrixElements(c1, CI, ladder[i]);
+        double factor = calcCompfactor(CI, D, C, *(b->get_twoInt()));
+        
+        element += factor*MatElements[index]/cleb;
       }
       break;
     }
@@ -827,7 +869,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreDesComp::getwork
     }
   else
     {
-      boost::shared_ptr<SparseMatrix> rep(new CreCreDesComp);
+      boost::shared_ptr<SparseMatrix> rep(new CreCreDesComp(m_state_index));
       *rep = *this;
       rep->build(*block);
       return rep;
@@ -846,6 +888,7 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
+/* DEBUG */ pout << "DEBUG @ Ham::build  leftBlock = " << *leftBlock << " / rightBlock = " << *rightBlock << endl;
 
   SpinBlock* loopBlock, *otherBlock;
   assignloopblock(loopBlock, otherBlock, leftBlock, rightBlock);
@@ -860,13 +903,15 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
   Ham *op_distributed=0;
   Ham *op_add=0;
 
+  opTypes lst_index, rst_index;
+
   //initiateMultiThread(this, op_array, op_distributed, maxt);
   initiateMultiThread(this, op_array, op_distributed, MAX_THRD);
 
-
-  boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_rep(HAM, deltaQuantum);
-  
-  SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+  if (leftBlock->has(HAM+m_state_index)) {
+    boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_rep(HAM, deltaQuantum);
+    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }
 
   if (rightBlock->get_sites().size() == 0) {
     //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
@@ -875,25 +920,75 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
     return;
   }
 
-  op = rightBlock->get_op_rep(HAM, deltaQuantum);
-  SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);  
+  if (rightBlock->has(HAM+m_state_index)) {
+    boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(HAM, deltaQuantum);
+    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);  
+  }
 
-  op_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? op_array : op_distributed;
-  Functor f = boost::bind(&opxop::cxcddcomp, leftBlock, _1, &b, op_add); 
-  for_all_multithread(rightBlock->get_op_array(CRE), f);
+  lst_index = leftBlock->has(CRE+m_state_index) ? m_state_index : 0;
+  rst_index = rightBlock->has(CRE+m_state_index) ? m_state_index : 0;
 
-  op_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? op_array : op_distributed;
-  f = boost::bind(&opxop::cxcddcomp, rightBlock, _1, &b, op_add); 
-  for_all_multithread(leftBlock->get_op_array(CRE), f);  
+  if(!m_state_index)
+  {
+    Functor f;
+    op_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? op_array : op_distributed;
+    f = boost::bind(&opxop::cxcddcomp, leftBlock, _1, &b, op_add); 
+    for_all_multithread(rightBlock->get_op_array(CRE), f);
+
+    op_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? op_array : op_distributed;
+    f = boost::bind(&opxop::cxcddcomp, rightBlock, _1, &b, op_add); 
+    for_all_multithread(leftBlock->get_op_array(CRE), f);  
+  }
+  if(m_state_index && (lst_index | rst_index))
+  {
+    Functor2 f;
+    if(leftBlock->has(CRE_CRE_DESCOMP+lst_index)) {
+      op_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP+lst_index).is_local() ? op_array : op_distributed;
+      f = boost::bind(&opxop::generic::cxcddcomp, leftBlock, _1, _2, &b, op_add, lst_index); 
+      for_all_multithread(rightBlock->get_op_array(CRE+rst_index), rightBlock->get_op_array(CRE+get_transbit(rst_index)), f);
+    }
+    if(rightBlock->has(CRE_CRE_DESCOMP+rst_index)) {
+      op_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP+rst_index).is_local() ? op_array : op_distributed;
+      f = boost::bind(&opxop::generic::cxcddcomp, rightBlock, _1, _2, &b, op_add, rst_index); 
+      for_all_multithread(leftBlock->get_op_array(CRE+lst_index), leftBlock->get_op_array(CRE+get_transbit(lst_index)), f);  
+    }
+  }
 
   if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {    
-    op_add =  (otherBlock->get_op_array(CRE_DESCOMP).is_local() && loopBlock->get_op_array(CRE_DES).is_local())? op_array : op_distributed;
-    f = boost::bind(&opxop::cdxcdcomp, otherBlock, _1, &b, op_add);
-    for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
+    if(!m_state_index)
+    {
+      Functor f;
+      op_add =  (otherBlock->get_op_array(CRE_DESCOMP).is_local() && loopBlock->get_op_array(CRE_DES).is_local())? op_array : op_distributed;
+      f = boost::bind(&opxop::cdxcdcomp, otherBlock, _1, &b, op_add);
+      for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
     
-    op_add =  (otherBlock->get_op_array(DES_DESCOMP).is_local() && loopBlock->get_op_array(CRE_CRE).is_local())? op_array : op_distributed;
-    f = boost::bind(&opxop::ddxcccomp, otherBlock, _1, &b, op_add);
-    for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);
+      op_add =  (otherBlock->get_op_array(DES_DESCOMP).is_local() && loopBlock->get_op_array(CRE_CRE).is_local())? op_array : op_distributed;
+      f = boost::bind(&opxop::ddxcccomp, otherBlock, _1, &b, op_add);
+      for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);
+    }
+    if(m_state_index)
+    {
+      Functor2 f;
+      lst_index = loopBlock->has(CRE_DES+m_state_index) ? m_state_index : 0;
+      rst_index = otherBlock->has(CRE_DESCOMP+m_state_index) ? m_state_index : 0;
+      if(lst_index | rst_index)
+      {
+        op_add =  (otherBlock->get_op_array(CRE_DESCOMP+rst_index).is_local() &&
+                   loopBlock->get_op_array(CRE_DES+lst_index).is_local())? op_array : op_distributed;
+        f = boost::bind(&opxop::generic::cdxcdcomp, otherBlock, _1, _2, &b, op_add, rst_index);
+        for_all_multithread(loopBlock->get_op_array(CRE_DES+lst_index), loopBlock->get_op_array(CRE_DES+get_transbit(lst_index)), f);
+      }
+    
+      lst_index = loopBlock->has(CRE_CRE+m_state_index) ? m_state_index : 0;
+      rst_index = otherBlock->has(DES_DESCOMP+m_state_index) ? m_state_index : 0;
+      if(lst_index | rst_index)
+      {
+        op_add =  (otherBlock->get_op_array(DES_DESCOMP+rst_index).is_local() &&
+                   loopBlock->get_op_array(CRE_CRE+lst_index).is_local())? op_array : op_distributed;
+        f = boost::bind(&opxop::generic::ddxcccomp, otherBlock, _1, _2, &b, op_add, rst_index);
+        for_all_multithread(loopBlock->get_op_array(CRE_CRE+lst_index), loopBlock->get_op_array(CRE_CRE+get_transbit(lst_index)), f);
+      }
+    }
   }
 
   //accumulateMultiThread(this, op_array, op_distributed, maxt);
@@ -921,80 +1016,80 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
     for(map<Slater, double>::iterator it1 = c1.det_rep.begin(); it1!= c1.det_rep.end(); it1++) {
       for (map<Slater, double>::iterator it2 = ladder[i].det_rep.begin(); it2 != ladder[i].det_rep.end(); it2++)
       {
-	
-	Slater s1 = (*it1).first, s2 = (*it2).first;
-	double d1 = (*it1).second, d2 = (*it2).second;
+        
+               Slater s1 = (*it1).first, s2 = (*it2).first;
+        double d1 = (*it1).second, d2 = (*it2).second;
 
-	std::vector<int> cv, dv;
-	s1.connect(s2, cv, dv);
-	if ((dv.size() == 2) && (cv.size() == 2))
-	{
-	  int cI = cv[0]; 
-	  int cJ = cv[1]; 
-	  int dK = dv[0]; 
-	  int dL = dv[1]; 
-	  int parity = s1.trace(s2.d(dK).d(dL).c(cJ).c(cI));
-	  double factor = parity*d1*d2*0.5;
-	  matrixE += factor*(v_2(cI, cJ, dK, dL) - v_2(cJ, cI, dK, dL) - v_2(cI, cJ, dL, dK) + v_2(cJ, cI, dL, dK));
-	}
-	if ((cv.size() == 1) && (dv.size() == 1))
-	{
-	  int cI = cv[0]; 
-	  int dK = dv[0]; 
-	  int parity = s1.trace(s2.d(dK).c(cI));
-	  double factor = parity*d1*d2;
-	  matrixE += factor*v_1(cI, dK);
-	  
-	  for (int kj=0; kj<b->get_sites().size(); kj++)
-	  {
-	    int jindex = dmrginp.spatial_to_spin()[b->get_sites()[kj]];
-	    int num = 2*Symmetry::sizeofIrrep(SymmetryOfSpatialOrb(b->get_sites()[kj]).getirrep());
-	    for (int J = jindex; J<num+jindex; J++) {	    
-	      s1 = (*it1).first; s2 = (*it2).first;
-	      parity = s1.trace(s2.d(dK).d(J).c(J).c(cI));
-	      factor = parity*d1*d2*0.5;
-	      matrixE += factor*(v_2(cI, J, dK, J) - v_2(J, cI, dK, J) - v_2(cI, J, J, dK) + v_2(J, cI, J, dK));
-	    }
-	  }
-	}
-	
-	if ((cv.size() == 0) && (dv.size() == 0))
-	{
-	  //T
-	  for (int kj=0; kj<b->get_sites().size(); kj++)
-	  {
-	    int jindex = dmrginp.spatial_to_spin()[b->get_sites()[kj]];
-	    int num = 2*Symmetry::sizeofIrrep(SymmetryOfSpatialOrb(b->get_sites()[kj]).getirrep());
-	    for (int J = jindex; J<num+jindex; J++) {	    
-	      s1 = (*it1).first; s2 = (*it2).first;
-	      matrixE += d1*d2*s1.trace(s2.d(J).c(J))*v_1(J,J);
-	    }
-	  }
-	  
-	  //V
-	  for (int ki=0; ki<b->get_sites().size(); ki++)
-	    for (int kk=0; kk<b->get_sites().size(); kk++)
-	    {
-	      int Iindex = dmrginp.spatial_to_spin()[b->get_sites()[ki]];
-	      int Inum = 2*Symmetry::sizeofIrrep(SymmetryOfSpatialOrb(b->get_sites()[ki]).getirrep());
-	      for (int I = Iindex; I<Inum+Iindex; I++) {	    
-		
-		int Kindex = dmrginp.spatial_to_spin()[b->get_sites()[kk]];
-		int Knum = 2*Symmetry::sizeofIrrep(SymmetryOfSpatialOrb(b->get_sites()[kk]).getirrep());
-		for (int K = Kindex; K<Knum+Kindex; K++) {	    
-		  
-		  double factor = 0.5*d1*d2; //if (ki == kk) factor = 1.0*d1*d2;
-		  s1 = (*it1).first; s2 = (*it2).first;
-		  matrixE += factor*s1.trace(s2.d(I).d(K).c(K).c(I))*(v_2(I, K, I, K) - v_2(K, I, I, K));
+        std::vector<int> cv, dv;
+        s1.connect(s2, cv, dv);
+        if ((dv.size() == 2) && (cv.size() == 2))
+        {
+          int cI = cv[0]; 
+          int cJ = cv[1]; 
+          int dK = dv[0]; 
+          int dL = dv[1]; 
+          int parity = s1.trace(s2.d(dK).d(dL).c(cJ).c(cI));
+          double factor = parity*d1*d2*0.5;
+          matrixE += factor*(v_2(cI, cJ, dK, dL) - v_2(cJ, cI, dK, dL) - v_2(cI, cJ, dL, dK) + v_2(cJ, cI, dL, dK));
+        }
+        if ((cv.size() == 1) && (dv.size() == 1))
+        {
+          int cI = cv[0]; 
+          int dK = dv[0]; 
+          int parity = s1.trace(s2.d(dK).c(cI));
+          double factor = parity*d1*d2;
+          matrixE += factor*v_1(cI, dK);
+          
+          for (int kj=0; kj<b->get_sites().size(); kj++)
+          {
+            int jindex = dmrginp.spatial_to_spin()[b->get_sites()[kj]];
+            int num = 2*Symmetry::sizeofIrrep(SymmetryOfSpatialOrb(b->get_sites()[kj]).getirrep());
+            for (int J = jindex; J<num+jindex; J++) {            
+              s1 = (*it1).first; s2 = (*it2).first;
+              parity = s1.trace(s2.d(dK).d(J).c(J).c(cI));
+              factor = parity*d1*d2*0.5;
+              matrixE += factor*(v_2(cI, J, dK, J) - v_2(J, cI, dK, J) - v_2(cI, J, J, dK) + v_2(J, cI, J, dK));
+            }
+          }
+        }
+        
+        if ((cv.size() == 0) && (dv.size() == 0))
+        {
+          //T
+          for (int kj=0; kj<b->get_sites().size(); kj++)
+          {
+            int jindex = dmrginp.spatial_to_spin()[b->get_sites()[kj]];
+            int num = 2*Symmetry::sizeofIrrep(SymmetryOfSpatialOrb(b->get_sites()[kj]).getirrep());
+            for (int J = jindex; J<num+jindex; J++) {            
+              s1 = (*it1).first; s2 = (*it2).first;
+              matrixE += d1*d2*s1.trace(s2.d(J).c(J))*v_1(J,J);
+            }
+          }
+          
+          //V
+          for (int ki=0; ki<b->get_sites().size(); ki++)
+            for (int kk=0; kk<b->get_sites().size(); kk++)
+            {
+              int Iindex = dmrginp.spatial_to_spin()[b->get_sites()[ki]];
+              int Inum = 2*Symmetry::sizeofIrrep(SymmetryOfSpatialOrb(b->get_sites()[ki]).getirrep());
+              for (int I = Iindex; I<Inum+Iindex; I++) {            
+                
+                int Kindex = dmrginp.spatial_to_spin()[b->get_sites()[kk]];
+                int Knum = 2*Symmetry::sizeofIrrep(SymmetryOfSpatialOrb(b->get_sites()[kk]).getirrep());
+                for (int K = Kindex; K<Knum+Kindex; K++) {            
+                  
+                  double factor = 0.5*d1*d2; //if (ki == kk) factor = 1.0*d1*d2;
+                  s1 = (*it1).first; s2 = (*it2).first;
+                  matrixE += factor*s1.trace(s2.d(I).d(K).c(K).c(I))*(v_2(I, K, I, K) - v_2(K, I, I, K));
 
-		}
-	      }
-	    }
+                }
+              }
+            }
 
-	}
+        }
       }
     }
-    element += 	matrixE;
+    element += matrixE;
   }
   
   return element;
@@ -1009,7 +1104,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Ham::getworkingreprese
     }
   else
     {
-      boost::shared_ptr<SparseMatrix> rep(new Ham);
+      boost::shared_ptr<SparseMatrix> rep(new Ham(m_state_index));
       *rep = *this;
       rep->build(*block);
       return rep;

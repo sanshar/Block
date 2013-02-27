@@ -48,6 +48,10 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   if (dmrginp.outputlevel() > 0)
     mcheck("before davidson but after all blocks are built");
 
+// DEBUG
+  pout << "\t\tDEBUG @ RenormaliseFrom  big::leftBlock  = " << *big.get_leftBlock()  << endl;
+  pout << "\t\tDEBUG @ RenormaliseFrom  big::rightBlock = " << *big.get_rightBlock() << endl;
+// *****
   dmrginp.solvewf -> start();
   Solver::solve_wavefunction(wave_solutions, energies, big, tol, guesswavetype, onedot, dot_with_sys, warmUp, additional_noise);
 

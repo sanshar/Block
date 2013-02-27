@@ -46,6 +46,13 @@ const opTypes BRAROOT_MASK  = 0x00fff000;
 const opTypes KETROOT_MASK  = 0x00000fff;
 const opTypes MAXROOT_BITS  = 12;
 
+// bitwise functions for state-index
+inline opTypes get_bra_index(const opTypes& optype) { return  (optype & BRAROOT_MASK) >> MAXROOT_BITS; }
+inline opTypes get_ket_index(const opTypes& optype) { return  (optype & KETROOT_MASK); }
+inline opTypes get_op_class (const opTypes& optype) { return  (optype & OP_TYPE_MASK); }
+inline opTypes get_transbit (const opTypes& optype) { return ((optype & KETROOT_MASK) << MAXROOT_BITS) | ((optype & BRAROOT_MASK) >> MAXROOT_BITS) | (optype & OP_TYPE_MASK); }
+inline opTypes make_state_index(int i, int j) { return ((i << MAXROOT_BITS) & BRAROOT_MASK) | (j & KETROOT_MASK); }
+
 enum CompType{CD, DD, CCD, C};
 
 

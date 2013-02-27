@@ -16,12 +16,13 @@ Sandeep Sharma and Garnet K.-L. Chan
 #endif
 #include "pario.h"
 
-#include "lrt_solver.h"
-#include "lrt_davidson.h"
-#include "gauge_transform.h"
+#include "modules/lrt/lrt_solver.h"
+#include "modules/lrt/lrt_davidson.h"
+#include "modules/lrt/gauge_transform.h"
 
 void SpinAdapted::LRT::solve_wavefunction
-(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm, SpinBlock& big, int nroots, int mroots, int kroots)
+(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm, SpinBlock& big,
+ const guessWaveTypes& guesswavetype, const bool& onedot, const bool& dot_with_sys, int nroots, int mroots, int kroots)
 {
   DiagonalMatrix h_diag;
   bool useprecond = true;
@@ -43,20 +44,21 @@ void SpinAdapted::LRT::solve_wavefunction
     h_diag.ReSize(0);
   
   // mroots: # of trial vecs, kroots: # of roots to be updated
-  psix.resize(mroots+kroots);
-  TDA::multiply_h_lr1 davidson_f(big, true);
-  GaugeTransform::gauge_fixed_wave(psix, big, mroots); // FIXME
-  TDA::solve_correction_equation(psix, eigv, h_diag, davidson_f, useprecond, nroots, mroots, kroots); // FIXME
+  psix.resize(mroots+nroots-kroots);
+  multiply_h_lrt_total davidson_f(big, onedot);
+  GuessWave::LRT::transform_gauge(psix, big, guesswavetype, onedot, dot_with_sys); // FIXME
+  TDA::solve_correction_equation(psix, eigv, rnorm, h_diag, davidson_f, useprecond, nroots, mroots, kroots); // FIXME
 }
 
 void SpinAdapted::LRT::TDA::solve_correction_equation
-(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm, const DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool useprecond, int nroots, int mroots, int kroots)
+(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm, const DiagonalMatrix& h_diag, Davidson_functor& h_mult,
+ bool useprecond, int nroots, int mroots, int kroots)
 {
   pout.precision(12);
 #ifndef SERIAL
   mpi::communicator world;
 #endif
-  const int lroots = mroots + nroots - kroots;
+//const int lroots = mroots + nroots - kroots;
   double levelshift = 0.0;
 
   vector<Wavefunction> sgvx;
@@ -127,9 +129,21 @@ void SpinAdapted::LRT::TDA::solve_correction_equation
 
       Normalise(r);
       Scale(1.0/dmrginput.last_site(), r); // scaled by 1/k (not necessary)
-      psix.push_back(r);
+      psix[mroots+i-kroots] = r;
     }
   }
+
+//  // broadcast psix
+//  for(int i = mroots; i < lroots; ++i) {
+//    Wavefunction  psix_i;
+//    Wavefunction *psix_ptr = &psix_i;
+//    if(mpigetrank() == 0) {
+//      psix_ptr = &psix[i];
+//    }
+//#ifndef SERIAL
+//    mpi::broadcast(world, *psix_ptr, 0);
+//#endif
+//  }
 }
 
 void SpinAdapted::LRT::TDA::compute_matrix_elements

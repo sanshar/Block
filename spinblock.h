@@ -71,7 +71,7 @@ class SpinBlock
 
   const boost::shared_ptr<TwoElectronArray> get_twoInt() const {return twoInt;}
   double memoryUsed();
-  void addAdditionalCompOps();
+  void addAdditionalCompOps(int iState = 0, int jState = 0);
   const StateInfo& get_stateInfo() const {return stateInfo;}
   std::vector<int> make_complement(const std::vector<int>& sites);
   void setstoragetype(Storagetype st);
@@ -117,8 +117,7 @@ class SpinBlock
   void build_operators();
   void BuildSumBlock(int condition, SpinBlock& b_1, SpinBlock& b_2, StateInfo* compState=0);
   void BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState=0);
-  void BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum> qnumbers, std::vector<int> distribution, bool random, 
-			 const bool haveNormops);
+  void BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum> qnumbers, std::vector<int> distribution, bool random, const bool haveNormops);
   void set_loopblock(bool p_loopblock){loopblock = p_loopblock;}
   friend ostream& operator<< (ostream& os, const SpinBlock& b);
   void multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) const;
@@ -130,10 +129,25 @@ class SpinBlock
   void RenormaliseFrom (std::vector<double> &energies, std::vector<double> &spins, double &error, std::vector<Matrix>& rotateMatrix,
                         const int keptstates, const int keptqstates, const double tol, SpinBlock& big,
                         const guessWaveTypes &guesswavetype, const double noise, const double additional_noise, const bool &onedot, SpinBlock& system, 
-			SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, const bool& warmUp, int sweepiter);
+                        SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, const bool& warmUp, int sweepiter);
 
   double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates);
   void transform_operators(std::vector<Matrix>& rotateMatrix);
+
+//// find implementations under modules/lrt/
+//void multiplyH_lrt_left(Wavefunction& c, Wavefunction* v, int iState, int num_threads) const;
+//void multiplyH_lrt_total(Wavefunction& c, Wavefunction* v, int iState, int num_threads) const;
+
+//void RenormaliseFrom_lrt(const vector<double> &energies, vector<double> &spins, vector<double>& rnorm, 
+//                         vector< vector<Matrix> >& rotateMatrix, int nroots, int mroots, int kroots,
+//                         const Matrix& state_rotation, Matrix& h_subspace, Matrix& s_subspace,
+//                         const int keptstates, const int keptqstates, SpinBlock& big, const bool &onedot, SpinBlock& System, 
+//                         SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, int sweepiter);
+
+//double makeRotateMatrix_lrt(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates);
+//void transform_operators_lrt(std::vector<Matrix>& rotateMatrix);
+  void rotatebyRitzVectors(const Matrix& alpha, int nroot);
+
 };
 }
 #endif

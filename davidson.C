@@ -16,9 +16,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 SpinAdapted::multiply_h::multiply_h(const SpinBlock& b, const bool &onedot_) : block(b){}
 
-void SpinAdapted::multiply_h::operator()(Wavefunction& c, Wavefunction& v, int state)
+void SpinAdapted::multiply_h::operator()(Wavefunction& c, Wavefunction& v, int iState, int jState)
 {
   block.multiplyH( c, &v, MAX_THRD);
 }
-
 

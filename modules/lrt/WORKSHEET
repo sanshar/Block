@@ -182,7 +182,24 @@ Initialization / Create Guesses --- hack SweepGenblock and fullrestart?
 + end iteration
 
 
+lrt_BaseOperator / done
 
+lrt_davidson / done
 
+lrt_renormalise / done
+
+lrt_rotationmat / done
+
+lrt_solver / done
+
+lrt_spinblock / done
+
+lrt_sweep
+
+lrt_transform_ops / done
+
+lrt_transform_gauge / done
+
+lrt_state_rotation
 
 

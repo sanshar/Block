@@ -19,15 +19,17 @@ namespace SpinAdapted {
 namespace LRT {
 
 void solve_wavefunction
-(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm, SpinBlock& big, int nroots, int mroots, int kroots);
+(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm, SpinBlock& big,
+ const guessWaveTypes& guesswavetype, const bool& onedot, const bool& dot_with_sys, int nroots, int mroots, int kroots);
 
 namespace TDA {
 
 void solve_correction_equation
-(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm, const DiagonalMatrix& e, Davidson_functor& h_mult, bool useprecond, int nroots, int mroots, int kroots);
+(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm, const DiagonalMatrix& h_diag, Davidson_functor& h_mult,
+ bool useprecond, int nroots, int mroots, int kroots);
 
 void compute_matrix_elements
-(const vector<Wavefunction>& psix, Davidson_functor& h_multx, Davidson_functor& h_mult0, Matrix& h_subspace, Matrix& s_subspace, int mroots);
+(const vector<Wavefunction>& psix, Davidson_functor& h_mult, Matrix& h_subspace, Matrix& s_subspace, int mroots);
 
 };
 

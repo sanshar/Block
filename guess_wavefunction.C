@@ -399,6 +399,14 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
 {
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Transforming previous wavefunction " << endl;
+// DEBUG
+//pout << "\t\tDEBUG @ transform_previous_wavefunction  big::leftBlock = " << endl << "\t\t\t" << *big.get_leftBlock() << endl << endl;
+//pout << "\t\tDEBUG @ transform_previous_wavefunction  big::rightBlock = " << endl << "\t\t\t" << *big.get_rightBlock() << endl << endl;
+//pout << "\t\tDEBUG @ transform_previous_wavefunction  big::leftBlock->leftBlock = " << endl << "\t\t\t" << *(big.get_leftBlock()->get_leftBlock()) << endl << endl;
+//pout << "\t\tDEBUG @ transform_previous_wavefunction  big::leftBlock->rightBlock = " << endl << "\t\t\t" << *(big.get_leftBlock()->get_rightBlock()) << endl << endl;
+//pout << "\t\tDEBUG @ transform_previous_wavefunction  big::rightBlock->leftBlock = " << endl << "\t\t\t" << *(big.get_rightBlock()->get_leftBlock()) << endl << endl;
+//pout << "\t\tDEBUG @ transform_previous_wavefunction  big::rightBlock->rightBlock = " << endl << "\t\t\t" << *(big.get_rightBlock()->get_rightBlock()) << endl << endl;
+// *****
   ObjectMatrix3D< vector<Matrix> > oldTrialWavefunction;
   ObjectMatrix3D< vector<Matrix> > newTrialWavefunction;
   StateInfo oldStateInfo;
@@ -420,26 +428,27 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
   {
     if (inverseLeftRotationMatrix [q].Nrows () > 0)
     {
-      try
-      {
-        svd(inverseLeftRotationMatrix[q], D, U, V);
-      }
-      catch (Exception)
-      {
-        pout << Exception::what() << endl;
-        pout << D << endl;
-        pout << U << endl;
-        pout << V << endl;
-        abort();
-      }
-      Matrix vd = V;
+//    try
+//    {
+//      svd(inverseLeftRotationMatrix[q], D, U, V);
+//    }
+//    catch (Exception)
+//    {
+//      pout << Exception::what() << endl;
+//      pout << D << endl;
+//      pout << U << endl;
+//      pout << V << endl;
+//      abort();
+//    }
+//    Matrix vd = V;
 // pout << "\tDEBUG @ transform guesswave: singular value = " << D << endl;
 // comment: singular values of rotatematrix are all equal to 1.0,
 //          thus, inverse rotatematrix = transposed rotatematrix?
-      vd *= D.i();
-      inverseLeftRotationMatrix[q].ReSize(V.Nrows(), U.Nrows());
-      SpinAdapted::Clear(inverseLeftRotationMatrix[q]);
-      MatrixMultiply(vd, 'n', U, 't', inverseLeftRotationMatrix[q], 1.);
+//    vd *= D.i();
+//    inverseLeftRotationMatrix[q].ReSize(V.Nrows(), U.Nrows());
+//    SpinAdapted::Clear(inverseLeftRotationMatrix[q]);
+//    MatrixMultiply(vd, 'n', U, 't', inverseLeftRotationMatrix[q], 1.);
+      inverseLeftRotationMatrix[q] = inverseLeftRotationMatrix[q].t();
     }
   }
 

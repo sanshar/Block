@@ -12,23 +12,58 @@ Sandeep Sharma and Garnet K.-L. Chan
 #define LRT_SPIN_DAVIDSON_HEADER
 
 #include "davidson.h"
+#include <boost/format.hpp>
+#include <fstream>
+#include <stdio.h>
 
-namespace SpinAdapted{
+namespace SpinAdapted {
 
-struct Davidson_functor
+namespace LRT {
+
+class multiply_h_left : public Davidson_functor
 {
-  virtual void operator()(Wavefunction& c, Wavefunction& v) = 0;
-  virtual const SpinBlock& get_block() = 0;
+private:
+  const SpinBlock& block;
+public:
+  multiply_h_left(const SpinBlock& b, const bool& onedot_);
+  void operator() (Wavefunction& c, Wavefunction& v, int iState, int jState);
+  const SpinBlock& get_block() { return block; }
 };
 
-class multiply_h : public Davidson_functor
+class multiply_h_total : public Davidson_functor
 {
- private:
+private:
   const SpinBlock& block;
- public:
-  multiply_h(const SpinBlock& b, const bool &onedot_);
-  void operator()(Wavefunction& c, Wavefunction& v);
-  const SpinBlock& get_block() {return block;}
+public:
+  multiply_h_total(const SpinBlock& b, const bool& onedot_);
+  void operator() (Wavefunction& c, Wavefunction& v, int iState, int jState);
+  const SpinBlock& get_block() { return block; }
+};
+
+void LoadDavidsonInfo(Matrix& h_subspace, Matrix& s_subspace, int& mroots, int& i_conv_root, bool& deflation_sweep)
+{
+  std::string file;
+  file = str(boost::format("%s%s") % dmrginp.load_prefix() % "/scratch_lrt_davidson.tmp" );
+
+  if(!mpigetrank()) {
+    std::ifstream ifs(file.c_str(), std::ios::binary);
+    boost::archive::binary_iarchive load_scr(ifs);
+    load_scr >> h_subspace >> s_subspace >> mroots >> i_conv_root >> deflation_sweep;
+  }
+}
+
+void SaveDavidsonInfo(Matrix& h_subspace, Matrix& s_subspace, int& mroots, int& i_conv_root, bool& deflation_sweep)
+{
+  std::string file;
+  file = str(boost::format("%s%s") % dmrginp.load_prefix() % "/scratch_lrt_davidson.tmp" );
+
+  if(!mpigetrank()) {
+    std::ifstream ofs(file.c_str(), std::ios::binary);
+    boost::archive::binary_oarchive save_scr(ofs);
+    save_scr << h_subspace << s_subspace << mroots << i_conv_root << deflation_sweep;
+  }
+}
+
 };
 
 };

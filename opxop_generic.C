@@ -17,18 +17,17 @@
 Formulas for making hamiltonian matrix while blocking a block with a dot block
 ****************************************************************************************************/
 
-void SpinAdapted::opxop::cdxcdcomp
+void SpinAdapted::opxop::generic::cdxcdcomp
 (const SpinBlock* otherblock,
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1,
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
- const SpinBlock* b, SparseMatrix* o, int iState, int jState)
+ const SpinBlock* b, SparseMatrix* o, opTypes state_index_ij)
 {
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();    
 
-  int state_index_ij = (BRAROOT_MASK & (iState << MAXROOT_BITS)) + (KETROOT_MASK & jState);
-  int state_index_ji = (BRAROOT_MASK & (jState << MAXROOT_BITS)) + (KETROOT_MASK & iState);
+  opTypes state_index_ji = get_transbit(state_index_ij);
 
   assert(opvec1.size() == opvec1_trans.size());
 
@@ -70,18 +69,17 @@ void SpinAdapted::opxop::cdxcdcomp
   }
 }
 
-void SpinAdapted::opxop::ddxcccomp
+void SpinAdapted::opxop::generic::ddxcccomp
 (const SpinBlock* otherblock,
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1,
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
- const SpinBlock* b, SparseMatrix* o, int iState, int jState)
+ const SpinBlock* b, SparseMatrix* o, opTypes state_index_ij)
 {
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
   
-  int state_index_ij = (BRAROOT_MASK & (iState << MAXROOT_BITS)) + (KETROOT_MASK & jState);
-  int state_index_ji = (BRAROOT_MASK & (jState << MAXROOT_BITS)) + (KETROOT_MASK & iState);
+  opTypes state_index_ji = get_transbit(state_index_ij);
 
   assert(opvec1.size() == opvec1_trans.size());
 
@@ -122,18 +120,17 @@ void SpinAdapted::opxop::ddxcccomp
   }
 }
 
-void SpinAdapted::opxop::cxcddcomp
+void SpinAdapted::opxop::generic::cxcddcomp
 (const SpinBlock* otherblock,
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1,
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
- const SpinBlock* b, SparseMatrix* o, int iState, int jState)
+ const SpinBlock* b, SparseMatrix* o, opTypes state_index_ij)
 {
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
 
-  int state_index_ij = (BRAROOT_MASK & (iState << MAXROOT_BITS)) + (KETROOT_MASK & jState);
-  int state_index_ji = (BRAROOT_MASK & (jState << MAXROOT_BITS)) + (KETROOT_MASK & iState);
+  opTypes state_index_ji = get_transbit(state_index_ij);
 
   assert(opvec1.size() == opvec1_trans.size());
 
@@ -174,19 +171,18 @@ void SpinAdapted::opxop::cxcddcomp
 Formulas for multiplying hamiltonian with wavefunction without ever making the hamiltonian explicitly
 ****************************************************************************************************/
 
-void SpinAdapted::opxop::cdxcdcomp
+void SpinAdapted::opxop::generic::cdxcdcomp
 (const SpinBlock* otherblock,
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1,
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
- const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q, int iState, int jState)
+ const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q, opTypes state_index_ij)
 {
   int ilock = omp_get_thread_num();
   int numthrds = 1; //MAX_THRD;
   SpinQuantum hq(0,0,IrrepSpace(0));
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
 
-  int state_index_ij = (BRAROOT_MASK & (iState << MAXROOT_BITS)) + (KETROOT_MASK & jState);
-  int state_index_ji = (BRAROOT_MASK & (jState << MAXROOT_BITS)) + (KETROOT_MASK & iState);
+  opTypes state_index_ji = get_transbit(state_index_ij);
 
   assert(opvec1.size() == opvec1_trans.size());
 
@@ -220,19 +216,18 @@ void SpinAdapted::opxop::cdxcdcomp
   }
 }
 
-void SpinAdapted::opxop::ddxcccomp
+void SpinAdapted::opxop::generic::ddxcccomp
 (const SpinBlock* otherblock,
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1,
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
- const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q, int iState, int jState)
+ const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q, opTypes state_index_ij)
 {
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   SpinQuantum hq(0,0,IrrepSpace(0));
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
   
-  int state_index_ij = (BRAROOT_MASK & (iState << MAXROOT_BITS)) + (KETROOT_MASK & jState);
-  int state_index_ji = (BRAROOT_MASK & (jState << MAXROOT_BITS)) + (KETROOT_MASK & iState);
+  opTypes state_index_ji = get_transbit(state_index_ij);
 
   assert(opvec1.size() == opvec1_trans.size());
 
@@ -270,19 +265,18 @@ void SpinAdapted::opxop::ddxcccomp
   }
 }
 
-void SpinAdapted::opxop::cxcddcomp
+void SpinAdapted::opxop::generic::cxcddcomp
 (const SpinBlock* otherblock,
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1,
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
- const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q, int iState, int jState)
+ const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q, opTypes state_index_ij)
 {
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   SpinQuantum hq(0,0,IrrepSpace(0));
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
 
-  int state_index_ij = (BRAROOT_MASK & (iState << MAXROOT_BITS)) + (KETROOT_MASK & jState);
-  int state_index_ji = (BRAROOT_MASK & (jState << MAXROOT_BITS)) + (KETROOT_MASK & iState);
+  opTypes state_index_ji = get_transbit(state_index_ij);
 
   assert(opvec1.size() == opvec1_trans.size());
 
@@ -325,11 +319,10 @@ void SpinAdapted::opxop::cxcddcomp
 Formulas for making CCdcomp operators while blocking a block with a dot block
 ****************************************************************************************************/
 
-void SpinAdapted::opxop::cxcdcomp
+void SpinAdapted::opxop::generic::cxcdcomp
 (const SpinBlock* otherBlock,
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1,
-       std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans, // not used ?
- const SpinBlock* b, int I, SparseMatrix* o, double scale, int iState, int jState)
+ const SpinBlock* b, int I, SparseMatrix* o, double scale, opTypes state_index_ij)
 {
   int ilock = 0;//omp_get_thread_num();
   int numthrds = 1;
@@ -337,8 +330,6 @@ void SpinAdapted::opxop::cxcdcomp
 
   if (opvec1[0]->get_orbs(0) >= I)
   {
-    int state_index_ij = (BRAROOT_MASK & (iState << MAXROOT_BITS)) + (KETROOT_MASK & jState);
-
     for (int opind=0; opind<opvec1.size(); opind++) {    
       boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind)->getworkingrepresentation(loopblock);
       if (!otherBlock->get_op_array(CRE_DESCOMP+state_index_ij).has_local_index(op1->get_orbs(0), I))
@@ -365,7 +356,7 @@ void SpinAdapted::opxop::cxcdcomp
   }
   else
   {
-    int state_index_ji = (BRAROOT_MASK & (jState << MAXROOT_BITS)) + (KETROOT_MASK & iState);
+    opTypes state_index_ji = get_transbit(state_index_ij);
 
     for (int opind=0; opind<opvec1.size(); opind++) {    
       boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind)->getworkingrepresentation(loopblock);
@@ -394,18 +385,17 @@ void SpinAdapted::opxop::cxcdcomp
 
 }
 
-void SpinAdapted::opxop::dxcccomp
+void SpinAdapted::opxop::generic::dxcccomp
 (const SpinBlock* otherBlock,
-       std::vector<boost::shared_ptr<SparseMatrix> >& opvec1, // not used ?
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
- const SpinBlock* b, int K, SparseMatrix* o, double scale, int iState, int jState)
+ const SpinBlock* b, int K, SparseMatrix* o, double scale, opTypes state_index_ij)
 {  
   int ilock = 0;//omp_get_thread_num();
   int numthrds = 1;
   //int numthrds = dmrginp.thrds_per_node()[mpigetrank()];
   const SpinBlock* loopblock = (otherBlock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
 
-  int state_index_ji = (BRAROOT_MASK & (jState << MAXROOT_BITS)) + (KETROOT_MASK & iState);
+  opTypes state_index_ji = get_transbit(state_index_ij);
 
   for (int opind=0; opind<opvec1_trans.size(); opind++) {    
     boost::shared_ptr<SparseMatrix> op1 = opvec1_trans.at(opind)->getworkingrepresentation(loopblock);

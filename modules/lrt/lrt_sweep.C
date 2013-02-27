@@ -11,6 +11,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "global.h"
 #include "solver.h"
 #include "initblocks.h"
+#include "modules/lrt/lrt_initblocks.h"
 #include "MatrixBLAS.h"
 #include <boost/format.hpp>
 #ifndef SERIAL
@@ -26,7 +27,10 @@ using namespace boost;
 using namespace std;
 
 
-void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys)
+void SpinAdapted::Sweep::LRT::BlockAndDecimate
+(SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem,
+ const vector<double>& eigenvalues, vector<double>& rnorm, Matrix& h_subspace, Matrix& s_subspace, const Matrix& alpha,
+ const bool &useSlater, const bool& dot_with_sys, int nroots, int mroots, int kroots, const bool& deflation_sweep)
 {
   if (dmrginp.outputlevel() > 0) {
     mcheck("at the start of block and decimate");
@@ -73,62 +77,39 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   envdotsites[0] = environmentDotStart;
   envdotsites[1] = environmentDotEnd;
 
-  if (!sweepParams.get_onedot())
-    environmentDot = SpinBlock(environmentDotStart, environmentDotEnd);
-  
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
   //before halfway put the sysdot with system otherwise with environment
-  if (!sweepParams.get_onedot()) {
-      dmrginp.datatransfer -> start();
-      system.addAdditionalCompOps();
-      dmrginp.datatransfer -> stop();
-      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), 
-      			     DISTRIBUTED_STORAGE, dot_with_sys, true);
-      if (dmrginp.outputlevel() > 0)
-         mcheck("");
-
-      InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot,
-					  sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-					  sweepParams.get_onedot(), nexact, useSlater, !dot_with_sys, true, dot_with_sys);
-      if (dmrginp.outputlevel() > 0)
-         mcheck("");
-  }
-  else {
+  if (sweepParams.get_onedot()) {
     dmrginp.datatransfer -> start();
     system.addAdditionalCompOps();
     dmrginp.datatransfer -> stop();
     if (dot_with_sys) {
-      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, dot_with_sys, true);
+      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(),
+                                     dmrginp.direct(), DISTRIBUTED_STORAGE, dot_with_sys, true);
 
     }
-    InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
-					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-					sweepParams.get_onedot(), nexact, useSlater, !dot_with_sys, true, dot_with_sys);
+    InitBlocks::LRT::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
+                                             sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
+                                             sweepParams.get_onedot(), nexact, useSlater, !dot_with_sys, true, dot_with_sys);
   }
+  else {
+    pout << "\t\t\t DMRG-LRT calculation can only be performed upon onedot wavefunction" << endl;
+    abort();
+  }
+
   SpinBlock big;
   if (dot_with_sys) {
     newSystem.set_loopblock(true);
     system.set_loopblock(false);
     newEnvironment.set_loopblock(false);
-    if (!sweepParams.get_onedot())
-      environment.set_loopblock(false);
     InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
   }
   else{
-    if (sweepParams.get_onedot()) {
-      system.set_loopblock(false);
-      newEnvironment.set_loopblock(true);
-      environment.set_loopblock(true);
-      InitBlocks::InitBigBlock(system, newEnvironment, big); 
-    }
-    else {
-      newSystem.set_loopblock(false);
-      system.set_loopblock(false);
-      newEnvironment.set_loopblock(true);
-      environment.set_loopblock(false);
-      InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
-    }
+    system.set_loopblock(false);
+    newEnvironment.set_loopblock(true);
+    environment.set_loopblock(true);
+    InitBlocks::InitBigBlock(system, newEnvironment, big); 
   }
   //analyse_operator_distribution(big);
   dmrginp.guessgenT -> stop();
@@ -149,11 +130,14 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     pout << "\t\t\t Solving wavefunction "<<endl;
   }
 
-  newSystem.RenormaliseFrom (sweepParams.set_lowest_energy(), sweepParams.set_lowest_energy_spins(), sweepParams.set_lowest_error(), 
-                             rotatematrices, sweepParams.get_keep_states(), 
-                             sweepParams.get_keep_qstates(), sweepParams.get_davidson_tol(), big, sweepParams.get_guesstype(), sweepParams.get_noise(), 
-                             sweepParams.get_additional_noise(), sweepParams.get_onedot(), system, systemDot, environmentDot, environment, 
-			     dot_with_sys, useSlater, sweepParams.get_sweep_iter());
+  GuessWave::LRT::rotate_previous_wavefunction(big, alpha, mroots, sweepParams.get_guesstype(),
+                                               sweepParams.get_onedot(), dot_with_sys);
+//if(deflation_sweep) mroots = nroots;
+
+  newSystem.RenormaliseFrom_lrt(eigenvalues, rnorm, rotatematrices, nroots, mroots, kroots, h_subspace, s_subspace,
+                                sweepParams.get_keep_states(), sweepParams.get_keep_qstates(), big,
+                                sweepParams.get_guesstype(), sweepParams.get_onedot(),
+                                system, systemDot, environmentDot, environment, dot_with_sys, sweepParams.get_sweep_iter());
 
   std::vector<StateInfo> storeStates(3);
   storeStates[0] = newSystem.get_stateInfo();
@@ -193,13 +177,13 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 
 }
 
-double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize)
+double SpinAdapted::Sweep::LRT::do_one
+(SweepParams &sweepParams, const bool& warmUp, const bool& forward, const bool& restart, const int& restartSize)
 {
-
   SpinBlock system;
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
-  std::vector<double> finalEnergy(nroots,1.0e10);
-  std::vector<double> finalEnergy_spins(nroots,0.);
+  std::vector<double> finalEnergy(nroots, 1.0e10);
+  std::vector<double> finalEnergy_spins(nroots, 0.);
   double finalError = 0.;
   if (restart) {
     finalEnergy = sweepParams.get_lowest_energy();
@@ -208,8 +192,37 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   }
 
   // FIXME: add here, initializations of DMRG-LRT calculation?
+#ifndef SERIAL
+  mpi::communicator world;
+#endif
 
+  bool deflation_sweep;
+  int mroots, i_conv_root;
+  Matrix h_subspace, s_subspace;
+  DiagonalMatrix eigenvalues;
+  Matrix alpha;
 
+  if(mpigetrank() == 0) {
+    LRT::LoadDavidsonInfo(h_subspace, s_subspace, mroots, i_conv_root, deflation_sweep);
+    diagonalise(h_subspace, s_subspace, eigenvalues, alpha);
+  }
+
+#ifndef SERIAL
+  mpi::broadcast(world, deflation_sweep, 0);
+  mpi::broadcast(world, mroots, 0);
+  mpi::broadcast(world, i_conv_root, 0);
+  mpi::broadcast(world, eigenvalues, 0);
+  mpi::broadcast(world, alpha, 0);
+#endif
+
+  for(int i = 1; i < nroots; ++i) finalEnergy[i] = eigenvalues(i, i);
+  std::vector<double> rnorm(nroots, 0.0);
+
+  if (deflation_sweep) mroots = nroots;
+
+  int lroots = mroots + nroots - i_conv_root;
+  h_subspace.ReSize(lroots, lroots); h_subspace = 0.0;
+  s_subspace.ReSize(lroots, lroots); s_subspace = 0.0;
 
   sweepParams.set_sweep_parameters();
   // a new renormalisation sweep routine
@@ -220,10 +233,10 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
-  InitBlocks::InitStartingBlock (system,forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+  InitBlocks::InitStartingBlock (system, forward, sweepParams.get_forward_starting_size(),
+                                                  sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
   if(!restart)
     sweepParams.set_block_iter() = 0;
-
  
   if (dmrginp.outputlevel() > 0)
     pout << "\t\t\t Starting block is :: " << endl << system << endl;
@@ -236,130 +249,105 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     syssites = system.get_sites();
   }
 
-  if (restart)
-  {
-    if (forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)
-      dot_with_sys = false;
-    if (!forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
-      dot_with_sys = false;
-  }
+//if (restart)
+//{
+//  if (forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)
+//    dot_with_sys = false;
+//  if (!forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
+//    dot_with_sys = false;
+//}
   if (dmrginp.outputlevel() > 0)
     mcheck("at the very start of sweep");
 
-  for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
-    {
-      
-      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
-      pout << "\t\t\t ----------------------------" << endl;
-      if (dmrginp.outputlevel() > 0) {
-	
-	if (forward)
-	  pout << "\t\t\t Current direction is :: Forwards " << endl;
-	else
-	  pout << "\t\t\t Current direction is :: Backwards " << endl;
-      }
+  for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) {
 
-      if (dmrginp.no_transform() || (sweepParams.get_sweep_iter()-sweepParams.get_restart_iter() == 0 && sweepParams.get_block_iter() == 0))
-	      sweepParams.set_guesstype() = BASIC;
-      else if (!warmUp && sweepParams.get_block_iter() != 0) 
-  	    sweepParams.set_guesstype() = TRANSFORM;
-      else if (!warmUp && sweepParams.get_block_iter() == 0 && 
-                ((dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter() != sweepParams.get_sweep_iter()) ||
-                  dmrginp.algorithm_method() != TWODOT_TO_ONEDOT))
-        sweepParams.set_guesstype() = TRANSPOSE;
+    pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+    pout << "\t\t\t ----------------------------" << endl;
+    if (dmrginp.outputlevel() > 0) {
+      if (forward)
+        pout << "\t\t\t Current direction is :: Forwards " << endl;
       else
-        sweepParams.set_guesstype() = BASIC;
+        pout << "\t\t\t Current direction is :: Backwards " << endl;
+    }
 
-      
-      if (dmrginp.outputlevel() > 0)
-         pout << "\t\t\t Blocking and Decimating " << endl;
-	  
-      SpinBlock newSystem;
+    if (dmrginp.no_transform() || (sweepParams.get_sweep_iter()-sweepParams.get_restart_iter() == 0 && sweepParams.get_block_iter() == 0))
+      sweepParams.set_guesstype() = BASIC;
+    else if (!warmUp && sweepParams.get_block_iter() != 0) 
+      sweepParams.set_guesstype() = TRANSFORM;
+    else if (!warmUp && sweepParams.get_block_iter() == 0 && 
+            ((dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter() != sweepParams.get_sweep_iter()) ||
+              dmrginp.algorithm_method() != TWODOT_TO_ONEDOT))
+      sweepParams.set_guesstype() = TRANSPOSE;
+    else
+      sweepParams.set_guesstype() = BASIC;
 
-      //Need to substitute by:
-      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian"))
-      //if (warmUp)// && (sym=="dinfh"||sym=="trans"))
-         Startup(sweepParams, system, newSystem);
-      else {
-         if (sweepParams.set_sweep_iter() == 1 && sweepParams.get_block_iter() == 0)
-           sweepParams.set_guesstype() = BASIC;
-         BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys);
-      }
-      
-      //Need to substitute by?
-      if (!warmUp || !(sym == "dinfh"||sym=="trans" || sym=="dinfh_abelian") ){
-      //if (!warmUp){// || !(sym == "dinfh"||sym=="trans") ){
-	
-	for(int j=0;j<nroots;++j)
-   {
-#ifndef MOLPRO
-	  pout << "\t\t\t Total block energy for State [ " << j << 
-	    " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
-#else 
-     //We might want to relax the output restrictions here, so it prints out with outputlevel=0
-     if (dmrginp.outputlevel() < 0) {
-        pout << "\t\t\t Total block energy for State [ " << j << 
-          " ] with " << sweepParams.get_keep_states()<<" States :: " << fixed << setprecision(10) << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
-      }
-#endif
-   }
-	
-	finalEnergy_spins = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy_spins() : finalEnergy_spins);
-	finalEnergy = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy() : finalEnergy);
-	finalError = max(sweepParams.get_lowest_error(),finalError);
-	pout << endl;
-      }
-      
-      system = newSystem;
-      if (dmrginp.outputlevel() > 0){
-         pout << system<<endl;
-         system.printOperatorSummary();
-      }
+    
+    if (dmrginp.outputlevel() > 0)
+       pout << "\t\t\t Blocking and Decimating " << endl;
+        
+    SpinBlock newSystem;
 
-      //system size is going to be less than environment size
-      if (forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)
-	dot_with_sys = false;
-      if (!forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
-	dot_with_sys = false;
+    BlockAndDecimate (sweepParams, system, newSystem, eigenvalues, rnorm, h_subspace, s_subspace, alpha,
+                      false, dot_with_sys, nroots, mroots, i_conv_root, deflation_sweep);
+    
+    system = newSystem;
+    if (dmrginp.outputlevel() > 0){
+       pout << system<<endl;
+       system.printOperatorSummary();
+    }
 
-      SpinBlock::store (forward, system.get_sites(), system);	 	
-      syssites = system.get_sites();
-      if (dmrginp.outputlevel() > 0)
-         pout << "\t\t\t saving state " << syssites.size() << endl;
-      ++sweepParams.set_block_iter();
+//  //system size is going to be less than environment size
+//  if (forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)
+//    dot_with_sys = false;
+//  if (!forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
+//    dot_with_sys = false;
+
+    SpinBlock::store (forward, system.get_sites(), system);                 
+    syssites = system.get_sites();
+    if (dmrginp.outputlevel() > 0)
+       pout << "\t\t\t saving state " << syssites.size() << endl;
+    ++sweepParams.set_block_iter();
       
 #ifndef SERIAL
-      mpi::communicator world;
-      world.barrier();
+    world.barrier();
 #endif
-      sweepParams.savestate(forward, syssites.size());
-      if (dmrginp.outputlevel() > 0)
-         mcheck("at the end of sweep iteration");
+    sweepParams.savestate(forward, syssites.size());
+    if (dmrginp.outputlevel() > 0)
+       mcheck("at the end of sweep iteration");
+
+  } // end block iter
+
+#ifndef SERIAL
+  mpi::broadcast(world, rnorm, 0);
+#endif
+
+  // check convergence and save iteration info
+  if (mpigetrank() == 0) {
+    i_conv_root = 1;
+    for(; i_conv_root < nroots; ++i_conv_root) {
+      if(rnorm[i_conv_root] > sweepParams.get_davidson_tol()) break;
     }
-  for(int j=0;j<nroots;++j)
+
+    mroots = lroots;
+    deflation_sweep = mroots > dmrginp.deflation_max_size() ? true : false;
+
+    LRT::SaveDavidsonInfo(h_subspace, s_subspace, mroots, i_conv_root, deflation_sweep);
+  }
+
+  for(int j = 0; j < nroots; ++j) {
     pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
-	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
+         << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j]+dmrginp.get_coreenergy()
+         << " ( R-norm  " << scientific << setprecision(3) << rnorm[j] << " ) " << endl;
+  }
+
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
   sweepParams.set_largest_dw() = finalError;
-  for(int j=0;j<nroots;++j){
-    if (mpigetrank() == 0) {
-#ifndef MOLPRO
-      printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
-#else 
-      //printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
-      xout << "\t\t\t M = " <<  setw(6) << sweepParams.get_keep_states() ; 
-      xout << "\t Largest Discarded Weight = " << scientific << setprecision(3) << finalError ;
-      xout << "\t Sweep Energy = " << fixed << setprecision(10) << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
-#endif
-    }
-  }
   pout << "\t\t\t ============================================================================ " << endl;
 
   // update the static number of iterations
 
   ++sweepParams.set_sweep_iter();
-  if (!mpigetrank())
-  {
+  if (!mpigetrank()) {
 #ifndef MOLPRO
     FILE* f = fopen("dmrg.e", "wb");
 #else
@@ -368,114 +356,13 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     FILE* f = fopen(efile.c_str(), "wb");
 #endif
     
-    for(int j=0;j<nroots;++j) {
+    for(int j = 0; j < nroots; ++j) {
       double e = finalEnergy[j]+dmrginp.get_coreenergy(); 
-      //pout << "ROA ROA get_lowest_energy()[" << j << "]" <<  sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() << " " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
       fwrite( &e, 1, sizeof(double), f);
     }
     fclose(f);
   }
 
-
-  return finalEnergy[0];
+  return *max_element(rnorm.begin(), rnorm.end());
 }
 
-void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem)
-{
-  mcheck("at the start of block and decimate");
-  dmrginp.guessgenT -> start();
-  bool forward = (system.get_sites() [0] == 0);
-  SpinBlock systemDot;
-  int systemDotStart, systemDotEnd;
-  int systemDotSize = sweepParams.get_sys_add() - 1;
-  if (forward)
-  {
-    systemDotStart = *system.get_sites().rbegin () + 1;
-    systemDotEnd = systemDotStart + systemDotSize;
-  }
-  else
-  {
-    systemDotStart = system.get_sites() [0] - 1;
-    systemDotEnd = systemDotStart - systemDotSize;
-  }
-  vector<int> spindotsites(2); 
-  spindotsites[0] = systemDotStart;
-  spindotsites[1] = systemDotEnd;
-  systemDot = SpinBlock(systemDotStart, systemDotEnd);
-  
-  const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
-
-  dmrginp.datatransfer -> start();
-  system.addAdditionalCompOps();
-  dmrginp.datatransfer -> stop();
-  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), 
-				 DISTRIBUTED_STORAGE, true, true);
-
-
-  int nquanta = newSystem.get_stateInfo().quanta.size();
-  std::vector<DiagonalMatrix > energies(nquanta);
-  std::vector<Matrix> rotateMatrix(nquanta);
-  DensityMatrix transformmatrix; 
-  transformmatrix.allocate(newSystem.get_stateInfo());
-  SpinQuantum q(0,0,IrrepSpace(0));
-
-  if (mpigetrank() == 0) {
-    double minval = 1e12;
-    for (int i=0; i<nquanta; i++) {
-      diagonalise(newSystem.get_op_rep(HAM,q)->operator_element(i,i), energies[i], transformmatrix(i,i));
-      for (int j=0; j<energies[i].Nrows(); j++) 
-	if (minval > energies[i](j+1))
-	  minval = energies[i](j+1);
-    }
-    for (int i=0; i<nquanta; i++) {
-      for (int j=0; j<energies[i].Nrows(); j++) 
-	energies[i](j+1) = 1.0/(energies[i](j+1)-minval+1);
-    }
-
-
-    vector<pair<int, int> > inorderwts;
-    vector<vector<int> > wtsbyquanta;
-    
-    sort_weights(energies, inorderwts, wtsbyquanta);
-    
-    // make transformation matrix by various algorithms
-    int keptstates = sweepParams.get_keep_states()/2, keptqstates = sweepParams.get_keep_states()-keptstates;
-    int totalstatesbydm = min(static_cast<int>(inorderwts.size()), keptstates);
-    int totalstatesbyquanta = min(static_cast<int>(inorderwts.size()), keptstates + keptqstates) - totalstatesbydm;
-    if (totalstatesbyquanta < 0) totalstatesbyquanta = 0;
-    
-    pout << "\t\t\t total states using dm and quanta " << totalstatesbydm << " " << totalstatesbyquanta << endl;
-    
-    
-    double error = assign_matrix_by_dm(rotateMatrix, energies, transformmatrix, inorderwts, wtsbyquanta, totalstatesbydm, totalstatesbyquanta, newSystem.size(), 2*totalstatesbydm);
-    pout << "\t\t\t Total discarded weight "<<error<<endl;
-  }
-
-#ifndef SERIAL
-  mpi::communicator world;
-  broadcast(world, rotateMatrix, 0);
-#endif
-
-  dmrginp.operrotT -> start();
-  newSystem.transform_operators(rotateMatrix);
-  for (int i=0; i<dmrginp.nroots(); i++)
-    SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, i);
-  dmrginp.operrotT -> stop();
-  mcheck("after rotation and transformation of block");
-  
-
-
-  pout << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
-  pout << dmrginp.makeopsT<<" makeops "<<endl;
-  pout << dmrginp.datatransfer<<" datatransfer "<<endl;
-  //cout << dmrginp.justmultiply<<" just multiply "<<endl;
-  //cout << dmrginp.otherrotation<<" "<<dmrginp.spinrotation<<" "<<dmrginp.operrotT<<" rotations time "<<endl; 
-  pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
-  pout << dmrginp.oneelecT<<" "<<dmrginp.twoelecT<<" "<<dmrginp.hmultiply<<" "<<dmrginp.couplingcoeff<<" hmult"<<endl;
-  pout << dmrginp.buildsumblock<<" "<<dmrginp.buildblockops<<" build block"<<endl;
-  pout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
-  pout << dmrginp.addnoise<<" "<<dmrginp.s0time<<" "<<dmrginp.s1time<<" "<<dmrginp.s2time<<endl;
-  
-
-  //mcheck("After renorm transform");
-}
