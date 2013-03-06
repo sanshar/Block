@@ -399,14 +399,6 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
 {
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Transforming previous wavefunction " << endl;
-// DEBUG
-//pout << "\t\tDEBUG @ transform_previous_wavefunction  big::leftBlock = " << endl << "\t\t\t" << *big.get_leftBlock() << endl << endl;
-//pout << "\t\tDEBUG @ transform_previous_wavefunction  big::rightBlock = " << endl << "\t\t\t" << *big.get_rightBlock() << endl << endl;
-//pout << "\t\tDEBUG @ transform_previous_wavefunction  big::leftBlock->leftBlock = " << endl << "\t\t\t" << *(big.get_leftBlock()->get_leftBlock()) << endl << endl;
-//pout << "\t\tDEBUG @ transform_previous_wavefunction  big::leftBlock->rightBlock = " << endl << "\t\t\t" << *(big.get_leftBlock()->get_rightBlock()) << endl << endl;
-//pout << "\t\tDEBUG @ transform_previous_wavefunction  big::rightBlock->leftBlock = " << endl << "\t\t\t" << *(big.get_rightBlock()->get_leftBlock()) << endl << endl;
-//pout << "\t\tDEBUG @ transform_previous_wavefunction  big::rightBlock->rightBlock = " << endl << "\t\t\t" << *(big.get_rightBlock()->get_rightBlock()) << endl << endl;
-// *****
   ObjectMatrix3D< vector<Matrix> > oldTrialWavefunction;
   ObjectMatrix3D< vector<Matrix> > newTrialWavefunction;
   StateInfo oldStateInfo;
@@ -414,20 +406,29 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
   DiagonalMatrix D;
   Matrix U;
   Matrix V;
-  std::vector<Matrix> inverseLeftRotationMatrix;
+  std::vector<Matrix> leftRotationMatrix;
   if (transpose_guess_wave || !onedot){
     oldWave.LoadWavefunctionInfo (oldStateInfo, big.get_leftBlock()->get_leftBlock()->get_sites(), state);
-    LoadRotationMatrix (big.get_leftBlock()->get_leftBlock()->get_sites(), inverseLeftRotationMatrix, state);
+    LoadRotationMatrix (big.get_leftBlock()->get_leftBlock()->get_sites(), leftRotationMatrix, state);
   }
   else{
     oldWave.LoadWavefunctionInfo (oldStateInfo, big.get_leftBlock()->get_sites(), state);
-    LoadRotationMatrix (big.get_leftBlock()->get_sites(), inverseLeftRotationMatrix, state);
+    LoadRotationMatrix (big.get_leftBlock()->get_sites(), leftRotationMatrix, state);
   }
 
-  for (int q = 0; q < inverseLeftRotationMatrix.size (); ++q)
+  for (int q = 0; q < leftRotationMatrix.size (); ++q)
   {
-    if (inverseLeftRotationMatrix [q].Nrows () > 0)
+    if (leftRotationMatrix [q].Nrows () > 0)
     {
+
+/****************************************************************************************************
+FIXME:
+Left rotation matrix should be transposed rather than inverted. Fortunately, this bug doesn't affect
+to any results, since rotation matrix has singular values which are all equal to 1, meaning that
+the pseudo inverse of a rotation matrix is indeed, the transposition of it. From the same reason,
+it's not necessary to take the pseudo inverse of right rotation matrix.
+****************************************************************************************************/
+
 //    try
 //    {
 //      svd(inverseLeftRotationMatrix[q], D, U, V);
@@ -441,14 +442,11 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
 //      abort();
 //    }
 //    Matrix vd = V;
-// pout << "\tDEBUG @ transform guesswave: singular value = " << D << endl;
-// comment: singular values of rotatematrix are all equal to 1.0,
-//          thus, inverse rotatematrix = transposed rotatematrix?
 //    vd *= D.i();
 //    inverseLeftRotationMatrix[q].ReSize(V.Nrows(), U.Nrows());
 //    SpinAdapted::Clear(inverseLeftRotationMatrix[q]);
 //    MatrixMultiply(vd, 'n', U, 't', inverseLeftRotationMatrix[q], 1.);
-      inverseLeftRotationMatrix[q] = inverseLeftRotationMatrix[q].t();
+      leftRotationMatrix[q] = leftRotationMatrix[q].t();
     }
   }
 
@@ -457,7 +455,7 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
   {
     Wavefunction tempoldWave;
     tempoldWave.AllowQuantaFor(*big.get_stateInfo().leftStateInfo->leftStateInfo, *oldStateInfo.rightStateInfo, oldWave.get_deltaQuantum()); 
-    TransformLeftBlock(oldWave, big.get_stateInfo(), inverseLeftRotationMatrix, tempoldWave);
+    TransformLeftBlock(oldWave, big.get_stateInfo(), leftRotationMatrix, tempoldWave);
 
 
     StateInfo tempoldStateInfo;
@@ -495,7 +493,7 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
       rotsites = big.get_rightBlock()->get_sites();
       LoadRotationMatrix(rotsites, rightRotationMatrix, state);
     }
-    onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWave, inverseLeftRotationMatrix, rightRotationMatrix, trial, transpose_guess_wave);
+    onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWave, leftRotationMatrix, rightRotationMatrix, trial, transpose_guess_wave);
   }
 
   double norm = DotProduct(trial, trial);
@@ -515,7 +513,7 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
  */
 
 void GuessWave::onedot_transform_wavefunction(const StateInfo& oldstateinfo, const StateInfo& newstateinfo, 
-					      const Wavefunction& oldwavefunction, const vector<Matrix>& inverseLeftRotationMatrix, 
+					      const Wavefunction& oldwavefunction, const vector<Matrix>& leftRotationMatrix, 
 					      const vector<Matrix>& rightRotationMatrix, Wavefunction& newwavefunction, 
 					      const bool& transpose_guess_wave)
 {
@@ -585,7 +583,7 @@ void GuessWave::onedot_transform_wavefunction(const StateInfo& oldstateinfo, con
       if (tM.Ncols () != 0) // this quanta combination is not allowed
       {
 	//assert (newstateinfo.leftStateInfo->leftStateInfo->quanta [a] == oldstateinfo.leftStateInfo->quanta [oldA]);
-	const Matrix& lM = inverseLeftRotationMatrix [oldA];
+	const Matrix& lM = leftRotationMatrix [oldA];
 	//assert (newstateinfo.leftStateInfo->leftStateInfo->quantaStates [a] == lM.Nrows ());
 	Matrix& nM = tmpwavefunction.operator_element(a, c);//tmpwavefunction (a, b, c);
 	nM.ReSize (lM.Nrows (), tM.Ncols ());

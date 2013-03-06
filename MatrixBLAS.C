@@ -427,7 +427,7 @@ void SpinAdapted::diagonalise(Matrix& sya, Matrix& syb, DiagonalMatrix& d, Matri
   int optlength = static_cast<int>(workquery[0]);
   vector<double> workspace(optlength);
 
-  DSYGV(1, 'V', 'U', nrows, awork.Store(), nrows, bwork.Store(), nrows, dptr, &(workspace[0]), optlength, info); // do query to find best size
+  DSYGV(1, 'V', 'U', nrows, awork.Store(), nrows, bwork.Store(), nrows, dptr, &(workspace[0]), optlength, info);
 
   if (info > 0) 
     {

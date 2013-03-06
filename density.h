@@ -32,8 +32,9 @@ public:
   DensityMatrix& operator+=(const DensityMatrix& other);
 
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return boost::shared_ptr<SparseMatrix> (this);}
-  void build(const SpinBlock& b){};
+  void build(const SpinBlock& b) { };
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b){return 0.0;}
+  boost::shared_ptr<SparseMatrix> deepCopy() const { return boost::shared_ptr<SparseMatrix>(new DensityMatrix(*this)); }
 };
 }
 

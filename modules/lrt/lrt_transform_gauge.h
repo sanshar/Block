@@ -15,14 +15,14 @@ namespace GuessWave {
 namespace LRT {
 
 void transform_gauge
-(std::vector<Wavefunction>& Wavefnc, const SpinBlock& big,
+(std::vector<Wavefunction>& Wavefnc, const int& nroots, const SpinBlock& big,
  const guessWaveTypes& guesswavetype, const bool& onedot, const bool& transpose_guess_wave);
 
 void transform_previous_wavefunction_deriv
-(std::vector<Wavefunction>& Wavefnc, const SpinBlock& big, const bool& onedot, const bool& transpose_guess_wave);
+(std::vector<Wavefunction>& Wavefnc, const int& nroots, const SpinBlock& big, const bool& onedot, const bool& transpose_guess_wave);
 
 void transpose_previous_wavefunction_deriv
-(std::vector<Wavefunction>& Wavefnc, const SpinBlock& big, const bool& onedot, const bool& transpose_guess_wave);
+(std::vector<Wavefunction>& Wavefnc, const int& nroots, const SpinBlock& big, const bool& onedot, const bool& transpose_guess_wave);
 
 void rotate_previous_wavefunction
 (const SpinBlock& big, const Matrix& alpha, const int& nroots,

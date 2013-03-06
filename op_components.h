@@ -58,13 +58,14 @@ class Op_component_base
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & m_core & m_deriv;
+    ar & m_core & m_deriv & m_state_index;
   }
  protected:
   bool m_core;
   bool m_deriv;
+  opTypes m_state_index;
  public:
-  virtual void build_operators(SpinBlock& b)=0;
+  virtual void build_operators(SpinBlock& b) = 0;
   virtual void build_csf_operators(std::vector< Csf >& dets, std::vector< std::vector<Csf> >& ladders, SpinBlock& b) = 0;
   virtual void build_iterators(SpinBlock& b)=0;
   //virtual string type_name() = 0;
@@ -75,6 +76,7 @@ class Op_component_base
   virtual std::vector<boost::shared_ptr<SparseMatrix> > get_global_element(int i)=0;
   const bool &is_core() const {return m_core;}
   const bool &is_deriv() const {return m_deriv;}
+  const opTypes &state_index() const {return m_state_index;}
   void set_core(bool is_core) {m_core = is_core;}
   virtual void add_local_indices(int i, int j=-1, int k=-1) {};
   virtual bool is_local() const = 0;
@@ -107,8 +109,8 @@ template <class Op> class Op_component : public Op_component_base
   typedef Op OpType; 
   paraarray m_op;
  public:
-  Op_component() {m_deriv=false;}
-  Op_component(bool core) {m_core=core;m_deriv=false;}
+  Op_component() { m_deriv=false; }
+  Op_component(bool core, opTypes state_index) { m_core = core; m_deriv = false; m_state_index = state_index & GENERIC_MASK; }
   bool& set_local() {return m_op.set_local();}
   bool is_local() const {return m_op.is_local();}
   int get_size() const {return m_op.local_nnz();}
@@ -146,7 +148,7 @@ template <class Op> class Op_component : public Op_component_base
 
   void clear(){m_op.clear();}
   void build_iterators(SpinBlock& b);
-  void build_operators(SpinBlock& b) {singlethread_build(*this, b);}
+  void build_operators(SpinBlock& b) { singlethread_build(*this, b); }
   void build_csf_operators(std::vector< Csf >& c, vector< vector<Csf> >& ladders, SpinBlock& b) {singlethread_build(*this, b, c, ladders);}
   const std::vector<boost::shared_ptr<SparseMatrix> >  get_element(int i, int j=-1, int k=-1) const 
   {

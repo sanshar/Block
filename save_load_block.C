@@ -114,12 +114,12 @@ void SpinBlock::addAdditionalCompOps(int iState, int jState)
   // make op-type index for < iState | O | jState >
   opTypes state_index = make_state_index(iState, jState);
 
-  if (!ops[CRE+state_index]->is_local()) {
+  if (!ops[CRE | state_index]->is_local()) {
     for(int i=0; i<get_sites().size(); i++) {
-      if (ops[CRE+state_index]->has(sites[i])) {
+      if (ops[CRE | state_index]->has(sites[i])) {
 	if (processorindex(sites[i]) != mpigetrank()) 
-	  ops[CRE+state_index]->add_local_indices(sites[i]);
-	mpi::broadcast(world, *(ops[CRE+state_index]->get_element(sites[i])[0]), processorindex(sites[i]));
+	  ops[CRE | state_index]->add_local_indices(sites[i]);
+	mpi::broadcast(world, *(ops[CRE | state_index]->get_element(sites[i])[0]), processorindex(sites[i]));
       }
     }
   }
@@ -137,10 +137,10 @@ void SpinBlock::addAdditionalCompOps(int iState, int jState)
       world.recv(processorindex(trimap(I, J, length)), 0, other_proc_has_ops);
       //this will potentially receive some ops
       if (other_proc_has_ops) {
-	ops[CRE_DESCOMP+state_index]->add_local_indices(I, J);
-	recvcompOps(*ops[CRE_DESCOMP+state_index], I, J, CRE_DESCOMP);
-	ops[DES_DESCOMP+state_index]->add_local_indices(I, J);
-	recvcompOps(*ops[DES_DESCOMP+state_index], I, J, DES_DESCOMP);
+	ops[CRE_DESCOMP | state_index]->add_local_indices(I, J);
+	recvcompOps(*ops[CRE_DESCOMP | state_index], I, J, CRE_DESCOMP);
+	ops[DES_DESCOMP | state_index]->add_local_indices(I, J);
+	recvcompOps(*ops[DES_DESCOMP | state_index], I, J, DES_DESCOMP);
       }
     }
     else
@@ -148,11 +148,11 @@ void SpinBlock::addAdditionalCompOps(int iState, int jState)
       
       //this will potentially send some ops
       if (processorindex(trimap(I, J, length)) == mpigetrank()) {
-	bool this_proc_has_ops = ops[CRE_DESCOMP+state_index]->has_local_index(I, J);
+	bool this_proc_has_ops = ops[CRE_DESCOMP | state_index]->has_local_index(I, J);
 	world.send(processorindex(compsite), 0, this_proc_has_ops);
 	if (this_proc_has_ops) {
-	  sendcompOps(*ops[CRE_DESCOMP+state_index], I, J, CRE_DESCOMP, compsite);
-	  sendcompOps(*ops[DES_DESCOMP+state_index], I, J, DES_DESCOMP, compsite);
+	  sendcompOps(*ops[CRE_DESCOMP | state_index], I, J, CRE_DESCOMP, compsite);
+	  sendcompOps(*ops[DES_DESCOMP | state_index], I, J, DES_DESCOMP, compsite);
 	}
       }
       else 
@@ -183,7 +183,8 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   StateInfo newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    if (! it->second->is_core())
+//  if (!it->second->is_core())
+    if (!(it->first & GENERIC_MASK) && !it->second->is_core()) // only for 0-th operators
       for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
 						       ref(rotateMatrix) , &newStateInfo));
   stateInfo = newStateInfo;
@@ -201,7 +202,8 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   Timer transformtimer;
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    if ( it->second->is_core())
+//  if ( it->second->is_core())
+    if (!(it->first & GENERIC_MASK) && it->second->is_core()) // only for 0-th operators
       for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, ref(rotateMatrix), (&this->stateInfo)));
 
 

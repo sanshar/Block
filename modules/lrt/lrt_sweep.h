@@ -7,22 +7,29 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
-#ifndef SPIN_SWEEP_LRT_HEADER
-#define SPIN_SWEEP_LRT_HEADER
-#include "module/dmrg_lrt/spinblock_deriv.h"
+#ifndef LRT_SPIN_SWEEP_HEADER
+#define LRT_SPIN_SWEEP_HEADER
+#include "spinblock.h"
 #include "sweep_params.h"
 
-namespace SpinAdapted{
+namespace SpinAdapted {
 
-namespace LRT
-{
+namespace Sweep {
 
-void BlockAndDecimate(SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys);
+namespace LRT {
+
+void BlockAndDecimate
+(SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem,
+ const vector<double>& eigenvalues, vector<double>& rnorm, Matrix& h_subspace, Matrix& s_subspace, const Matrix& alpha,
+ const bool &useSlater, const bool& dot_with_sys, int nroots, int mroots, int kroots, const bool& deflation_sweep);
 
 double do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize);
 
 };
 
 };
+
+};
+
 #endif
 

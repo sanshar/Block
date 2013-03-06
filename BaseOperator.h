@@ -8,6 +8,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #ifndef SPIN_BASEOPERATOR_HEADER
 #define SPIN_BASEOPERATOR_HEADER
+#include <sstream>
 #include <cmath>
 #include <boost/function.hpp>
 #include <boost/functional.hpp>
@@ -46,12 +47,14 @@ const opTypes BRAROOT_MASK  = 0x00fff000;
 const opTypes KETROOT_MASK  = 0x00000fff;
 const opTypes MAXROOT_BITS  = 12;
 
-// bitwise functions for state-index
+// bit-twiddling for state-index
 inline opTypes get_bra_index(const opTypes& optype) { return  (optype & BRAROOT_MASK) >> MAXROOT_BITS; }
 inline opTypes get_ket_index(const opTypes& optype) { return  (optype & KETROOT_MASK); }
 inline opTypes get_op_class (const opTypes& optype) { return  (optype & OP_TYPE_MASK); }
 inline opTypes get_transbit (const opTypes& optype) { return ((optype & KETROOT_MASK) << MAXROOT_BITS) | ((optype & BRAROOT_MASK) >> MAXROOT_BITS) | (optype & OP_TYPE_MASK); }
 inline opTypes make_state_index(int i, int j) { return ((i << MAXROOT_BITS) & BRAROOT_MASK) | (j & KETROOT_MASK); }
+std::string get_op_label(const opTypes& optype);
+
 
 enum CompType{CD, DD, CCD, C};
 
@@ -148,7 +151,7 @@ class SparseMatrix : public Baseoperator<Matrix>
   void allocate(const StateInfo& sr, const StateInfo& sc);
   void allocate(const SpinBlock& b);
   virtual boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) =0;
-  virtual void build(const SpinBlock& b) =0;
+  virtual void build(const SpinBlock& b) = 0;
   void buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s) ;
   virtual double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b=0)=0;
   double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, const TwoElectronArray& v_2);
@@ -176,7 +179,21 @@ class SparseMatrix : public Baseoperator<Matrix>
   void renormalise_transform(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo);
   void build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& rotate_matrix, 
 				       const StateInfo *newStateInfo);
+
+  // additional member functions for DMRG-LRT
+  void renormalise_transform_lrt(const SparseMatrix& op_0,
+                                 const std::vector<Matrix>& rotate_matrix_0,
+                                 const std::vector<Matrix>& rotate_matrix_i, bool doTrans,
+                                 const StateInfo *stateinfo);
+  void build_and_renormalise_transform_lrt(SpinBlock *big, const opTypes& ot_0, const opTypes& ot_i,
+                                 const std::vector<Matrix>& rotate_matrix_0,
+                                 const std::vector<Matrix>& rotate_matrix_i, bool doTrans,
+                                 const StateInfo *newStateInfo);
+
   SparseMatrix& operator+=(const SparseMatrix& other);
+
+  // perform deep copy of abstract class SparseMatrix
+  virtual boost::shared_ptr<SparseMatrix> deepCopy() const = 0;
 };
 
 class Transposeview : public SparseMatrix
@@ -241,8 +258,9 @@ public:
     return scale;
   }
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata;}
-  void build(const SpinBlock& b){};
+  void build(const SpinBlock& b) { };
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b){return 0.0;}
+  boost::shared_ptr<SparseMatrix> deepCopy() const { return boost::shared_ptr<SparseMatrix>(new Transposeview(opdata->deepCopy())); }
 }; 
 
 const Transposeview Transpose(SparseMatrix& op);

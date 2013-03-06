@@ -20,8 +20,8 @@ namespace LRT {
 
 void InitNewEnvironmentBlock
 (SpinBlock &environment, SpinBlock& environmentDot, SpinBlock &newEnvironment, const SpinBlock &system, SpinBlock &systemDot,
- const Matrix& alpha, const int& nroots, const int &sys_add, const int &env_add, const bool &forward, const bool &direct, const bool &onedot, 
- const bool &nexact, const bool &useSlater, bool haveNormops = true, bool haveCompops = true, const bool& dot_with_sys = true);
+ const Matrix& alpha, const int &sys_add, const int &env_add, const bool &forward, const bool &direct, const bool &onedot, 
+ const bool &nexact, const bool &useSlater, bool haveNormops = true, bool haveCompops = true, const bool& dot_with_sys = true, int nroots = 1);
 
 };
 

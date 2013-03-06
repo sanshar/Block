@@ -23,6 +23,7 @@ void SpinAdapted::opxop::generic::cdxcdcomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
  const SpinBlock* b, SparseMatrix* o, opTypes state_index_ij)
 {
+//pout << "DEBUG @ opxop::generic::cdxcdcomp(b): called, state index = " << state_index_ij << endl;
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();    
@@ -36,11 +37,11 @@ void SpinAdapted::opxop::generic::cdxcdcomp
     op1 = opvec1.at(opind)->getworkingrepresentation(loopblock);
     int i = op1->get_orbs(0);
     int j = op1->get_orbs(1);
-    if (!otherblock->get_op_array(CRE_DESCOMP+state_index_ij).has_local_index(i, j))
+    if (!otherblock->get_op_array(CRE_DESCOMP | state_index_ij).has_local_index(i, j))
       return;
 
     boost::shared_ptr<SparseMatrix>
-    op3 = otherblock->get_op_array(CRE_DESCOMP+state_index_ij).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
+    op3 = otherblock->get_op_array(CRE_DESCOMP | state_index_ij).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
 
     double factor = 1.0;
     if (otherblock == b->get_leftBlock())
@@ -54,10 +55,10 @@ void SpinAdapted::opxop::generic::cdxcdcomp
     op1 = opvec1_trans.at(opind)->getworkingrepresentation(loopblock);
         i = op1->get_orbs(0);
         j = op1->get_orbs(1);
-    if (!otherblock->get_op_array(CRE_DESCOMP+state_index_ji).has_local_index(i, j))
+    if (!otherblock->get_op_array(CRE_DESCOMP | state_index_ji).has_local_index(i, j))
       return;
 
-    op3 = otherblock->get_op_array(CRE_DESCOMP+state_index_ji).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
+    op3 = otherblock->get_op_array(CRE_DESCOMP | state_index_ji).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
 
     factor = 1.0;
     if (otherblock == b->get_rightBlock())
@@ -75,6 +76,7 @@ void SpinAdapted::opxop::generic::ddxcccomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
  const SpinBlock* b, SparseMatrix* o, opTypes state_index_ij)
 {
+//pout << "DEBUG @ opxop::generic::ddxcccomp(b): called, state index = " << state_index_ij << endl;
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
@@ -88,12 +90,12 @@ void SpinAdapted::opxop::generic::ddxcccomp
     op1 = opvec1.at(opind)->getworkingrepresentation(loopblock);
     int i = op1->get_orbs(0);
     int j = op1->get_orbs(1);
-    if (!otherblock->get_op_array(DES_DESCOMP+state_index_ij).has_local_index(i, j))
+    if (!otherblock->get_op_array(DES_DESCOMP | state_index_ij).has_local_index(i, j))
       return;
     double factor = 2.0; if (i == j) factor = 1.0;
 
     boost::shared_ptr<SparseMatrix>
-    op2 = otherblock->get_op_array(DES_DESCOMP+state_index_ij).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
+    op2 = otherblock->get_op_array(DES_DESCOMP | state_index_ij).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
 
     double scale = 1.0;
     double parity = 1.0;
@@ -106,10 +108,10 @@ void SpinAdapted::opxop::generic::ddxcccomp
     op1 = opvec1_trans.at(opind)->getworkingrepresentation(loopblock);
         i = op1->get_orbs(0);
         j = op1->get_orbs(1);
-    if (!otherblock->get_op_array(DES_DESCOMP+state_index_ji).has_local_index(i, j))
+    if (!otherblock->get_op_array(DES_DESCOMP | state_index_ji).has_local_index(i, j))
       return;
 
-    op2 = otherblock->get_op_array(DES_DESCOMP+state_index_ji).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
+    op2 = otherblock->get_op_array(DES_DESCOMP | state_index_ji).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
 
     parity = 1.0;
     if (otherblock == b->get_rightBlock())
@@ -126,6 +128,7 @@ void SpinAdapted::opxop::generic::cxcddcomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
  const SpinBlock* b, SparseMatrix* o, opTypes state_index_ij)
 {
+//pout << "DEBUG @ opxop::generic::cxcddcomp(b): called, state index = " << state_index_ij << endl;
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
@@ -138,11 +141,11 @@ void SpinAdapted::opxop::generic::cxcddcomp
     boost::shared_ptr<SparseMatrix>
     op1 = opvec1_trans.at(opind)->getworkingrepresentation(loopblock);
     int i = op1->get_orbs(0);
-    if (!otherblock->get_op_array(CRE_CRE_DESCOMP+state_index_ij).has_local_index(i))
+    if (!otherblock->get_op_array(CRE_CRE_DESCOMP | state_index_ij).has_local_index(i))
       return;
 
     boost::shared_ptr<SparseMatrix>
-    op2 = otherblock->get_op_array(CRE_CRE_DESCOMP+state_index_ij).get_element(i).at(opind)->getworkingrepresentation(otherblock);
+    op2 = otherblock->get_op_array(CRE_CRE_DESCOMP | state_index_ij).get_element(i).at(opind)->getworkingrepresentation(otherblock);
 
     double scale = 1.0;
     double parity = 1.0;
@@ -154,10 +157,10 @@ void SpinAdapted::opxop::generic::cxcddcomp
 
     op1 = opvec1.at(opind)->getworkingrepresentation(loopblock);
         i = op1->get_orbs(0);
-    if (!otherblock->get_op_array(CRE_CRE_DESCOMP+state_index_ji).has_local_index(i))
+    if (!otherblock->get_op_array(CRE_CRE_DESCOMP | state_index_ji).has_local_index(i))
       return;
 
-    op2 = otherblock->get_op_array(CRE_CRE_DESCOMP+state_index_ji).get_element(i).at(opind)->getworkingrepresentation(otherblock);
+    op2 = otherblock->get_op_array(CRE_CRE_DESCOMP | state_index_ji).get_element(i).at(opind)->getworkingrepresentation(otherblock);
 
     if (otherblock == b->get_leftBlock())
       parity = getCommuteParity(-op2->get_deltaQuantum(), op1->get_deltaQuantum(), o->get_deltaQuantum());
@@ -177,6 +180,7 @@ void SpinAdapted::opxop::generic::cdxcdcomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
  const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q, opTypes state_index_ij)
 {
+//pout << "DEBUG @ opxop::generic::cdxcdcomp(v): called, state index = " << state_index_ij << endl;
   int ilock = omp_get_thread_num();
   int numthrds = 1; //MAX_THRD;
   SpinQuantum hq(0,0,IrrepSpace(0));
@@ -191,11 +195,11 @@ void SpinAdapted::opxop::generic::cdxcdcomp
     op1 = opvec1.at(opind)->getworkingrepresentation(loopblock);
     int i = op1->get_orbs(0);
     int j = op1->get_orbs(1);
-    if (!otherblock->get_op_array(CRE_DESCOMP+state_index_ij).has_local_index(i,j))
+    if (!otherblock->get_op_array(CRE_DESCOMP | state_index_ij).has_local_index(i,j))
       return;
 
     boost::shared_ptr<SparseMatrix>
-    op3 = otherblock->get_op_array(CRE_DESCOMP+state_index_ij).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
+    op3 = otherblock->get_op_array(CRE_DESCOMP | state_index_ij).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
 
     double factor = 1.0;
     SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op3, *op1, b, c, v[ilock], hq, factor);
@@ -205,10 +209,10 @@ void SpinAdapted::opxop::generic::cdxcdcomp
     op1 = opvec1_trans.at(opind)->getworkingrepresentation(loopblock);
         i = op1->get_orbs(0);
         j = op1->get_orbs(1);
-    if (!otherblock->get_op_array(CRE_DESCOMP+state_index_ji).has_local_index(i,j))
+    if (!otherblock->get_op_array(CRE_DESCOMP | state_index_ji).has_local_index(i,j))
       return;
 
-    op3 = otherblock->get_op_array(CRE_DESCOMP+state_index_ji).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
+    op3 = otherblock->get_op_array(CRE_DESCOMP | state_index_ji).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
 
     SpinAdapted::operatorfunctions::TensorMultiply(otherblock, Transposeview(*op3), Transposeview(*op1), b, c, v[ilock], hq, factor);
 
@@ -222,6 +226,7 @@ void SpinAdapted::opxop::generic::ddxcccomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
  const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q, opTypes state_index_ij)
 {
+//pout << "DEBUG @ opxop::generic::ddxcccomp(v): called, state index = " << state_index_ij << endl;
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   SpinQuantum hq(0,0,IrrepSpace(0));
@@ -236,12 +241,12 @@ void SpinAdapted::opxop::generic::ddxcccomp
     op1 = opvec1.at(opind)->getworkingrepresentation(loopblock);
     int i = op1->get_orbs(0);
     int j = op1->get_orbs(1);
-    if (!otherblock->get_op_array(DES_DESCOMP+state_index_ij).has_local_index(i, j))
+    if (!otherblock->get_op_array(DES_DESCOMP | state_index_ij).has_local_index(i, j))
       return;
     double factor = 2.0; if (i == j) factor = 1.0;
 
     boost::shared_ptr<SparseMatrix>
-    op2 = otherblock->get_op_array(DES_DESCOMP+state_index_ij).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
+    op2 = otherblock->get_op_array(DES_DESCOMP | state_index_ij).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
 
     double scale = 1.0;
     double parity = 1.0;
@@ -252,10 +257,10 @@ void SpinAdapted::opxop::generic::ddxcccomp
     op1 = opvec1_trans.at(opind)->getworkingrepresentation(loopblock);
         i = op1->get_orbs(0);
         j = op1->get_orbs(1);
-    if (!otherblock->get_op_array(DES_DESCOMP+state_index_ji).has_local_index(i,j))
+    if (!otherblock->get_op_array(DES_DESCOMP | state_index_ji).has_local_index(i,j))
       return;
 
-    op2 = otherblock->get_op_array(DES_DESCOMP+state_index_ji).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
+    op2 = otherblock->get_op_array(DES_DESCOMP | state_index_ji).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
 
     parity = 1.0;
     if (otherblock == b->get_rightBlock())
@@ -271,6 +276,7 @@ void SpinAdapted::opxop::generic::cxcddcomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
  const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q, opTypes state_index_ij)
 {
+//pout << "DEBUG @ opxop::generic::cxcddcomp(v): called, state index = " << state_index_ij << endl;
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   SpinQuantum hq(0,0,IrrepSpace(0));
@@ -284,14 +290,14 @@ void SpinAdapted::opxop::generic::cxcddcomp
     boost::shared_ptr<SparseMatrix>
     o1 = opvec1_trans.at(opind);
     int i = o1->get_orbs(0);
-    if (!otherblock->get_op_array(CRE_CRE_DESCOMP+state_index_ij).has_local_index(i))
+    if (!otherblock->get_op_array(CRE_CRE_DESCOMP | state_index_ij).has_local_index(i))
       return;
 
     boost::shared_ptr<SparseMatrix>
     op1 = o1->getworkingrepresentation(loopblock);
 
     boost::shared_ptr<SparseMatrix>
-    op2 = otherblock->get_op_array(CRE_CRE_DESCOMP+state_index_ij).get_element(i).at(opind)->getworkingrepresentation(otherblock);
+    op2 = otherblock->get_op_array(CRE_CRE_DESCOMP | state_index_ij).get_element(i).at(opind)->getworkingrepresentation(otherblock);
 
     double scale = 1.0;
     double parity = 1.0;
@@ -302,12 +308,12 @@ void SpinAdapted::opxop::generic::cxcddcomp
 
     o1 = opvec1.at(opind);
         i = o1->get_orbs(0);
-    if (!otherblock->get_op_array(CRE_CRE_DESCOMP+state_index_ji).has_local_index(i))
+    if (!otherblock->get_op_array(CRE_CRE_DESCOMP | state_index_ji).has_local_index(i))
       return;
 
     op1 = o1->getworkingrepresentation(loopblock);
 
-    op2 = otherblock->get_op_array(CRE_CRE_DESCOMP+state_index_ji).get_element(i).at(opind)->getworkingrepresentation(otherblock);
+    op2 = otherblock->get_op_array(CRE_CRE_DESCOMP | state_index_ji).get_element(i).at(opind)->getworkingrepresentation(otherblock);
 
     //if (otherblock == b->get_leftBlock())
     //parity = getCommuteParity(op1->get_deltaQuantum(), op2->get_deltaQuantum(), q)*-1.0;
@@ -324,6 +330,7 @@ void SpinAdapted::opxop::generic::cxcdcomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1,
  const SpinBlock* b, int I, SparseMatrix* o, double scale, opTypes state_index_ij)
 {
+//pout << "DEBUG @ opxop::generic::cxcdcomp(b): called, state index = " << state_index_ij << endl;
   int ilock = 0;//omp_get_thread_num();
   int numthrds = 1;
   const SpinBlock* loopblock = (otherBlock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
@@ -332,10 +339,10 @@ void SpinAdapted::opxop::generic::cxcdcomp
   {
     for (int opind=0; opind<opvec1.size(); opind++) {    
       boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind)->getworkingrepresentation(loopblock);
-      if (!otherBlock->get_op_array(CRE_DESCOMP+state_index_ij).has_local_index(op1->get_orbs(0), I))
+      if (!otherBlock->get_op_array(CRE_DESCOMP | state_index_ij).has_local_index(op1->get_orbs(0), I))
         return;
 
-      const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherBlock->get_op_array(CRE_DESCOMP+state_index_ij).get_element(op1->get_orbs(0), I);
+      const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherBlock->get_op_array(CRE_DESCOMP | state_index_ij).get_element(op1->get_orbs(0), I);
       for (int opind2 = 0; opind2<opvec2.size(); opind2++) {
         boost::shared_ptr<SparseMatrix> op2 = opvec2.at(opind2)->getworkingrepresentation(otherBlock);
 
@@ -360,9 +367,9 @@ void SpinAdapted::opxop::generic::cxcdcomp
 
     for (int opind=0; opind<opvec1.size(); opind++) {    
       boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind)->getworkingrepresentation(loopblock);
-      if (!otherBlock->get_op_array(CRE_DESCOMP+state_index_ji).has_local_index(I, op1->get_orbs(0)))
+      if (!otherBlock->get_op_array(CRE_DESCOMP | state_index_ji).has_local_index(I, op1->get_orbs(0)))
         return;
-      const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherBlock->get_op_array(CRE_DESCOMP+state_index_ji).get_element(I, op1->get_orbs(0));
+      const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherBlock->get_op_array(CRE_DESCOMP | state_index_ji).get_element(I, op1->get_orbs(0));
 
       for (int opind2 = 0; opind2<opvec2.size(); opind2++) {
         boost::shared_ptr<SparseMatrix> op2 = opvec2.at(opind2)->getworkingrepresentation(otherBlock);
@@ -390,6 +397,7 @@ void SpinAdapted::opxop::generic::dxcccomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
  const SpinBlock* b, int K, SparseMatrix* o, double scale, opTypes state_index_ij)
 {  
+//pout << "DEBUG @ opxop::generic::dxcccomp(b): called, state index = " << state_index_ij << endl;
   int ilock = 0;//omp_get_thread_num();
   int numthrds = 1;
   //int numthrds = dmrginp.thrds_per_node()[mpigetrank()];
@@ -406,10 +414,10 @@ void SpinAdapted::opxop::generic::dxcccomp
       { k=i; i=K; transpose = true;}
     SpinQuantum iq = getSpinQuantum(i), kq = getSpinQuantum(k);
     
-    if (!otherBlock->get_op_array(DES_DESCOMP+state_index_ji).has_local_index(k,i))
+    if (!otherBlock->get_op_array(DES_DESCOMP | state_index_ji).has_local_index(k,i))
         return;
 
-    const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherBlock->get_op_array(DES_DESCOMP+state_index_ji).get_element(k,i);
+    const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherBlock->get_op_array(DES_DESCOMP | state_index_ji).get_element(k,i);
 
     for (int opind2 = 0; opind2<opvec2.size(); opind2++) {
       

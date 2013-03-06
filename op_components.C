@@ -29,7 +29,7 @@ namespace SpinAdapted {
 	{
 	  orbs[0] = m_op.get_local_indices()[i];
 	  m_op.get_local_element(i).resize(1);
-	  m_op.get_local_element(i)[0]=boost::shared_ptr<Cre>(new Cre);
+	  m_op.get_local_element(i)[0]=boost::shared_ptr<Cre>(new Cre(m_state_index));
 	  SparseMatrix& op = *m_op.get_local_element(i)[0];
 	  op.set_orbs() = orbs;
 	  op.set_initialised() = true;
@@ -61,7 +61,7 @@ namespace SpinAdapted {
       
       std::vector<boost::shared_ptr<Cre> >& vec = m_op(i);
       vec.resize(1);
-      vec[0]=boost::shared_ptr<Cre>(new Cre);
+      vec[0]=boost::shared_ptr<Cre>(new Cre(m_state_index));
     }
 
   
@@ -87,7 +87,7 @@ namespace SpinAdapted {
 	  std::vector<SpinQuantum> spinvec = spin1-spin2;
 	  vec.resize(spinvec.size());
 	  for (int j=0; j<spinvec.size(); j++) {
-	    vec[j]=boost::shared_ptr<CreDes>(new CreDes);
+	    vec[j]=boost::shared_ptr<CreDes>(new CreDes(m_state_index));
 	    SparseMatrix& op = *vec[j];
 	    op.set_orbs() = orbs;
 	    op.set_initialised() = true;
@@ -121,7 +121,7 @@ namespace SpinAdapted {
 	  std::vector<SpinQuantum> spinvec = spin1+spin2;
 	  vec.resize(spinvec.size());
 	  for (int j=0; j<spinvec.size(); j++) {
-	    vec[j]=boost::shared_ptr<CreCre>(new CreCre);
+	    vec[j]=boost::shared_ptr<CreCre>(new CreCre(m_state_index));
 	    SparseMatrix& op = *vec[j];
 	    op.set_orbs() = orbs;
 	    op.set_initialised() = true;
@@ -156,7 +156,7 @@ namespace SpinAdapted {
 	  std::vector<SpinQuantum> spinvec = spin2-spin1;
 	  vec.resize(spinvec.size());
 	  for (int j=0; j<spinvec.size(); j++) {
-	    vec[j]=boost::shared_ptr<CreDesComp>(new CreDesComp);
+	    vec[j]=boost::shared_ptr<CreDesComp>(new CreDesComp(m_state_index));
 	    SparseMatrix& op = *vec[j];
 	    op.set_orbs() = orbs;
 	    op.set_initialised() = true;
@@ -176,7 +176,7 @@ namespace SpinAdapted {
       std::vector<SpinQuantum> spinvec = spin2-spin1;
       vec.resize(spinvec.size());
       for (int j=0; j<spinvec.size(); j++) 
-	vec[j]=boost::shared_ptr<CreDesComp>(new CreDesComp);
+	vec[j]=boost::shared_ptr<CreDesComp>(new CreDesComp(m_state_index));
     }
   
   
@@ -205,7 +205,7 @@ namespace SpinAdapted {
 	  std::vector<SpinQuantum> spinvec = spin1+spin2;
 	  vec.resize(spinvec.size());
 	  for (int j=0; j<spinvec.size(); j++) {
-	    vec[j]=boost::shared_ptr<DesDesComp>(new DesDesComp);
+	    vec[j]=boost::shared_ptr<DesDesComp>(new DesDesComp(m_state_index));
 	    SparseMatrix& op = *vec[j];
 	    op.set_orbs() = orbs;
 	    op.set_initialised() = true;
@@ -226,7 +226,7 @@ namespace SpinAdapted {
       std::vector<SpinQuantum> spinvec = spin1+spin2;
       vec.resize(spinvec.size());
       for (int j=0; j<spinvec.size(); j++) 
-	vec[j]=boost::shared_ptr<DesDesComp>(new DesDesComp);
+	vec[j]=boost::shared_ptr<DesDesComp>(new DesDesComp(m_state_index));
     }
   
   
@@ -245,7 +245,7 @@ namespace SpinAdapted {
 	{
 	  orbs[0] = m_op.get_local_indices()[i];
 	  m_op.get_local_element(i).resize(1);
-	  m_op.get_local_element(i)[0]=boost::shared_ptr<CreCreDesComp>(new CreCreDesComp);
+	  m_op.get_local_element(i)[0]=boost::shared_ptr<CreCreDesComp>(new CreCreDesComp(m_state_index));
 	  SparseMatrix& op = *m_op.get_local_element(i)[0];
 	  op.set_orbs() = orbs;
 	  op.set_initialised() = true;
@@ -276,7 +276,7 @@ namespace SpinAdapted {
     {
       m_op.set_indices();
       m_op(0).resize(1);
-      m_op(0)[0]=boost::shared_ptr<Ham>(new Ham);
+      m_op(0)[0]=boost::shared_ptr<Ham>(new Ham(m_state_index));
       m_op(0)[0]->set_orbs() = std::vector<int>();
       m_op(0)[0]->set_initialised() = true;
       m_op(0)[0]->set_fermion() = false;

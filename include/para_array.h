@@ -42,47 +42,52 @@ inline int processorindex(int i)
 
 
 /// 1d interface for the parallel array classes
+/// FIXME: should members in para_sparse_vector be fully pure virtual? (N.N.)
+///      : also, in the implementation of Op_component, m_op can be defined as a pointer to para_sparse_vector
+///      : otherwise, this base class is not meaningful. maybe there's a better class design for para_array.
 template<class T> struct para_sparse_vector
 {
 public:
   /// clear all elements
-  virtual void clear() {};
+  virtual void clear() = 0;
   /// number of non-zero elements in local storage
-  virtual int local_nnz() const {};
+  virtual int local_nnz() const = 0;
 
-  virtual int global_nnz() const {};
+  virtual int global_nnz() const = 0;
   /// ith element of local storage
-  virtual const T& get_local_element(int i) const {};
+  virtual const T& get_local_element(int i) const = 0;
   /// ith element of local storage
-  virtual T& get_local_element(int i) {};
+  virtual T& get_local_element(int i) = 0;
   /// query nullness of element i
-  virtual bool has_local_index(int i) const {};
+  //virtual bool has_local_index(int i) const = 0;
+  //FIX ME!!
+  //virtual bool has_local_index(int i, int j) const = 0;
+  /// above two definitions are not instantiated as results of has_local_index(int i, int j = -1, int k = -1)
+  /// and has_local_index(int i, int j, int k = -1), must define following indeed.
+  virtual bool has_local_index(int i = -1, int j = -1, int k = -1) const = 0;
 
   // virtual indexing
-  virtual T& operator()(const std::vector<int>& orbs) {};
-  virtual const T& operator()(const std::vector<int>& orbs) const {};
+  virtual T& operator()(const std::vector<int>& orbs) = 0;
+  virtual const T& operator()(const std::vector<int>& orbs) const = 0;
 
   /// expose local storage
-  virtual bool is_local() const {};
-  virtual bool is_distributed() const {};
+  virtual bool is_local() const = 0;
+  virtual bool is_distributed() const = 0;
 
-  virtual bool& set_local() {};
+  virtual bool& set_local() = 0;
 
   /// virtual constructor. caller is responsible for managing storage
-  virtual para_sparse_vector<T>* clone() const {};
+  virtual para_sparse_vector<T>* clone() const = 0;
 
-  //FIX ME!!
-  virtual bool has_local_index(int i, int j) const {};
-
-  virtual bool has(int i) const {};
-  virtual bool has(int i, int j) const {};
-  virtual bool has(int i=-1, int j=-1, int k=-1) const {};
-  virtual bool has(const std::vector<int>& orbs) const {};
-  virtual const std::vector<T>& get_store() const {};
-  virtual const std::vector<int>& get_indices() const {};
-  virtual int trimap(int i, int j) const {};
-  virtual T& get(const std::vector<int>& orbs)=0;
-  virtual const std::pair<int, int> unmap_local_index(int i) const {};
+//virtual bool has(int i) const = 0;
+//virtual bool has(int i, int j) const = 0;
+  virtual bool has(int i = -1, int j = -1, int k = -1) const = 0;
+  virtual bool has(const std::vector<int>& orbs) const = 0;
+  virtual const std::vector<T>& get_store() const = 0;
+  virtual const std::vector<int>& get_indices() const = 0;
+  virtual int trimap(int i, int j) const = 0;
+  virtual T& get(const std::vector<int>& orbs) = 0;
+  virtual const std::pair<int, int> unmap_local_index(int i) const = 0;
 };
 
 /// A wrapper for a single element 
@@ -95,6 +100,11 @@ public:
  */
 template<class T> class para_array_0d : public para_sparse_vector<T>
 {
+private:
+  /// these shouldn't be called from para_array_0d
+  bool has(const std::vector<int>& orbs) const { return false; }
+  const std::vector<int>& get_indices() const { return store.get_indices(); }
+  int trimap(int i, int j) const { return 0; }
 public:
 
   /// implements para_sparse_vector interface by forwarding to para_array_1d
@@ -110,6 +120,7 @@ public:
   const T& operator()(const std::vector<int>& orbs) const { return store.get_local_element(orbs[0]); }
   T& operator()(int i=-1, int j=-1, int k=-1) { return store(0); }
   const T& operator()(int i=-1, int j=-1, int k=-1) const { return store(0); }
+  bool has(int i, int j = -1, int k = -1) const { return store.has(i); }
   bool has_local_index(int i, int j=-1, int k=-1) const { return store.has_local_index(i); }
   const std::vector<T>& get_store() const { return store.get_store(); }
   void set_indices() 
@@ -125,7 +136,15 @@ public:
   T& operator()() { return store(0); }
   bool is_local() const { return store.is_local(); }
   bool is_distributed() const { return store.is_distributed(); }
+  bool& set_local() { return store.set_local(); }
   para_array_0d<T>* clone() const { return new para_array_0d<T>(*this); }
+
+  // this shouldn't be called from para_array_0d
+  const std::pair<int, int> unmap_local_index(int i) const
+  {
+    assert(false);
+    return std::make_pair(0, 0);
+  }
 private:
   friend class boost::serialization::access;
   template<class Archive>
@@ -158,6 +177,9 @@ private:
 /// be exploited.
 template<class T> class para_array_1d : public para_sparse_vector<T>
 {
+private:
+  /// this shouldn't be called from para_array_1d
+  int trimap(int i, int j) const { return 0; }
 public:
   para_array_1d() : stored_local(true) {}
   
@@ -173,11 +195,11 @@ public:
   const std::vector<int>& get_local_indices() const { return local_indices; }
 
   /// query whether elements are non-null, locally and globally
-  bool has(int i, int j=-1, int k=-1) const
+  bool has(int i, int j = -1, int k = -1) const
   {
-    return has_global_index(i); 
+    return has_global_index(i);
   }
-  bool has_local_index(int i, int j=-1, int k=-1) const 
+  bool has_local_index(int i, int j = -1, int k = -1) const 
   { 
     return local_indices_map[i] != -1; 
   }
@@ -238,7 +260,7 @@ public:
 
 
   /// returns value at index i
-  const T& operator()(int i, int j=-1, int k=-1) const
+  const T& operator()(int i, int j = -1, int k = -1) const
   {
     assert(has_global_index(i));
     if (is_distributed())		/**< if storage is distributed, make sure index is available on current processor */
@@ -247,7 +269,7 @@ public:
   }    
 
   /// returns value at index i
-  T& operator()(int i, int j=-1, int k=-1)
+  T& operator()(int i, int j = -1, int k = -1)
   {
     assert(has_global_index(i));
     if (is_distributed())
@@ -312,6 +334,13 @@ public:
   }      
 
   para_array_1d<T>* clone() const { return new para_array_1d<T>(*this); }
+
+  // this shouldn't be called from para_array_1d
+  const std::pair<int, int> unmap_local_index(int i) const
+  {
+    assert(false);
+    return std::make_pair(0, 0);
+  }
 
 private:
   friend class boost::serialization::access;
@@ -450,7 +479,7 @@ public:
     return (*this)(i, j);
   }
   /// returns elements at i, j
-  T& operator()(int i, int j, int k=-1)
+  T& operator()(int i, int j, int k = -1)
   {
     assert (i >= j);
     assert(has(i, j));
@@ -458,7 +487,7 @@ public:
       assert(has_local_index(trimap(i, j)));
     return store[trimap(i, j)];
   }
-  const T& operator()(int i, int j, int k=-1) const
+  const T& operator()(int i, int j, int k = -1) const
   {
     assert (i >= j);
     assert(has(i, j));
@@ -468,17 +497,17 @@ public:
   }
 
   /// query whether elements are non-null
-  bool has(int i, int j, int k=-1) const { return has_global_index(trimap(i, j)); }
+  bool has(int i, int j, int k = -1) const { return has_global_index(trimap(i, j)); }
   bool has(const std::vector<int>& orbs) const
   {
     assert(orbs.size() == 2);
     return has(orbs[0], orbs[1]);
   }
-  bool has_global_index(int i, int j, int k=-1) const
+  bool has_global_index(int i, int j, int k = -1) const
   {
     return has_global_index(trimap(i, j));
   }
-  bool has_local_index(int i, int j, int k=-1) const
+  bool has_local_index(int i, int j, int k = -1) const
   {
     return has_local_index(trimap(i, j));
   }

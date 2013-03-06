@@ -12,9 +12,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "pario.h"
 
 void SpinAdapted::InitBlocks::LRT::InitNewEnvironmentBlock
-(SpinBlock &environment, SpinBlock& environmentDot, SpinBlock &newEnvironment, const SpinBlock &system, SpinBlock &systemDot,
- const Matrix& alpha, const int& nroots, const int &sys_add, const int &env_add, const bool &forward, const bool &direct, const bool &onedot,
- const bool &nexact, const bool &useSlater, bool haveNormops, bool haveCompops, const bool& dot_with_sys)
+(SpinBlock& environment, SpinBlock& environmentDot, SpinBlock& newEnvironment, const SpinBlock& system, SpinBlock& systemDot,
+ const Matrix& alpha, const int& sys_add, const int& env_add, const bool& forward, const bool& direct, const bool& onedot,
+ const bool& nexact, const bool& useSlater, bool haveNormops, bool haveCompops, const bool& dot_with_sys, int nroots)
 {
   // now initialise environment Dot
   int systemDotStart, systemDotEnd, environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
@@ -47,7 +47,7 @@ void SpinAdapted::InitBlocks::LRT::InitNewEnvironmentBlock
   // now initialise environment
   if (useSlater)
   {
-    pout << "\t\t\t LRT::InitBlocks::InitNewEnvironmentBlock  invalid option was specified, could not construct block from slater det." << endl;
+    pout << "\t\t\t InitBlocks::LRT::InitNewEnvironmentBlock  invalid option was specified, could not construct block from slater det." << endl;
     abort();
   }
   else
@@ -73,7 +73,7 @@ void SpinAdapted::InitBlocks::LRT::InitNewEnvironmentBlock
     environment.addAdditionalCompOps();
     dmrginp.datatransfer -> stop();
 
-      newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops);
+      newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops, nroots);
       newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
       
       newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, environmentDot);

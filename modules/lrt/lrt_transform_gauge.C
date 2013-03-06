@@ -22,38 +22,57 @@ namespace SpinAdapted {
 //
 
 void GuessWave::LRT::transform_gauge
-(std::vector<Wavefunction>& Wavefnc, const SpinBlock &big,
+(std::vector<Wavefunction>& Wavefnc, const int& nroots, const SpinBlock &big,
  const guessWaveTypes& guesswavetype, const bool &onedot, const bool &transpose_guess_wave)
 {
 #ifndef SERIAL
   mpi::communicator world;
 #endif
-  const int nroots = Wavefnc.size();
+  assert(nroots <= Wavefnc.size());
   for(int i = 0; i < nroots; ++i) {
-    Wavefnc.initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
+    Wavefnc[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
   }
 
   if (!mpigetrank()) {
     switch(guesswavetype)
     {
     case TRANSFORM: 
-      transform_previous_wavefunction_deriv(Wavefnc, big, onedot, transpose_guess_wave);
+      transform_previous_wavefunction_deriv(Wavefnc, nroots, big, onedot, transpose_guess_wave);
       break;
     case TRANSPOSE: 
-      transpose_previous_wavefunction_deriv(Wavefnc, big, onedot, transpose_guess_wave);
+      transpose_previous_wavefunction_deriv(Wavefnc, nroots, big, onedot, transpose_guess_wave);
       break;
     defalt:
       pout << "\t\t\t Invalid guessWaveTypes for gauge-transformation was specified" << endl;
       abort();
     }
+
+//  // DEBUG: begin check gauge-condition
+//  std::vector<Wavefunction> transWavefnc(nroots);
+//  for(int i = 0; i < nroots; ++i) {
+//    transWavefnc[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
+//  }
+//  transpose_previous_wavefunction_deriv(transWavefnc, nroots, big, onedot, transpose_guess_wave);
+
+//  for(int i = 0; i < nroots; ++i) {
+//    Wavefunction subWavefnc(Wavefnc[i]);
+//    ScaleAdd(-1.0, transWavefnc[i], subWavefnc);
+//    double subnorm = DotProduct(subWavefnc, subWavefnc);
+//    pout << "\t\t\t DEBUG @ GuessWave::LRT::transform_gauge: checking gauge of Wavefnc[" << i << "]: diff = " << subnorm << endl;
+//  }
+//  // DEBUG: end   check gauge-condition
+
+    double norm = DotProduct(Wavefnc[0], Wavefnc[0]);
+    pout << "\t\t\t DEBUG @ GuessWave::LRT::transform_gauge: norm of 0-th wavefunction = "
+         << fixed << setprecision(24) << norm << endl;
   }
 }
 
 // transform gauge of 1-st order wavefunction
 void GuessWave::LRT::transform_previous_wavefunction_deriv
-(std::vector<Wavefunction>& Wavefnc, const SpinBlock &big, const bool &onedot, const bool& transpose_guess_wave)
+(std::vector<Wavefunction>& Wavefnc, const int& nroots, const SpinBlock &big, const bool &onedot, const bool& transpose_guess_wave)
 {
-  const int nroots = Wavefnc.size();
+  assert(nroots <= Wavefnc.size());
 
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Transforming gauge of previous wavefunction " << endl;
@@ -85,6 +104,22 @@ void GuessWave::LRT::transform_previous_wavefunction_deriv
     }
   }
 
+  std::vector<int> rotsites;
+  if (transpose_guess_wave) {
+    rotsites = big.get_rightBlock()->get_sites();
+    rotsites.insert(rotsites.end(), big.get_leftBlock()->get_rightBlock()->get_sites().begin(),
+                                    big.get_leftBlock()->get_rightBlock()->get_sites().end());
+    sort(rotsites.begin(), rotsites.end());
+  }
+  else{
+    rotsites = big.get_rightBlock()->get_sites();
+  }
+
+  // should be load 0-th wavefunction rather than transform
+  // since follows may introduce round-off-error which breaks normality of 0-th wavefunction
+
+  // old right rotation matrix
+  LoadRotationMatrix(rotsites, rightRotationMatrix, 0);
   // transform 0-th gauge
   onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWavefnc,
                                 leftRotationMatrix, rightRotationMatrix, Wavefnc[0], transpose_guess_wave);
@@ -95,22 +130,16 @@ void GuessWave::LRT::transform_previous_wavefunction_deriv
     Wavefunction oldWavefnc_deriv;
     std::vector<Matrix> rightRotationMatrix_deriv; // had to be rotated by Ritz vector and saved when making newEnvironment
 
-    std::vector<int> rotsites;
     if (transpose_guess_wave) {
       // old wavefunction
       oldWavefnc_deriv.LoadWavefunctionInfo (oldStateInfo_deriv, big.get_leftBlock()->get_leftBlock()->get_sites(), i);
       // old right rotation matrix
-      rotsites = big.get_rightBlock()->get_sites();
-      rotsites.insert(rotsites.end(), big.get_leftBlock()->get_rightBlock()->get_sites().begin(),
-                                      big.get_leftBlock()->get_rightBlock()->get_sites().end());
-      sort(rotsites.begin(), rotsites.end());
       LoadRotationMatrix(rotsites, rightRotationMatrix_deriv, i);
     }
     else{
       // old wavefunction
       oldWavefnc_deriv.LoadWavefunctionInfo (oldStateInfo_deriv, big.get_leftBlock()->get_sites(), i);
       // old right rotation matrix
-      rotsites = big.get_rightBlock()->get_sites();
       LoadRotationMatrix(rotsites, rightRotationMatrix_deriv, i);
     }
 
@@ -118,18 +147,18 @@ void GuessWave::LRT::transform_previous_wavefunction_deriv
     // L(0)^(t) * C(I) * R(0)
     onedot_transform_wavefunction(oldStateInfo_deriv, big.get_stateInfo(), oldWavefnc_deriv,
                                   leftRotationMatrix, rightRotationMatrix, tmpWavefnc, transpose_guess_wave);
-    // L(I)^(t) * C(0) * R(0)
+    // L(0)^(t) * C(0) * R(I)
     onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWavefnc,
-                                  leftRotationMatrix_deriv, rightRotationMatrix, Wavefnc[i], transpose_guess_wave);
+                                  leftRotationMatrix, rightRotationMatrix_deriv, Wavefnc[i], transpose_guess_wave);
     Wavefnc[i] += tmpWavefnc;
   }
 }
 
 // transpose 1-st order wavefunction ( block iter == 0 )
 void GuessWave::LRT::transpose_previous_wavefunction_deriv
-(std::vector<Wavefunction>& Wavefnc, const SpinBlock &big, const bool &onedot, const bool& transpose_guess_wave)
+(std::vector<Wavefunction>& Wavefnc, const int& nroots, const SpinBlock &big, const bool &onedot, const bool& transpose_guess_wave)
 {
-  const int nroots = Wavefnc.size();
+  assert(nroots <= Wavefnc.size());
   for(int i = 0; i < nroots; ++i) {
     transpose_previous_wavefunction(Wavefnc[i], big, i, onedot, transpose_guess_wave);
   }
@@ -147,8 +176,8 @@ void GuessWave::LRT::rotate_previous_wavefunction
   }
 
   if(guesswavetype == TRANSPOSE) {
-    std::vector<StateInfo>   oldStateInfo(mroots);
-    std::vector<Wavefuncton> oldWavefnc(mroots);
+    std::vector<StateInfo>    oldStateInfo(mroots);
+    std::vector<Wavefunction> oldWavefnc(mroots);
 
     std::vector<int> wfsites = big.get_rightBlock()->get_sites();
     wfsites.insert(wfsites.end(), big.get_leftBlock()->get_rightBlock()->get_sites().begin(), big.get_leftBlock()->get_rightBlock()->get_sites().end());

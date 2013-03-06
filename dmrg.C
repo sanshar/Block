@@ -37,6 +37,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "sweepgenblock.h"
 #include "sweeponepdm.h"
 #include "sweeptwopdm.h"
+#include "modules/lrt/lrt_sweep.h"
 #include "BaseOperator.h"
 #include "dmrg_wrapper.h"
 
@@ -49,6 +50,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 
 void dmrg(double sweep_tol);
+void dmrglrt(double sweep_tol);
 void restart(double sweep_tol, bool reset_iter);
 void ReadInput(char* conf);
 void fullrestartGenblock();
@@ -270,38 +272,31 @@ int calldmrg(char* input, char* output)
   // Run into DMRG Linear-Response Theory for Excited State
   case (DMRG_LRT):
     if (dmrginp.algorithm_method() == TWODOT) {
-      pout << "DMRG-LRT not allowed with twodot algorithm" << endl;
+      pout << "\t\t\t ERROR: DMRG-LRT not allowed with twodot algorithm" << endl;
+      abort();
+    }
+    if (dmrginp.nroots() == 1) {
+      pout << "\t\t\t ERROR: number of roots (> 1) must be specified for DMRG-LRT calculation" << endl;
       abort();
     }
 
     // TODO: followings are just copied from other calc_type().
     //       figure out all necessary setup before DMRG-LRT
-    if (RESTART && !FULLRESTART)
-      restart(sweep_tol, reset_iter);
-    else if (FULLRESTART) {
+//  if (RESTART && !FULLRESTART)
+//    restart(sweep_tol, reset_iter);
+    if (FULLRESTART) {
+pout << "DEBUG @ calldmrg: fullrestart for DMRG-LRT calculation" << endl;
       fullrestartGenblock();
       reset_iter = true;
       sweepParams.restorestate(direction, restartsize);
       sweepParams.calc_niter();
       sweepParams.savestate(direction, restartsize);
-      restart(sweep_tol, reset_iter);
+//    restart(sweep_tol, reset_iter);
     }
 
-    dmrginp.screen_tol() = 0.0;
-    dmrginp.Sz() = dmrginp.total_spin_number();
-    dmrginp.do_cd() = true;
-    dmrginp.screen_tol() = 0.0;
-
-    sweep_copy.restorestate(direction_copy, restartsize_copy);
-
-    dmrginp.set_fullrestart() = true;
-    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
-    dmrginp.set_fullrestart() = false;    
-
-//  // DMRG-LRT: turned off
-//  SweepDmrgLrt::do_one(sweepParams, false, direction, false, 0, dmrginp.nroots());
-//  sweep_copy.savestate(direction_copy, restartsize_copy);
+pout << "DEBUG @ calldmrg: calling DMRG-LRT calculation" << endl;
+    // DMRG-LRT
+    dmrglrt(sweep_tol);
 
     break;
   }
@@ -501,3 +496,36 @@ void dmrg(double sweep_tol)
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
 }
 
+void dmrglrt(double sweep_tol)
+{
+  bool direction;
+  int restartsize;
+  SweepParams sweepParams;
+  sweepParams.ls_dw.resize(0);
+  sweepParams.ls_energy.resize(0);
+
+  sweepParams.restorestate(direction, restartsize);
+  if(reset_iter) { //this is when you restart from the start of the sweep
+    sweepParams.set_sweep_iter() = 0;
+    sweepParams.set_restart_iter() = 0;
+  }
+  
+pout << "####################################################################################################" << endl;
+pout << "DEBUG @ dmrglrt: calling LRT::do_one to set guesses, direction = " << (direction ? "forward" : "backward") << endl;
+pout << "####################################################################################################" << endl;
+  Sweep::LRT::do_one(sweepParams, true, direction, false, 0);
+
+  double max_rnorm = 1.0e8;
+
+  while (max_rnorm > sweep_tol) {
+    direction = !direction;
+
+    if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+      break;
+
+pout << "####################################################################################################" << endl;
+pout << "DEBUG @ dmrglrt: calling LRT::do_one, direction = " << (direction ? "forward" : "backward") << endl;
+pout << "####################################################################################################" << endl;
+    max_rnorm = Sweep::LRT::do_one(sweepParams, false, direction, false, 0);
+  }
+}

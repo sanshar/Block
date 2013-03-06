@@ -35,10 +35,15 @@ void SpinBlock::printOperatorSummary()
   else {
     for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
     {
+      int iState = get_bra_index(it->first);
+      int jState = get_ket_index(it->first);
+
       if(it->second->is_core()) 
-         cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
+         cout << it->second->size() << " :  "
+              << it->second->get_op_string() << " ( " << iState << ", " << jState << " )  Core Operators  ";
       else
-         cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
+         cout << it->second->size() << " :  "
+              << it->second->get_op_string() << " ( " << iState << ", " << jState << " )  Virtual Operators  ";
       
       vector<int> numops(world.size(), 0);
       for (int proc = 0; proc <world.size(); proc++) {
@@ -54,10 +59,15 @@ void SpinBlock::printOperatorSummary()
 #else
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
   {
+    int iState = get_bra_index(it->first);
+    int jState = get_ket_index(it->first);
+
     if(it->second->is_core()) 
-      cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
+       cout << it->second->size() << " :  "
+            << it->second->get_op_string() << " ( " << iState << ", " << jState << " )  Core Operators  ";
     else
-      cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
+       cout << it->second->size() << " :  "
+            << it->second->get_op_string() << " ( " << iState << ", " << jState << " )  Virtual Operators  ";
     cout << endl;
   }
 #endif
@@ -200,7 +210,7 @@ void SpinBlock::build_operators()
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core()) {
-	it->second->build_operators(*this);
+        it->second->build_operators(*this);
       }
     }
 }

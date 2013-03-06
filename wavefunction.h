@@ -32,7 +32,7 @@ public:
   void set_onedot(bool p_onedot) {onedot = p_onedot;}
 
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return boost::shared_ptr<SparseMatrix> (this);}
-  void build(const SpinBlock& b) {}
+  void build(const SpinBlock& b) { }
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b=0) {return 0.0;}
   void CollectFrom(const RowVector& C);
   void FlattenInto(Matrix& C);
@@ -46,6 +46,7 @@ public:
   void CollectQuantaAlongColumns(const StateInfo& sRow, const StateInfo& sCol);
   void UnCollectQuantaAlongColumns(const StateInfo& sRow, const StateInfo& sCol);
   Wavefunction& operator+=(const Wavefunction& other);
+  boost::shared_ptr<SparseMatrix> deepCopy() const { return boost::shared_ptr<SparseMatrix>(new Wavefunction(*this)); }
 };
 }
 #endif

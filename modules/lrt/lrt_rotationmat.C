@@ -201,10 +201,10 @@ double SpinAdapted::LRT::assign_matrix_by_dm_deriv
   rotatematrix_deriv.resize(nquanta);
   for(int q = 0; q < nquanta; ++q) {
     if(rotatematrix[q].Ncols() > 0) {
-      Matrix matrix_elements;
+      Matrix matrix_elements(rotatematrix[q]); matrix_elements = 0.0;
       MatrixMultiply(density_deriv(q, q), 'n', rotatematrix[q], 'n', matrix_elements, 1.0);
       if(projection) {
-        Matrix projected_matrix;
+        Matrix projected_matrix(rotatematrix[q].Ncols(), rotatematrix[q].Ncols()); projected_matrix = 0.0;
         MatrixMultiply(rotatematrix[q], 't', matrix_elements, 'n', projected_matrix, 1.0);
         MatrixMultiply(rotatematrix[q], 'n', projected_matrix, 'n', matrix_elements,-1.0);
       }
@@ -212,12 +212,12 @@ double SpinAdapted::LRT::assign_matrix_by_dm_deriv
         ColumnVector derived_basis(rotatematrix[q].Nrows());
         derived_basis = 0.0;
         if (abs(selectedwts[q][i]) > 1.e-12)
-          derived_basis = matrix_elements/selectedwts[q][i];
+          derived_basis = matrix_elements.Column(i + 1)/selectedwts[q][i];
 
         if(rotatematrix_deriv[q].Ncols() == 0)
-          rotatematrix_deriv[q] = perturbedvec;
+          rotatematrix_deriv[q] = derived_basis;
         else
-          rotatematrix_deriv[q] |= perturbedvec;
+          rotatematrix_deriv[q] |= derived_basis;
       }
     }
   }
@@ -227,7 +227,7 @@ double SpinAdapted::LRT::assign_matrix_by_dm_deriv
 void SpinAdapted::LRT::project_onto_rejectedspace
 (const Wavefunction& c, const std::vector<Matrix>& rotatematrix, const bool& dot_with_sys, Wavefunction& c_projected)
 {
-  int nquanta = rejectedbasis.size();
+  int nquanta = rotatematrix.size();
   c_projected = c;
   // FIXME: should check for dot_with_sys, supposed to be false with LRT
   for(int i = 0; i < c_projected.nrows(); ++i) {
@@ -235,8 +235,13 @@ void SpinAdapted::LRT::project_onto_rejectedspace
       if(c_projected.allowed(i, j)) {
         const Matrix& lM = rotatematrix[i];
               Matrix& nM = c_projected.operator_element(i, j);        
-              Matrix  tM;
+              Matrix  tM = nM;
+              tM.ReSize(lM.Ncols(), nM.Ncols()); tM = 0.0;
+//pout << "DEBUG @ LRT::project_onto_rejectedspace: lM.Nrows() = " << lM.Nrows() << ", lM.Ncols() = " << lM.Ncols()
+//                                            << ", nM.Nrows() = " << nM.Nrows() << ", nM.Ncols() = " << nM.Ncols() << endl;
         MatrixMultiply(lM, 't', nM, 'n', tM, 1.0); // T = L^(t) * C
+//pout << "DEBUG @ LRT::project_onto_rejectedspace: lM.Nrows() = " << lM.Nrows() << ", lM.Ncols() = " << lM.Ncols()
+//                                            << ", tM.Nrows() = " << nM.Nrows() << ", tM.Ncols() = " << nM.Ncols() << endl;
         MatrixMultiply(lM, 'n', tM, 'n', nM,-1.0); // C = C - L * T
       }
     }

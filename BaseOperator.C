@@ -15,6 +15,23 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 namespace SpinAdapted{
 
+std::string get_op_label(const opTypes& optype)
+{
+  std::ostringstream label;
+  switch(optype & OP_TYPE_MASK) {
+    case HAM:             label << "HAM";             break;
+    case CRE:             label << "CRE";             break;
+    case CRE_CRE_DESCOMP: label << "CRE_CRE_DESCOMP"; break;
+    case CRE_CRE:         label << "CRE_CRE";         break;
+    case DES_DESCOMP:     label << "DES_DESCOMP";     break;
+    case CRE_DES:         label << "CRE_DES";         break;
+    case CRE_DESCOMP:     label << "CRE_DESCOMP";     break;
+    default:              label << "UNKNOWN";         break;
+  }
+  label << " ( " << get_bra_index(optype) << ", " << get_ket_index(optype) << " )";
+  return label.str();
+}
+
 double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
 {
   int aspin = a.get_s(), airrep = a.get_symm().getirrep();
@@ -273,7 +290,7 @@ void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matri
 void SparseMatrix::build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& rotate_matrix, 
 					       const StateInfo *newStateInfo)
 {
-  
+
   boost::shared_ptr<SparseMatrix> tmp;
   if (orbs.size() == 0)
     tmp =   big->get_op_rep(ot, deltaQuantum);

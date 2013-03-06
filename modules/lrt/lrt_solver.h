@@ -13,6 +13,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include "spinblock.h"
 #include "wavefunction.h"
+#include "davidson.h"
 
 namespace SpinAdapted {
 
@@ -25,11 +26,11 @@ void solve_wavefunction
 namespace TDA {
 
 void solve_correction_equation
-(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm, const DiagonalMatrix& h_diag, Davidson_functor& h_mult,
+(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm, DiagonalMatrix& h_diag, Davidson_functor& h_mult,
  bool useprecond, int nroots, int mroots, int kroots);
 
 void compute_matrix_elements
-(const vector<Wavefunction>& psix, Davidson_functor& h_mult, Matrix& h_subspace, Matrix& s_subspace, int mroots);
+(vector<Wavefunction>& psix, Davidson_functor& h_mult, Matrix& h_subspace, Matrix& s_subspace, int mroots);
 
 };
 

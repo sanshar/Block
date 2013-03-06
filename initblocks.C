@@ -13,7 +13,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const bool &forward, 
                                     const int & forward_starting_size, const int &backward_starting_size,
-                                    const int& restartSize, const bool &restart, const bool& warmUp)
+                                    const int& restartSize, const bool &restart, const bool& warmUp, int nroots)
 {
   if (restart && restartSize != 1)
   {
@@ -34,6 +34,8 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
   else if (forward)
   {
     startingBlock = SpinBlock(0, forward_starting_size - 1, true);
+// FIXME: nroots might be required when SS-DMRG for excited state (not sure)
+//  startingBlock = SpinBlock(0, forward_starting_size - 1, true, nroots);
     
     if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s() != 0)
     {
@@ -44,6 +46,7 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
       SpinBlock dummyblock(addstate);
       SpinBlock newstartingBlock;
       newstartingBlock.default_op_components(false, startingBlock, dummyblock, true, true);
+//    newstartingBlock.default_op_components(false, startingBlock, dummyblock, true, true, nroots);
       newstartingBlock.setstoragetype(LOCAL_STORAGE);
       newstartingBlock.BuildSumBlock(NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, startingBlock, dummyblock);
       startingBlock.clear();
@@ -56,16 +59,19 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
     for (int i = 0; i < backward_starting_size; ++i) 
 	    backwardSites.push_back (dmrginp.last_site() - i - 1);
     sort (backwardSites.begin (), backwardSites.end ());
-	  startingBlock.default_op_components(false);
+          startingBlock.default_op_components(false);
+//        startingBlock.default_op_components(false, nroots);
     startingBlock.BuildTensorProductBlock (backwardSites);
   }
 }
 
 
-void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &systemDot, SpinBlock &newSystem, const int &sys_add, const bool &direct, const Storagetype &storage, bool haveNormops, bool haveCompops)
+void SpinAdapted::InitBlocks::InitNewSystemBlock
+(SpinBlock &system, SpinBlock &systemDot, SpinBlock &newSystem,
+ const int &sys_add, const bool &direct, const Storagetype &storage, bool haveNormops, bool haveCompops, int nroots)
 {
 
-  newSystem.default_op_components(direct, system, systemDot, haveNormops, haveCompops);
+  newSystem.default_op_components(direct, system, systemDot, haveNormops, haveCompops, nroots);
   newSystem.setstoragetype(storage);
   newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, systemDot);
 
@@ -75,9 +81,10 @@ void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &s
   }
 }
 
-void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, SpinBlock& environmentDot, SpinBlock &newEnvironment, 
-                                          const SpinBlock &system, SpinBlock &systemDot,
-					 const int &sys_add, const int &env_add, const bool &forward, const bool &direct, const bool &onedot, const bool &nexact, const bool &useSlater, bool haveNormops, bool haveCompops, const bool& dot_with_sys)
+void SpinAdapted::InitBlocks::InitNewEnvironmentBlock
+(SpinBlock &environment, SpinBlock& environmentDot, SpinBlock &newEnvironment, const SpinBlock &system, SpinBlock &systemDot,
+ const int &sys_add, const int &env_add, const bool &forward, const bool &direct, const bool &onedot,
+ const bool &nexact, const bool &useSlater, bool haveNormops, bool haveCompops, const bool& dot_with_sys, int nroots)
 {
   // now initialise environment Dot
   int systemDotStart, systemDotEnd, environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
@@ -120,14 +127,14 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
     {
       if ((!dot_with_sys && onedot) || !onedot)
       {
-	environment.default_op_components(!forward);
+	environment.default_op_components(!forward, nroots);
 	environment.setstoragetype(DISTRIBUTED_STORAGE);
 	environment.BuildTensorProductBlock(environmentSites);
 	SpinBlock::store (true, environmentSites, environment);	
       }
       else
       {
-	newEnvironment.default_op_components(!forward);
+	newEnvironment.default_op_components(!forward, nroots);
 	newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
 	newEnvironment.BuildTensorProductBlock(environmentSites);
 	SpinBlock::store (true, environmentSites, newEnvironment);	
@@ -217,10 +224,12 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
     environment.addAdditionalCompOps();
     dmrginp.datatransfer -> stop();
 
-      newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops);
+      newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops, nroots);
       newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
       
+//pout << "DEBUG @ InitNewEnvironmentBlock: calling BuildSumBlock" << endl;
       newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, environmentDot);
+//pout << "DEBUG @ InitNewEnvironmentBlock: passed BuildSumBlock" << endl;
       if (dmrginp.outputlevel() > 0) {
 	pout << "\t\t\t Environment block " << endl << environment << endl;
 	environment.printOperatorSummary();
@@ -235,10 +244,10 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 
 }
 
-void SpinAdapted::InitBlocks::InitBigBlock(SpinBlock &leftBlock, SpinBlock &rightBlock, SpinBlock &big)
+void SpinAdapted::InitBlocks::InitBigBlock(SpinBlock &leftBlock, SpinBlock &rightBlock, SpinBlock &big, int nroots)
 {
   //set big block components
-  big.set_big_components(); 
+  big.set_big_components(nroots); 
   // build the big block
   big.BuildSumBlock(PARTICLE_SPIN_NUMBER_CONSTRAINT, leftBlock, rightBlock);
 }
