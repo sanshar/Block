@@ -77,7 +77,7 @@ class SpinBlock
   void setstoragetype(Storagetype st);
   void default_op_components(bool complementary_, int nroots = 1);
   void default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops, int nroots = 1);
-  void set_big_components(int nroots = 1);
+  void set_big_components();
   void printOperatorSummary();
 
   int size() const { return sites.size(); }

@@ -63,8 +63,8 @@ void GuessWave::LRT::transform_gauge
 //  // DEBUG: end   check gauge-condition
 
     double norm = DotProduct(Wavefnc[0], Wavefnc[0]);
-    pout << "\t\t\t DEBUG @ GuessWave::LRT::transform_gauge: norm of 0-th wavefunction = "
-         << fixed << setprecision(24) << norm << endl;
+    if(dmrginp.outputlevel() > 0)
+      pout << "\t\t\t norm of 0-th wavefunction = " << fixed << setprecision(24) << norm << endl;
   }
 }
 

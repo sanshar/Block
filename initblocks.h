@@ -30,7 +30,7 @@ void InitNewEnvironmentBlock
  const int &sys_add, const int &env_add, const bool &forward, const bool &direct, const bool &onedot, const bool &nexact, const bool &useSlater, 
  bool haveNormops = true, bool haveCompops = true, const bool& dot_with_sys = true, int nroots = 1);
 
-void InitBigBlock(SpinBlock &leftBlock, SpinBlock &rightBlock, SpinBlock &big, int nroots = 1);
+void InitBigBlock(SpinBlock &leftBlock, SpinBlock &rightBlock, SpinBlock &big);
 
 }
 }

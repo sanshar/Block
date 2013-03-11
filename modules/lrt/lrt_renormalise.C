@@ -50,7 +50,6 @@ void SpinBlock::RenormaliseFrom_lrt
  SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, int sweepiter)
 {
   const int lroots = mroots + nroots - kroots;
-pout << "DEBUG @ SpinBlock::RenormaliseFrom_lrt: nroots = " << nroots << ", mroots = " << mroots << ", kroots = " << kroots << ", lroots = " << lroots << endl;
   vector<Wavefunction> wave_solutions;
   dmrginp.davidsonT -> start();
   if (dmrginp.outputlevel() > 0)
@@ -77,24 +76,25 @@ pout << "DEBUG @ SpinBlock::RenormaliseFrom_lrt: nroots = " << nroots << ", mroo
   SpinBlock newbig;
   dmrginp.postwfrearrange -> start();
 
-//// maybe better to turn 'dot with env' off for computing (1 - L(0)L(0)')C(I) later
-//if (onedot && !dot_with_sys) {
-//  InitBlocks::InitNewSystemBlock(System, sysDot, newsystem, sysDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true);
-//  InitBlocks::InitBigBlock(newsystem, environment, newbig); 
-//  for (int i = 0; i < lroots && mpigetrank() == 0; i++) {
-//    Wavefunction tempwave = wave_solutions[i];
-//    GuessWave::onedot_shufflesysdot(big.get_stateInfo(), newbig.get_stateInfo(), wave_solutions[i], tempwave);  
-//    wave_solutions[i] = tempwave;
-//  }
-//  *this = newsystem;
-//  if (dmrginp.outputlevel() > 0)
-//     cout << newsystem.get_twoInt().get()<<"  "<<get_twoInt().get()<<"  Ints "<<endl;
-//  envDot.clear();
-//  big.get_rightBlock()->clear();
-//  big.clear();
-//}
-//else
+  // maybe better to turn 'dot with env' off for computing (1 - L(0)L(0)')C(I) later
+  if (onedot && !dot_with_sys) {
+    InitBlocks::InitNewSystemBlock(System, sysDot, newsystem, sysDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true, lroots);
+    InitBlocks::InitBigBlock(newsystem, environment, newbig); 
+    for (int i = 0; i < lroots && mpigetrank() == 0; i++) {
+      Wavefunction tempwave = wave_solutions[i];
+      GuessWave::onedot_shufflesysdot(big.get_stateInfo(), newbig.get_stateInfo(), wave_solutions[i], tempwave);  
+      wave_solutions[i] = tempwave;
+    }
+    *this = newsystem;
+    if (dmrginp.outputlevel() > 0)
+       cout << newsystem.get_twoInt().get()<<"  "<<get_twoInt().get()<<"  Ints "<<endl;
+    envDot.clear();
+    big.get_rightBlock()->clear();
+    big.clear();
+  }
+  else
     newbig = big;
+
   dmrginp.postwfrearrange -> stop();
 
   if (dmrginp.outputlevel() > 0)
@@ -165,7 +165,7 @@ pout << "DEBUG @ SpinBlock::RenormaliseFrom_lrt: nroots = " << nroots << ", mroo
 // DEBUG
 
   // might be used the same subroutine for both TDA and RPA ?
-  LRT::multiply_h_left davidson_f(big, onedot);
+  LRT::multiply_h_left davidson_f(newbig, onedot);
   LRT::TDA::compute_matrix_elements(projected_wave_solutions, davidson_f, h_subspace, s_subspace, lroots);
 
   if(mpigetrank() == 0) {

@@ -209,10 +209,12 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   sweepParams.set_sweep_parameters();
   // a new renormalisation sweep routine
   pout << endl;
-  if (forward)
+  if (forward) {
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in forwards direction"<<endl;
-  else
+  }
+  else {
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
+  }
   pout << "\t\t\t ============================================================================ " << endl;
 
   InitBlocks::InitStartingBlock (system,forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
@@ -248,10 +250,12 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       pout << "\t\t\t ----------------------------" << endl;
       if (dmrginp.outputlevel() > 0) {
 	
-	if (forward)
+	if (forward) {
 	  pout << "\t\t\t Current direction is :: Forwards " << endl;
-	else
+        }
+	else {
 	  pout << "\t\t\t Current direction is :: Backwards " << endl;
+        }
       }
 
       if (dmrginp.no_transform() || (sweepParams.get_sweep_iter()-sweepParams.get_restart_iter() == 0 && sweepParams.get_block_iter() == 0))

@@ -165,11 +165,12 @@ void SpinAdapted::LRT::TDA::solve_correction_equation
       if(useprecond)
         SpinAdapted::Linear::olsenPrecondition(r, psix[i], eigv[i], h_diag, levelshift);
 
-      Normalise(r);
+      int success = 0;
+      Normalise(r, &success);
       double overlap = DotProduct(r, psix[0]);
       ScaleAdd(-overlap, psix[0], r);
 
-      Normalise(r);
+      Normalise(r, &success);
       Scale(1.0/dmrginp.last_site(), r); // scaled by 1/k (not necessary)
       psix[mroots+i-kroots] = r;
     }

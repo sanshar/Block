@@ -34,8 +34,6 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
   else if (forward)
   {
     startingBlock = SpinBlock(0, forward_starting_size - 1, true);
-// FIXME: nroots might be required when SS-DMRG for excited state (not sure)
-//  startingBlock = SpinBlock(0, forward_starting_size - 1, true, nroots);
     
     if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s() != 0)
     {
@@ -46,7 +44,6 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
       SpinBlock dummyblock(addstate);
       SpinBlock newstartingBlock;
       newstartingBlock.default_op_components(false, startingBlock, dummyblock, true, true);
-//    newstartingBlock.default_op_components(false, startingBlock, dummyblock, true, true, nroots);
       newstartingBlock.setstoragetype(LOCAL_STORAGE);
       newstartingBlock.BuildSumBlock(NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, startingBlock, dummyblock);
       startingBlock.clear();
@@ -60,7 +57,6 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
 	    backwardSites.push_back (dmrginp.last_site() - i - 1);
     sort (backwardSites.begin (), backwardSites.end ());
           startingBlock.default_op_components(false);
-//        startingBlock.default_op_components(false, nroots);
     startingBlock.BuildTensorProductBlock (backwardSites);
   }
 }
@@ -244,10 +240,10 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock
 
 }
 
-void SpinAdapted::InitBlocks::InitBigBlock(SpinBlock &leftBlock, SpinBlock &rightBlock, SpinBlock &big, int nroots)
+void SpinAdapted::InitBlocks::InitBigBlock(SpinBlock &leftBlock, SpinBlock &rightBlock, SpinBlock &big)
 {
   //set big block components
-  big.set_big_components(nroots); 
+  big.set_big_components(); 
   // build the big block
   big.BuildSumBlock(PARTICLE_SPIN_NUMBER_CONSTRAINT, leftBlock, rightBlock);
 }

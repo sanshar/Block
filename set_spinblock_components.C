@@ -146,7 +146,7 @@ void SpinBlock::default_op_components(bool complementary_, int nroots)
 }
 
 
-void SpinBlock::set_big_components(int nroots)
+void SpinBlock::set_big_components()
 {
   setstoragetype(DISTRIBUTED_STORAGE);
 

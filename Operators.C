@@ -174,7 +174,6 @@ FIXME: @ SpinAdapted::X::build, N.N. supposes those construct [ <I|A|J> x <n|B|n
 
 void SpinAdapted::Cre::build(const SpinBlock& b)
 {
-//pout << "DEBUG @ Cre::build: called, state index = " << m_state_index << endl;
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -183,8 +182,7 @@ void SpinAdapted::Cre::build(const SpinBlock& b)
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
 
-//pout << "DEBUG @ Cre::build: leftBlock: " << endl << *leftBlock  << endl;
-//pout << "DEBUG @ Cre::build: rightBlock: " << endl << *rightBlock << endl;
+//pout << "DEBUG @ Cre::build: called, state index = " << m_state_index << " / i = " << i << endl;
 
   if (leftBlock->has(CRE | m_state_index) && leftBlock->get_op_array(CRE | m_state_index).has(i))
   {
@@ -200,10 +198,9 @@ void SpinAdapted::Cre::build(const SpinBlock& b)
     dmrginp.makeopsT -> stop();
     return;
   }
-//else {
-//pout << "DEBUG @ Cre::build: for null component" << endl;
-//  abort();  
-//}
+  if (dmrginp.calc_type() != DMRG_LRT) {
+    abort();  
+  }
   dmrginp.makeopsT -> stop();
 }
 
@@ -258,7 +255,6 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Cre::getworkingreprese
 
 void SpinAdapted::CreDes::build(const SpinBlock& b)
 {
-//pout << "DEBUG @ CreDes::build: called, state index = " << m_state_index << endl;
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -269,40 +265,55 @@ void SpinAdapted::CreDes::build(const SpinBlock& b)
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
-//pout << "DEBUG @ CreDes::build leftBlock = " << endl << *leftBlock << endl;
-//pout << "DEBUG @ CreDes::build rightBlock = " << endl << *rightBlock << endl;
 
-  if (leftBlock->has(CRE_DES | m_state_index) && leftBlock->get_op_array(CRE_DES | m_state_index).has(i, j))
-  {      
+  opTypes lst_index, rst_index;
+
+//pout << "DEBUG @ CreDes::build: called, state index = " << m_state_index << " / i = " << i << ", j = " << j << endl;
+
+  // FIXME: suppose one of left and right is a dot block
+  //        i.e. if(lst_index && rst_index) -> makes erroneous behavior
+
+  lst_index = leftBlock->has(CRE_DES | m_state_index) ? m_state_index : 0;
+  rst_index = rightBlock->has(CRE_DES | m_state_index) ? m_state_index : 0;
+  if(m_state_index && !(lst_index | rst_index)) { dmrginp.makeopsT -> stop(); return; }
+
+  if (leftBlock->get_op_array(CRE_DES | lst_index).has(i, j))
+  {
+    if(rst_index) return;
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES | m_state_index, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }
-  if (rightBlock->has(CRE_DES | m_state_index) && rightBlock->get_op_array(CRE_DES | m_state_index).has(i, j))
+  if (rightBlock->get_op_array(CRE_DES | rst_index).has(i, j))
   {
+    if(lst_index) return;
     const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_DES | m_state_index, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
-  }  
-  if (leftBlock->has(CRE | m_state_index) && leftBlock->get_op_array(CRE | m_state_index).has(i))
+  }
+
+  lst_index = leftBlock->has(CRE | m_state_index) ? m_state_index : 0;
+  rst_index = rightBlock->has(CRE | m_state_index) ? m_state_index : 0;
+  if(m_state_index && !(lst_index | rst_index)) { dmrginp.makeopsT -> stop(); return; }
+
+  if (leftBlock->get_op_array(CRE | lst_index).has(i))
   {
-    const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE | m_state_index, getSpinQuantum(i), i);
-    Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(j), j)); // this is dot
+    const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE | lst_index, getSpinQuantum(i), i);
+    Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE | get_transbit(rst_index), getSpinQuantum(j), j)); // this is dot
     SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, 1.0);
   }
-  else if (rightBlock->has(CRE | m_state_index) && rightBlock->get_op_array(CRE | m_state_index).has(i))
+  else if (rightBlock->get_op_array(CRE | rst_index).has(i))
   {
-    const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE | m_state_index, getSpinQuantum(i), i);
-    Transposeview top2 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(j), j)); // this is dot
+    const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE | rst_index, getSpinQuantum(i), i);
+    Transposeview top2 = Transposeview(leftBlock->get_op_rep(CRE | get_transbit(lst_index), getSpinQuantum(j), j)); // this is dot
     double parity = getCommuteParity(op1->get_deltaQuantum(), top2.get_deltaQuantum(), get_deltaQuantum());
     SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
-//else {
-//pout << "DEBUG @ CreDes::build: for null component" << endl;
-//  abort();  
-//}
+  else if(dmrginp.calc_type() != DMRG_LRT) {
+    abort();
+  }
   dmrginp.makeopsT -> stop();
 }
 
@@ -354,7 +365,6 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDes::getworkingrepr
 
 void SpinAdapted::CreCre::build(const SpinBlock& b)
 {
-//pout << "DEBUG @ CreCre::build: called, state index = " << m_state_index << endl;
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -365,40 +375,55 @@ void SpinAdapted::CreCre::build(const SpinBlock& b)
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
-//pout << "DEBUG @ CreCre::build leftBlock = " << endl << *leftBlock << endl;
-//pout << "DEBUG @ CreCre::build rightBlock = " << endl << *rightBlock << endl;
 
-  if (leftBlock->has(CRE_CRE | m_state_index) && leftBlock->get_op_array(CRE_CRE | m_state_index).has(i, j))
+  opTypes lst_index, rst_index;
+
+//pout << "DEBUG @ CreCre::build: called, state index = " << m_state_index << " / i = " << i << ", j = " << j << endl;
+
+  // FIXME: suppose one of left and right is a dot block
+  //        i.e. if(lst_index && rst_index) -> makes erroneous behavior
+
+  lst_index = leftBlock->has(CRE_CRE | m_state_index) ? m_state_index : 0;
+  rst_index = rightBlock->has(CRE_CRE | m_state_index) ? m_state_index : 0;
+  if(m_state_index && !(lst_index | rst_index)) { dmrginp.makeopsT -> stop(); return; }
+
+  if (leftBlock->get_op_array(CRE_CRE | lst_index).has(i, j))
   {      
+    if(rst_index) return;
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE | m_state_index, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }
-  if (rightBlock->has(CRE_CRE | m_state_index) && rightBlock->get_op_array(CRE_CRE | m_state_index).has(i, j))
+  if (rightBlock->get_op_array(CRE_CRE | rst_index).has(i, j))
   {
+    if(lst_index) return;
     const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_CRE | m_state_index, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }  
-  if (leftBlock->has(CRE | m_state_index) && leftBlock->get_op_array(CRE | m_state_index).has(i))
+
+  lst_index = leftBlock->has(CRE | m_state_index) ? m_state_index : 0;
+  rst_index = rightBlock->has(CRE | m_state_index) ? m_state_index : 0;
+  if(m_state_index && !(lst_index | rst_index)) { dmrginp.makeopsT -> stop(); return; }
+
+  if (leftBlock->get_op_array(CRE | lst_index).has(i))
   {
-    const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE | m_state_index, getSpinQuantum(i), i);
-    const boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(j), j); // this is dot
+    const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE | lst_index, getSpinQuantum(i), i);
+    const boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE | rst_index, getSpinQuantum(j), j); // this is dot
     SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, 1.0);
   }
-  else if (rightBlock->has(CRE | m_state_index) && rightBlock->get_op_array(CRE | m_state_index).has(i))
+  else if (rightBlock->get_op_array(CRE | rst_index).has(i))
   {
-    const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE | m_state_index, getSpinQuantum(i), i);
-    const boost::shared_ptr<SparseMatrix> op2 = leftBlock->get_op_rep(CRE, getSpinQuantum(j), j);
+    const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE | rst_index, getSpinQuantum(i), i);
+    const boost::shared_ptr<SparseMatrix> op2 = leftBlock->get_op_rep(CRE | lst_index, getSpinQuantum(j), j);
     double parity = getCommuteParity(op1->get_deltaQuantum(), op2->get_deltaQuantum(), get_deltaQuantum());
     SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
-//else {
-//pout << "DEBUG @ CreCre::build: for null component" << endl;
-//  abort();  
-//}
+  else if (dmrginp.calc_type() != DMRG_LRT) {
+    abort();  
+  }
   dmrginp.makeopsT -> stop();
 }
 
@@ -455,7 +480,6 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCre::getworkingrepr
 
 void SpinAdapted::CreDesComp::build(const SpinBlock& b)
 {
-//pout << "DEBUG @ CreDesComp::build: called, state index = " << m_state_index << endl;
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -470,8 +494,8 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
-//pout << "DEBUG @ CreDesComp::build leftBlock = " << endl << *leftBlock << endl;
-//pout << "DEBUG @ CreDesComp::build rightBlock = " << endl << *rightBlock << endl;
+
+//pout << "DEBUG @ CreDesComp::build: called, state index = " << m_state_index << " / i = " << i << ", j = " << j << endl;
 
   if (leftBlock->has(CRE_DESCOMP | m_state_index) && leftBlock->get_op_array(CRE_DESCOMP | m_state_index).has(i, j))
   {      
@@ -488,6 +512,9 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
 
+  // FIXME: suppose one of left and right is a dot block
+  //        i.e. if(lst_index && rst_index) -> makes erroneous behavior
+
   opTypes lst_index = leftBlock->has(CRE | m_state_index) ? m_state_index : 0;
   opTypes rst_index = rightBlock->has(CRE | m_state_index) ? m_state_index : 0;
   if(m_state_index && !(lst_index | rst_index)) { dmrginp.makeopsT -> stop(); return; }
@@ -502,24 +529,29 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
       TensorOp CD2 = CK.product(DL, spin, sym.getirrep());
       if (!CD2.empty) {
         double scaleV = calcCompfactor(CD1, CD2, CD,*(b.get_twoInt()));
+        if (fabs(scaleV) > dmrginp.screen_tol()) { // FIXME: does it work ?
+
+        boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE | lst_index, getSpinQuantum(k), k);
+        Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE | get_transbit(rst_index), getSpinQuantum(l), l));
         
-        boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE+lst_index, getSpinQuantum(k), k);
-        Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE+get_transbit(rst_index), getSpinQuantum(l), l));
-        
-        if (fabs(scaleV) > dmrginp.screen_tol())
+//      if (fabs(scaleV) > dmrginp.screen_tol())
           SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV);
+        }
       }
 
       CK=TensorOp(l,1); DL=TensorOp(k,-1);      
       CD2 = CK.product(DL, spin, sym.getirrep());
       if (!CD2.empty) {
         double scaleV = calcCompfactor(CD1, CD2, CD,*(b.get_twoInt()));
-        boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE+rst_index, getSpinQuantum(l), l);
-        Transposeview top2 = Transposeview(leftBlock->get_op_rep(CRE+get_transbit(lst_index), getSpinQuantum(k), k));
+        if (fabs(scaleV) > dmrginp.screen_tol()) { // FIXME: does it work ?
+
+        boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE | rst_index, getSpinQuantum(l), l);
+        Transposeview top2 = Transposeview(leftBlock->get_op_rep(CRE | get_transbit(lst_index), getSpinQuantum(k), k));
 
         double parity = getCommuteParity(op1->get_deltaQuantum(), top2.get_deltaQuantum(), get_deltaQuantum());
-        if (fabs(scaleV) > dmrginp.screen_tol())
+//      if (fabs(scaleV) > dmrginp.screen_tol())
           SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV*parity);
+        }
       }
     }
   dmrginp.makeopsT -> stop();
@@ -590,7 +622,6 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesComp::getworking
 
 void SpinAdapted::DesDesComp::build(const SpinBlock& b)
 {
-//pout << "DEBUG @ DesDesComp::build: called, state index = " << m_state_index << endl;
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -605,8 +636,8 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
-//pout << "DEBUG @ DesDesComp::build leftBlock = " << endl << *leftBlock << endl;
-//pout << "DEBUG @ DesDesComp::build rightBlock = " << endl << *rightBlock << endl;
+
+//pout << "DEBUG @ DesDesComp::build: called, state index = " << m_state_index << " / i = " << i << ", j = " << j << endl;
 
   if (leftBlock->has(DES_DESCOMP | m_state_index) && leftBlock->get_op_array(DES_DESCOMP | m_state_index).has(i, j))
   {      
@@ -623,8 +654,11 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
   }  
 
-  opTypes lst_index = leftBlock->has(CRE+get_transbit(m_state_index)) ? m_state_index : 0;
-  opTypes rst_index = rightBlock->has(CRE+get_transbit(m_state_index)) ? m_state_index : 0;
+  // FIXME: suppose one of left and right is a dot block
+  //        i.e. if(lst_index && rst_index) -> makes erroneous behavior
+
+  opTypes lst_index = leftBlock->has(CRE | m_state_index) ? get_transbit(m_state_index) : 0;
+  opTypes rst_index = rightBlock->has(CRE | m_state_index) ? get_transbit(m_state_index) : 0;
   if(m_state_index && !(lst_index | rst_index)) { dmrginp.makeopsT -> stop(); return; }
 
   for (int kx = 0; kx < leftBlock->get_sites().size(); ++kx)
@@ -642,15 +676,17 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
       DD2 = DL.product(DK, spin, sym.getirrep(), k==l);
       double scaleV2 = calcCompfactor(CC1, DD2, DD, *(b.get_twoInt()));
 
-      Transposeview top1 = Transposeview(leftBlock->get_op_rep(CRE+lst_index, getSpinQuantum(k), k));
-      Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE+rst_index, getSpinQuantum(l), l));
+      if (fabs(scaleV) > dmrginp.screen_tol() || fabs(scaleV2) > dmrginp.screen_tol()) { // does it work ?
 
-      double parity = getCommuteParity(top1.get_deltaQuantum(), top2.get_deltaQuantum(), get_deltaQuantum());      
+      Transposeview top1 = Transposeview(leftBlock->get_op_rep(CRE | lst_index, getSpinQuantum(k), k));
+      Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE | rst_index, getSpinQuantum(l), l));
+
+      double parity = getCommuteParity(top1.get_deltaQuantum(), top2.get_deltaQuantum(), get_deltaQuantum());
       scaleV += parity*scaleV2;
 
-      if (fabs(scaleV) > dmrginp.screen_tol())
+//    if (fabs(scaleV) > dmrginp.screen_tol())
         SpinAdapted::operatorfunctions::TensorProduct(leftBlock, top1, top2, &b, &(b.get_stateInfo()), *this, scaleV);
-
+      }
     }
   dmrginp.makeopsT -> stop();
 
@@ -728,8 +764,6 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::DesDesComp::getworking
 
 void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
 {
-//pout << "DEBUG @ CreCreDesComp::build: called, state index = " << m_state_index << endl;
-//pout << "DEBUG @ CreCreDesComp::build: build for " << endl << b << endl;
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -738,29 +772,25 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
   bool hack = false;
   if (b.get_sites().size() == 3 && k==4) hack = true;
 
-
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
-//pout << "DEBUG @ CreCreDesComp::build: leftBlock: " << endl << *leftBlock  << endl;
-//pout << "DEBUG @ CreCreDesComp::build: rightBlock: " << endl << *rightBlock << endl;
 
   SpinBlock* loopBlock, *otherBlock;
   assignloopblock(loopBlock, otherBlock, leftBlock, rightBlock);
 
+//pout << "DEBUG @ CreCreDesComp::build: called, state index = " << m_state_index << " / k = " << k << endl;
+
   if (leftBlock->has(CRE_CRE_DESCOMP | m_state_index) && leftBlock->get_op_array(CRE_CRE_DESCOMP | m_state_index).has(k))
   {      
-//pout << "DEBUG @ CreCreDesComp::build: CreComp[" << m_state_index << "]_l x 1_r" << endl;
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DESCOMP | m_state_index, deltaQuantum, k);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   if (rightBlock->get_sites().size() == 0) {
-//pout << "DEBUG @ CreCreDesComp::build: special case" << endl;
     //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
     return;
   }
   if (rightBlock->has(CRE_CRE_DESCOMP | m_state_index) && rightBlock->get_op_array(CRE_CRE_DESCOMP | m_state_index).has(k))
   {
-//pout << "DEBUG @ CreCreDesComp::build: 1_l x CreComp[" << m_state_index << "]_r" << endl;
     const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_CRE_DESCOMP | m_state_index, deltaQuantum, k);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
   }  
@@ -788,19 +818,19 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
     {
       if(otherBlock->has(CRE_DESCOMP+ost_index)) {
         f = boost::bind(&opxop::generic::cxcdcomp, otherBlock, _1, &b, k, this, 1.0, ost_index); 
-        for_all_singlethread(loopBlock->get_op_array(CRE+lst_index), f);
+        for_all_singlethread(loopBlock->get_op_array(CRE | lst_index), f);
       }
       if(otherBlock->has(DES_DESCOMP+ost_index)) {
         f = boost::bind(&opxop::generic::dxcccomp, otherBlock, _1, &b, k, this, 2.0, ost_index);
-        for_all_singlethread(loopBlock->get_op_array(CRE+get_transbit(lst_index)), f);
+        for_all_singlethread(loopBlock->get_op_array(CRE | get_transbit(lst_index)), f);
       }
-      if(loopBlock->has(CRE_DESCOMP+lst_index)) {
+      if(loopBlock->has(CRE_DESCOMP | lst_index)) {
         f = boost::bind(&opxop::generic::cxcdcomp, loopBlock, _1, &b, k, this, 1.0, lst_index); 
         for_all_singlethread(otherBlock->get_op_array(CRE+ost_index), f);
       }
-      if(loopBlock->has(DES_DESCOMP+lst_index)) {
+      if(loopBlock->has(DES_DESCOMP | lst_index)) {
         f = boost::bind(&opxop::generic::dxcccomp, loopBlock, _1, &b, k, this, 2.0, lst_index);
-        for_all_singlethread(otherBlock->get_op_array(CRE+get_transbit(ost_index)), f);
+        for_all_singlethread(otherBlock->get_op_array(CRE | get_transbit(ost_index)), f);
       }
     }
 //  else
@@ -905,21 +935,18 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreDesComp::getwork
 
 void SpinAdapted::Ham::build(const SpinBlock& b)
 {
-//pout << "DEBUG @ Ham::build: called, state index = " << m_state_index << endl;
-//pout << "DEBUG @ Ham::build: build for " << endl << b << endl;
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
-//pout << "DEBUG @ Ham::build: leftBlock: " << endl << *leftBlock  << endl;
-//pout << "DEBUG @ Ham::build: rightBlock: " << endl << *rightBlock << endl;
 
   SpinBlock* loopBlock, *otherBlock;
   assignloopblock(loopBlock, otherBlock, leftBlock, rightBlock);
   //loopBlock = rightBlock; otherBlock = leftBlock; //**********
 
+//pout << "DEBUG @ Ham::build: called, state index = " << m_state_index << endl;
 
 #ifndef SERIAL
   boost::mpi::communicator world;
@@ -935,13 +962,11 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
   initiateMultiThread(this, op_array, op_distributed, MAX_THRD);
 
   if (leftBlock->has(HAM | m_state_index)) {
-//pout << "DEBUG @ Ham::build: Ham[" << m_state_index << "]_l x 1_r" << endl;
     boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_rep(HAM | m_state_index, deltaQuantum);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
 
   if (rightBlock->get_sites().size() == 0) {
-//pout << "DEBUG @ Ham::build: special case" << endl;
     //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
     accumulateMultiThread(this, op_array, op_distributed, MAX_THRD);
     dmrginp.makeopsT -> stop();    
@@ -949,7 +974,6 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
   }
 
   if (rightBlock->has(HAM | m_state_index)) {
-//pout << "DEBUG @ Ham::build: 1_l x Ham[" << m_state_index << "]_r" << endl;
     boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(HAM | m_state_index, deltaQuantum);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);  
   }
@@ -959,7 +983,6 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
 
   if(!m_state_index)
   {
-//pout << "DEBUG @ Ham::build: Cre[0]_l x Des[0]_r" << endl;
     Functor f;
     op_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? op_array : op_distributed;
     f = boost::bind(&opxop::cxcddcomp, leftBlock, _1, &b, op_add); 
@@ -971,17 +994,16 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
   }
   if(m_state_index && (lst_index | rst_index))
   {
-//pout << "DEBUG @ Ham::build: Cre[" << lst_index << "]_l x Des[" << rst_index << "]_r" << endl;
     Functor2 f;
-    if(leftBlock->has(CRE_CRE_DESCOMP+lst_index)) {
-      op_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP+lst_index).is_local() ? op_array : op_distributed;
+    if(leftBlock->has(CRE_CRE_DESCOMP | lst_index)) {
+      op_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP | lst_index).is_local() ? op_array : op_distributed;
       f = boost::bind(&opxop::generic::cxcddcomp, leftBlock, _1, _2, &b, op_add, lst_index); 
-      for_all_multithread(rightBlock->get_op_array(CRE+rst_index), rightBlock->get_op_array(CRE+get_transbit(rst_index)), f);
+      for_all_multithread(rightBlock->get_op_array(CRE | rst_index), rightBlock->get_op_array(CRE | get_transbit(rst_index)), f);
     }
-    if(rightBlock->has(CRE_CRE_DESCOMP+rst_index)) {
-      op_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP+rst_index).is_local() ? op_array : op_distributed;
+    if(rightBlock->has(CRE_CRE_DESCOMP | rst_index)) {
+      op_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP | rst_index).is_local() ? op_array : op_distributed;
       f = boost::bind(&opxop::generic::cxcddcomp, rightBlock, _1, _2, &b, op_add, rst_index); 
-      for_all_multithread(leftBlock->get_op_array(CRE+lst_index), leftBlock->get_op_array(CRE+get_transbit(lst_index)), f);  
+      for_all_multithread(leftBlock->get_op_array(CRE | lst_index), leftBlock->get_op_array(CRE | get_transbit(lst_index)), f);  
     }
   }
 
@@ -1004,20 +1026,20 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
       rst_index = otherBlock->has(CRE_DESCOMP | m_state_index) ? m_state_index : 0;
       if(lst_index | rst_index)
       {
-        op_add =  (otherBlock->get_op_array(CRE_DESCOMP+rst_index).is_local() &&
-                   loopBlock->get_op_array(CRE_DES+lst_index).is_local())? op_array : op_distributed;
+        op_add =  (otherBlock->get_op_array(CRE_DESCOMP | rst_index).is_local() &&
+                   loopBlock->get_op_array(CRE_DES | lst_index).is_local())? op_array : op_distributed;
         f = boost::bind(&opxop::generic::cdxcdcomp, otherBlock, _1, _2, &b, op_add, rst_index);
-        for_all_multithread(loopBlock->get_op_array(CRE_DES+lst_index), loopBlock->get_op_array(CRE_DES+get_transbit(lst_index)), f);
+        for_all_multithread(loopBlock->get_op_array(CRE_DES | lst_index), loopBlock->get_op_array(CRE_DES | get_transbit(lst_index)), f);
       }
     
       lst_index = loopBlock->has(CRE_CRE | m_state_index) ? m_state_index : 0;
       rst_index = otherBlock->has(DES_DESCOMP | m_state_index) ? m_state_index : 0;
       if(lst_index | rst_index)
       {
-        op_add =  (otherBlock->get_op_array(DES_DESCOMP+rst_index).is_local() &&
-                   loopBlock->get_op_array(CRE_CRE+lst_index).is_local())? op_array : op_distributed;
+        op_add =  (otherBlock->get_op_array(DES_DESCOMP | rst_index).is_local() &&
+                   loopBlock->get_op_array(CRE_CRE | lst_index).is_local())? op_array : op_distributed;
         f = boost::bind(&opxop::generic::ddxcccomp, otherBlock, _1, _2, &b, op_add, rst_index);
-        for_all_multithread(loopBlock->get_op_array(CRE_CRE+lst_index), loopBlock->get_op_array(CRE_CRE+get_transbit(lst_index)), f);
+        for_all_multithread(loopBlock->get_op_array(CRE_CRE | lst_index), loopBlock->get_op_array(CRE_CRE | get_transbit(lst_index)), f);
       }
     }
   }

@@ -269,7 +269,7 @@ int calldmrg(char* input, char* output)
 
     break;
 
-  // Run into DMRG Linear-Response Theory for Excited State
+  // DMRG Linear-Response Theory for Excited State
   case (DMRG_LRT):
     if (dmrginp.algorithm_method() == TWODOT) {
       pout << "\t\t\t ERROR: DMRG-LRT not allowed with twodot algorithm" << endl;
@@ -280,22 +280,15 @@ int calldmrg(char* input, char* output)
       abort();
     }
 
-    // TODO: followings are just copied from other calc_type().
-    //       figure out all necessary setup before DMRG-LRT
-//  if (RESTART && !FULLRESTART)
-//    restart(sweep_tol, reset_iter);
     if (FULLRESTART) {
-pout << "DEBUG @ calldmrg: fullrestart for DMRG-LRT calculation" << endl;
       fullrestartGenblock();
       reset_iter = true;
       sweepParams.restorestate(direction, restartsize);
       sweepParams.calc_niter();
       sweepParams.savestate(direction, restartsize);
-//    restart(sweep_tol, reset_iter);
     }
 
-pout << "DEBUG @ calldmrg: calling DMRG-LRT calculation" << endl;
-    // DMRG-LRT
+    // calling DMRG-LRT
     dmrglrt(sweep_tol);
 
     break;
@@ -510,9 +503,7 @@ void dmrglrt(double sweep_tol)
     sweepParams.set_restart_iter() = 0;
   }
   
-pout << "####################################################################################################" << endl;
-pout << "DEBUG @ dmrglrt: calling LRT::do_one to set guesses, direction = " << (direction ? "forward" : "backward") << endl;
-pout << "####################################################################################################" << endl;
+  pout << "\t\t\t computing guesses from Krylov subspace " << endl;
   Sweep::LRT::do_one(sweepParams, true, direction, false, 0);
 
   double max_rnorm = 1.0e8;
@@ -523,9 +514,6 @@ pout << "#######################################################################
     if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
       break;
 
-pout << "####################################################################################################" << endl;
-pout << "DEBUG @ dmrglrt: calling LRT::do_one, direction = " << (direction ? "forward" : "backward") << endl;
-pout << "####################################################################################################" << endl;
     max_rnorm = Sweep::LRT::do_one(sweepParams, false, direction, false, 0);
   }
 }
