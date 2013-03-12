@@ -23,7 +23,6 @@ void SpinAdapted::opxop::generic::cdxcdcomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
  const SpinBlock* b, SparseMatrix* o, opTypes state_index_ij)
 {
-//pout << "DEBUG @ opxop::generic::cdxcdcomp(b): called, state index = " << state_index_ij << endl;
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();    
@@ -76,7 +75,6 @@ void SpinAdapted::opxop::generic::ddxcccomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
  const SpinBlock* b, SparseMatrix* o, opTypes state_index_ij)
 {
-//pout << "DEBUG @ opxop::generic::ddxcccomp(b): called, state index = " << state_index_ij << endl;
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
@@ -128,7 +126,6 @@ void SpinAdapted::opxop::generic::cxcddcomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
  const SpinBlock* b, SparseMatrix* o, opTypes state_index_ij)
 {
-//pout << "DEBUG @ opxop::generic::cxcddcomp(b): called, state index = " << state_index_ij << endl;
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
@@ -180,7 +177,6 @@ void SpinAdapted::opxop::generic::cdxcdcomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
  const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q, opTypes state_index_ij)
 {
-//pout << "DEBUG @ opxop::generic::cdxcdcomp(v): called, state index = " << state_index_ij << endl;
   int ilock = omp_get_thread_num();
   int numthrds = 1; //MAX_THRD;
   SpinQuantum hq(0,0,IrrepSpace(0));
@@ -226,7 +222,6 @@ void SpinAdapted::opxop::generic::ddxcccomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
  const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q, opTypes state_index_ij)
 {
-//pout << "DEBUG @ opxop::generic::ddxcccomp(v): called, state index = " << state_index_ij << endl;
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   SpinQuantum hq(0,0,IrrepSpace(0));
@@ -276,7 +271,6 @@ void SpinAdapted::opxop::generic::cxcddcomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
  const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q, opTypes state_index_ij)
 {
-//pout << "DEBUG @ opxop::generic::cxcddcomp(v): called, state index = " << state_index_ij << endl;
   int ilock = omp_get_thread_num();
   int numthrds = 1;//MAX_THRD;
   SpinQuantum hq(0,0,IrrepSpace(0));
@@ -330,7 +324,6 @@ void SpinAdapted::opxop::generic::cxcdcomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1,
  const SpinBlock* b, int I, SparseMatrix* o, double scale, opTypes state_index_ij)
 {
-//pout << "DEBUG @ opxop::generic::cxcdcomp(b): called, state index = " << state_index_ij << endl;
   int ilock = 0;//omp_get_thread_num();
   int numthrds = 1;
   const SpinBlock* loopblock = (otherBlock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
@@ -397,7 +390,6 @@ void SpinAdapted::opxop::generic::dxcccomp
        std::vector<boost::shared_ptr<SparseMatrix> >& opvec1_trans,
  const SpinBlock* b, int K, SparseMatrix* o, double scale, opTypes state_index_ij)
 {  
-//pout << "DEBUG @ opxop::generic::dxcccomp(b): called, state index = " << state_index_ij << endl;
   int ilock = 0;//omp_get_thread_num();
   int numthrds = 1;
   //int numthrds = dmrginp.thrds_per_node()[mpigetrank()];

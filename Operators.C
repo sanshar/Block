@@ -182,8 +182,6 @@ void SpinAdapted::Cre::build(const SpinBlock& b)
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
 
-//pout << "DEBUG @ Cre::build: called, state index = " << m_state_index << " / i = " << i << endl;
-
   if (leftBlock->has(CRE | m_state_index) && leftBlock->get_op_array(CRE | m_state_index).has(i))
   {
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE | m_state_index, deltaQuantum, i);
@@ -267,8 +265,6 @@ void SpinAdapted::CreDes::build(const SpinBlock& b)
   SpinBlock* rightBlock = b.get_rightBlock();
 
   opTypes lst_index, rst_index;
-
-//pout << "DEBUG @ CreDes::build: called, state index = " << m_state_index << " / i = " << i << ", j = " << j << endl;
 
   // FIXME: suppose one of left and right is a dot block
   //        i.e. if(lst_index && rst_index) -> makes erroneous behavior
@@ -377,8 +373,6 @@ void SpinAdapted::CreCre::build(const SpinBlock& b)
   SpinBlock* rightBlock = b.get_rightBlock();
 
   opTypes lst_index, rst_index;
-
-//pout << "DEBUG @ CreCre::build: called, state index = " << m_state_index << " / i = " << i << ", j = " << j << endl;
 
   // FIXME: suppose one of left and right is a dot block
   //        i.e. if(lst_index && rst_index) -> makes erroneous behavior
@@ -494,8 +488,6 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
-
-//pout << "DEBUG @ CreDesComp::build: called, state index = " << m_state_index << " / i = " << i << ", j = " << j << endl;
 
   if (leftBlock->has(CRE_DESCOMP | m_state_index) && leftBlock->get_op_array(CRE_DESCOMP | m_state_index).has(i, j))
   {      
@@ -637,8 +629,6 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
 
-//pout << "DEBUG @ DesDesComp::build: called, state index = " << m_state_index << " / i = " << i << ", j = " << j << endl;
-
   if (leftBlock->has(DES_DESCOMP | m_state_index) && leftBlock->get_op_array(DES_DESCOMP | m_state_index).has(i, j))
   {      
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(DES_DESCOMP | m_state_index, deltaQuantum, i,j);
@@ -777,8 +767,6 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
 
   SpinBlock* loopBlock, *otherBlock;
   assignloopblock(loopBlock, otherBlock, leftBlock, rightBlock);
-
-//pout << "DEBUG @ CreCreDesComp::build: called, state index = " << m_state_index << " / k = " << k << endl;
 
   if (leftBlock->has(CRE_CRE_DESCOMP | m_state_index) && leftBlock->get_op_array(CRE_CRE_DESCOMP | m_state_index).has(k))
   {      
@@ -945,8 +933,6 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
   SpinBlock* loopBlock, *otherBlock;
   assignloopblock(loopBlock, otherBlock, leftBlock, rightBlock);
   //loopBlock = rightBlock; otherBlock = leftBlock; //**********
-
-//pout << "DEBUG @ Ham::build: called, state index = " << m_state_index << endl;
 
 #ifndef SERIAL
   boost::mpi::communicator world;

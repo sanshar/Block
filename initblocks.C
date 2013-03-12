@@ -223,9 +223,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock
       newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops, nroots);
       newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
       
-//pout << "DEBUG @ InitNewEnvironmentBlock: calling BuildSumBlock" << endl;
       newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, environmentDot);
-//pout << "DEBUG @ InitNewEnvironmentBlock: passed BuildSumBlock" << endl;
       if (dmrginp.outputlevel() > 0) {
 	pout << "\t\t\t Environment block " << endl << environment << endl;
 	environment.printOperatorSummary();
