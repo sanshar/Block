@@ -70,19 +70,25 @@ void SpinAdapted::InitBlocks::LRT::InitNewEnvironmentBlock
   if (!dot_with_sys || !onedot)
   {
     dmrginp.datatransfer -> start();
+    // broadcast additional compops (0-th)
     environment.addAdditionalCompOps();
+    // broadcast additional compops (1-st)
+    for(int i = 1; i < nroots; ++i) {
+      environment.addAdditionalCompOps(0, i);
+      environment.addAdditionalCompOps(i, 0);
+    }
     dmrginp.datatransfer -> stop();
 
-      newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops, nroots);
-      newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
-      
-      newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, environmentDot);
-      if (dmrginp.outputlevel() > 0) {
-        pout << "\t\t\t Environment block " << endl << environment << endl;
-        environment.printOperatorSummary();
-        pout << "\t\t\t NewEnvironment block " << endl << newEnvironment << endl;
-        newEnvironment.printOperatorSummary();
-      }
+    newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops, nroots);
+    newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
+    
+    newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, environmentDot);
+    if (dmrginp.outputlevel() > 0) {
+      pout << "\t\t\t Environment block " << endl << environment << endl;
+      environment.printOperatorSummary();
+      pout << "\t\t\t NewEnvironment block " << endl << newEnvironment << endl;
+      newEnvironment.printOperatorSummary();
+    }
   }
   else  if (dmrginp.outputlevel() > 0) {
     pout << "\t\t\t Environment block " << endl << newEnvironment << endl;

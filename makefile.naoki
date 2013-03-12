@@ -13,7 +13,7 @@ BOOSTLIB = -L/home/naokin/boost/1.52.0/lib/ -lboost_serialization -lboost_system
 LAPACKBLAS = -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 #use these variable to set if we will use mpi or not 
-USE_MPI = no
+USE_MPI = yes
 
 AR=ar
 ARFLAGS=-qs

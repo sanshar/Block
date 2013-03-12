@@ -58,17 +58,11 @@ void SpinBlock::RenormaliseFrom_lrt
   dmrginp.solvewf -> start();
   LRT::solve_wavefunction(wave_solutions, energies, rnorm, big, guesswavetype, onedot, dot_with_sys, nroots, mroots, kroots);
 
-// DEBUG
-//pout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-" << endl;
-//pout << "\t\t Printing Wavefunctions: after solve_wavefunction " << endl;
-//pout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-" << endl;
-//for(int i = 0; i < wave_solutions.size(); ++i) {
-//pout << "\t\t\t State = " << i << endl;
-//pout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-" << endl;
-//pout << wave_solutions[i] << endl;
-//pout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-" << endl;
-//}
-// DEBUG
+  // specialize to use dot with environment at last site (necessary for parallel run)
+  if(last_site) {
+    LRT::multiply_h_left davidson_f(big, onedot);
+    LRT::TDA::compute_matrix_elements(wave_solutions, davidson_f, h_subspace, s_subspace, lroots);
+  }
 
   dmrginp.solvewf -> stop();
   SpinBlock newsystem;
@@ -152,21 +146,11 @@ void SpinBlock::RenormaliseFrom_lrt
     }
   }
 
-// DEBUG
-//pout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-" << endl;
-//pout << "\t\t Printing Projected Wavefunctions: before compute_matrix_elements " << endl;
-//pout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-" << endl;
-//for(int i = 0; i < projected_wave_solutions.size(); ++i) {
-//pout << "\t\t\t State = " << i << endl;
-//pout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-" << endl;
-//pout << projected_wave_solutions[i] << endl;
-//pout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-" << endl;
-//}
-// DEBUG
-
   // might be used the same subroutine for both TDA and RPA ?
-  LRT::multiply_h_left davidson_f(newbig, onedot);
-  LRT::TDA::compute_matrix_elements(projected_wave_solutions, davidson_f, h_subspace, s_subspace, lroots);
+  if(!last_site) {
+    LRT::multiply_h_left davidson_f(newbig, onedot);
+    LRT::TDA::compute_matrix_elements(projected_wave_solutions, davidson_f, h_subspace, s_subspace, lroots);
+  }
 
   if(mpigetrank() == 0) {
     for(int i = 1; i < lroots; ++i) {
@@ -185,21 +169,6 @@ void SpinBlock::RenormaliseFrom_lrt
 //    LRT::project_onto_rejectedspace(wave_solutions[i], rotateMatrices[0], dot_with_sys, projected_wave_solutions[i]);
     }
   }
-
-// DEBUG
-//pout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-" << endl;
-//pout << "\t\t Printing Rotation Matrices " << endl;
-//pout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-" << endl;
-//for(int i = 0; i < rotateMatrices.size(); ++i) {
-//pout << "\t\t\t State = " << i << endl;
-//pout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-" << endl;
-//for(int q = 0; q < rotateMatrices[i].size(); ++q) {
-//pout << "quantum = " << q << endl;
-//pout << rotateMatrices[i][q] << endl;
-//}
-//pout << "+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-" << endl;
-//}
-// DEBUG
 
 #ifndef SERIAL
   mpi::communicator world;

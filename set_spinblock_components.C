@@ -28,6 +28,7 @@ void SpinBlock::setstoragetype(Storagetype st)
 //  if (has(CRE_CRE_DESCOMP))
 //    set_op_array(CRE_CRE_DESCOMP).set_local() = true;
     for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+      if((it->first & OP_TYPE_MASK) == HAM) continue;
       it->second->set_local() = true;
 //    set_op_array(it->first).set_local() = true;
     }
@@ -48,6 +49,7 @@ void SpinBlock::setstoragetype(Storagetype st)
 //  if (has(CRE_CRE_DESCOMP))
 //    set_op_array(CRE_CRE_DESCOMP).set_local() = false;
     for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+      if((it->first & OP_TYPE_MASK) == HAM) continue;
       it->second->set_local() = false;
 //    set_op_array(it->first).set_local() = false;
     }

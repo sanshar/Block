@@ -87,7 +87,13 @@ void SpinAdapted::Sweep::LRT::BlockAndDecimate
   //before halfway put the sysdot with system otherwise with environment
   if (sweepParams.get_onedot()) {
     dmrginp.datatransfer -> start();
+    // broadcast additional compops (0-th)
     system.addAdditionalCompOps();
+    // broadcast additional compops (1-st)
+    for(int i = 1; i < lroots; ++i) {
+      system.addAdditionalCompOps(0, i);
+      system.addAdditionalCompOps(i, 0);
+    }
     dmrginp.datatransfer -> stop();
     if (dot_with_sys) {
       InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(),
@@ -208,12 +214,10 @@ double SpinAdapted::Sweep::LRT::do_one
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
   std::vector<double> finalEnergy(nroots, 0.);
   std::vector<double> finalEnergy_spins(nroots, 0.);
-  double finalError = 0.;
-  if (restart) {
-    finalEnergy[0]      = sweepParams.get_lowest_energy()[0];
-    finalEnergy_spins[0]= sweepParams.get_lowest_energy()[0];
-    finalError = sweepParams.get_lowest_error();
-  }
+//double finalError = 0.;
+  finalEnergy[0] = sweepParams.get_lowest_energy()[0];
+  finalEnergy_spins.resize(nroots, sweepParams.get_lowest_energy()[0]);
+//  finalError = sweepParams.get_lowest_error();
 
   //====================================================================================================
   // Load and solve generalized eigenvalue problem: H x = E S x
@@ -232,25 +236,30 @@ double SpinAdapted::Sweep::LRT::do_one
   // here, warmUp is used to detect if it's the initial sweep
   // guess wavefunctions will be computed from Krylov subspace
   if(mpigetrank() == 0) {
-    eigenvalues[0] = 0.0; // <-- 0-th energy, but not necessary (TODO)
+    eigenvalues[0] = finalEnergy[0]; // <-- 0-th energy, but not necessary (TODO)
     if(!warmUp) {
       SpinAdapted::LRT::LoadDavidsonInfo(h_subspace, s_subspace, mroots, i_conv_root, deflation_sweep);
-//pout << "DEBUG @ Sweep::LRT::do_one: printing subspace H" << endl;
-//      for(int i = 1; i < mroots; ++i) {
-//        pout << "\t\t\t ";
-//        for(int j = 1; j < mroots; ++j) {
-//          pout << setw(16) << fixed << setprecision(8) << h_subspace(i, j);
-//        }
-//        pout << endl;
-//      }
-//pout << "DEBUG @ Sweep::LRT::do_one: printing subspace S" << endl;
-//      for(int i = 1; i < mroots; ++i) {
-//        pout << "\t\t\t ";
-//        for(int j = 1; j < mroots; ++j) {
-//          pout << setw(16) << fixed << setprecision(8) << s_subspace(i, j);
-//        }
-//        pout << endl;
-//      }
+
+      if(dmrginp.outputlevel() > 0) {
+        pout << "\t\t\t printing subspace hamiltonian matrix" << endl;
+        for(int i = 1; i < mroots; ++i) {
+          pout << "\t\t\t ";
+          for(int j = 1; j < mroots; ++j) {
+            pout << setw(16) << fixed << setprecision(8) << h_subspace(i, j);
+          }
+          pout << endl;
+        }
+        pout << endl;
+        pout << "\t\t\t printing subspace overlap matrix" << endl;
+        for(int i = 1; i < mroots; ++i) {
+          pout << "\t\t\t ";
+          for(int j = 1; j < mroots; ++j) {
+            pout << setw(16) << fixed << setprecision(8) << s_subspace(i, j);
+          }
+          pout << endl;
+        }
+        pout << endl;
+      }
 
       DiagonalMatrix ritzval;
       diagonalise(h_subspace, s_subspace, ritzval, alpha);
@@ -327,7 +336,6 @@ double SpinAdapted::Sweep::LRT::do_one
     syssites = system.get_sites();
   }
 
-// --  WORKING HERE  --
   if (restart)
   {
     if (forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)
@@ -335,7 +343,6 @@ double SpinAdapted::Sweep::LRT::do_one
     if (!forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
       dot_with_sys = false;
   }
-// -- -- -- -- -- -- --
 
   if (dmrginp.outputlevel() > 0)
     mcheck("at the very start of sweep");
@@ -391,25 +398,25 @@ double SpinAdapted::Sweep::LRT::do_one
     BlockAndDecimate (sweepParams, system, newSystem, eigenvalues, rnorm, h_subspace, s_subspace, alpha,
                       false, dot_with_sys, nroots, mroots, i_conv_root, deflation_sweep);
 
-    if(dmrginp.outputlevel() > 0) {
-
-    pout << "\t\t\t printing subspace hamiltonian matrix" << endl;
-    for(int i = 1; i < lroots; ++i) {
-      pout << "\t\t\t ";
-      for(int j = 1; j < lroots; ++j) {
-        pout << setw(16) << fixed << setprecision(8) << h_subspace(i, j);
+    if(dmrginp.outputlevel() > 1) {
+      pout << "\t\t\t printing subspace hamiltonian matrix" << endl;
+      for(int i = 1; i < lroots; ++i) {
+        pout << "\t\t\t ";
+        for(int j = 1; j < lroots; ++j) {
+          pout << setw(16) << fixed << setprecision(8) << h_subspace(i, j);
+        }
+        pout << endl;
       }
-      pout << endl << endl;
-    }
-    pout << "\t\t\t printing subspace overlap matrix" << endl;
-    for(int i = 1; i < lroots; ++i) {
-      pout << "\t\t\t ";
-      for(int j = 1; j < lroots; ++j) {
-        pout << setw(16) << fixed << setprecision(8) << s_subspace(i, j);
+      pout << endl;
+      pout << "\t\t\t printing subspace overlap matrix" << endl;
+      for(int i = 1; i < lroots; ++i) {
+        pout << "\t\t\t ";
+        for(int j = 1; j < lroots; ++j) {
+          pout << setw(16) << fixed << setprecision(8) << s_subspace(i, j);
+        }
+        pout << endl;
       }
-      pout << endl << endl;
-    }
-
+      pout << endl;
     }
 
     system = newSystem;
@@ -454,14 +461,15 @@ double SpinAdapted::Sweep::LRT::do_one
     SpinAdapted::LRT::SaveDavidsonInfo(h_subspace, s_subspace, mroots, i_conv_root, deflation_sweep);
   }
 
-  for(int j = 1; j < nroots; ++j) {
+  for(int j = 0; j < nroots && !warmUp; ++j) {
+//for(int j = 1; j < nroots; ++j) {
     pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
          << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << fixed << setprecision(8) << finalEnergy[j]+dmrginp.get_coreenergy()
          << " ( R-norm  " << scientific << setprecision(3) << rnorm[j] << " ) " << endl;
   }
 
-  pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
-  sweepParams.set_largest_dw() = finalError;
+//pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
+//sweepParams.set_largest_dw() = finalError;
   pout << "\t\t\t ============================================================================ " << endl;
 
   // update the static number of iterations
@@ -483,6 +491,14 @@ double SpinAdapted::Sweep::LRT::do_one
     fclose(f);
   }
 
-  return *max_element(rnorm.begin()+1, rnorm.end());
+  double max_rnorm;
+  if(mpigetrank() == 0) {
+    max_rnorm = *max_element(rnorm.begin()+1, rnorm.end());
+  }
+#ifndef SERIAL
+  mpi::broadcast(world, max_rnorm, 0);
+#endif
+
+  return max_rnorm;
 }
 

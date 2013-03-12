@@ -122,6 +122,7 @@ void SpinAdapted::LRT::TDA::solve_correction_equation
   // compute sigma vectors
 
   vector<Wavefunction> sgvx(mroots);
+  vector<Wavefunction> sgv0(mroots);
 
   for(int i = 1; i < mroots; ++i) {
     Wavefunction  psix_i;
@@ -130,10 +131,17 @@ void SpinAdapted::LRT::TDA::solve_correction_equation
     Wavefunction  sgvx_i;
     Wavefunction *sgvx_ptr = &sgvx_i;
 
+    Wavefunction  sgv0_i;
+    Wavefunction *sgv0_ptr = &sgv0_i;
+
     if(mpigetrank() == 0) {
       sgvx[i] = psix[i];
       sgvx[i].Clear();
       sgvx_ptr = &sgvx[i];
+
+      sgv0[i] = psix[i];
+      sgv0[i].Clear();
+      sgv0_ptr = &sgv0[i];
 
       psix_ptr = &psix[i];
     }
@@ -144,10 +152,16 @@ void SpinAdapted::LRT::TDA::solve_correction_equation
     if(mpigetrank() != 0) {
       sgvx_i = psix_i;
       sgvx_i.Clear();
+
+      sgv0_i = psix_i;
+      sgv0_i.Clear();
     }
 
     h_mult(*psix_ptr, *sgvx_ptr, 0);
-    h_mult(*psi0_ptr, *sgvx_ptr, i);
+    h_mult(*psi0_ptr, *sgv0_ptr, i);
+
+    if(mpigetrank() == 0)
+      sgvx[i] += sgv0[i];
   }
 
   dmrginp.hmultiply -> stop();
@@ -176,17 +190,6 @@ void SpinAdapted::LRT::TDA::solve_correction_equation
     }
   }
 
-//  // broadcast psix
-//  for(int i = mroots; i < lroots; ++i) {
-//    Wavefunction  psix_i;
-//    Wavefunction *psix_ptr = &psix_i;
-//    if(mpigetrank() == 0) {
-//      psix_ptr = &psix[i];
-//    }
-//#ifndef SERIAL
-//    mpi::broadcast(world, *psix_ptr, 0);
-//#endif
-//  }
 }
 
 void SpinAdapted::LRT::TDA::compute_matrix_elements
@@ -257,13 +260,11 @@ void SpinAdapted::LRT::TDA::compute_matrix_elements
     h_mult(*psix_ptr, *sgvx_ptr, 0);
     h_mult(*psi0_ptr, *sgv0_ptr, i);
   }
-//pout << "DEBUG @ LRT::solve_correction_equation: check point 1 - passed" << endl;
 
   dmrginp.hmultiply -> stop();
 
   // build residual
   if(mpigetrank() == 0) {
-//pout << "DEBUG @ LRT::solve_correction_equation: check point 2" << endl;
     for(int i = 1; i < mroots; ++i) {
       double sii = DotProduct(psix[i], psix[i]);
       s_subspace(i, i) += sii;
@@ -274,7 +275,6 @@ void SpinAdapted::LRT::TDA::compute_matrix_elements
       }
     }
 
-//pout << "DEBUG @ LRT::solve_correction_equation: check point 3" << endl;
     for(int i = 1; i < mroots; ++i) {
       double hii = DotProduct(psix[i], sgvx[i])
                  + DotProduct(psix[i], sgv0[i]) * 2.0;
@@ -288,7 +288,7 @@ void SpinAdapted::LRT::TDA::compute_matrix_elements
       }
     }
   }
-//pout << "DEBUG @ LRT::solve_correction_equation: check point 4 ( done )" << endl;
+
 }
 
 

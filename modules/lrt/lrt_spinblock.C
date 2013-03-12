@@ -43,10 +43,10 @@ void SpinBlock::multiplyH_lrt_left(Wavefunction& c, Wavefunction* v, int iState,
   dmrginp.oneelecT -> start();
   dmrginp.s0time -> start();
 
-  if(leftBlock->has(HAM+state_index_0i)) {
+  if(leftBlock->has(HAM | state_index_0i)) {
     // iState >  0: Ham(L)[0, 1] x 1(R)[0, 0] * C[0]
     // iState == 0: Ham(L)[0, 0] x 1(R)[0, 0] * C[1]
-    boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM+state_index_0i).get_local_element(0)[0];
+    boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM | state_index_0i).get_local_element(0)[0];
     TensorMultiply(leftBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);
   }
 
@@ -66,16 +66,16 @@ void SpinBlock::multiplyH_lrt_left(Wavefunction& c, Wavefunction* v, int iState,
   dmrginp.s1time -> start();
 
   Functor2 f;
-  if(leftBlock->has(CRE_CRE_DESCOMP+state_index_0i)) {
-    v_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP+state_index_0i).is_local() ? v_array : v_distributed;
+  if(leftBlock->has(CRE_CRE_DESCOMP | state_index_0i)) {
+    v_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP | state_index_0i).is_local() ? v_array : v_distributed;
     f = boost::bind(&opxop::generic::cxcddcomp, leftBlock, _1, _2, this, ref(c), v_add, dmrginp.effective_molecule_quantum(), state_index_0i); 
     for_all_multithread(rightBlock->get_op_array(CRE), rightBlock->get_op_array(CRE), f);
   }
 
-  if(leftBlock->has(CRE+state_index_0i)) {
+  if(leftBlock->has(CRE | state_index_0i)) {
     v_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
     f = boost::bind(&opxop::generic::cxcddcomp, rightBlock, _1, _2, this, ref(c), v_add, dmrginp.effective_molecule_quantum(), 0); 
-    for_all_multithread(leftBlock->get_op_array(CRE+state_index_0i), leftBlock->get_op_array(CRE+state_index_i0), f);  
+    for_all_multithread(leftBlock->get_op_array(CRE | state_index_0i), leftBlock->get_op_array(CRE | state_index_i0), f);  
   }
 
   dmrginp.s1time -> stop();
@@ -87,29 +87,29 @@ void SpinBlock::multiplyH_lrt_left(Wavefunction& c, Wavefunction* v, int iState,
   if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
     if(leftBlock->is_loopblock()) {
       dmrginp.s0time -> start();
-      if(leftBlock->has(CRE_DES+state_index_0i)) {
+      if(leftBlock->has(CRE_DES | state_index_0i)) {
         v_add =  rightBlock->get_op_array(CRE_DESCOMP).is_local() ? v_array : v_distributed;
         f = boost::bind(&opxop::generic::cdxcdcomp, rightBlock, _1, _2, this, ref(c), v_add, dmrginp.effective_molecule_quantum(), 0);
-        for_all_multithread(leftBlock->get_op_array(CRE_DES+state_index_0i), leftBlock->get_op_array(CRE_DES+state_index_i0), f);
+        for_all_multithread(leftBlock->get_op_array(CRE_DES | state_index_0i), leftBlock->get_op_array(CRE_DES | state_index_i0), f);
       }
 
-      if(leftBlock->has(CRE_CRE+state_index_0i)) {
+      if(leftBlock->has(CRE_CRE | state_index_0i)) {
         v_add =  rightBlock->get_op_array(DES_DESCOMP).is_local() ? v_array : v_distributed;
         f = boost::bind(&opxop::generic::ddxcccomp, rightBlock, _1, _2, this, ref(c), v_add, dmrginp.effective_molecule_quantum(), 0);
-        for_all_multithread(leftBlock->get_op_array(CRE_CRE+state_index_0i), leftBlock->get_op_array(CRE_CRE+state_index_i0), f);
+        for_all_multithread(leftBlock->get_op_array(CRE_CRE | state_index_0i), leftBlock->get_op_array(CRE_CRE | state_index_i0), f);
       }
       dmrginp.s0time -> stop();
     }
     else {
       dmrginp.s0time -> start();
-      if(leftBlock->has(CRE_DESCOMP+state_index_0i)) {
-        v_add =  leftBlock->get_op_array(CRE_DESCOMP+state_index_0i).is_local() ? v_array : v_distributed;
+      if(leftBlock->has(CRE_DESCOMP | state_index_0i)) {
+        v_add =  leftBlock->get_op_array(CRE_DESCOMP | state_index_0i).is_local() ? v_array : v_distributed;
         f = boost::bind(&opxop::generic::cdxcdcomp, leftBlock, _1, _2, this, ref(c), v_add, dmrginp.effective_molecule_quantum(), state_index_0i);
         for_all_multithread(rightBlock->get_op_array(CRE_DES), rightBlock->get_op_array(CRE_DES), f);
       }
 
-      if(leftBlock->has(DES_DESCOMP+state_index_0i)) {
-        v_add =  leftBlock->get_op_array(DES_DESCOMP+state_index_0i).is_local() ? v_array : v_distributed;
+      if(leftBlock->has(DES_DESCOMP | state_index_0i)) {
+        v_add =  leftBlock->get_op_array(DES_DESCOMP | state_index_0i).is_local() ? v_array : v_distributed;
         f = boost::bind(&opxop::generic::ddxcccomp, leftBlock, _1, _2, this, ref(c), v_add, dmrginp.effective_molecule_quantum(), state_index_0i);
         for_all_multithread(rightBlock->get_op_array(CRE_CRE), rightBlock->get_op_array(CRE_CRE), f);
       }
@@ -138,13 +138,13 @@ void SpinBlock::multiplyH_lrt_total(Wavefunction& c, Wavefunction* v, int iState
   dmrginp.oneelecT -> start();
   dmrginp.s0time -> start();
 
-  if(leftBlock->has(HAM+state_index_0i)) {
-    boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM+state_index_0i).get_local_element(0)[0];
+  if(leftBlock->has(HAM | state_index_0i)) {
+    boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM | state_index_0i).get_local_element(0)[0];
     TensorMultiply(leftBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);
   }
 
-  if(rightBlock->has(HAM+state_index_0i)) {
-    boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_array(HAM+state_index_0i).get_local_element(0)[0];
+  if(rightBlock->has(HAM | state_index_0i)) {
+    boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_array(HAM | state_index_0i).get_local_element(0)[0];
     TensorMultiply(rightBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum(), 1.0, MAX_THRD);  
   }
 
@@ -158,28 +158,28 @@ void SpinBlock::multiplyH_lrt_total(Wavefunction& c, Wavefunction* v, int iState
 
   Functor2 f;
 
-  if(leftBlock->has(CRE_CRE_DESCOMP+state_index_0i)) {
-    v_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP+state_index_0i).is_local() ? v_array : v_distributed;
+  if(leftBlock->has(CRE_CRE_DESCOMP | state_index_0i)) {
+    v_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP | state_index_0i).is_local() ? v_array : v_distributed;
     f = boost::bind(&opxop::generic::cxcddcomp, leftBlock, _1, _2, this, ref(c), v_add, dmrginp.effective_molecule_quantum(), state_index_0i); 
     for_all_multithread(rightBlock->get_op_array(CRE), rightBlock->get_op_array(CRE), f);
   }
 
-  if(leftBlock->has(CRE+state_index_0i)) {
+  if(leftBlock->has(CRE | state_index_0i)) {
     v_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
     f = boost::bind(&opxop::generic::cxcddcomp, rightBlock, _1, _2, this, ref(c), v_add, dmrginp.effective_molecule_quantum(), 0); 
-    for_all_multithread(leftBlock->get_op_array(CRE+state_index_0i), leftBlock->get_op_array(CRE+state_index_i0), f);  
+    for_all_multithread(leftBlock->get_op_array(CRE | state_index_0i), leftBlock->get_op_array(CRE | state_index_i0), f);  
   }
 
   if(iState > 0) {
 
-  if(rightBlock->has(CRE+state_index_0i)) {
+  if(rightBlock->has(CRE | state_index_0i)) {
     v_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
     f = boost::bind(&opxop::generic::cxcddcomp, leftBlock, _1, _2, this, ref(c), v_add, dmrginp.effective_molecule_quantum(), 0); 
-    for_all_multithread(rightBlock->get_op_array(CRE+state_index_0i), rightBlock->get_op_array(CRE+state_index_i0), f);
+    for_all_multithread(rightBlock->get_op_array(CRE | state_index_0i), rightBlock->get_op_array(CRE | state_index_i0), f);
   }
 
-  if(rightBlock->has(CRE_CRE_DESCOMP+state_index_0i)) {
-    v_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP+state_index_0i).is_local() ? v_array : v_distributed;
+  if(rightBlock->has(CRE_CRE_DESCOMP | state_index_0i)) {
+    v_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP | state_index_0i).is_local() ? v_array : v_distributed;
     f = boost::bind(&opxop::generic::cxcddcomp, rightBlock, _1, _2, this, ref(c), v_add, dmrginp.effective_molecule_quantum(), state_index_0i); 
     for_all_multithread(leftBlock->get_op_array(CRE), leftBlock->get_op_array(CRE), f);  
   }
@@ -195,28 +195,28 @@ void SpinBlock::multiplyH_lrt_total(Wavefunction& c, Wavefunction* v, int iState
   if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
     dmrginp.s0time -> start();
 
-    if(loopBlock->has(CRE_DES+state_index_0i)) {
+    if(loopBlock->has(CRE_DES | state_index_0i)) {
       v_add =  otherBlock->get_op_array(CRE_DESCOMP).is_local() ? v_array : v_distributed;
       f = boost::bind(&opxop::generic::cdxcdcomp, otherBlock, _1, _2, this, ref(c), v_add, dmrginp.effective_molecule_quantum(), 0);
-      for_all_multithread(loopBlock->get_op_array(CRE_DES+state_index_0i), loopBlock->get_op_array(CRE_DES+state_index_i0), f);
+      for_all_multithread(loopBlock->get_op_array(CRE_DES | state_index_0i), loopBlock->get_op_array(CRE_DES | state_index_i0), f);
     }
 
-    if(loopBlock->has(CRE_CRE+state_index_0i)) {
+    if(loopBlock->has(CRE_CRE | state_index_0i)) {
       v_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? v_array : v_distributed;
       f = boost::bind(&opxop::generic::ddxcccomp, otherBlock, _1, _2, this, ref(c), v_add, dmrginp.effective_molecule_quantum(), 0);
-      for_all_multithread(loopBlock->get_op_array(CRE_CRE+state_index_0i), loopBlock->get_op_array(CRE_CRE+state_index_i0), f);
+      for_all_multithread(loopBlock->get_op_array(CRE_CRE | state_index_0i), loopBlock->get_op_array(CRE_CRE | state_index_i0), f);
     }
 
     if(iState > 0) {
 
-    if(otherBlock->has(CRE_DESCOMP+state_index_0i)) {
-      v_add =  otherBlock->get_op_array(CRE_DESCOMP+state_index_0i).is_local() ? v_array : v_distributed;
+    if(otherBlock->has(CRE_DESCOMP | state_index_0i)) {
+      v_add =  otherBlock->get_op_array(CRE_DESCOMP | state_index_0i).is_local() ? v_array : v_distributed;
       f = boost::bind(&opxop::generic::cdxcdcomp, otherBlock, _1, _2, this, ref(c), v_add, dmrginp.effective_molecule_quantum(), state_index_0i);
       for_all_multithread(loopBlock->get_op_array(CRE_DES), loopBlock->get_op_array(CRE_DES), f);
     }
 
-    if(otherBlock->has(DES_DESCOMP+state_index_0i)) {
-      v_add =  otherBlock->get_op_array(DES_DESCOMP+state_index_0i).is_local() ? v_array : v_distributed;
+    if(otherBlock->has(DES_DESCOMP | state_index_0i)) {
+      v_add =  otherBlock->get_op_array(DES_DESCOMP | state_index_0i).is_local() ? v_array : v_distributed;
       f = boost::bind(&opxop::generic::ddxcccomp, otherBlock, _1, _2, this, ref(c), v_add, dmrginp.effective_molecule_quantum(), state_index_0i);
       for_all_multithread(loopBlock->get_op_array(CRE_CRE), loopBlock->get_op_array(CRE_CRE), f);
     }
@@ -232,18 +232,6 @@ void SpinBlock::multiplyH_lrt_total(Wavefunction& c, Wavefunction* v, int iState
 
 void SpinBlock::rotatebyRitzVectors(const Matrix& alpha, int nroots)
 {
-// DEBUG
-//for(int i = 0; i < nroots; ++i) {
-//  pout << "DEBUG @ rotatebyRitzVectors: state = " << i << endl;
-//  if(has(HAM            +make_state_index(0, i))) pout << "\t\t has HAM" << endl;
-//  if(has(CRE            +make_state_index(0, i))) pout << "\t\t has CRE" << endl;
-//  if(has(CRE_DES        +make_state_index(0, i))) pout << "\t\t has CRE_DES" << endl;
-//  if(has(CRE_CRE        +make_state_index(0, i))) pout << "\t\t has CRE_CRE" << endl;
-//  if(has(CRE_DESCOMP    +make_state_index(0, i))) pout << "\t\t has CRE_DESCOMP" << endl;
-//  if(has(DES_DESCOMP    +make_state_index(0, i))) pout << "\t\t has DES_DESCOMP" << endl;
-//  if(has(CRE_CRE_DESCOMP+make_state_index(0, i))) pout << "\t\t has CRE_CRE_DESCOMP" << endl;
-//}
-// DEBUG
   if(has(HAM)) {
     RotateOps::rotate_operator_arrays(alpha, *this, HAM, nroots, false);
   }

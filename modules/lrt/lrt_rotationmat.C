@@ -211,6 +211,7 @@ double SpinAdapted::LRT::assign_matrix_by_dm_deriv
       for(int i = 0; i < rotatematrix[q].Ncols(); ++i) {
         ColumnVector derived_basis(rotatematrix[q].Nrows());
         derived_basis = 0.0;
+        // FIXME: in case M is large enough, small selected weights introduce numerical instability
         if (abs(selectedwts[q][i]) > 1.e-12)
           derived_basis = matrix_elements.Column(i + 1)/selectedwts[q][i];
 
@@ -237,11 +238,7 @@ void SpinAdapted::LRT::project_onto_rejectedspace
               Matrix& nM = c_projected.operator_element(i, j);        
               Matrix  tM = nM;
               tM.ReSize(lM.Ncols(), nM.Ncols()); tM = 0.0;
-//pout << "DEBUG @ LRT::project_onto_rejectedspace: lM.Nrows() = " << lM.Nrows() << ", lM.Ncols() = " << lM.Ncols()
-//                                            << ", nM.Nrows() = " << nM.Nrows() << ", nM.Ncols() = " << nM.Ncols() << endl;
         MatrixMultiply(lM, 't', nM, 'n', tM, 1.0); // T = L^(t) * C
-//pout << "DEBUG @ LRT::project_onto_rejectedspace: lM.Nrows() = " << lM.Nrows() << ", lM.Ncols() = " << lM.Ncols()
-//                                            << ", tM.Nrows() = " << nM.Nrows() << ", tM.Ncols() = " << nM.Ncols() << endl;
         MatrixMultiply(lM, 'n', tM, 'n', nM,-1.0); // C = C - L * T
       }
     }
