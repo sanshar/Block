@@ -105,6 +105,8 @@ void SpinBlock::RenormaliseFrom_lrt
   vector<Wavefunction> projected_wave_solutions(lroots);
 
   vector< vector<double> > selectedwts;
+  vector< vector<double> > rejectedwts;
+  vector< Matrix > rejectedbasis;
 
   if(mpigetrank() == 0) {
     // FIXME: re-computing 0-th rotation matrix is wasteful, but computing 1-st rotation matrices needs its eigenvalues
@@ -132,8 +134,6 @@ void SpinBlock::RenormaliseFrom_lrt
   
 // FIXME: rejected basis might not be necessary, after fixed this should be removed
 //  vector< vector<double> > selectedwts;
-    vector< vector<double> > rejectedwts;
-    vector< Matrix > rejectedbasis;
     LRT::assign_matrix_by_dm(eigenMatrix, rotateMatrices[0], selectedwts, rejectedbasis, rejectedwts, transformmatrix,
                              inorderwts, wtsbyquanta, totalstatesbydm, totalstatesbyquanta, size(), dmrginp.last_site()-size());
 
@@ -165,7 +165,10 @@ void SpinBlock::RenormaliseFrom_lrt
 //    LRT::assign_matrix_by_dm_deriv(rotateMatrices[0], selectedwts, rejectedbasis, rejectedwts, tracedMatrix_deriv, rotateMatrices[i]);
 //    LRT::project_onto_rejectedspace(wave_solutions[i], rejectedbasis, dot_with_sys, projected_wave_solutions[i]);
 //    LRT::assign_matrix_by_dm_deriv(rotateMatrices[0], selectedwts, tracedMatrix_deriv, rotateMatrices[i], true);
-      LRT::assign_matrix_by_dm_deriv(rotateMatrices[0], selectedwts, tracedMatrix_deriv, rotateMatrices[i], false);
+
+//    LRT::assign_matrix_by_dm_deriv(rotateMatrices[0], selectedwts, tracedMatrix_deriv, rotateMatrices[i], false);
+      LRT::assign_matrix_by_dm_deriv(rotateMatrices[0], selectedwts, rejectedwts, tracedMatrix_deriv, rotateMatrices[i], false);
+
 //    LRT::project_onto_rejectedspace(wave_solutions[i], rotateMatrices[0], dot_with_sys, projected_wave_solutions[i]);
     }
   }

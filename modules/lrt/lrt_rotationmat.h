@@ -31,7 +31,8 @@ double assign_matrix_by_dm
 // const SparseMatrix& density_deriv, std::vector<Matrix>& rotatematrix_deriv);
 
 double assign_matrix_by_dm_deriv
-(const std::vector<Matrix>& rotatematrix, const std::vector< std::vector<double> >& selectedwts,
+(const std::vector<Matrix>& rotatematrix,
+ const std::vector< std::vector<double> >& selectedwts, const std::vector< std::vector<double> >& rejectedwts,
  const SparseMatrix& density_deriv, std::vector<Matrix>& rotatematrix_deriv, bool projection);
 
 void project_onto_rejectedspace

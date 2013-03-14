@@ -143,10 +143,12 @@ class SpinBlock
                            SpinBlock& big, const guessWaveTypes &guesswavetype, const bool &onedot, const bool &last_site, SpinBlock& System, 
                            SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, int sweepiter);
 
-  double makeRotateMatrix_lrt(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates);
-  void transform_operators_lrt(std::vector< std::vector<Matrix> >& rotateMatrix);
+//double makeRotateMatrix_lrt(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates);
+  void transform_operators_lrt(std::vector< std::vector<Matrix> >& rotateMatrices);
   void rotatebyRitzVectors(const Matrix& alpha, int nroot);
 
+  // additional member functions for DMRG-RPA
+  void transform_operators_rpa(std::vector< std::vector<Matrix> >& rotateMatricesRe, std::vector< std::vector<Matrix> >& rotateMatricesIm);
 };
 }
 #endif

@@ -47,24 +47,22 @@ void GuessWave::LRT::transform_gauge
       abort();
     }
 
-//  // DEBUG: begin check gauge-condition
-//  std::vector<Wavefunction> transWavefnc(nroots);
-//  for(int i = 0; i < nroots; ++i) {
-//    transWavefnc[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
-//  }
-//  transpose_previous_wavefunction_deriv(transWavefnc, nroots, big, onedot, transpose_guess_wave);
-
-//  for(int i = 0; i < nroots; ++i) {
-//    Wavefunction subWavefnc(Wavefnc[i]);
-//    ScaleAdd(-1.0, transWavefnc[i], subWavefnc);
-//    double subnorm = DotProduct(subWavefnc, subWavefnc);
-//    pout << "\t\t\t DEBUG @ GuessWave::LRT::transform_gauge: checking gauge of Wavefnc[" << i << "]: diff = " << subnorm << endl;
-//  }
-//  // DEBUG: end   check gauge-condition
-
     double norm = DotProduct(Wavefnc[0], Wavefnc[0]);
     if(dmrginp.outputlevel() > 0)
       pout << "\t\t\t norm of 0-th wavefunction = " << fixed << setprecision(24) << norm << endl;
+
+    // FIXME: this slightly changes 0-th order space (~ 1.0e-12)
+    int success;
+    Normalise(Wavefnc[0], &success);
+
+    // FIXME: to avoid leak into 0-th space and thus, to avoid numerical instability
+    for(int i = 1; i < nroots; ++i) {
+      double overlap = DotProduct(Wavefnc[0], Wavefnc[i]);
+      if(abs(overlap) > 1.0e-8 && dmrginp.outputlevel() > 1) {
+        pout << "WARNING: found large overlap < 0 | " << i << " > = " << scientific << overlap << " to be eliminated" << endl;
+      }
+      ScaleAdd(-overlap, Wavefnc[0], Wavefnc[i]);
+    }
   }
 }
 

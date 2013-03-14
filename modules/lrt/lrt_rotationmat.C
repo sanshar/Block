@@ -194,7 +194,8 @@ double SpinAdapted::LRT::assign_matrix_by_dm_deriv
 
 // alternative code not using rejectedbasis
 double SpinAdapted::LRT::assign_matrix_by_dm_deriv
-(const std::vector<Matrix>& rotatematrix, const std::vector< std::vector<double> >& selectedwts,
+(const std::vector<Matrix>& rotatematrix,
+ const std::vector< std::vector<double> >& selectedwts, const std::vector< std::vector<double> >& rejectedwts,
  const SparseMatrix& density_deriv, std::vector<Matrix>& rotatematrix_deriv, bool projection)
 {
   int nquanta = rotatematrix.size();
@@ -208,17 +209,27 @@ double SpinAdapted::LRT::assign_matrix_by_dm_deriv
         MatrixMultiply(rotatematrix[q], 't', matrix_elements, 'n', projected_matrix, 1.0);
         MatrixMultiply(rotatematrix[q], 'n', projected_matrix, 'n', matrix_elements,-1.0);
       }
-      for(int i = 0; i < rotatematrix[q].Ncols(); ++i) {
-        ColumnVector derived_basis(rotatematrix[q].Nrows());
-        derived_basis = 0.0;
-        // FIXME: in case M is large enough, small selected weights introduce numerical instability
-        if (abs(selectedwts[q][i]) > 1.e-12)
-          derived_basis = matrix_elements.Column(i + 1)/selectedwts[q][i];
+      if(rejectedwts[q].size() > 0) {
+        for(int i = 0; i < rotatematrix[q].Ncols(); ++i) {
+          ColumnVector derived_basis(rotatematrix[q].Nrows());
+          derived_basis = 0.0;
+          // FIXME: in case M is large enough, small selected weights introduce numerical instability
 
-        if(rotatematrix_deriv[q].Ncols() == 0)
-          rotatematrix_deriv[q] = derived_basis;
-        else
-          rotatematrix_deriv[q] |= derived_basis;
+          if (abs(selectedwts[q][i]) > 1.e-12) {
+            derived_basis = matrix_elements.Column(i + 1)/selectedwts[q][i];
+          }
+          else if(dmrginp.outputlevel() > 1) {
+            pout << "WARNING: ignored small selected weight (" << scientific << selectedwts[q][i] << ") meaning that 1-st order rotation matrix is not exact" << endl;
+          }
+
+          if(rotatematrix_deriv[q].Ncols() == 0)
+            rotatematrix_deriv[q] = derived_basis;
+          else
+            rotatematrix_deriv[q] |= derived_basis;
+        }
+      }
+      else {
+        rotatematrix_deriv[q] = matrix_elements;
       }
     }
   }
