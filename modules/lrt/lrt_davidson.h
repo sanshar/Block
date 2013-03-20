@@ -26,7 +26,7 @@ private:
   const SpinBlock& block;
 public:
   multiply_h_left(const SpinBlock& b, const bool& onedot_);
-  void operator() (Wavefunction& c, Wavefunction& v, int iState, int jState);
+  void operator() (Wavefunction& c, Wavefunction& v, int state, bool conjugate = false);
   const SpinBlock& get_block() { return block; }
 };
 
@@ -36,13 +36,20 @@ private:
   const SpinBlock& block;
 public:
   multiply_h_total(const SpinBlock& b, const bool& onedot_);
-  void operator() (Wavefunction& c, Wavefunction& v, int iState, int jState);
+  void operator() (Wavefunction& c, Wavefunction& v, int state, bool conjugate = false);
   const SpinBlock& get_block() { return block; }
 };
 
-void LoadDavidsonInfo(Matrix& h_subspace, Matrix& s_subspace, int& mroots, int& i_conv_root, bool& deflation_sweep);
+void LoadDavidsonInfo
+(Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace,
+ std::vector<double>& eigenvalues, std::vector<double>& rnorm, std::vector<double>& ynorm,
+ int& mroots, int& i_conv_root, bool& deflation_sweep);
 
-void SaveDavidsonInfo(Matrix& h_subspace, Matrix& s_subspace, int& mroots, int& i_conv_root, bool& deflation_sweep);
+void SaveDavidsonInfo
+(Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace,
+ std::vector<double>& eigenvalues, std::vector<double>& rnorm, std::vector<double>& ynorm,
+ int& mroots, int& i_conv_root, bool& deflation_sweep);
+
 
 };
 

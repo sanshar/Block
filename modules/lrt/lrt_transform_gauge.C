@@ -22,55 +22,59 @@ namespace SpinAdapted {
 //
 
 void GuessWave::LRT::transform_gauge
-(std::vector<Wavefunction>& Wavefnc, const int& nroots, const SpinBlock &big,
- const guessWaveTypes& guesswavetype, const bool &onedot, const bool &transpose_guess_wave)
+(std::vector<Wavefunction>& Wavefnc1st, std::vector<Wavefunction>& Wavefnc2nd, const int& nroots, const SpinBlock& big,
+ const guessWaveTypes& guesswavetype, const bool& onedot, const bool& transpose_guess_wave)
 {
 #ifndef SERIAL
   mpi::communicator world;
 #endif
-  assert(nroots <= Wavefnc.size());
+  assert(nroots <= Wavefnc1st.size());
+  assert(nroots <= Wavefnc2nd.size());
   for(int i = 0; i < nroots; ++i) {
-    Wavefnc[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
+    Wavefnc1st[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
+    Wavefnc2nd[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
   }
 
   if (!mpigetrank()) {
     switch(guesswavetype)
     {
     case TRANSFORM: 
-      transform_previous_wavefunction_deriv(Wavefnc, nroots, big, onedot, transpose_guess_wave);
+      transform_previous_wavefunction_deriv(Wavefnc1st, Wavefnc2nd, nroots, big, onedot, transpose_guess_wave);
       break;
     case TRANSPOSE: 
-      transpose_previous_wavefunction_deriv(Wavefnc, nroots, big, onedot, transpose_guess_wave);
+      transpose_previous_wavefunction_deriv(Wavefnc1st, Wavefnc2nd, nroots, big, onedot, transpose_guess_wave);
       break;
     defalt:
       pout << "\t\t\t Invalid guessWaveTypes for gauge-transformation was specified" << endl;
       abort();
     }
 
-    double norm = DotProduct(Wavefnc[0], Wavefnc[0]);
+    double norm = DotProduct(Wavefnc1st[0], Wavefnc1st[0]);
     if(dmrginp.outputlevel() > 0)
       pout << "\t\t\t norm of 0-th wavefunction = " << fixed << setprecision(24) << norm << endl;
 
     // FIXME: this slightly changes 0-th order space (~ 1.0e-12)
-    int success;
-    Normalise(Wavefnc[0], &success);
+//  int success;
+//  Normalise(Wavefnc[0], &success);
 
     // FIXME: to avoid leak into 0-th space and thus, to avoid numerical instability
     for(int i = 1; i < nroots; ++i) {
-      double overlap = DotProduct(Wavefnc[0], Wavefnc[i]);
+      double overlap = DotProduct(Wavefnc1st[0], Wavefnc1st[i]);
       if(abs(overlap) > 1.0e-8 && dmrginp.outputlevel() > 1) {
         pout << "WARNING: found large overlap < 0 | " << i << " > = " << scientific << overlap << " to be eliminated" << endl;
       }
-      ScaleAdd(-overlap, Wavefnc[0], Wavefnc[i]);
+      ScaleAdd(-overlap, Wavefnc1st[0], Wavefnc1st[i]);
     }
   }
 }
 
 // transform gauge of 1-st order wavefunction
 void GuessWave::LRT::transform_previous_wavefunction_deriv
-(std::vector<Wavefunction>& Wavefnc, const int& nroots, const SpinBlock &big, const bool &onedot, const bool& transpose_guess_wave)
+(std::vector<Wavefunction>& Wavefnc1st, std::vector<Wavefunction>& Wavefnc2nd, const int& nroots, const SpinBlock& big,
+ const bool& onedot, const bool& transpose_guess_wave)
 {
-  assert(nroots <= Wavefnc.size());
+  assert(nroots <= Wavefnc1st.size());
+  assert(nroots <= Wavefnc2nd.size());
 
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Transforming gauge of previous wavefunction " << endl;
@@ -120,7 +124,8 @@ void GuessWave::LRT::transform_previous_wavefunction_deriv
   LoadRotationMatrix(rotsites, rightRotationMatrix, 0);
   // transform 0-th gauge
   onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWavefnc,
-                                leftRotationMatrix, rightRotationMatrix, Wavefnc[0], transpose_guess_wave);
+                                leftRotationMatrix, rightRotationMatrix, Wavefnc1st[0], transpose_guess_wave);
+  Wavefnc2nd[0] = Wavefnc1st[0];
 
   for (int i = 1; i < nroots; ++i) {
     // 1-st order wavefuncton & rotation matrices
@@ -141,30 +146,31 @@ void GuessWave::LRT::transform_previous_wavefunction_deriv
       LoadRotationMatrix(rotsites, rightRotationMatrix_deriv, i);
     }
 
-    Wavefunction tmpWavefnc = Wavefnc[i];
-    // L(0)^(t) * C(I) * R(0)
-    onedot_transform_wavefunction(oldStateInfo_deriv, big.get_stateInfo(), oldWavefnc_deriv,
-                                  leftRotationMatrix, rightRotationMatrix, tmpWavefnc, transpose_guess_wave);
     // L(0)^(t) * C(0) * R(I)
     onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWavefnc,
-                                  leftRotationMatrix, rightRotationMatrix_deriv, Wavefnc[i], transpose_guess_wave);
-    Wavefnc[i] += tmpWavefnc;
+                                  leftRotationMatrix, rightRotationMatrix_deriv, Wavefnc2nd[i], transpose_guess_wave);
+    // L(0)^(t) * C(I) * R(0) ( NOTE: this vanishes for 2nd-order wavefunction )
+    onedot_transform_wavefunction(oldStateInfo_deriv, big.get_stateInfo(), oldWavefnc_deriv,
+                                  leftRotationMatrix, rightRotationMatrix, Wavefnc1st[i], transpose_guess_wave);
+    Wavefnc1st[i] += Wavefnc2nd[i];
   }
 }
 
 // transpose 1-st order wavefunction ( block iter == 0 )
 void GuessWave::LRT::transpose_previous_wavefunction_deriv
-(std::vector<Wavefunction>& Wavefnc, const int& nroots, const SpinBlock &big, const bool &onedot, const bool& transpose_guess_wave)
+(std::vector<Wavefunction>& Wavefnc1st, std::vector<Wavefunction>& Wavefnc2nd, const int& nroots, const SpinBlock& big,
+ const bool& onedot, const bool& transpose_guess_wave)
 {
-  assert(nroots <= Wavefnc.size());
+  assert(nroots <= Wavefnc1st.size());
+  assert(nroots <= Wavefnc2nd.size());
   for(int i = 0; i < nroots; ++i) {
-    transpose_previous_wavefunction(Wavefnc[i], big, i, onedot, transpose_guess_wave);
+    transpose_previous_wavefunction(Wavefnc1st[i], big, i, onedot, transpose_guess_wave);
+    Wavefnc2nd[i] = Wavefnc1st[i]; // this might not be required
   }
 }
 
 void GuessWave::LRT::rotate_previous_wavefunction
-(const SpinBlock& big, const Matrix& alpha, const int& nroots,
- const guessWaveTypes& guesswavetype, const bool& onedot, const bool& transpose_guess_wave)
+(const SpinBlock& big, const Matrix& alpha, const int& nroots, const guessWaveTypes& guesswavetype, const bool& onedot, const bool& transpose_guess_wave)
 {
   const int mroots = alpha.Nrows()+1;
 

@@ -10,10 +10,11 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "modules/lrt/lrt_sweep.h"
 #include "global.h"
 #include "initblocks.h"
+#include "MatrixBLAS.h"
 #include "modules/lrt/lrt_initblocks.h"
 #include "modules/lrt/lrt_transform_gauge.h"
 #include "modules/lrt/lrt_davidson.h"
-#include "MatrixBLAS.h"
+#include "modules/lrt/lrt_solver.h"
 #include <boost/format.hpp>
 
 #ifndef SERIAL
@@ -31,12 +32,18 @@ using namespace std;
 
 void SpinAdapted::Sweep::LRT::BlockAndDecimate
 (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem,
- const vector<double>& eigenvalues, vector<double>& rnorm, Matrix& h_subspace, Matrix& s_subspace, const Matrix& alpha,
- const bool &useSlater, const bool& dot_with_sys, int nroots, int mroots, int kroots, const bool& deflation_sweep)
+ const vector<double>& eigenvalues, vector<double>& rnorm, vector<double>& ynorm,
+ Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace, const Matrix& alpha,
+ const bool &useSlater, const bool& dot_with_sys, const bool& rpa_sweep, const bool& rpa_sweep_2nd, int nroots, int mroots, int kroots)
 {
   const int lroots = mroots + nroots - kroots;
 
-  pout << "\t\t\t Davidson info: nroots = " << nroots << ", trial vecs = " << mroots << ", converged = " << kroots << (deflation_sweep ? " / deflation step" : "") << endl;
+  int Nroots = (rpa_sweep ? 2 * nroots - 1 : nroots);
+  int Mroots = (rpa_sweep ? 2 * mroots - 1 : mroots);
+  int Lroots = (rpa_sweep ? 2 * lroots - 1 : lroots);
+
+  pout << "\t\t\t Davidson info: nroots = " << nroots << ", trial vecs = " << mroots << ", converged = " << kroots << endl;
+
   if (dmrginp.outputlevel() > 0) {
     mcheck("at the start of block and decimate");
     pout << "\t\t\t dot with system "<<dot_with_sys<<endl;
@@ -90,19 +97,19 @@ void SpinAdapted::Sweep::LRT::BlockAndDecimate
     // broadcast additional compops (0-th)
     system.addAdditionalCompOps();
     // broadcast additional compops (1-st)
-    for(int i = 1; i < lroots; ++i) {
+    for(int i = 1; i < Lroots; ++i) {
       system.addAdditionalCompOps(0, i);
       system.addAdditionalCompOps(i, 0);
     }
     dmrginp.datatransfer -> stop();
     if (dot_with_sys) {
       InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(),
-                                     dmrginp.direct(), DISTRIBUTED_STORAGE, dot_with_sys, true, lroots);
+                                     dmrginp.direct(), DISTRIBUTED_STORAGE, dot_with_sys, true, Lroots);
 
     }
     InitBlocks::LRT::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, alpha,
                                              sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-                                             sweepParams.get_onedot(), nexact, useSlater, !dot_with_sys, true, dot_with_sys, mroots);
+                                             sweepParams.get_onedot(), nexact, useSlater, !dot_with_sys, true, dot_with_sys, rpa_sweep_2nd, Mroots);
   }
   else {
     pout << "\t\t\t DMRG-LRT calculation can only be performed upon onedot wavefunction" << endl;
@@ -155,17 +162,15 @@ void SpinAdapted::Sweep::LRT::BlockAndDecimate
 //    newEnvironment.printOperatorSummary();
 //  }
 
-  GuessWave::LRT::rotate_previous_wavefunction(big, alpha, mroots, sweepParams.get_guesstype(),
-                                               sweepParams.get_onedot(), dot_with_sys);
-//if(deflation_sweep) mroots = nroots; // moved to do_one
+  if(!rpa_sweep_2nd)
+    GuessWave::LRT::rotate_previous_wavefunction(big, alpha, Mroots, sweepParams.get_guesstype(), sweepParams.get_onedot(), dot_with_sys);
 
-  bool last_site = false;
-  if(sweepParams.get_block_iter() == sweepParams.get_n_iters() - 1)
-       last_site = true;
+  bool last_site = (sweepParams.get_block_iter() == sweepParams.get_n_iters() - 1) ? true : false;
 
-  newSystem.RenormaliseFrom_lrt(eigenvalues, rnorm, rotatematrices, nroots, mroots, kroots, h_subspace, s_subspace,
+  newSystem.RenormaliseFrom_lrt(eigenvalues, rnorm, ynorm, rotatematrices, nroots, mroots, kroots,
+                                a_subspace, b_subspace, s_subspace, d_subspace,
                                 sweepParams.get_keep_states(), sweepParams.get_keep_qstates(), big,
-                                sweepParams.get_guesstype(), sweepParams.get_onedot(), last_site,
+                                sweepParams.get_guesstype(), sweepParams.get_onedot(), last_site, rpa_sweep, rpa_sweep_2nd,
                                 system, systemDot, environmentDot, environment, dot_with_sys, sweepParams.get_sweep_iter());
 
   std::vector<StateInfo> storeStates(3);
@@ -181,7 +186,6 @@ void SpinAdapted::Sweep::LRT::BlockAndDecimate
   newEnvironment.clear();
 
   pout <<"\t\t\t Performing Renormalization "<<endl;
-//pout << "\t\t\t Total discarded weight "<<sweepParams.set_lowest_error()<<endl<<endl; // always zero
 
   dmrginp.multiplierT -> stop();
   dmrginp.operrotT -> start();
@@ -208,16 +212,17 @@ void SpinAdapted::Sweep::LRT::BlockAndDecimate
 }
 
 double SpinAdapted::Sweep::LRT::do_one
-(SweepParams &sweepParams, const bool& warmUp, const bool& forward, const bool& restart, const int& restartSize)
+(SweepParams &sweepParams, const bool& warmUp, const bool& forward, const bool& rpa_sweep_2nd, const bool& restart, const int& restartSize)
 {
   SpinBlock system;
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
+  double zerothEnergy;
   std::vector<double> finalEnergy(nroots, 0.);
   std::vector<double> finalEnergy_spins(nroots, 0.);
 //double finalError = 0.;
-  finalEnergy[0] = sweepParams.get_lowest_energy()[0];
+  zerothEnergy = sweepParams.get_lowest_energy()[0];
   finalEnergy_spins.resize(nroots, sweepParams.get_lowest_energy()[0]);
-//  finalError = sweepParams.get_lowest_error();
+//finalError = sweepParams.get_lowest_error();
 
   //====================================================================================================
   // Load and solve generalized eigenvalue problem: H x = E S x
@@ -227,53 +232,102 @@ double SpinAdapted::Sweep::LRT::do_one
   mpi::communicator world;
 #endif
 
+  bool rpa_sweep = (dmrginp.lrt_type() == RPA);
   bool deflation_sweep;
   int mroots, i_conv_root;
-  Matrix h_subspace, s_subspace;
-  std::vector<double> eigenvalues(nroots);
+  Matrix a_subspace, b_subspace, s_subspace, d_subspace;
+  std::vector<double> eigenvalues;
+  std::vector<double> rnorm;
+  std::vector<double> ynorm;
   Matrix alpha;
 
   // here, warmUp is used to detect if it's the initial sweep
   // guess wavefunctions will be computed from Krylov subspace
   if(mpigetrank() == 0) {
-    eigenvalues[0] = finalEnergy[0]; // <-- 0-th energy, but not necessary (TODO)
     if(!warmUp) {
-      SpinAdapted::LRT::LoadDavidsonInfo(h_subspace, s_subspace, mroots, i_conv_root, deflation_sweep);
+      SpinAdapted::LRT::LoadDavidsonInfo(a_subspace, b_subspace, s_subspace, d_subspace,
+                                         eigenvalues, rnorm, ynorm, mroots, i_conv_root, deflation_sweep);
 
-      if(dmrginp.outputlevel() > 0) {
-        pout << "\t\t\t printing subspace hamiltonian matrix" << endl;
+      if(dmrginp.outputlevel() > 0 && !rpa_sweep_2nd) {
+        pout << "\t\t\t printing reduced A-matrix: " << a_subspace.Nrows() << " x " << a_subspace.Ncols() << endl;
         for(int i = 1; i < mroots; ++i) {
-          pout << "\t\t\t ";
+          pout << "\t ";
           for(int j = 1; j < mroots; ++j) {
-            pout << setw(16) << fixed << setprecision(8) << h_subspace(i, j);
+            pout << setw(16) << fixed << setprecision(8) << a_subspace(i, j);
           }
           pout << endl;
         }
         pout << endl;
-        pout << "\t\t\t printing subspace overlap matrix" << endl;
+
+        if(rpa_sweep) {
+
+        pout << "\t\t\t printing reduced B-matrix: " << b_subspace.Nrows() << " x " << b_subspace.Ncols() << endl;
         for(int i = 1; i < mroots; ++i) {
-          pout << "\t\t\t ";
+          pout << "\t ";
+          for(int j = 1; j < mroots; ++j) {
+            pout << setw(16) << fixed << setprecision(8) << b_subspace(i, j);
+          }
+          pout << endl;
+        }
+        pout << endl;
+
+        }
+
+        pout << "\t\t\t printing reduced S-matrix: " << s_subspace.Nrows() << " x " << s_subspace.Ncols() << endl;
+        for(int i = 1; i < mroots; ++i) {
+          pout << "\t ";
           for(int j = 1; j < mroots; ++j) {
             pout << setw(16) << fixed << setprecision(8) << s_subspace(i, j);
           }
           pout << endl;
         }
         pout << endl;
+
+        if(rpa_sweep) {
+
+        pout << "\t\t\t printing reduced D-matrix: " << d_subspace.Nrows() << " x " << d_subspace.Ncols() << endl;
+        for(int i = 1; i < mroots; ++i) {
+          pout << "\t ";
+          for(int j = 1; j < mroots; ++j) {
+            pout << setw(16) << fixed << setprecision(8) << d_subspace(i, j);
+          }
+          pout << endl;
+        }
+        pout << endl;
+
+        }
       }
 
-      DiagonalMatrix ritzval;
-      diagonalise(h_subspace, s_subspace, ritzval, alpha);
-      for(int i = 1; i < nroots; ++i) {
-        eigenvalues[i] = ritzval(i, i);
+      if(!rpa_sweep_2nd) {
+        DiagonalMatrix freq;
+        if(rpa_sweep)
+          mroots = 1 + SpinAdapted::LRT::compute_eigenvalues(a_subspace, b_subspace, s_subspace, d_subspace, freq, alpha);
+        else
+          mroots = 1 + SpinAdapted::LRT::compute_eigenvalues(a_subspace, s_subspace, freq, alpha);
+
+        for(int i = 1; i < nroots; ++i) {
+          eigenvalues[i] = freq(i, i); // excitation frequencies
+        }
+
+        if(dmrginp.outputlevel() > 0) {
+          pout << "\t\t\t printing frequencies" << endl;
+          pout << "\t ";
+          for(int i = 1; i < eigenvalues.size(); ++i) {
+            pout << setw(16) << fixed << setprecision(8) << eigenvalues[i];
+          }
+          pout << endl << endl;
+        }
+        if(dmrginp.outputlevel() > 1) {
+          pout << "\t\t\t printing state rotation vectors" << endl;
+          for(int i = 0; i < alpha.Nrows(); ++i) {
+            pout << "\t ";
+            for(int j = 0; j < alpha.Ncols(); ++j) {
+              pout << setw(16) << fixed << setprecision(8) << alpha(i+1,j+1);
+            }
+            pout << endl;
+          }
+        }
       }
-//pout << "DEBUG @ Sweep::LRT::do_one: Ritz vectors" << endl;
-//      for(int i = 0; i < alpha.Nrows(); ++i) {
-//        pout << "\t";
-//        for(int j = 0; j < alpha.Ncols(); ++j) {
-//          pout << setw(16) << fixed << setprecision(8) << alpha(i+1,j+1);
-//        }
-//        pout << endl;
-//      }
 // DEBUG: make no correction vectors
 //    mroots = nroots;
 //    i_conv_root = nroots;
@@ -281,29 +335,43 @@ double SpinAdapted::Sweep::LRT::do_one
 // DEBUG: end
     }
     else {
-      // compute guesses from Krylov subspace
-      mroots = 1;
-      i_conv_root = 1;
-      deflation_sweep = false;
+      if(rpa_sweep_2nd) {
+        SpinAdapted::LRT::LoadDavidsonInfo(a_subspace, b_subspace, s_subspace, d_subspace,
+                                           eigenvalues, rnorm, ynorm, mroots, i_conv_root, deflation_sweep);
+      }
+      else {
+        // compute guesses from Krylov subspace
+        eigenvalues.resize(nroots, 0.0);
+        mroots = 1;
+        i_conv_root = 1;
+        deflation_sweep = false;
+      }
     }
+    eigenvalues[0] = zerothEnergy; // <-- 0-th energy
   }
 
 #ifndef SERIAL
-  mpi::broadcast(world, deflation_sweep, 0);
+  mpi::broadcast(world, eigenvalues, 0);
+  mpi::broadcast(world, rnorm, 0);
+  mpi::broadcast(world, ynorm, 0);
   mpi::broadcast(world, mroots, 0);
   mpi::broadcast(world, i_conv_root, 0);
-  mpi::broadcast(world, eigenvalues, 0);
+  mpi::broadcast(world, deflation_sweep, 0);
   mpi::broadcast(world, alpha, 0);
 #endif
-
-  for(int i = 1; i < nroots; ++i) finalEnergy[i] = eigenvalues[i];
-  std::vector<double> rnorm(nroots, 0.0);
 
   if (deflation_sweep) mroots = nroots;
 
   int lroots = mroots + nroots - i_conv_root;
-  h_subspace.ReSize(lroots-1, lroots-1); h_subspace = 0.0;
-  s_subspace.ReSize(lroots-1, lroots-1); s_subspace = 0.0;
+
+  if(!rpa_sweep_2nd) {
+    a_subspace.ReSize(lroots-1, lroots-1); a_subspace = 0.0;
+    b_subspace.ReSize(lroots-1, lroots-1); b_subspace = 0.0;
+    s_subspace.ReSize(lroots-1, lroots-1); s_subspace = 0.0;
+    d_subspace.ReSize(lroots-1, lroots-1); d_subspace = 0.0;
+    rnorm.resize(nroots); fill(rnorm.begin(), rnorm.end(), 0.0);
+    ynorm.resize(lroots); fill(ynorm.begin(), ynorm.end(), 0.0);
+  }
 
   //====================================================================================================
   // Sweep Iteration for Davidson update
@@ -360,29 +428,12 @@ double SpinAdapted::Sweep::LRT::do_one
       }
     }
 
-//  if (dmrginp.no_transform() || (sweepParams.get_sweep_iter()-sweepParams.get_restart_iter() == 0 && sweepParams.get_block_iter() == 0))
-//    sweepParams.set_guesstype() = BASIC;
-//  else if (!warmUp && sweepParams.get_block_iter() != 0) 
-//    sweepParams.set_guesstype() = TRANSFORM;
-//  else if (!warmUp && sweepParams.get_block_iter() == 0 && 
-//          ((dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter() != sweepParams.get_sweep_iter()) ||
-//            dmrginp.algorithm_method() != TWODOT_TO_ONEDOT))
-//    sweepParams.set_guesstype() = TRANSPOSE;
-//  else
-//    sweepParams.set_guesstype() = BASIC;
-
-//  if (!warmUp && sweepParams.get_block_iter() == 0) {
     if (sweepParams.get_block_iter() == 0) {
       sweepParams.set_guesstype() = TRANSPOSE;
     }
-//  else if (!warmUp && sweepParams.get_block_iter() != 0) {
     else {
       sweepParams.set_guesstype() = TRANSFORM;
     }
-//  else {
-//    pout << "\t\t\t ERROR: guess type BASIC was requested, this makes a problem in the gauge-transformation" << endl;
-//    abort();
-//  }
     
 //pout << "DEBUG @ Sweep::LRT::do_one: before BlockAndDecimate, printing system operators" << endl;
 //  if (dmrginp.outputlevel() > 0){
@@ -395,28 +446,57 @@ double SpinAdapted::Sweep::LRT::do_one
         
     SpinBlock newSystem;
 
-    BlockAndDecimate (sweepParams, system, newSystem, eigenvalues, rnorm, h_subspace, s_subspace, alpha,
-                      false, dot_with_sys, nroots, mroots, i_conv_root, deflation_sweep);
+    BlockAndDecimate (sweepParams, system, newSystem, eigenvalues, rnorm, ynorm, a_subspace, b_subspace, s_subspace, d_subspace, alpha,
+                      false, dot_with_sys, rpa_sweep, rpa_sweep_2nd, nroots, mroots, i_conv_root);
 
-    if(dmrginp.outputlevel() > 1) {
-      pout << "\t\t\t printing subspace hamiltonian matrix" << endl;
+    if(dmrginp.outputlevel() > 2) { // this might give verbose output
+      pout << "\t\t\t printing reduced A-matrix: " << a_subspace.Nrows() << " x " << a_subspace.Ncols() << endl;
       for(int i = 1; i < lroots; ++i) {
-        pout << "\t\t\t ";
+        pout << "\t ";
         for(int j = 1; j < lroots; ++j) {
-          pout << setw(16) << fixed << setprecision(8) << h_subspace(i, j);
+          pout << setw(16) << fixed << setprecision(8) << a_subspace(i, j);
         }
         pout << endl;
       }
       pout << endl;
-      pout << "\t\t\t printing subspace overlap matrix" << endl;
+
+      if(rpa_sweep) {
+
+      pout << "\t\t\t printing reduced B-matrix: " << b_subspace.Nrows() << " x " << b_subspace.Ncols() << endl;
       for(int i = 1; i < lroots; ++i) {
-        pout << "\t\t\t ";
+        pout << "\t ";
+        for(int j = 1; j < lroots; ++j) {
+          pout << setw(16) << fixed << setprecision(8) << b_subspace(i, j);
+        }
+        pout << endl;
+      }
+      pout << endl;
+
+      }
+
+      pout << "\t\t\t printing reduced S-matrix: " << s_subspace.Nrows() << " x " << s_subspace.Ncols() << endl;
+      for(int i = 1; i < lroots; ++i) {
+        pout << "\t ";
         for(int j = 1; j < lroots; ++j) {
           pout << setw(16) << fixed << setprecision(8) << s_subspace(i, j);
         }
         pout << endl;
       }
       pout << endl;
+
+      if(rpa_sweep) {
+
+      pout << "\t\t\t printing reduced D-matrix: " << d_subspace.Nrows() << " x " << d_subspace.Ncols() << endl;
+      for(int i = 1; i < lroots; ++i) {
+        pout << "\t ";
+        for(int j = 1; j < lroots; ++j) {
+          pout << setw(16) << fixed << setprecision(8) << d_subspace(i, j);
+        }
+        pout << endl;
+      }
+      pout << endl;
+
+      }
     }
 
     system = newSystem;
@@ -442,34 +522,66 @@ double SpinAdapted::Sweep::LRT::do_one
 
   } // end block iter
 
+  // compute RPA energy
+  double rpaEcorr = 0.0;
+  if(mpigetrank() == 0) {
+    for(int i = 1; i < nroots; ++i)
+      rpaEcorr -= eigenvalues[i] * ynorm[i];
+  }
+
 #ifndef SERIAL
+  mpi::broadcast(world, rpaEcorr, 0);
   mpi::broadcast(world, rnorm, 0);
+  mpi::broadcast(world, ynorm, 0);
+  mpi::broadcast(world, eigenvalues, 0);
 #endif
+
+  finalEnergy[0] = eigenvalues[0] - rpaEcorr;
+  for(int i = 1; i < nroots; ++i)
+    finalEnergy[i] = finalEnergy[0] + eigenvalues[i];
 
   // check convergence and save iteration info
   if (mpigetrank() == 0) {
-    i_conv_root = 1;
-    if(!warmUp) {
+    if(!warmUp && (!rpa_sweep || rpa_sweep_2nd)) {
+      i_conv_root = 1;
       for(; i_conv_root < nroots; ++i_conv_root) {
         if(rnorm[i_conv_root] > sweepParams.get_davidson_tol()) break;
       }
     }
 
-    mroots = lroots;
-    deflation_sweep = mroots > dmrginp.deflation_max_size() ? true : false;
+    if(!rpa_sweep || rpa_sweep_2nd) mroots = lroots;
 
-    SpinAdapted::LRT::SaveDavidsonInfo(h_subspace, s_subspace, mroots, i_conv_root, deflation_sweep);
+    deflation_sweep = (mroots > dmrginp.deflation_max_size()) ? true : false;
+
+    SpinAdapted::LRT::SaveDavidsonInfo(a_subspace, b_subspace, s_subspace, d_subspace,
+                                       eigenvalues, rnorm, ynorm, mroots, i_conv_root, deflation_sweep);
   }
 
-  for(int j = 0; j < nroots && !warmUp; ++j) {
-//for(int j = 1; j < nroots; ++j) {
-    pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
-         << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << fixed << setprecision(8) << finalEnergy[j]+dmrginp.get_coreenergy()
-         << " ( R-norm  " << scientific << setprecision(3) << rnorm[j] << " ) " << endl;
+  if(!warmUp && (!rpa_sweep || rpa_sweep_2nd)) {
+    if(dmrginp.outputlevel() > 0) {
+      pout << "\t\t\t printing eigenvalues of effective hamiltonian" << endl;
+      for(int j = 1; j < nroots; ++j) {
+        pout << "\t\t\t excitation energy for State [ " << j << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()
+             << " ] :: " << setw(16) << fixed << setprecision(12) << eigenvalues[j]
+             << " ( Y-norm  " << setw(20) << scientific << setprecision(12) << ynorm[j] << " ) " << endl;
+      }
+    }
+
+    pout << "\t\t\t ============================================================================ " << endl;
+    pout << "\t\t\t energy for State [ 0 ] with Spin [ "
+         << dmrginp.molecule_quantum().get_s()  << " ] :: "
+         << setw(16) << fixed << setprecision(12) << finalEnergy[0]+dmrginp.get_coreenergy() << endl;
+    if(rpa_sweep)
+      pout << "\t\t\t ( RPA correlation energy :: " << setw(16) << fixed << setprecision(12) << rpaEcorr << " ) " << endl;
+
+    for(int j = 1; j < nroots; ++j) {
+      pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and energy for State [ " << j 
+           << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: "
+           << setw(16) << fixed << setprecision(12) << finalEnergy[j]+dmrginp.get_coreenergy()
+           << " ( R-norm  " << scientific << setprecision(3) << rnorm[j] << " ) " << endl;
+    }
   }
 
-//pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
-//sweepParams.set_largest_dw() = finalError;
   pout << "\t\t\t ============================================================================ " << endl;
 
   // update the static number of iterations

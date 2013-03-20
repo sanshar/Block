@@ -19,24 +19,36 @@ namespace SpinAdapted {
 
 namespace LRT {
 
+int compute_orthogonal_transform(const Matrix& s, Matrix& u, bool is_rpa_metric);
+void transform_matrix(const Matrix& a, const Matrix& u, Matrix& b);
+int compute_eigenvalues(const Matrix& a_subspace, const Matrix& s_subspace, DiagonalMatrix& freq, Matrix& alpha);
+int compute_eigenvalues(const Matrix& a_subspace, const Matrix& b_subspace, const Matrix& s_subspace, const Matrix& d_subspace, DiagonalMatrix& freq, Matrix& alpha);
+
 void solve_wavefunction
-(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm, SpinBlock& big,
- const guessWaveTypes& guesswavetype, const bool& onedot, const bool& dot_with_sys, int nroots, int mroots, int kroots);
+(vector<Wavefunction>& psix1st, vector<Wavefunction>& psix2nd, const vector<double>& eigv, vector<double>& rnorm, SpinBlock& big,
+ const guessWaveTypes& guesswavetype, const bool& onedot, const bool& dot_with_sys,
+ const bool& rpa_sweep, const bool& rpa_sweep_2nd, int nroots, int mroots, int kroots);
 
 namespace TDA {
 
 void solve_correction_equation
-(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm, DiagonalMatrix& h_diag, Davidson_functor& h_mult,
- bool useprecond, int nroots, int mroots, int kroots);
+(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm,
+ DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool useprecond, int nroots, int mroots, int kroots);
 
 void compute_matrix_elements
-(vector<Wavefunction>& psix, Davidson_functor& h_mult, Matrix& h_subspace, Matrix& s_subspace, int mroots);
+(vector<Wavefunction>& psix, const vector<double>& eigv, Davidson_functor& h_mult, Matrix& a_subspace, Matrix& s_subspace, int mroots);
 
 };
 
 namespace RPA {
 
-// Is anyone going to implement here the RPA solver?
+void solve_correction_equation
+(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm,
+ DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool useprecond, int nroots, int mroots, int kroots);
+
+void compute_matrix_elements
+(vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& ynorm, Davidson_functor& h_mult,
+ Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace, const bool& rpa_sweep_2nd, int mroots);
 
 };
 

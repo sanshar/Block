@@ -56,12 +56,10 @@ void SpinBlock::transform_operators_lrt(std::vector< std::vector<Matrix> >& rota
       opTypes ot_0 = it->first & OP_TYPE_MASK;
 
       if (iState == 0 && jState >  0) {
-//pout << "DEBUG @ SpinBlock::transform_operators_lrt : build_and_renormalise_transform [ " << iState << ", " << jState << " ] " << endl;
         for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform_lrt, _1, this, ot_0, it->first,
                                       ref(rotateMatrices[iState]), ref(rotateMatrices[jState]), false, &newStateInfo));
       }
       else if (iState >  0 && jState == 0) {
-//pout << "DEBUG @ SpinBlock::transform_operators_lrt : build_and_renormalise_transform [ " << iState << ", " << jState << " ] " << endl;
         for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform_lrt, _1, this, ot_0, it->first,
                                       ref(rotateMatrices[jState]), ref(rotateMatrices[iState]), true,  &newStateInfo));
       }
@@ -100,15 +98,11 @@ void SpinBlock::transform_operators_lrt(std::vector< std::vector<Matrix> >& rota
       opTypes ot_0 = it->first & OP_TYPE_MASK;
 
       if (iState == 0 && jState >  0) {
-//pout << "DEBUG @ SpinBlock::transform_operators_lrt : renormalise_transform [ " << iState << ", " << jState << " ] " << endl;
         for_all_operators_multithread(*it->second, this->get_op_array(ot_0), bind(&SparseMatrix::renormalise_transform_lrt, _1, _2,
-//                                    ref(rotateMatrices[iState]), ref(rotateMatrices[jState]), false, (&this->stateInfo)));
                                       ref(rotateMatrices[iState]), ref(rotateMatrices[jState]), false, &newStateInfo));
       }
       else if (iState >  0 && jState == 0) {
-//pout << "DEBUG @ SpinBlock::transform_operators_lrt : renormalise_transform [ " << iState << ", " << jState << " ] " << endl;
         for_all_operators_multithread(*it->second, this->get_op_array(ot_0), bind(&SparseMatrix::renormalise_transform_lrt, _1, _2,
-//                                    ref(rotateMatrices[jState]), ref(rotateMatrices[iState]), true,  (&this->stateInfo)));
                                       ref(rotateMatrices[jState]), ref(rotateMatrices[iState]), true,  &newStateInfo));
       }
     }
@@ -134,76 +128,4 @@ void SpinBlock::transform_operators_lrt(std::vector< std::vector<Matrix> >& rota
 //  rightBlock->clear();
 }
 
-
-// transforming operators for DMRG-RPA
-
-// rotateMatricesRe: rotation matrix for X (contains 0-th rotation matrix)
-// rotateMatricesIm: rotation matrix for Y
-void SpinBlock::transform_operators_rpa(std::vector< std::vector<Matrix> >& rotateMatricesRe, std::vector< std::vector<Matrix> >& rotateMatricesIm)
-{
-  StateInfo oldStateInfo = stateInfo;
-  std::vector<SpinQuantum> newQuanta;
-  std::vector<int> newQuantaStates;
-  std::vector<int> newQuantaMap;
-  for (int Q = 0; Q < rotateMatrices[0].size (); ++Q)
-    {
-      if (rotateMatrices[0] [Q].Ncols () != 0)
-        {
-          newQuanta.push_back (stateInfo.quanta [Q]);
-          newQuantaStates.push_back (rotateMatrices[0] [Q].Ncols ());
-          newQuantaMap.push_back (Q);
-        }
-    }
-  StateInfo newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
-
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
-
-    if (!it->second->is_core()) {
-
-      int iState = get_bra_index(it->first);
-      int jState = get_ket_index(it->first);
-      opTypes ot_0 = it->first & OP_TYPE_MASK;
-
-      if (iState == 0 && jState >  0) {
-        for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform_rpa, _1, this, ot_0, it->first,
-                                      ref(rotateMatricesRe[iState]), ref(rotateMatricesRe[jState]), ref(rotateMatricesIm[jState]), false, &newStateInfo));
-      }
-      else if (iState >  0 && jState == 0) {
-        for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform_rpa, _1, this, ot_0, it->first,
-                                      ref(rotateMatricesRe[jState]), ref(rotateMatricesRe[iState]), ref(rotateMatricesIm[iState]), true,  &newStateInfo));
-      }
-    }
-  }
-
-   newStateInfo.AllocatePreviousStateInfo ();
-  *newStateInfo.previousStateInfo = oldStateInfo;
-
-  for (int i = 0; i < newQuantaMap.size (); ++i)
-    assert (newStateInfo.quanta [i] == oldStateInfo.quanta [newQuantaMap [i]]);
-
-  if (dmrginp.outputlevel() > 0) {
-    pout << "\t\t\t total elapsed time " << globaltimer.totalwalltime() << " " << globaltimer.totalcputime() << " ... " 
-         << globaltimer.elapsedwalltime() << " " << globaltimer.elapsedcputime() << endl;
-    pout << "\t\t\t Transforming to new basis " << endl;
-  }
-  Timer transformtimer;
-
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
-
-    if ( it->second->is_core()) {
-
-      int iState = get_bra_index(it->first);
-      int jState = get_ket_index(it->first);
-      opTypes ot_0 = it->first & OP_TYPE_MASK;
-
-      if (iState == 0 && jState >  0) {
-        for_all_operators_multithread(*it->second, this->get_op_array(ot_0), bind(&SparseMatrix::renormalise_transform_rpa, _1, _2,
-                                      ref(rotateMatricesRe[iState]), ref(rotateMatricesRe[jState]), ref(rotateMatricesIm[jState]), false, &newStateInfo));
-      }
-      else if (iState >  0 && jState == 0) {
-        for_all_operators_multithread(*it->second, this->get_op_array(ot_0), bind(&SparseMatrix::renormalise_transform_rpa, _1, _2,
-                                      ref(rotateMatricesRe[jState]), ref(rotateMatricesRe[iState]), ref(rotateMatricesIm[iState]), true,  &newStateInfo));
-      }
-    }
-  }
 }

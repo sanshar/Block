@@ -14,7 +14,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 void SpinAdapted::InitBlocks::LRT::InitNewEnvironmentBlock
 (SpinBlock& environment, SpinBlock& environmentDot, SpinBlock& newEnvironment, const SpinBlock& system, SpinBlock& systemDot,
  const Matrix& alpha, const int& sys_add, const int& env_add, const bool& forward, const bool& direct, const bool& onedot,
- const bool& nexact, const bool& useSlater, bool haveNormops, bool haveCompops, const bool& dot_with_sys, int nroots)
+ const bool& nexact, const bool& useSlater, bool haveNormops, bool haveCompops, const bool& dot_with_sys,
+ const bool& rpa_sweep_2nd, int nroots)
 {
   // now initialise environment Dot
   int systemDotStart, systemDotEnd, environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
@@ -56,11 +57,11 @@ void SpinAdapted::InitBlocks::LRT::InitNewEnvironmentBlock
       pout << "\t\t\t Restoring block of size " << environmentSites.size () << " from previous iteration" << endl;
     if(dot_with_sys && onedot) {
       SpinBlock::restore (!forward, environmentSites, newEnvironment);
-      newEnvironment.rotatebyRitzVectors(alpha, nroots);
+      if(!rpa_sweep_2nd) newEnvironment.rotatebyRitzVectors(alpha, nroots);
     }
     else {
       SpinBlock::restore (!forward, environmentSites, environment);
-      environment.rotatebyRitzVectors(alpha, nroots);
+      if(!rpa_sweep_2nd) environment.rotatebyRitzVectors(alpha, nroots);
     }
     if (dmrginp.outputlevel() > 0)
       mcheck("");
@@ -94,6 +95,5 @@ void SpinAdapted::InitBlocks::LRT::InitNewEnvironmentBlock
     pout << "\t\t\t Environment block " << endl << newEnvironment << endl;
     newEnvironment.printOperatorSummary();
   }
-
 }
 

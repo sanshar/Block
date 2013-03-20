@@ -189,6 +189,17 @@ class SparseMatrix : public Baseoperator<Matrix>
                                  const std::vector<Matrix>& rotate_matrix_0,
                                  const std::vector<Matrix>& rotate_matrix_i, bool doTrans,
                                  const StateInfo *newStateInfo);
+  // additional member functions for DMRG-RPA
+  void renormalise_transform_rpa(const SparseMatrix& op_0,
+                                 const std::vector<Matrix>& rotate_matrix_0,
+                                 const std::vector<Matrix>& rotate_matrix_x,
+                                 const std::vector<Matrix>& rotate_matrix_y, bool doTrans,
+                                 const StateInfo *stateinfo);
+  void build_and_renormalise_transform_rpa(SpinBlock *big, const opTypes& ot_0, const opTypes& ot_i,
+                                 const std::vector<Matrix>& rotate_matrix_0,
+                                 const std::vector<Matrix>& rotate_matrix_x,
+                                 const std::vector<Matrix>& rotate_matrix_y, bool doTrans,
+                                 const StateInfo *newStateInfo);
 
   SparseMatrix& operator+=(const SparseMatrix& other);
 

@@ -135,20 +135,18 @@ class SpinBlock
   void transform_operators(std::vector<Matrix>& rotateMatrix);
 
   // additional member functions for DMRG-LRT
-  void multiplyH_lrt_left(Wavefunction& c, Wavefunction* v, int iState, int num_threads) const;
-  void multiplyH_lrt_total(Wavefunction& c, Wavefunction* v, int iState, int num_threads) const;
+  void multiplyH_lrt_left (Wavefunction& c, Wavefunction* v, int state, bool conjugate, int num_threads) const;
+  void multiplyH_lrt_total(Wavefunction& c, Wavefunction* v, int state, bool conjugate, int num_threads) const;
 
-  void RenormaliseFrom_lrt(const vector<double> &energies, vector<double>& rnorm, vector< vector<Matrix> >& rotateMatrices,
-                           int nroots, int mroots, int kroots, Matrix& h_subspace, Matrix& s_subspace, const int keptstates, const int keptqstates,
-                           SpinBlock& big, const guessWaveTypes &guesswavetype, const bool &onedot, const bool &last_site, SpinBlock& System, 
-                           SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, int sweepiter);
+  void RenormaliseFrom_lrt(const vector<double> &energies, vector<double>& rnorm, vector<double>& ynorm, vector< vector<Matrix> >& rotateMatrices,
+                           int nroots, int mroots, int kroots, Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace,
+                           const int keptstates, const int keptqstates, SpinBlock& big, const guessWaveTypes &guesswavetype, const bool &onedot,
+                           const bool &last_site, const bool &rpa_sweep, const bool &rpa_sweep_2nd,
+                           SpinBlock& System, SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, int sweepiter);
 
 //double makeRotateMatrix_lrt(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates);
   void transform_operators_lrt(std::vector< std::vector<Matrix> >& rotateMatrices);
-  void rotatebyRitzVectors(const Matrix& alpha, int nroot);
-
-  // additional member functions for DMRG-RPA
-  void transform_operators_rpa(std::vector< std::vector<Matrix> >& rotateMatricesRe, std::vector< std::vector<Matrix> >& rotateMatricesIm);
+  void rotatebyRitzVectors(const Matrix& alpha, int nroots);
 };
 }
 #endif

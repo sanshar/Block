@@ -15,7 +15,7 @@ namespace SpinAdapted{
 
 struct Davidson_functor
 {
-  virtual void operator() (Wavefunction& c, Wavefunction& v, int iState = 0, int jState = 0) = 0;
+  virtual void operator() (Wavefunction& c, Wavefunction& v, int state = 0, bool conjugate = false) = 0;
   virtual const SpinBlock& get_block() = 0;
 };
 
@@ -25,7 +25,7 @@ private:
   const SpinBlock& block;
 public:
   multiply_h(const SpinBlock& b, const bool& onedot_);
-  void operator() (Wavefunction& c, Wavefunction& v, int iState, int jState);
+  void operator() (Wavefunction& c, Wavefunction& v, int state, bool conjugate);
   const SpinBlock& get_block() { return block; }
 };
 

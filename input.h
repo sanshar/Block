@@ -31,6 +31,7 @@ enum solveTypes {LANCZOS, DAVIDSON};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
 enum calcType {DMRG, ONEPDM, TWOPDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI, DMRG_LRT};
+enum lrtType {TDA, RPA}; // to be added LRT-property calc.
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 
 enum keywords{ORBS, MAXM, REORDER, GAORDER, SCHEDULE, SYM, NELECS, SPIN, IRREP,
@@ -71,6 +72,7 @@ class Input {
   double m_diis_error_tol;
 
   calcType m_calc_type;
+  lrtType  m_lrt_type;
   noiseTypes m_noise_type;
   hamTypes m_ham_type;
   int m_nroots;
@@ -138,7 +140,7 @@ class Input {
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat & m_reorder & m_gaopt & m_gaorder;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_cd;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_screen_tol & m_quantaToKeep & m_noise_type;
-    ar & m_sweep_tol & m_restart & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;
+    ar & m_sweep_tol & m_restart & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_lrt_type & m_ham_type;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
     ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_default & m_core_energy &m_integral_disk_storage_thresh;
   }
@@ -248,6 +250,7 @@ class Input {
   const int &max_lanczos_dimension() const {return m_max_lanczos_dimension;}
   std::vector<int> thrds_per_node() const { return m_thrds_per_node; }
   const calcType &calc_type() const { return m_calc_type; }
+  const lrtType &lrt_type() const { return m_lrt_type; }
   const solveTypes &solve_method() const { return m_solve_type; }
   const noiseTypes &noise_type() const {return m_noise_type;}
   const bool &set_Sz() const {return m_set_Sz;}

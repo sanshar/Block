@@ -27,16 +27,14 @@ namespace SpinAdapted {
 using namespace operatorfunctions;
 
 // for DMRG-LRT: ( [ L(0i) x R(00) ] + [ L(i0)^(T) x R(00)^(T) ] ) * c
-void SpinBlock::multiplyH_lrt_left(Wavefunction& c, Wavefunction* v, int iState, int num_threads) const
+void SpinBlock::multiplyH_lrt_left(Wavefunction& c, Wavefunction* v, int state, bool conjugate, int num_threads) const
 {
-//pout << "DEBUG @ SpinBlock::multiplyH_lrt_left: state = " << iState << endl;
-//pout << "DEBUG @ SpinBlock::multiplyH_lrt_left: leftBlock: " << endl << *leftBlock << endl;
-//pout << "DEBUG @ SpinBlock::multiplyH_lrt_left: rightBlock: " << endl << *rightBlock << endl;
-
   Wavefunction *v_array=0, *v_distributed=0, *v_add=0;
   
-  opTypes state_index_0i = make_state_index(0, iState);
-  opTypes state_index_i0 = make_state_index(iState, 0);
+  opTypes state_index_0i = make_state_index(0, state);
+  opTypes state_index_i0 = make_state_index(state, 0);
+
+  if(conjugate) swap(state_index_0i, state_index_i0); // for RPA
 
   int maxt = 1;
   initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
@@ -44,15 +42,22 @@ void SpinBlock::multiplyH_lrt_left(Wavefunction& c, Wavefunction* v, int iState,
   dmrginp.s0time -> start();
 
   if(leftBlock->has(HAM | state_index_0i)) {
-    // iState >  0: Ham(L)[0, 1] x 1(R)[0, 0] * C[0]
-    // iState == 0: Ham(L)[0, 0] x 1(R)[0, 0] * C[1]
+    // state >  0: Ham(L)[0, 1] x 1(R)[0, 0] * C[0]
+    // state == 0: Ham(L)[0, 0] x 1(R)[0, 0] * C[1]
     boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM | state_index_0i).get_local_element(0)[0];
     TensorMultiply(leftBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);
   }
+  else if(leftBlock->has(HAM | state_index_i0)) {
+    // for RPA, imaginary part
+    // state >  0: Ham(L)[0, 1] x 1(R)[0, 0] * C[0]
+    // state == 0: Ham(L)[0, 0] x 1(R)[0, 0] * C[1]
+    boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM | state_index_i0).get_local_element(0)[0];
+    TensorMultiply(leftBlock, Transposeview(*op), this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);
+  }
 
-  if(iState == 0) {
-    // iState >  0: 0
-    // iState == 0: 1(R)[0, 0] x Ham(L)[0, 0] * C[1]
+  if(state == 0) {
+    // state >  0: 0
+    // state == 0: 1(R)[0, 0] x Ham(L)[0, 0] * C[1]
     boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_array(HAM).get_local_element(0)[0];
     TensorMultiply(rightBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum(), 1.0, MAX_THRD);  
   }
@@ -122,7 +127,7 @@ void SpinBlock::multiplyH_lrt_left(Wavefunction& c, Wavefunction* v, int iState,
 
 }
 
-void SpinBlock::multiplyH_lrt_total(Wavefunction& c, Wavefunction* v, int iState, int num_threads) const
+void SpinBlock::multiplyH_lrt_total(Wavefunction& c, Wavefunction* v, int state, bool conjugate, int num_threads) const
 {
 
   SpinBlock* loopBlock = (leftBlock->is_loopblock()) ? leftBlock : rightBlock;
@@ -130,8 +135,10 @@ void SpinBlock::multiplyH_lrt_total(Wavefunction& c, Wavefunction* v, int iState
 
   Wavefunction *v_array=0, *v_distributed=0, *v_add=0;
   
-  opTypes state_index_0i = make_state_index(0, iState);
-  opTypes state_index_i0 = make_state_index(iState, 0);
+  opTypes state_index_0i = make_state_index(0, state);
+  opTypes state_index_i0 = make_state_index(state, 0);
+
+  if(conjugate) swap(state_index_0i, state_index_i0); // for RPA
 
   int maxt = 1;
   initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
@@ -142,10 +149,18 @@ void SpinBlock::multiplyH_lrt_total(Wavefunction& c, Wavefunction* v, int iState
     boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM | state_index_0i).get_local_element(0)[0];
     TensorMultiply(leftBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);
   }
+  else if(leftBlock->has(HAM | state_index_i0)) {
+    boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM | state_index_i0).get_local_element(0)[0];
+    TensorMultiply(leftBlock, Transposeview(*op), this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);
+  }
 
   if(rightBlock->has(HAM | state_index_0i)) {
     boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_array(HAM | state_index_0i).get_local_element(0)[0];
     TensorMultiply(rightBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum(), 1.0, MAX_THRD);  
+  }
+  else if(rightBlock->has(HAM | state_index_i0)) {
+    boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_array(HAM | state_index_i0).get_local_element(0)[0];
+    TensorMultiply(rightBlock, Transposeview(*op), this, c, *v, dmrginp.effective_molecule_quantum(), 1.0, MAX_THRD);  
   }
 
   dmrginp.s0time -> stop();
@@ -170,7 +185,7 @@ void SpinBlock::multiplyH_lrt_total(Wavefunction& c, Wavefunction* v, int iState
     for_all_multithread(leftBlock->get_op_array(CRE | state_index_0i), leftBlock->get_op_array(CRE | state_index_i0), f);  
   }
 
-  if(iState > 0) {
+  if(state > 0) {
 
   if(rightBlock->has(CRE | state_index_0i)) {
     v_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
@@ -207,7 +222,7 @@ void SpinBlock::multiplyH_lrt_total(Wavefunction& c, Wavefunction* v, int iState
       for_all_multithread(loopBlock->get_op_array(CRE_CRE | state_index_0i), loopBlock->get_op_array(CRE_CRE | state_index_i0), f);
     }
 
-    if(iState > 0) {
+    if(state > 0) {
 
     if(otherBlock->has(CRE_DESCOMP | state_index_0i)) {
       v_add =  otherBlock->get_op_array(CRE_DESCOMP | state_index_0i).is_local() ? v_array : v_distributed;

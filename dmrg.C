@@ -269,7 +269,7 @@ int calldmrg(char* input, char* output)
 
     break;
 
-  // DMRG Linear-Response Theory for Excited State
+  // DMRG Linear-Response Theory & Random Phase Approximation for Excited State
   case (DMRG_LRT):
     if (dmrginp.algorithm_method() == TWODOT) {
       pout << "\t\t\t ERROR: DMRG-LRT not allowed with twodot algorithm" << endl;
@@ -503,17 +503,33 @@ void dmrglrt(double sweep_tol)
     sweepParams.set_restart_iter() = 0;
   }
   
+  bool is_rpa = (dmrginp.lrt_type() == RPA);
+
   pout << "\t\t\t computing guesses from Krylov subspace " << endl;
-  Sweep::LRT::do_one(sweepParams, true, direction, false, 0);
+  if(is_rpa) {
+    Sweep::LRT::do_one(sweepParams, true, direction, false, false, 0);
+    Sweep::LRT::do_one(sweepParams, true, !direction, true, false, 0);
+  }
+  else {
+    Sweep::LRT::do_one(sweepParams, true, direction, false, false, 0);
+    direction = !direction;
+  }
 
   double max_rnorm = 1.0e8;
 
   while (max_rnorm > sweep_tol) {
-    direction = !direction;
 
     if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
       break;
 
-    max_rnorm = Sweep::LRT::do_one(sweepParams, false, direction, false, 0);
+    if(is_rpa) {
+      max_rnorm = Sweep::LRT::do_one(sweepParams, false, direction, false, false, 0);
+                  Sweep::LRT::do_one(sweepParams, false, !direction, true, false, 0);
+    }
+    else {
+      max_rnorm = Sweep::LRT::do_one(sweepParams, false, direction, false, false, 0);
+      direction = !direction;
+    }
+
   }
 }

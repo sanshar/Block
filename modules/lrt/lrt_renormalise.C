@@ -43,25 +43,55 @@ namespace SpinAdapted {
 using namespace operatorfunctions;
 
 void SpinBlock::RenormaliseFrom_lrt
-(const vector<double> &energies, vector<double>& rnorm, 
- vector< vector<Matrix> >& rotateMatrices, int nroots, int mroots, int kroots,
- Matrix& h_subspace, Matrix& s_subspace, const int keptstates, const int keptqstates,
- SpinBlock& big, const guessWaveTypes &guesswavetype, const bool &onedot, const bool &last_site, SpinBlock& System, 
- SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, int sweepiter)
+(const vector<double> &energies, vector<double>& rnorm, vector<double>& ynorm, vector< vector<Matrix> >& rotateMatrices, int nroots, int mroots, int kroots,
+ Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace, const int keptstates, const int keptqstates,
+ SpinBlock& big, const guessWaveTypes &guesswavetype, const bool &onedot, const bool &last_site, const bool &rpa_sweep, const bool &rpa_sweep_2nd,
+ SpinBlock& System, SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, int sweepiter)
 {
-  const int lroots = mroots + nroots - kroots;
-  vector<Wavefunction> wave_solutions;
+  int lroots = mroots + nroots - kroots;
+
+  int Nroots = (rpa_sweep ? 2 * nroots - 1 : nroots);
+  int Mroots = (rpa_sweep ? 2 * mroots - 1 : mroots);
+  int Lroots = (rpa_sweep ? 2 * lroots - 1 : lroots);
+
+  vector<Wavefunction> wave_solutions_1st;
+  vector<Wavefunction> wave_solutions_2nd;
+
   dmrginp.davidsonT -> start();
   if (dmrginp.outputlevel() > 0)
     mcheck("before davidson but after all blocks are built");
 
   dmrginp.solvewf -> start();
-  LRT::solve_wavefunction(wave_solutions, energies, rnorm, big, guesswavetype, onedot, dot_with_sys, nroots, mroots, kroots);
 
-  // specialize to use dot with environment at last site (necessary for parallel run)
-  if(last_site) {
-    LRT::multiply_h_left davidson_f(big, onedot);
-    LRT::TDA::compute_matrix_elements(wave_solutions, davidson_f, h_subspace, s_subspace, lroots);
+  //
+  // NOTE: wave_solutions_1st[0] = wave_solutions_2nd[0] : 0-th wavefunction
+  //
+
+  LRT::solve_wavefunction(wave_solutions_1st, wave_solutions_2nd,
+                          energies, rnorm, big, guesswavetype, onedot, dot_with_sys, rpa_sweep, rpa_sweep_2nd, nroots, mroots, kroots);
+
+  if(rpa_sweep) {
+    // compute 1-st order components for RPA
+    // specialize to use dot with environment at last site (necessary for parallel run)
+    if(!rpa_sweep_2nd && last_site) {
+      LRT::multiply_h_left davidson_f(big, onedot);
+      LRT::RPA::compute_matrix_elements(wave_solutions_1st, energies, ynorm, davidson_f,
+                                        a_subspace, b_subspace, s_subspace, d_subspace, rpa_sweep_2nd, lroots);
+    }
+    // compute 2-nd order components for RPA
+    else if(rpa_sweep_2nd && !last_site) {
+      LRT::multiply_h_left davidson_f(big, onedot);
+      LRT::RPA::compute_matrix_elements(wave_solutions_2nd, energies, ynorm, davidson_f,
+                                        a_subspace, b_subspace, s_subspace, d_subspace, rpa_sweep_2nd, lroots);
+    }
+  }
+  else {
+    // compute 1-st order components for TDA
+    // specialize to use dot with environment at last site (necessary for parallel run)
+    if(last_site) {
+      LRT::multiply_h_left davidson_f(big, onedot);
+      LRT::TDA::compute_matrix_elements(wave_solutions_1st, energies, davidson_f, a_subspace, s_subspace, lroots);
+    }
   }
 
   dmrginp.solvewf -> stop();
@@ -72,12 +102,12 @@ void SpinBlock::RenormaliseFrom_lrt
 
   // maybe better to turn 'dot with env' off for computing (1 - L(0)L(0)')C(I) later
   if (onedot && !dot_with_sys) {
-    InitBlocks::InitNewSystemBlock(System, sysDot, newsystem, sysDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true, lroots);
+    InitBlocks::InitNewSystemBlock(System, sysDot, newsystem, sysDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true, Lroots);
     InitBlocks::InitBigBlock(newsystem, environment, newbig); 
-    for (int i = 0; i < lroots && mpigetrank() == 0; i++) {
-      Wavefunction tempwave = wave_solutions[i];
-      GuessWave::onedot_shufflesysdot(big.get_stateInfo(), newbig.get_stateInfo(), wave_solutions[i], tempwave);  
-      wave_solutions[i] = tempwave;
+    for (int i = 0; i < Lroots && mpigetrank() == 0; i++) {
+      Wavefunction tempwave = wave_solutions_1st[i];
+      GuessWave::onedot_shufflesysdot(big.get_stateInfo(), newbig.get_stateInfo(), wave_solutions_1st[i], tempwave);  
+      wave_solutions_1st[i] = tempwave;
     }
     *this = newsystem;
     if (dmrginp.outputlevel() > 0)
@@ -101,8 +131,8 @@ void SpinBlock::RenormaliseFrom_lrt
   DensityMatrix tracedMatrix;
   tracedMatrix.allocate(stateInfo);
 
-  rotateMatrices.resize(lroots);
-  vector<Wavefunction> projected_wave_solutions(lroots);
+  rotateMatrices.resize(Lroots);
+  vector<Wavefunction> projected_wave_solutions(Lroots);
 
   vector< vector<double> > selectedwts;
   vector< vector<double> > rejectedwts;
@@ -110,7 +140,7 @@ void SpinBlock::RenormaliseFrom_lrt
 
   if(mpigetrank() == 0) {
     // FIXME: re-computing 0-th rotation matrix is wasteful, but computing 1-st rotation matrices needs its eigenvalues
-    MultiplyProduct (wave_solutions[0], Transpose(wave_solutions[0]), tracedMatrix, 1.0);
+    MultiplyProduct (wave_solutions_1st[0], Transpose(wave_solutions_1st[0]), tracedMatrix, 1.0);
 
     // find and sort weight info
     DensityMatrix transformmatrix;
@@ -137,39 +167,37 @@ void SpinBlock::RenormaliseFrom_lrt
     LRT::assign_matrix_by_dm(eigenMatrix, rotateMatrices[0], selectedwts, rejectedbasis, rejectedwts, transformmatrix,
                              inorderwts, wtsbyquanta, totalstatesbydm, totalstatesbyquanta, size(), dmrginp.last_site()-size());
 
-    projected_wave_solutions[0] = wave_solutions[0];
-    for(int i = 1; i < lroots; ++i) {
+    projected_wave_solutions[0] = wave_solutions_1st[0];
+    for(int i = 1; i < Lroots; ++i) {
       if(last_site)
-        projected_wave_solutions[i] = wave_solutions[i];
+        projected_wave_solutions[i] = wave_solutions_1st[i];
       else
-        LRT::project_onto_rejectedspace(wave_solutions[i], rotateMatrices[0], dot_with_sys, projected_wave_solutions[i]);
+        LRT::project_onto_rejectedspace(wave_solutions_1st[i], rotateMatrices[0], dot_with_sys, projected_wave_solutions[i]);
     }
   }
 
-  // might be used the same subroutine for both TDA and RPA ?
-  if(!last_site) {
-    LRT::multiply_h_left davidson_f(newbig, onedot);
-    LRT::TDA::compute_matrix_elements(projected_wave_solutions, davidson_f, h_subspace, s_subspace, lroots);
+  // compute 1-st order components for RPA
+  if(rpa_sweep) {
+    if(!rpa_sweep_2nd && !last_site) {
+      LRT::multiply_h_left davidson_f(newbig, onedot);
+      LRT::RPA::compute_matrix_elements(projected_wave_solutions, energies, ynorm, davidson_f,
+                                        a_subspace, b_subspace, s_subspace, d_subspace, rpa_sweep_2nd, lroots);
+    }
+  }
+  // compute 1-st order components for TDA
+  else {
+    if(!last_site) {
+      LRT::multiply_h_left davidson_f(newbig, onedot);
+      LRT::TDA::compute_matrix_elements(projected_wave_solutions, energies, davidson_f, a_subspace, s_subspace, lroots);
+    }
   }
 
   if(mpigetrank() == 0) {
-    for(int i = 1; i < lroots; ++i) {
+    for(int i = 1; i < Lroots; ++i) {
       DensityMatrix tracedMatrix_deriv;
       tracedMatrix_deriv.allocate(stateInfo);
-      // FIXME: one of them doesn't contribute
-      // (maybe second one, but not sure, since it depends on storage structure of BLOCK code)
-      MultiplyProduct (projected_wave_solutions[i], Transpose(wave_solutions[0]), tracedMatrix_deriv, 1.0);
-//pout << "DEBUG @ SpinBlock::RenormaliseFrom_lrt: check point dm_deriv - 3" << endl;
-//      MultiplyProduct (wave_solutions[0], Transpose(wave_solutions[i]), tracedMatrix_deriv, 1.0);
-
-//    LRT::assign_matrix_by_dm_deriv(rotateMatrices[0], selectedwts, rejectedbasis, rejectedwts, tracedMatrix_deriv, rotateMatrices[i]);
-//    LRT::project_onto_rejectedspace(wave_solutions[i], rejectedbasis, dot_with_sys, projected_wave_solutions[i]);
-//    LRT::assign_matrix_by_dm_deriv(rotateMatrices[0], selectedwts, tracedMatrix_deriv, rotateMatrices[i], true);
-
-//    LRT::assign_matrix_by_dm_deriv(rotateMatrices[0], selectedwts, tracedMatrix_deriv, rotateMatrices[i], false);
+      MultiplyProduct (projected_wave_solutions[i], Transpose(wave_solutions_1st[0]), tracedMatrix_deriv, 1.0);
       LRT::assign_matrix_by_dm_deriv(rotateMatrices[0], selectedwts, rejectedwts, tracedMatrix_deriv, rotateMatrices[i], false);
-
-//    LRT::project_onto_rejectedspace(wave_solutions[i], rotateMatrices[0], dot_with_sys, projected_wave_solutions[i]);
     }
   }
 
@@ -178,11 +206,13 @@ void SpinBlock::RenormaliseFrom_lrt
   broadcast(world, rotateMatrices, 0);
 #endif
 
-  for (int i = 0; i < lroots; ++i)
+  for (int i = 0; i < Lroots; ++i)
     SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrices[i], i);
-  for (int i = 0; i < lroots; ++i)
-//for (int i = 1; i < lroots; ++i) // keep 0-th wavefunction
-    wave_solutions[i].SaveWavefunctionInfo (newbig.stateInfo, newbig.leftBlock->sites, i);
+// FOR DEBUG TEST
+//for (int i = 0; i < Lroots; ++i)
+  for (int i = 1; i < Lroots; ++i)
+    wave_solutions_1st[i].SaveWavefunctionInfo (newbig.stateInfo, newbig.leftBlock->sites, i);
+
   dmrginp.rotmatrixT -> stop();
 }
 

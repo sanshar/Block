@@ -66,6 +66,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_algorithm_type = TWODOT_TO_ONEDOT;
   m_noise_type = RANDOM;
   m_calc_type = DMRG;
+  m_lrt_type = TDA;
   m_solve_type = DAVIDSON;
 
   m_twodot_to_onedot_iter = 0;
@@ -422,8 +423,17 @@ SpinAdapted::Input::Input(const string& config_name)
 	m_calc_type = RESTART_ONEPDM;
       else if (boost::iequals(keyword,  "restart_twopdm") || boost::iequals(keyword,  "restart_twordm") || boost::iequals(keyword,  "restart_trdm"))
 	m_calc_type = RESTART_TWOPDM;
-      else if (boost::iequals(keyword,  "dmrglrt") || boost::iequals(keyword,  "dmrg_lrt") || boost::iequals(keyword,  "lrt"))
+      else if (boost::iequals(keyword,  "dmrglrt") || boost::iequals(keyword,  "dmrg_lrt") || boost::iequals(keyword,  "lrt")) {
         m_calc_type = DMRG_LRT;
+      }
+      else if (boost::iequals(keyword,  "dmrgtda") || boost::iequals(keyword,  "dmrg_tda") || boost::iequals(keyword,  "tda")) {
+        m_calc_type = DMRG_LRT;
+        m_lrt_type  = TDA;
+      }
+      else if (boost::iequals(keyword,  "dmrgrpa") || boost::iequals(keyword,  "dmrg_rpa") || boost::iequals(keyword,  "rpa")) {
+        m_calc_type = DMRG_LRT;
+        m_lrt_type  = RPA;
+      }
       else if(boost::iequals(keyword,  "prefix") || boost::iequals(keyword,  "scratch"))
       {
 	if(usedkey[PREFIX] == 0) 
