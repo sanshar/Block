@@ -654,7 +654,7 @@ void SpinAdapted::LRT::RPA::solve_correction_equation
 
     // BX * C0
     Wavefunction  sgvm_i;
-    Wavefunction *sgvm_ptr = &sgv0_i;
+    Wavefunction *sgvm_ptr = &sgvm_i;
 
     if(mpigetrank() == 0) {
       sgvx[i] = psix[i];

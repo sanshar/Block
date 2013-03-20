@@ -558,24 +558,24 @@ double SpinAdapted::Sweep::LRT::do_one
   }
 
   if(!warmUp && (!rpa_sweep || rpa_sweep_2nd)) {
-    if(dmrginp.outputlevel() > 0) {
-      pout << "\t\t\t printing eigenvalues of effective hamiltonian" << endl;
-      for(int j = 1; j < nroots; ++j) {
-        pout << "\t\t\t excitation energy for State [ " << j << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()
-             << " ] :: " << setw(16) << fixed << setprecision(12) << eigenvalues[j]
-             << " ( Y-norm  " << setw(20) << scientific << setprecision(12) << ynorm[j] << " ) " << endl;
-      }
+    pout << endl << endl;
+    pout << "\t\t\t Finished DMRG-" << (rpa_sweep ? "TDA" : "RPA") << " calculation" << endl;
+    pout << "\t\t\t ============================================================================ " << endl;
+    for(int j = 1; j < nroots; ++j) {
+      pout << "\t\t\t excitation energy for State [ " << j << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()
+           << " ] :: " << setw(16) << fixed << setprecision(12) << eigenvalues[j]
+           << " ( Y-norm  " << setw(20) << scientific << setprecision(12) << ynorm[j] << " ) " << endl;
     }
+    if(rpa_sweep)
+      pout << "\t\t\t RPA correlation energy :: " << setw(16) << fixed << setprecision(12) << rpaEcorr << endl;
 
     pout << "\t\t\t ============================================================================ " << endl;
-    pout << "\t\t\t energy for State [ 0 ] with Spin [ "
+    pout << "\t\t\t            energy for State [ 0 ] with Spin [ "
          << dmrginp.molecule_quantum().get_s()  << " ] :: "
          << setw(16) << fixed << setprecision(12) << finalEnergy[0]+dmrginp.get_coreenergy() << endl;
-    if(rpa_sweep)
-      pout << "\t\t\t ( RPA correlation energy :: " << setw(16) << fixed << setprecision(12) << rpaEcorr << " ) " << endl;
 
     for(int j = 1; j < nroots; ++j) {
-      pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and energy for State [ " << j 
+      pout << "\t\t\t            energy for State [ " << j 
            << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: "
            << setw(16) << fixed << setprecision(12) << finalEnergy[j]+dmrginp.get_coreenergy()
            << " ( R-norm  " << scientific << setprecision(3) << rnorm[j] << " ) " << endl;

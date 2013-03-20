@@ -208,9 +208,7 @@ void SpinBlock::RenormaliseFrom_lrt
 
   for (int i = 0; i < Lroots; ++i)
     SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrices[i], i);
-// FOR DEBUG TEST
-//for (int i = 0; i < Lroots; ++i)
-  for (int i = 1; i < Lroots; ++i)
+  for (int i = 0; i < Lroots; ++i)
     wave_solutions_1st[i].SaveWavefunctionInfo (newbig.stateInfo, newbig.leftBlock->sites, i);
 
   dmrginp.rotmatrixT -> stop();
