@@ -203,3 +203,26 @@ lrt_transform_gauge / done
 lrt_state_rotation / done
 
 
+====================================================================================================
+Faster Algorithm:
+====================================================================================================
+
++ sweep 1-st
+- L-MPS: self-rot / calc & save { 1...L }
+- R-MPS: rot { 1...M-1 }
+- SGVAI: rot { 1...M-1 } / calc { M...L-1 } / save fwd { 1...L-1 } / dot_with_sys = true
+- SGVA0: rot { 1...M-1 } / calc { M...L-1 } / save fwd { 1...L-1 } / dot_with_sys = true
+- SGVB0: ---
+- SGVTI: trans & rot { 1...M-1 } / save fwd { 1...M-1 }
+
++ sweep 2-nd
+- L-MPS: ---
+- R-MPS: self-rot / calc & save { 1...L-1 }
+- SGVAI: ---
+- SGVA0: ---
+- SGVB0: rot { 1...M-1 } / calc { M...L-1 } / save bwd { 1...L-1 }
+- SGVTI: trans { 1...M-1 } / calc { M...L-1 } / save bwd { 1...L-1 }
+
+
+
+

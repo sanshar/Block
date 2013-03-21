@@ -350,7 +350,14 @@ void SpinAdapted::LRT::compute_guess_solutions
 #endif
   }
 
-  Linear::block_davidson(psix_tmp, h_diag, 1.0e-6, false, h_mult, useprecond);
+  int nvals;
+  if(mpigetrank() == 0) nvals = h_diag.Ncols();
+#ifndef SERIAL
+  mpi::broadcast(world, nvals, 0);
+#endif
+
+  if(nvals > 2*nroots)
+    Linear::block_davidson(psix_tmp, h_diag, 1.0e-6, false, h_mult, useprecond);
 
   if(mpigetrank() == 0) {
     for(int i = 1; i < nroots; ++i) {

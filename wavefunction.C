@@ -87,10 +87,11 @@ void SpinAdapted::Wavefunction::CollectFrom (const RowVector& C)
 
 
   
-void SpinAdapted::Wavefunction::SaveWavefunctionInfo (const StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num)
+void SpinAdapted::Wavefunction::SaveWavefunctionInfo (const StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num, const string& name)
 {
   char file [5000];
-  sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/wave-", sites [0], "-", *(sites.rbegin()), ".", mpigetrank(), ".", wave_num, ".tmp");
+//sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/wave-", sites [0], "-", *(sites.rbegin()), ".", mpigetrank(), ".", wave_num, ".tmp");
+  sprintf (file, "%s%s%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/", name.c_str(), "-", sites [0], "-", *(sites.rbegin()), ".", mpigetrank(), ".", wave_num, ".tmp");
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Saving Wavefunction " << file << endl;
   if (mpigetrank() == 0)
@@ -106,10 +107,11 @@ void SpinAdapted::Wavefunction::SaveWavefunctionInfo (const StateInfo &waveInfo,
     }
 }
 
-void SpinAdapted::Wavefunction::LoadWavefunctionInfo (StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num)
+void SpinAdapted::Wavefunction::LoadWavefunctionInfo (StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num, const string& name)
 {
   char file [5000];
-  sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.load_prefix().c_str(), "/wave-", sites [0], "-", *(sites.rbegin()), ".", mpigetrank(), ".", wave_num, ".tmp");
+//sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.load_prefix().c_str(), "/wave-", sites [0], "-", *(sites.rbegin()), ".", mpigetrank(), ".", wave_num, ".tmp");
+  sprintf (file, "%s%s%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/", name.c_str(), "-", sites [0], "-", *(sites.rbegin()), ".", mpigetrank(), ".", wave_num, ".tmp");
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Loading Wavefunction " << file << endl;
   waveInfo.Allocate ();

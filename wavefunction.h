@@ -24,7 +24,7 @@ private:
   } 
   bool onedot;
 public:
- Wavefunction() : onedot(false), SparseMatrix(){}
+  Wavefunction() : onedot(false), SparseMatrix(){}
   Wavefunction(const Wavefunction& wf) : SparseMatrix(wf), onedot(wf.onedot) {}
   Wavefunction(const SpinQuantum dQ, const SpinBlock* b, const bool onedot_) : onedot(onedot_) { initialise(dQ, b, onedot_); }
   void initialise(const SpinQuantum dQ, const SpinBlock* b, const bool &onedot_);
@@ -37,8 +37,8 @@ public:
   void CollectFrom(const RowVector& C);
   void FlattenInto(Matrix& C);
 
-  void LoadWavefunctionInfo (StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num);
-  void SaveWavefunctionInfo (const StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num);
+  void LoadWavefunctionInfo(StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num, const std::string& name = "wave");
+  void SaveWavefunctionInfo(const StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num, const std::string& name = "wave");
 
   void UnCollectQuantaAlongRows(const StateInfo& sRow, const StateInfo& sCol);
   void AllowQuantaFor(const StateInfo& sRow, const StateInfo& sCol, const SpinQuantum q);

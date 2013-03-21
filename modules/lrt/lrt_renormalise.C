@@ -67,6 +67,8 @@ void SpinBlock::RenormaliseFrom_lrt
   // NOTE: wave_solutions_1st[0] = wave_solutions_2nd[0] : 0-th wavefunction
   //
 
+  // NOTE: dot_with_sys is valid
+
   LRT::solve_wavefunction(wave_solutions_1st, wave_solutions_2nd,
                           energies, rnorm, big, guesswavetype, onedot, dot_with_sys, rpa_sweep, rpa_sweep_2nd, nroots, mroots, kroots);
 
@@ -100,7 +102,6 @@ void SpinBlock::RenormaliseFrom_lrt
   SpinBlock newbig;
   dmrginp.postwfrearrange -> start();
 
-  // maybe better to turn 'dot with env' off for computing (1 - L(0)L(0)')C(I) later
   if (onedot && !dot_with_sys) {
     InitBlocks::InitNewSystemBlock(System, sysDot, newsystem, sysDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true, Lroots);
     InitBlocks::InitBigBlock(newsystem, environment, newbig); 
@@ -176,17 +177,17 @@ void SpinBlock::RenormaliseFrom_lrt
     }
   }
 
-  // compute 1-st order components for RPA
-  if(rpa_sweep) {
-    if(!rpa_sweep_2nd && !last_site) {
+  // NOTE: here dot_with_sys always true
+
+  if(!last_site && !rpa_sweep_2nd) {
+    // compute 1-st order components for RPA
+    if(rpa_sweep) {
       LRT::multiply_h_left davidson_f(newbig, onedot);
       LRT::RPA::compute_matrix_elements(projected_wave_solutions, energies, ynorm, davidson_f,
                                         a_subspace, b_subspace, s_subspace, d_subspace, rpa_sweep_2nd, lroots);
     }
-  }
-  // compute 1-st order components for TDA
-  else {
-    if(!last_site) {
+    // compute 1-st order components for TDA
+    else {
       LRT::multiply_h_left davidson_f(newbig, onedot);
       LRT::TDA::compute_matrix_elements(projected_wave_solutions, energies, davidson_f, a_subspace, s_subspace, lroots);
     }
