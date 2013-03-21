@@ -30,10 +30,15 @@ void GuessWave::LRT::transform_gauge
 #endif
   assert(nroots <= Wavefnc1st.size());
   assert(nroots <= Wavefnc2nd.size());
+//assert(Wavefnc1st.size() == Wavefnc2nd.size());
   for(int i = 0; i < nroots; ++i) {
     Wavefnc1st[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
     Wavefnc2nd[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
   }
+//for(int i = 0; i < Wavefnc1st.size(); ++i)
+//  Wavefnc1st[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
+//for(int i = 0; i < Wavefnc2nd.size(); ++i)
+//  Wavefnc2nd[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
 
   if (!mpigetrank()) {
     switch(guesswavetype)
@@ -75,6 +80,7 @@ void GuessWave::LRT::transform_previous_wavefunction_deriv
 {
   assert(nroots <= Wavefnc1st.size());
   assert(nroots <= Wavefnc2nd.size());
+//assert(Wavefnc1st.size() == Wavefnc2nd.size());
 
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Transforming gauge of previous wavefunction " << endl;
@@ -146,13 +152,31 @@ void GuessWave::LRT::transform_previous_wavefunction_deriv
       LoadRotationMatrix(rotsites, rightRotationMatrix_deriv, i);
     }
 
-    // L(0)^(t) * C(0) * R(I)
-    onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWavefnc,
-                                  leftRotationMatrix, rightRotationMatrix_deriv, Wavefnc2nd[i], transpose_guess_wave);
     // L(0)^(t) * C(I) * R(0) ( NOTE: this vanishes for 2nd-order wavefunction )
     onedot_transform_wavefunction(oldStateInfo_deriv, big.get_stateInfo(), oldWavefnc_deriv,
                                   leftRotationMatrix, rightRotationMatrix, Wavefnc1st[i], transpose_guess_wave);
+    // L(0)^(t) * C(0) * R(I)
+    onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWavefnc,
+                                  leftRotationMatrix, rightRotationMatrix_deriv, Wavefnc2nd[i], transpose_guess_wave);
     Wavefnc1st[i] += Wavefnc2nd[i];
+  }
+
+  return;
+
+  // FOR TEST
+  for (int i = nroots; i < Wavefnc1st.size(); ++i) {
+    // 1-st order wavefuncton & rotation matrices
+    StateInfo    oldStateInfo_deriv;
+    Wavefunction oldWavefnc_deriv;
+
+    if (transpose_guess_wave)
+      oldWavefnc_deriv.LoadWavefunctionInfo (oldStateInfo_deriv, big.get_leftBlock()->get_leftBlock()->get_sites(), i);
+    else
+      oldWavefnc_deriv.LoadWavefunctionInfo (oldStateInfo_deriv, big.get_leftBlock()->get_sites(), i);
+
+    // L(0)^(t) * C(I) * R(0)
+    onedot_transform_wavefunction(oldStateInfo_deriv, big.get_stateInfo(), oldWavefnc_deriv,
+                                  leftRotationMatrix, rightRotationMatrix, Wavefnc1st[i], transpose_guess_wave);
   }
 }
 
@@ -163,6 +187,7 @@ void GuessWave::LRT::transpose_previous_wavefunction_deriv
 {
   assert(nroots <= Wavefnc1st.size());
   assert(nroots <= Wavefnc2nd.size());
+//assert(Wavefnc1st.size() == Wavefnc2nd.size());
   for(int i = 0; i < nroots; ++i) {
     transpose_previous_wavefunction(Wavefnc1st[i], big, i, onedot, transpose_guess_wave);
     Wavefnc2nd[i] = Wavefnc1st[i]; // this might not be required

@@ -559,7 +559,7 @@ double SpinAdapted::Sweep::LRT::do_one
 
   if(!warmUp && (!rpa_sweep || rpa_sweep_2nd)) {
     pout << endl << endl;
-    pout << "\t\t\t Finished DMRG-" << (rpa_sweep ? "TDA" : "RPA") << " calculation" << endl;
+    pout << "\t\t\t Finished DMRG-" << (rpa_sweep ? "RPA" : "TDA") << " calculation" << endl;
     pout << "\t\t\t ============================================================================ " << endl;
     for(int j = 1; j < nroots; ++j) {
       pout << "\t\t\t excitation energy for State [ " << j << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()
