@@ -536,7 +536,7 @@ double SpinAdapted::Sweep::LRT::do_one
   mpi::broadcast(world, eigenvalues, 0);
 #endif
 
-  finalEnergy[0] = eigenvalues[0] - rpaEcorr;
+  finalEnergy[0] = eigenvalues[0] + rpaEcorr;
   for(int i = 1; i < nroots; ++i)
     finalEnergy[i] = finalEnergy[0] + eigenvalues[i];
 
