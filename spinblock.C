@@ -365,6 +365,7 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
 
 void SpinBlock::diagonalH(DiagonalMatrix& e) const
 {
+pout << "DEBUG SpinBlock::diagonalH  check point 1" << endl;
   SpinBlock* loopBlock=(leftBlock->is_loopblock()) ? leftBlock : rightBlock;
   SpinBlock* otherBlock = loopBlock == leftBlock ? rightBlock : leftBlock;
 
@@ -372,9 +373,11 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 
   initiateMultiThread(&e, e_array, e_distributed, MAX_THRD);
 
+pout << "DEBUG SpinBlock::diagonalH  check point 2" << endl;
   boost::shared_ptr<SparseMatrix> op =leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(this);
   TensorTrace(leftBlock, *op, this, &(get_stateInfo()), e, 1.0);
 
+pout << "DEBUG SpinBlock::diagonalH  check point 3" << endl;
   op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(this);
   TensorTrace(rightBlock, *op, this, &(get_stateInfo()), e, 1.0);  
 
@@ -384,6 +387,7 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
   int size = world.size();
 #endif
 
+pout << "DEBUG SpinBlock::diagonalH  check point 4" << endl;
   std::vector< std::vector<int> > indices;
   e_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? e_array : e_distributed;
   indices = rightBlock->get_op_array(CRE).get_array();
@@ -391,6 +395,7 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
   //for_all_multithread(rightBlock->get_op_array(CRE), f); //not needed in diagonal
 
 
+pout << "DEBUG SpinBlock::diagonalH  check point 5" << endl;
   e_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? e_array : e_distributed;
   indices = leftBlock->get_op_array(CRE).get_array();
   f = boost::bind(&opxop::cxcddcomp_d, rightBlock, _1, this, e_add); 
@@ -400,12 +405,14 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 
   if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
     
+pout << "DEBUG SpinBlock::diagonalH  check point 6" << endl;
     e_add =  otherBlock->get_op_array(CRE_DESCOMP).is_local() ? e_array : e_distributed;
     indices = loopBlock->get_op_array(CRE_DES).get_array();
     f = boost::bind(&opxop::cdxcdcomp_d, otherBlock, _1, this, e_add);
     for_all_multithread(loopBlock->get_op_array(CRE_DES), f);  
 
     
+pout << "DEBUG SpinBlock::diagonalH  check point 7" << endl;
     e_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? e_array : e_distributed;
     indices = loopBlock->get_op_array(CRE_CRE).get_array();
     f = boost::bind(&opxop::ddxcccomp_d, otherBlock, _1, this, e_add);
@@ -413,6 +420,7 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 
   }
 
+pout << "DEBUG SpinBlock::diagonalH  check point 8" << endl;
   accumulateMultiThread(&e, e_array, e_distributed, MAX_THRD);
 
 }

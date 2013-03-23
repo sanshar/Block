@@ -169,8 +169,8 @@ void SpinAdapted::Sweep::LRT::BlockAndDecimate
 
   newSystem.RenormaliseFrom_lrt(eigenvalues, rnorm, ynorm, rotatematrices, nroots, mroots, kroots,
                                 a_subspace, b_subspace, s_subspace, d_subspace,
-                                sweepParams.get_keep_states(), sweepParams.get_keep_qstates(), big,
-                                sweepParams.get_guesstype(), sweepParams.get_onedot(), last_site, rpa_sweep, rpa_sweep_2nd,
+                                sweepParams.get_keep_states(), sweepParams.get_keep_qstates(), big, sweepParams.get_guesstype(),
+                                sweepParams.get_noise(), sweepParams.get_onedot(), last_site, rpa_sweep, rpa_sweep_2nd,
                                 system, systemDot, environmentDot, environment, dot_with_sys, sweepParams.get_sweep_iter());
 
   std::vector<StateInfo> storeStates(3);

@@ -45,7 +45,8 @@ using namespace operatorfunctions;
 void SpinBlock::RenormaliseFrom_lrt
 (const vector<double> &energies, vector<double>& rnorm, vector<double>& ynorm, vector< vector<Matrix> >& rotateMatrices, int nroots, int mroots, int kroots,
  Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace, const int keptstates, const int keptqstates,
- SpinBlock& big, const guessWaveTypes &guesswavetype, const bool &onedot, const bool &last_site, const bool &rpa_sweep, const bool &rpa_sweep_2nd,
+ SpinBlock& big, const guessWaveTypes &guesswavetype, const double& noise, const bool &onedot,
+ const bool &last_site, const bool &rpa_sweep, const bool &rpa_sweep_2nd,
  SpinBlock& System, SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, int sweepiter)
 {
   int lroots = mroots + nroots - kroots;
@@ -70,7 +71,7 @@ void SpinBlock::RenormaliseFrom_lrt
   // NOTE: dot_with_sys is valid
 
   LRT::solve_wavefunction(wave_solutions_1st, wave_solutions_2nd,
-                          energies, rnorm, big, guesswavetype, onedot, dot_with_sys, rpa_sweep, rpa_sweep_2nd, nroots, mroots, kroots);
+                          energies, rnorm, big, guesswavetype, onedot, dot_with_sys, noise, rpa_sweep, rpa_sweep_2nd, nroots, mroots, kroots);
 
   if(rpa_sweep) {
     // compute 1-st order components for RPA

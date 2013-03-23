@@ -236,7 +236,7 @@ int SpinAdapted::LRT::compute_eigenvalues
 
 void SpinAdapted::LRT::solve_wavefunction
 (vector<Wavefunction>& psix1st, vector<Wavefunction>& psix2nd, const vector<double>& eigv, vector<double>& rnorm, SpinBlock& big,
- const guessWaveTypes& guesswavetype, const bool& onedot, const bool& dot_with_sys,
+ const guessWaveTypes& guesswavetype, const bool& onedot, const bool& dot_with_sys, const double& noise,
  const bool& rpa_sweep, const bool& rpa_sweep_2nd, int nroots, int mroots, int kroots)
 {
 //pout << "DEBUG @ LRT::solve_wavefunction: nroots = " << nroots << ", mroots = " << mroots << ", kroots = " << kroots << endl;
@@ -284,9 +284,9 @@ void SpinAdapted::LRT::solve_wavefunction
 
   if (!rpa_sweep_2nd) {
     if (rpa_sweep)
-      LRT::RPA::solve_correction_equation(psix1st, eigv, rnorm, h_diag, davidson_f, useprecond, nroots, mroots, kroots);
+      LRT::RPA::solve_correction_equation(psix1st, eigv, rnorm, h_diag, davidson_f, useprecond, nroots, mroots, kroots, noise);
     else
-      LRT::TDA::solve_correction_equation(psix1st, eigv, rnorm, h_diag, davidson_f, useprecond, nroots, mroots, kroots);
+      LRT::TDA::solve_correction_equation(psix1st, eigv, rnorm, h_diag, davidson_f, useprecond, nroots, mroots, kroots, noise);
   }
 }
 
@@ -318,6 +318,8 @@ void SpinAdapted::LRT::compute_guess_solutions
 
   // guess wavefunctions from Krylov subspace
 
+  bool useLinearSolver = true;
+
   for(int i = 1; i < nroots; ++i) {
     Wavefunction  psix_i;
     Wavefunction *psix_ptr = &psix_i;
@@ -342,6 +344,7 @@ void SpinAdapted::LRT::compute_guess_solutions
         ScaleAdd(-overlap, psix_tmp[j], psix_tmp[i]);
       }
       Normalise(psix_tmp[i], &success);
+      useLinearSolver &= !success;
 
       psi0_ptr = &psix_tmp[i];
     }
@@ -354,9 +357,10 @@ void SpinAdapted::LRT::compute_guess_solutions
   if(mpigetrank() == 0) nvals = h_diag.Ncols();
 #ifndef SERIAL
   mpi::broadcast(world, nvals, 0);
+  mpi::broadcast(world, useLinearSolver, 0);
 #endif
 
-  if(nvals > 2*nroots)
+  if(useLinearSolver && nvals > 2*nroots)
     Linear::block_davidson(psix_tmp, h_diag, 1.0e-6, false, h_mult, useprecond);
 
   if(mpigetrank() == 0) {
@@ -377,7 +381,7 @@ void SpinAdapted::LRT::compute_guess_solutions
 
 void SpinAdapted::LRT::TDA::solve_correction_equation
 (vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm, DiagonalMatrix& h_diag, Davidson_functor& h_mult,
- bool useprecond, int nroots, int mroots, int kroots)
+ bool useprecond, int nroots, int mroots, int kroots, double noise)
 {
 //pout << "DEBUG @ LRT::TDA::solve_correction_equation: nroots = " << nroots << ", mroots = " << mroots << ", kroots = " << kroots << endl;
   pout.precision(12);
@@ -514,10 +518,16 @@ void SpinAdapted::LRT::TDA::solve_correction_equation
         SpinAdapted::Linear::olsenPrecondition(r, psix[i], eigv[i], h_diag, levelshift);
 
 //    r += psix[mroots+i-kroots]; // this comes from previous block (FIXME: not exact)
+      int success = 0;
+
+      Wavefunction noiseWave = psix[i];
+      noiseWave.Randomise();
+      Normalise(noiseWave, &success);
+      ScaleAdd(noise, noiseWave, r);
+
       double overlap = DotProduct(r, psix[0]);
       ScaleAdd(-overlap, psix[0], r);
 
-      int success = 0;
       Normalise(r, &success);
       Scale(1.0/dmrginp.last_site(), r); // scaled by 1/k (not necessary)
       psix[mroots+i-kroots] = r;
@@ -641,7 +651,7 @@ void SpinAdapted::LRT::TDA::compute_matrix_elements
 
 void SpinAdapted::LRT::RPA::solve_correction_equation
 (vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm,
- DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool useprecond, int nroots, int mroots, int kroots)
+ DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool useprecond, int nroots, int mroots, int kroots, double noise)
 {
 //pout << "DEBUG @ LRT::solve_correction_equation: nroots = " << nroots << ", mroots = " << mroots << ", kroots = " << kroots << endl;
   pout.precision(12);
@@ -817,33 +827,41 @@ void SpinAdapted::LRT::RPA::solve_correction_equation
         SpinAdapted::Linear::olsenPrecondition(ry, psix[iy],-eigv[i], h_diag, levelshift);
       }
 
-      int success;
-      double overlap;
+      // real part
+      {
+        int success = 0;
 
-//    rx += psix[Mroots+ix-Kroots]; // this comes from previous block (FIXME: not exact)
-      overlap = DotProduct(rx, psix[0]);
-      ScaleAdd(-overlap, psix[0], rx);
-//    success = 0;
-//    Normalise(rx, &success);
+        Wavefunction noiseWave = psix[ix];
+        noiseWave.Randomise();
+        Normalise(noiseWave, &success);
+        ScaleAdd(noise, noiseWave, rx);
 
-//    ry += psix[Mroots+iy-Kroots]; // this comes from previous block (FIXME: not exact)
-      overlap = DotProduct(ry, psix[0]);
-      ScaleAdd(-overlap, psix[0], ry);
-//    success = 0;
-//    Normalise(ry, &success);
+//      rx += psix[Mroots+ix-Kroots]; // this comes from previous block (FIXME: not exact)
+        double overlap = DotProduct(rx, psix[0]);
+        ScaleAdd(-overlap, psix[0], rx);
 
-      double xnorm = DotProduct(rx, rx);
-//    double ynorm = DotProduct(ry, ry);
-
-//    double scale = 1.0/dmrginp.last_site();
-      if(xnorm > 1.0) {
-        double scale = 1.0/sqrt(xnorm);
-        Scale(scale, rx);
-        Scale(scale, ry);
+        Normalise(rx, &success);
+        Scale(1.0/dmrginp.last_site(), rx); // scaled by 1/k (not necessary)
+        psix[Mroots+ix-Kroots] = rx;
       }
 
-      psix[Mroots+ix-Kroots] = rx;
-      psix[Mroots+iy-Kroots] = ry;
+      // imag part
+      {
+        int success = 0;
+
+        Wavefunction noiseWave = psix[iy];
+        noiseWave.Randomise();
+        Normalise(noiseWave, &success);
+        ScaleAdd(noise, noiseWave, ry);
+
+//      ry += psix[Mroots+iy-Kroots]; // this comes from previous block (FIXME: not exact)
+        double overlap = DotProduct(ry, psix[0]);
+        ScaleAdd(-overlap, psix[0], ry);
+
+        Normalise(ry, &success);
+        Scale(1.0/dmrginp.last_site(), ry); // scaled by 1/k (not necessary)
+        psix[Mroots+iy-Kroots] = ry;
+      }
     }
   }
 
