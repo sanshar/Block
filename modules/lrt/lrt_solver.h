@@ -30,7 +30,7 @@ void solve_wavefunction
  const bool& rpa_sweep, const bool& rpa_sweep_2nd, int nroots, int mroots, int kroots);
 
 void compute_guess_solutions
-(vector<Wavefunction>& psix, DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool rpa_sweep, bool useprecond, int nroots);
+(vector<Wavefunction>& psix, DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool rpa_sweep, bool useprecond, int nroots, const bool& dot_with_sys);
 
 namespace TDA {
 

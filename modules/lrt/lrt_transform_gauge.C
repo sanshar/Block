@@ -31,14 +31,14 @@ void GuessWave::LRT::transform_gauge
   assert(nroots <= Wavefnc1st.size());
   assert(nroots <= Wavefnc2nd.size());
 //assert(Wavefnc1st.size() == Wavefnc2nd.size());
-  for(int i = 0; i < nroots; ++i) {
-    Wavefnc1st[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
-    Wavefnc2nd[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
-  }
-//for(int i = 0; i < Wavefnc1st.size(); ++i)
+//for(int i = 0; i < nroots; ++i) {
 //  Wavefnc1st[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
-//for(int i = 0; i < Wavefnc2nd.size(); ++i)
 //  Wavefnc2nd[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
+//}
+  for(int i = 0; i < Wavefnc1st.size(); ++i)
+    Wavefnc1st[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
+  for(int i = 0; i < Wavefnc2nd.size(); ++i)
+    Wavefnc2nd[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
 
   if (!mpigetrank()) {
     switch(guesswavetype)
@@ -161,7 +161,7 @@ void GuessWave::LRT::transform_previous_wavefunction_deriv
     Wavefnc1st[i] += Wavefnc2nd[i];
   }
 
-  return;
+//return;
 
   // FOR TEST
   for (int i = nroots; i < Wavefnc1st.size(); ++i) {
@@ -191,6 +191,10 @@ void GuessWave::LRT::transpose_previous_wavefunction_deriv
   for(int i = 0; i < nroots; ++i) {
     transpose_previous_wavefunction(Wavefnc1st[i], big, i, onedot, transpose_guess_wave);
     Wavefnc2nd[i] = Wavefnc1st[i]; // this might not be required
+  }
+  for(int i = nroots; i < Wavefnc1st.size(); ++i) {
+    Wavefnc1st[i] = Wavefnc1st[0];
+    Wavefnc1st[i].Clear();
   }
 }
 

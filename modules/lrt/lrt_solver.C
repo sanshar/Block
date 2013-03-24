@@ -246,6 +246,7 @@ void SpinAdapted::LRT::solve_wavefunction
   int Kroots = (rpa_sweep ? 2 * kroots - 1 : kroots);
 
   DiagonalMatrix h_diag;
+  DiagonalMatrix a_diag; // (H - E0)
   bool useprecond = true;
 
   h_diag.ReSize(big.get_stateInfo().totalStates); h_diag = 0;
@@ -257,12 +258,18 @@ void SpinAdapted::LRT::solve_wavefunction
   FORTINT m, n = 1, nsize = h_diag.Storage();
   pout << "\t\t\t Number of elements in wavefunction :: " << h_diag.Ncols() << endl;
   if (mpigetrank()==0) {
-    m = idamax_(nsize,h_diag.Store(), n); 
+    a_diag = h_diag;
+    double ezero = eigv[0];
+    for(int i = 1; i <= a_diag.Ncols(); ++i)
+      a_diag(i) -= ezero;
+
+    m = idamax_(nsize,a_diag.Store(), n); 
     if (dmrginp.outputlevel() > 0)
-      pout << "highest diagonal value " << m << " " << h_diag(m) << endl;
+      pout << "highest diagonal value " << m << " " << a_diag(m) << endl;
   }
   else {
     h_diag.ReSize(0);
+    a_diag.ReSize(0);
   }
   
   psix1st.resize(Mroots+Nroots-Kroots);
@@ -275,18 +282,13 @@ void SpinAdapted::LRT::solve_wavefunction
 
   multiply_h_total davidson_f(big, onedot);
 
-  if (!rpa_sweep_2nd && mroots == 1)
-    compute_guess_solutions(psix1st, h_diag, davidson_f, rpa_sweep, useprecond, nroots);
-
-  double ezero = eigv[0];
-  for(int i = 1; i <= h_diag.Ncols(); ++i)
-    h_diag(i) -= ezero;
-
   if (!rpa_sweep_2nd) {
-    if (rpa_sweep)
-      LRT::RPA::solve_correction_equation(psix1st, eigv, rnorm, h_diag, davidson_f, useprecond, nroots, mroots, kroots, noise);
+    if (mroots == 1)
+      compute_guess_solutions(psix1st, h_diag, davidson_f, rpa_sweep, useprecond, nroots, dot_with_sys);
+    else if (rpa_sweep)
+      LRT::RPA::solve_correction_equation(psix1st, eigv, rnorm, a_diag, davidson_f, useprecond, nroots, mroots, kroots, noise);
     else
-      LRT::TDA::solve_correction_equation(psix1st, eigv, rnorm, h_diag, davidson_f, useprecond, nroots, mroots, kroots, noise);
+      LRT::TDA::solve_correction_equation(psix1st, eigv, rnorm, a_diag, davidson_f, useprecond, nroots, mroots, kroots, noise);
   }
 }
 
@@ -294,12 +296,14 @@ void SpinAdapted::LRT::solve_wavefunction
 // compute initial guesses for excited states
 //
 void SpinAdapted::LRT::compute_guess_solutions
-(vector<Wavefunction>& psix, DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool rpa_sweep, bool useprecond, int nroots)
+(vector<Wavefunction>& psix, DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool rpa_sweep, bool useprecond, int nroots, const bool& dot_with_sys)
 {
   pout.precision(12);
 #ifndef SERIAL
   mpi::communicator world;
 #endif
+
+  static bool has_guess = false;
 
   dmrginp.hmultiply -> start();
 
@@ -314,11 +318,14 @@ void SpinAdapted::LRT::compute_guess_solutions
 
 #ifndef SERIAL
   mpi::broadcast(world, *psi0_ptr, 0);
+  mpi::broadcast(world, has_guess, 0);
 #endif
+
+  if (has_guess) return;
 
   // guess wavefunctions from Krylov subspace
 
-  bool useLinearSolver = true;
+  bool useLinearSolver = !dot_with_sys;
 
   for(int i = 1; i < nroots; ++i) {
     Wavefunction  psix_i;
@@ -367,8 +374,13 @@ void SpinAdapted::LRT::compute_guess_solutions
     for(int i = 1; i < nroots; ++i) {
       int ix = (rpa_sweep ? 2*i-1 : i);
       psix[ix] = psix_tmp[i];
-      double overlap = DotProduct(psix[0], psix[ix]);
-      ScaleAdd(-overlap, psix[0], psix[ix]);
+      if(useLinearSolver) {
+        double overlap = DotProduct(psix[0], psix[ix]);
+        ScaleAdd(-overlap, psix[0], psix[ix]);
+      }
+      else {
+        psix[ix].Clear();
+      }
 
       if(rpa_sweep) {
         psix[ix+1] = psix[0];
@@ -376,7 +388,7 @@ void SpinAdapted::LRT::compute_guess_solutions
       }
     }
   }
-
+  has_guess = useLinearSolver;
 }
 
 void SpinAdapted::LRT::TDA::solve_correction_equation
