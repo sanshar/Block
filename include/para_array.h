@@ -88,6 +88,7 @@ public:
   virtual int trimap(int i, int j) const = 0;
   virtual T& get(const std::vector<int>& orbs) = 0;
   virtual const std::pair<int, int> unmap_local_index(int i) const = 0;
+  virtual ~para_sparse_vector(){}
 };
 
 /// A wrapper for a single element 

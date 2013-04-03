@@ -527,10 +527,12 @@ void SpinAdapted::LRT::TDA::solve_correction_equation
       if(i < kroots) continue;
 
       if(useprecond)
-        SpinAdapted::Linear::olsenPrecondition(r, psix[i], eigv[i], h_diag, levelshift);
+//      SpinAdapted::Linear::olsenPrecondition(r, psix[i], eigv[i], h_diag, levelshift);
+        SpinAdapted::Linear::precondition(r, eigv[i], h_diag, levelshift);
 
 //    r += psix[mroots+i-kroots]; // this comes from previous block (FIXME: not exact)
       int success = 0;
+      Normalise(r, &success);
 
       Wavefunction noiseWave = psix[i];
       noiseWave.Randomise();
@@ -541,7 +543,7 @@ void SpinAdapted::LRT::TDA::solve_correction_equation
       ScaleAdd(-overlap, psix[0], r);
 
       Normalise(r, &success);
-      Scale(1.0/dmrginp.last_site(), r); // scaled by 1/k (not necessary)
+//    Scale(1.0/dmrginp.last_site(), r); // scaled by 1/k (not necessary)
       psix[mroots+i-kroots] = r;
     }
   }
@@ -829,19 +831,21 @@ void SpinAdapted::LRT::RPA::solve_correction_equation
       ry += sgvm[ix]; // AY + BX
       ScaleAdd(+eigv[i], psix[iy], ry); // (H - E0) Yi + Ei S Yi
 
-      rnorm[i] += DotProduct(rx, rx);
-      rnorm[i] += DotProduct(ry, ry);
+      rnorm[i] += (DotProduct(rx, rx) + DotProduct(ry, ry));
 
       if(i < kroots) continue;
 
       if(useprecond) {
-        SpinAdapted::Linear::olsenPrecondition(rx, psix[ix], eigv[i], h_diag, levelshift);
-        SpinAdapted::Linear::olsenPrecondition(ry, psix[iy],-eigv[i], h_diag, levelshift);
+//      SpinAdapted::Linear::olsenPrecondition(rx, psix[ix], eigv[i], h_diag, levelshift);
+//      SpinAdapted::Linear::olsenPrecondition(ry, psix[iy],-eigv[i], h_diag, levelshift);
+        SpinAdapted::Linear::precondition(rx, eigv[i], h_diag, levelshift);
+        SpinAdapted::Linear::precondition(ry,-eigv[i], h_diag, levelshift);
       }
 
       // real part
       {
         int success = 0;
+        Normalise(rx, &success);
 
         Wavefunction noiseWave = psix[ix];
         noiseWave.Randomise();
@@ -853,13 +857,14 @@ void SpinAdapted::LRT::RPA::solve_correction_equation
         ScaleAdd(-overlap, psix[0], rx);
 
         Normalise(rx, &success);
-        Scale(1.0/dmrginp.last_site(), rx); // scaled by 1/k (not necessary)
+//      Scale(1.0/dmrginp.last_site(), rx); // scaled by 1/k (not necessary)
         psix[Mroots+ix-Kroots] = rx;
       }
 
       // imag part
       {
         int success = 0;
+        Normalise(ry, &success);
 
         Wavefunction noiseWave = psix[iy];
         noiseWave.Randomise();
@@ -871,7 +876,7 @@ void SpinAdapted::LRT::RPA::solve_correction_equation
         ScaleAdd(-overlap, psix[0], ry);
 
         Normalise(ry, &success);
-        Scale(1.0/dmrginp.last_site(), ry); // scaled by 1/k (not necessary)
+//      Scale(1.0/dmrginp.last_site(), ry); // scaled by 1/k (not necessary)
         psix[Mroots+iy-Kroots] = ry;
       }
     }

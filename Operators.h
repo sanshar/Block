@@ -31,6 +31,7 @@ protected:
   opTypes m_state_index;
 public:
   GenericOperator(opTypes index = 0) { orbs.resize(1); fermion = true; m_state_index = index & GENERIC_MASK; }
+  virtual ~GenericOperator() { }
   virtual void build(const SpinBlock& b) = 0;
   virtual boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) = 0;
   virtual double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b) = 0;
