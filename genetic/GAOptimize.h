@@ -7,7 +7,7 @@
 namespace genetic
 {
   Cell gaordering(ifstream& confFile, ifstream& dumpFile);
-  Cell gaoptimize();
+  Cell gaoptimize(const int& seed);
 };
 
 #endif

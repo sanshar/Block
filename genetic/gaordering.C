@@ -3,13 +3,17 @@
 #include <cstdlib>
 #include <cstring>
 #include <cmath>
+#ifndef SERIAL
 #include <boost/mpi.hpp>
+#endif
 #include "GAInput.h"
 #include "GAOptimize.h"
 #include "ReadIntegral.h"
 using namespace std;
 
+#ifndef SERIAL
 namespace mpi = boost::mpi;
+#endif
 
 namespace genetic
 {
