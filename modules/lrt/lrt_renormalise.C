@@ -199,7 +199,8 @@ void SpinBlock::RenormaliseFrom_lrt
       DensityMatrix tracedMatrix_deriv;
       tracedMatrix_deriv.allocate(stateInfo);
       MultiplyProduct (projected_wave_solutions[i], Transpose(wave_solutions_1st[0]), tracedMatrix_deriv, 1.0);
-      LRT::assign_matrix_by_dm_deriv(rotateMatrices[0], selectedwts, rejectedwts, tracedMatrix_deriv, rotateMatrices[i], false);
+//    LRT::assign_matrix_by_dm_deriv(rotateMatrices[0], selectedwts, rejectedwts, tracedMatrix_deriv, rotateMatrices[i], false);
+      LRT::assign_matrix_by_dm_deriv(rotateMatrices[0], selectedwts, rejectedwts, tracedMatrix_deriv, rotateMatrices[i], true);
     }
   }
 

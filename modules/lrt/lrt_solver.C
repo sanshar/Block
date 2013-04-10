@@ -38,14 +38,16 @@ int SpinAdapted::LRT::compute_orthogonal_transform(const Matrix& s, Matrix& u, b
 
   // ignore small and/or negative eigenvalues
   int nignore = 0;
-  if(is_rpa_metric) {
-    for(; nignore < nrows; nignore += 2)
+//if(is_rpa_metric) {
+//  for(; nignore < nrows; nignore += 2)
+//    if(d.element(nignore, nignore) >= 1.0e-16) break;
+//}
+//else {
+    for(; nignore < nrows; ++nignore) {
       if(d.element(nignore, nignore) >= 1.0e-16) break;
-  }
-  else {
-    for(; nignore < nrows; ++nignore)
-      if(d.element(nignore, nignore) >= 1.0e-16) break;
-  }
+      pout << "\t\t\t Warning: eliminated redundant/negative eigenvalue in metric = " << d.element(nignore, nignore) << endl;
+    }
+//}
 
   int ncols = nrows - nignore;
   u.ReSize(nrows, ncols);

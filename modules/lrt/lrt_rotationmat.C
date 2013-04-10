@@ -204,21 +204,21 @@ double SpinAdapted::LRT::assign_matrix_by_dm_deriv
     if(rotatematrix[q].Ncols() > 0) {
       Matrix matrix_elements(rotatematrix[q]); matrix_elements = 0.0;
       MatrixMultiply(density_deriv(q, q), 'n', rotatematrix[q], 'n', matrix_elements, 1.0);
-      if(projection) {
-        Matrix projected_matrix(rotatematrix[q].Ncols(), rotatematrix[q].Ncols()); projected_matrix = 0.0;
-        MatrixMultiply(rotatematrix[q], 't', matrix_elements, 'n', projected_matrix, 1.0);
-        MatrixMultiply(rotatematrix[q], 'n', projected_matrix, 'n', matrix_elements,-1.0);
-      }
+//    if(projection) {
+//      Matrix projected_matrix(rotatematrix[q].Ncols(), rotatematrix[q].Ncols()); projected_matrix = 0.0;
+//      MatrixMultiply(rotatematrix[q], 't', matrix_elements, 'n', projected_matrix, 1.0);
+//      MatrixMultiply(rotatematrix[q], 'n', projected_matrix, 'n', matrix_elements,-1.0);
+//    }
       if(rejectedwts[q].size() > 0) {
         for(int i = 0; i < rotatematrix[q].Ncols(); ++i) {
           ColumnVector derived_basis(rotatematrix[q].Nrows());
           derived_basis = 0.0;
           // FIXME: in case M is large enough, small selected weights introduce numerical instability
 
-          if (abs(selectedwts[q][i]) > 1.e-12) {
+          if (abs(selectedwts[q][i]) > 1.e-13) {
             derived_basis = matrix_elements.Column(i + 1)/selectedwts[q][i];
           }
-          else if(dmrginp.outputlevel() > 1) {
+          else if(dmrginp.outputlevel() > 0) {
             pout << "WARNING: ignored small selected weight (" << scientific << selectedwts[q][i] << ") meaning that 1-st order rotation matrix is not exact" << endl;
           }
 
@@ -226,6 +226,11 @@ double SpinAdapted::LRT::assign_matrix_by_dm_deriv
             rotatematrix_deriv[q] = derived_basis;
           else
             rotatematrix_deriv[q] |= derived_basis;
+        }
+        if(projection) {
+          Matrix projected_matrix(rotatematrix[q].Ncols(), rotatematrix[q].Ncols()); projected_matrix = 0.0;
+          MatrixMultiply(rotatematrix[q], 't', rotatematrix_deriv[q], 'n', projected_matrix, 1.0);
+          MatrixMultiply(rotatematrix[q], 'n', projected_matrix, 'n', rotatematrix_deriv[q],-1.0);
         }
       }
       else {
