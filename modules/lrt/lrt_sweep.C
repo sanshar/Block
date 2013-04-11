@@ -34,9 +34,11 @@ void SpinAdapted::Sweep::LRT::BlockAndDecimate
 (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem,
  const vector<double>& eigenvalues, vector<double>& rnorm, vector<double>& ynorm,
  Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace, const Matrix& alpha,
- const bool &useSlater, const bool& dot_with_sys, const bool& rpa_sweep, const bool& rpa_sweep_2nd, int nroots, int mroots, int kroots)
+ const bool &useSlater, const bool& dot_with_sys, const bool& rpa_sweep, const bool& rpa_sweep_2nd,
+ int nroots, int mroots, const std::vector<int>& conv_roots)
 {
-  const int lroots = mroots + nroots - kroots;
+  int kroots = 1 + conv_roots.size();
+  int lroots = mroots + nroots - kroots;
 
   int Nroots = (rpa_sweep ? 2 * nroots - 1 : nroots);
   int Mroots = (rpa_sweep ? 2 * mroots - 1 : mroots);
@@ -167,7 +169,7 @@ void SpinAdapted::Sweep::LRT::BlockAndDecimate
 
   bool last_site = (sweepParams.get_block_iter() == sweepParams.get_n_iters() - 1) ? true : false;
 
-  newSystem.RenormaliseFrom_lrt(eigenvalues, rnorm, ynorm, rotatematrices, nroots, mroots, kroots,
+  newSystem.RenormaliseFrom_lrt(eigenvalues, rnorm, ynorm, rotatematrices, nroots, mroots, conv_roots,
                                 a_subspace, b_subspace, s_subspace, d_subspace,
                                 sweepParams.get_keep_states(), sweepParams.get_keep_qstates(), big, sweepParams.get_guesstype(),
                                 sweepParams.get_noise(), sweepParams.get_onedot(), last_site, rpa_sweep, rpa_sweep_2nd,
@@ -234,10 +236,11 @@ double SpinAdapted::Sweep::LRT::do_one
 
   bool rpa_sweep = (dmrginp.lrt_type() == RPA);
   bool deflation_sweep;
-  int mroots, i_conv_root;
+  int mroots;
   Matrix a_subspace, b_subspace, s_subspace, d_subspace;
   std::vector<double> eigenvalues;
   std::vector<double> rnorm;
+  std::vector<int> conv_roots;
   std::vector<double> ynorm;
   Matrix alpha;
 
@@ -246,7 +249,7 @@ double SpinAdapted::Sweep::LRT::do_one
   if(mpigetrank() == 0) {
     if(!warmUp) {
       SpinAdapted::LRT::LoadDavidsonInfo(a_subspace, b_subspace, s_subspace, d_subspace,
-                                         eigenvalues, rnorm, ynorm, mroots, i_conv_root, deflation_sweep);
+                                         eigenvalues, rnorm, ynorm, mroots, conv_roots, deflation_sweep);
 
       if(dmrginp.outputlevel() > 0 && !rpa_sweep_2nd) {
         pout << "\t\t\t printing reduced A-matrix: " << a_subspace.Nrows() << " x " << a_subspace.Ncols() << endl;
@@ -330,20 +333,21 @@ double SpinAdapted::Sweep::LRT::do_one
       }
 // DEBUG: make no correction vectors
 //    mroots = nroots;
-//    i_conv_root = nroots;
+//    conv_roots.clear();
+//    for(int i = 1; i < nroots; ++i) conv_roots.push_back(i);
 //    deflation_sweep = false;
 // DEBUG: end
     }
     else {
       if(rpa_sweep_2nd) {
         SpinAdapted::LRT::LoadDavidsonInfo(a_subspace, b_subspace, s_subspace, d_subspace,
-                                           eigenvalues, rnorm, ynorm, mroots, i_conv_root, deflation_sweep);
+                                           eigenvalues, rnorm, ynorm, mroots, conv_roots, deflation_sweep);
       }
       else {
         // compute guesses from Krylov subspace
         eigenvalues.resize(nroots, 0.0);
         mroots = 1;
-        i_conv_root = 1;
+        conv_roots.clear();
         deflation_sweep = false;
       }
     }
@@ -355,14 +359,15 @@ double SpinAdapted::Sweep::LRT::do_one
   mpi::broadcast(world, rnorm, 0);
   mpi::broadcast(world, ynorm, 0);
   mpi::broadcast(world, mroots, 0);
-  mpi::broadcast(world, i_conv_root, 0);
+  mpi::broadcast(world, conv_roots, 0);
   mpi::broadcast(world, deflation_sweep, 0);
   mpi::broadcast(world, alpha, 0);
 #endif
 
   if (deflation_sweep) mroots = nroots;
 
-  int lroots = mroots + nroots - i_conv_root;
+  int kroots = 1 + conv_roots.size();
+  int lroots = mroots + nroots - kroots;
 
   if(!rpa_sweep_2nd) {
     a_subspace.ReSize(lroots-1, lroots-1); a_subspace = 0.0;
@@ -447,7 +452,7 @@ double SpinAdapted::Sweep::LRT::do_one
     SpinBlock newSystem;
 
     BlockAndDecimate (sweepParams, system, newSystem, eigenvalues, rnorm, ynorm, a_subspace, b_subspace, s_subspace, d_subspace, alpha,
-                      false, dot_with_sys, rpa_sweep, rpa_sweep_2nd, nroots, mroots, i_conv_root);
+                      false, dot_with_sys, rpa_sweep, rpa_sweep_2nd, nroots, mroots, conv_roots);
 
     if(dmrginp.outputlevel() > 2) { // this might give verbose output
       pout << "\t\t\t printing reduced A-matrix: " << a_subspace.Nrows() << " x " << a_subspace.Ncols() << endl;
@@ -543,9 +548,9 @@ double SpinAdapted::Sweep::LRT::do_one
   // check convergence and save iteration info
   if (mpigetrank() == 0) {
     if(!warmUp && (!rpa_sweep || rpa_sweep_2nd)) {
-      i_conv_root = 1;
-      for(; i_conv_root < nroots; ++i_conv_root) {
-        if(rnorm[i_conv_root] > sweepParams.get_davidson_tol()) break;
+      conv_roots.clear();
+      for(int i = 1; i < nroots; ++i) {
+        if(rnorm[i] < sweepParams.get_davidson_tol()) conv_roots.push_back(i);
       }
     }
 
@@ -554,7 +559,7 @@ double SpinAdapted::Sweep::LRT::do_one
     deflation_sweep = (mroots > dmrginp.deflation_max_size()) ? true : false;
 
     SpinAdapted::LRT::SaveDavidsonInfo(a_subspace, b_subspace, s_subspace, d_subspace,
-                                       eigenvalues, rnorm, ynorm, mroots, i_conv_root, deflation_sweep);
+                                       eigenvalues, rnorm, ynorm, mroots, conv_roots, deflation_sweep);
   }
 
   if(!warmUp && (!rpa_sweep || rpa_sweep_2nd)) {

@@ -43,12 +43,13 @@ namespace SpinAdapted {
 using namespace operatorfunctions;
 
 void SpinBlock::RenormaliseFrom_lrt
-(const vector<double> &energies, vector<double>& rnorm, vector<double>& ynorm, vector< vector<Matrix> >& rotateMatrices, int nroots, int mroots, int kroots,
+(const vector<double> &energies, vector<double>& rnorm, vector<double>& ynorm, vector< vector<Matrix> >& rotateMatrices, int nroots, int mroots, const vector<int>& conv_roots,
  Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace, const int keptstates, const int keptqstates,
  SpinBlock& big, const guessWaveTypes &guesswavetype, const double& noise, const bool &onedot,
  const bool &last_site, const bool &rpa_sweep, const bool &rpa_sweep_2nd,
  SpinBlock& System, SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, int sweepiter)
 {
+  int kroots = 1 + conv_roots.size();
   int lroots = mroots + nroots - kroots;
 
   int Nroots = (rpa_sweep ? 2 * nroots - 1 : nroots);
@@ -70,8 +71,8 @@ void SpinBlock::RenormaliseFrom_lrt
 
   // NOTE: dot_with_sys is valid
 
-  LRT::solve_wavefunction(wave_solutions_1st, wave_solutions_2nd,
-                          energies, rnorm, big, guesswavetype, onedot, dot_with_sys, noise, rpa_sweep, rpa_sweep_2nd, nroots, mroots, kroots);
+  LRT::solve_wavefunction(wave_solutions_1st, wave_solutions_2nd, energies, rnorm, big, guesswavetype,
+                          onedot, dot_with_sys, noise, rpa_sweep, rpa_sweep_2nd, nroots, mroots, conv_roots);
 
   if(rpa_sweep) {
     // compute 1-st order components for RPA

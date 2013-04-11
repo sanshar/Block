@@ -139,7 +139,7 @@ class SpinBlock
   void multiplyH_lrt_total(Wavefunction& c, Wavefunction* v, int state, bool conjugate, int num_threads) const;
 
   void RenormaliseFrom_lrt(const vector<double> &energies, vector<double>& rnorm, vector<double>& ynorm, vector< vector<Matrix> >& rotateMatrices,
-                           int nroots, int mroots, int kroots, Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace,
+                           int nroots, int mroots, const vector<int>& conv_roots, Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace,
                            const int keptstates, const int keptqstates, SpinBlock& big, const guessWaveTypes &guesswavetype, const double& noise,
                            const bool &onedot, const bool &last_site, const bool &rpa_sweep, const bool &rpa_sweep_2nd,
                            SpinBlock& System, SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, int sweepiter);

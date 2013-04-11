@@ -239,10 +239,11 @@ int SpinAdapted::LRT::compute_eigenvalues
 void SpinAdapted::LRT::solve_wavefunction
 (vector<Wavefunction>& psix1st, vector<Wavefunction>& psix2nd, const vector<double>& eigv, vector<double>& rnorm, SpinBlock& big,
  const guessWaveTypes& guesswavetype, const bool& onedot, const bool& dot_with_sys, const double& noise,
- const bool& rpa_sweep, const bool& rpa_sweep_2nd, int nroots, int mroots, int kroots)
+ const bool& rpa_sweep, const bool& rpa_sweep_2nd, int nroots, int mroots, const vector<int>& conv_roots)
 {
 //pout << "DEBUG @ LRT::solve_wavefunction: nroots = " << nroots << ", mroots = " << mroots << ", kroots = " << kroots << endl;
 
+  int kroots = 1 + conv_roots.size();
   int Nroots = (rpa_sweep ? 2 * nroots - 1 : nroots);
   int Mroots = (rpa_sweep ? 2 * mroots - 1 : mroots);
   int Kroots = (rpa_sweep ? 2 * kroots - 1 : kroots);
@@ -288,9 +289,9 @@ void SpinAdapted::LRT::solve_wavefunction
     if (mroots == 1)
       compute_guess_solutions(psix1st, h_diag, davidson_f, rpa_sweep, useprecond, nroots, dot_with_sys);
     else if (rpa_sweep)
-      LRT::RPA::solve_correction_equation(psix1st, eigv, rnorm, a_diag, davidson_f, useprecond, nroots, mroots, kroots, noise);
+      LRT::RPA::solve_correction_equation(psix1st, eigv, rnorm, a_diag, davidson_f, useprecond, nroots, mroots, conv_roots, noise);
     else
-      LRT::TDA::solve_correction_equation(psix1st, eigv, rnorm, a_diag, davidson_f, useprecond, nroots, mroots, kroots, noise);
+      LRT::TDA::solve_correction_equation(psix1st, eigv, rnorm, a_diag, davidson_f, useprecond, nroots, mroots, conv_roots, noise);
   }
 }
 
@@ -347,6 +348,11 @@ void SpinAdapted::LRT::compute_guess_solutions
 
     if(mpigetrank() == 0) {
       int success = 0;
+      Normalise(psix_tmp[i], &success);
+      Wavefunction randomWave = psix_tmp[0];
+      randomWave.Randomise();
+      Normalise(randomWave, &success);
+      ScaleAdd(1.0e-3, randomWave, psix_tmp[i]);
       for(int j = 0; j < i; ++j) {
         Normalise(psix_tmp[i], &success);
         double overlap = DotProduct(psix_tmp[j], psix_tmp[i]);
@@ -395,14 +401,15 @@ void SpinAdapted::LRT::compute_guess_solutions
 
 void SpinAdapted::LRT::TDA::solve_correction_equation
 (vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm, DiagonalMatrix& h_diag, Davidson_functor& h_mult,
- bool useprecond, int nroots, int mroots, int kroots, double noise)
+ bool useprecond, int nroots, int mroots, const vector<int>& conv_roots, double noise)
 {
 //pout << "DEBUG @ LRT::TDA::solve_correction_equation: nroots = " << nroots << ", mroots = " << mroots << ", kroots = " << kroots << endl;
   pout.precision(12);
 #ifndef SERIAL
   mpi::communicator world;
 #endif
-//const int lroots = mroots + nroots - kroots;
+  int kroots = 1+ conv_roots.size();
+//int lroots = mroots + nroots - kroots;
   double levelshift = 0.0;
 
   dmrginp.hmultiply -> start();
@@ -423,51 +430,7 @@ void SpinAdapted::LRT::TDA::solve_correction_equation
   mpi::broadcast(world, *psi0_ptr, 0);
 #endif
 
-  // guess wavefunctions from Krylov subspace
-
-  if(mroots == 1) {
-//  for(int i = 1; i < nroots; ++i) {
-//    Wavefunction  psix_i;
-//    Wavefunction *psix_ptr = &psix_i;
-
-//    if(mpigetrank() == 0) {
-//      psix[i] = psix[0];
-//      psix[i].Clear();
-//      psix_ptr = &psix[i];
-//    }
-//    else {
-//      psix_i = psi0;
-//      psix_i.Clear();
-//    }
-
-//    h_mult(*psi0_ptr, *psix_ptr, 0);
-
-//    if(mpigetrank() == 0) {
-//      ScaleAdd(-eigv[0], psix[0], psix[i]); // FIXME: (H - E0) * X
-//      int success = 0;
-//      for(int j = 0; j < i; ++j) {
-//        Normalise(psix[i], &success);
-//        double overlap = DotProduct(psix[j], psix[i]);
-//        ScaleAdd(-overlap, psix[j], psix[i]);
-//      }
-//      Normalise(psix[i], &success);
-
-//      ScaleAdd(-eigv[0], psix[0], psix[i]); // FIXME: (H - E0) * X
-//      double overlap = DotProduct(psix[0], psix[i]);
-//      ScaleAdd(-overlap, psix[0], psix[i]);
-//      int success = 0;
-//      Normalise(psix[i], &success);
-
-
-//      psi0_ptr = &psix[i];
-//    }
-
-#ifndef SERIAL
-//    mpi::broadcast(world, *psi0_ptr, 0);
-#endif
-//  }
-    return;
-  }
+  if(mroots == 1) return;
 
   // compute sigma vectors
 
@@ -521,12 +484,13 @@ void SpinAdapted::LRT::TDA::solve_correction_equation
   // solve correction
   if(mpigetrank() == 0) {
     Wavefunction r;
+    int ioffs = 0;
     for(int i = 1; i < nroots; ++i) {
       r = sgvx[i];
       ScaleAdd(-eigv[i], psix[i], r);
       rnorm[i] += DotProduct(r, r);
 
-      if(i < kroots) continue;
+      if(find(conv_roots.begin(), conv_roots.end(), i) != conv_roots.end()) continue;
 
       if(useprecond)
 //      SpinAdapted::Linear::olsenPrecondition(r, psix[i], eigv[i], h_diag, levelshift);
@@ -546,7 +510,7 @@ void SpinAdapted::LRT::TDA::solve_correction_equation
 
       Normalise(r, &success);
 //    Scale(1.0/dmrginp.last_site(), r); // scaled by 1/k (not necessary)
-      psix[mroots+i-kroots] = r;
+      psix[mroots+ioffs] = r; ++ioffs;
     }
   }
 
@@ -667,7 +631,7 @@ void SpinAdapted::LRT::TDA::compute_matrix_elements
 
 void SpinAdapted::LRT::RPA::solve_correction_equation
 (vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm,
- DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool useprecond, int nroots, int mroots, int kroots, double noise)
+ DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool useprecond, int nroots, int mroots, const vector<int>& conv_roots, double noise)
 {
 //pout << "DEBUG @ LRT::solve_correction_equation: nroots = " << nroots << ", mroots = " << mroots << ", kroots = " << kroots << endl;
   pout.precision(12);
@@ -676,6 +640,7 @@ void SpinAdapted::LRT::RPA::solve_correction_equation
 #endif
   double levelshift = 0.0;
 
+  int kroots = 1 + conv_roots.size();
   int lroots = mroots + nroots - kroots;
 
   int Nroots = 2 * nroots - 1;
@@ -701,53 +666,7 @@ void SpinAdapted::LRT::RPA::solve_correction_equation
   mpi::broadcast(world, *psi0_ptr, 0);
 #endif
 
-  // guess wavefunctions from Krylov subspace
-
-  if(mroots == 1) {
-
-//  for(int i = 1; i < nroots; ++i) {
-
-//    int ix = 2*i-1;
-//    int iy = 2*i;
-
-//    Wavefunction  psix_ix;
-//    Wavefunction *psix_ptr = &psix_ix;
-
-//    if(mpigetrank() == 0) {
-//      psix[ix] = psix[0];
-//      psix[ix].Clear();
-//      psix_ptr = &psix[ix];
-
-//      // set Y[i] to zero
-//      psix[iy] = psix[0];
-//      psix[iy].Clear();
-//    }
-//    else {
-//      psix_ix = psi0;
-//      psix_ix.Clear();
-//    }
-
-//    h_mult(*psi0_ptr, *psix_ptr, 0);
-
-//    if(mpigetrank() == 0) {
-//      ScaleAdd(-eigv[0], psix[0], psix[ix]); // FIXME: (H - E0) * X
-//      double overlap = DotProduct(psix[0], psix[ix]);
-//      ScaleAdd(-overlap, psix[0], psix[ix]);
-//      int success = 0;
-//      Normalise(psix[ix], &success);
-
-//      psix[iy] = psix[ix];
-//      Scale(0.0, psix[iy]);
-
-//      psi0_ptr = &psix[ix];
-//    }
-
-#ifndef SERIAL
-//    mpi::broadcast(world, *psi0_ptr, 0);
-#endif
-//  }
-    return;
-  }
+  if(mroots == 1) return;
 
   // compute sigma vectors
 
@@ -820,6 +739,8 @@ void SpinAdapted::LRT::RPA::solve_correction_equation
     Wavefunction rx;
     Wavefunction ry;
 
+    int ioffs = 0;
+
     for(int i = 1; i < nroots; ++i) {
 
       int ix = 2*i-1;
@@ -835,7 +756,7 @@ void SpinAdapted::LRT::RPA::solve_correction_equation
 
       rnorm[i] += (DotProduct(rx, rx) + DotProduct(ry, ry));
 
-      if(i < kroots) continue;
+      if(find(conv_roots.begin(), conv_roots.end(), i) != conv_roots.end()) continue;
 
       if(useprecond) {
 //      SpinAdapted::Linear::olsenPrecondition(rx, psix[ix], eigv[i], h_diag, levelshift);
@@ -860,7 +781,7 @@ void SpinAdapted::LRT::RPA::solve_correction_equation
 
         Normalise(rx, &success);
 //      Scale(1.0/dmrginp.last_site(), rx); // scaled by 1/k (not necessary)
-        psix[Mroots+ix-Kroots] = rx;
+        psix[Mroots+ioffs] = rx; ++ioffs;
       }
 
       // imag part
@@ -879,7 +800,7 @@ void SpinAdapted::LRT::RPA::solve_correction_equation
 
         Normalise(ry, &success);
 //      Scale(1.0/dmrginp.last_site(), ry); // scaled by 1/k (not necessary)
-        psix[Mroots+iy-Kroots] = ry;
+        psix[Mroots+ioffs] = ry; ++ioffs;
       }
     }
   }

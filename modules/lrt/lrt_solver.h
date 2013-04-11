@@ -27,7 +27,7 @@ int compute_eigenvalues(const Matrix& a_subspace, const Matrix& b_subspace, cons
 void solve_wavefunction
 (vector<Wavefunction>& psix1st, vector<Wavefunction>& psix2nd, const vector<double>& eigv, vector<double>& rnorm, SpinBlock& big,
  const guessWaveTypes& guesswavetype, const bool& onedot, const bool& dot_with_sys, const double& noise,
- const bool& rpa_sweep, const bool& rpa_sweep_2nd, int nroots, int mroots, int kroots);
+ const bool& rpa_sweep, const bool& rpa_sweep_2nd, int nroots, int mroots, const vector<int>& conv_roots);
 
 void compute_guess_solutions
 (vector<Wavefunction>& psix, DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool rpa_sweep, bool useprecond, int nroots, const bool& dot_with_sys);
@@ -36,7 +36,7 @@ namespace TDA {
 
 void solve_correction_equation
 (vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm,
- DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool useprecond, int nroots, int mroots, int kroots, double noise = 0.0);
+ DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool useprecond, int nroots, int mroots, const vector<int>& conv_roots, double noise = 0.0);
 
 void compute_matrix_elements
 (vector<Wavefunction>& psix, const vector<double>& eigv, Davidson_functor& h_mult, Matrix& a_subspace, Matrix& s_subspace, int mroots);
@@ -47,7 +47,7 @@ namespace RPA {
 
 void solve_correction_equation
 (vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& rnorm,
- DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool useprecond, int nroots, int mroots, int kroots, double noise = 0.0);
+ DiagonalMatrix& h_diag, Davidson_functor& h_mult, bool useprecond, int nroots, int mroots, const vector<int>& conv_roots, double noise = 0.0);
 
 void compute_matrix_elements
 (vector<Wavefunction>& psix, const vector<double>& eigv, vector<double>& ynorm, Davidson_functor& h_mult,

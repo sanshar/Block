@@ -43,12 +43,12 @@ public:
 void LoadDavidsonInfo
 (Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace,
  std::vector<double>& eigenvalues, std::vector<double>& rnorm, std::vector<double>& ynorm,
- int& mroots, int& i_conv_root, bool& deflation_sweep);
+ int& mroots, std::vector<int>& conv_roots, bool& deflation_sweep);
 
 void SaveDavidsonInfo
 (Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace,
  std::vector<double>& eigenvalues, std::vector<double>& rnorm, std::vector<double>& ynorm,
- int& mroots, int& i_conv_root, bool& deflation_sweep);
+ int& mroots, std::vector<int>& conv_roots, bool& deflation_sweep);
 
 
 };

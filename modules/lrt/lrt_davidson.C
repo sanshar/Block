@@ -32,7 +32,7 @@ void SpinAdapted::LRT::multiply_h_total::operator()(Wavefunction& c, Wavefunctio
 void SpinAdapted::LRT::LoadDavidsonInfo
 (Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace,
  std::vector<double>& eigenvalues, std::vector<double>& rnorm, std::vector<double>& ynorm,
- int& mroots, int& i_conv_root, bool& deflation_sweep)
+ int& mroots, std::vector<int>& conv_roots, bool& deflation_sweep)
 {
   std::string file;
   file = str(boost::format("%s%s") % dmrginp.load_prefix() % "/scratch_lrt_davidson.tmp" );
@@ -47,7 +47,7 @@ void SpinAdapted::LRT::LoadDavidsonInfo
              >> rnorm
              >> ynorm
              >> mroots
-             >> i_conv_root
+             >> conv_roots
              >> deflation_sweep;
   }
 }
@@ -55,7 +55,7 @@ void SpinAdapted::LRT::LoadDavidsonInfo
 void SpinAdapted::LRT::SaveDavidsonInfo
 (Matrix& a_subspace, Matrix& b_subspace, Matrix& s_subspace, Matrix& d_subspace,
  std::vector<double>& eigenvalues, std::vector<double>& rnorm, std::vector<double>& ynorm,
- int& mroots, int& i_conv_root, bool& deflation_sweep)
+ int& mroots, std::vector<int>& conv_roots, bool& deflation_sweep)
 {
   std::string file;
   file = str(boost::format("%s%s") % dmrginp.load_prefix() % "/scratch_lrt_davidson.tmp" );
@@ -70,7 +70,7 @@ void SpinAdapted::LRT::SaveDavidsonInfo
              << rnorm
              << ynorm
              << mroots
-             << i_conv_root
+             << conv_roots
              << deflation_sweep;
   }
 }
