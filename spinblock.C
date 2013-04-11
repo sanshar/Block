@@ -321,12 +321,15 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
 
   dmrginp.s1time -> start();
   v_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
-  Functor f = boost::bind(&opxop::cxcddcomp, leftBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
-  for_all_multithread(rightBlock->get_op_array(CRE), f);
+//MAW C++11 >>>>>>>>>
+assert(false);
+//MAW FIXME  Functor f = boost::bind(&opxop::cxcddcomp, leftBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
+//MAW FIXME  for_all_multithread(rightBlock->get_op_array(CRE), f);
 
   v_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
-  f = boost::bind(&opxop::cxcddcomp, rightBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
-  for_all_multithread(leftBlock->get_op_array(CRE), f);  
+//MAW FIXME  f = boost::bind(&opxop::cxcddcomp, rightBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
+//MAW FIXME  for_all_multithread(leftBlock->get_op_array(CRE), f);  
+//MAW C++11 <<<<<<<<<<
 
   dmrginp.s1time -> stop();
 
@@ -338,12 +341,15 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
     
     dmrginp.s0time -> start();
     v_add =  otherBlock->get_op_array(CRE_DESCOMP).is_local() ? v_array : v_distributed;
-    f = boost::bind(&opxop::cdxcdcomp, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
-    for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
+//MAW C++11 >>>>>>>>>
+assert(false);
+//MAW FIXME    f = boost::bind(&opxop::cdxcdcomp, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
+//MAW FIXME    for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
 
     v_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? v_array : v_distributed;
-    f = boost::bind(&opxop::ddxcccomp, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
-    for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);
+//MAW FIXME    f = boost::bind(&opxop::ddxcccomp, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
+//MAW FIXME    for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);
+//MAW C++11 <<<<<<<<<<
     dmrginp.s0time -> stop();
   }
   dmrginp.twoelecT -> stop();

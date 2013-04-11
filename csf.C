@@ -417,10 +417,10 @@ std::vector< SpinAdapted::Csf > SpinAdapted::Csf::distribute (const int n, const
 	}
 	
 	std::vector<bool> tmp = lbuffer;
+//MAW C++11
+assert(false);
 //MAW FIXME	copy (orbs.begin(), orbs.end(), back_inserter(tmp));
-	copy (orbs.begin(), orbs.end(), back_inserter(tmp));
 //MAW	FIXME copy (rbuffer.begin(), rbuffer.end(), back_inserter(tmp));
-   copy (rbuffer.begin(), rbuffer.end(), back_inserter(tmp));
 	Slater new_det = Slater (Orbstring (tmp));
 	map<Slater, double> m;
 	m[new_det] = 1.0;
