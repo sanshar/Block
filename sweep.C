@@ -37,7 +37,6 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   dmrginp.guessgenT -> start();
   bool forward = (system.get_sites() [0] == 0);
   SpinBlock systemDot;
-  SpinBlock envDot;
   int systemDotStart, systemDotEnd;
   int systemDotSize = sweepParams.get_sys_add() - 1;
   if (forward)

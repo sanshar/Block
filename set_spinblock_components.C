@@ -11,6 +11,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 namespace SpinAdapted{
 void SpinBlock::setstoragetype(Storagetype st)
+//MAW 3-index?
 {
   if (st == LOCAL_STORAGE)
   {
@@ -52,6 +53,7 @@ void SpinBlock::setstoragetype(Storagetype st)
 boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bool &is_core)
 {
   boost::shared_ptr<Op_component_base> ret;
+//MAW 3-index?
   switch(optype)
   {
     case CRE:
@@ -74,6 +76,10 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
       break;
     case HAM:
       ret = boost::shared_ptr<Op_component<Ham> >(new Op_component<Ham>(is_core));
+      break;
+    //MAW
+    case CRE_CRE_CRE:
+      ret = boost::shared_ptr<Op_component<CreCreCre> >(new Op_component<CreCreCre>(is_core));
       break;
   }
   return ret;
@@ -102,6 +108,10 @@ void SpinBlock::default_op_components(bool complementary_)
     ops[CRE_CRE] = make_new_op(CRE_CRE, true);
     ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
     ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
+    //MAW
+    if (dmrginp.calc_type() == THREEPDM) {
+      ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
+    }
   }
 
   this->loopblock = true;
@@ -132,6 +142,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
   }
 
   if (!is_direct() )
+//MAW put in 3-index operator here?
   {
     ops[CRE] = make_new_op(CRE, true);
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);

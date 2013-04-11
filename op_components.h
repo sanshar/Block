@@ -12,6 +12,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/function.hpp>
 #include <boost/functional.hpp>
 #include <para_array.h>
+//MAW
+#include <para_array_3d.h>
 #include <boost/shared_ptr.hpp>
 #include <list>
 #include <boost/serialization/base_object.hpp>
@@ -20,6 +22,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "Operators.h"
 #include "operatorloops.h"
 #include <string>
+//MAW
+#include "npdm_operators.h"
 
 namespace SpinAdapted{
 class SpinBlock;
@@ -49,6 +53,10 @@ template <> struct ChooseArray<CreCreDesComp> {
 };
 template <> struct ChooseArray<Ham> {
   typedef para_array_0d<std::vector<boost::shared_ptr<Ham> > > ArrayType;
+};
+//MAW
+template <> struct ChooseArray<CreCreCre> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<CreCreCre> > > ArrayType;
 };
 //*************************************
 class Op_component_base
@@ -137,9 +145,12 @@ template <class Op> class Op_component : public Op_component_base
     std::vector< std::vector<int> > ret_val(m_op.local_nnz());
     for (int i=0; i<m_op.local_nnz(); i++)
       {
-	pair<int, int> opair = m_op.unmap_local_index(i);
-	orbs[0] = opair.first; orbs[1] = opair.second;
-	ret_val[i] = orbs;
+//MAW >>>>>
+assert(false);
+// pair<int, int> opair = m_op.unmap_local_index(i);
+// orbs[0] = opair.first; orbs[1] = opair.second;
+//ret_val[i] = orbs;
+//MAW <<<<<
       }
     return ret_val;
   }

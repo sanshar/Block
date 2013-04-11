@@ -146,13 +146,21 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 #ifndef SERIAL
   const int numprocs = world.size();
 #endif
-  if (sweepParams.get_block_iter() == 0)
-    compute_twopdm_initial(solution, system, systemDot, newSystem, newEnvironment, big, numprocs, state);
+// >>>>>>>>> MAW
+//  if (sweepParams.get_block_iter() == 0)
+//    compute_twopdm_initial(solution, system, systemDot, newSystem, newEnvironment, big, numprocs, state);
+//
+//  compute_twopdm_sweep(solution, system, systemDot, newSystem, newEnvironment, big, numprocs, state);
+//
+//  if (sweepParams.get_block_iter()  == sweepParams.get_n_iters() - 1)
+//    compute_twopdm_final(solution, system, systemDot, newSystem, newEnvironment, big, numprocs, state);
+// <<<<<<<<<< MAW
 
-  compute_twopdm_sweep(solution, system, systemDot, newSystem, newEnvironment, big, numprocs, state);
-
-  if (sweepParams.get_block_iter()  == sweepParams.get_n_iters() - 1)
-    compute_twopdm_final(solution, system, systemDot, newSystem, newEnvironment, big, numprocs, state);
+//MAW
+  int sweepPos = sweepParams.get_block_iter();
+  int endPos = sweepParams.get_n_iters()-1;
+  compute_twopdm_sweep(solution, big, state, sweepPos, endPos);
+//MAW
 
   SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
 

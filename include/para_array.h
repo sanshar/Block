@@ -82,7 +82,7 @@ public:
   virtual const std::vector<int>& get_indices() const {};
   virtual int trimap(int i, int j) const {};
   virtual T& get(const std::vector<int>& orbs)=0;
-  virtual const std::pair<int, int> unmap_local_index(int i) const {};
+//  virtual const std::pair<int, int> unmap_local_index(int i) const {};
 };
 
 /// A wrapper for a single element 

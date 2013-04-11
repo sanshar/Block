@@ -181,8 +181,11 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if (! it->second->is_core())
-      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
-						       ref(rotateMatrix) , &newStateInfo));
+//assert(false);
+//MAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
+//MAW						       ref(rotateMatrix) , &newStateInfo));
+     for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
+						                 ref(rotateMatrix) , &newStateInfo));
   stateInfo = newStateInfo;
   stateInfo.AllocatePreviousStateInfo ();
   *stateInfo.previousStateInfo = oldStateInfo;
@@ -199,8 +202,9 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if ( it->second->is_core())
-      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, ref(rotateMatrix), (&this->stateInfo)));
-
+//assert(false);
+//MAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, ref(rotateMatrix), (&this->stateInfo)));
+     for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, ref(rotateMatrix), (&this->stateInfo)));
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if (! it->second->is_core())

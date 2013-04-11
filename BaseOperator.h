@@ -26,7 +26,9 @@ class TensorOp;
 namespace SpinAdapted{
 class SpinBlock;
 
-enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP};
+//enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP};
+//MAW
+enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP, CRE_CRE_CRE };
 
 enum CompType{CD, DD, CCD, C};
 

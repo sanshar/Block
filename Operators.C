@@ -224,6 +224,7 @@ double SpinAdapted::Cre::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
   return element;
 }
 
+
 boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Cre::getworkingrepresentation(const SpinBlock* block)
 {
   //assert(this->get_initialised());

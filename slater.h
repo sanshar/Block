@@ -75,8 +75,8 @@ public:
     return (*this);
   }
   
-  shared_ptr<Slater> getLeftSlater(int index);
-  shared_ptr<Slater> getRightSlater(int index);
+  boost::shared_ptr<Slater> getLeftSlater(int index);
+  boost::shared_ptr<Slater> getRightSlater(int index);
 
   inline Slater& d (int i)
   {
