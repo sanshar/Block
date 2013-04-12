@@ -335,15 +335,12 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
     
     dmrginp.s0time -> start();
     v_add =  otherBlock->get_op_array(CRE_DESCOMP).is_local() ? v_array : v_distributed;
-//MAW C++11 >>>>>>>>>
-assert(false);
-//MAW FIXME    f = boost::bind(&opxop::cdxcdcomp, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
-//MAW FIXME    for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
+    f = boost::bind(&opxop::cdxcdcomp, otherBlock, _1, this, boost::ref(c), v_add, dmrginp.effective_molecule_quantum() );
+    for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
 
     v_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? v_array : v_distributed;
-//MAW FIXME    f = boost::bind(&opxop::ddxcccomp, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
-//MAW FIXME    for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);
-//MAW C++11 <<<<<<<<<<
+    f = boost::bind(&opxop::ddxcccomp, otherBlock, _1, this, boost::ref(c), v_add, dmrginp.effective_molecule_quantum() );
+    for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);
     dmrginp.s0time -> stop();
   }
   dmrginp.twoelecT -> stop();
