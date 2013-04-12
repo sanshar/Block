@@ -25,17 +25,17 @@ class NpdmSpinOps {
     virtual void set_local_ops( int idx ) { assert(false); };
 
     // Numerical representation of the operators for several total spins (e.g. 2-index op has two forms with spin-1/2 particles)
-    std::vector< boost::shared_ptr<SparseMatrix> > opReps;
+    std::vector< boost::shared_ptr<SparseMatrix> > opReps_;
     // Spin multiplicity of each operator (this info should be in each OpReps element, but we can use this for diagnostics)
-    std::vector<int> mults;
+    std::vector<int> mults_;
     // How the operator is built (e.g. 3-index from product of 2-index cre-cre and 1-index destruction, otherwise)
-    std::vector<char> build_pattern;
+    std::vector<char> build_pattern_;
     // Do we need to transpose the representation before using it?
-    bool transpose;
+    bool transpose_;
     // Do we need to multiply by any constant factors when using it (due to implicit use of commutation relations)?
-    double factor;
+    double factor_;
     // Effective spatial orbital indices (since due to use of transposition / commutation may not match OpRep.get_orbs() etc)
-    std::vector<int> indices;
+    std::vector<int> indices_;
 
   protected:
     boost::shared_ptr<SparseMatrix> build_compound_operator( std::vector< boost::shared_ptr<SparseMatrix> > lhsOps, int ilhs,

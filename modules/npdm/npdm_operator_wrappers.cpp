@@ -20,11 +20,11 @@ Npdm_op_wrapper_compound_CCDD::Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBl
 {
   spinBlock_ = spinBlock;
   size_ = 1;
-  factor = 1.0;
-  transpose = false;
-  build_pattern = { '(','(','C','C',')','(','D','D',')',')' };
+  factor_ = 1.0;
+  transpose_ = false;
+  build_pattern_ = { '(','(','C','C',')','(','D','D',')',')' };
   // Build singlets only here
-  mults = { 1, 1 };
+  mults_ = { 1, 1 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -32,24 +32,24 @@ Npdm_op_wrapper_compound_CCDD::Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBl
 void Npdm_op_wrapper_compound_CCDD::set_local_ops( int idx )
 {
   // Spatial orbital indices
-  indices.clear();
+  indices_.clear();
   int ix, jx, kx, lx;
   std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
-  ix = opReps.at(0)->get_orbs(0);
-  jx = opReps.at(0)->get_orbs(1);
+  ix = opReps_.at(0)->get_orbs(0);
+  jx = opReps_.at(0)->get_orbs(1);
 
   // Assumed single site
   assert ( ix == jx );
-  indices.push_back( ix );
-  indices.push_back( ix );
-  indices.push_back( ix );
-  indices.push_back( ix );
+  indices_.push_back( ix );
+  indices_.push_back( ix );
+  indices_.push_back( ix );
+  indices_.push_back( ix );
 
-  opReps.clear();
+  opReps_.clear();
   // S=0 (+) S=0;  S=0
-  opReps.push_back( build_compound_operator( twoOps, 0, twoOps, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( twoOps, 0, twoOps, 0, 0, ix, true ) );
   // S=1 (+) S=1;  S=0
-  opReps.push_back( build_compound_operator( twoOps, 1, twoOps, 1, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( twoOps, 1, twoOps, 1, 0, ix, true ) );
 }
 
 //===========================================================================================================================================================
@@ -60,11 +60,11 @@ Npdm_op_wrapper_compound_CCD::Npdm_op_wrapper_compound_CCD( SpinBlock * spinBloc
 {
   spinBlock_ = spinBlock;
   size_ = 1;
-  factor = 1.0;
-  transpose = false;
-  build_pattern = { '(','(','C','C',')','D',')' };
+  factor_ = 1.0;
+  transpose_ = false;
+  build_pattern_ = { '(','(','C','C',')','D',')' };
   // S={1/2,1/2,3/2}
-  mults = { 2, 2, 4 };
+  mults_ = { 2, 2, 4 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -72,29 +72,29 @@ Npdm_op_wrapper_compound_CCD::Npdm_op_wrapper_compound_CCD( SpinBlock * spinBloc
 void Npdm_op_wrapper_compound_CCD::set_local_ops( int idx )
 {
   // Spatial orbital indices
-  indices.clear();
+  indices_.clear();
   int ix, jx, kx;
 
   std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
-  ix = opReps.at(0)->get_orbs(0);
-  jx = opReps.at(0)->get_orbs(1);
+  ix = opReps_.at(0)->get_orbs(0);
+  jx = opReps_.at(0)->get_orbs(1);
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
-  kx = opReps.at(0)->get_orbs(0);
+  kx = opReps_.at(0)->get_orbs(0);
 
   // Assumed single site
   assert ( ix == jx );
   assert ( jx == kx );
-  indices.push_back( ix );
-  indices.push_back( jx );
-  indices.push_back( kx );
+  indices_.push_back( ix );
+  indices_.push_back( jx );
+  indices_.push_back( kx );
 
-  opReps.clear();
+  opReps_.clear();
   // S=0 (+) S=1/2;  S=1/2
-  opReps.push_back( build_compound_operator( twoOps, 0, oneOp, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( twoOps, 0, oneOp, 0, 0, ix, true ) );
   // S=1 (+) S=1/2;  S=1/2
-  opReps.push_back( build_compound_operator( twoOps, 1, oneOp, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( twoOps, 1, oneOp, 0, 0, ix, true ) );
   // S=1 (+) S=1/2;  S=3/2
-  opReps.push_back( build_compound_operator( twoOps, 1, oneOp, 1, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( twoOps, 1, oneOp, 1, 0, ix, true ) );
 }
 
 //===========================================================================================================================================================
@@ -104,11 +104,11 @@ Npdm_op_wrapper_compound_CDD::Npdm_op_wrapper_compound_CDD( SpinBlock * spinBloc
 {
   spinBlock_ = spinBlock;
   size_ = 1;
-  factor = 1.0;
-  transpose = true;
-  build_pattern = { '(','C','(','D','D',')',')' };
+  factor_ = 1.0;
+  transpose_ = true;
+  build_pattern_ = { '(','C','(','D','D',')',')' };
   // S={1/2,1/2,3/2}
-  mults = { 2, 2, 4 };
+  mults_ = { 2, 2, 4 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -116,29 +116,29 @@ Npdm_op_wrapper_compound_CDD::Npdm_op_wrapper_compound_CDD( SpinBlock * spinBloc
 void Npdm_op_wrapper_compound_CDD::set_local_ops( int idx )
 {
   // Spatial orbital indices
-  indices.clear();
+  indices_.clear();
   int ix, jx, kx;
 
   std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
-  ix = opReps.at(0)->get_orbs(0);
-  jx = opReps.at(0)->get_orbs(1);
+  ix = opReps_.at(0)->get_orbs(0);
+  jx = opReps_.at(0)->get_orbs(1);
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
-  kx = opReps.at(0)->get_orbs(0);
+  kx = opReps_.at(0)->get_orbs(0);
 
   // Assumed single site
   assert ( ix == jx );
   assert ( jx == kx );
-  indices.push_back( ix );
-  indices.push_back( jx );
-  indices.push_back( kx );
+  indices_.push_back( ix );
+  indices_.push_back( jx );
+  indices_.push_back( kx );
 
-  opReps.clear();
+  opReps_.clear();
   // S=0 (+) S=1/2;  S=1/2
-  opReps.push_back( build_compound_operator( twoOps, 0, oneOp, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( twoOps, 0, oneOp, 0, 0, ix, true ) );
   // S=1 (+) S=1/2;  S=1/2
-  opReps.push_back( build_compound_operator( twoOps, 1, oneOp, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( twoOps, 1, oneOp, 0, 0, ix, true ) );
   // S=1 (+) S=1/2;  S=3/2
-  opReps.push_back( build_compound_operator( twoOps, 1, oneOp, 1, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( twoOps, 1, oneOp, 1, 0, ix, true ) );
 }
 
 //===========================================================================================================================================================
@@ -149,10 +149,10 @@ Npdm_op_wrapper_CC::Npdm_op_wrapper_CC( SpinBlock * spinBlock )
 {
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
-  transpose = false;
-  build_pattern = { '(','C','C',')' };
+  transpose_ = false;
+  build_pattern_ = { '(','C','C',')' };
   // S={0,1}
-  mults = { 1, 3 };
+  mults_ = { 1, 3 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -160,18 +160,18 @@ Npdm_op_wrapper_CC::Npdm_op_wrapper_CC( SpinBlock * spinBlock )
 void Npdm_op_wrapper_CC::set_local_ops( int idx )
 {
   // Spatial orbital indices
-  indices.clear();
+  indices_.clear();
   int ix, jx;
 
-  opReps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
-  ix = opReps.at(0)->get_orbs(0);
-  jx = opReps.at(0)->get_orbs(1);
+  opReps_ = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
+  ix = opReps_.at(0)->get_orbs(0);
+  jx = opReps_.at(0)->get_orbs(1);
 
   // Our algorithm assumes 2-particle indices (i,j) s.t. i<=j.  Block stores j<=i, so we commute them (assuming i!=j) and multiply -1
-  indices.push_back( jx );
-  indices.push_back( ix );
-  factor = 1.0;
-  if ( ix != jx ) factor = -1.0;
+  indices_.push_back( jx );
+  indices_.push_back( ix );
+  factor_ = 1.0;
+  if ( ix != jx ) factor_ = -1.0;
 }
 
 //===========================================================================================================================================================
@@ -180,11 +180,11 @@ Npdm_op_wrapper_CD::Npdm_op_wrapper_CD( SpinBlock * spinBlock )
 {
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_DES).get_size();
-  factor = 1.0;
-  transpose = true;
-  build_pattern = { '(','C','D',')' };
+  factor_ = 1.0;
+  transpose_ = true;
+  build_pattern_ = { '(','C','D',')' };
   // S={0,1}
-  mults = { 1, 3 };
+  mults_ = { 1, 3 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -192,16 +192,16 @@ Npdm_op_wrapper_CD::Npdm_op_wrapper_CD( SpinBlock * spinBlock )
 void Npdm_op_wrapper_CD::set_local_ops( int idx )
 {
   // Spatial orbital indices
-  indices.clear();
+  indices_.clear();
   int ix, jx;
 
-  opReps = spinBlock_->get_op_array(CRE_DES).get_local_element(idx);
-  ix = opReps.at(0)->get_orbs(0);
-  jx = opReps.at(0)->get_orbs(1);
+  opReps_ = spinBlock_->get_op_array(CRE_DES).get_local_element(idx);
+  ix = opReps_.at(0)->get_orbs(0);
+  jx = opReps_.at(0)->get_orbs(1);
 
   // Our algorithm assumes 2-particle indices (i,j) s.t. i<=j.  Block stores j<=i, but the transpose takes care of it.
-  indices.push_back( jx );
-  indices.push_back( ix );
+  indices_.push_back( jx );
+  indices_.push_back( ix );
 }
 
 //===========================================================================================================================================================
@@ -210,11 +210,11 @@ Npdm_op_wrapper_DD::Npdm_op_wrapper_DD( SpinBlock * spinBlock )
 {
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
-  factor = 1.0;
-  transpose = true;
-  build_pattern = { '(','D','D',')' };
+  factor_ = 1.0;
+  transpose_ = true;
+  build_pattern_ = { '(','D','D',')' };
   // S={0,1}
-  mults = { 1, 3 };
+  mults_ = { 1, 3 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -222,64 +222,64 @@ Npdm_op_wrapper_DD::Npdm_op_wrapper_DD( SpinBlock * spinBlock )
 void Npdm_op_wrapper_DD::set_local_ops( int idx )
 {
   // Spatial orbital indices
-  indices.clear();
+  indices_.clear();
   int ix, jx;
 
-  opReps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
-  ix = opReps.at(0)->get_orbs(0);
-  jx = opReps.at(0)->get_orbs(1);
+  opReps_ = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
+  ix = opReps_.at(0)->get_orbs(0);
+  jx = opReps_.at(0)->get_orbs(1);
 
   // Our algorithm assumes 2-particle indices (i,j) s.t. i<=j.  Block stores j<=i, but the transpose takes care of it.
-  indices.push_back( jx );
-  indices.push_back( ix );
+  indices_.push_back( jx );
+  indices_.push_back( ix );
 }
 
 //===========================================================================================================================================================
 // 1-INDEX OPERATORS
 //===========================================================================================================================================================
 
-Npdm_op_wrapper_C::Npdm_op_wrapper_C( SpinBlock * spinBlock )
+Npdm_op_wrapper_C::Npdm_op_wrapper_C( SpinBlock * spinBlock ) 
 {
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE).get_size();
-  factor = 1.0;
-  transpose = false;
-  build_pattern = { '(','C',')' };
+  factor_ = 1.0;
+  transpose_ = false;
+  build_pattern_ = { '(','C',')' };
   // S=1/2 only
-  mults = { 2 };
+  mults_ = { 2 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Npdm_op_wrapper_C::set_local_ops( int idx )
 {
-  indices.clear();
-  opReps = spinBlock_->get_op_array(CRE).get_local_element(idx);
-  int ix = opReps.at(0)->get_orbs(0);
-  indices.push_back(ix);
+  indices_.clear();
+  opReps_ = spinBlock_->get_op_array(CRE).get_local_element(idx);
+  int ix = opReps_.at(0)->get_orbs(0);
+  indices_.push_back(ix);
 }
 
 //===========================================================================================================================================================
 
-Npdm_op_wrapper_D::Npdm_op_wrapper_D( SpinBlock * spinBlock )
+Npdm_op_wrapper_D::Npdm_op_wrapper_D( SpinBlock * spinBlock ) 
 {
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE).get_size();
-  factor = 1.0;
-  transpose = true;
-  build_pattern = { '(','D',')' };
+  factor_ = 1.0;
+  transpose_ = true;
+  build_pattern_ = { '(','D',')' };
   // S=1/2 only
-  mults = { 2 };
+  mults_ = { 2 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
+// FIXME (check how to use initialization lists for base classes...??)
 void Npdm_op_wrapper_D::set_local_ops( int idx )
 {
-  indices.clear();
-  opReps = spinBlock_->get_op_array(CRE).get_local_element(idx);
-  int ix = opReps.at(0)->get_orbs(0);
-  indices.push_back(ix);
+  indices_.clear();
+  opReps_ = spinBlock_->get_op_array(CRE).get_local_element(idx);
+  int ix = opReps_.at(0)->get_orbs(0);
+  indices_.push_back(ix);
 }
 
 //===========================================================================================================================================================
@@ -288,10 +288,10 @@ Npdm_op_wrapper_NULL::Npdm_op_wrapper_NULL()
 {
   // Null operator
   size_ = 0;
-  factor = 1.0;
-  transpose = false;
-  build_pattern = { '(',')' };
-  mults = { 0 };
+  factor_ = 1.0;
+  transpose_ = false;
+  build_pattern_ = { '(',')' };
+  mults_ = { 0 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -299,10 +299,10 @@ Npdm_op_wrapper_NULL::Npdm_op_wrapper_NULL()
 void Npdm_op_wrapper_NULL::set_local_ops( int idx )
 {
   // Null operator
-  indices.clear();
-  opReps.clear();
-  opReps.reserve(1); // Just for compatibility
-  indices.push_back(-1);
+  indices_.clear();
+  opReps_.clear();
+  opReps_.reserve(1); // Just for compatibility
+  indices_.push_back(-1);
 }
 
 
