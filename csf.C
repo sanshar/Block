@@ -416,11 +416,21 @@ std::vector< SpinAdapted::Csf > SpinAdapted::Csf::distribute (const int n, const
 	  ++alphaI;
 	}
 	
+//MAW C++11 >>>>
 	std::vector<bool> tmp = lbuffer;
-//MAW C++11
-assert(false);
 //MAW FIXME	copy (orbs.begin(), orbs.end(), back_inserter(tmp));
 //MAW	FIXME copy (rbuffer.begin(), rbuffer.end(), back_inserter(tmp));
+
+//CHANGED for new compiler which seemed to have an ambiguity with the back_inserter implementation
+std::cout << "MAW FIXME: CHECK THIS!!!" << std::endl;
+//assert(false);
+// Add orbs to end of tmp vector
+tmp.insert( tmp.end(), orbs.begin(), orbs.end() );
+// Add rbuffer to end of tmp vector
+tmp.insert( tmp.end(), rbuffer.begin(), rbuffer.end() );
+
+//MAW C++11 <<<<
+
 	Slater new_det = Slater (Orbstring (tmp));
 	map<Slater, double> m;
 	m[new_det] = 1.0;
