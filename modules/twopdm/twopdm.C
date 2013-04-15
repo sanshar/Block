@@ -37,17 +37,17 @@ void loop_over_block_operators( Wavefunction & wavefunction,
   // Only one spatial combination on the dot block
   assert( dotOps.size() == 1 );
   dotOps.set_local_ops( 0 );
-  assert( dotOps.mults.size() == dotOps.opReps.size() );
+  assert( dotOps.mults_.size() == dotOps.opReps_.size() );
 
   // Many spatial combinations on left block
   for ( int ilhs = 0; ilhs < lhsOps.size(); ilhs++ ) {
     lhsOps.set_local_ops( ilhs );
-    assert( lhsOps.mults.size() == lhsOps.opReps.size() );
+    assert( lhsOps.mults_.size() == lhsOps.opReps_.size() );
 
     // Many spatial combinations on right block
     for ( int irhs = 0; irhs < rhsOps.size(); irhs++ ) {
       rhsOps.set_local_ops( irhs );
-      assert( rhsOps.mults.size() == rhsOps.opReps.size() );
+      assert( rhsOps.mults_.size() == rhsOps.opReps_.size() );
 
       // Contract these spin-adapted spatial operators and build expectation values
       std::vector<double> vals = npdm_expectations.get_expectations();

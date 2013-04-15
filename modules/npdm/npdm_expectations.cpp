@@ -80,19 +80,19 @@ void Npdm_spin_adaptation::to_nonspin_adapt( std::vector<double> & spin_adapted_
 
   // Set-up npdm element indices
   std::vector<int> indices;
-  indices.reserve( lhsOps_.indices.size() + dotOps_.indices.size() + rhsOps_.indices.size() );
-  indices.insert( indices.end(), lhsOps_.indices.begin(), lhsOps_.indices.end() );
-  indices.insert( indices.end(), dotOps_.indices.begin(), dotOps_.indices.end() );
-  indices.insert( indices.end(), rhsOps_.indices.begin(), rhsOps_.indices.end() );
+  indices.reserve( lhsOps_.indices_.size() + dotOps_.indices_.size() + rhsOps_.indices_.size() );
+  indices.insert( indices.end(), lhsOps_.indices_.begin(), lhsOps_.indices_.end() );
+  indices.insert( indices.end(), dotOps_.indices_.begin(), dotOps_.indices_.end() );
+  indices.insert( indices.end(), rhsOps_.indices_.begin(), rhsOps_.indices_.end() );
   assert (indices.size() == 4);
 
   // Set-up how tensor operator is constructed from (compound) block operators
   std::vector<char> build_pattern = { '(' };
-  build_pattern.reserve( lhsOps_.build_pattern.size() + dotOps_.build_pattern.size() + rhsOps_.build_pattern.size() + 2 );
-  build_pattern.insert( build_pattern.end(), lhsOps_.build_pattern.begin(), lhsOps_.build_pattern.end() );
-  build_pattern.insert( build_pattern.end(), dotOps_.build_pattern.begin(), dotOps_.build_pattern.end() );
+  build_pattern.reserve( lhsOps_.build_pattern_.size() + dotOps_.build_pattern_.size() + rhsOps_.build_pattern_.size() + 2 );
+  build_pattern.insert( build_pattern.end(), lhsOps_.build_pattern_.begin(), lhsOps_.build_pattern_.end() );
+  build_pattern.insert( build_pattern.end(), dotOps_.build_pattern_.begin(), dotOps_.build_pattern_.end() );
   build_pattern.push_back( ')' );
-  build_pattern.insert( build_pattern.end(), rhsOps_.build_pattern.begin(), rhsOps_.build_pattern.end() );
+  build_pattern.insert( build_pattern.end(), rhsOps_.build_pattern_.begin(), rhsOps_.build_pattern_.end() );
 
   // Translate our format for the build pattern into the types used by the old twopdm implementation
   Oporder build_pattern_type = parse_build_pattern( build_pattern );  
@@ -122,9 +122,9 @@ void Npdm_expectations::contract_spin_operators( int ilhs, int idot, int irhs )
 {
 
   // Pointers to the numerical operator representations
-  boost::shared_ptr<SparseMatrix> lhsPtr = lhsOps_.opReps.at(ilhs);
-  boost::shared_ptr<SparseMatrix> dotPtr = dotOps_.opReps.at(idot);
-  boost::shared_ptr<SparseMatrix> rhsPtr = rhsOps_.opReps.at(irhs);
+  boost::shared_ptr<SparseMatrix> lhsPtr = lhsOps_.opReps_.at(ilhs);
+  boost::shared_ptr<SparseMatrix> dotPtr = dotOps_.opReps_.at(idot);
+  boost::shared_ptr<SparseMatrix> rhsPtr = rhsOps_.opReps_.at(irhs);
 
   // Pointers to the transposes (may not all be needed)
   Transposeview lhsOpTr = Transposeview(lhsPtr);
@@ -134,17 +134,17 @@ void Npdm_expectations::contract_spin_operators( int ilhs, int idot, int irhs )
   // Set actual pointers we'll contract
   boost::shared_ptr<SparseMatrix> lhsOp, dotOp, rhsOp;
   // LHS
-  if ( lhsOps_.transpose )
+  if ( lhsOps_.transpose_ )
     lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
   else
     lhsOp = lhsPtr;
   // Dot
-  if ( dotOps_.transpose )
+  if ( dotOps_.transpose_ )
     dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
   else
     dotOp = dotPtr;
   // RHS
-  if ( rhsOps_.transpose )
+  if ( rhsOps_.transpose_ )
     rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
   else
     rhsOp = rhsPtr;
@@ -154,7 +154,7 @@ void Npdm_expectations::contract_spin_operators( int ilhs, int idot, int irhs )
   spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_, expectations_, false);
 
   // Modify new elements with sign factors
-  double factor = lhsOps_.factor * dotOps_.factor * rhsOps_.factor;
+  double factor = lhsOps_.factor_ * dotOps_.factor_ * rhsOps_.factor_;
   for (int i = index_begin; i < expectations_.size(); i++) {
     expectations_[i] *= factor;
   }
@@ -183,17 +183,17 @@ void Npdm_expectations::build_singlet_expectations()
 {
   expectations_.clear();
 
-  for (int ilhs = 0; ilhs < lhsOps_.opReps.size(); ilhs++) {
-    for (int idot = 0; idot < dotOps_.opReps.size(); idot++) {
-      for (int irhs = 0; irhs < rhsOps_.opReps.size(); irhs++) {
+  for (int ilhs = 0; ilhs < lhsOps_.opReps_.size(); ilhs++) {
+    for (int idot = 0; idot < dotOps_.opReps_.size(); idot++) {
+      for (int irhs = 0; irhs < rhsOps_.opReps_.size(); irhs++) {
   
         // .mults should be redundant!  Test we're doing what we think we're doing
-        assert( lhsOps_.mults.at(ilhs)-1 == lhsOps_.opReps.at(ilhs)->get_deltaQuantum().totalSpin );
-        assert( dotOps_.mults.at(idot)-1 == dotOps_.opReps.at(idot)->get_deltaQuantum().totalSpin );
-        assert( rhsOps_.mults.at(irhs)-1 == rhsOps_.opReps.at(irhs)->get_deltaQuantum().totalSpin );
+        assert( lhsOps_.mults_.at(ilhs)-1 == lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );
+        assert( dotOps_.mults_.at(idot)-1 == dotOps_.opReps_.at(idot)->get_deltaQuantum().totalSpin );
+        assert( rhsOps_.mults_.at(irhs)-1 == rhsOps_.opReps_.at(irhs)->get_deltaQuantum().totalSpin );
 
         // If this combination allows a singlet, compute it
-        if ( test_for_singlet( lhsOps_.mults.at(ilhs), dotOps_.mults.at(idot), rhsOps_.mults.at(irhs) ) ) {
+        if ( test_for_singlet( lhsOps_.mults_.at(ilhs), dotOps_.mults_.at(idot), rhsOps_.mults_.at(irhs) ) ) {
           contract_spin_operators( ilhs, idot, irhs );
         }
 
