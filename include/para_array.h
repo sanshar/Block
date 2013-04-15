@@ -40,6 +40,7 @@ inline int processorindex(int i)
 #endif
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 /// 1d interface for the parallel array classes
 template<class T> struct para_sparse_vector
@@ -82,8 +83,11 @@ public:
   virtual const std::vector<int>& get_indices() const {};
   virtual int trimap(int i, int j) const {};
   virtual T& get(const std::vector<int>& orbs)=0;
-//  virtual const std::pair<int, int> unmap_local_index(int i) const {};
+//MAW
+  virtual const std::pair<int, int> unmap_local_index(int i) const { assert(false); };
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 /// A wrapper for a single element 
 /**
@@ -135,6 +139,8 @@ private:
   }
   para_array_1d<T> store;
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 /// A sparse parallel 1d array class
 /**
@@ -364,6 +370,8 @@ inline int trimap(int i, int j, int length, bool ut = false)
     abort();
   return 0;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 /// parallel 2d lower triangular array class
 /**
@@ -611,7 +619,6 @@ private:
 
 };
 
-
-
+//------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #endif

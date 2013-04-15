@@ -143,15 +143,14 @@ template <class Op> class Op_component : public Op_component_base
   {
     std::vector<int> orbs(2);
     std::vector< std::vector<int> > ret_val(m_op.local_nnz());
-    for (int i=0; i<m_op.local_nnz(); i++)
-      {
+    for (int i=0; i<m_op.local_nnz(); i++) {
 //MAW >>>>>
-assert(false);
-// pair<int, int> opair = m_op.unmap_local_index(i);
-// orbs[0] = opair.first; orbs[1] = opair.second;
-//ret_val[i] = orbs;
+//FIXME for 3-index
+      pair<int, int> opair = m_op.unmap_local_index(i);
+      orbs[0] = opair.first; orbs[1] = opair.second;
+      ret_val[i] = orbs;
 //MAW <<<<<
-      }
+    }
     return ret_val;
   }
 

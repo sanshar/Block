@@ -165,7 +165,8 @@ public:
     return global_index_tuple[i];
   }
   /// returns i j for ith element of local storage
-  const std::tuple<int,int,int> unmap_local_index(int i) const
+  //FIXME const std::tuple<int,int,int> unmap_local_index(int i) const
+  const std::pair<int,int> unmap_local_index(int i) const
   {
     return local_index_tuple[i];
   }
@@ -185,7 +186,8 @@ public:
   *
   * see corresponding set_indices member fn.
   */
-  void set_tuple_indices(const std::vector<std::tuple<int,int,int> >& occupied, 
+//MAW FIXME tuple
+  void set_tuple_indices(const std::vector<std::pair<int,int> >& occupied, 
 			int len,
 			bool ut = false)
   {
@@ -197,7 +199,8 @@ public:
     int length_1d = tristore(len);
 
     /* this part is different from set_indices */
-    for (std::vector<std::tuple<int,int,int> >::const_iterator ptr = occupied.begin(); ptr != occupied.end(); ++ptr) {
+//MAW FIXME tuple
+    for (std::vector<std::pair<int,int> >::const_iterator ptr = occupied.begin(); ptr != occupied.end(); ++ptr) {
       global_indices.push_back(trimap(std::get<0>(*ptr), std::get<1>(*ptr)));
       global_index_tuple.push_back(*ptr);
     }
@@ -254,8 +257,10 @@ private:
   std::vector<int> global_indices_map;
   std::vector<int> local_indices;
   std::vector<int> local_indices_map;
-  std::vector<std::tuple<int,int,int> > global_index_tuple; 
-  std::vector<std::tuple<int,int,int> > local_index_tuple;
+//MAW FIXME tuple
+  std::vector<std::pair<int,int> > global_index_tuple; 
+//MAW FIXME tuple
+  std::vector<std::pair<int,int> > local_index_tuple;
   std::vector<T> store;
   bool stored_local;
   bool upper_triangular;

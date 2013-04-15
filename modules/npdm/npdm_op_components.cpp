@@ -58,14 +58,15 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
   const double screen_tol = dmrginp.screen_tol();
 //FIXME
   std::vector< std::tuple<int,int,int> > screened_ccc_ix = screened_ccc_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
-  m_op.set_tuple_indices(screened_ccc_ix, dmrginp.last_site());      
+//FIXME
+//  m_op.set_tuple_indices(screened_ccc_ix, dmrginp.last_site());      
   std::vector<int> orbs(3);
 
   for (int i = 0; i < m_op.local_nnz(); ++i) {
-    std::tuple<int,int,int> tuple = m_op.unmap_local_index(i);
-    orbs[0] = std::get<0>(tuple);
-    orbs[1] = std::get<1>(tuple);
-    orbs[2] = std::get<2>(tuple);
+//FIXME    std::tuple<int,int,int> tuple = m_op.unmap_local_index(i);
+//    orbs[0] = std::get<0>(tuple);
+//    orbs[1] = std::get<1>(tuple);
+//    orbs[2] = std::get<2>(tuple);
   
     std::vector<boost::shared_ptr<CreCreCre> >& vec = m_op.get_local_element(i);
     SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
