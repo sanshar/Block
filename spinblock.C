@@ -322,8 +322,11 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   dmrginp.s1time -> start();
   v_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
   Functor f = boost::bind(&opxop::cxcddcomp, leftBlock, _1, this, boost::ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
+  for_all_multithread(rightBlock->get_op_array(CRE), f);
 
   v_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
+  f = boost::bind(&opxop::cxcddcomp, rightBlock, _1, this, boost::ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
+  for_all_multithread(leftBlock->get_op_array(CRE), f);  
 
   dmrginp.s1time -> stop();
 
