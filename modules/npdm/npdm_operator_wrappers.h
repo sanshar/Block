@@ -122,7 +122,7 @@ class Npdm_op_wrapper_D : public NpdmSpinOps {
 };
 
 //===========================================================================================================================================================
-//  NULL case (for creation-destruction patterns with none on either LHS or RHS blocks)
+//  NULL case (for empty creation-destruction patterns)
 //===========================================================================================================================================================
 
 class Npdm_op_wrapper_NULL : public NpdmSpinOps {

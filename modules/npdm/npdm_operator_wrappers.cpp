@@ -17,6 +17,8 @@ namespace SpinAdapted{
 
 Npdm_op_wrapper_compound_CCDD::Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBlock )
 {
+  opReps_.clear();
+  indices_.clear();
   spinBlock_ = spinBlock;
   size_ = 1;
   factor_ = 1.0;
@@ -34,8 +36,8 @@ void Npdm_op_wrapper_compound_CCDD::set_local_ops( int idx )
   indices_.clear();
   int ix, jx, kx, lx;
   std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
-  ix = opReps_.at(0)->get_orbs(0);
-  jx = opReps_.at(0)->get_orbs(1);
+  ix = twoOps.at(0)->get_orbs(0);
+  jx = twoOps.at(0)->get_orbs(1);
 
   // Assumed single site
   assert ( ix == jx );
@@ -57,6 +59,8 @@ void Npdm_op_wrapper_compound_CCDD::set_local_ops( int idx )
 
 Npdm_op_wrapper_compound_CCD::Npdm_op_wrapper_compound_CCD( SpinBlock * spinBlock )
 {
+  opReps_.clear();
+  indices_.clear();
   spinBlock_ = spinBlock;
   size_ = 1;
   factor_ = 1.0;
@@ -75,10 +79,10 @@ void Npdm_op_wrapper_compound_CCD::set_local_ops( int idx )
   int ix, jx, kx;
 
   std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
-  ix = opReps_.at(0)->get_orbs(0);
-  jx = opReps_.at(0)->get_orbs(1);
+  ix = twoOps.at(0)->get_orbs(0);
+  jx = twoOps.at(0)->get_orbs(1);
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
-  kx = opReps_.at(0)->get_orbs(0);
+  kx = oneOp.at(0)->get_orbs(0);
 
   // Assumed single site
   assert ( ix == jx );
@@ -101,6 +105,8 @@ void Npdm_op_wrapper_compound_CCD::set_local_ops( int idx )
 
 Npdm_op_wrapper_compound_CDD::Npdm_op_wrapper_compound_CDD( SpinBlock * spinBlock )
 {
+  opReps_.clear();
+  indices_.clear();
   spinBlock_ = spinBlock;
   size_ = 1;
   factor_ = 1.0;
@@ -119,10 +125,10 @@ void Npdm_op_wrapper_compound_CDD::set_local_ops( int idx )
   int ix, jx, kx;
 
   std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
-  ix = opReps_.at(0)->get_orbs(0);
-  jx = opReps_.at(0)->get_orbs(1);
+  ix = twoOps.at(0)->get_orbs(0);
+  jx = twoOps.at(0)->get_orbs(1);
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
-  kx = opReps_.at(0)->get_orbs(0);
+  kx = oneOp.at(0)->get_orbs(0);
 
   // Assumed single site
   assert ( ix == jx );
@@ -146,6 +152,8 @@ void Npdm_op_wrapper_compound_CDD::set_local_ops( int idx )
 
 Npdm_op_wrapper_CC::Npdm_op_wrapper_CC( SpinBlock * spinBlock )
 {
+  opReps_.clear();
+  indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
   transpose_ = false;
@@ -177,6 +185,8 @@ void Npdm_op_wrapper_CC::set_local_ops( int idx )
 
 Npdm_op_wrapper_CD::Npdm_op_wrapper_CD( SpinBlock * spinBlock )
 {
+  opReps_.clear();
+  indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_DES).get_size();
   factor_ = 1.0;
@@ -207,6 +217,8 @@ void Npdm_op_wrapper_CD::set_local_ops( int idx )
 
 Npdm_op_wrapper_DD::Npdm_op_wrapper_DD( SpinBlock * spinBlock )
 {
+  opReps_.clear();
+  indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
   factor_ = 1.0;
@@ -239,6 +251,8 @@ void Npdm_op_wrapper_DD::set_local_ops( int idx )
 
 Npdm_op_wrapper_C::Npdm_op_wrapper_C( SpinBlock * spinBlock ) 
 {
+  opReps_.clear();
+  indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE).get_size();
   factor_ = 1.0;
@@ -262,6 +276,8 @@ void Npdm_op_wrapper_C::set_local_ops( int idx )
 
 Npdm_op_wrapper_D::Npdm_op_wrapper_D( SpinBlock * spinBlock ) 
 {
+  opReps_.clear();
+  indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE).get_size();
   factor_ = 1.0;

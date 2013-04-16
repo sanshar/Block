@@ -14,7 +14,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 
 // Forward declaration
-boost::shared_ptr<NpdmSpinOps> select_npdm_operators( SpinBlock * spinBlock, std::vector<Npdm::CD> cd_type );
+boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::vector<Npdm::CD> & cd_type );
 
 //===========================================================================================================================================================
 
@@ -30,19 +30,17 @@ void loop_over_block_operators( Wavefunction & wavefunction,
   SpinBlock* rhsBlock = big.get_rightBlock();
   SpinBlock* dotBlock = lhsBlock->get_rightBlock();
 
-  boost::shared_ptr<NpdmSpinOps> lhsOps = select_npdm_operators( lhsBlock, lhs_cd_type );
-  boost::shared_ptr<NpdmSpinOps> dotOps = select_npdm_operators( dotBlock, dot_cd_type );
-  boost::shared_ptr<NpdmSpinOps> rhsOps = select_npdm_operators( rhsBlock, rhs_cd_type );
+  boost::shared_ptr<NpdmSpinOps> lhsOps = select_op_wrapper( lhsBlock, lhs_cd_type );
+  boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );
+  boost::shared_ptr<NpdmSpinOps> rhsOps = select_op_wrapper( rhsBlock, rhs_cd_type );
 
   Npdm_expectations npdm_expectations( wavefunction, big, *lhsOps, *dotOps, *rhsOps );
   Npdm_spin_adaptation npdm_spin_adapt( *lhsOps, *dotOps, *rhsOps, twopdm );
 
   // Only one spatial combination on the dot block
   assert( dotOps->size() == 1 );
-//FIXME this next line fails to call the derived class....??
   dotOps->set_local_ops( 0 );
   assert( dotOps->mults_.size() == dotOps->opReps_.size() );
-assert (false);
 
   // Many spatial combinations on left block
   for ( int ilhs = 0; ilhs < lhsOps->size(); ilhs++ ) {
