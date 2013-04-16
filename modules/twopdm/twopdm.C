@@ -42,15 +42,26 @@ void loop_over_block_operators( Wavefunction & wavefunction,
   dotOps->set_local_ops( 0 );
   assert( dotOps->mults_.size() == dotOps->opReps_.size() );
 
+//pout << "lhsOps->size()" << lhsOps->size() << std::endl;
+//pout << "dotOps->size()" << dotOps->size() << std::endl;
+//pout << "rhsOps->size()" << rhsOps->size() << std::endl;
+//pout << "------\n";
+//pout << "dotOps->indices_.size()" << dotOps->indices_.size() << std::endl;
+//pout << "npdm_expectations.dotOps_.indices_.size()" << npdm_expectations.dotOps_.indices_.size() << std::endl;
   // Many spatial combinations on left block
   for ( int ilhs = 0; ilhs < lhsOps->size(); ilhs++ ) {
     lhsOps->set_local_ops( ilhs );
-    assert( lhsOps->mults_.size() == lhsOps->opReps_.size() );
+//pout << "lhsOps->indices_.size()" << lhsOps->indices_.size() << std::endl;
+//pout << "npdm_expectations.lhsOps_.indices_.size()" << npdm_expectations.lhsOps_.indices_.size() << std::endl;
+    if ( lhsOps->opReps_.size() != 0 ) assert( lhsOps->mults_.size() == lhsOps->opReps_.size() );
 
     // Many spatial combinations on right block
     for ( int irhs = 0; irhs < rhsOps->size(); irhs++ ) {
+//pout << "rhsOps->indices_.size()" << rhsOps->indices_.size() << std::endl;
+//pout << "npdm_expectations.rhsOps_.indices_.size()" << npdm_expectations.rhsOps_.indices_.size() << std::endl;
+//pout << "------\n";
       rhsOps->set_local_ops( irhs );
-      assert( rhsOps->mults_.size() == rhsOps->opReps_.size() );
+      if ( rhsOps->opReps_.size() != 0 ) assert( rhsOps->mults_.size() == rhsOps->opReps_.size() );
 
       // Contract these spin-adapted spatial operators and build expectation values
       std::vector<double> vals = npdm_expectations.get_expectations();

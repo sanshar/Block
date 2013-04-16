@@ -302,7 +302,9 @@ void Npdm_op_wrapper_D::set_local_ops( int idx )
 Npdm_op_wrapper_NULL::Npdm_op_wrapper_NULL()
 {
   // Null operator
-  size_ = 0;
+  opReps_.clear();
+  indices_.clear();
+  size_ = 1; // For compatibility with rest of code
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = { '(',')' };
@@ -316,8 +318,9 @@ void Npdm_op_wrapper_NULL::set_local_ops( int idx )
   // Null operator
   indices_.clear();
   opReps_.clear();
-  opReps_.reserve(1); // Just for compatibility
-  indices_.push_back(-1);
+//  opReps_.reserve(1); // Just for compatibility
+//  opReps_.push_back(0); // Null pointer
+//  indices_.push_back(-1);
 }
 
 

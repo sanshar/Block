@@ -20,8 +20,8 @@ Npdm_spin_adaptation::Npdm_spin_adaptation( NpdmSpinOps & lhsOps,
                                             NpdmSpinOps & rhsOps,
                                             array_4d<double> & twopdm )
 : lhsOps_(lhsOps),
-  dotOps_(lhsOps),
-  rhsOps_(lhsOps),
+  dotOps_(dotOps),
+  rhsOps_(rhsOps),
   twopdm_(twopdm)
 { }
 
@@ -57,13 +57,12 @@ Oporder Npdm_spin_adaptation::parse_build_pattern( std::vector<char> build_patte
   if ( build_pattern == test ) return D_CC_D; // ????
 
   // 0,4,0
-  test = { '(','(',')','(','C','C',')','(','D','D',')',')','(',')' };
+  test = { '(','(',')','(','(','C','C',')','(','D','D',')',')',')','(',')' };
   if ( build_pattern == test ) return CC_DD; // ????
 
   // 0,3,1
   test = { '(','(',')','(','C','C',')','(','D',')',')','(','D',')' };
   if ( build_pattern == test ) return CC_D_D;
-
 
   for (auto i = build_pattern.begin(); i != build_pattern.end(); i++) {
     std::cout << *i;
@@ -121,37 +120,47 @@ Npdm_expectations::Npdm_expectations( Wavefunction & wavefunction,
 void Npdm_expectations::contract_spin_operators( int ilhs, int idot, int irhs )
 {
 
-  // Pointers to the numerical operator representations
-  boost::shared_ptr<SparseMatrix> lhsPtr = lhsOps_.opReps_.at(ilhs);
-  boost::shared_ptr<SparseMatrix> dotPtr = dotOps_.opReps_.at(idot);
-  boost::shared_ptr<SparseMatrix> rhsPtr = rhsOps_.opReps_.at(irhs);
+  boost::shared_ptr<SparseMatrix> lhsPtr, dotPtr, rhsPtr, lhsOp, dotOp, rhsOp;
 
-  // Pointers to the transposes (may not all be needed)
-  Transposeview lhsOpTr = Transposeview(lhsPtr);
-  Transposeview dotOpTr = Transposeview(dotPtr);
-  Transposeview rhsOpTr = Transposeview(rhsPtr);
+  // Pointers to the numerical operator representations or their tranposes
+  if ( lhsOps_.opReps_.size() != 0 ) {
+    lhsPtr = lhsOps_.opReps_.at(ilhs);
+    Transposeview lhsOpTr = Transposeview(lhsPtr);
+    if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
+    else lhsOp = lhsPtr;
+  }
+  if ( dotOps_.opReps_.size() != 0 ) {
+    dotPtr = dotOps_.opReps_.at(idot);
+    Transposeview dotOpTr = Transposeview(dotPtr);
+    if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
+    else dotOp = dotPtr;
+  }
+  if ( rhsOps_.opReps_.size() != 0 ) {
+    rhsPtr = rhsOps_.opReps_.at(irhs);
+    Transposeview rhsOpTr = Transposeview(rhsPtr);
+    if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
+    else rhsOp = rhsPtr;
+  }
 
-  // Set actual pointers we'll contract
-  boost::shared_ptr<SparseMatrix> lhsOp, dotOp, rhsOp;
-  // LHS
-  if ( lhsOps_.transpose_ )
-    lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
-  else
-    lhsOp = lhsPtr;
-  // Dot
-  if ( dotOps_.transpose_ )
-    dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
-  else
-    dotOp = dotPtr;
-  // RHS
-  if ( rhsOps_.transpose_ )
-    rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
-  else
-    rhsOp = rhsPtr;
-
-  // Push back into expectations the singlet component of this spin-operator contraction
+  // Push-back into expectations the singlet component of this spin-operator contraction
   int index_begin = expectations_.size();
-  spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_, expectations_, false);
+
+  // We need to distinguish cases where the block has an empty operator string
+  assert ( dotOps_.opReps_.size() != 0 );
+  // 0_X_X case
+  if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() != 0) ) {
+    SparseMatrix* null = 0; 
+    spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *rhsOp, big_, expectations_, false);
+  }
+  // X_X_0 case
+  else if ( (lhsOps_.opReps_.size() != 0) && (rhsOps_.opReps_.size() == 0) ) {
+    SparseMatrix* null = 0; 
+    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *null, big_, expectations_, false);
+  }
+  // X_X_X case
+  else {
+    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_, expectations_, false);
+  }
 
   // Modify new elements with sign factors
   double factor = lhsOps_.factor_ * dotOps_.factor_ * rhsOps_.factor_;
@@ -171,7 +180,7 @@ bool Npdm_expectations::test_for_singlet( int lhs_mult, int dot_mult, int rhs_mu
   int rhs2S = rhs_mult-1;
 
   // Couple LHS and Dot spin angular momenta and see if any equal RHS  
-  for (int s = lhs2S+dot2S; s <= std::abs( lhs2S-dot2S ); s-=2) {
+  for (int s = lhs2S + dot2S; s <= std::abs( lhs2S - dot2S ); s -= 2) {
     if ( s == rhs2S ) return true;
   }
   return false;
@@ -188,14 +197,13 @@ void Npdm_expectations::build_singlet_expectations()
       for (int irhs = 0; irhs < rhsOps_.opReps_.size(); irhs++) {
   
         // .mults should be redundant!  Test we're doing what we think we're doing
-        assert( lhsOps_.mults_.at(ilhs)-1 == lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );
-        assert( dotOps_.mults_.at(idot)-1 == dotOps_.opReps_.at(idot)->get_deltaQuantum().totalSpin );
-        assert( rhsOps_.mults_.at(irhs)-1 == rhsOps_.opReps_.at(irhs)->get_deltaQuantum().totalSpin );
+        assert( lhsOps_.mults_.at(ilhs) -1 == lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );
+        assert( dotOps_.mults_.at(idot) -1 == dotOps_.opReps_.at(idot)->get_deltaQuantum().totalSpin );
+        assert( rhsOps_.mults_.at(irhs) -1 == rhsOps_.opReps_.at(irhs)->get_deltaQuantum().totalSpin );
 
         // If this combination allows a singlet, compute it
-        if ( test_for_singlet( lhsOps_.mults_.at(ilhs), dotOps_.mults_.at(idot), rhsOps_.mults_.at(irhs) ) ) {
-          contract_spin_operators( ilhs, idot, irhs );
-        }
+        bool singlet = test_for_singlet( lhsOps_.mults_.at(ilhs), dotOps_.mults_.at(idot), rhsOps_.mults_.at(irhs) );
+        if ( singlet ) contract_spin_operators( ilhs, idot, irhs );
 
       }
     }
