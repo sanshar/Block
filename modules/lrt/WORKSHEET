@@ -223,6 +223,10 @@ Faster Algorithm:
 - SGVB0: rot { 1...M-1 } / calc { M...L-1 } / save bwd { 1...L-1 }
 - SGVTI: trans { 1...M-1 } / calc { M...L-1 } / save bwd { 1...L-1 }
 
+TODO:
++ rigorous expression of RPA correction equation (maybe, B-matrix is a problem)
++ save & reuse sigma-vector -> needs transposition of wavefunction for each site
++ symmetry-breaking problem? find additional symmetry in renormalized basis
 
 
 

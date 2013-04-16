@@ -67,6 +67,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_noise_type = RANDOM;
   m_calc_type = DMRG;
   m_lrt_type = TDA;
+  m_density_tol = 1.0e-14;
   m_solve_type = DAVIDSON;
 
   m_twodot_to_onedot_iter = 0;
@@ -548,6 +549,21 @@ SpinAdapted::Input::Input(const string& config_name)
 	  abort();
 	}
         m_screen_tol = atof(tok[1].c_str());
+      }
+
+
+      else if(boost::iequals(keyword,  "density_tol"))
+      {
+	if(usedkey[DENSITY_TOL] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[DENSITY_TOL] = 0;
+	if (tok.size() != 2) {
+	  pout << "keyword density_tol should be followed by a single number and then an endline"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}
+        m_density_tol = atof(tok[1].c_str());
       }
 
 

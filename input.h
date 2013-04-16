@@ -36,7 +36,7 @@ enum orbitalFormat{MOLPROFORM, DMRGFORM};
 
 enum keywords{ORBS, MAXM, REORDER, GAORDER, SCHEDULE, SYM, NELECS, SPIN, IRREP,
 	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, 
-	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NUMKEYWORDS};
+	      SCREEN_TOL, ODOT, SWEEP_TOL, DENSITY_TOL, OUTPUTLEVEL, NUMKEYWORDS};
 
 class Input {
 
@@ -73,6 +73,8 @@ class Input {
 
   calcType m_calc_type;
   lrtType  m_lrt_type;
+  double m_density_tol;
+
   noiseTypes m_noise_type;
   hamTypes m_ham_type;
   int m_nroots;
@@ -140,7 +142,7 @@ class Input {
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat & m_reorder & m_gaopt & m_gaorder;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_cd;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_screen_tol & m_quantaToKeep & m_noise_type;
-    ar & m_sweep_tol & m_restart & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_lrt_type & m_ham_type;
+    ar & m_sweep_tol & m_restart & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_lrt_type & m_density_tol & m_ham_type;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
     ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_default & m_core_energy &m_integral_disk_storage_thresh;
   }
@@ -290,6 +292,7 @@ class Input {
   const int &max_iter() const { return m_maxiter; }
   const double &screen_tol() const { return m_screen_tol; }
   double &screen_tol() { return m_screen_tol; }
+  const double &density_tol() const { return m_density_tol; }
   const int &total_spin() const {return m_total_spin;}
   const std::vector<int> &spin_vector() const { return m_spin_vector; }
   const std::string &save_prefix() const { return m_save_prefix; }

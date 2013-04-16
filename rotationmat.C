@@ -141,7 +141,7 @@ double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::
       int qs = inorderwts[i].second;
 
       //if(i < min_states && eigenmatrix[q].element(qs, qs) > 1.e-12)
-      if( eigenmatrix[q].element(qs, qs) > 1.e-13)
+      if( eigenmatrix[q].element(qs, qs) > dmrginp.density_tol())
       {
         if (rotatematrix[q].Ncols() == 0)
         {
@@ -208,7 +208,7 @@ double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::
   {
     int q = linearwtsbyquanta[i].first;
     int qs = linearwtsbyquanta[i].second;
-    if( eigenmatrix[q].element(qs, qs) > 1.e-13)
+    if( eigenmatrix[q].element(qs, qs) > dmrginp.density_tol())
     {
       if (rotatematrix[q].Ncols() == 0)
       {
@@ -254,7 +254,8 @@ void SpinAdapted::diagonalise_dm(SparseMatrix& tracedMatrix, SparseMatrix& trans
       EigenValues (dM, weights, transformMatrix.operator_element(tQ,tQ));
 #endif
       for(int i=0;i<weights.Nrows();++i)
-        if(weights.element(i,i) < 1.e-14)
+//      if(weights.element(i,i) < dmrginp.density_tol())
+        if(weights.element(i,i) < 1.0e-16)
           weights.element(i,i) = 0.;
       eigenMatrix [tQ] = weights;
     }  

@@ -41,7 +41,7 @@ double SpinAdapted::LRT::assign_matrix_by_dm
       int qs = inorderwts[i].second;
 
       //if(i < min_states && eigenmatrix[q].element(qs, qs) > 1.e-12)
-      if( eigenmatrix[q].element(qs, qs) > 1.e-13)
+      if( eigenmatrix[q].element(qs, qs) > dmrginp.density_tol())
       {
         if (rotatematrix[q].Ncols() == 0)
         {
@@ -109,7 +109,7 @@ double SpinAdapted::LRT::assign_matrix_by_dm
   {
     int q = linearwtsbyquanta[i].first;
     int qs = linearwtsbyquanta[i].second;
-    if( eigenmatrix[q].element(qs, qs) > 1.e-13)
+    if( eigenmatrix[q].element(qs, qs) > dmrginp.density_tol())
     {
       if (rotatematrix[q].Ncols() == 0)
       {
@@ -204,22 +204,18 @@ double SpinAdapted::LRT::assign_matrix_by_dm_deriv
     if(rotatematrix[q].Ncols() > 0) {
       Matrix matrix_elements(rotatematrix[q]); matrix_elements = 0.0;
       MatrixMultiply(density_deriv(q, q), 'n', rotatematrix[q], 'n', matrix_elements, 1.0);
-//    if(projection) {
-//      Matrix projected_matrix(rotatematrix[q].Ncols(), rotatematrix[q].Ncols()); projected_matrix = 0.0;
-//      MatrixMultiply(rotatematrix[q], 't', matrix_elements, 'n', projected_matrix, 1.0);
-//      MatrixMultiply(rotatematrix[q], 'n', projected_matrix, 'n', matrix_elements,-1.0);
-//    }
       if(rejectedwts[q].size() > 0) {
         for(int i = 0; i < rotatematrix[q].Ncols(); ++i) {
           ColumnVector derived_basis(rotatematrix[q].Nrows());
           derived_basis = 0.0;
           // FIXME: in case M is large enough, small selected weights introduce numerical instability
 
-          if (abs(selectedwts[q][i]) > 1.e-13) {
+          if (abs(selectedwts[q][i]) > dmrginp.density_tol()) {
             derived_basis = matrix_elements.Column(i + 1)/selectedwts[q][i];
           }
-          else if(dmrginp.outputlevel() > 0) {
-            pout << "WARNING: ignored small selected weight (" << scientific << selectedwts[q][i] << ") meaning that 1-st order rotation matrix is not exact" << endl;
+//        else if(dmrginp.outputlevel() > 0) {
+          else {
+            pout << "Warning: ignored small selected weight (" << scientific << selectedwts[q][i] << ") meaning that 1-st order rotation matrix is not exact" << endl;
           }
 
           if(rotatematrix_deriv[q].Ncols() == 0)
