@@ -79,6 +79,7 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
       break;
     //MAW
     case CRE_CRE_CRE:
+      assert (false);
       ret = boost::shared_ptr<Op_component<CreCreCre> >(new Op_component<CreCreCre>(is_core));
       break;
   }
@@ -110,6 +111,7 @@ void SpinBlock::default_op_components(bool complementary_)
     ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
     //MAW
     if (dmrginp.calc_type() == THREEPDM) {
+      assert (false);
       ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
     }
   }

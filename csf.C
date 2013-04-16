@@ -422,7 +422,6 @@ std::vector< SpinAdapted::Csf > SpinAdapted::Csf::distribute (const int n, const
 //MAW	FIXME copy (rbuffer.begin(), rbuffer.end(), back_inserter(tmp));
 
 //CHANGED for new compiler which seemed to have an ambiguity with the back_inserter implementation
-std::cout << "MAW FIXME: CHECK THIS!!!" << std::endl;
 //assert(false);
 // Add orbs to end of tmp vector
 tmp.insert( tmp.end(), orbs.begin(), orbs.end() );
