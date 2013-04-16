@@ -337,41 +337,4 @@ boost::shared_ptr<SparseMatrix> NpdmSpinOps::build_compound_operator( std::vecto
 
 //===========================================================================================================================================================
 
-NpdmSpinOps init_npdm_operators( SpinBlock * spinBlock, std::vector<Npdm::CD> cd_type )
-{
-  std::vector<Npdm::CD> op;
-
-  // 0-index operators
-  if ( cd_type.size() == 0 ) return Npdm_op_wrapper_NULL();
-
-  // 1-index operators
-  op = { Npdm::CREATION };
-  if ( cd_type == op ) return Npdm_op_wrapper_C( spinBlock );
-  op = { Npdm::DESTRUCTION };
-  if ( cd_type == op ) return Npdm_op_wrapper_D( spinBlock );
-
-  // 2-index operators
-  op = { Npdm::CREATION, Npdm::CREATION };
-  if ( cd_type == op ) return Npdm_op_wrapper_CC( spinBlock );
-  op = { Npdm::CREATION, Npdm::DESTRUCTION };
-  if ( cd_type == op ) return Npdm_op_wrapper_CD( spinBlock );
-  op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION };
-  if ( cd_type == op ) return Npdm_op_wrapper_DD( spinBlock );
-
-  // 3-index (dot) operators
-  op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION };
-  if ( cd_type == op ) return Npdm_op_wrapper_compound_CCD( spinBlock );
-  op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
-  if ( cd_type == op ) return Npdm_op_wrapper_compound_CDD( spinBlock );
-
-  // 4-index (dot) operators
-  op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
-  if ( cd_type == op ) return Npdm_op_wrapper_compound_CCDD( spinBlock );
-
-  assert (false );
 }
-
-//===========================================================================================================================================================
-
-}
-
