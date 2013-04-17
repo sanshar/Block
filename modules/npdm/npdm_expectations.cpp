@@ -123,19 +123,19 @@ void Npdm_expectations::contract_spin_operators( int ilhs, int idot, int irhs )
   boost::shared_ptr<SparseMatrix> lhsPtr, dotPtr, rhsPtr, lhsOp, dotOp, rhsOp;
 
   // Pointers to the numerical operator representations or their tranposes
-  if ( lhsOps_.opReps_.size() != 0 ) {
+  if ( lhsOps_.opReps_.size() > 0 ) {
     lhsPtr = lhsOps_.opReps_.at(ilhs);
     Transposeview lhsOpTr = Transposeview(lhsPtr);
     if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     else lhsOp = lhsPtr;
   }
-  if ( dotOps_.opReps_.size() != 0 ) {
+  if ( dotOps_.opReps_.size() > 0 ) {
     dotPtr = dotOps_.opReps_.at(idot);
     Transposeview dotOpTr = Transposeview(dotPtr);
     if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     else dotOp = dotPtr;
   }
-  if ( rhsOps_.opReps_.size() != 0 ) {
+  if ( rhsOps_.opReps_.size() > 0 ) {
     rhsPtr = rhsOps_.opReps_.at(irhs);
     Transposeview rhsOpTr = Transposeview(rhsPtr);
     if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
@@ -145,22 +145,21 @@ void Npdm_expectations::contract_spin_operators( int ilhs, int idot, int irhs )
   // Push-back into expectations the singlet component of this spin-operator contraction
   int index_begin = expectations_.size();
 
-  // We need to distinguish cases where the block has an empty operator string
+  // We need to distinguish cases where one or more blocks has an empty operator string
   assert ( dotOps_.opReps_.size() != 0 );
-  // 0_X_X case
-  if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() != 0) ) {
-    SparseMatrix* null = 0; 
+  SparseMatrix* null = 0; 
+  if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() == 0) )
+    // 0_X_0 case
+    spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *null, big_, expectations_, false);
+  else if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() != 0) )
+    // 0_X_X case
     spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *rhsOp, big_, expectations_, false);
-  }
-  // X_X_0 case
-  else if ( (lhsOps_.opReps_.size() != 0) && (rhsOps_.opReps_.size() == 0) ) {
-    SparseMatrix* null = 0; 
+  else if ( (lhsOps_.opReps_.size() != 0) && (rhsOps_.opReps_.size() == 0) )
+    // X_X_0 case
     spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *null, big_, expectations_, false);
-  }
-  // X_X_X case
-  else {
+  else
+    // X_X_X case
     spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_, expectations_, false);
-  }
 
   // Modify new elements with sign factors
   double factor = lhsOps_.factor_ * dotOps_.factor_ * rhsOps_.factor_;
@@ -192,14 +191,14 @@ void Npdm_expectations::build_singlet_expectations()
 {
   expectations_.clear();
 
-  for (int ilhs = 0; ilhs < lhsOps_.opReps_.size(); ilhs++) {
-    for (int idot = 0; idot < dotOps_.opReps_.size(); idot++) {
-      for (int irhs = 0; irhs < rhsOps_.opReps_.size(); irhs++) {
+  for (int ilhs = 0; ilhs < lhsOps_.size(); ilhs++) {
+    for (int idot = 0; idot < dotOps_.size(); idot++) {
+      for (int irhs = 0; irhs < rhsOps_.size(); irhs++) {
   
         // .mults should be redundant!  Test we're doing what we think we're doing
-        assert( lhsOps_.mults_.at(ilhs) -1 == lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );
-        assert( dotOps_.mults_.at(idot) -1 == dotOps_.opReps_.at(idot)->get_deltaQuantum().totalSpin );
-        assert( rhsOps_.mults_.at(irhs) -1 == rhsOps_.opReps_.at(irhs)->get_deltaQuantum().totalSpin );
+        if ( lhsOps_.opReps_.size() > 0 ) assert( lhsOps_.mults_.at(ilhs) -1 == lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );
+        if ( dotOps_.opReps_.size() > 0 ) assert( dotOps_.mults_.at(idot) -1 == dotOps_.opReps_.at(idot)->get_deltaQuantum().totalSpin );
+        if ( rhsOps_.opReps_.size() > 0 ) assert( rhsOps_.mults_.at(irhs) -1 == rhsOps_.opReps_.at(irhs)->get_deltaQuantum().totalSpin );
 
         // If this combination allows a singlet, compute it
         bool singlet = test_for_singlet( lhsOps_.mults_.at(ilhs), dotOps_.mults_.at(idot), rhsOps_.mults_.at(irhs) );

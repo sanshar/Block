@@ -21,7 +21,7 @@ Npdm_op_wrapper_compound_CCDD::Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBl
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = 1;
-  factor_ = 1.0;
+  factor_ = -1.0;
   transpose_ = false;
   build_pattern_ = { '(','(','C','C',')','(','D','D',')',')' };
   // Build singlets only here
