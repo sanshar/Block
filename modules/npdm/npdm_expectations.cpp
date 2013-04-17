@@ -64,7 +64,7 @@ Oporder Npdm_spin_adaptation::parse_build_pattern( std::vector<char> build_patte
   test = { '(','(',')','(','C','C',')','(','D',')',')','(','D',')' };
   if ( build_pattern == test ) return CC_D_D;
 
-  for (auto i = build_pattern.begin(); i != build_pattern.end(); i++) {
+  for (auto i = build_pattern.begin(); i != build_pattern.end(); ++i) {
     std::cout << *i;
   }
   std::cout << std::endl;
@@ -120,26 +120,47 @@ Npdm_expectations::Npdm_expectations( Wavefunction & wavefunction,
 void Npdm_expectations::contract_spin_operators( int ilhs, int idot, int irhs )
 {
 
+//////  SpinBlock* leftBlock = big_.get_leftBlock();
+//////  SpinBlock* rightBlock = big_.get_rightBlock();
+//////  SpinBlock* dotBlock = leftBlock->get_rightBlock();
+//////
+//////  boost::shared_ptr<SparseMatrix> lhsOp = leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(0)[0];
+//////  boost::shared_ptr<SparseMatrix> dotOp = dotBlock->get_op_array(CRE_DES).get_local_element(0)[0];
+//////  boost::shared_ptr<SparseMatrix> rhsOp = rightBlock->get_op_array(CRE).get_local_element(0)[0];
+//////
+//////  Transposeview rhsOpTr = Transposeview(*rhsOp);
+//////  spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, rhsOpTr, big_, expectations_, false);
+
+
   boost::shared_ptr<SparseMatrix> lhsPtr, dotPtr, rhsPtr, lhsOp, dotOp, rhsOp;
 
   // Pointers to the numerical operator representations or their tranposes
   if ( lhsOps_.opReps_.size() > 0 ) {
-    lhsPtr = lhsOps_.opReps_.at(ilhs);
-    Transposeview lhsOpTr = Transposeview(lhsPtr);
-    if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
-    else lhsOp = lhsPtr;
+pout << "hello1  " << ilhs << std::endl;
+    assert( lhsOps_.mults_.at(ilhs) -1 == lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );
+    lhsOp = lhsOps_.opReps_.at(ilhs);
+//    lhsPtr = lhsOps_.opReps_.at(ilhs);
+//    Transposeview lhsOpTr = Transposeview(*lhsPtr);
+//    if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
+//    else lhsOp = lhsPtr;
   }
   if ( dotOps_.opReps_.size() > 0 ) {
-    dotPtr = dotOps_.opReps_.at(idot);
-    Transposeview dotOpTr = Transposeview(dotPtr);
-    if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
-    else dotOp = dotPtr;
+pout << "hello2  " << idot << std::endl;
+    assert( dotOps_.mults_.at(idot) -1 == dotOps_.opReps_.at(idot)->get_deltaQuantum().totalSpin );
+    dotOp = dotOps_.opReps_.at(idot);
+//    dotPtr = dotOps_.opReps_.at(idot);
+//    Transposeview dotOpTr = Transposeview(*dotPtr);
+//    if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
+//    else dotOp = dotPtr;
   }
   if ( rhsOps_.opReps_.size() > 0 ) {
-    rhsPtr = rhsOps_.opReps_.at(irhs);
-    Transposeview rhsOpTr = Transposeview(rhsPtr);
-    if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
-    else rhsOp = rhsPtr;
+pout << "hello3  " << irhs << std::endl;
+    assert( rhsOps_.mults_.at(irhs) -1 == rhsOps_.opReps_.at(irhs)->get_deltaQuantum().totalSpin );
+    rhsOp = rhsOps_.opReps_.at(irhs);
+//    rhsPtr = rhsOps_.opReps_.at(irhs);
+//    Transposeview rhsOpTr = Transposeview(*rhsPtr);
+//    if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
+//    else rhsOp = rhsPtr;
   }
 
   // Push-back into expectations the singlet component of this spin-operator contraction
@@ -151,19 +172,24 @@ void Npdm_expectations::contract_spin_operators( int ilhs, int idot, int irhs )
   if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() == 0) )
     // 0_X_0 case
     spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *null, big_, expectations_, false);
-  else if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() != 0) )
+  else if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() > 0) )
     // 0_X_X case
     spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *rhsOp, big_, expectations_, false);
-  else if ( (lhsOps_.opReps_.size() != 0) && (rhsOps_.opReps_.size() == 0) )
+  else if ( (lhsOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) )
     // X_X_0 case
     spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *null, big_, expectations_, false);
-  else
+  else {
     // X_X_X case
-    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_, expectations_, false);
+pout << "hello4\n";
+//    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_, expectations_, false);
+    Transposeview rhsOpTr = Transposeview(*rhsOp);
+    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, rhsOpTr, big_, expectations_, false);
+  }
+
 
   // Modify new elements with sign factors
   double factor = lhsOps_.factor_ * dotOps_.factor_ * rhsOps_.factor_;
-  for (int i = index_begin; i < expectations_.size(); i++) {
+  for (int i = index_begin; i < expectations_.size(); ++i) {
     expectations_[i] *= factor;
   }
 
@@ -186,27 +212,53 @@ bool Npdm_expectations::test_for_singlet( int lhs_mult, int dot_mult, int rhs_mu
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
+// Filter operator combinations that do not combine to give a singlet
 void Npdm_expectations::build_singlet_expectations()
 {
   expectations_.clear();
+  bool singlet;
 
-  for (int ilhs = 0; ilhs < lhsOps_.size(); ilhs++) {
-    for (int idot = 0; idot < dotOps_.size(); idot++) {
-      for (int irhs = 0; irhs < rhsOps_.size(); irhs++) {
-  
-        // .mults should be redundant!  Test we're doing what we think we're doing
-        if ( lhsOps_.opReps_.size() > 0 ) assert( lhsOps_.mults_.at(ilhs) -1 == lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );
-        if ( dotOps_.opReps_.size() > 0 ) assert( dotOps_.mults_.at(idot) -1 == dotOps_.opReps_.at(idot)->get_deltaQuantum().totalSpin );
-        if ( rhsOps_.opReps_.size() > 0 ) assert( rhsOps_.mults_.at(irhs) -1 == rhsOps_.opReps_.at(irhs)->get_deltaQuantum().totalSpin );
+  // We need to distinguish cases where one or more blocks has an empty operator string
+  assert ( dotOps_.opReps_.size() > 0 );
 
-        // If this combination allows a singlet, compute it
-        bool singlet = test_for_singlet( lhsOps_.mults_.at(ilhs), dotOps_.mults_.at(idot), rhsOps_.mults_.at(irhs) );
-        if ( singlet ) contract_spin_operators( ilhs, idot, irhs );
-
+  if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() == 0) ) {
+    // 0_X_0 case
+    for (int idot = 0; idot < dotOps_.opReps_.size(); ++idot) {
+      if ( dotOps_.mults_.at(idot) == 1) contract_spin_operators( 0, idot, 0 );
+    }
+  }
+  else if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() > 0) ) {
+    // 0_X_X case
+    for (int idot = 0; idot < dotOps_.opReps_.size(); ++idot) {
+      for (int irhs = 0; irhs < rhsOps_.opReps_.size(); ++irhs) {
+        singlet = test_for_singlet( 0, dotOps_.mults_.at(idot), rhsOps_.mults_.at(irhs) );
+        if ( singlet ) contract_spin_operators( 0, idot, irhs );
       }
     }
   }
+  else if ( (lhsOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) ){
+    // X_X_0 case
+    for (int ilhs = 0; ilhs < lhsOps_.opReps_.size(); ++ilhs) {
+      for (int idot = 0; idot < dotOps_.opReps_.size(); ++idot) {
+        singlet = test_for_singlet( lhsOps_.mults_.at(ilhs), dotOps_.mults_.at(idot), 0 );
+        if ( singlet ) contract_spin_operators( ilhs, idot, 0 );
+      }
+    }
+  }
+  else {
+    // X_X_X case
+    for (int ilhs = 0; ilhs < lhsOps_.opReps_.size(); ++ilhs) {
+      for (int idot = 0; idot < dotOps_.opReps_.size(); ++idot) {
+        for (int irhs = 0; irhs < rhsOps_.opReps_.size(); ++irhs) {
+pout << "spin comp: ilhs, idot, irhs = " << ilhs << idot << irhs << std::endl;
+  
+          bool singlet = test_for_singlet( lhsOps_.mults_.at(ilhs), dotOps_.mults_.at(idot), rhsOps_.mults_.at(irhs) );
+          if ( singlet ) contract_spin_operators( ilhs, idot, irhs );
+        }
+      }
+    }
+  }
+
 }
 
 //===========================================================================================================================================================

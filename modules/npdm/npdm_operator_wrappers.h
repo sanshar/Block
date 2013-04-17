@@ -21,7 +21,6 @@ namespace SpinAdapted{
 class NpdmSpinOps {
 
   public:
-
     int size() { return size_; };
     virtual void set_local_ops( int idx ) { assert(false); };
 
