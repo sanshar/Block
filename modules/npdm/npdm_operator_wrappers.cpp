@@ -97,7 +97,7 @@ void Npdm_op_wrapper_compound_CCD::set_local_ops( int idx )
   // S=1 (+) S=1/2;  S=1/2
   opReps_.push_back( build_compound_operator( twoOps, 1, oneOp, 0, 0, ix, true ) );
   // S=1 (+) S=1/2;  S=3/2
-  opReps_.push_back( build_compound_operator( twoOps, 1, oneOp, 1, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( twoOps, 1, oneOp, 0, 1, ix, true ) );
 }
 
 //===========================================================================================================================================================

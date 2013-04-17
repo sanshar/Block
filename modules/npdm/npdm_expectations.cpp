@@ -32,6 +32,11 @@ Oporder Npdm_spin_adaptation::parse_build_pattern( std::vector<char> build_patte
 
   std::vector<char> test;
 
+for (auto it = build_pattern.begin(); it != build_pattern.end(); ++it) {
+  pout << *it;
+}
+pout << std::endl;
+
   // 2,2,0
   test = { '(','(','C','C',')','(','D','D',')',')','(',')' };
   if ( build_pattern == test ) return CC_DD;
@@ -48,7 +53,8 @@ Oporder Npdm_spin_adaptation::parse_build_pattern( std::vector<char> build_patte
 
   // 1,3,0
   test = { '(','(','C',')','(','C','(','D','D',')',')',')','(',')' };
-  if ( build_pattern == test ) return CC_DD;  // ???
+//  if ( build_pattern == test ) return CC_DD;  // ???
+  if ( build_pattern == test ) return CC_D_D;  // ???
 
   // 1,2,1
   test = { '(','(','C',')','(','C','D',')',')','(','D',')' };
@@ -61,7 +67,8 @@ Oporder Npdm_spin_adaptation::parse_build_pattern( std::vector<char> build_patte
   if ( build_pattern == test ) return CC_DD; // ????
 
   // 0,3,1
-  test = { '(','(',')','(','C','C',')','(','D',')',')','(','D',')' };
+  test = { '(','(',')','(','(','C','C',')','D',')',')','(','D',')' };
+//          (   (   )   (   (   C   C   )   D   )   )   (D)
   if ( build_pattern == test ) return CC_D_D;
 
   for (auto i = build_pattern.begin(); i != build_pattern.end(); ++i) {
@@ -136,7 +143,6 @@ void Npdm_expectations::contract_spin_operators( int ilhs, int idot, int irhs )
 
   // Pointers to the numerical operator representations or their tranposes
   if ( lhsOps_.opReps_.size() > 0 ) {
-pout << "hello1  " << ilhs << std::endl;
     lhsOp = lhsOps_.opReps_.at(ilhs);
 //    lhsPtr = lhsOps_.opReps_.at(ilhs);
 //    Transposeview lhsOpTr = Transposeview(*lhsPtr);
@@ -144,7 +150,6 @@ pout << "hello1  " << ilhs << std::endl;
 //    else lhsOp = lhsPtr;
   }
   if ( dotOps_.opReps_.size() > 0 ) {
-pout << "hello2  " << idot << std::endl;
     dotOp = dotOps_.opReps_.at(idot);
 //    dotPtr = dotOps_.opReps_.at(idot);
 //    Transposeview dotOpTr = Transposeview(*dotPtr);
@@ -152,7 +157,6 @@ pout << "hello2  " << idot << std::endl;
 //    else dotOp = dotPtr;
   }
   if ( rhsOps_.opReps_.size() > 0 ) {
-pout << "hello3  " << irhs << std::endl;
     rhsOp = rhsOps_.opReps_.at(irhs);
 //    rhsPtr = rhsOps_.opReps_.at(irhs);
 //    Transposeview rhsOpTr = Transposeview(*rhsPtr);
@@ -175,18 +179,18 @@ pout << "hello3  " << irhs << std::endl;
   else if ( (lhsOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) ) {
     // X_X_0 case
 //FIXME
-//    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *null, big_, expectations_, false);
-pout << "hello7\n";
-    Transposeview dotOpTr = Transposeview(*dotOp);
-    spinExpectation(wavefunction_, wavefunction_, *lhsOp, dotOpTr, *null, big_, expectations_, false);
+    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *null, big_, expectations_, false);
+//pout << "hello7\n";
+//    Transposeview dotOpTr = Transposeview(*dotOp);
+//    spinExpectation(wavefunction_, wavefunction_, *lhsOp, dotOpTr, *null, big_, expectations_, false);
   }
   else {
     // X_X_X case
 pout << "hello8\n";
 //FIXME
-//    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_, expectations_, false);
-    Transposeview rhsOpTr = Transposeview(*rhsOp);
-    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, rhsOpTr, big_, expectations_, false);
+    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_, expectations_, false);
+//    Transposeview rhsOpTr = Transposeview(*rhsOp);
+//    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, rhsOpTr, big_, expectations_, false);
   }
 
   // Modify new elements with sign factors
