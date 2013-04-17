@@ -143,7 +143,7 @@ void Npdm_op_wrapper_compound_CDD::set_local_ops( int idx )
   // S=1 (+) S=1/2;  S=1/2
   opReps_.push_back( build_compound_operator( twoOps, 1, oneOp, 0, 0, ix, true ) );
   // S=1 (+) S=1/2;  S=3/2
-  opReps_.push_back( build_compound_operator( twoOps, 1, oneOp, 1, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( twoOps, 1, oneOp, 0, 1, ix, true ) );
 }
 
 //===========================================================================================================================================================
@@ -308,7 +308,7 @@ Npdm_op_wrapper_NULL::Npdm_op_wrapper_NULL()
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = { '(',')' };
-  mults_ = { 0 };
+  mults_ = { 1 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -318,9 +318,6 @@ void Npdm_op_wrapper_NULL::set_local_ops( int idx )
   // Null operator
   indices_.clear();
   opReps_.clear();
-//  opReps_.reserve(1); // Just for compatibility
-//  opReps_.push_back(0); // Null pointer
-//  indices_.push_back(-1);
 }
 
 
