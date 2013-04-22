@@ -91,6 +91,7 @@ void Npdm_spin_adaptation::to_nonspin_adapt( std::vector<double> & spin_adapted_
   indices.insert( indices.end(), dotOps_.indices_.begin(), dotOps_.indices_.end() );
   indices.insert( indices.end(), rhsOps_.indices_.begin(), rhsOps_.indices_.end() );
   assert (indices.size() == 4);
+pout << "indices = " << indices[0] << "," << indices[1] << "," << indices[2] << "," << indices[3] << std::endl;
 
   // Set-up how tensor operator is constructed from (compound) block operators
   std::vector<char> build_pattern = { '(' };
@@ -104,6 +105,7 @@ void Npdm_spin_adaptation::to_nonspin_adapt( std::vector<double> & spin_adapted_
   Oporder build_pattern_type = parse_build_pattern( build_pattern );  
 
   // Call old code for transforming spin-adapted expectatio values and twopdm update
+//if (build_pattern_type = C_CD_D)
   spin_to_nonspin( indices, spin_adapted_vals, twopdm_, build_pattern_type, true );
 
 }
@@ -139,6 +141,7 @@ void Npdm_expectations::contract_spin_operators( int ilhs, int idot, int irhs )
 //////  spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, rhsOpTr, big_, expectations_, false);
 
 
+pout << "---------------------------------\n";
   boost::shared_ptr<SparseMatrix> lhsPtr, dotPtr, rhsPtr, lhsOp, dotOp, rhsOp;
 
   // Pointers to the numerical operator representations or their tranposes
@@ -173,26 +176,39 @@ void Npdm_expectations::contract_spin_operators( int ilhs, int idot, int irhs )
   if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() == 0) )
     // 0_X_0 case
     spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *null, big_, expectations_, false);
-  else if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() > 0) )
+  else if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() > 0) ) {
     // 0_X_X case
-    spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *rhsOp, big_, expectations_, false);
+pout << "hello 0_X_X\n";
+//    spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *rhsOp, big_, expectations_, false);
+    Transposeview rhsOpTr = Transposeview(*rhsOp);
+    spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, rhsOpTr, big_, expectations_, false);
+  }
   else if ( (lhsOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) ) {
     // X_X_0 case
-//FIXME
+pout << "hello X_X_0\n";
     spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *null, big_, expectations_, false);
-//pout << "hello7\n";
+//FIXME
+//    spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *null, big_, expectations_, false);
+//    Transposeview lhsOpTr = Transposeview(*lhsOp);
+//    spinExpectation(wavefunction_, wavefunction_, lhsOpTr, *dotOp, *null, big_, expectations_, false);
 //    Transposeview dotOpTr = Transposeview(*dotOp);
 //    spinExpectation(wavefunction_, wavefunction_, *lhsOp, dotOpTr, *null, big_, expectations_, false);
   }
   else {
     // X_X_X case
-pout << "hello8\n";
+pout << "hello X_X_X\n";
 //FIXME
-    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_, expectations_, false);
-//    Transposeview rhsOpTr = Transposeview(*rhsOp);
-//    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, rhsOpTr, big_, expectations_, false);
+//    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_, expectations_, false);
+    Transposeview rhsOpTr = Transposeview(*rhsOp);
+    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, rhsOpTr, big_, expectations_, false);
   }
 
+assert (expectations_.size() > 0);
+pout << "expectations =\n";
+for (auto it = expectations_.begin(); it != expectations_.end(); ++it) {
+  pout << *it << "  ";
+}
+pout << std::endl;
   // Modify new elements with sign factors
   double factor = lhsOps_.factor_ * dotOps_.factor_ * rhsOps_.factor_;
   for (int i = index_begin; i < expectations_.size(); ++i) {
@@ -226,6 +242,9 @@ void Npdm_expectations::build_singlet_expectations()
   for (int ilhs = 0; ilhs < lhsOps_.mults_.size(); ++ilhs) {
     for (int idot = 0; idot < dotOps_.mults_.size(); ++idot) {
       for (int irhs = 0; irhs < rhsOps_.mults_.size(); ++irhs) {
+//  for (int ilhs = 0; ilhs < 1; ++ilhs) {
+//    for (int idot = 0; idot < 1; ++idot) {
+//      for (int irhs = 0; irhs < 1; ++irhs) {
 pout << "spin comp: ilhs, idot, irhs = " << ilhs << idot << irhs << std::endl;
 
         if ( lhsOps_.opReps_.size() > 0 ) assert( lhsOps_.mults_.at(ilhs) -1 == lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );

@@ -288,7 +288,7 @@ Npdm_op_wrapper_D::Npdm_op_wrapper_D( SpinBlock * spinBlock )
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// FIXME (check how to use initialization lists for base classes...??)
+
 void Npdm_op_wrapper_D::set_local_ops( int idx )
 {
   indices_.clear();
