@@ -38,7 +38,8 @@ class NpdmSpinOps {
     std::vector<int> indices_;
 
   protected:
-    boost::shared_ptr<SparseMatrix> build_compound_operator( std::vector< boost::shared_ptr<SparseMatrix> > lhsOps, int ilhs,
+    boost::shared_ptr<SparseMatrix> build_compound_operator( bool is_fermion,
+                                                             std::vector< boost::shared_ptr<SparseMatrix> > lhsOps, int ilhs,
                                                              std::vector< boost::shared_ptr<SparseMatrix> > rhsOps, int irhs,
                                                              int ispin, int ix, bool transpose );
 

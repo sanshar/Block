@@ -105,7 +105,7 @@ pout << "indices = " << indices[0] << "," << indices[1] << "," << indices[2] << 
   Oporder build_pattern_type = parse_build_pattern( build_pattern );  
 
   // Call old code for transforming spin-adapted expectatio values and twopdm update
-//if (build_pattern_type = C_CD_D)
+//assert (build_pattern_type == CC_D_D);
   spin_to_nonspin( indices, spin_adapted_vals, twopdm_, build_pattern_type, true );
 
 }
@@ -129,23 +129,58 @@ Npdm_expectations::Npdm_expectations( Wavefunction & wavefunction,
 void Npdm_expectations::contract_spin_operators( int ilhs, int idot, int irhs )
 {
 
-//////  SpinBlock* leftBlock = big_.get_leftBlock();
-//////  SpinBlock* rightBlock = big_.get_rightBlock();
-//////  SpinBlock* dotBlock = leftBlock->get_rightBlock();
-//////
-//////  boost::shared_ptr<SparseMatrix> lhsOp = leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(0)[0];
-//////  boost::shared_ptr<SparseMatrix> dotOp = dotBlock->get_op_array(CRE_DES).get_local_element(0)[0];
-//////  boost::shared_ptr<SparseMatrix> rhsOp = rightBlock->get_op_array(CRE).get_local_element(0)[0];
-//////
-//////  Transposeview rhsOpTr = Transposeview(*rhsOp);
-//////  spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, rhsOpTr, big_, expectations_, false);
+
+/*
+//MAW------------------------------------------------------
+//  int index_begin = expectations_.size();
+
+  SpinBlock* leftBlock = big_.get_leftBlock();
+//  SpinBlock* rightBlock = big_.get_rightBlock();
+  SpinBlock* dotBlock = leftBlock->get_rightBlock();
+
+//  SparseMatrix* null = 0; 
+//  boost::shared_ptr<SparseMatrix> lhsOp = leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(0)[0];
+//  boost::shared_ptr<SparseMatrix> dotOp = dotBlock->get_op_array(CRE_DES).get_local_element(0)[0];
+//  boost::shared_ptr<SparseMatrix> rhsOp = rightBlock->get_op_array(CRE).get_local_element(0)[0];
+//  boost::shared_ptr<SparseMatrix> rhsOp;
+//  if ( rhsOps_.opReps_.size() > 0 ) rhsOp = rhsOps_.opReps_.at(irhs);
+
+//RHS
+//  Transposeview rhsOpTr = Transposeview(*rhsOp);
+//  if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
+
+//Dot
+
+  int dotindex = dotBlock->get_sites()[0];
+pout << "dotindex = " << dotindex << std::endl;
+  Cre dotOp;
+  boost::shared_ptr<SparseMatrix> dotOp1 = dotBlock->get_op_array(CRE).get_local_element(0)[0];
+  dotOp.set_orbs() = dotOp1->get_orbs(); 
+  dotOp.set_orbs().push_back(dotindex); 
+  dotOp.set_orbs().push_back(dotindex);
+  dotOp.set_initialised() = true;
+//FIXME must be false for 4-index operator!
+  dotOp.set_fermion() = true;
+  // 1
+  boost::shared_ptr<SparseMatrix> dotOp0 = dotBlock->get_op_array(CRE_CRE).get_local_element(0)[0];
+  dotOp.set_deltaQuantum() = ( dotOp0->get_deltaQuantum() - dotOp1->get_deltaQuantum() )[0];
+  dotOp.allocate(dotBlock->get_stateInfo());
+  operatorfunctions::Product(dotBlock, *dotOp0, Transposeview(*dotOp1), dotOp, 1.0);
+//  spinExpectation(wavefunction_, wavefunction_, *null, dotOp, rhsOpTr, big_, expectations_, false);
+  // 2
+//  dotOp0 = dotBlock->get_op_array(CRE_CRE).get_local_element(0)[1];
+//  dotOp.set_deltaQuantum() = ( dotOp0->get_deltaQuantum() - dotOp1->get_deltaQuantum() )[0];
+//  dotOp.allocate(dotBlock->get_stateInfo());
+//  operatorfunctions::Product(dotBlock, *dotOp0, Transposeview(*dotOp1), dotOp, 1.0);
+//  spinExpectation(wavefunction_, wavefunction_, *null, dotOp, rhsOpTr, big_, expectations_, false);
+
+//MAW------------------------------------------------------
+*/
 
 
-pout << "---------------------------------\n";
-//  boost::shared_ptr<SparseMatrix> lhsPtr, dotPtr, rhsPtr;
-  boost::shared_ptr<SparseMatrix> lhsOp, dotOp, rhsOp;
-
+///*
   // Pointers to the numerical operator representations if available
+  boost::shared_ptr<SparseMatrix> lhsOp, dotOp, rhsOp;
   if ( lhsOps_.opReps_.size() > 0 ) lhsOp = lhsOps_.opReps_.at(ilhs);
   if ( dotOps_.opReps_.size() > 0 ) dotOp = dotOps_.opReps_.at(idot);
   if ( rhsOps_.opReps_.size() > 0 ) rhsOp = rhsOps_.opReps_.at(irhs);
@@ -165,11 +200,12 @@ pout << "---------------------------------\n";
   }
   else if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() > 0) ) {
     // 0_X_X case
+pout << "hello 0_X_X \n";
     Transposeview dotOpTr = Transposeview(*dotOp);
     if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
-    spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, rhsOpTr, big_, expectations_, false);
+    spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *rhsOp, big_, expectations_, false);
   }
   else if ( (lhsOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) ) {
     // X_X_0 case
@@ -189,13 +225,14 @@ pout << "---------------------------------\n";
     if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
     spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_, expectations_, false);
   }
+//*/
 
-//assert (expectations_.size() > 0);
-//pout << "expectations =\n";
-//for (auto it = expectations_.begin(); it != expectations_.end(); ++it) {
-//  pout << *it << "  ";
-//}
-//pout << std::endl;
+assert (expectations_.size() > 0);
+pout << "expectations =\n";
+for (auto it = expectations_.begin(); it != expectations_.end(); ++it) {
+  pout << *it << "  ";
+}
+pout << std::endl;
 
   // Modify new elements with sign factors
   double factor = lhsOps_.factor_ * dotOps_.factor_ * rhsOps_.factor_;
@@ -233,6 +270,7 @@ void Npdm_expectations::build_singlet_expectations()
 //  for (int ilhs = 0; ilhs < 1; ++ilhs) {
 //    for (int idot = 0; idot < 1; ++idot) {
 //      for (int irhs = 0; irhs < 1; ++irhs) {
+pout << "---------------------------------\n";
 pout << "spin comp: ilhs, idot, irhs = " << ilhs << idot << irhs << std::endl;
 
         if ( lhsOps_.opReps_.size() > 0 ) assert( lhsOps_.mults_.at(ilhs) -1 == lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );

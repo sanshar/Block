@@ -48,9 +48,9 @@ void Npdm_op_wrapper_compound_CCDD::set_local_ops( int idx )
 
   opReps_.clear();
   // S=0 (+) S=0;  S=0
-  opReps_.push_back( build_compound_operator( twoOps, 0, twoOps, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( false, twoOps, 0, twoOps, 0, 0, ix, true ) );
   // S=1 (+) S=1;  S=0
-  opReps_.push_back( build_compound_operator( twoOps, 1, twoOps, 1, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( false, twoOps, 1, twoOps, 1, 0, ix, true ) );
 }
 
 //===========================================================================================================================================================
@@ -83,6 +83,7 @@ void Npdm_op_wrapper_compound_CCD::set_local_ops( int idx )
   jx = twoOps.at(0)->get_orbs(1);
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
   kx = oneOp.at(0)->get_orbs(0);
+pout << "getting CCD operator...\n";
 
   // Assumed single site
   assert ( ix == jx );
@@ -93,11 +94,11 @@ void Npdm_op_wrapper_compound_CCD::set_local_ops( int idx )
 
   opReps_.clear();
   // S=0 (+) S=1/2;  S=1/2
-  opReps_.push_back( build_compound_operator( twoOps, 0, oneOp, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( true, twoOps, 0, oneOp, 0, 0, ix, true ) );
   // S=1 (+) S=1/2;  S=1/2
-  opReps_.push_back( build_compound_operator( twoOps, 1, oneOp, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 0, ix, true ) );
   // S=1 (+) S=1/2;  S=3/2
-  opReps_.push_back( build_compound_operator( twoOps, 1, oneOp, 0, 1, ix, true ) );
+  opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 1, ix, true ) );
 }
 
 //===========================================================================================================================================================
@@ -139,11 +140,11 @@ void Npdm_op_wrapper_compound_CDD::set_local_ops( int idx )
 
   opReps_.clear();
   // S=0 (+) S=1/2;  S=1/2
-  opReps_.push_back( build_compound_operator( twoOps, 0, oneOp, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( true, twoOps, 0, oneOp, 0, 0, ix, true ) );
   // S=1 (+) S=1/2;  S=1/2
-  opReps_.push_back( build_compound_operator( twoOps, 1, oneOp, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 0, ix, true ) );
   // S=1 (+) S=1/2;  S=3/2
-  opReps_.push_back( build_compound_operator( twoOps, 1, oneOp, 0, 1, ix, true ) );
+  opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 1, ix, true ) );
 }
 
 //===========================================================================================================================================================
@@ -324,7 +325,8 @@ void Npdm_op_wrapper_NULL::set_local_ops( int idx )
 //===========================================================================================================================================================
 // NOTE transpose applied to RHS operator here
 
-boost::shared_ptr<SparseMatrix> NpdmSpinOps::build_compound_operator( std::vector< boost::shared_ptr<SparseMatrix> > lhsOps, int ilhs,
+boost::shared_ptr<SparseMatrix> NpdmSpinOps::build_compound_operator( bool is_fermion,
+                                                                      std::vector< boost::shared_ptr<SparseMatrix> > lhsOps, int ilhs,
                                                                       std::vector< boost::shared_ptr<SparseMatrix> > rhsOps, int irhs,
                                                                       int ispin, int ix, bool transpose )
 {
@@ -334,17 +336,18 @@ boost::shared_ptr<SparseMatrix> NpdmSpinOps::build_compound_operator( std::vecto
   newOp->set_orbs().push_back(ix); 
   newOp->set_orbs().push_back(ix);
   newOp->set_initialised() = true;
-  newOp->set_fermion() = false;
-  newOp->allocate( spinBlock_->get_stateInfo() );
+  newOp->set_fermion() = is_fermion;
 
   if (transpose) {
     // Build compound operator as product of LHS and TRANSPOSE( RHS )
     newOp->set_deltaQuantum() = ( lhsOps.at(ilhs)->get_deltaQuantum() - rhsOps.at(irhs)->get_deltaQuantum() ).at(ispin);
+    newOp->allocate( spinBlock_->get_stateInfo() );
     operatorfunctions::Product(spinBlock_, *(lhsOps.at(ilhs)), Transposeview(*rhsOps.at(irhs)), *newOp, 1.0 );
   }
   else {
     // Build compound operator as product of LHS and RHS
     newOp->set_deltaQuantum() = ( lhsOps.at(ilhs)->get_deltaQuantum() - rhsOps.at(irhs)->get_deltaQuantum() ).at(ispin);
+    newOp->allocate( spinBlock_->get_stateInfo() );
     operatorfunctions::Product(spinBlock_, *(lhsOps.at(ilhs)), *(rhsOps.at(irhs)), *newOp, 1.0 );
   }
 
