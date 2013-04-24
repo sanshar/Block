@@ -20,8 +20,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 namespace SpinAdapted{
 
-void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& leftOp, SparseMatrix& dotOp, SparseMatrix& rightOp, const SpinBlock& big, vector<double>& expectations, bool doTranspose)
+//void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& leftOp, SparseMatrix& dotOp, SparseMatrix& rightOp, const SpinBlock& big, vector<double>& expectations, bool doTranspose)
+double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& leftOp, SparseMatrix& dotOp, SparseMatrix& rightOp, const SpinBlock& big)
 {
+
   //calculating <wave1| Oa*Ob | wave2>
   // do transpose specifies if we want  <wave1| Oa^T*Ob |wave2> separately. This can be avoided in some sitations if wave1 and wave2 are the same functions
   int leftindices=0, dotindices=0, rightindices=0;
@@ -51,24 +53,26 @@ void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& lef
   if (Aindices == 0 && Bindices == 4)
   {
     operatorfunctions::TensorMultiply(rightBlock, rightOp, &big, wave2, opw2, dQ, 1.0);
-    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
+//    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
   }
   else if (Aindices == 4&& Bindices == 0)
   { 
     operatorfunctions::TensorMultiply(leftBlock, AOp, &big, wave2, opw2, dQ, 1.0);
-    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
+//    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
   }
   else if (Aindices != 0 && Bindices != 0)
   { 
     operatorfunctions::TensorMultiply(leftBlock, AOp, rightOp, &big, wave2, opw2, dQ, 1.0);
-    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );    
-    if (doTranspose)
-    {
-      opw2.Clear();
-      operatorfunctions::TensorMultiply(leftBlock, Transposeview(AOp), rightOp, &big, wave2, opw2, dQ, 1.0);
-      expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );    
-    }
+//    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );    
+//    if (doTranspose)
+//    {
+//      opw2.Clear();
+//      operatorfunctions::TensorMultiply(leftBlock, Transposeview(AOp), rightOp, &big, wave2, opw2, dQ, 1.0);
+//      expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );    
+//    }
   }
+pout << "new val = " << DotProduct(wave1, opw2, dmrginp.Sz(), big) << std::endl;
+  return DotProduct(wave1, opw2, dmrginp.Sz(), big);
 
 }
 
@@ -118,7 +122,7 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
 } 
 
 
-void spin_to_nonspin(vector<int>& indices, vector<double>& coeffs, array_4d<double>& twopdm, Oporder order, bool dotranspose)
+void spin_to_nonspin(std::vector<int>& indices, std::vector< std::pair<int,double> >& coeffs, array_4d<double>& twopdm, Oporder order, bool dotranspose)
 {
   //indices are ix jx kx lx 
   // the six possibilities are
@@ -136,7 +140,12 @@ void spin_to_nonspin(vector<int>& indices, vector<double>& coeffs, array_4d<doub
   ColumnVector x(6), b(6);
 
   b = 0.0; x=0.0;
-  b(1) = coeffs[0]; b(2) = coeffs[1];
+  //MAW check first value is a singlet from the coupling of two singlets
+  assert( coeffs.at(0).first == 1 );
+  b(1) = coeffs.at(0).second; 
+  //MAW check second value is a singlet from the coupling of two triplets
+  assert( coeffs.at(1).first == 3 );
+  b(2) = coeffs.at(1).second;
 
   int ix = 2*indices[0], jx = 2*indices[1], kx = 2*indices[2], lx = 2*indices[3];
 
@@ -361,15 +370,19 @@ void accumulate_twopdm(array_4d<double>& twopdm)
 void assign_antisymmetric(array_4d<double>& twopdm, const int i, const int j, const int k, const int l, const double val)
 {
 
-  if ( twopdm(i, j, k, l) != 0.0 && (twopdm(i,j,k,l)-val) > 2e-4)
+//MAW
+if ( abs(val) > 1e-8 ) pout << "twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
+
+  if ( twopdm(i, j, k, l) != 0.0 && abs(twopdm(i,j,k,l)-val) > 2e-4)
     {
       void *array[10];
       size_t size;
       size = backtrace(array, 10);
       cout << "Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<endl;
       //backtrace_symbols_fd(array, size, 2);
-      cout << "earlier value: "<<twopdm(i,j,k,l)<<endl<<"new value: "<<val<<endl;
-      assert(1 == 0);
+      cout << "earlier value: "<<twopdm(i,j,k,l)<<endl<< "new value:     "<<val<<endl;
+//MAW FIXME      assert(1 == 0);
+      return;
     }
 
   twopdm(i, j, k, l) = val;

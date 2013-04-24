@@ -14,20 +14,82 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
+//
+//Npdm_spin_adaptation::Npdm_spin_adaptation( NpdmSpinOps & lhsOps,
+//                                            NpdmSpinOps & dotOps,
+//                                            NpdmSpinOps & rhsOps,
+//                                            array_4d<double> & twopdm )
+//: lhsOps_(lhsOps),
+//  dotOps_(dotOps),
+//  rhsOps_(rhsOps),
+//  twopdm_(twopdm)
+//{ }
+//
+//===========================================================================================================================================================
 
-Npdm_spin_adaptation::Npdm_spin_adaptation( NpdmSpinOps & lhsOps,
-                                            NpdmSpinOps & dotOps,
-                                            NpdmSpinOps & rhsOps,
-                                            array_4d<double> & twopdm )
-: lhsOps_(lhsOps),
+Npdm_expectations::Npdm_expectations( Wavefunction & wavefunction, 
+                                      const SpinBlock & big, 
+                                      NpdmSpinOps & lhsOps,
+                                      NpdmSpinOps & dotOps,
+                                      NpdmSpinOps & rhsOps )
+: wavefunction_(wavefunction),
+  big_(big),
+  lhsOps_(lhsOps),
   dotOps_(dotOps),
-  rhsOps_(rhsOps),
-  twopdm_(twopdm)
+  rhsOps_(rhsOps)
 { }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-Oporder Npdm_spin_adaptation::parse_build_pattern( std::vector<char> build_pattern )
+std::string Npdm_expectations::get_op_string()
+{
+  std::string op_string;
+
+  // Set up npdm element indices
+  std::vector<int> indices;
+  indices.reserve( lhsOps_.indices_.size() + dotOps_.indices_.size() + rhsOps_.indices_.size() );
+  indices.insert( indices.end(), lhsOps_.indices_.begin(), lhsOps_.indices_.end() );
+  indices.insert( indices.end(), dotOps_.indices_.begin(), dotOps_.indices_.end() );
+  indices.insert( indices.end(), rhsOps_.indices_.begin(), rhsOps_.indices_.end() );
+  assert (indices.size() == 4);
+pout << "indices = " << indices[0] << "," << indices[1] << "," << indices[2] << "," << indices[3] << std::endl;
+
+  // Set up how tensor operator is constructed from (compound) block operators
+  std::vector<char> build_pattern = { '(' };
+  build_pattern.reserve( lhsOps_.build_pattern_.size() + dotOps_.build_pattern_.size() + rhsOps_.build_pattern_.size() + 2 );
+  build_pattern.insert( build_pattern.end(), lhsOps_.build_pattern_.begin(), lhsOps_.build_pattern_.end() );
+  build_pattern.insert( build_pattern.end(), dotOps_.build_pattern_.begin(), dotOps_.build_pattern_.end() );
+  build_pattern.push_back( ')' );
+  build_pattern.insert( build_pattern.end(), rhsOps_.build_pattern_.begin(), rhsOps_.build_pattern_.end() );
+
+
+  return op_string;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_expectations::transform_spin_adapt_to_nonspin_adapt( array_4d<double> & twopdm ) 
+{
+
+  std::string op_string;
+  // Set up operator string  
+  op_string = get_op_string();
+
+
+
+
+
+  // Call old code for transforming spin-adapted expectation values and twopdm update
+  // Translate our format for the build pattern into the types used by the old twopdm implementation
+//  Oporder build_pattern_type = old_parse_build_pattern( build_pattern );  
+//  assert( expectations_.size() > 0 );
+//  spin_to_nonspin( indices, expectations_, twopdm, build_pattern_type, true );
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Oporder Npdm_expectations::old_parse_build_pattern( std::vector<char> build_pattern )
 {
 
   std::vector<char> test;
@@ -39,7 +101,7 @@ pout << std::endl;
 
   // 2,2,0
   test = { '(','(','C','C',')','(','D','D',')',')','(',')' };
-  if ( build_pattern == test ) return CC_DD;
+  if ( build_pattern == test ) return CC_DD;  // (C2 VERIFIED)
   test = { '(','(','C','D',')','(','C','D',')',')','(',')' };
   if ( build_pattern == test ) return CD_CD;
 
@@ -51,24 +113,22 @@ pout << std::endl;
   test = { '(','(','C','D',')','(','D',')',')','(','C',')' };
   if ( build_pattern == test ) return CD_D_C; 
 
-  // 1,3,0
+  // 1,3,0  (C2 VERIFIED)
   test = { '(','(','C',')','(','C','(','D','D',')',')',')','(',')' };
-//  if ( build_pattern == test ) return CC_DD;  // ???
-  if ( build_pattern == test ) return CC_D_D;  // ???
+  if ( build_pattern == test ) return CC_D_D;
 
-  // 1,2,1
+  // 1,2,1 
   test = { '(','(','C',')','(','C','D',')',')','(','D',')' };
-  if ( build_pattern == test ) return C_CD_D;
+  if ( build_pattern == test ) return C_CD_D;  // (H2O verified)
   test = { '(','(','C',')','(','D','D',')',')','(','C',')' };
   if ( build_pattern == test ) return D_CC_D; // ????
 
-  // 0,4,0
+  // 0,4,0  (VERIFIED)
   test = { '(','(',')','(','(','C','C',')','(','D','D',')',')',')','(',')' };
-  if ( build_pattern == test ) return CC_DD; // ????
+  if ( build_pattern == test ) return CC_DD;
 
-  // 0,3,1
+  // 0,3,1  (C2 VERIFIED)
   test = { '(','(',')','(','(','C','C',')','D',')',')','(','D',')' };
-//          (   (   )   (   (   C   C   )   D   )   )   (D)
   if ( build_pattern == test ) return CC_D_D;
 
   for (auto i = build_pattern.begin(); i != build_pattern.end(); ++i) {
@@ -81,7 +141,7 @@ pout << std::endl;
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Npdm_spin_adaptation::to_nonspin_adapt( std::vector<double> & spin_adapted_vals )
+void Npdm_expectations::old_transform_spin_adapt_to_nonspin_adapt( array_4d<double> & twopdm ) 
 {
 
   // Set-up npdm element indices
@@ -101,32 +161,18 @@ pout << "indices = " << indices[0] << "," << indices[1] << "," << indices[2] << 
   build_pattern.push_back( ')' );
   build_pattern.insert( build_pattern.end(), rhsOps_.build_pattern_.begin(), rhsOps_.build_pattern_.end() );
 
+  // Call old code for transforming spin-adapted expectation values and twopdm update
   // Translate our format for the build pattern into the types used by the old twopdm implementation
-  Oporder build_pattern_type = parse_build_pattern( build_pattern );  
-
-  // Call old code for transforming spin-adapted expectatio values and twopdm update
-//assert (build_pattern_type == CC_D_D);
-  spin_to_nonspin( indices, spin_adapted_vals, twopdm_, build_pattern_type, true );
+  Oporder build_pattern_type = old_parse_build_pattern( build_pattern );  
+  assert( expectations_.size() > 0 );
+//if ( build_pattern_type == CD_CD )
+  spin_to_nonspin( indices, expectations_, twopdm, build_pattern_type, true );
 
 }
 
-//===========================================================================================================================================================
-
-Npdm_expectations::Npdm_expectations( Wavefunction & wavefunction, 
-                                      const SpinBlock & big, 
-                                      NpdmSpinOps & lhsOps,
-                                      NpdmSpinOps & dotOps,
-                                      NpdmSpinOps & rhsOps )
-: wavefunction_(wavefunction),
-  big_(big),
-  lhsOps_(lhsOps),
-  dotOps_(dotOps),
-  rhsOps_(rhsOps)
-{ }
-
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Npdm_expectations::contract_spin_operators( int ilhs, int idot, int irhs )
+void Npdm_expectations::contract_spin_adapted_operators( int mult, int ilhs, int idot, int irhs )
 {
 
 
@@ -191,21 +237,22 @@ pout << "dotindex = " << dotindex << std::endl;
   // We need to distinguish cases where one or more blocks has an empty operator string
   assert ( dotOps_.opReps_.size() != 0 );
   SparseMatrix* null = 0; 
+  double expectation;
 
   if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() == 0) ) {
     // 0_X_0 case
     Transposeview dotOpTr = Transposeview(*dotOp);
     if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
-    spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *null, big_, expectations_, false);
+    //expectation = spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *null, big_, expectations_, false);
+    expectation = spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *null, big_);
   }
   else if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() > 0) ) {
     // 0_X_X case
-pout << "hello 0_X_X \n";
     Transposeview dotOpTr = Transposeview(*dotOp);
     if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
-    spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *rhsOp, big_, expectations_, false);
+    expectation = spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *rhsOp, big_);
   }
   else if ( (lhsOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) ) {
     // X_X_0 case
@@ -213,7 +260,7 @@ pout << "hello 0_X_X \n";
     if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     Transposeview dotOpTr = Transposeview(*dotOp);
     if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
-    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *null, big_, expectations_, false);
+    expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *null, big_);
   }
   else {
     // X_X_X case
@@ -223,26 +270,24 @@ pout << "hello 0_X_X \n";
     if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
-    spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_, expectations_, false);
+    expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_);
   }
 //*/
+
+  // Modify new element with sign factors and store
+  double factor = lhsOps_.factor_ * dotOps_.factor_ * rhsOps_.factor_;
+  expectations_.push_back( std::make_pair(mult, expectation*factor) );
 
 assert (expectations_.size() > 0);
 pout << "expectations =\n";
 for (auto it = expectations_.begin(); it != expectations_.end(); ++it) {
-  pout << *it << "  ";
+  pout << "spin:" << it->first << "\t" << it->second << std::endl;
 }
-pout << std::endl;
-
-  // Modify new elements with sign factors
-  double factor = lhsOps_.factor_ * dotOps_.factor_ * rhsOps_.factor_;
-  for (int i = index_begin; i < expectations_.size(); ++i) {
-    expectations_[i] *= factor;
-  }
 
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// Return value is used to identify which singlet this is (e.g. S=1 coupled with S=1, or S=0 coupled with S=0 etc)
 
 bool Npdm_expectations::test_for_singlet( int lhs_mult, int dot_mult, int rhs_mult )
 {
@@ -252,8 +297,8 @@ bool Npdm_expectations::test_for_singlet( int lhs_mult, int dot_mult, int rhs_mu
   int rhs2S = rhs_mult -1;
 
   // Couple LHS and Dot spin angular momenta and see if any equal RHS  
-  for (int s = std::abs(lhs2S - dot2S); s <= ( lhs2S + dot2S ); s += 2 ) {
-    if ( s == rhs2S ) return true;
+  for (int twoS = std::abs(lhs2S - dot2S); twoS <= ( lhs2S + dot2S ); twoS += 2 ) {
+    if ( twoS == rhs2S ) return true;
   }
   return false;
 }
@@ -267,9 +312,6 @@ void Npdm_expectations::build_singlet_expectations()
   for (int ilhs = 0; ilhs < lhsOps_.mults_.size(); ++ilhs) {
     for (int idot = 0; idot < dotOps_.mults_.size(); ++idot) {
       for (int irhs = 0; irhs < rhsOps_.mults_.size(); ++irhs) {
-//  for (int ilhs = 0; ilhs < 1; ++ilhs) {
-//    for (int idot = 0; idot < 1; ++idot) {
-//      for (int irhs = 0; irhs < 1; ++irhs) {
 pout << "---------------------------------\n";
 pout << "spin comp: ilhs, idot, irhs = " << ilhs << idot << irhs << std::endl;
 
@@ -279,7 +321,10 @@ pout << "spin comp: ilhs, idot, irhs = " << ilhs << idot << irhs << std::endl;
 
         // Filter operator combinations that do not combine to give a singlet
         bool singlet = test_for_singlet( lhsOps_.mults_.at(ilhs), dotOps_.mults_.at(idot), rhsOps_.mults_.at(irhs) );
-        if ( singlet ) contract_spin_operators( ilhs, idot, irhs );
+        if ( singlet ) {
+          if ( rhsOps_.opReps_.size() > 0 ) contract_spin_adapted_operators( rhsOps_.mults_.at(irhs), ilhs, idot, irhs );
+          else contract_spin_adapted_operators( dotOps_.mults_.at(idot), ilhs, idot, irhs );
+        }
       }
     }
   }
