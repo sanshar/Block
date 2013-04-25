@@ -671,7 +671,7 @@ SpinAdapted::Input::Input(const string& config_name)
     Symmetry::InitialiseTable(sym);
 
   ifstream orbitalFile;
-  orbitalFile.open(orbitalfile.c_str(), ios::in);
+  CheckFileExistence(orbitalfile, "Orbital file ");
 
   //read the orbitals
   v_1.rhf= true; 
@@ -689,23 +689,24 @@ SpinAdapted::Input::Input(const string& config_name)
   if (m_gaopt) {
     ifstream gaconfFile;
     if(gaconffile != "default") gaconfFile.open(gaconffile.c_str(), ios::in);
+    orbitalFile.open(orbitalfile.c_str(), ios::in);
     getgaorder(gaconfFile, orbitalFile);
+    orbitalFile.close();
   }
 
   if (mpigetrank() == 0) {
      //Fiedler
   if (m_fiedler) {
      Matrix fiedler; 
-     CheckFileExistence(orbitalfile, "Orbital file ");
+     orbitalFile.open(orbitalfile.c_str(), ios::in);
      genetic::ReadIntegral(orbitalFile, fiedler);
      orbitalFile.close();
      SymmetricMatrix fiedler_sym;
      fiedler_sym << fiedler;
      m_fiedlerorder=fiedler_reorder(fiedler_sym);
-     orbitalFile.open(orbitalfile.c_str(), ios::in);
   }
 
-    CheckFileExistence(orbitalfile, "Orbital file ");
+    orbitalFile.open(orbitalfile.c_str(), ios::in);
     readorbitalsfile(orbitalFile, v_1, v_2);
     orbitalFile.close();
 

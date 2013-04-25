@@ -9,7 +9,6 @@ Sandeep Sharma, Garnet K.-L. Chan and Roberto Olivares-Amaya
 #include <stdio.h>
 #include <stdlib.h>
 #include "new_anglib.h"
-#include "anglib.h"
 #include <cmath>
 #include <algorithm>
 
