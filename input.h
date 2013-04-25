@@ -33,7 +33,7 @@ enum noiseTypes {RANDOM, EXCITEDSTATE};
 enum calcType {DMRG, ONEPDM, TWOPDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 
-enum keywords{ORBS, MAXM, REORDER, GAORDER, SCHEDULE, SYM, NELECS, SPIN, IRREP,
+enum keywords{ORBS, MAXM, REORDER, FIEDLER, GAORDER, SCHEDULE, SYM, NELECS, SPIN, IRREP,
 	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, 
 	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NUMKEYWORDS};
 
@@ -121,6 +121,9 @@ class Input {
   bool m_reorder;
   string m_reorderfile;
 
+  bool m_fiedler;
+  std::vector<int> m_fiedlerorder;
+
   bool m_gaopt;
   std::vector<int> m_gaorder;
 
@@ -136,6 +139,7 @@ class Input {
     ar & m_save_prefix & m_load_prefix & m_direct & m_max_lanczos_dimension;
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat & m_reorder & m_gaopt & m_gaorder;
+    ar & m_fiedler;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_cd;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;

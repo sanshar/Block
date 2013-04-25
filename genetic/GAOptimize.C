@@ -92,6 +92,9 @@ genetic::Cell genetic::gaoptimize(const int& seed)
 {
   srand(seed);
   Generation ancestor;
+  // Need to create a function that does not affect this
+  //ancestor.m_cells[0].Create(Gene::ReadGuess());
+  //cout << ancestor << endl;
 
   for(int g = 0; g < gainput.max_generation; ++g)
   {

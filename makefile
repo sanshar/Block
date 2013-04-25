@@ -6,11 +6,14 @@
 
 
 #specify boost include file
-BOOSTINCLUDE = /usr/include/boost
+# BOOSTINCLUDE = /usr/include/boost
+BOOSTINCLUDE = /home/ro3/libs/boost/boost_1_53_0/
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/usr/lib/ -lboost_serialization -lboost_system -lboost_filesystem
-LAPACKBLAS = -L/opt/intel/mkl/lib/intel64/ -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+# BOOSTLIB = -L/usr/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+# LAPACKBLAS = -L/opt/intel/mkl/lib/intel64/ -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+BOOSTLIB = -L/home/ro3/libs/boost/boost_1_53_0/stage/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+LAPACKBLAS = -L/opt/intel/composer_xe_2013.2.146/mkl/lib/intel64/ -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
@@ -32,7 +35,8 @@ endif
 EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
-CXX = g++
+# CXX = /opt/ekopath-4.0.12.1/bin/pathCC
+CXX = icpc
 MPICXX = mpic++
 HOME = .
 NEWMATINCLUDE = $(HOME)/newmat10/
@@ -52,23 +56,25 @@ LIBS =  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp
 MPI_OPT = -DSERIAL
 
 
+# Intel compiler
 ifeq ($(notdir $(firstword $(CXX))),icpc)
    ifeq ($(OPENMP), yes)
       OPENMP_FLAGS= -openmp -D_OPENMP 
    endif
-# Intel compiler
-	OPT = -O3 -funroll-loops $(OPENMP_INC) -DBLAS -DUSELAPACK  $(MPI_OPT) $(I8) -DFAST_MTP $(MOLPRO_BLOCK)
-#	OPT = -g -DBLAS -DUSELAPACK  $(MPI_OPT) -DFAST_MTP 
-	CXX = icc
+	OPT = -O3 -funroll-loops $(OPENMP_FLAGS)
+#	OPT = -g
+#	CXX = icc
 endif
+# GNU compiler
 ifeq ($(notdir $(firstword $(CXX))),g++)
    ifeq ($(OPENMP), yes)
-      OPENMP_INC= -fopenmp -D_OPENMP 
+      OPENMP_FLAGS= -fopenmp -D_OPENMP 
    endif
-# GNU compiler
-	OPT = -O3 $(OPENMP_FLAGS) -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)
-#	OPT = -g -fopenmp   -DBLAS -DFAST_MTP -DUSELAPACK $(MPI_OPT)
+	OPT = -O3
+#	OPT = -g
 endif
+
+OPT+=$(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) -DFAST_MTP $(MOLPRO_BLOCK)
 
 ifeq ($(USE_MPI), yes)
 	MPI_OPT = 
@@ -86,10 +92,10 @@ endif
 
 SRC_genetic = genetic/CrossOver.C genetic/Evaluate.C genetic/GAInput.C genetic/GAOptimize.C genetic/Generation.C genetic/Mutation.C genetic/RandomGenerator.C genetic/ReadIntegral.C
 
-SRC_spin_adapted =  dmrg.C least_squares.C set_spinblock_components.C linear.C main.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C anglib.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C $(SRC_genetic)
+SRC_spin_adapted =  dmrg.C fiedler.C least_squares.C set_spinblock_components.C linear.C main.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C $(SRC_genetic)
 
 
-SRC_spin_library =  IrrepSpace.C least_squares.C dmrg.C readinput.C save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C spinblock.C StateInfo.C set_spinblock_components.C op_components.C Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C linear.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C anglib.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C  modules/onepdm/sweep.C modules/onepdm/onepdm.C  modules/generate_blocks/sweep.C fci.C $(SRC_genetic)
+SRC_spin_library =  fiedler.C IrrepSpace.C least_squares.C dmrg.C readinput.C save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C spinblock.C StateInfo.C set_spinblock_components.C op_components.C Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C linear.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C  modules/onepdm/sweep.C modules/onepdm/onepdm.C  modules/generate_blocks/sweep.C fci.C $(SRC_genetic)
 
 
 OBJ_spin_adapted=$(SRC_spin_adapted:.C=.o)

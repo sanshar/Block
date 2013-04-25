@@ -1,6 +1,7 @@
 #ifndef GENE_H
 #define GENE_H
 
+#include <iostream>
 #include <ostream>
 #include <iomanip>
 #include <vector>
@@ -31,6 +32,11 @@ namespace genetic
     {
       Gene gen(RandomSequence(m_length));
       return gen;
+    }
+    const static Gene ReadGuess(void)
+    {
+       Gene gen(ReadSequence(m_length));
+       return gen;
     }
 
     const vector<int>& Sequence(void) const { return m_sequence; }

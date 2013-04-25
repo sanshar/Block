@@ -26,6 +26,7 @@ namespace genetic
 
   vector<int> RandomBitSequence(const double& alpha, const int& nSize);
   vector<int> RandomSequence(const int& nSize);
+  vector<int> ReadSequence(const int& nSize);
   inline vector<int> RandomBitSequence(const int& nSize) { return RandomBitSequence(0.5, nSize); }
 
   // cross over functions

@@ -16,6 +16,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "spinblock.h"
 #include "couplingCoeffs.h"
 #include "genetic/GAOptimize.h"
+#include "genetic/ReadIntegral.h"
 #include <boost/tokenizer.hpp>
 #include <string.h>
 #include <ctype.h>
@@ -23,6 +24,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
+#include "fiedler.h"
 #include "pario.h"
 
 using namespace std;
@@ -124,6 +126,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_reorder = false;
   m_reorderfile = "";
   m_gaopt = false;
+  m_fiedler = false;
 
   m_orbformat=MOLPROFORM;
 }
@@ -206,6 +209,10 @@ SpinAdapted::Input::Input(const string& config_name)
 	}	
 	m_reorder = true;
 	m_reorderfile = tok[1];
+      }
+      else if (boost::iequals(keyword,  "fiedler")) {
+         m_fiedler=true;
+         cout << "ROA Fiedler is: " << m_fiedler << endl;
       }
       else if (boost::iequals(keyword,  "gaopt"))
       {
@@ -686,9 +693,23 @@ SpinAdapted::Input::Input(const string& config_name)
   }
 
   if (mpigetrank() == 0) {
+     //Fiedler
+  if (m_fiedler) {
+     Matrix fiedler; 
+     CheckFileExistence(orbitalfile, "Orbital file ");
+     genetic::ReadIntegral(orbitalFile, fiedler);
+     orbitalFile.close();
+     SymmetricMatrix fiedler_sym;
+     fiedler_sym << fiedler;
+     m_fiedlerorder=fiedler_reorder(fiedler_sym);
+     orbitalFile.open(orbitalfile.c_str(), ios::in);
+  }
+
     CheckFileExistence(orbitalfile, "Orbital file ");
     readorbitalsfile(orbitalFile, v_1, v_2);
-    
+    orbitalFile.close();
+
+          
     pout << "Checking input for errors"<<endl;
     performSanityTest();
     pout << "Summary of input"<<endl;
@@ -727,6 +748,7 @@ void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& p
 	  abort();
 	}
 	oldtonew.push_back(atoi(tok[i].c_str())-1); //reorder is starting from 1 to n, but internally we store it from 0 to n
+   cout << "ROA tok oldtonew " << tok[i].c_str() << " " << oldtonew[i] << endl;
 	if (oldtonew.back() >m_norbs || oldtonew.back() < 0) {
 	  pout << "Illegal orbital index "<<atoi(tok[i].c_str())<<" in reorder file"<<endl;
 	  abort();
@@ -779,6 +801,25 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     ifstream reorderFile(m_reorderfile.c_str());
     CheckFileExistence(m_reorderfile, "Reorder file ");
     readreorderfile(reorderFile, reorder, oldtonew);
+    for (int i=0; i<m_norbs/2; i++) {
+      cout << oldtonew[i] << " ";
+    }
+    cout << endl;
+  }
+  // use Fiedler-based ordering
+  else if (m_fiedler) {
+    m_reorder = true;
+    oldtonew = m_fiedlerorder;
+    if (oldtonew.size() != m_norbs/2) {
+      pout << "Size of gaorder "<<oldtonew.size()<<" is different from number of orbitals "<<m_norbs/2<<endl;
+      abort();
+    }
+    reorder.resize(m_norbs/2);
+    for (int i=0; i<m_norbs/2; i++) {
+      reorder.at(oldtonew[i]) = i;
+      cout << oldtonew[i] << " ";
+    }
+    cout << endl;
   }
   // use Kij-based ordering
   else if (m_gaopt) {
@@ -791,7 +832,9 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     reorder.resize(m_norbs/2);
     for (int i=0; i<m_norbs/2; i++) {
       reorder.at(oldtonew[i]) = i;
+      cout << oldtonew[i] << " ";
     }
+    cout << endl;
   }
 
   int orbindex = 0;
@@ -889,7 +932,10 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     if (i==-1 && j==-1 && k==-1 && l==-1) m_core_energy = value;
     else if (k==-1 && l==-1) { 
       if(m_reorder){ v1(2*reorder.at(i),2*reorder.at(j)) = value;  v1(2*reorder.at(j),2*reorder.at(i)) = value;}
-      else {v1(2*i,2*j) = value;v1(2*j,2*i) = value;}
+      else {
+         v1(2*i,2*j) = value;
+         v1(2*j,2*i) = value;
+      }
     } 
     else {
       int I=i, J=j, K=k, L=l;
