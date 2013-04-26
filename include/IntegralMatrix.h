@@ -162,7 +162,8 @@ class OneElectronArray
     {
       if (bin) {
         dumpFile.seekg (0, ios::end);
-	int size = dumpFile.tellg();
+	//int size = dumpFile.tellg();
+	double size = dumpFile.tellg();
         dumpFile.seekg (0, ios::beg);
         FORTINT nmo = rhf ? static_cast<int>(2*sqrt(size / (sizeof(double)))) : static_cast<int>(sqrt(size / (sizeof(double))));
 	ReSize(nmo);

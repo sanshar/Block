@@ -3,6 +3,10 @@
 #include "genetic_utils.h"
 using namespace std;
 
+   void genetic::Generation::AddFiedler(std::vector<int> fiedlerorder){
+   m_cells[0].Create(fiedlerorder);
+   }
+
 void genetic::Generation::ComputeProbability(void)
 {
   // Sort by Fitness

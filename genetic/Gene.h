@@ -33,11 +33,6 @@ namespace genetic
       Gene gen(RandomSequence(m_length));
       return gen;
     }
-    const static Gene ReadGuess(void)
-    {
-       Gene gen(ReadSequence(m_length));
-       return gen;
-    }
 
     const vector<int>& Sequence(void) const { return m_sequence; }
     Gene(void) { }

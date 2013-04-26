@@ -46,6 +46,8 @@ namespace genetic
 
     void Generate(const Generation& ancestor);
 
+    void AddFiedler(std::vector<int> fiedlerorder);
+
     friend ostream& operator<< (ostream& ost, const Generation& g){
       using std::setw;
       using std::endl;

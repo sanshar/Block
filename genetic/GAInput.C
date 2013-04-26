@@ -14,6 +14,7 @@ genetic::GAInput::GAInput(void)
   exponent       = 2.0;
   select         = GAUSS;
   random_seed    = 1414; //setting default seed
+  fiedler        = true;
 }
 
 genetic::GAInput::GAInput(ifstream& config)
@@ -35,6 +36,7 @@ void genetic::GAInput::Configure(ifstream& config)
     if(entry == "scale")    config >> scaling;
     if(entry == "exponent") config >> exponent;
     if(entry == "seed")     config >> random_seed;
+    if(entry == "fiedler")  config >> fiedler;
     if(entry == "method")
     {
       config >> entry;

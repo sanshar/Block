@@ -27,6 +27,7 @@ namespace genetic
       ar & exponent;
       ar & random_seed;
       ar & select;
+      ar & fiedler;
     }
 
   public:
@@ -39,6 +40,7 @@ namespace genetic
     double scaling;
     double exponent;
     unsigned int random_seed;
+    bool fiedler;
     SELECT_TYPE select;
 
     GAInput(void);

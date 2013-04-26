@@ -6,8 +6,8 @@
 
 namespace genetic
 {
-  Cell gaordering(ifstream& confFile, ifstream& dumpFile);
-  Cell gaoptimize(const int& seed);
+  Cell gaordering(ifstream& confFile, ifstream& dumpFile, std::vector<int> fiedlerorder);
+  Cell gaoptimize(const int& seed, std::vector<int> fiedlerorder); 
 };
 
 #endif

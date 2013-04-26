@@ -48,34 +48,34 @@ public:
   /// clear all elements
   virtual void clear() {};
   /// number of non-zero elements in local storage
-  virtual int local_nnz() const {};
+  virtual int local_nnz()  const {return local_nnz();}
 
-  virtual int global_nnz() const {};
+  virtual int global_nnz() const {return global_nnz();}
   /// ith element of local storage
-  virtual const T& get_local_element(int i) const {};
+  virtual const T& get_local_element(int i) const {return get_local_element(i);}
   /// ith element of local storage
-  virtual T& get_local_element(int i) {};
+  virtual T& get_local_element(int i) {return get_local_element(i);}
   /// query nullness of element i
-  virtual bool has_local_index(int i) const {};
+  virtual bool has_local_index(int i) const {return has_local_index(i);}
 
   // virtual indexing
-  virtual T& operator()(const std::vector<int>& orbs) {};
-  virtual const T& operator()(const std::vector<int>& orbs) const {};
+  virtual T& operator()(const std::vector<int>& orbs) {return get_local_element(orbs[0]);}
+  virtual const T& operator()(const std::vector<int>& orbs) const {return get_local_element(orbs[0]);}
 
   /// expose local storage
-  virtual bool is_local() const {};
-  virtual bool is_distributed() const {};
+  virtual bool is_local() const {return is_local();}
+  virtual bool is_distributed() const {return is_distributed();}
 
   virtual bool& set_local() {};
 
   /// virtual constructor. caller is responsible for managing storage
-  virtual para_sparse_vector<T>* clone() const {};
+  virtual para_sparse_vector<T>* clone() const {}
 
   //FIX ME!!
-  virtual bool has_local_index(int i, int j) const {};
+  virtual bool has_local_index(int i, int j) const {return has_local_index(i); }
 
-  virtual bool has(int i) const {};
-  virtual bool has(int i, int j) const {};
+  virtual bool has(int i) const {}
+  virtual bool has(int i, int j) const {}
   virtual bool has(int i=-1, int j=-1, int k=-1) const {};
   virtual bool has(const std::vector<int>& orbs) const {};
   virtual const std::vector<T>& get_store() const {};

@@ -26,7 +26,7 @@ namespace genetic
   boost::function<double(const Gene&)> Cell::Evaluate;
 };
 
-genetic::Cell genetic::gaordering(ifstream& confFile, ifstream& dumpFile)
+genetic::Cell genetic::gaordering(ifstream& confFile, ifstream& dumpFile, std::vector<int> fiedlerorder)
 {
 #ifndef SERIAL
   mpi::communicator world;
@@ -58,11 +58,11 @@ genetic::Cell genetic::gaordering(ifstream& confFile, ifstream& dumpFile)
 #ifndef SERIAL
   int ntask = 1 + gainput.max_community / world.size();
 
-  Cell comm_best = gaoptimize(genetic::gainput.random_seed+world.rank());
+  Cell comm_best = gaoptimize(genetic::gainput.random_seed+world.rank(), fiedlerorder);
   cout << "Order #" << world.rank() << ": " << comm_best << endl;
   for(int i = 1; i < ntask; ++i)
   {
-    Cell comm_cell = gaoptimize(genetic::gainput.random_seed + i * world.size() + world.rank());
+    Cell comm_cell = gaoptimize(genetic::gainput.random_seed + i * world.size() + world.rank(), fiedlerorder);
     cout << "Order #" << i * world.size() + world.rank() << ": " << comm_cell << endl;
     if(comm_cell < comm_best) comm_best = comm_cell;
   }
@@ -88,13 +88,13 @@ genetic::Cell genetic::gaordering(ifstream& confFile, ifstream& dumpFile)
   return best;
 }
 
-genetic::Cell genetic::gaoptimize(const int& seed)
+genetic::Cell genetic::gaoptimize(const int& seed, std::vector<int> fiedlerorder)
 {
   srand(seed);
   Generation ancestor;
   // Need to create a function that does not affect this
-  //ancestor.m_cells[0].Create(Gene::ReadGuess());
-  //cout << ancestor << endl;
+  // Now I can add an if command here that if we don't want fiedler, then this is turned off
+  ancestor.AddFiedler(fiedlerorder);
 
   for(int g = 0; g < gainput.max_generation; ++g)
   {

@@ -686,24 +686,21 @@ SpinAdapted::Input::Input(const string& config_name)
 #ifndef SERIAL
   mpi::broadcast(world,m_gaopt,0);
 #endif
-  if (m_gaopt) {
-    ifstream gaconfFile;
-    if(gaconffile != "default") gaconfFile.open(gaconffile.c_str(), ios::in);
-    orbitalFile.open(orbitalfile.c_str(), ios::in);
-    getgaorder(gaconfFile, orbitalFile);
-    orbitalFile.close();
-  }
 
   if (mpigetrank() == 0) {
      //Fiedler
-  if (m_fiedler) {
-     Matrix fiedler; 
-     orbitalFile.open(orbitalfile.c_str(), ios::in);
-     genetic::ReadIntegral(orbitalFile, fiedler);
-     orbitalFile.close();
-     SymmetricMatrix fiedler_sym;
-     fiedler_sym << fiedler;
-     m_fiedlerorder=fiedler_reorder(fiedler_sym);
+     if (m_fiedler) {
+        m_fiedlerorder=get_fiedler(orbitalfile, orbitalFile);
+  }
+
+  if (m_gaopt) {
+    ifstream gaconfFile;
+    if(gaconffile != "default") gaconfFile.open(gaconffile.c_str(), ios::in);
+    if (!m_fiedler) m_fiedlerorder=get_fiedler(orbitalfile, orbitalFile);
+    orbitalFile.open(orbitalfile.c_str(), ios::in);
+    cout << "ROA entering getgaorder " << endl;
+    getgaorder(gaconfFile, orbitalFile, m_fiedlerorder);
+    orbitalFile.close();
   }
 
     orbitalFile.open(orbitalfile.c_str(), ios::in);
@@ -808,7 +805,8 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     cout << endl;
   }
   // use Fiedler-based ordering
-  else if (m_fiedler) {
+  // m_fiedler and m_gaopt can be consolidated 
+  else if ((m_fiedler) && !(m_gaopt)) {
     m_reorder = true;
     oldtonew = m_fiedlerorder;
     if (oldtonew.size() != m_norbs/2) {
@@ -963,8 +961,18 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   }
   
 }
+std::vector<int> SpinAdapted::Input::get_fiedler(string& dumpname, ifstream& dumpFile){
+     Matrix fiedler; 
+     dumpFile.open(dumpname.c_str(), ios::in);
+     genetic::ReadIntegral(dumpFile, fiedler);
+     dumpFile.close();
+     SymmetricMatrix fiedler_sym;
+     fiedler_sym << fiedler;
+     std::vector<int> findices = fiedler_reorder(fiedler_sym);
+     return findices;
+}
 
-void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
+void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile, std::vector<int> fiedlerorder)
 {
    std::ofstream gaFILE;
 #ifndef SERIAL
@@ -979,7 +987,7 @@ void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile)
    cout << "---------- Kij-based ordering by GA opt. ----------" << endl;
   }
 
-   m_gaorder = genetic::gaordering(gaconfFile, dumpFile).Gen().Sequence();
+   m_gaorder = genetic::gaordering(gaconfFile, dumpFile, fiedlerorder).Gen().Sequence();
 
   if(mpigetrank() == 0) {
    cout << "------ pick the best ordering up to reorder -------" << endl;
