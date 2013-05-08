@@ -72,14 +72,9 @@ void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const SpinB
 	  Matrix tmp = oldWave(j, i);
 	  tmp = tmp.t(); // this is really a transpose, not a hermitian conjugate...
 	  trial(i, j) = tmp;
-	  int parity = 1;
-          if (IsFermion(s->leftStateInfo->quanta[i]) && IsFermion(s->rightStateInfo->quanta[j]))
-	    parity = -1;
-	  int A, B, J;
-	  A = s->leftStateInfo->quanta[i].get_s();
-	  B = s->rightStateInfo->quanta[j].get_s();
-	  J = oldWave.get_deltaQuantum().get_s();
-	  parity *= pow(-1.0, static_cast<int>( (3*A - B + J)/2));
+	  int parity = getCommuteParity(s->leftStateInfo->quanta[i],
+					s->rightStateInfo->quanta[j],
+					oldWave.get_deltaQuantum());
 	  if (parity == -1)
 	    trial(i,j) *= -1.0;
         }
@@ -115,32 +110,28 @@ void GuessWave::onedot_transpose_wavefunction(const StateInfo& guessstateinfo, c
 	if (threewave(a, b, c).size () != 0)
 	  {
 	    threewavetranspose(c, b, a).resize( threewave(a, b, c).size());
-	    int includedindex = 0;
 	    for (int i=0; i< threewave(a,b,c).size(); i++) 
 	    {
 	      if (threewave(a,b,c)[i].Ncols() == 0)
 		continue;
-	      int ab = guessstateinfo.leftStateInfo->unCollectedStateInfo->quantaMap(a , b)[includedindex];
-	      includedindex++;
+	      //int ab = guessstateinfo.leftStateInfo->unCollectedStateInfo->quantaMap(a , b)[i];
+	      //int absize = guessstateinfo.leftStateInfo->unCollectedStateInfo->quantaMap(a , b).size();
 	      copy(threewave(a, b, c)[i].t(), threewavetranspose(c, b, a)[i]);
 
 	      // from |s.e> configuration, determine parity for |e.s> form                                                              
 
-	      bool aodd = IsFermion(guessstateinfo.leftStateInfo->leftStateInfo->quanta[a]);
-	      bool bodd = IsFermion(guessstateinfo.leftStateInfo->rightStateInfo->quanta[b]);
-	      bool codd = IsFermion(guessstateinfo.rightStateInfo->quanta[c]);
-	      int j1 = guessstateinfo.leftStateInfo->leftStateInfo->quanta[a].get_s();
-	      int j2 = guessstateinfo.leftStateInfo->rightStateInfo->quanta[b].get_s();
-	      int j3 = guessstateinfo.rightStateInfo->quanta[c].get_s();
-	      int J = guessstateinfo.leftStateInfo->unCollectedStateInfo->quanta[ab].get_s();
+	      SpinQuantum Aq = guessstateinfo.leftStateInfo->leftStateInfo->quanta[a];
+	      SpinQuantum Bq = guessstateinfo.leftStateInfo->rightStateInfo->quanta[b];
+	      SpinQuantum Cq = guessstateinfo.rightStateInfo->quanta[c];
+	      SpinQuantum ABq = (Aq+Bq)[i];
+	      //SpinQuantum ABq = guessstateinfo.leftStateInfo->unCollectedStateInfo->quanta[ab];
 	      
-	      // first, from |s.e> -> |.se>                                                                                             
-	      int parity = (aodd && bodd) ? -1 : 1;
-	      parity = parity*pow(-1.0, static_cast<int>((3*j1 - j2 + J)/2));
-	      // next, |.se> -> |e.s>                                                                                                   
-	      bool xorabodd = ((aodd || bodd) && !(aodd && bodd));
-	      parity *= (xorabodd && codd) ? -1: 1;
-	      parity = parity*pow(-1.0, static_cast<int>((3*J - j3 + transposewf.get_deltaQuantum().get_s())/2));
+	      // first, from |s.e> -> |.se>	      
+	      int parity1 = getCommuteParity(Aq, Bq, ABq);		
+
+	      // next, |.se> -> |e.s>
+	      int parity = parity1*getCommuteParity(ABq, Cq, transposewf.get_deltaQuantum());
+
 	      if (parity == -1) 
 		threewavetranspose(c, b, a)[i] *= -1.;
 	    }
@@ -377,12 +368,16 @@ void GuessWave::onedot_twoindex_to_threeindex_shufflesysdot(const StateInfo& sta
           int c = uncollectedstateinfo.leftUnMapQuanta[bc];
           bool bodd = IsFermion(stateinfo.rightStateInfo->rightStateInfo->quanta[b]);
           bool codd = IsFermion(stateinfo.rightStateInfo->leftStateInfo->quanta[c]);
-	  int parity = (bodd&codd) ? -1 : 1;
+	  //int parity = (bodd&codd) ? -1 : 1;
 	  int j1 = stateinfo.rightStateInfo->leftStateInfo->quanta[c].get_s();
 	  int j2 = stateinfo.rightStateInfo->rightStateInfo->quanta[b].get_s();
 	  int J = uncollectedstateinfo.quanta[bc].get_s();
+	  
+	  int parity = getCommuteParity(stateinfo.rightStateInfo->leftStateInfo->quanta[c],
+				    stateinfo.rightStateInfo->rightStateInfo->quanta[b],
+				    uncollectedstateinfo.quanta[bc]);
 
-	  parity *= pow(-1.0, static_cast<int>( (3*j1 - j2 + J)/2));
+	  //parity *= pow(-1.0, static_cast<int>( (3*j1 - j2 + J)/2));
 	  int insertionNum = uncollectedstateinfo.quanta[bc].insertionNum(stateinfo.rightStateInfo->rightStateInfo->quanta[b], stateinfo.rightStateInfo->leftStateInfo->quanta[c]);
 	  vector<SpinQuantum> spq = stateinfo.rightStateInfo->rightStateInfo->quanta[b]+ stateinfo.rightStateInfo->leftStateInfo->quanta[c];
 
