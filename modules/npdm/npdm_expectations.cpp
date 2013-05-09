@@ -19,7 +19,7 @@ namespace SpinAdapted{
 namespace Npdm{
 
 // Forward declaration
-void npdm_get_spin_adapt_matrix(std::string& s, Matrix& A, std::vector< std::vector<int> >& so_indices, std::vector<int> & singlet_indices);
+void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matrix& A, ColumnVector& b, std::vector< std::vector<int> >& so_indices);
 
 //===========================================================================================================================================================
 
@@ -90,23 +90,14 @@ void Npdm_expectations::transform_spin_adapt_to_nonspin_adapt( array_4d<double> 
   // x holds the non-spin-adapted expectation values
   x=0.0;
 
+//FIXME magic numbers
   // Transformation matrix
-//FIXME magic numbers
   Matrix A(6,6);
-  // Vector of spin-orbital indices ordered according to A 
-//FIXME magic numbers
+  // Vector of spin-orbital indices ordered according to A
   std::vector< std::vector<int> > so_indices(6);
-  // Which RHS indices corresponds to singlet expectations?
-  std::vector<int> singlet_indices;
 
-  // Parse operator string and get transformation data
-  npdm_get_spin_adapt_matrix(op_string, A, so_indices, singlet_indices );
-
-  // Set up RHS of linear equations
-  assert( expectations_.size() == singlet_indices.size() );
-  for (int i=0; i < expectations_.size(); ++i) {
-    b( singlet_indices[i] ) = expectations_[i];
-  }
+  // Parse operator string and set up linear equations
+  npdm_set_up_linear_equations(op_string, expectations_, A, b, so_indices );
 
   // Solve A.x = b to get non-spin-adapted expectations in x
   xsolve_AxeqB(A, b, x);
@@ -128,11 +119,6 @@ void Npdm_expectations::transform_spin_adapt_to_nonspin_adapt( array_4d<double> 
     int lx = so_indices[i][0];
     assign_antisymmetric(twopdm, ix, jx, kx, lx, x(i+1));
   }
-
-//FIXME is the transpose always needed?
-
-//  spin_to_nonspin( indices, expectations_, twopdm, build_pattern_type, true );
-
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

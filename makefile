@@ -9,6 +9,8 @@
 #BOOSTINCLUDE = /usr/include/boost
 BOOSTINCLUDE = /home/markaw/libs/boost_1_50_0/
 
+EIGENINCLUDE = /home/markaw/libs/eigen/
+
 
 #specify boost and lapack-blas library locations
 #BOOSTLIB = -L/usr/lib/ -lboost_serialization -lboost_system -lboost_filesystem
@@ -52,7 +54,7 @@ ifeq ($(MOLPRO), yes)
    MOLPROINCLUDE=$(HOME)/../
    MOLPRO_BLOCK= -DMOLPRO
 endif
-FLAGS =  -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(HOME)/modules/npdm/ -I$(HOME)/modules/twopdm/ -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(MOLPROINCLUDE)
+FLAGS =  -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(EIGENINCLUDE) -I$(HOME)/modules/npdm/ -I$(HOME)/modules/twopdm/ -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(MOLPROINCLUDE)
 LIBS =  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp
 MPI_OPT = -DSERIAL
 

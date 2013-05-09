@@ -1,3 +1,5 @@
+#include <algorithm>
+#include <Eigen/Dense>
 #include "npdm_tensorop_arithematic.h"
 #include "MatrixBLAS.h"
 
@@ -93,7 +95,7 @@ std::map< std::vector<int>, int > get_map_to_int( std::vector< std::map< std::ve
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
    
 void parse_result_into_matrix( const std::vector<TensorOp>& tensor_ops, 
-                               Matrix& matrix, std::vector< std::vector<int> >& so_indices, std::vector<int>& singlet_indices)
+                               Matrix& matrix, std::vector< std::vector<int> >& so_indices, std::vector<int>& singlet_rows)
 {
 
   // Note the indices in the matrix/vector notation start at 1 not 0
@@ -101,11 +103,11 @@ void parse_result_into_matrix( const std::vector<TensorOp>& tensor_ops,
   std::map< std::vector<int>, int > map_to_int;
 
   // Extract matrix rows from tensor operators
-  singlet_indices.clear();
+  singlet_rows.clear();
   for (int i=0; i < tensor_ops.size(); ++i) {
     bool is_singlet;
     matrix_rows.push_back( get_matrix_row(tensor_ops[i], is_singlet) );
-    if (is_singlet) singlet_indices.push_back(i+1);
+    if (is_singlet) singlet_rows.push_back(i+1);
   }
 
   // Make a map of spin-orbital indices to single integers
@@ -133,7 +135,83 @@ void parse_result_into_matrix( const std::vector<TensorOp>& tensor_ops,
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void npdm_get_spin_adapt_matrix(std::string& s, Matrix& A, std::vector< std::vector<int> >& so_indices, std::vector<int> & singlet_indices)
+void apply_permutation( Eigen::MatrixXi & perm_mat, std::vector< std::vector<int> >& so_indices)
+{
+  int cols = so_indices.size();
+  int rows = so_indices[0].size();
+  assert( perm_mat.rows() == rows );
+  assert( perm_mat.cols() == rows );
+
+  // Convert so_indices to explicit matrix type
+  Eigen::MatrixXi so_mat(rows,cols);
+  for (int j=0; j<cols; j++) {
+    for (int i=0; i<rows; i++) {
+      so_mat(i,j) = so_indices[j][i];
+    }
+  }
+
+  // Transform by matrix multiplication
+  Eigen::MatrixXi new_so_mat(rows,cols);
+  new_so_mat = perm_mat * so_mat;
+
+  // Over-write so_indices with new matrix
+  for (int j=0; j<cols; j++) {
+    for (int i=0; i<rows; i++) {
+      so_indices[j][i] = new_so_mat(i,j);
+    }
+  }
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+int commute_so_indices_to_pdm_order( std::string& s, std::vector< std::vector<int> >& so_indices)
+{
+  // Trim op string to just get ordering of creations and destructions (cre=0, des=1)
+  std::vector<int> cd_order;
+  for ( auto it = s.begin(); it != s.end(); ++it ) {
+    if (*it=='C') cd_order.push_back(0);
+    if (*it=='D') cd_order.push_back(1);
+  }
+  assert ( cd_order.size() == so_indices.at(0).size() );
+  int dim = cd_order.size();
+
+  // Initialize permutation matrix for spin-orbital indices
+  std::vector< std::pair< int, std::vector<int> > >  perm_mat_pair;
+  int i = 0;
+  for (auto cd = cd_order.begin(); cd != cd_order.end(); ++cd) {
+    std::vector<int> row(dim,0);
+    row[i] = 1;
+    perm_mat_pair.push_back( std::make_pair(*cd, row) );
+    i++;
+  }
+
+//FIXME check that we don't commute two identical SO indices!!
+
+  // Permute into CCC..DDD.. order, hence build permutation matrix
+  std::sort( perm_mat_pair.begin(), perm_mat_pair.end() );
+
+  // Back out permutation matrix as explicit matrix type
+  Eigen::MatrixXi perm_mat(dim,dim);
+  for (int i=0; i<dim; i++) {
+    for (int j=0; j<dim; j++) {
+      perm_mat(i,j) = perm_mat_pair[i].second[j];
+    }
+  }
+
+  // Re-order so_indices
+  apply_permutation( perm_mat, so_indices );
+
+  // Parity is just the determinant of permutation matrix
+  int parity = perm_mat.determinant();
+  assert( abs(parity) == 1 );
+
+  return parity;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matrix& A, ColumnVector& b, std::vector< std::vector<int> >& so_indices)
 {
   // Parse string of form (((C1C2)(D3))(D4)) etc
   std::string::const_iterator iter = s.begin();        
@@ -143,9 +221,21 @@ void npdm_get_spin_adapt_matrix(std::string& s, Matrix& A, std::vector< std::vec
   assert(success);
   std::cout << "Number of compounded tensor operators = " << result.size() << std::endl;
 
-  // Recover transformation matrix A from tensor operators
-  parse_result_into_matrix( result, A, so_indices, singlet_indices ); 
+  // Which RHS indices (rows of A) corresponds to singlet expectations?
+  std::vector<int> singlet_rows;
 
+  // Recover transformation matrix A from tensor operators
+  parse_result_into_matrix( result, A, so_indices, singlet_rows ); 
+
+  // Permutation parity for commuting so_indices into NPDM order (i.e. cre,cre..,des,des..)
+  int fac = commute_so_indices_to_pdm_order( s, so_indices );  
+
+  // Set up RHS of linear equations (note we assume the ordering of the singlets is consistent with earlier)
+  assert( b0.size() == singlet_rows.size() );
+  for (int i=0; i < b0.size(); ++i) {
+    assert( singlet_rows[i] <= b.Nrows() );
+    b( singlet_rows[i] ) = fac*b0[i];
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

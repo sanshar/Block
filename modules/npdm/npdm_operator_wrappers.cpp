@@ -21,9 +21,9 @@ Npdm_op_wrapper_compound_CCDD::Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBl
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = 1;
-  factor_ = 1.0;
+//FIXME why do we need -1 here ??
+  factor_ = -1.0;
   transpose_ = false;
-//  build_pattern_ = { '(','(','C','C',')','(','D','D',')',')' };
   build_pattern_ = "((CC)(DD))";
   // Build singlets only here
   mults_ = { 1, 1 };
@@ -66,7 +66,6 @@ Npdm_op_wrapper_compound_CCD::Npdm_op_wrapper_compound_CCD( SpinBlock * spinBloc
   size_ = 1;
   factor_ = 1.0;
   transpose_ = false;
-//  build_pattern_ = { '(','(','C','C',')','D',')' };
   build_pattern_ = "((CC)D)";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
@@ -114,7 +113,6 @@ Npdm_op_wrapper_compound_CDD::Npdm_op_wrapper_compound_CDD( SpinBlock * spinBloc
   size_ = 1;
   factor_ = 1.0;
   transpose_ = true;
-//  build_pattern_ = { '(','C','(','D','D',')',')' };
   build_pattern_ = "(C(DD))";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
@@ -161,7 +159,6 @@ Npdm_op_wrapper_CC::Npdm_op_wrapper_CC( SpinBlock * spinBlock )
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
   transpose_ = false;
-//  build_pattern_ = { '(','C','C',')' };
   build_pattern_ = "(CC)";
   // S={0,1}
   mults_ = { 1, 3 };
@@ -179,11 +176,14 @@ void Npdm_op_wrapper_CC::set_local_ops( int idx )
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
 
-  // Our algorithm assumes 2-particle indices (i,j) s.t. i<=j.  Block stores j<=i, so we commute them (assuming i!=j) and multiply -1
-  indices_.push_back( jx );
   indices_.push_back( ix );
+  indices_.push_back( jx );
   factor_ = 1.0;
-  if ( ix != jx ) factor_ = -1.0;
+//  // Our algorithm assumes 2-particle indices (i,j) s.t. i<=j.  Block stores j<=i, so we commute them (assuming i!=j) and multiply -1
+//  indices_.push_back( jx );
+//  indices_.push_back( ix );
+//  factor_ = 1.0;
+//  if ( ix != jx ) factor_ = -1.0;
 }
 
 //===========================================================================================================================================================
@@ -196,7 +196,6 @@ Npdm_op_wrapper_CD::Npdm_op_wrapper_CD( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE_DES).get_size();
   factor_ = 1.0;
   transpose_ = true;
-//  build_pattern_ = { '(','C','D',')' };
   build_pattern_ = "(CD)";
   // S={0,1}
   mults_ = { 1, 3 };
@@ -214,9 +213,11 @@ void Npdm_op_wrapper_CD::set_local_ops( int idx )
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
 
-  // Our algorithm assumes 2-particle indices (i,j) s.t. i<=j.  Block stores j<=i, but the transpose takes care of it.
-  indices_.push_back( jx );
   indices_.push_back( ix );
+  indices_.push_back( jx );
+//  // Our algorithm assumes 2-particle indices (i,j) s.t. i<=j.  Block stores j<=i, but the transpose takes care of it.
+//  indices_.push_back( jx );
+//  indices_.push_back( ix );
 }
 
 //===========================================================================================================================================================
@@ -229,7 +230,6 @@ Npdm_op_wrapper_DD::Npdm_op_wrapper_DD( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
   factor_ = 1.0;
   transpose_ = true;
-//  build_pattern_ = { '(','D','D',')' };
   build_pattern_ = "(DD)";
   // S={0,1}
   mults_ = { 1, 3 };
@@ -247,9 +247,13 @@ void Npdm_op_wrapper_DD::set_local_ops( int idx )
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
 
-  // Our algorithm assumes 2-particle indices (i,j) s.t. i<=j.  Block stores j<=i, but the transpose takes care of it.
   indices_.push_back( jx );
   indices_.push_back( ix );
+//FIXME why do we need -1 here ??
+  factor_ = -1.0;
+//  // Our algorithm assumes 2-particle indices (i,j) s.t. i<=j.  Block stores j<=i, but the transpose takes care of it.
+//  indices_.push_back( jx );
+//  indices_.push_back( ix );
 }
 
 //===========================================================================================================================================================
@@ -264,7 +268,6 @@ Npdm_op_wrapper_C::Npdm_op_wrapper_C( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE).get_size();
   factor_ = 1.0;
   transpose_ = false;
-//  build_pattern_ = { '(','C',')' };
   build_pattern_ = "(C)";
   // S=1/2 only
   mults_ = { 2 };
@@ -290,7 +293,6 @@ Npdm_op_wrapper_D::Npdm_op_wrapper_D( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE).get_size();
   factor_ = 1.0;
   transpose_ = true;
-//  build_pattern_ = { '(','D',')' };
   build_pattern_ = "(D)";
   // S=1/2 only
   mults_ = { 2 };
@@ -316,7 +318,6 @@ Npdm_op_wrapper_NULL::Npdm_op_wrapper_NULL()
   size_ = 1; // For compatibility with rest of code
   factor_ = 1.0;
   transpose_ = false;
-//  build_pattern_ = { '(',')' };
   build_pattern_ = "";
   mults_ = { 1 };
 }
