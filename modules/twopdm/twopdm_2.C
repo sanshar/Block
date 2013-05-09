@@ -122,7 +122,7 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
 } 
 
 
-void spin_to_nonspin(std::vector<int>& indices, std::vector< std::pair<int,double> >& coeffs, array_4d<double>& twopdm, Oporder order, bool dotranspose)
+void spin_to_nonspin(std::vector<int>& indices, std::vector<double>& coeffs, array_4d<double>& twopdm, Oporder order, bool dotranspose)
 {
   //indices are ix jx kx lx 
   // the six possibilities are
@@ -140,12 +140,8 @@ void spin_to_nonspin(std::vector<int>& indices, std::vector< std::pair<int,doubl
   ColumnVector x(6), b(6);
 
   b = 0.0; x=0.0;
-  //MAW check first value is a singlet from the coupling of two singlets
-  assert( coeffs.at(0).first == 1 );
-  b(1) = coeffs.at(0).second; 
-  //MAW check second value is a singlet from the coupling of two triplets
-  assert( coeffs.at(1).first == 3 );
-  b(2) = coeffs.at(1).second;
+  b(1) = coeffs.at(0);
+  b(2) = coeffs.at(1);
 
   int ix = 2*indices[0], jx = 2*indices[1], kx = 2*indices[2], lx = 2*indices[3];
 
@@ -366,12 +362,14 @@ void accumulate_twopdm(array_4d<double>& twopdm)
 #endif
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void assign_antisymmetric(array_4d<double>& twopdm, const int i, const int j, const int k, const int l, const double val)
 {
 
 //MAW
-if ( abs(val) > 1e-8 ) pout << "twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
+//if ( abs(val) > 1e-8 ) pout << "twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
+pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
 
   if ( twopdm(i, j, k, l) != 0.0 && abs(twopdm(i,j,k,l)-val) > 2e-4)
     {
@@ -381,7 +379,7 @@ if ( abs(val) > 1e-8 ) pout << "twopdm val: i,j,k,l = " << i << "," << j << "," 
       cout << "Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<endl;
       //backtrace_symbols_fd(array, size, 2);
       cout << "earlier value: "<<twopdm(i,j,k,l)<<endl<< "new value:     "<<val<<endl;
-//MAW FIXME      assert(1 == 0);
+//MAW FIXME      assert( false );
       return;
     }
 
@@ -389,7 +387,15 @@ if ( abs(val) > 1e-8 ) pout << "twopdm val: i,j,k,l = " << i << "," << j << "," 
   twopdm(i, j, l, k) = -val;
   twopdm(j, i, k, l) = -val;
   twopdm(j, i, l, k) = val;
+//  assert ( k != l );
+//  assert ( i != j );
+//  assert ( (i != j) && (k != l) );
+//  if ( k != l ) twopdm(i, j, l, k) = -val;
+//  if ( i != j ) twopdm(j, i, k, l) = -val;
+//  if ( (i != j) && (k != l) ) twopdm(j, i, l, k) = val;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 double DotProduct(const Wavefunction& w1, const Wavefunction& w2, double Sz, const SpinBlock& big)
 {

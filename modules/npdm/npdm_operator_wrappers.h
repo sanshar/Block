@@ -29,7 +29,7 @@ class NpdmSpinOps {
     // Spin multiplicity of each operator (this info should be in each OpReps element, but we can use this for diagnostics)
     std::vector<int> mults_;
     // How the operator is built (e.g. 3-index from product of 2-index cre-cre and 1-index destruction, otherwise)
-    std::vector<char> build_pattern_;
+    std::string build_pattern_;
     // Do we need to transpose the representation before using it?
     bool transpose_;
     // Do we need to multiply by any constant factors when using it (due to implicit use of commutation relations)?

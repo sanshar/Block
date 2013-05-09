@@ -7,8 +7,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
-#ifndef TENSOR_OPERATOR_H
-#define TENSOR_OPERATOR_H
+#ifndef NPDM_TENSOR_OPERATOR_H
+#define NPDM_TENSOR_OPERATOR_H
 #include <vector>
 #include <utility>
 #include <string>
@@ -18,11 +18,29 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "new_anglib.h"
 #include <stdlib.h>
 #include <cmath>
-#include "Symmetry.h"
-#include "global.h"
+//#include "Symmetry.h"
+
+namespace SpinAdapted {
+namespace Npdm {
 
 using namespace std;
-using namespace SpinAdapted;
+//using namespace SpinAdapted;
+
+struct IrrepSpace {
+  int irrep;
+IrrepSpace() : irrep(0) {};
+  IrrepSpace(int p) : irrep(p) {};
+  int getirrep() {return 0;}
+  friend IrrepSpace operator-(IrrepSpace lhs) {return lhs;} 
+  friend std::vector<IrrepSpace> operator+(IrrepSpace lhs, IrrepSpace rhs)
+  {
+    return std::vector<IrrepSpace>(1);
+  }
+};
+
+namespace Symmetry {
+  int sizeofIrrep(int i) {return 1;}
+};
 
 class TensorOp {
 
@@ -42,8 +60,8 @@ class TensorOp {
   TensorOp():Spin(0), irrep(0), empty(true) {}
   TensorOp(int k, int sign) :empty(false) 
   {
-    int K = dmrginp.spatial_to_spin()[k]; //convert spatial id to spin id because slaters need that
-    int Kirrep = SymmetryOfSpatialOrb(k).getirrep();
+    int K = 2*k; //convert spatial id to spin id because slaters need that
+    int Kirrep = 0;
 
     if (Symmetry::sizeofIrrep(Kirrep)>1 && sign <0) {
       int ind1[] = {K+3, K+2, K+1, K+0};
@@ -161,7 +179,7 @@ class TensorOp {
 
 	//double cleb = cleb_(Spin, sz1, op1.Spin, sz2, pspin, sz);
 	double cleb = clebsch(Spin, sz1, op1.Spin, sz2, pspin, sz);
-	double clebdinfh = Symmetry::spatial_cg(irrep, op1.irrep, pirrep, ilz1, ilz2, ilz);
+	double clebdinfh = 1.0;//Symmetry::spatial_cg(irrep, op1.irrep, pirrep, ilz1, ilz2, ilz);
 	if (fabs(cleb) <= 1.0e-14 || fabs(clebdinfh) <= 1.0e-14)
 	  continue;
 
@@ -193,6 +211,7 @@ class TensorOp {
   }    
     
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   friend ostream& operator<<(ostream& os, const TensorOp& op) {
     if (op.Spin%2 == 0) {
       for (int ilz = 0; ilz<op.rows; ilz++){
@@ -202,7 +221,7 @@ class TensorOp {
           if (op.Szops[ilz*(op.Spin+1)+op.Spin/2][i] != 0.0) {
             os <<op.Szops[ilz*(op.Spin+1)+op.Spin/2][i]<<"    ";
             for (int j=0; j<op.opindices[i].size(); j++)
-            os<<op.opindices[i][j]<<" ";
+              os<<op.opindices[i][j]<<" ";
             os<<endl;
           }
         }
@@ -228,7 +247,13 @@ class TensorOp {
     return os;
   }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 };
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+}
+}
 
 #endif

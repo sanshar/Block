@@ -23,7 +23,8 @@ Npdm_op_wrapper_compound_CCDD::Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBl
   size_ = 1;
   factor_ = 1.0;
   transpose_ = false;
-  build_pattern_ = { '(','(','C','C',')','(','D','D',')',')' };
+//  build_pattern_ = { '(','(','C','C',')','(','D','D',')',')' };
+  build_pattern_ = "((CC)(DD))";
   // Build singlets only here
   mults_ = { 1, 1 };
 }
@@ -47,9 +48,9 @@ void Npdm_op_wrapper_compound_CCDD::set_local_ops( int idx )
   indices_.push_back( ix );
 
   opReps_.clear();
-  // S=0 (+) S=0;  S=0
+  // S=0 (+) S=0  =>  S=0
   opReps_.push_back( build_compound_operator( false, twoOps, 0, twoOps, 0, 0, ix, true ) );
-  // S=1 (+) S=1;  S=0
+  // S=1 (+) S=1  =>  S=0
   opReps_.push_back( build_compound_operator( false, twoOps, 1, twoOps, 1, 0, ix, true ) );
 }
 
@@ -65,7 +66,8 @@ Npdm_op_wrapper_compound_CCD::Npdm_op_wrapper_compound_CCD( SpinBlock * spinBloc
   size_ = 1;
   factor_ = 1.0;
   transpose_ = false;
-  build_pattern_ = { '(','(','C','C',')','D',')' };
+//  build_pattern_ = { '(','(','C','C',')','D',')' };
+  build_pattern_ = "((CC)D)";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
 }
@@ -93,11 +95,11 @@ pout << "getting CCD operator...\n";
   indices_.push_back( kx );
 
   opReps_.clear();
-  // S=0 (+) S=1/2;  S=1/2
+  // S=0 (+) S=1/2  =>  S=1/2
   opReps_.push_back( build_compound_operator( true, twoOps, 0, oneOp, 0, 0, ix, true ) );
-  // S=1 (+) S=1/2;  S=1/2
+  // S=1 (+) S=1/2  =>  S=1/2
   opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 0, ix, true ) );
-  // S=1 (+) S=1/2;  S=3/2
+  // S=1 (+) S=1/2  =>  S=3/2
   opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 1, ix, true ) );
 }
 
@@ -112,7 +114,8 @@ Npdm_op_wrapper_compound_CDD::Npdm_op_wrapper_compound_CDD( SpinBlock * spinBloc
   size_ = 1;
   factor_ = 1.0;
   transpose_ = true;
-  build_pattern_ = { '(','C','(','D','D',')',')' };
+//  build_pattern_ = { '(','C','(','D','D',')',')' };
+  build_pattern_ = "(C(DD))";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
 }
@@ -139,11 +142,11 @@ void Npdm_op_wrapper_compound_CDD::set_local_ops( int idx )
   indices_.push_back( kx );
 
   opReps_.clear();
-  // S=0 (+) S=1/2;  S=1/2
+  // S=0 (+) S=1/2  =>  S=1/2
   opReps_.push_back( build_compound_operator( true, twoOps, 0, oneOp, 0, 0, ix, true ) );
-  // S=1 (+) S=1/2;  S=1/2
+  // S=1 (+) S=1/2  =>  S=1/2
   opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 0, ix, true ) );
-  // S=1 (+) S=1/2;  S=3/2
+  // S=1 (+) S=1/2  =>  S=3/2
   opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 1, ix, true ) );
 }
 
@@ -158,7 +161,8 @@ Npdm_op_wrapper_CC::Npdm_op_wrapper_CC( SpinBlock * spinBlock )
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
   transpose_ = false;
-  build_pattern_ = { '(','C','C',')' };
+//  build_pattern_ = { '(','C','C',')' };
+  build_pattern_ = "(CC)";
   // S={0,1}
   mults_ = { 1, 3 };
 }
@@ -192,7 +196,8 @@ Npdm_op_wrapper_CD::Npdm_op_wrapper_CD( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE_DES).get_size();
   factor_ = 1.0;
   transpose_ = true;
-  build_pattern_ = { '(','C','D',')' };
+//  build_pattern_ = { '(','C','D',')' };
+  build_pattern_ = "(CD)";
   // S={0,1}
   mults_ = { 1, 3 };
 }
@@ -224,7 +229,8 @@ Npdm_op_wrapper_DD::Npdm_op_wrapper_DD( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
   factor_ = 1.0;
   transpose_ = true;
-  build_pattern_ = { '(','D','D',')' };
+//  build_pattern_ = { '(','D','D',')' };
+  build_pattern_ = "(DD)";
   // S={0,1}
   mults_ = { 1, 3 };
 }
@@ -258,7 +264,8 @@ Npdm_op_wrapper_C::Npdm_op_wrapper_C( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE).get_size();
   factor_ = 1.0;
   transpose_ = false;
-  build_pattern_ = { '(','C',')' };
+//  build_pattern_ = { '(','C',')' };
+  build_pattern_ = "(C)";
   // S=1/2 only
   mults_ = { 2 };
 }
@@ -283,7 +290,8 @@ Npdm_op_wrapper_D::Npdm_op_wrapper_D( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE).get_size();
   factor_ = 1.0;
   transpose_ = true;
-  build_pattern_ = { '(','D',')' };
+//  build_pattern_ = { '(','D',')' };
+  build_pattern_ = "(D)";
   // S=1/2 only
   mults_ = { 2 };
 }
@@ -308,7 +316,8 @@ Npdm_op_wrapper_NULL::Npdm_op_wrapper_NULL()
   size_ = 1; // For compatibility with rest of code
   factor_ = 1.0;
   transpose_ = false;
-  build_pattern_ = { '(',')' };
+//  build_pattern_ = { '(',')' };
+  build_pattern_ = "";
   mults_ = { 1 };
 }
 

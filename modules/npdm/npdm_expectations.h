@@ -15,6 +15,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "npdm_operator_wrappers.h"
 
 namespace SpinAdapted{
+namespace Npdm{
 
 //===========================================================================================================================================================
 //
@@ -48,20 +49,19 @@ class Npdm_expectations {
                        NpdmSpinOps & dotOps,
                        NpdmSpinOps & rhsOps );
 
-//    std::vector<double> get_expectations() { build_singlet_expectations(); return expectations_; };
     void build_singlet_expectations();
     void transform_spin_adapt_to_nonspin_adapt( array_4d<double> & twopdm );
     void old_transform_spin_adapt_to_nonspin_adapt( array_4d<double> & twopdm );
 
   private:
-    std::vector< std::pair<int,double> > expectations_;
+    std::vector< double > expectations_;
     Wavefunction & wavefunction_; 
     const SpinBlock & big_; 
     NpdmSpinOps & lhsOps_;
     NpdmSpinOps & dotOps_;
     NpdmSpinOps & rhsOps_;
 
-    void contract_spin_adapted_operators( int mult, int ilhs, int idot, int irhs );
+    double contract_spin_adapted_operators( int ilhs, int idot, int irhs );
     bool test_for_singlet( int lhs_mult, int dot_mult, int rhs_mult );
     Oporder old_parse_build_pattern( std::vector<char> build_pattern );
     std::string get_op_string();
@@ -70,6 +70,7 @@ class Npdm_expectations {
 
 //===========================================================================================================================================================
 
+}
 }
 
 #endif

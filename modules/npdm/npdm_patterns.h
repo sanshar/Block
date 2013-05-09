@@ -10,6 +10,7 @@
 #include <tuple>
 #include <vector>
 
+namespace SpinAdapted {
 namespace Npdm {
 
 // Note this definition is not arbitrary as we sort against these integers
@@ -67,6 +68,7 @@ class Npdm_patterns
 
 //===========================================================================================================================================================
 
+}
 }
 
 #endif
