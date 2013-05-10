@@ -23,7 +23,7 @@ class Npdm_patterns
 
   public:
     Npdm_patterns() { pdm_order_=0; };
-    Npdm_patterns( int pdm_order );
+    Npdm_patterns( int pdm_order, int sweep_pos, int end_pos );
     std::set< std::map< char, std::vector<CD> > >::const_iterator ldr_cd_begin() { return ldr_cd_types_.begin(); };
     std::set< std::map< char, std::vector<CD> > >::const_iterator ldr_cd_end() { return ldr_cd_types_.end(); };
 
@@ -48,12 +48,12 @@ class Npdm_patterns
     std::set< std::map< char, std::vector<CD> > > ldr_cd_types_;
 
     // Build all operator partitionings for the NPDM
-    void build_lhs_dot_rhs_types();
+    void build_lhs_dot_rhs_types( int sweep_pos, int end_pos );
     // Build all creation-destruction patterns
     void build_cre_des_types();
     void add_operator( int cre_ops, int des_ops, std::vector<CD> cd_type1 );
     // Combine ldr and cd patterns together
-    void build_ldr_cd_types( );
+    void build_ldr_cd_types( int sweep_pos, int end_pos );
     // Test if valid creation-destruction string on dot assuming fermions
     bool is_valid_dot_type( std::vector<CD> );
     // Test if unique creation-destruction string over all blocks

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <string>
 #include <Eigen/Dense>
 #include "npdm_tensorop_arithematic.h"
 #include "MatrixBLAS.h"
@@ -63,7 +64,6 @@ std::map< std::vector<int>, double > get_matrix_row ( const TensorOp& op, bool &
 //  std::cout << "-----------------------------\n";
 
   return matrix_row;
-
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -81,7 +81,7 @@ std::map< std::vector<int>, int > get_map_to_int( std::vector< std::map< std::ve
   }
   std::cout << "set size = " << indices_set.size() << std::endl;
 
-  // Map group of indices to single integer in arbitrary order
+  // Map group of indices to single integer in arbitrary, but well-defined, order
   int k=0;
   for ( auto it = indices_set.begin(); it != indices_set.end(); ++it ) {
     map_to_int[*it] = k;
@@ -118,6 +118,8 @@ void parse_result_into_matrix( const std::vector<TensorOp>& tensor_ops,
   assert( dim == map_to_int.size() );
   assert( dim == matrix.Nrows() );
   assert( dim == matrix.Ncols() );
+  // Don't forget to initialize!
+  matrix=0.0;
   for (int i=0; i<dim; ++i) {
     for (auto it = matrix_rows[i].begin(); it != matrix_rows[i].end(); ++it) {
        int col = map_to_int.at( it->first );
@@ -154,7 +156,7 @@ void apply_permutation( Eigen::MatrixXi & perm_mat, std::vector< std::vector<int
   Eigen::MatrixXi new_so_mat(rows,cols);
   new_so_mat = perm_mat * so_mat;
 
-  // Over-write so_indices with new matrix
+  // Over-write so_indices with new ordering
   for (int j=0; j<cols; j++) {
     for (int i=0; i<rows; i++) {
       so_indices[j][i] = new_so_mat(i,j);
@@ -186,9 +188,9 @@ int commute_so_indices_to_pdm_order( std::string& s, std::vector< std::vector<in
     i++;
   }
 
-//FIXME check that we don't commute two identical SO indices!!
+//FIXME check that we don't commute two identical SO indices
 
-  // Permute into CCC..DDD.. order, hence build permutation matrix
+  // Sort into CCC..DDD.. order, hence implicitly build permutation matrix
   std::sort( perm_mat_pair.begin(), perm_mat_pair.end() );
 
   // Back out permutation matrix as explicit matrix type
@@ -218,23 +220,33 @@ void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matri
   std::string::const_iterator end  = s.end();          
   std::vector<TensorOp> result;                                       
   bool success = parse(iter, end, eg, result) ;		 
+  //FIXME
+  // Edge case: ()((CxCx)... (Arises when LHS and Dot blocks are empty)
+  if ( not success ) {
+    std::cout << "WARNING: something wasn't quite perfect in parsing the operator string!\n";
+    s.erase( s.begin() );   
+    s.erase( s.begin() );   
+    success = parse(iter, end, eg, result) ;		 
+  }
   assert(success);
+  std::cout << "Setting up linear equations for spin-adaptation transformation...\n";
   std::cout << "Number of compounded tensor operators = " << result.size() << std::endl;
 
-  // Which RHS indices (rows of A) corresponds to singlet expectations?
+  // RHS indices (i.e. rows of A) corresponding to singlet expectations
   std::vector<int> singlet_rows;
 
-  // Recover transformation matrix A from tensor operators
+  // Recover transformation matrix A and relevant spin-orbital indices from tensor operators
   parse_result_into_matrix( result, A, so_indices, singlet_rows ); 
 
-  // Permutation parity for commuting so_indices into NPDM order (i.e. cre,cre..,des,des..)
-  int fac = commute_so_indices_to_pdm_order( s, so_indices );  
+  // Get permutation parity and commute so_indices into NPDM order (i.e. cre,cre..,des,des..)
+  int parity = commute_so_indices_to_pdm_order( s, so_indices );  
+//std::cout << "parity = " << parity << std::endl;
 
   // Set up RHS of linear equations (note we assume the ordering of the singlets is consistent with earlier)
   assert( b0.size() == singlet_rows.size() );
   for (int i=0; i < b0.size(); ++i) {
     assert( singlet_rows[i] <= b.Nrows() );
-    b( singlet_rows[i] ) = fac*b0[i];
+    b( singlet_rows[i] ) = parity*b0[i];
   }
 }
 

@@ -99,6 +99,13 @@ void Npdm_expectations::transform_spin_adapt_to_nonspin_adapt( array_4d<double> 
   // Parse operator string and set up linear equations
   npdm_set_up_linear_equations(op_string, expectations_, A, b, so_indices );
 
+//std::cout << "A matrix:\n";
+//for (int i=1; i<7; ++i) { 
+//  for (int j=1; j<7; ++j) {
+//    std::cout << i << "," << j << "\t\t" << A(i,j) << std::endl;
+//  }
+//}
+
   // Solve A.x = b to get non-spin-adapted expectations in x
   xsolve_AxeqB(A, b, x);
 
@@ -208,55 +215,6 @@ pout << "indices = " << indices[0] << "," << indices[1] << "," << indices[2] << 
 
 double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, int irhs )
 {
-
-
-/*
-//MAW------------------------------------------------------
-
-  SpinBlock* leftBlock = big_.get_leftBlock();
-//  SpinBlock* rightBlock = big_.get_rightBlock();
-  SpinBlock* dotBlock = leftBlock->get_rightBlock();
-
-//  SparseMatrix* null = 0; 
-//  boost::shared_ptr<SparseMatrix> lhsOp = leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(0)[0];
-//  boost::shared_ptr<SparseMatrix> dotOp = dotBlock->get_op_array(CRE_DES).get_local_element(0)[0];
-//  boost::shared_ptr<SparseMatrix> rhsOp = rightBlock->get_op_array(CRE).get_local_element(0)[0];
-//  boost::shared_ptr<SparseMatrix> rhsOp;
-//  if ( rhsOps_.opReps_.size() > 0 ) rhsOp = rhsOps_.opReps_.at(irhs);
-
-//RHS
-//  Transposeview rhsOpTr = Transposeview(*rhsOp);
-//  if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
-
-//Dot
-
-  int dotindex = dotBlock->get_sites()[0];
-pout << "dotindex = " << dotindex << std::endl;
-  Cre dotOp;
-  boost::shared_ptr<SparseMatrix> dotOp1 = dotBlock->get_op_array(CRE).get_local_element(0)[0];
-  dotOp.set_orbs() = dotOp1->get_orbs(); 
-  dotOp.set_orbs().push_back(dotindex); 
-  dotOp.set_orbs().push_back(dotindex);
-  dotOp.set_initialised() = true;
-//FIXME must be false for 4-index operator!
-  dotOp.set_fermion() = true;
-  // 1
-  boost::shared_ptr<SparseMatrix> dotOp0 = dotBlock->get_op_array(CRE_CRE).get_local_element(0)[0];
-  dotOp.set_deltaQuantum() = ( dotOp0->get_deltaQuantum() - dotOp1->get_deltaQuantum() )[0];
-  dotOp.allocate(dotBlock->get_stateInfo());
-  operatorfunctions::Product(dotBlock, *dotOp0, Transposeview(*dotOp1), dotOp, 1.0);
-//  spinExpectation(wavefunction_, wavefunction_, *null, dotOp, rhsOpTr, big_, expectations_, false);
-  // 2
-//  dotOp0 = dotBlock->get_op_array(CRE_CRE).get_local_element(0)[1];
-//  dotOp.set_deltaQuantum() = ( dotOp0->get_deltaQuantum() - dotOp1->get_deltaQuantum() )[0];
-//  dotOp.allocate(dotBlock->get_stateInfo());
-//  operatorfunctions::Product(dotBlock, *dotOp0, Transposeview(*dotOp1), dotOp, 1.0);
-//  spinExpectation(wavefunction_, wavefunction_, *null, dotOp, rhsOpTr, big_, expectations_, false);
-
-//MAW------------------------------------------------------
-*/
-
-
   // Pointers to the numerical operator representations if available
   boost::shared_ptr<SparseMatrix> lhsOp, dotOp, rhsOp;
   if ( lhsOps_.opReps_.size() > 0 ) lhsOp = lhsOps_.opReps_.at(ilhs);
@@ -264,17 +222,18 @@ pout << "dotindex = " << dotindex << std::endl;
   if ( rhsOps_.opReps_.size() > 0 ) rhsOp = rhsOps_.opReps_.at(irhs);
 
   // We need to distinguish cases where one or more blocks has an empty operator string
-  assert ( dotOps_.opReps_.size() != 0 );
+  assert ( dotOps_.opReps_.size() + lhsOps_.opReps_.size() + rhsOps_.opReps_.size() != 0 );
   SparseMatrix* null = 0; 
   double expectation;
 
-  if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() == 0) ) {
+  if ( (lhsOps_.opReps_.size() == 0) && (dotOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) ) {
     // 0_X_0 case
     Transposeview dotOpTr = Transposeview(*dotOp);
+//FIXME is null_deleter() necessary?
     if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *null, big_);
   }
-  else if ( (lhsOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() > 0) ) {
+  else if ( (lhsOps_.opReps_.size() == 0) && (dotOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() > 0) ) {
     // 0_X_X case
     Transposeview dotOpTr = Transposeview(*dotOp);
     if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
@@ -282,7 +241,7 @@ pout << "dotindex = " << dotindex << std::endl;
     if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *rhsOp, big_);
   }
-  else if ( (lhsOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) ) {
+  else if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) ) {
     // X_X_0 case
     Transposeview lhsOpTr = Transposeview(*lhsOp);
     if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
@@ -290,7 +249,7 @@ pout << "dotindex = " << dotindex << std::endl;
     if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *null, big_);
   }
-  else {
+  else if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() > 0) ) {
     // X_X_X case
     Transposeview lhsOpTr = Transposeview(*lhsOp);
     if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
@@ -300,11 +259,24 @@ pout << "dotindex = " << dotindex << std::endl;
     if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_);
   }
+  // Edge cases:
+  else if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() == 0) ) {
+    // X_0_0 case
+    Transposeview lhsOpTr = Transposeview(*lhsOp);
+    if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
+    expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *null, *null, big_);
+  }
+  else if ( (lhsOps_.opReps_.size() == 0) && (dotOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() > 0) ) {
+    // 0_0_X case
+    Transposeview rhsOpTr = Transposeview(*rhsOp);
+    if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
+    expectation = spinExpectation(wavefunction_, wavefunction_, *null, *null, *rhsOp, big_);
+  }
+  else assert (false);
 
   // Modify new element with sign factors and return
   double factor = lhsOps_.factor_ * dotOps_.factor_ * rhsOps_.factor_;
   return expectation*factor;
-
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

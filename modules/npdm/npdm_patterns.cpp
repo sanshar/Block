@@ -12,22 +12,20 @@ namespace Npdm {
 
 //===========================================================================================================================================================
 
-Npdm_patterns::Npdm_patterns(int pdm_order)
+Npdm_patterns::Npdm_patterns( int pdm_order, int sweep_pos, int end_pos )
+: pdm_order_(pdm_order)
 {
-
-  pdm_order_ = pdm_order;
-  build_lhs_dot_rhs_types();
-  build_cre_des_types();
-  build_ldr_cd_types();
+  build_lhs_dot_rhs_types( sweep_pos, end_pos );
+  build_cre_des_types( );
+  build_ldr_cd_types( sweep_pos, end_pos );
 
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Npdm_patterns::build_lhs_dot_rhs_types( )
+void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
 {
 
-  // FIXME initial edge case??
   int lhs, rhs, dot, dotmax;
 
   std::cout << "=================================================================\n";
@@ -41,6 +39,24 @@ void Npdm_patterns::build_lhs_dot_rhs_types( )
         lhs_dot_rhs_types_.insert( std::make_tuple(lhs,dot,rhs) );
       }
     }
+  }
+
+//FIXME make general!!  This only works for 2PDM >>>
+  if ( sweep_pos == 0 ) {
+    std::cout << "Extra block partitions for initial sweep position:\n";
+    std::cout << 4 << "," << 0 << "," << 0 << std::endl;
+    lhs_dot_rhs_types_.insert( std::make_tuple(4,0,0) );
+    std::cout << 3 << "," << 1 << "," << 0 << std::endl;
+    lhs_dot_rhs_types_.insert( std::make_tuple(3,1,0) );
+  }
+  else if ( sweep_pos == end_pos ) {
+    std::cout << "Extra block partitions for final sweep position:\n";
+    std::cout << 0 << "," << 2 << "," << 2 << std::endl;
+    lhs_dot_rhs_types_.insert( std::make_tuple(0,2,2) );
+    std::cout << 0 << "," << 1 << "," << 3 << std::endl;
+    lhs_dot_rhs_types_.insert( std::make_tuple(0,1,3) );
+    std::cout << 0 << "," << 0 << "," << 4 << std::endl;
+    lhs_dot_rhs_types_.insert( std::make_tuple(0,0,4) );
   }
 
 }
@@ -98,6 +114,8 @@ void Npdm_patterns::build_cre_des_types()
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//FIXME "dot" is also the case for LHS and RHS when at first or last position in sweep...
+//FIXME explain why (1) holds below???
 // Ensure following properties of creation-destruction string on dot
 // (1) All creation should be to left of destruction
 // (2) No more than 2 creation or 2 destruction, since gives zero in fermion spin-half cases
@@ -139,7 +157,7 @@ bool Npdm_patterns::is_rhs_gte_lhs( std::vector<int> & vec1, std::vector<int> & 
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// Not all the creation-destruction patterns map to a irreducible index combination.
+// Not all the creation-destruction patterns map to an irreducible index combination.
 // Here we screen away those special cases.
 
 bool Npdm_patterns::is_valid_ldr_type( std::map< char, std::vector<CD> > & cd_pattern )
@@ -182,7 +200,7 @@ bool Npdm_patterns::is_valid_ldr_type( std::map< char, std::vector<CD> > & cd_pa
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Npdm_patterns::build_ldr_cd_types()
+void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
 {
 
   ldr_cd_types_.clear();
@@ -204,8 +222,12 @@ void Npdm_patterns::build_ldr_cd_types()
       std::vector<CD> dot_cd( cd_iter->begin() + ilhs, cd_iter->begin() + ilhs + idot);
       std::vector<CD> rhs_cd( cd_iter->begin() + ilhs + idot, cd_iter->end() );
 
-      // Only allow if it's a valid dot pattern
+      // Only allow if it's a valid dot pattern 
       if ( not is_valid_dot_type( dot_cd ) ) continue;
+      // Edge case: lhs == dot:
+      if ( ( sweep_pos == 0 ) && ( not is_valid_dot_type( lhs_cd ) ) ) continue;
+      // Edge case: rhs == dot:
+      if ( ( sweep_pos == end_pos ) && ( not is_valid_dot_type( rhs_cd ) ) ) continue;
 
       // Combine together
       std::map< char, std::vector<CD> > cd_pattern;
@@ -229,8 +251,6 @@ void Npdm_patterns::build_ldr_cd_types()
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//
 //
 //  // Print out
 //  std::cout << "----------------------------------\n";
@@ -264,7 +284,6 @@ void Npdm_patterns::print_cd_string( const std::vector<CD> & cdvec )
   for (auto op = cdvec.begin(); op != cdvec.end(); op++) {
      cd = '.';
      if (*op == CREATION) cd = '+';
-//     if (*op == DESTRUCTION) cd = '.';
      std::cout << cd;
   }
   std::cout << ")";

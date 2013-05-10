@@ -51,16 +51,16 @@ pout << std::endl;
   boost::shared_ptr<NpdmSpinOps> rhsOps = select_op_wrapper( rhsBlock, rhs_cd_type );
 
   Npdm::Npdm_expectations npdm_expectations( wavefunction, big, *lhsOps, *dotOps, *rhsOps );
-
-  // Only one spatial combination on the dot block
-  assert( dotOps->size() == 1 );
-  dotOps->set_local_ops( 0 );
-  assert( dotOps->mults_.size() == dotOps->opReps_.size() );
-
 pout << "lhsOps->size()" << lhsOps->size() << std::endl;
 pout << "dotOps->size()" << dotOps->size() << std::endl;
 pout << "rhsOps->size()" << rhsOps->size() << std::endl;
 pout << "------\n";
+
+  // Only one spatial combination on the dot block
+  assert( dotOps->size() == 1 );
+  dotOps->set_local_ops( 0 );
+  if ( lhsOps->opReps_.size() > 0 ) assert( dotOps->mults_.size() == dotOps->opReps_.size() );
+
   // Many spatial combinations on left block
   for ( int ilhs = 0; ilhs < lhsOps->size(); ++ilhs ) {
     lhsOps->set_local_ops( ilhs );
@@ -102,9 +102,7 @@ pout << "Sweep position = "<< sweepPos << " (" << endPos << ")\n";
   load_twopdm_binary(twopdm, state, state);
   
   // Loop over NPDM operator patterns (here we initialize for a 2PDM)
-  // FIXME change this so the patterns are altered if we're at the edges of the sweep!
-  // Npdm_patterns npdm_patterns( 2, sweepPos, endPos );
-  Npdm::Npdm_patterns npdm_patterns( 2 );
+  Npdm::Npdm_patterns npdm_patterns( 2, sweepPos, endPos );
 
   for (auto pattern = npdm_patterns.ldr_cd_begin(); pattern != npdm_patterns.ldr_cd_end(); ++pattern) {
     std::vector<Npdm::CD> lhs_cd_type = pattern->at('l');
