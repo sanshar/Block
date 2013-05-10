@@ -195,7 +195,6 @@ Npdm_op_wrapper_CD::Npdm_op_wrapper_CD( SpinBlock * spinBlock )
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_DES).get_size();
   factor_ = 1.0;
-  transpose_ = true;
   build_pattern_ = "(CD)";
   // S={0,1}
   mults_ = { 1, 3 };
@@ -213,9 +212,11 @@ void Npdm_op_wrapper_CD::set_local_ops( int idx )
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
 
+  transpose_ = false;
   indices_.push_back( ix );
   indices_.push_back( jx );
 //  // Our algorithm assumes 2-particle indices (i,j) s.t. i<=j.  Block stores j<=i, but the transpose takes care of it.
+//  transpose_ = true;
 //  indices_.push_back( jx );
 //  indices_.push_back( ix );
 }

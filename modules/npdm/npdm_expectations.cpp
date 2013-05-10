@@ -84,9 +84,8 @@ void Npdm_expectations::transform_spin_adapt_to_nonspin_adapt( array_4d<double> 
 
   // Dimension is 6 for 2PDM
 //FIXME magic numbers
-  ColumnVector x(6), b(6);
   // b holds the spin-adapted expectation values (we only care about the singlets)
-  b=0.0;
+  ColumnVector x(6), b(6);
   // x holds the non-spin-adapted expectation values
   x=0.0;
 
@@ -212,12 +211,14 @@ pout << "indices = " << indices[0] << "," << indices[1] << "," << indices[2] << 
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// FIXME clean up this routine!!
 
 double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, int irhs )
 {
-  // Pointers to the numerical operator representations if available
+  // Pointers to the numerical operator representations (or transposes) if available
   boost::shared_ptr<SparseMatrix> lhsOp, dotOp, rhsOp;
   if ( lhsOps_.opReps_.size() > 0 ) lhsOp = lhsOps_.opReps_.at(ilhs);
+//FIXME is null_deleter() necessary?
   if ( dotOps_.opReps_.size() > 0 ) dotOp = dotOps_.opReps_.at(idot);
   if ( rhsOps_.opReps_.size() > 0 ) rhsOp = rhsOps_.opReps_.at(irhs);
 
@@ -229,7 +230,6 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
   if ( (lhsOps_.opReps_.size() == 0) && (dotOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) ) {
     // 0_X_0 case
     Transposeview dotOpTr = Transposeview(*dotOp);
-//FIXME is null_deleter() necessary?
     if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *null, big_);
   }
@@ -260,6 +260,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
     expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_);
   }
   // Edge cases:
+  //------------
   else if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() == 0) ) {
     // X_0_0 case
     Transposeview lhsOpTr = Transposeview(*lhsOp);
@@ -271,6 +272,14 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *null, *null, *rhsOp, big_);
+  }
+  else if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() > 0) ) {
+    // X_0_X case
+    Transposeview lhsOpTr = Transposeview(*lhsOp);
+    if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
+    Transposeview rhsOpTr = Transposeview(*rhsOp);
+    if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
+    expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *null, *rhsOp, big_);
   }
   else assert (false);
 

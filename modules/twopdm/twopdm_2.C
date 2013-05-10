@@ -368,8 +368,8 @@ void assign_antisymmetric(array_4d<double>& twopdm, const int i, const int j, co
 {
 
 //MAW
-//if ( abs(val) > 1e-8 ) pout << "twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
-pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
+if ( abs(val) > 1e-8 ) pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
+//pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
 
   if ( twopdm(i, j, k, l) != 0.0 && abs(twopdm(i,j,k,l)-val) > 2e-4)
     {

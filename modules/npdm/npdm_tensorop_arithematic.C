@@ -244,6 +244,7 @@ void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matri
 
   // Set up RHS of linear equations (note we assume the ordering of the singlets is consistent with earlier)
   assert( b0.size() == singlet_rows.size() );
+  b=0.0;
   for (int i=0; i < b0.size(); ++i) {
     assert( singlet_rows[i] <= b.Nrows() );
     b( singlet_rows[i] ) = parity*b0[i];
