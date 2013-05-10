@@ -71,7 +71,6 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
 //      expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );    
 //    }
   }
-pout << "new val = " << DotProduct(wave1, opw2, dmrginp.Sz(), big) << std::endl;
   return DotProduct(wave1, opw2, dmrginp.Sz(), big);
 
 }
@@ -379,7 +378,7 @@ if ( abs(val) > 1e-8 ) pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "
       cout << "Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<endl;
       //backtrace_symbols_fd(array, size, 2);
       cout << "earlier value: "<<twopdm(i,j,k,l)<<endl<< "new value:     "<<val<<endl;
-//MAW FIXME      assert( false );
+      assert( false );
       return;
     }
 
