@@ -20,7 +20,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 namespace SpinAdapted{
 
-//void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& leftOp, SparseMatrix& dotOp, SparseMatrix& rightOp, const SpinBlock& big, vector<double>& expectations, bool doTranspose)
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& leftOp, SparseMatrix& dotOp, SparseMatrix& rightOp, const SpinBlock& big)
 {
 
@@ -55,7 +56,7 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
     operatorfunctions::TensorMultiply(rightBlock, rightOp, &big, wave2, opw2, dQ, 1.0);
 //MAW    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
   }
-  else if (Aindices == 4&& Bindices == 0)
+  else if (Aindices == 4 && Bindices == 0)
   { 
     operatorfunctions::TensorMultiply(leftBlock, AOp, &big, wave2, opw2, dQ, 1.0);
 //MAW    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
@@ -75,6 +76,7 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
 
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const SparseMatrix& dotOp, SparseMatrix& Aop, int totalspin)
 {
@@ -120,87 +122,7 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
     }
 } 
 
-
-void spin_to_nonspin(std::vector<int>& indices, std::vector<double>& coeffs, array_4d<double>& twopdm, Oporder order, bool dotranspose)
-{
-  //indices are ix jx kx lx 
-  // the six possibilities are
-  // ix jx+1 kx lx+1     ix jx+1 kx+1 lx     ix+1 jx kx lx+1     ix+1 jx kx+1 lx
-  // ix+1 jx+1 kx+1 lx+1   ix jx kx lx
-
-  Matrix a(6,6);
-  a  <<  1.0/sqrt(4.0)     <<  -1.0/sqrt(4.0)     <<   -1.0/sqrt(4.0)  <<  1.0/sqrt(4.0)  <<    0.0            <<  0.0           //00 **
-     <<  1.0/sqrt(12.0)    <<   1.0/sqrt(12.0)    <<    1.0/sqrt(12.0) <<  1.0/sqrt(12.0) <<    1.0/sqrt(3.0)  <<  1.0/sqrt(3.0) //00 **
-     << -1.0/sqrt(4.0)     <<  -1.0/sqrt(4.0)     <<    1.0/sqrt(4.0)  <<  1.0/sqrt(4.0)  <<    0.0            <<  0.0           //20 **
-     << -1.0/sqrt(12.0)    <<   1.0/sqrt(12.0)    <<   -1.0/sqrt(12.0) <<  1.0/sqrt(12.0) <<   -1.0/sqrt(3.0)  <<  1.0/sqrt(3.0) //20 **
-     <<  1.0/sqrt(6.0)     <<  -1.0/sqrt(6.0)     <<    1.0/sqrt(6.0)  << -1.0/sqrt(6.0)  <<   -1.0/sqrt(6.0)  <<  1.0/sqrt(6.0) //20
-     << -1.0/sqrt(6.0)     <<  -1.0/sqrt(6.0)     <<   -1.0/sqrt(6.0)  << -1.0/sqrt(6.0)  <<    1.0/sqrt(6.0)  <<  1.0/sqrt(6.0); //40 
-
-  ColumnVector x(6), b(6);
-
-  b = 0.0; x=0.0;
-  b(1) = coeffs.at(0);
-  b(2) = coeffs.at(1);
-
-  int ix = 2*indices[0], jx = 2*indices[1], kx = 2*indices[2], lx = 2*indices[3];
-
-  if (order == CC_D_D)
-  {
-    //do nothing same as default
-  }
-
-  if (order == CD_D_C)
-  {
-    a.Row(1)  << -1.0/sqrt(4.0)     <<   0.0               <<    0.0            << -1.0/2.0        <<   -1.0/2.0        << -1.0/2.0 ;      //00 **
-    a.Row(2) <<  1.0/sqrt(12.0)    <<  -1.0/sqrt(3.0)     <<   -1.0/sqrt(3.0)  <<  1.0/sqrt(12.0) <<    -1.0/sqrt(12.0) << -1.0/sqrt(12.0) ;//00 **
-  }
-
-  if (order == CD_CD)
-  {
-    a.Row(1)  << -1.0/sqrt(4.0)     <<   0.0               <<    0.0            << -1.0/2.0        <<   -1.0/2.0        << -1.0/2.0 ;      //00 **
-    a.Row(2) << -1.0/sqrt(12.0)    <<   1.0/sqrt(3.0)     <<    1.0/sqrt(3.0)  << -1.0/sqrt(12.0) <<    1.0/sqrt(12.0) <<  1.0/sqrt(12.0) ;//00 **
-  }
-
-  if (order == D_CD_C)
-  {
-    a.Row(1)  << 0.0     <<    1.0/2.0         <<    1.0/2.0        <<   0.0          <<   1.0/2.0        <<  1.0/2.0 ;      //00 **
-    a.Row(2) << -1.0/sqrt(3.0)    <<  1.0/sqrt(12.0)     <<   1.0/sqrt(12.0)  << -1.0/sqrt(3.0) <<  -1.0/sqrt(12.0) << -1.0/sqrt(12.0) ;//00 **
-  }
-  
-  if (order == C_CD_D)
-  {
-    a.Row(1)  << 0.0     <<    1.0/2.0         <<    1.0/2.0        <<   0.0          <<   1.0/2.0        <<  1.0/2.0 ;      //00 **
-    a.Row(2) << 1.0/sqrt(3.0)    <<  -1.0/sqrt(12.0)     <<   -1.0/sqrt(12.0)  <<  1.0/sqrt(3.0) <<   1.0/sqrt(12.0) <<  1.0/sqrt(12.0) ;//00 **
-  }
-
-  if (order == D_CC_D)
-  {
-    a.Row(1)  << 1.0/2.0    <<   -1.0/2.0         <<    -1.0/2.0        << 1.0/2.0        <<   0.0        <<  0.0 ;      //00 **
-    a.Row(2) << -1.0/sqrt(12.0)    <<  -1.0/sqrt(12.0)     <<  -1.0/sqrt(12.0)  << -1.0/sqrt(12.0) <<-1.0/sqrt(3.0) << -1.0/sqrt(3.0) ;//00 **
-  }
-
-  xsolve_AxeqB(a, b, x);
-
-  assign_antisymmetric(twopdm, ix  , jx+1, kx  , lx+1, x(1));
-  assign_antisymmetric(twopdm, ix  , jx+1, kx+1, lx  , x(2));
-  assign_antisymmetric(twopdm, ix+1, jx  , kx  , lx+1, x(3));
-  assign_antisymmetric(twopdm, ix+1, jx  , kx+1, lx  , x(4));
-  assign_antisymmetric(twopdm, ix+1, jx+1, kx+1, lx+1, x(5));
-  assign_antisymmetric(twopdm, ix  , jx  , kx  , lx  , x(6));
-
-  if (dotranspose)
-  {
-    int temp = ix; ix = lx; lx = temp; temp = kx; kx = jx; jx = temp;  
-    assign_antisymmetric(twopdm, ix  , jx+1, kx  , lx+1, x(1));
-    assign_antisymmetric(twopdm, ix  , jx+1, kx+1, lx  , x(2));
-    assign_antisymmetric(twopdm, ix+1, jx  , kx  , lx+1, x(3));
-    assign_antisymmetric(twopdm, ix+1, jx  , kx+1, lx  , x(4));
-    assign_antisymmetric(twopdm, ix+1, jx+1, kx+1, lx+1, x(5));
-    assign_antisymmetric(twopdm, ix  , jx  , kx  , lx  , x(6));
-  }
-
-}
-
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void save_twopdm_text(const array_4d<double>& twopdm, const int &i, const int &j)
 {
@@ -218,6 +140,8 @@ void save_twopdm_text(const array_4d<double>& twopdm, const int &i, const int &j
     ofs.close();
   }
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void save_spatial_twopdm_text(const array_4d<double>& twopdm, const int &i, const int &j)
 {
@@ -242,6 +166,8 @@ void save_spatial_twopdm_text(const array_4d<double>& twopdm, const int &i, cons
     ofs.close();
   }
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void save_spatial_twopdm_binary(const array_4d<double>& twopdm, const int &i, const int &j)
 {
@@ -269,6 +195,8 @@ void save_spatial_twopdm_binary(const array_4d<double>& twopdm, const int &i, co
   }
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void save_twopdm_binary(const array_4d<double>& twopdm, const int &i, const int &j)
 {
   if(!mpigetrank())
@@ -281,6 +209,8 @@ void save_twopdm_binary(const array_4d<double>& twopdm, const int &i, const int 
     ofs.close();
   }
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void load_twopdm_binary(array_4d<double>& twopdm, const int &i, const int &j)
 {
@@ -300,6 +230,8 @@ void load_twopdm_binary(array_4d<double>& twopdm, const int &i, const int &j)
     twopdm.Clear();
 #endif
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void save_averaged_twopdm(const int &nroots)
 {
@@ -335,6 +267,8 @@ void save_averaged_twopdm(const int &nroots)
     ofs.close();
   }
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void accumulate_twopdm(array_4d<double>& twopdm)
 {
@@ -415,4 +349,7 @@ double DotProduct(const Wavefunction& w1, const Wavefunction& w2, double Sz, con
 
   return output;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 }

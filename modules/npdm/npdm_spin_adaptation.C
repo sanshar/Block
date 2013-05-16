@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <string>
 #include <Eigen/Dense>
-#include "npdm_tensorop_arithematic.h"
+#include "npdm_spin_adaptation.h"
 #include "MatrixBLAS.h"
 
 namespace SpinAdapted {

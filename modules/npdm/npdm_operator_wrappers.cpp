@@ -76,6 +76,7 @@ Npdm_op_wrapper_compound_CCD::Npdm_op_wrapper_compound_CCD( SpinBlock * spinBloc
 
 void Npdm_op_wrapper_compound_CCD::set_local_ops( int idx )
 {
+pout << "getting compound CCD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -85,7 +86,6 @@ void Npdm_op_wrapper_compound_CCD::set_local_ops( int idx )
   jx = twoOps.at(0)->get_orbs(1);
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
   kx = oneOp.at(0)->get_orbs(0);
-pout << "getting CCD operator...\n";
 
   // Assumed single site
   assert ( ix == jx );
@@ -123,20 +123,17 @@ Npdm_op_wrapper_compound_CDD::Npdm_op_wrapper_compound_CDD( SpinBlock * spinBloc
 
 void Npdm_op_wrapper_compound_CDD::set_local_ops( int idx )
 {
-pout << "getting CDD operator...\n";
+pout << "getting compound CDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
 
 //  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
-pout << "hello1\n";
   std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_DES).get_local_element(idx);
   ix = twoOps.at(0)->get_orbs(0);
   jx = twoOps.at(0)->get_orbs(1);
-pout << "hello2\n";
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
   kx = oneOp.at(0)->get_orbs(0);
-pout << "hello3\n";
 
   // Assumed single site
   assert ( ix == jx );
@@ -155,8 +152,8 @@ pout << "hello3\n";
   opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 1, ix, true ) );
 
 //  "(C(DD))";
-//FIXME this fails for 0,1,1,1 case.... WHY??
-//FIXME why do we need -1 here ??
+//FIXME this fails... WHY??
+//FIXME why do we need -1 here to make some work??
 //  factor_ = -1.0;
 //  opReps_.clear();
 //  // S=0 (+) S=1/2  =>  S=1/2
@@ -167,7 +164,7 @@ pout << "hello3\n";
 //  opReps_.push_back( build_compound_operator( true, oneOp, 0, twoOps, 1, 1, ix, true ) );
 
 //  "(C(DD))";
-//FIXME this + transpose=true fails??
+//FIXME this + transpose=true fails... WHY??
 //  opReps_.clear();
 //  // S=0 (+) S=1/2  =>  S=1/2
 //  opReps_.push_back( build_compound_operator( true, twoOps, 0, oneOp, 0, 0, ix, true ) );
@@ -175,6 +172,79 @@ pout << "hello3\n";
 //  opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 0, ix, true ) );
 //  // S=1 (+) S=1/2  =>  S=3/2
 //  opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 1, ix, true ) );
+}
+
+//===========================================================================================================================================================
+// 3-INDEX OPERATORS
+//===========================================================================================================================================================
+
+Npdm_op_wrapper_CCD::Npdm_op_wrapper_CCD( SpinBlock * spinBlock )
+{
+  opReps_.clear();
+  indices_.clear();
+  spinBlock_ = spinBlock;
+  size_ = spinBlock_->get_op_array(CRE_CRE_DES).get_size();
+  factor_ = 1.0;
+  transpose_ = false;
+  build_pattern_ = "((CC)D)";
+  // S={1/2,1/2,3/2}
+  mults_ = { 2, 2, 4 };
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_op_wrapper_CCD::set_local_ops( int idx )
+{
+pout << "getting CCD operator...\n";
+  // Spatial orbital indices
+  indices_.clear();
+  int ix, jx, kx;
+
+  opReps_ = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
+  ix = opReps_.at(0)->get_orbs(0);
+  jx = opReps_.at(0)->get_orbs(1);
+  kx = opReps_.at(0)->get_orbs(2);
+
+  indices_.push_back( ix );
+  indices_.push_back( jx );
+  indices_.push_back( kx );
+  factor_ = 1.0;
+}
+
+//===========================================================================================================================================================
+
+Npdm_op_wrapper_CDD::Npdm_op_wrapper_CDD( SpinBlock * spinBlock )
+{
+  opReps_.clear();
+  indices_.clear();
+  spinBlock_ = spinBlock;
+  size_ = spinBlock_->get_op_array(CRE_CRE_DES).get_size();
+  factor_ = 1.0;
+  transpose_ = false;
+  build_pattern_ = "((CC)D)";
+  // S={1/2,1/2,3/2}
+  mults_ = { 2, 2, 4 };
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_op_wrapper_CDD::set_local_ops( int idx )
+{
+pout << "getting CDD operator...\n";
+  // Spatial orbital indices
+  indices_.clear();
+  int ix, jx, kx;
+assert(false);
+
+  opReps_ = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
+  ix = opReps_.at(0)->get_orbs(0);
+  jx = opReps_.at(0)->get_orbs(1);
+  kx = opReps_.at(0)->get_orbs(2);
+
+  indices_.push_back( ix );
+  indices_.push_back( jx );
+  indices_.push_back( kx );
+  factor_ = 1.0;
 }
 
 //===========================================================================================================================================================
