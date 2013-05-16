@@ -257,6 +257,7 @@ Npdm_op_wrapper_CC::Npdm_op_wrapper_CC( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
+  factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "(CC)";
   // S={0,1}
@@ -278,12 +279,6 @@ pout << "getting CC operator...\n";
 
   indices_.push_back( ix );
   indices_.push_back( jx );
-  factor_ = 1.0;
-//  // Our algorithm assumes 2-particle indices (i,j) s.t. i<=j.  Block stores j<=i, so we commute them (assuming i!=j) and multiply -1
-//  indices_.push_back( jx );
-//  indices_.push_back( ix );
-//  factor_ = 1.0;
-//  if ( ix != jx ) factor_ = -1.0;
 }
 
 //===========================================================================================================================================================
@@ -316,10 +311,6 @@ pout << "getting CD operator...\n";
   transpose_ = false;
   indices_.push_back( ix );
   indices_.push_back( jx );
-//  // Our algorithm assumes 2-particle indices (i,j) s.t. i<=j.  Block stores j<=i, but the transpose takes care of it.
-//  transpose_ = true;
-//  indices_.push_back( jx );
-//  indices_.push_back( ix );
 }
 
 //===========================================================================================================================================================
@@ -354,9 +345,6 @@ pout << "getting DD operator...\n";
   // Note use of transpose means we store this as (j,i) not (i,j)
   indices_.push_back( jx );
   indices_.push_back( ix );
-//  // Our algorithm assumes 2-particle indices (i,j) s.t. i<=j.  Block stores j<=i, but the transpose takes care of it.
-//  indices_.push_back( jx );
-//  indices_.push_back( ix );
 }
 
 //===========================================================================================================================================================

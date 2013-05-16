@@ -25,21 +25,21 @@ boost::shared_ptr<NpdmSpinOps> init_4_index_operators( SpinBlock * spinBlock, st
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// Init 3-index (dot) operators
+// Init 3-index operators
 boost::shared_ptr<NpdmSpinOps> init_3_index_operators( SpinBlock * spinBlock, std::vector<Npdm::CD> & cd_type ) {
 
   std::vector<Npdm::CD> op;
 
   op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION };
   if ( cd_type == op ) {
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCD( spinBlock ) );
-    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CCD( spinBlock ) );
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCD( spinBlock ) );
+//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CCD( spinBlock ) );
     return ret;
   } 
   op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
   if ( cd_type == op ) {
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDD( spinBlock ) );
-    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CDD( spinBlock ) );
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDD( spinBlock ) );
+//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CDD( spinBlock ) );
     return ret;
   } 
   assert(false);
