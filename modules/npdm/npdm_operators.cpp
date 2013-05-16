@@ -25,10 +25,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-//  (Cre,Cre,Cre)
+//  (Cre,Cre,Des)
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SpinAdapted::CreCreCre::build(const SpinBlock& b)
+void SpinAdapted::CreCreDes::build(const SpinBlock& b)
 {
   dmrginp.makeopsT -> start();
   built = true;
@@ -75,7 +75,7 @@ void SpinAdapted::CreCreCre::build(const SpinBlock& b)
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-double SpinAdapted::CreCreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
+double SpinAdapted::CreCreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
   double element = 0.0;
   int I = get_orbs()[0], 
@@ -103,12 +103,12 @@ double SpinAdapted::CreCreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, con
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreCre::getworkingrepresentation(const SpinBlock* block)
+boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreDes::getworkingrepresentation(const SpinBlock* block)
 {
   //assert(this->get_initialised());
   if (this->get_built())
     {
-      return boost::shared_ptr<CreCreCre>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
+      return boost::shared_ptr<CreCreDes>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
     }
   else
     {

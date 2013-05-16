@@ -10,10 +10,10 @@ namespace SpinAdapted{
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-class CreCreCre: public SpinAdapted::SparseMatrix
+class CreCreDes: public SpinAdapted::SparseMatrix
 {
  public:
-  CreCreCre() { orbs.resize(3); fermion = false;}
+  CreCreDes() { orbs.resize(3); fermion = false;}
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);

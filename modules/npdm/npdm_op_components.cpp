@@ -21,7 +21,7 @@ namespace SpinAdapted {
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 //FIXME update SCREEN.C
 
-std::vector<std::tuple<int,int,int> > screened_ccc_indices(const vector<int, std::allocator<int> >& indices,
+std::vector<std::tuple<int,int,int> > screened_ccd_indices(const vector<int, std::allocator<int> >& indices,
                                                            const vector<int, std::allocator<int> >& interactingix,
                                                            const TwoElectronArray& twoe, double thresh)
 {
@@ -33,7 +33,7 @@ std::vector<std::tuple<int,int,int> > screened_ccc_indices(const vector<int, std
 //        screened_indices.push_back(make_pair(indices[i], indices[j]));
 //      }
 //      else {
-//        if (screen_ccc_interaction(indices[i], indices[j], interactingix, twoe, thresh))
+//        if (screen_ccd_interaction(indices[i], indices[j], interactingix, twoe, thresh))
 //          screened_indices.push_back(make_pair(indices[i], indices[j]));
 //      }
 //    }
@@ -41,25 +41,25 @@ std::vector<std::tuple<int,int,int> > screened_ccc_indices(const vector<int, std
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
-// (Cre,Cre,Cre)
+// (Cre,Cre,Des)
 //-------------------
 
 template<> 
-string Op_component<CreCreCre>::get_op_string() const {
-  return "CRECRECRE";
+string Op_component<CreCreDes>::get_op_string() const {
+  return "CRECREDES";
 }
 
 template<> 
-void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
+void Op_component<CreCreDes>::build_iterators(SpinBlock& b)
 {
   // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
   if (b.get_sites().size () == 0) return; 
 
   const double screen_tol = dmrginp.screen_tol();
 //FIXME
-  std::vector< std::tuple<int,int,int> > screened_ccc_ix = screened_ccc_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
+  std::vector< std::tuple<int,int,int> > screened_ccd_ix = screened_ccd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
 //FIXME
-//  m_op.set_tuple_indices(screened_ccc_ix, dmrginp.last_site());      
+//  m_op.set_tuple_indices(screened_ccd_ix, dmrginp.last_site());      
   std::vector<int> orbs(3);
 
   for (int i = 0; i < m_op.local_nnz(); ++i) {
@@ -68,7 +68,7 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
 //    orbs[1] = std::get<1>(tuple);
 //    orbs[2] = std::get<2>(tuple);
   
-    std::vector<boost::shared_ptr<CreCreCre> >& vec = m_op.get_local_element(i);
+    std::vector<boost::shared_ptr<CreCreDes> >& vec = m_op.get_local_element(i);
     SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
     SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
   
@@ -76,7 +76,7 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
   
     vec.resize(spinvec.size());
     for (int j=0; j<spinvec.size(); j++) {
-      vec[j]=boost::shared_ptr<CreCreCre>(new CreCreCre);
+      vec[j]=boost::shared_ptr<CreCreDes>(new CreCreDes);
       SparseMatrix& op = *vec[j];
       op.set_orbs() = orbs;
       op.set_initialised() = true;

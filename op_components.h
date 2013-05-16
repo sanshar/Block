@@ -54,9 +54,9 @@ template <> struct ChooseArray<CreCreDesComp> {
 template <> struct ChooseArray<Ham> {
   typedef para_array_0d<std::vector<boost::shared_ptr<Ham> > > ArrayType;
 };
-//MAW
-template <> struct ChooseArray<CreCreCre> {
-  typedef para_array_3d<std::vector<boost::shared_ptr<CreCreCre> > > ArrayType;
+//MAW3PDM
+template <> struct ChooseArray<CreCreDes> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<CreCreDes> > > ArrayType;
 };
 //*************************************
 class Op_component_base

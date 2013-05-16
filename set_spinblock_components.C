@@ -78,9 +78,9 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
       ret = boost::shared_ptr<Op_component<Ham> >(new Op_component<Ham>(is_core));
       break;
     //MAW
-    case CRE_CRE_CRE:
+    case CRE_CRE_DES:
       assert (false);
-      ret = boost::shared_ptr<Op_component<CreCreCre> >(new Op_component<CreCreCre>(is_core));
+      ret = boost::shared_ptr<Op_component<CreCreDes> >(new Op_component<CreCreDes>(is_core));
       break;
   }
   return ret;
@@ -112,7 +112,7 @@ void SpinBlock::default_op_components(bool complementary_)
     //MAW
     if (dmrginp.calc_type() == THREEPDM) {
       assert (false);
-      ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
+      ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
     }
   }
 
