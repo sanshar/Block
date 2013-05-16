@@ -243,6 +243,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
   }
   else if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) ) {
     // X_X_0 case
+pout << "hello X_X_0 \n";
     Transposeview lhsOpTr = Transposeview(*lhsOp);
     if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     Transposeview dotOpTr = Transposeview(*dotOp);
@@ -275,6 +276,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
   }
   else if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() > 0) ) {
     // X_0_X case
+pout << "hello X_0_X\n";
     Transposeview lhsOpTr = Transposeview(*lhsOp);
     if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);

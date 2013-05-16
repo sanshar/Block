@@ -41,27 +41,33 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
     }
   }
 
-//FIXME make general!!  This only works for 2PDM >>>
+//-----------------------------------------------------
+//  EDGE CASES 
+//-----------------------------------------------------
+//FIXME make general!!  This only works for 2PDM now
+//-----------------------------------------------------
+
   if ( sweep_pos == 0 ) {
     std::cout << "Extra block partitions for initial sweep position:\n";
     std::cout << 4 << "," << 0 << "," << 0 << std::endl;
     lhs_dot_rhs_types_.insert( std::make_tuple(4,0,0) );
     std::cout << 3 << "," << 1 << "," << 0 << std::endl;
     lhs_dot_rhs_types_.insert( std::make_tuple(3,1,0) );
+    std::cout << 3 << "," << 0 << "," << 1 << std::endl;
+    lhs_dot_rhs_types_.insert( std::make_tuple(3,0,1) );
   }
   else if ( sweep_pos == end_pos ) {
     std::cout << "Extra block partitions for final sweep position:\n";
-
     std::cout << 0 << "," << 2 << "," << 2 << std::endl;
     lhs_dot_rhs_types_.insert( std::make_tuple(0,2,2) );
     std::cout << 2 << "," << 0 << "," << 2 << std::endl;
     lhs_dot_rhs_types_.insert( std::make_tuple(2,0,2) );
-
+    std::cout << 1 << "," << 1 << "," << 2 << std::endl;
+    lhs_dot_rhs_types_.insert( std::make_tuple(1,1,2) );
     std::cout << 0 << "," << 1 << "," << 3 << std::endl;
     lhs_dot_rhs_types_.insert( std::make_tuple(0,1,3) );
     std::cout << 1 << "," << 0 << "," << 3 << std::endl;
     lhs_dot_rhs_types_.insert( std::make_tuple(1,0,3) );
-
     std::cout << 0 << "," << 0 << "," << 4 << std::endl;
     lhs_dot_rhs_types_.insert( std::make_tuple(0,0,4) );
   }

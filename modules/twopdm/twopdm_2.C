@@ -53,23 +53,23 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
   if (Aindices == 0 && Bindices == 4)
   {
     operatorfunctions::TensorMultiply(rightBlock, rightOp, &big, wave2, opw2, dQ, 1.0);
-//    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
+//MAW    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
   }
   else if (Aindices == 4&& Bindices == 0)
   { 
     operatorfunctions::TensorMultiply(leftBlock, AOp, &big, wave2, opw2, dQ, 1.0);
-//    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
+//MAW    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
   }
   else if (Aindices != 0 && Bindices != 0)
   { 
     operatorfunctions::TensorMultiply(leftBlock, AOp, rightOp, &big, wave2, opw2, dQ, 1.0);
-//    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );    
-//    if (doTranspose)
-//    {
-//      opw2.Clear();
-//      operatorfunctions::TensorMultiply(leftBlock, Transposeview(AOp), rightOp, &big, wave2, opw2, dQ, 1.0);
-//      expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );    
-//    }
+//MAW    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );    
+//MAW    if (doTranspose)
+//MAW    {
+//MAW      opw2.Clear();
+//MAW      operatorfunctions::TensorMultiply(leftBlock, Transposeview(AOp), rightOp, &big, wave2, opw2, dQ, 1.0);
+//MAW      expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );    
+//MAW    }
   }
   return DotProduct(wave1, opw2, dmrginp.Sz(), big);
 

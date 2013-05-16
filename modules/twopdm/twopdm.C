@@ -73,10 +73,9 @@ pout << "dotOps->opReps_.size()" << dotOps->opReps_.size() << std::endl;
     // Many spatial combinations on right block
     for ( int irhs = 0; irhs < rhsOps->size(); ++irhs ) {
       rhsOps->set_local_ops( irhs );
-pout << "----------------------------------------\n";
 pout << "rhsOps->indices_.size()" << rhsOps->indices_.size() << std::endl;
 pout << "rhsOps->opReps_.size()" << rhsOps->opReps_.size() << std::endl;
-pout << "------\n";
+pout << "----------------------------------------\n";
 pout << "spatial: ilhs, irhs = " << ilhs << "," << irhs << std::endl;
       if ( rhsOps->opReps_.size() > 0 ) assert( rhsOps->mults_.size() == rhsOps->opReps_.size() );
 
