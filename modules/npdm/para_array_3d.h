@@ -20,6 +20,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 //#include <multiarray.h>     
 //#include <boost/serialization/serialization.hpp>
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 template<class T> class para_array_3d;
 
 // Parallel 3d array class
@@ -36,6 +38,8 @@ public:
 
   bool is_upper() const { return upper_triangular; }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   /// clears all elements
   void clear()
   {
@@ -49,6 +53,8 @@ public:
     length = 0;
   }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   /// set storage flags
   bool& set_local() { return stored_local; }
   /// is storage distributed?
@@ -56,10 +62,7 @@ public:
   /// is storage local?
   bool is_local() const { return stored_local; }
 
-  const std::vector<int>& get_indices() const { return global_indices; }
-
-  std::vector<int>& get_local_indices() { return local_indices; }
-
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   /// number of non-null elements in local storage
   int local_nnz() const { return local_indices.size(); }
@@ -67,44 +70,51 @@ public:
   /// number of non-null elements in global storage
   int global_nnz() const { return global_indices.size(); }
 
-  /// ith element of local storage
-  T& get_local_element(int i)
-  {
-    return store[local_indices[i]];
-  }
-  const T& get_local_element(int i) const
-  {
-    return store[local_indices[i]];
-  }
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+  /// query whether elements are non-null
+  bool has(int i, int j, int k=-1) const { return has_global_index(trimap(i, j)); }
+  bool has(const std::vector<int>& orbs) const { assert(orbs.size() == 2); return has(orbs[0], orbs[1]); }
 
-  T& get_global_element(int i)
-  {
-    return store[global_indices[i]];
-  }
+  bool has_global_index(int i, int j, int k=-1) const { return has_global_index(trimap(i, j)); }
+  bool has_local_index(int i, int j, int k=-1) const { return has_local_index(trimap(i, j)); }
+  bool has_global_index(int i) const { return (global_indices_map[i] != -1); }
+  bool has_local_index(int i) const { return (local_indices_map[i] != -1); }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+ 
+  const std::vector<int>& get_indices() const { return global_indices; }
+
+  std::vector<int>& get_local_indices() { return local_indices; }
+
+  /// ith element of local storage
+  T& get_local_element(int i) { return store[local_indices[i]]; }
+  const T& get_local_element(int i) const { return store[local_indices[i]]; }
+
+  T& get_global_element(int i) { return store[global_indices[i]]; }
 
   /// ith element of global storage
-  const T& get_global_element(int i) const
-  {
-    return store[global_indices[i]];
-  }
+  const T& get_global_element(int i) const { return store[global_indices[i]]; }
 
+  T& get(const std::vector<int>& orbs) { return (*this)(orbs[0], orbs[1]); }
 
-  T& get(const std::vector<int>& orbs)
-  {
-    return (*this)(orbs[0], orbs[1]);
-  }
-
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
   /// returns elements at orbs
   T& operator()(const std::vector<int>& orbs)
   {
     int i = orbs[0]; int j = orbs[1];
     return (*this)(i, j);
   }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   const T& operator()(const std::vector<int>& orbs) const
   {
     int i = orbs[0]; int j = orbs[1];
     return (*this)(i, j);
   }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   /// returns elements at i, j
   T& operator()(int i, int j, int k=-1)
   {
@@ -114,6 +124,9 @@ public:
       assert(has_local_index(trimap(i, j)));
     return store[trimap(i, j)];
   }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   const T& operator()(int i, int j, int k=-1) const
   {
     assert (i >= j);
@@ -123,53 +136,28 @@ public:
     return store[trimap(i, j)];
   }
 
-  /// query whether elements are non-null
-  bool has(int i, int j, int k=-1) const { return has_global_index(trimap(i, j)); }
-  bool has(const std::vector<int>& orbs) const
-  {
-    assert(orbs.size() == 2);
-    return has(orbs[0], orbs[1]);
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  /// returns 1d index from i,j,k
+  int trimap(int i, int j) const { return ::trimap(i,j, length, upper_triangular); }
+
+  /// returns i,j,k for ith element of global storage
+  std::tuple<int,int,int> unmap_global_index(int i) { return global_index_tuple[i]; }
+
+  /// returns i,j,k for ith element of local storage
+  const std::vector<int> unmap_local_index(int i) const { 
+    std::vector<int> ret(3);
+    ret[0] = std::get<0>(local_index_tuple[i]);
+    ret[1] = std::get<1>(local_index_tuple[i]);
+    ret[2] = std::get<2>(local_index_tuple[i]);
+    return ret;
   }
-  bool has_global_index(int i, int j, int k=-1) const
-  {
-    return has_global_index(trimap(i, j));
-  }
-  bool has_local_index(int i, int j, int k=-1) const
-  {
-    return has_local_index(trimap(i, j));
-  }
-  bool has_global_index(int i) const
-  {
-    return (global_indices_map[i] != -1);
-  }
-  bool has_local_index(int i) const
-  {
-    return (local_indices_map[i] != -1);
-  }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
   
-  friend std::ostream& operator<<(std::ostream& os, para_array_3d& op)
-  {
-    abort();
-    return os;
-  }
+  friend std::ostream& operator<<(std::ostream& os, para_array_3d& op) { abort(); return os; }
 
-  /// returns 1d index from i, j
-  int trimap(int i, int j) const
-  {
-    return ::trimap(i, j, length, upper_triangular);
-  }
-
-  /// returns i j for ith element of global storage
-  std::tuple<int,int,int> unmap_global_index(int i)
-  {
-    return global_index_tuple[i];
-  }
-  /// returns i j for ith element of local storage
-  //FIXME const std::tuple<int,int,int> unmap_local_index(int i) const
-  const std::pair<int,int> unmap_local_index(int i) const
-  {
-    return local_index_tuple[i];
-  }
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   para_array_3d<T>* clone() const { return new para_array_3d<T>(*this); }
 
@@ -180,16 +168,14 @@ public:
     local_indices_map[index]= index;
   }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
   /**
   * make a sparse para_array_triang2d with specified
   * non-zero indices
   *
   * see corresponding set_indices member fn.
   */
-//MAW FIXME tuple
-  void set_tuple_indices(const std::vector<std::pair<int,int> >& occupied, 
-			int len,
-			bool ut = false)
+  void set_tuple_indices(const std::vector<std::tuple<int,int,int> >& occupied, int len, bool ut = false)
   {
     clear();
 
@@ -199,8 +185,7 @@ public:
     int length_1d = tristore(len);
 
     /* this part is different from set_indices */
-//MAW FIXME tuple
-    for (std::vector<std::pair<int,int> >::const_iterator ptr = occupied.begin(); ptr != occupied.end(); ++ptr) {
+    for (std::vector<std::tuple<int,int,int> >::const_iterator ptr = occupied.begin(); ptr != occupied.end(); ++ptr) {
       global_indices.push_back(trimap(std::get<0>(*ptr), std::get<1>(*ptr)));
       global_index_tuple.push_back(*ptr);
     }
@@ -215,6 +200,8 @@ public:
     // now setup local indices
     setup_local_indices();
   }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 private:
   /**
@@ -245,6 +232,9 @@ private:
 
       }  
   }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   friend class boost::serialization::access;
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
@@ -258,16 +248,16 @@ private:
   std::vector<int> local_indices;
   std::vector<int> local_indices_map;
 //MAW FIXME tuple
-  std::vector<std::pair<int,int> > global_index_tuple; 
+  std::vector<std::tuple<int,int,int> > global_index_tuple; 
 //MAW FIXME tuple
-  std::vector<std::pair<int,int> > local_index_tuple;
+  std::vector<std::tuple<int,int,int> > local_index_tuple;
   std::vector<T> store;
   bool stored_local;
   bool upper_triangular;
   int length;
 
-};
-
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+};
 
 #endif

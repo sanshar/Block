@@ -84,7 +84,8 @@ public:
   virtual int trimap(int i, int j) const {};
   virtual T& get(const std::vector<int>& orbs)=0;
 //MAW
-  virtual const std::pair<int, int> unmap_local_index(int i) const { assert(false); };
+//  virtual const std::pair<int, int> unmap_local_index(int i) const { assert(false); };
+  virtual const std::vector<int> unmap_local_index(int i) const { assert(false); };
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -517,9 +518,14 @@ public:
     return global_index_pair[i];
   }
   /// returns i j for ith element of local storage
-  const std::pair<int, int> unmap_local_index(int i) const
+//MAW  const std::pair<int, int> unmap_local_index(int i) const
+  const std::vector<int> unmap_local_index(int i) const
   {
-    return local_index_pair[i];
+//MAW    return local_index_pair[i];
+    std::vector<int> ret(2);
+    ret[0] = local_index_pair[i].first;
+    ret[1] = local_index_pair[i].second;
+    return ret;
   }
 
   para_array_triang_2d<T>* clone() const { return new para_array_triang_2d<T>(*this); }

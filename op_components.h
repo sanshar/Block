@@ -26,10 +26,12 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "npdm_operators.h"
 
 namespace SpinAdapted{
+
 class SpinBlock;
 
-//********************************
-//choose the type of array for different types of Operators
+//===========================================================================================================================================================
+// Choose the type of array for different types of Operators
+
 template <class T> struct ChooseArray {
   typedef para_array_1d<std::vector<boost::shared_ptr<SparseMatrix> > > ArrayType;
 };
@@ -54,11 +56,13 @@ template <> struct ChooseArray<CreCreDesComp> {
 template <> struct ChooseArray<Ham> {
   typedef para_array_0d<std::vector<boost::shared_ptr<Ham> > > ArrayType;
 };
-//MAW3PDM
+//MAW 3PDM
 template <> struct ChooseArray<CreCreDes> {
   typedef para_array_3d<std::vector<boost::shared_ptr<CreCreDes> > > ArrayType;
 };
-//*************************************
+
+//===========================================================================================================================================================
+
 class Op_component_base
 {
  private:
@@ -99,6 +103,8 @@ class Op_component_base
   virtual ~Op_component_base() {}  
 };
 
+//===========================================================================================================================================================
+
 template <class Op> class Op_component : public Op_component_base
 {
  private:
@@ -110,10 +116,12 @@ template <class Op> class Op_component : public Op_component_base
     ar.register_type(static_cast<Op *>(NULL));
     ar & m_op;
   }
+
  protected:
   typedef typename ChooseArray<Op>::ArrayType paraarray;
   typedef Op OpType; 
   paraarray m_op;
+
  public:
   Op_component() {m_deriv=false;}
   Op_component(bool core) {m_core=core;m_deriv=false;}
@@ -124,6 +132,14 @@ template <class Op> class Op_component : public Op_component_base
   bool has(int i, int j=-1, int k=-1) const {return m_op.has(i, j, k);}
   bool has_local_index(int i, int j=-1, int k=-1) const {return m_op.has_local_index(i, j, k);}
   virtual void add_local_indices(int i, int j=-1, int k=-1){};
+  void clear(){m_op.clear();}
+  void build_iterators(SpinBlock& b);
+  void build_operators(SpinBlock& b) {singlethread_build(*this, b);}
+  void build_csf_operators(std::vector< Csf >& c, vector< vector<Csf> >& ladders, SpinBlock& b) {singlethread_build(*this, b, c, ladders);}
+  std::string get_op_string() const;
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   std::vector<boost::shared_ptr<SparseMatrix> > get_local_element(int i) 
   {
     std::vector<boost::shared_ptr<SparseMatrix> > vec(m_op.get_local_element(i).size());
@@ -131,6 +147,9 @@ template <class Op> class Op_component : public Op_component_base
       vec[l] = m_op.get_local_element(i)[l]; 
     return vec;
   }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   std::vector<boost::shared_ptr<SparseMatrix> > get_global_element(int i)
   {
     std::vector<boost::shared_ptr<SparseMatrix> > vec(m_op.get_global_element(i).size());
@@ -139,25 +158,26 @@ template <class Op> class Op_component : public Op_component_base
     return vec;
   }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   std::vector< std::vector<int> > get_array() const 
   {
-    std::vector<int> orbs(2);
+//    std::vector<int> orbs(2);
     std::vector< std::vector<int> > ret_val(m_op.local_nnz());
     for (int i=0; i<m_op.local_nnz(); i++) {
 //MAW >>>>>
 //FIXME for 3-index
-      pair<int, int> opair = m_op.unmap_local_index(i);
-      orbs[0] = opair.first; orbs[1] = opair.second;
-      ret_val[i] = orbs;
+//      pair<int, int> opair = m_op.unmap_local_index(i);
+//      orbs[0] = opair.first; orbs[1] = opair.second;
+//      ret_val[i] = orbs;
+      ret_val[i] = m_op.unmap_local_index(i);
 //MAW <<<<<
     }
     return ret_val;
   }
 
-  void clear(){m_op.clear();}
-  void build_iterators(SpinBlock& b);
-  void build_operators(SpinBlock& b) {singlethread_build(*this, b);}
-  void build_csf_operators(std::vector< Csf >& c, vector< vector<Csf> >& ladders, SpinBlock& b) {singlethread_build(*this, b, c, ladders);}
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   const std::vector<boost::shared_ptr<SparseMatrix> >  get_element(int i, int j=-1, int k=-1) const 
   {
     std::vector<boost::shared_ptr<SparseMatrix> > vec(m_op(i,j,k).size());
@@ -165,6 +185,9 @@ template <class Op> class Op_component : public Op_component_base
       vec[l] = m_op(i,j,k)[l]; 
     return vec;
   }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   std::vector<boost::shared_ptr<SparseMatrix> >  get_element(int i, int j=-1, int k=-1)
   {
     std::vector<boost::shared_ptr<SparseMatrix> > vec(m_op(i,j,k).size());
@@ -172,6 +195,9 @@ template <class Op> class Op_component : public Op_component_base
       vec[l] = m_op(i,j,k)[l]; 
     return vec;
   }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1)
   {
     Op* o = 0;
@@ -181,6 +207,9 @@ template <class Op> class Op_component : public Op_component_base
 	return m_op(i,j,k)[l];
     return boost::shared_ptr<Op>(o);
   }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   const boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1) const
   {
     Op* o = 0;
@@ -190,13 +219,11 @@ template <class Op> class Op_component : public Op_component_base
 	return m_op(i,j,k)[l];
     return boost::shared_ptr<Op>(o);
   }
-  std::string get_op_string() const;
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 };
 
-
- 
+//===========================================================================================================================================================
 }
-
-
 #endif

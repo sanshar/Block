@@ -83,8 +83,10 @@ class SparseMatrix : public Baseoperator<Matrix>
   ObjectMatrix<Matrix> operatorMatrix;
   SpinQuantum deltaQuantum;
   int Sign;
+//MAW
+  std::vector<SpinQuantum> quantum_ladder;
  public:
- SparseMatrix() : orbs(2), initialised(false), built(false), Sign(1), fermion(false){};
+  SparseMatrix() : orbs(2), initialised(false), built(false), Sign(1), fermion(false){};
   virtual ~SparseMatrix(){};
   int nrows() const { return allowedQuantaMatrix.nrows(); }
   int ncols() const { return allowedQuantaMatrix.ncols(); }
@@ -102,6 +104,8 @@ class SparseMatrix : public Baseoperator<Matrix>
   int get_spin()const  { return deltaQuantum.get_s();}
   IrrepSpace get_symm()const  { return deltaQuantum.get_symm();}
   SpinQuantum get_deltaQuantum() const { return deltaQuantum; }
+  std::vector<SpinQuantum>  get_quantum_ladder() const { return quantum_ladder; }
+  std::vector<SpinQuantum>& set_quantum_ladder() { return quantum_ladder; }
   int get_orbs(int i) const 
   { 
     if(i >= orbs.size())

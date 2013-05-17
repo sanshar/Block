@@ -12,6 +12,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 //
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//#include "BaseOperator.h"
 #include "npdm_operators.h"
 //#include "csf.h"
 #include "spinblock.h"
@@ -37,40 +38,55 @@ void SpinAdapted::CreCreDes::build(const SpinBlock& b)
 
   const int i = get_orbs()[0];
   const int j = get_orbs()[1];
+  const int k = get_orbs()[2];
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
 
-  if (leftBlock->get_op_array(CRE_DES).has(i, j))
-  {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES, deltaQuantum, i,j);
+  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder();
+  assert( quantum_ladder.size() == 2 );
+  SpinQuantum deltaQuantum12 = quantum_ladder.at(0);
+  SpinQuantum deltaQuantum123 = quantum_ladder.at(1);
+
+  // Forward
+  if (leftBlock->get_op_array(CRE_CRE_DES).has(i,j,k)) {
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DES, deltaQuantum123, i,j,k);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
-    dmrginp.makeopsT -> stop();
-    return;
   }
-  if (rightBlock->get_op_array(CRE_DES).has(i, j))
-  {
-    const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_DES, deltaQuantum, i,j);
-    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
-    dmrginp.makeopsT -> stop();
-    return;
-  }  
-  if (leftBlock->get_op_array(CRE).has(i))
-  {
+  else if (leftBlock->get_op_array(CRE_CRE).has(i,j)) {
+    assert (rightBlock->get_op_array(CRE).has(k));
+    const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE_CRE, deltaQuantum12, i,j);
+    Transposeview op2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(k), k));
+    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, op2, &b, &(b.get_stateInfo()), *this, 1.0);
+  }
+  else if (leftBlock->get_op_array(CRE).has(i)) {
+    assert (rightBlock->get_op_array(CRE_DES).has(j,k));
     const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(i), i);
-    Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(j), j));
-    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, 1.0);
+    Transposeview op2 = Transposeview(rightBlock->get_op_rep(CRE_DES, deltaQuantum12, j,k));
+    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, op2, &b, &(b.get_stateInfo()), *this, 1.0);
   }
-  else if (rightBlock->get_op_array(CRE).has(i))
-  {
-    const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE, getSpinQuantum(i), i);
-    Transposeview top2 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(j), j));
-    double parity = getCommuteParity(op1->get_deltaQuantum(), top2.get_deltaQuantum(), get_deltaQuantum());
-    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
+//FIXME   Don't understand backwards at all...
+  // Backward (?)
+  else if (rightBlock->get_op_array(CRE_CRE_DES).has(i,j,k)) {
+    const boost::shared_ptr<SparseMatrix>& op = rightBlock->get_op_rep(CRE_CRE_DES, deltaQuantum123, i,j,k);
+    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
-  else
-    abort();  
+  else if (rightBlock->get_op_array(CRE_CRE).has(i,j)) {
+    assert (leftBlock->get_op_array(CRE).has(k));
+    const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE_CRE, deltaQuantum12, i,j);
+    Transposeview op2 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(k), k));
+    double parity = getCommuteParity(op1->get_deltaQuantum(), op2.get_deltaQuantum(), get_deltaQuantum());
+    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, op2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
+  }
+  else if (rightBlock->get_op_array(CRE).has(i)) {
+    assert (leftBlock->get_op_array(CRE_DES).has(j,k));
+    assert (false);
+  }
+  else {
+    assert (false);
+  }
   dmrginp.makeopsT -> stop();
+
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -78,20 +94,38 @@ void SpinAdapted::CreCreDes::build(const SpinBlock& b)
 double SpinAdapted::CreCreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
   double element = 0.0;
-  int I = get_orbs()[0], 
-    J = get_orbs()[1]; //convert spatial id to spin id because slaters need that
-  IrrepSpace sym = deltaQuantum.get_symm();
-  int irrep = deltaQuantum.get_symm().getirrep();
-  int spin = deltaQuantum.get_s();
+  int I = get_orbs()[0]; 
+  int J = get_orbs()[1];
+  int K = get_orbs()[2];
 
-  TensorOp C(I, 1), D(J, -1);
-  TensorOp CD = C.product(D, spin, irrep);
+  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder();
+  assert( quantum_ladder.size() == 2 );
+  SpinQuantum deltaQuantum12 = quantum_ladder.at(0);
+  SpinQuantum deltaQuantum123 = quantum_ladder.at(1);
+
+  // Spin quantum data for first pair of operators combined
+  IrrepSpace sym12 = deltaQuantum12.get_symm();
+  int irrep12 = deltaQuantum12.get_symm().getirrep();
+  int spin12 = deltaQuantum12.get_s();
+  // Spin quantum data for total operator
+  IrrepSpace sym123 = deltaQuantum123.get_symm();
+  int irrep123 = deltaQuantum123.get_symm().getirrep();
+  int spin123 = deltaQuantum123.get_s();
+
+  TensorOp C1(I, 1); 
+  TensorOp C2(J, 1); 
+  TensorOp D3(K,-1); 
+
+  // Combine first two operators
+  TensorOp CC = C1.product(C2, spin12, irrep12, I==J);
+  // Combine with third operator
+  TensorOp CCD = CC.product(D3, spin123, irrep123);
 
   for (int i=0; i<ladder.size(); i++)
   {
     int index = 0; double cleb=0.0;
     if (nonZeroTensorComponent(c1, deltaQuantum, ladder[i], index, cleb)) {
-      std::vector<double> MatElements = calcMatrixElements(c1, CD, ladder[i]) ;
+      std::vector<double> MatElements = calcMatrixElements(c1, CCD, ladder[i]) ;
       element = MatElements[index]/cleb;
       break;
     }
@@ -105,19 +139,16 @@ double SpinAdapted::CreCreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, con
 
 boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreDes::getworkingrepresentation(const SpinBlock* block)
 {
-  //assert(this->get_initialised());
-  if (this->get_built())
-    {
-      return boost::shared_ptr<CreCreDes>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
-    }
-  else
-    {
-      boost::shared_ptr<SparseMatrix> rep(new CreDes);
-      *rep = *this;
-      rep->build(*block);
-      return rep;
-    }
-
+  assert(this->get_initialised());
+  if (this->get_built()) {
+    return boost::shared_ptr<CreCreDes>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
+  }
+  else {
+    boost::shared_ptr<SparseMatrix> rep(new CreCreDes);
+    *rep = *this;
+    rep->build(*block);
+    return rep;
+  }
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------

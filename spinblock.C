@@ -92,6 +92,7 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
 {
   complementary = is_complement;
   normal = !is_complement;
+//MAW
   default_op_components(is_complement);
   std::vector<int> sites; 
   if (dmrginp.use_partial_two_integrals()) {
@@ -119,6 +120,7 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
   for (int i=0; i < sites.size(); i++)
       sites[i] = lower + i;
 
+//MAW
   BuildTensorProductBlock(sites);   
 }
 
@@ -159,10 +161,12 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
   stateInfo = StateInfo(dets);
   setstoragetype(LOCAL_STORAGE);
   complementary_sites = make_complement(sites);
+//MAW
   build_iterators();
   std::vector< std::vector<Csf> > ladders; ladders.resize(dets.size());
   for (int i=0; i< dets.size(); i++)
     ladders[i] = dets[i].spinLadder(min(2,dets[i].S));
+//MAW
   build_operators(dets, ladders);
 
 }
