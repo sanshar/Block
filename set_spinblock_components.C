@@ -30,6 +30,8 @@ void SpinBlock::setstoragetype(Storagetype st)
 //FIXME MAW
     if (has(CRE_CRE_DES))
       set_op_array(CRE_CRE_DES).set_local() = true;
+    if (has(CRE_DES_DES))
+      set_op_array(CRE_DES_DES).set_local() = true;
 
   }
   else if (st == DISTRIBUTED_STORAGE)
@@ -50,6 +52,8 @@ void SpinBlock::setstoragetype(Storagetype st)
 //FIXME MAW 
     if (has(CRE_CRE_DES))
       set_op_array(CRE_CRE_DES).set_local() = false;
+    if (has(CRE_DES_DES))
+      set_op_array(CRE_DES_DES).set_local() = false;
   }
 
 

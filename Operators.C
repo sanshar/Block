@@ -163,6 +163,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
   return factor;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //******************CRE*****************
 
@@ -196,6 +197,7 @@ pout << "building Cre renormalized operator...\n";
 
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 double SpinAdapted::Cre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
@@ -225,6 +227,7 @@ double SpinAdapted::Cre::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
   return element;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Cre::getworkingrepresentation(const SpinBlock* block)
 {
@@ -243,6 +246,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Cre::getworkingreprese
 
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //******************CREDES*****************
 
@@ -292,6 +296,27 @@ pout << "building CreDes renormalized operator...\n";
   dmrginp.makeopsT -> stop();
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//MAW debug
+void SpinAdapted::CreDes::build_in_csf_space(const SpinBlock& b) 
+{
+pout << "building CreDes in CSF space as a product..\n";
+  built = true;
+  allocate(b.get_stateInfo());
+  Sign = 1;
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+  assert( b.get_op_array(CRE).has(i));
+  assert( b.get_op_array(CRE).has(j));
+
+  const boost::shared_ptr<SparseMatrix> op1 = b.get_op_rep(CRE, getSpinQuantum(i), i);
+  Transposeview op2 = Transposeview( b.get_op_rep(CRE, getSpinQuantum(j), j) );
+  SpinAdapted::operatorfunctions::Product(&b, *op1, op2, *this, 1.0);
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 double SpinAdapted::CreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
@@ -319,6 +344,8 @@ double SpinAdapted::CreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const 
   return element;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDes::getworkingrepresentation(const SpinBlock* block)
 {
   //assert(this->get_initialised());
@@ -335,6 +362,8 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDes::getworkingrepr
     }
 
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //******************CRECRE*****************
 
@@ -384,9 +413,32 @@ pout << "building CreCre renormalized operator...\n";
   dmrginp.makeopsT -> stop();
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//MAW debug
+void SpinAdapted::CreCre::build_in_csf_space(const SpinBlock& b) 
+{
+pout << "building CreCre in CSF space as a product..\n";
+  built = true;
+  allocate(b.get_stateInfo());
+  Sign = 1;
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+  assert( b.get_op_array(CRE).has(i));
+  assert( b.get_op_array(CRE).has(j));
+
+  const boost::shared_ptr<SparseMatrix> op1 = b.get_op_rep(CRE, getSpinQuantum(i), i);
+  const boost::shared_ptr<SparseMatrix> op2 = b.get_op_rep(CRE, getSpinQuantum(j), j);
+//  Transposeview op2 = Transposeview( b.get_op_rep(CRE, getSpinQuantum(j), j) );
+  SpinAdapted::operatorfunctions::Product(&b, *op1, *op2, *this, 1.0);
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 double SpinAdapted::CreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
+
   double element = 0.0;
   int I = get_orbs()[0], 
     J = get_orbs()[1]; //convert spatial id to spin id because slaters need that
@@ -411,7 +463,10 @@ double SpinAdapted::CreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const 
     
   }
   return element;
+
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCre::getworkingrepresentation(const SpinBlock* block)
 {
@@ -430,7 +485,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCre::getworkingrepr
 
 }
 
-
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //******************CREDESCOMP*****************
 

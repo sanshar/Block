@@ -53,11 +53,14 @@ pout << "building CreCreDes renormalized operator...\n";
   // Below, note transposes for (i,j) since 2-index ops are built with i>=j 
 
 pout << "indices  " << i << " " << j << " " << k << std::endl;
-pout <<  (leftBlock->get_op_array(CRE_CRE).has(j,i)) << std::endl;
   // Forward
   if (leftBlock->get_op_array(CRE_CRE_DES).has(i,j,k)) {
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DES, quantum_ladder, i,j,k);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }
+  else if (rightBlock->get_op_array(CRE_CRE_DES).has(i,j,k)) {
+    const boost::shared_ptr<SparseMatrix>& op = rightBlock->get_op_rep(CRE_CRE_DES, quantum_ladder, i,j,k);
+    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   else if (leftBlock->get_op_array(CRE_CRE).has(j,i)) {
     assert (rightBlock->get_op_array(CRE).has(k));
@@ -66,6 +69,7 @@ pout <<  (leftBlock->get_op_array(CRE_CRE).has(j,i)) << std::endl;
     SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, op2, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Want to build as ((CC)D), not (C(CD)), but FIXME this is relatively expensive!
+//FIXME commute indices???
   else if (b.get_op_array(CRE_CRE).has(j,i)) {
     // Get CC on big block
     const boost::shared_ptr<SparseMatrix> op1 = b.get_op_rep(CRE_CRE, deltaQuantum12, j,i);
@@ -73,17 +77,14 @@ pout <<  (leftBlock->get_op_array(CRE_CRE).has(j,i)) << std::endl;
     assert (b.get_op_array(CRE).has(k));
     Transposeview op2 = Transposeview( b.get_op_rep(CRE, getSpinQuantum(k), k) );
     // Build tensor product operator directly in 4M*4M space
-    boost::shared_ptr<SparseMatrix> newOp (new Cre);
-    newOp->set_orbs().push_back(i);
-    newOp->set_orbs().push_back(j);
-    newOp->set_orbs().push_back(k);
-    newOp->set_initialised() = true;
-    newOp->set_fermion() = true; //is_fermion;
-    operatorfunctions::Product(&b, *op1, op2, *newOp, 1.0 );
-  }
-  else if (rightBlock->get_op_array(CRE_CRE_DES).has(i,j,k)) {
-    const boost::shared_ptr<SparseMatrix>& op = rightBlock->get_op_rep(CRE_CRE_DES, quantum_ladder, i,j,k);
-    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
+//    boost::shared_ptr<SparseMatrix> newOp (new Cre);
+//    newOp->set_orbs().push_back(i);
+//    newOp->set_orbs().push_back(j);
+//    newOp->set_orbs().push_back(k);
+//    newOp->set_initialised() = true;
+//    newOp->set_fermion() = true; //is_fermion;
+//    operatorfunctions::Product(&b, *op1, op2, *newOp, 1.0 );
+//    operatorfunctions::Product(&b, *op1, op2, *this, 1.0 );
   }
 //  else if (rightBlock->get_op_array(CRE_CRE).has(j,i)) {
 //pout << "hello6\n";
@@ -139,6 +140,7 @@ pout << spin12/2.0 << "  " << spin123/2.0 << std::endl;
   TensorOp D3(K,-1); 
 
   // Combine first two operators
+//FIXME  TensorOp CC = C1.product(C2, spin12, irrep12);  I==J has no affect
   TensorOp CC = C1.product(C2, spin12, irrep12, I==J);
   // Combine with third operator
   TensorOp CCD = CC.product(D3, spin123, irrep123);
@@ -206,6 +208,10 @@ pout <<  (leftBlock->get_op_array(CRE_CRE).has(j,i)) << std::endl;
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DES, quantum_ladder, i,j,k);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
+  else if (rightBlock->get_op_array(CRE_CRE_DES).has(i,j,k)) {
+    const boost::shared_ptr<SparseMatrix>& op = rightBlock->get_op_rep(CRE_CRE_DES, quantum_ladder, i,j,k);
+    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }
   else if (leftBlock->get_op_array(CRE_CRE).has(j,i)) {
     assert (rightBlock->get_op_array(CRE).has(k));
     const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE_CRE, deltaQuantum12, j,i);
@@ -227,10 +233,6 @@ pout <<  (leftBlock->get_op_array(CRE_CRE).has(j,i)) << std::endl;
     newOp->set_initialised() = true;
     newOp->set_fermion() = true; //is_fermion;
     operatorfunctions::Product(&b, *op1, op2, *newOp, 1.0 );
-  }
-  else if (rightBlock->get_op_array(CRE_CRE_DES).has(i,j,k)) {
-    const boost::shared_ptr<SparseMatrix>& op = rightBlock->get_op_rep(CRE_CRE_DES, quantum_ladder, i,j,k);
-    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
 //  else if (rightBlock->get_op_array(CRE_CRE).has(j,i)) {
 //pout << "hello6\n";
@@ -282,19 +284,19 @@ pout << I << "  " << J << "  " << K << std::endl;
 pout << "spin composition:\n";
 pout << spin12/2.0 << "  " << spin123/2.0 << std::endl;
   TensorOp C1(I, 1); 
-  TensorOp C2(J, 1); 
+  TensorOp D2(J,-1); 
   TensorOp D3(K,-1); 
 
   // Combine first two operators
-  TensorOp CC = C1.product(C2, spin12, irrep12, I==J);
+  TensorOp CD = C1.product(D2, spin12, irrep12);
   // Combine with third operator
-  TensorOp CCD = CC.product(D3, spin123, irrep123);
+  TensorOp CDD = CD.product(D3, spin123, irrep123);
 
   for (int i=0; i<ladder.size(); i++)
   {
     int index = 0; double cleb=0.0;
     if (nonZeroTensorComponent(c1, deltaQuantum, ladder[i], index, cleb)) {
-      std::vector<double> MatElements = calcMatrixElements(c1, CCD, ladder[i]) ;
+      std::vector<double> MatElements = calcMatrixElements(c1, CDD, ladder[i]) ;
       element = MatElements[index]/cleb;
       break;
     }

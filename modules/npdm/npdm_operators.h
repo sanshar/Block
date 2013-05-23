@@ -14,6 +14,8 @@ class CreCreDes: public SpinAdapted::SparseMatrix
 {
   public:
     CreCreDes() { orbs.resize(3); fermion = false;}
+//MAW
+    void build_in_csf_space(const SpinBlock& b) {assert(false);}
     void build(const SpinBlock& b) ;
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
     double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
@@ -25,6 +27,8 @@ class CreDesDes: public SpinAdapted::SparseMatrix
 {
   public:
     CreDesDes() { orbs.resize(3); fermion = false;}
+//MAW
+    void build_in_csf_space(const SpinBlock& b) {assert(false);}
     void build(const SpinBlock& b) ;
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
     double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);

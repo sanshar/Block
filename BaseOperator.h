@@ -28,7 +28,7 @@ class SpinBlock;
 
 //enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP};
 //MAW
-enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP, CRE_CRE_DES };
+enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP, CRE_CRE_DES, CRE_DES_DES };
 
 enum CompType{CD, DD, CCD, C};
 
@@ -129,6 +129,8 @@ class SparseMatrix : public Baseoperator<Matrix>
   void allocate(const StateInfo& sr, const StateInfo& sc);
   void allocate(const SpinBlock& b);
   virtual boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) =0;
+//MAW debug
+  virtual void build_in_csf_space(const SpinBlock& b) {assert(false);}
   virtual void build(const SpinBlock& b) =0;
   void buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s) ;
   virtual double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b=0)=0;
