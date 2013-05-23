@@ -41,12 +41,17 @@ template<class A> void singlethread_build(A& array, SpinBlock& b, std::vector< C
 #pragma omp parallel default(shared)
 #pragma omp for schedule(guided) nowait
 #endif
+pout << array.get_op_string() << std::endl;
+pout << "singlethread_build (csf) = " << array.get_size() << std::endl;
   for (int i = 0; i < array.get_size(); ++i) {
     //typedef typename A::OpType Op;
+pout << "array.get_local_element(i)  " << i << std::endl;
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
+pout << "size() = " << vec.size() << std::endl;
     for (int j=0; j<vec.size(); j++)
       vec[j]->buildUsingCsf(b, ladders, s);
   }
+pout << "done!\n";
 }
 
 template<class A> void singlethread_build(A& array, SpinBlock& b)
@@ -55,13 +60,18 @@ template<class A> void singlethread_build(A& array, SpinBlock& b)
 #pragma omp parallel default(shared)
 #pragma omp for schedule(guided) nowait
 #endif
+pout << array.get_op_string() << std::endl;
+pout << "singlethread_build\n";
   for (int i = 0; i < array.get_size(); ++i) {
     //typedef typename A::OpType Op;
     //std::vector<boost::shared_ptr<Op> >& vec = array.get_local_element(i);
+pout << "array.get_local_element(i)  " << i << std::endl;
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
+pout << "size() = " << vec.size() << std::endl;
     for (int j=0; j<vec.size(); j++)
       vec[j]->build(b);
   }
+pout << "done!\n";
 }
 //*****************************************************************************
 
@@ -102,12 +112,19 @@ template<typename T2, class A> void for_all_operators_multithread(A& array, cons
 #ifdef _OPENMP
     #pragma omp for schedule(guided) nowait
 #endif
+pout << array.get_op_string() << std::endl;
+pout << "for_all_operators_multithread\n";
     for (i = 0; i < array.get_size(); ++i) {
+pout << "array.get_local_element(i)  " << i << std::endl;
       std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
+pout << "size() = " << vec.size() << std::endl;
       for (int j=0; j<vec.size(); j++){
-	func(*vec[j]);
+//FIXME MAW        func(*vec[j]);
+pout << j << std::endl;
+        func( *(vec.at(j)) );
       }
     }
+pout << "done!\n";
   }
 }
 

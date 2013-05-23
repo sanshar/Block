@@ -19,7 +19,8 @@ BOOSTLIB = -L/home/markaw/libs/boost_1_50_0/stage/lib/ -lboost_serialization -lb
 LAPACKBLAS = -L/srv/usr/local/opt/intel/mkl/10.2.1.017/lib/em64t/ -lmkl_intel_lp64 -lmkl_sequential -lmkl_core  #maw
 
 #use these variable to set if we will use mpi or not 
-USE_MPI = yes
+#USE_MPI = yes
+USE_MPI = no
 
 AR=ar
 ARFLAGS=-qs
@@ -39,8 +40,11 @@ OPENMP = no
 EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
-CXX = g++
-MPICXX = mpic++
+#CXX = g++
+#MPICXX = mpic++
+CXX=g++44 -std=c++0x
+OMPI_CXX=g++44 -std=c++0x
+
 HOME = .
 NEWMATINCLUDE = $(HOME)/newmat10/
 INCLUDE1 = $(HOME)/include/
@@ -69,7 +73,7 @@ ifeq ($(notdir $(firstword $(CXX))),icpc)
 	CXX = icc
 endif
 
-ifeq ($(notdir $(firstword $(CXX))),g++)
+ifeq ($(notdir $(firstword $(CXX))),g++44)
    ifeq ($(OPENMP), yes)
       OPENMP_INC= -fopenmp -D_OPENMP 
    endif

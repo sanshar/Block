@@ -36,6 +36,8 @@ namespace SpinAdapted {
 	  op.set_fermion() = true;
 	  op.set_deltaQuantum() = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));      
 	  //op.set_deltaQuantum() = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOf(orbs[0]));      
+//MAW
+     op.set_quantum_ladder() = { op.get_deltaQuantum() };
 	}
       
     }
@@ -95,6 +97,8 @@ namespace SpinAdapted {
 	    op.set_initialised() = true;
 	    op.set_fermion() = false;
 	    op.set_deltaQuantum() = spinvec[j];      
+//MAW
+       op.set_quantum_ladder() = { op.get_deltaQuantum() };
 	  }
 	}
     }
@@ -131,6 +135,8 @@ namespace SpinAdapted {
 	    op.set_initialised() = true;
 	    op.set_fermion() = false;
 	    op.set_deltaQuantum() = spinvec[j];      
+//MAW
+       op.set_quantum_ladder() = { op.get_deltaQuantum() };
 	  }
 	}
     }
@@ -168,6 +174,8 @@ namespace SpinAdapted {
 	    op.set_initialised() = true;
 	    op.set_fermion() = false;
 	    op.set_deltaQuantum() = spinvec[j];      
+//MAW
+       op.set_quantum_ladder() = { op.get_deltaQuantum() };
 	  }
 	}
     }
@@ -219,6 +227,8 @@ namespace SpinAdapted {
 	    op.set_initialised() = true;
 	    op.set_fermion() = false;
 	    op.set_deltaQuantum() = -spinvec[j];      
+//MAW
+       op.set_quantum_ladder() = { op.get_deltaQuantum() };
 	  }
 	}
       
@@ -260,6 +270,8 @@ namespace SpinAdapted {
 	  op.set_fermion() = true;
 	  //op.set_deltaQuantum() = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOfSpatialOrb(orbs[0]) );      
 	  op.set_deltaQuantum() = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]) );      
+//MAW
+     op.set_quantum_ladder() = { op.get_deltaQuantum() };
 	}
     }
   
@@ -289,6 +301,8 @@ namespace SpinAdapted {
       m_op(0)[0]->set_initialised() = true;
       m_op(0)[0]->set_fermion() = false;
       m_op(0)[0]->set_deltaQuantum() = SpinQuantum(0, 0, IrrepSpace(0) );      
+//MAW
+      m_op(0)[0]->set_quantum_ladder() = { m_op(0)[0]->get_deltaQuantum() };
     }
   
   template<> std::vector<std::vector<int> > Op_component<Ham>::get_array() const 

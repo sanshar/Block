@@ -15,6 +15,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 namespace SpinAdapted{
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
 {
   int aspin = a.get_s(), airrep = a.get_symm().getirrep();
@@ -42,12 +44,14 @@ double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
   return 1.0;
 }
 
-
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SparseMatrix::allocate(const SpinBlock& b)
 {
   allocate(b.get_stateInfo());
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SparseMatrix::allocate(const StateInfo& s)
 {
@@ -66,6 +70,8 @@ void SparseMatrix::allocate(const StateInfo& s)
     }     
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SparseMatrix::allocate(const StateInfo& sr, const StateInfo& sc)
 {
   resize(sr.quanta.size(), sc.quanta.size());
@@ -83,6 +89,8 @@ void SparseMatrix::allocate(const StateInfo& sr, const StateInfo& sc)
     }     
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SparseMatrix::CleanUp ()
 {
   built = false;
@@ -93,6 +101,8 @@ void SparseMatrix::CleanUp ()
   allowedQuantaMatrix.ReSize (0,0);
   operatorMatrix.ReSize (0,0);
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 const Transposeview Transpose(SparseMatrix& op) { return Transposeview(op); };
 
@@ -109,6 +119,8 @@ ostream& operator<< (ostream& os, const SparseMatrix& a)
       return os;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 double SparseMatrix::memoryUsed(const SpinBlock& b)
 {
   StateInfo stateinfo = b.get_stateInfo();
@@ -121,6 +133,8 @@ double SparseMatrix::memoryUsed(const SpinBlock& b)
       }
   return memory;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
   
 void SparseMatrix::buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s) 
 {
@@ -136,8 +150,9 @@ void SparseMatrix::buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladd
           for (int iq =stateinfo.unBlockedIndex[i]; iq < stateinfo.unBlockedIndex[i]+stateinfo.quantaStates[i]; iq++) 
           operatorMatrix(i,j)(iq-stateinfo.unBlockedIndex[i]+1, jq-stateinfo.unBlockedIndex[j]+1) = redMatrixElement(s[iq], ladders[jq], &b);
         }
-
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SparseMatrix::Randomise ()
 {
@@ -146,6 +161,8 @@ void SparseMatrix::Randomise ()
       if (allowed(lQ, rQ))
 	SpinAdapted::Randomise (operator_element(lQ, rQ));
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 double DotProduct(const SparseMatrix& lhs, const SparseMatrix& rhs)
 {
@@ -158,6 +175,8 @@ double DotProduct(const SparseMatrix& lhs, const SparseMatrix& rhs)
   return result;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void Scale(double d, SparseMatrix& a)
 {
   for (int lQ = 0; lQ < a.nrows(); ++lQ)
@@ -165,6 +184,8 @@ void Scale(double d, SparseMatrix& a)
       if (a.allowed(lQ, rQ))
         MatrixScale(d, a.operator_element(lQ, rQ));
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void ScaleAdd(double d, const SparseMatrix& a, SparseMatrix& b)
 {
@@ -179,10 +200,14 @@ void ScaleAdd(double d, const SparseMatrix& a, SparseMatrix& b)
         }
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void Normalise(SparseMatrix& a, int* success)
 {
   a.Normalise(success);
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SparseMatrix::Normalise (int* success)
 {
@@ -195,6 +220,8 @@ void SparseMatrix::Normalise (int* success)
   }
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SparseMatrix::Clear ()
 {
   built = false;
@@ -202,6 +229,8 @@ void SparseMatrix::Clear ()
     for (int j = 0; j < allowedQuantaMatrix.Ncols (); ++j)
       if (allowedQuantaMatrix (i,j)) SpinAdapted::Clear (operatorMatrix (i,j));
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void assignloopblock(SpinBlock*& loopblock, SpinBlock*& otherblock, SpinBlock* leftBlock,
 			    SpinBlock* rightBlock)
@@ -211,6 +240,8 @@ void assignloopblock(SpinBlock*& loopblock, SpinBlock*& otherblock, SpinBlock* l
   if (!leftBlock->is_loopblock()) {loopblock = rightBlock; otherblock = leftBlock;}
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void copy(const ObjectMatrix<Matrix>& a, ObjectMatrix<Matrix>& b)
 {
   b.resize(a.Nrows(), a.Ncols());
@@ -218,6 +249,8 @@ void copy(const ObjectMatrix<Matrix>& a, ObjectMatrix<Matrix>& b)
     for (int j = 0; j < a.Ncols(); ++j)
       copy(a(i, j), b(i, j));
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void copy(const Matrix& a, Matrix& b)
 {
@@ -230,6 +263,8 @@ void copy(const Matrix& a, Matrix& b)
   b = a;
 #endif
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SparseMatrix::OperatorMatrixReference (ObjectMatrix<Matrix*>& m, const std::vector<int>& oldToNewStateI, 
 					const std::vector<int>& oldToNewStateJ)
@@ -244,6 +279,8 @@ void SparseMatrix::OperatorMatrixReference (ObjectMatrix<Matrix*>& m, const std:
 	m (i,j) = &operatorMatrix (oldToNewStateI [i], oldToNewStateJ [j]);
       }
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //Renormalization functions for core and virtual operators                                                                                
 void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo)
@@ -270,41 +307,59 @@ void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matri
 
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SparseMatrix::build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& rotate_matrix, 
-					       const StateInfo *newStateInfo)
+                                                   const StateInfo *newStateInfo)
 {
-  
+pout << "maw hello SparseMatrix::build_and_renormalise_transform\n";  
+
+  assert( quantum_ladder.size() > 0 );
+  assert( quantum_ladder.back() == deltaQuantum );
   boost::shared_ptr<SparseMatrix> tmp;
-  if (orbs.size() == 0)
-    tmp =   big->get_op_rep(ot, deltaQuantum);
-  if (orbs.size() == 1)
-    tmp =   big->get_op_rep(ot, deltaQuantum, orbs[0]);
-  if (orbs.size() == 2)
-    tmp =   big->get_op_rep(ot, deltaQuantum, orbs[0], orbs[1]);
+  if (orbs.size() == 0) {
+pout << "hello 0op\n";
+    tmp = big->get_op_rep(ot, deltaQuantum);
+  }
+  else if (orbs.size() == 1) {
+pout << "hello 1op  " << orbs[0] << std::endl;
+    tmp = big->get_op_rep(ot, deltaQuantum, orbs[0]);
+  }
+  else if (orbs.size() == 2) {
+pout << "hello 2op  " << orbs[0] << "  " << orbs[1] << std::endl;
+    tmp = big->get_op_rep(ot, deltaQuantum, orbs[0], orbs[1]);
+  }
+  else if (orbs.size() == 3) {
+pout << "hello 3op  " << orbs[0] << "  " << orbs[1] << "  " << orbs[2] << std::endl;
+    tmp = big->get_op_rep(ot, quantum_ladder, orbs[0], orbs[1], orbs[2]);
+  }
+  else
+    assert (false);
 
   tmp->built = true;
 
   this->allocate(*newStateInfo);
   this->built = true;
-
   int newQ = 0;
-  for (int Q = 0; Q < rotate_matrix.size (); ++Q)
-    if (rotate_matrix[Q].Ncols () != 0)
-      {
-	int newQPrime = 0;
-	for (int QPrime = 0; QPrime < rotate_matrix.size (); ++QPrime)
-	  if (rotate_matrix[QPrime].Ncols () != 0)
-	    {
-	      if (this->allowedQuantaMatrix (newQ, newQPrime)) {
-		MatrixRotate (rotate_matrix[Q], tmp->operatorMatrix(Q, QPrime), rotate_matrix[QPrime],
-			      this->operatorMatrix (newQ, newQPrime) );
-	      }
-	      ++newQPrime;
-	    }
-	++newQ;
+  for (int Q = 0; Q < rotate_matrix.size (); ++Q) {
+    if (rotate_matrix[Q].Ncols () != 0) {
+      int newQPrime = 0;
+      for (int QPrime = 0; QPrime < rotate_matrix.size (); ++QPrime) {
+        if (rotate_matrix[QPrime].Ncols () != 0) {
+          if (this->allowedQuantaMatrix (newQ, newQPrime)) {
+            MatrixRotate (rotate_matrix[Q], tmp->operatorMatrix(Q, QPrime), rotate_matrix[QPrime], this->operatorMatrix (newQ, newQPrime) );
+          }
+          ++newQPrime;
+        }
       }
+      ++newQ;
+    }
+  }
+pout << "done!\n";
 
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 SparseMatrix& SparseMatrix::operator+=(const SparseMatrix& other)
 {
@@ -317,4 +372,7 @@ SparseMatrix& SparseMatrix::operator+=(const SparseMatrix& other)
 	}
   return *this;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 }

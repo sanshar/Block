@@ -34,6 +34,7 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
   else if (forward)
   {
     startingBlock = SpinBlock(0, forward_starting_size - 1, true);
+pout << "startingBlock built!\n";
     
     if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s() != 0)
     {
@@ -56,7 +57,7 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
     for (int i = 0; i < backward_starting_size; ++i) 
 	    backwardSites.push_back (dmrginp.last_site() - i - 1);
     sort (backwardSites.begin (), backwardSites.end ());
-	  startingBlock.default_op_components(false);
+    startingBlock.default_op_components(false);
     startingBlock.BuildTensorProductBlock (backwardSites);
   }
 }

@@ -168,6 +168,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 
 void SpinAdapted::Cre::build(const SpinBlock& b)
 {
+pout << "building Cre renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -247,6 +248,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Cre::getworkingreprese
 
 void SpinAdapted::CreDes::build(const SpinBlock& b)
 {
+pout << "building CreDes renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -338,6 +340,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDes::getworkingrepr
 
 void SpinAdapted::CreCre::build(const SpinBlock& b)
 {
+pout << "building CreCre renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -434,6 +437,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCre::getworkingrepr
 
 void SpinAdapted::CreDesComp::build(const SpinBlock& b)
 {
+pout << "building CreDesComp renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -562,6 +566,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesComp::getworking
 
 void SpinAdapted::DesDesComp::build(const SpinBlock& b)
 {
+pout << "building DesDesComp renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -692,6 +697,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::DesDesComp::getworking
 
 void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
 {
+pout << "building CreCreComp renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -841,6 +847,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreDesComp::getwork
 
 void SpinAdapted::Ham::build(const SpinBlock& b)
 {
+pout << "building Ham renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());

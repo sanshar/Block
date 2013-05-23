@@ -208,7 +208,6 @@ pout << "getting CCD operator...\n";
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
-  factor_ = 1.0;
 }
 
 //===========================================================================================================================================================
@@ -234,6 +233,7 @@ pout << "getting CDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
+//FIXME
 assert(false);
 
   opReps_ = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
@@ -244,7 +244,6 @@ assert(false);
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
-  factor_ = 1.0;
 }
 
 //===========================================================================================================================================================

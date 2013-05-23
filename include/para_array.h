@@ -358,17 +358,17 @@ inline int trimap(int i, int j, int length, bool ut = false)
       
       //first check if our case is in slot 1
       if (i>=halflen && j >= halflen)
-	return tristore(length - j - 1) + length - i - 1;
+        return tristore(length - j - 1) + length - i - 1;
       else if (i < halflen && j <halflen)
-	return tristore(length - halflen - 1) + length - halflen + tristore(i) + j;
+        return tristore(length - halflen - 1) + length - halflen + tristore(i) + j;
       else {
-	int base= tristore(length - halflen - 1) + length - halflen + tristore(halflen);
-	return base + (i-halflen)*(halflen) + (j);
+        int base= tristore(length - halflen - 1) + length - halflen + tristore(halflen);
+        return base + (i-halflen)*(halflen) + (j);
       }
       //return tristore(length - j - 1) + length - i - 1;
     }
   else 
-    abort();
+    assert(false);
   return 0;
 }
 
@@ -502,7 +502,7 @@ public:
   
   friend std::ostream& operator<<(std::ostream& os, para_array_triang_2d& op)
   {
-    abort();
+    assert(false);
     return os;
   }
 

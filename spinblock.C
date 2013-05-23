@@ -78,12 +78,15 @@ ostream& operator<< (ostream& os, const SpinBlock& b)
   return os;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 SpinBlock::SpinBlock () : 
   localstorage(false),
   name (rand()), 
   hasMemoryAllocated (false),
   direct(false), complementary(false), normal(true), leftBlock(0), rightBlock(0) { }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 SpinBlock::SpinBlock(int start, int finish, bool is_complement) :  
   name (rand()), 
@@ -93,6 +96,7 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
   complementary = is_complement;
   normal = !is_complement;
 //MAW
+pout << "calling default op_components...\n";
   default_op_components(is_complement);
   std::vector<int> sites; 
   if (dmrginp.use_partial_two_integrals()) {
@@ -121,7 +125,9 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
       sites[i] = lower + i;
 
 //MAW
+pout << "calling BuildTensorProductBlock(sites)...\n";   
   BuildTensorProductBlock(sites);   
+pout << "done BuildTensorProductBlock(sites)!\n";   
 }
 
 SpinBlock::SpinBlock (const SpinBlock& b) { *this = b; }
@@ -132,7 +138,7 @@ SpinBlock::SpinBlock(const StateInfo& s)
   sites.resize(0);
 }
 
-
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
 {
@@ -162,14 +168,17 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
   setstoragetype(LOCAL_STORAGE);
   complementary_sites = make_complement(sites);
 //MAW
+pout << "build_iterators....\n";
   build_iterators();
   std::vector< std::vector<Csf> > ladders; ladders.resize(dets.size());
   for (int i=0; i< dets.size(); i++)
     ladders[i] = dets[i].spinLadder(min(2,dets[i].S));
 //MAW
+pout << "build_operators....\n";
   build_operators(dets, ladders);
-
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<int> SpinBlock::make_complement(const std::vector<int>& sites)
 {
@@ -182,6 +191,8 @@ std::vector<int> SpinBlock::make_complement(const std::vector<int>& sites)
   
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SpinBlock::build_iterators()
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
@@ -190,6 +201,8 @@ void SpinBlock::build_iterators()
   }
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vector<Csf> >& ladders)
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
@@ -197,18 +210,23 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
       if(it->second->is_core())
         it->second->build_csf_operators(dets, ladders, *this);      
     }
+pout << "done build_csf_operators! (All optypes)\n";
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::build_operators()
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core()) {
-	it->second->build_operators(*this);
+        it->second->build_operators(*this);
       }
     }
+pout << "done build_operators! (All optypes)\n";
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::clear()
 {
@@ -216,6 +234,7 @@ void SpinBlock::clear()
     it->second->clear();
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState)
 {
@@ -264,6 +283,8 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
     stateInfo.CollectQuanta();
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SpinBlock::BuildSumBlock(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState)
 {
   dmrginp.buildsumblock -> start();
@@ -277,6 +298,7 @@ void SpinBlock::BuildSumBlock(int condition, SpinBlock& lBlock, SpinBlock& rBloc
   dmrginp.buildsumblock -> stop();
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::operator= (const SpinBlock& b)
 {
@@ -298,6 +320,8 @@ void SpinBlock::operator= (const SpinBlock& b)
   twoInt = b.twoInt;
   ops = b.ops;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) const
 {
@@ -356,6 +380,7 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
 
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::diagonalH(DiagonalMatrix& e) const
 {

@@ -215,6 +215,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   pout << "\t\t\t ============================================================================ " << endl;
 
   InitBlocks::InitStartingBlock (system,forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+pout << "InitStartingBlock done!\n";
   if(!restart)
     sweepParams.set_block_iter() = 0;
 

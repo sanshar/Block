@@ -52,7 +52,6 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b)
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Saving block file :: " << file << endl;
 
-
   std::ofstream ofs(file.c_str(), std::ios::binary);
   b.Save (ofs);
   ofs.close();
@@ -164,10 +163,12 @@ void SpinBlock::addAdditionalCompOps()
 
 void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
 {
+pout << "maw hello transform_operators\n";
   StateInfo oldStateInfo = stateInfo;
   std::vector<SpinQuantum> newQuanta;
   std::vector<int> newQuantaStates;
   std::vector<int> newQuantaMap;
+pout << "maw hello1\n";
   for (int Q = 0; Q < rotateMatrix.size (); ++Q)
     {
       if (rotateMatrix [Q].Ncols () != 0)
@@ -177,19 +178,26 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
           newQuantaMap.push_back (Q);
         }
     }
+pout << "maw hello2\n";
   StateInfo newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
 
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    if (! it->second->is_core())
+pout << "maw hello3\n";
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    if (! it->second->is_core()) {
       for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, boost::ref(rotateMatrix) , &newStateInfo));
+    }
+  }
 
+pout << "maw hello4\n";
   stateInfo = newStateInfo;
   stateInfo.AllocatePreviousStateInfo ();
   *stateInfo.previousStateInfo = oldStateInfo;
 
+pout << "maw hello5\n";
   for (int i = 0; i < newQuantaMap.size (); ++i)
     assert (stateInfo.quanta [i] == oldStateInfo.quanta [newQuantaMap [i]]);
 
+pout << "maw hello6\n";
   if (dmrginp.outputlevel() > 0) {
     pout << "\t\t\t total elapsed time " << globaltimer.totalwalltime() << " " << globaltimer.totalcputime() << " ... " 
 	 << globaltimer.elapsedwalltime() << " " << globaltimer.elapsedcputime() << endl;
@@ -197,10 +205,12 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   }
   Timer transformtimer;
 
+pout << "maw hello7\n";
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if ( it->second->is_core())
       for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), (&this->stateInfo)));
 
+pout << "maw hello8\n";
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if (! it->second->is_core())
       ops[it->first]->set_core(true);

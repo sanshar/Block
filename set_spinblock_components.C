@@ -11,7 +11,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 namespace SpinAdapted{
 void SpinBlock::setstoragetype(Storagetype st)
-//MAW 3-index?
 {
   if (st == LOCAL_STORAGE)
   {
@@ -28,6 +27,9 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_DESCOMP).set_local() = true;
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = true;
+//FIXME MAW
+    if (has(CRE_CRE_DES))
+      set_op_array(CRE_CRE_DES).set_local() = true;
 
   }
   else if (st == DISTRIBUTED_STORAGE)
@@ -45,6 +47,9 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_DESCOMP).set_local() = false;
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = false;
+//FIXME MAW 
+    if (has(CRE_CRE_DES))
+      set_op_array(CRE_CRE_DES).set_local() = false;
   }
 
 
@@ -53,7 +58,6 @@ void SpinBlock::setstoragetype(Storagetype st)
 boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bool &is_core)
 {
   boost::shared_ptr<Op_component_base> ret;
-//MAW 3-index?
   switch(optype)
   {
     case CRE:
@@ -79,7 +83,6 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
       break;
     //MAW
     case CRE_CRE_DES:
-      assert (false);
       ret = boost::shared_ptr<Op_component<CreCreDes> >(new Op_component<CreCreDes>(is_core));
       break;
   }
@@ -110,10 +113,10 @@ void SpinBlock::default_op_components(bool complementary_)
     ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
     ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
     //MAW
-    if (dmrginp.calc_type() == THREEPDM) {
-      assert (false);
+//    if (dmrginp.calc_type() == THREEPDM) {
+//      assert (false);
       ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
-    }
+//    }
   }
 
   this->loopblock = true;
@@ -149,19 +152,20 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     ops[CRE] = make_new_op(CRE, true);
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
     ops[HAM] = make_new_op(HAM, true);
+
     if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
-      
-      if (haveNormops)
-      {
-	ops[CRE_DES] = make_new_op(CRE_DES, true);
-	ops[CRE_CRE] = make_new_op(CRE_CRE, true);
+      if (haveNormops) {
+        ops[CRE_DES] = make_new_op(CRE_DES, true);
+        ops[CRE_CRE] = make_new_op(CRE_CRE, true);
+//FIXME MAW
+        ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
       }
-      if (haveCompops)
-      {
-	ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
-	ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
+      if (haveCompops) {
+        ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
+        ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
       }
     }
+
     if (haveNormops)
       this->loopblock = true;
     else
@@ -173,19 +177,20 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     ops[CRE] = make_new_op(CRE, false); //this should definitely be false, we not have copies of CRE is all the procs
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
     ops[HAM] = make_new_op(HAM, true);
+
     if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
-      
-      if (haveNormops || dmrginp.do_cd())
-      {
-	ops[CRE_DES] = make_new_op(CRE_DES, false);
-	ops[CRE_CRE] = make_new_op(CRE_CRE, false);
+      if (haveNormops || dmrginp.do_cd()) {
+        ops[CRE_DES] = make_new_op(CRE_DES, false);
+        ops[CRE_CRE] = make_new_op(CRE_CRE, false);
+//FIXME MAW
+        ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
       }
-      if (haveCompops)
-      {
-	ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, false);
-	ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, false);
+      if (haveCompops) {
+        ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, false);
+        ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, false);
       }
     }
+
     if (haveNormops)
       this->loopblock = true;
     else

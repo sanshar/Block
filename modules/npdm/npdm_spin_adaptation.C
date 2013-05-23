@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <string>
+#include <set>
 #include <Eigen/Dense>
 #include "npdm_spin_adaptation.h"
 #include "MatrixBLAS.h"
