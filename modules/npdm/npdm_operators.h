@@ -21,6 +21,17 @@ class CreCreDes: public SpinAdapted::SparseMatrix
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+class CreDesDes: public SpinAdapted::SparseMatrix
+{
+  public:
+    CreDesDes() { orbs.resize(3); fermion = false;}
+    void build(const SpinBlock& b) ;
+    boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+    double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 }
 
 #endif

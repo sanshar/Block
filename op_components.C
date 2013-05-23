@@ -99,6 +99,7 @@ namespace SpinAdapted {
 	    op.set_deltaQuantum() = spinvec[j];      
 //MAW
        op.set_quantum_ladder() = { op.get_deltaQuantum() };
+       assert( op.get_deltaQuantum().particleNumber == 0 );
 	  }
 	}
     }
@@ -137,6 +138,7 @@ namespace SpinAdapted {
 	    op.set_deltaQuantum() = spinvec[j];      
 //MAW
        op.set_quantum_ladder() = { op.get_deltaQuantum() };
+       assert( op.get_deltaQuantum().particleNumber == 2 );
 	  }
 	}
     }

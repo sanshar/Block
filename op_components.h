@@ -56,10 +56,14 @@ template <> struct ChooseArray<CreCreDesComp> {
 template <> struct ChooseArray<Ham> {
   typedef para_array_0d<std::vector<boost::shared_ptr<Ham> > > ArrayType;
 };
-//MAW 3PDM
+//MAW 3PDM >>>>>
 template <> struct ChooseArray<CreCreDes> {
   typedef para_array_3d<std::vector<boost::shared_ptr<CreCreDes> > > ArrayType;
 };
+template <> struct ChooseArray<CreDesDes> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<CreDesDes> > > ArrayType;
+};
+//MAW 3PDM <<<<<
 
 //===========================================================================================================================================================
 
@@ -207,9 +211,14 @@ pout << "op_components.h get_local_element(i)\n";
     assert( k ==-1 );
     Op* o = 0;
     std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
+std::cout << " s.particleNumber = " << s.particleNumber << std::endl;
+std::cout << " s.totalSpin = " << s.totalSpin << std::endl;
     for (int l=0; l<vec.size(); l++) {
+std::cout << " vec[l].particleNumber = " << vec[l]->get_deltaQuantum().particleNumber << std::endl;
+std::cout << " vec[l].totalSpin = " << vec[l]->get_deltaQuantum().totalSpin << std::endl;
       if ( s == vec[l]->get_deltaQuantum() ) return m_op(i,j,k)[l];
     }
+    assert (false);
     return boost::shared_ptr<Op>(o);
   }
 
@@ -223,6 +232,7 @@ pout << "op_components.h get_local_element(i)\n";
     for (int l=0; l<vec.size(); l++) {
       if ( s == vec[l]->get_deltaQuantum() ) return m_op(i,j,k)[l];
     }
+    assert (false);
     return boost::shared_ptr<Op>(o);
   }
 
@@ -237,6 +247,7 @@ pout << "op_components.h get_local_element(i)\n";
     for (int l=0; l<vec.size(); l++) {
       if ( s == vec[l]->get_quantum_ladder() ) return m_op(i,j,k)[l];
     }
+    assert (false);
     return boost::shared_ptr<Op>(o);
   }
 
@@ -252,6 +263,7 @@ pout << "op_components.h get_local_element(i)\n";
     for (int l=0; l<vec.size(); l++) {
       if ( s == vec[l]->get_quantum_ladder() ) return m_op(i,j,k)[l];
     }
+    assert (false);
     return boost::shared_ptr<Op>(o);
   }
 

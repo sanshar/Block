@@ -50,8 +50,10 @@ pout << "getting CCDD operator...\n";
 
   opReps_.clear();
   // S=0 (+) S=0  =>  S=0
+//FIXME why NOT FERMION????
   opReps_.push_back( build_compound_operator( false, twoOps, 0, twoOps, 0, 0, ix, true ) );
   // S=1 (+) S=1  =>  S=0
+//FIXME why NOT FERMION????
   opReps_.push_back( build_compound_operator( false, twoOps, 1, twoOps, 1, 0, ix, true ) );
 }
 
@@ -440,6 +442,7 @@ boost::shared_ptr<SparseMatrix> NpdmSpinOps::build_compound_operator( bool is_fe
   newOp->set_initialised() = true;
   newOp->set_fermion() = is_fermion;
 
+//FIXME move stuff outside if blocks??
   if (transpose) {
     // Build compound operator as product of LHS and TRANSPOSE( RHS )
     newOp->set_deltaQuantum() = ( lhsOps.at(ilhs)->get_deltaQuantum() - rhsOps.at(irhs)->get_deltaQuantum() ).at(ispin);
