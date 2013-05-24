@@ -485,7 +485,8 @@ double Symmetry::spatial_sixj(int j1, int j2, int j3, int j5, int j4, int j7) {
     return 1.0;
   }
   else {
-    double out = spatial_ninej(j1, j2, j3, j4, j5, j3, j7, j7, 0);
+    //double out = spatial_ninej(j1, j2, j3, j4, j5, j3, j7, j7, 0);
+    double out = spatial_ninej(j1, j2, j3, 0, j5, j5, j1, j7, j4);
     return out;
   }
 }

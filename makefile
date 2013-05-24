@@ -48,10 +48,10 @@ NEWMATLIB = $(HOME)/newmat10/
    
 
 ifeq ($(MOLPRO), yes)
-   MOLPROINCLUDE=$(HOME)/../
+   MOLPROINCLUDE=-I $(HOME)/../
    MOLPRO_BLOCK= -DMOLPRO
 endif
-FLAGS =  -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(HOME)/modules/twopdm/ -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(MOLPROINCLUDE)
+FLAGS =  -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(HOME)/modules/twopdm/ -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm $(MOLPROINCLUDE)
 LIBS =  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp
 MPI_OPT = -DSERIAL
 
