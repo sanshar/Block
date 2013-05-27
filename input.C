@@ -671,6 +671,7 @@ SpinAdapted::Input::Input(const string& config_name)
     Symmetry::InitialiseTable(sym);
 
   ifstream orbitalFile;
+  if (mpigetrank() == 0) 
   CheckFileExistence(orbitalfile, "Orbital file ");
 
   //read the orbitals
