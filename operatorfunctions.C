@@ -18,7 +18,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 void SpinAdapted::operatorfunctions::TensorTrace(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const SpinBlock *cblock, const StateInfo *cstateinfo, Baseoperator<Matrix>& c, double scale, int num_thrds)
 {
   
-pout << "hello maw TensorTrace 2:\n";
   if (fabs(scale) < TINY) return;
   assert (a.get_initialised() && c.get_initialised());
 #ifdef _OPENMP
@@ -43,7 +42,6 @@ void SpinAdapted::operatorfunctions::TensorTraceElement(const SpinBlock *ablock,
 
 void SpinAdapted::operatorfunctions::TensorTraceElement(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const SpinBlock *cblock, const StateInfo *cstateinfo, Baseoperator<Matrix>& c, Matrix& cel, int cq, int cqprime, double scale)
 {
-pout << "hello maw TensorTraceElement:\n";
   if (fabs(scale) < TINY) return;
   assert(c.allowed(cq, cqprime));
     
@@ -423,7 +421,6 @@ void SpinAdapted::operatorfunctions::MultiplyProduct(const Baseoperator<Matrix>&
 
 void SpinAdapted::operatorfunctions::TensorTrace (const SpinBlock *ablock, const Baseoperator<Matrix>& a, const SpinBlock* cblock, const StateInfo* cstateinfo, DiagonalMatrix& cDiagonal, Real scale)
 {
-//pout << "hello maw TensorTrace:\n";
   if (fabs(scale) < TINY) return;
   try
     {
