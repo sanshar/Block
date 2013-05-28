@@ -141,9 +141,10 @@ pout << "building CreCreDes in CSF space as a product..\n";
   const int i = get_orbs()[0];
   const int j = get_orbs()[1];
   const int k = get_orbs()[2];
-  assert( b.get_op_array(CRE).has(i));
-  assert( b.get_op_array(CRE).has(j));
-  assert( b.get_op_array(CRE).has(k));
+//pout << "indices = " << i << " " << j << " " << k << std::endl;
+  assert( b.get_op_array(CRE).has(i) );
+  assert( b.get_op_array(CRE).has(j) );
+  assert( b.get_op_array(CRE).has(k) );
   // Spin quanta
   std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder();
   assert( quantum_ladder.size() == 2 );
