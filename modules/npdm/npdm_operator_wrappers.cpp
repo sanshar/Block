@@ -79,6 +79,7 @@ Npdm_op_wrapper_compound_CCD::Npdm_op_wrapper_compound_CCD( SpinBlock * spinBloc
 void Npdm_op_wrapper_compound_CCD::set_local_ops( int idx )
 {
 pout << "getting compound CCD operator...\n";
+assert(false);
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -137,6 +138,7 @@ Npdm_op_wrapper_compound_CDD::Npdm_op_wrapper_compound_CDD( SpinBlock * spinBloc
 void Npdm_op_wrapper_compound_CDD::set_local_ops( int idx )
 {
 pout << "getting compound CDD operator...\n";
+assert(false);
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -237,11 +239,10 @@ Npdm_op_wrapper_CDD::Npdm_op_wrapper_CDD( SpinBlock * spinBlock )
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;
-  size_ = spinBlock_->get_op_array(CRE_CRE_DES).get_size();
+  size_ = spinBlock_->get_op_array(CRE_DES_DES).get_size();
   factor_ = 1.0;
   transpose_ = false;
-//FIXME
-  build_pattern_ = "((CC)D)";
+  build_pattern_ = "((CD)D)";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
 }
@@ -254,10 +255,8 @@ pout << "getting CDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
-//FIXME
-assert(false);
 
-  opReps_ = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
+  opReps_ = spinBlock_->get_op_array(CRE_DES_DES).get_local_element(idx);
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);

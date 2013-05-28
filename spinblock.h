@@ -38,6 +38,7 @@ class SpinBlock
       ar.register_type(static_cast<Op_component<Ham> *>(NULL));
 //MAW 3PDM
       ar.register_type(static_cast<Op_component<CreCreDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesDes> *>(NULL));
       ar & ops;
     }
 

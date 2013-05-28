@@ -22,14 +22,15 @@ Npdm_patterns::Npdm_patterns( int pdm_order, int sweep_pos, int end_pos )
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// Generates all required block partitionings for an NPDM
 
 void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
 {
-
-  int lhs, rhs, dot, dotmax;
-
   std::cout << "=================================================================\n";
   std::cout << "Possible block partitions:\n";
+
+  int lhs, rhs, dot, dotmax;
+  // General cases
   for (lhs = pdm_order_; lhs >= 0; lhs--) {
     dotmax = 2*pdm_order_ - lhs;
     for (dot = dotmax; dot >= 1; dot--) {
@@ -73,8 +74,8 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
   }
 
 //Debug extra
-//std::cout << 1 << "," << 1 << "," << 2 << std::endl;
-//lhs_dot_rhs_types_.insert( std::make_tuple(1,1,2) );
+//std::cout << 3 << "," << 1 << "," << 0 << std::endl;
+//lhs_dot_rhs_types_.insert( std::make_tuple(3,1,0) );
 
 }
 

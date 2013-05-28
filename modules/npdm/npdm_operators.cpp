@@ -57,11 +57,12 @@ pout << "building CreCreDes renormalized operator...\n";
 pout << "indices  " << i << " " << j << " " << k << std::endl;
   // Forward
   if (leftBlock->get_op_array(CRE_CRE_DES).has(i,j,k)) {
-//    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DES, quantum_ladder, i,j,k);
-//    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
-    const boost::shared_ptr<SparseMatrix>& op12 = leftBlock->get_op_rep(CRE_CRE, deltaQuantum12, i,j);
-std::cout << "operator elements:\n";
-std::cout << *op12;
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DES, quantum_ladder, i,j,k);
+    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+std::cout << "operator elements before; total_spin = " << deltaQuantum123.get_s() << std::endl;
+std::cout << *op;
+std::cout << "operator elements after; total_spin = " << deltaQuantum123.get_s() << std::endl;
+std::cout << *this;
 //    Transposeview op3 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(k), k));
 //    CreCreDes op123;
 //    op123.set_orbs().push_back(i);
@@ -133,6 +134,7 @@ pout << "done!\n";
 void SpinAdapted::CreCreDes::build_in_csf_space(const SpinBlock& b)
 {
 pout << "building CreCreDes in CSF space as a product..\n";
+assert(false); // sometimes fails
   built = true;
   allocate(b.get_stateInfo());
   Sign = 1;
@@ -142,6 +144,7 @@ pout << "building CreCreDes in CSF space as a product..\n";
   const int j = get_orbs()[1];
   const int k = get_orbs()[2];
 pout << "indices = " << i << " " << j << " " << k << std::endl;
+//FIXME THIS FAILS SOMETIMES... e.g. c2_d2h test example; don't know why.
   assert( b.get_op_array(CRE).has(i) );
   assert( b.get_op_array(CRE).has(j) );
   assert( b.get_op_array(CRE).has(k) );
@@ -270,54 +273,55 @@ pout << "building CreDesDes renormalized operator...\n";
   // Below, note transposes for (i,j) since 2-index ops are built with i>=j 
 
 pout << "indices  " << i << " " << j << " " << k << std::endl;
-pout <<  (leftBlock->get_op_array(CRE_CRE).has(j,i)) << std::endl;
+pout <<  (leftBlock->get_op_array(CRE_DES).has(j,i)) << std::endl;
   // Forward
-  if (leftBlock->get_op_array(CRE_CRE_DES).has(i,j,k)) {
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DES, quantum_ladder, i,j,k);
+  if (leftBlock->get_op_array(CRE_DES_DES).has(i,j,k)) {
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES_DES, quantum_ladder, i,j,k);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
-  else if (rightBlock->get_op_array(CRE_CRE_DES).has(i,j,k)) {
-    const boost::shared_ptr<SparseMatrix>& op = rightBlock->get_op_rep(CRE_CRE_DES, quantum_ladder, i,j,k);
-    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
-  }
-  else if (leftBlock->get_op_array(CRE_CRE).has(j,i)) {
-    assert (rightBlock->get_op_array(CRE).has(k));
-    const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE_CRE, deltaQuantum12, j,i);
-    Transposeview op2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(k), k));
-    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, op2, &b, &(b.get_stateInfo()), *this, 1.0);
-  }
-  // Want to build as ((CC)D), not (C(CD)), but FIXME this is relatively expensive!
-  else if (b.get_op_array(CRE_CRE).has(j,i)) {
-    // Get CC on big block
-    const boost::shared_ptr<SparseMatrix> op1 = b.get_op_rep(CRE_CRE, deltaQuantum12, j,i);
-    // Get D on big block
-    assert (b.get_op_array(CRE).has(k));
-    Transposeview op2 = Transposeview( b.get_op_rep(CRE, getSpinQuantum(k), k) );
-    // Build tensor product operator directly in 4M*4M space
-    boost::shared_ptr<SparseMatrix> newOp (new Cre);
-    newOp->set_orbs().push_back(i);
-    newOp->set_orbs().push_back(j);
-    newOp->set_orbs().push_back(k);
-    newOp->set_initialised() = true;
-    newOp->set_fermion() = true; //is_fermion;
-    operatorfunctions::Product(&b, *op1, op2, *newOp, 1.0 );
-  }
-//  else if (rightBlock->get_op_array(CRE_CRE).has(j,i)) {
-//pout << "hello6\n";
-//    assert (false);
-//    assert (leftBlock->get_op_array(CRE).has(k));
-//    const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE_CRE, deltaQuantum12, i,j);
-//    Transposeview op2 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(k), k));
-//    double parity = getCommuteParity(op1->get_deltaQuantum(), op2.get_deltaQuantum(), get_deltaQuantum());
-//    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, op2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
+//  else if (rightBlock->get_op_array(CRE_CRE_DES).has(i,j,k)) {
+//    const boost::shared_ptr<SparseMatrix>& op = rightBlock->get_op_rep(CRE_CRE_DES, quantum_ladder, i,j,k);
+//    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
 //  }
-//  else if (rightBlock->get_op_array(CRE).has(i)) {
-//pout << "hello7\n";
+//  else if (leftBlock->get_op_array(CRE_CRE).has(j,i)) {
+//    assert (rightBlock->get_op_array(CRE).has(k));
+//    const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE_CRE, deltaQuantum12, j,i);
+//    Transposeview op2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(k), k));
+//    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, op2, &b, &(b.get_stateInfo()), *this, 1.0);
+//  }
+//  // Want to build as ((CC)D), not (C(CD)), but FIXME this is relatively expensive!
+//  else if (b.get_op_array(CRE_CRE).has(j,i)) {
+//    // Get CC on big block
+//    const boost::shared_ptr<SparseMatrix> op1 = b.get_op_rep(CRE_CRE, deltaQuantum12, j,i);
+//    // Get D on big block
+//    assert (b.get_op_array(CRE).has(k));
+//    Transposeview op2 = Transposeview( b.get_op_rep(CRE, getSpinQuantum(k), k) );
+//    // Build tensor product operator directly in 4M*4M space
+//    boost::shared_ptr<SparseMatrix> newOp (new Cre);
+//    newOp->set_orbs().push_back(i);
+//    newOp->set_orbs().push_back(j);
+//    newOp->set_orbs().push_back(k);
+//    newOp->set_initialised() = true;
+//    newOp->set_fermion() = true; //is_fermion;
+//    operatorfunctions::Product(&b, *op1, op2, *newOp, 1.0 );
+//  }
+////  else if (rightBlock->get_op_array(CRE_CRE).has(j,i)) {
+////pout << "hello6\n";
+////    assert (false);
+////    assert (leftBlock->get_op_array(CRE).has(k));
+////    const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE_CRE, deltaQuantum12, i,j);
+////    Transposeview op2 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(k), k));
+////    double parity = getCommuteParity(op1->get_deltaQuantum(), op2.get_deltaQuantum(), get_deltaQuantum());
+////    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, op2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
+////  }
+////  else if (rightBlock->get_op_array(CRE).has(i)) {
+////pout << "hello7\n";
+////    assert (false);
+////  }
+//  else {
 //    assert (false);
 //  }
-  else {
-    assert (false);
-  }
+
   dmrginp.makeopsT -> stop();
 pout << "done!\n";
 

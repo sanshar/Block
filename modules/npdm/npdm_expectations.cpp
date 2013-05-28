@@ -206,7 +206,6 @@ std::vector< std::pair< std::vector<int>, double > > Npdm_expectations::get_nons
 double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, int irhs )
 {
 //FIXME is null_deleter() necessary below?
-  assert ( dotOps_.opReps_.size() + lhsOps_.opReps_.size() + rhsOps_.opReps_.size() != 0 );
   SparseMatrix* null = 0; 
   double expectation;
 
@@ -214,6 +213,10 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
   if ( lhsOps_.opReps_.size() > 0 ) lhsOp = lhsOps_.opReps_.at(ilhs);
   if ( dotOps_.opReps_.size() > 0 ) dotOp = dotOps_.opReps_.at(idot);
   if ( rhsOps_.opReps_.size() > 0 ) rhsOp = rhsOps_.opReps_.at(irhs);
+
+//if ( lhsOps_.opReps_.size() > 0 ) cout << "lhsOp:\n" << *lhsOp;
+//if ( dotOps_.opReps_.size() > 0 ) cout << "dotOp:\n" << *dotOp;
+//if ( rhsOps_.opReps_.size() > 0 ) cout << "rhsOp:\n" << *rhsOp;
 
   // We need to distinguish cases where one or more blocks has an empty operator string
   // X_X_X
@@ -268,9 +271,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
     if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *null, *null, *rhsOp, big_);
   }
-  else {
-    assert(false);
-  }
+  else assert(false);
 
   // Modify new element with sign factors and return
   double factor = lhsOps_.factor_ * dotOps_.factor_ * rhsOps_.factor_;

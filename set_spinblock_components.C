@@ -27,7 +27,7 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_DESCOMP).set_local() = true;
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = true;
-//FIXME MAW
+//FIXME MAW 3PDM
     if (has(CRE_CRE_DES))
       set_op_array(CRE_CRE_DES).set_local() = true;
     if (has(CRE_DES_DES))
@@ -49,7 +49,7 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_DESCOMP).set_local() = false;
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = false;
-//FIXME MAW 
+//FIXME MAW 3PDM
     if (has(CRE_CRE_DES))
       set_op_array(CRE_CRE_DES).set_local() = false;
     if (has(CRE_DES_DES))
@@ -85,9 +85,12 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
     case HAM:
       ret = boost::shared_ptr<Op_component<Ham> >(new Op_component<Ham>(is_core));
       break;
-    //MAW
+//FIXME MAW 3PDM
     case CRE_CRE_DES:
       ret = boost::shared_ptr<Op_component<CreCreDes> >(new Op_component<CreCreDes>(is_core));
+      break;
+    case CRE_DES_DES:
+      ret = boost::shared_ptr<Op_component<CreDesDes> >(new Op_component<CreDesDes>(is_core));
       break;
   }
   return ret;
@@ -116,10 +119,11 @@ void SpinBlock::default_op_components(bool complementary_)
     ops[CRE_CRE] = make_new_op(CRE_CRE, true);
     ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
     ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
-    //MAW
+//FIXME MAW 3PDM
 //    if (dmrginp.calc_type() == THREEPDM) {
 //      assert (false);
       ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
+      ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
 //    }
   }
 
@@ -151,7 +155,6 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
   }
 
   if (!is_direct() )
-//MAW put in 3-index operator here?
   {
     ops[CRE] = make_new_op(CRE, true);
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
@@ -161,8 +164,9 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
       if (haveNormops) {
         ops[CRE_DES] = make_new_op(CRE_DES, true);
         ops[CRE_CRE] = make_new_op(CRE_CRE, true);
-//FIXME MAW
+//FIXME MAW 3PDM
         ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
+        ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
       }
       if (haveCompops) {
         ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
@@ -186,8 +190,9 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
       if (haveNormops || dmrginp.do_cd()) {
         ops[CRE_DES] = make_new_op(CRE_DES, false);
         ops[CRE_CRE] = make_new_op(CRE_CRE, false);
-//FIXME MAW
+//FIXME MAW 3PDM
         ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
+        ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);
       }
       if (haveCompops) {
         ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, false);

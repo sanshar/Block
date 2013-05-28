@@ -170,8 +170,8 @@ pout << "spins = " << spin1.get_s()/2.0 << " " << spin2.get_s()/2.0 << " " << sp
         op.set_fermion() = true;
         op.set_deltaQuantum() = spinvec123[q];      
         op.set_quantum_ladder() = { spinvec12[p], spinvec123[q] };
-        assert( spinvec12[p].particleNumber  == 2 );
-        assert( spinvec123[p].particleNumber == 1 );
+        assert( spinvec12[p].particleNumber  == 0 );
+        assert( spinvec123[p].particleNumber == -1 );
 pout << "3-index operators spin composition:\n";
 pout << spinvec12[p].get_s()/2.0 << "  " << spinvec123[q].get_s()/2.0 << std::endl;
       }
