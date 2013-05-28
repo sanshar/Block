@@ -149,7 +149,7 @@ template <class Op> class Op_component : public Op_component_base
 
   std::vector<boost::shared_ptr<SparseMatrix> > get_local_element(int i) 
   {
-pout << "op_components.h get_local_element(i)\n";
+//pout << "op_components.h get_local_element(i)\n";
     std::vector<boost::shared_ptr<SparseMatrix> > vec(m_op.get_local_element(i).size());
     for (int l=0; l<vec.size(); l++)
       vec[l] = m_op.get_local_element(i)[l]; 
@@ -214,8 +214,6 @@ pout << "op_components.h get_local_element(i)\n";
 std::cout << " s.particleNumber = " << s.particleNumber << std::endl;
 std::cout << " s.totalSpin = " << s.totalSpin << std::endl;
     for (int l=0; l<vec.size(); l++) {
-std::cout << " vec[l].particleNumber = " << vec[l]->get_deltaQuantum().particleNumber << std::endl;
-std::cout << " vec[l].totalSpin = " << vec[l]->get_deltaQuantum().totalSpin << std::endl;
       if ( s == vec[l]->get_deltaQuantum() ) return m_op(i,j,k)[l];
     }
     assert (false);

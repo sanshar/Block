@@ -49,8 +49,10 @@ pout << "array.get_local_element(i)  " << i << std::endl;
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
 pout << "size() = " << vec.size() << std::endl;
     for (int j=0; j<vec.size(); j++)
-      if (array.get_op_string() == "CRECRE" ||
-          array.get_op_string() == "CREDES")
+//      if (array.get_op_string() == "CRECRE"     ||
+//          array.get_op_string() == "CREDES"     ||
+//          array.get_op_string() == "CRECREDES")
+      if (array.get_op_string() == "CRECREDES")
         vec[j]->build_in_csf_space(b);
       else 
         vec[j]->buildUsingCsf(b, ladders, s);

@@ -169,7 +169,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 
 void SpinAdapted::Cre::build(const SpinBlock& b)
 {
-pout << "building Cre renormalized operator...\n";
+//pout << "building Cre renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -252,7 +252,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Cre::getworkingreprese
 
 void SpinAdapted::CreDes::build(const SpinBlock& b)
 {
-pout << "building CreDes renormalized operator...\n";
+//pout << "building CreDes renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -310,16 +310,17 @@ pout << "building CreDes in CSF space as a product..\n";
   assert( b.get_op_array(CRE).has(i));
   assert( b.get_op_array(CRE).has(j));
 
+//std::cout << "indices = " << i << " " << j << std::endl;
   const boost::shared_ptr<SparseMatrix> op1 = b.get_op_rep(CRE, getSpinQuantum(i), i);
   Transposeview op2 = Transposeview( b.get_op_rep(CRE, getSpinQuantum(j), j) );
   SpinAdapted::operatorfunctions::Product(&b, *op1, op2, *this, 1.0);
-
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 double SpinAdapted::CreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
+//  assert(false);
   double element = 0.0;
   int I = get_orbs()[0], 
     J = get_orbs()[1]; //convert spatial id to spin id because slaters need that
@@ -348,7 +349,7 @@ double SpinAdapted::CreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const 
 
 boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDes::getworkingrepresentation(const SpinBlock* block)
 {
-  //assert(this->get_initialised());
+  assert(this->get_initialised());
   if (this->get_built())
     {
       return boost::shared_ptr<CreDes>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
@@ -369,7 +370,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDes::getworkingrepr
 
 void SpinAdapted::CreCre::build(const SpinBlock& b)
 {
-pout << "building CreCre renormalized operator...\n";
+//pout << "building CreCre renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -429,16 +430,14 @@ pout << "building CreCre in CSF space as a product..\n";
 
   const boost::shared_ptr<SparseMatrix> op1 = b.get_op_rep(CRE, getSpinQuantum(i), i);
   const boost::shared_ptr<SparseMatrix> op2 = b.get_op_rep(CRE, getSpinQuantum(j), j);
-//  Transposeview op2 = Transposeview( b.get_op_rep(CRE, getSpinQuantum(j), j) );
   SpinAdapted::operatorfunctions::Product(&b, *op1, *op2, *this, 1.0);
-
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 double SpinAdapted::CreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
-
+//  assert(false);
   double element = 0.0;
   int I = get_orbs()[0], 
     J = get_orbs()[1]; //convert spatial id to spin id because slaters need that
@@ -470,13 +469,16 @@ double SpinAdapted::CreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const 
 
 boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCre::getworkingrepresentation(const SpinBlock* block)
 {
-  //assert(this->get_initialised());
+pout << "CreCre::getworkingrepresentation\n";
+  assert(this->get_initialised());
   if (this->get_built())
     {
+pout << "get directly\n";
       return boost::shared_ptr<CreCre>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
     }
   else
     {
+pout << "build first\n";
       boost::shared_ptr<SparseMatrix> rep(new CreCre);
       *rep = *this;
       rep->build(*block);
@@ -492,7 +494,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCre::getworkingrepr
 
 void SpinAdapted::CreDesComp::build(const SpinBlock& b)
 {
-pout << "building CreDesComp renormalized operator...\n";
+//pout << "building CreDesComp renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -621,7 +623,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesComp::getworking
 
 void SpinAdapted::DesDesComp::build(const SpinBlock& b)
 {
-pout << "building DesDesComp renormalized operator...\n";
+//pout << "building DesDesComp renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -752,7 +754,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::DesDesComp::getworking
 
 void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
 {
-pout << "building CreCreComp renormalized operator...\n";
+//pout << "building CreCreComp renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -902,7 +904,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreDesComp::getwork
 
 void SpinAdapted::Ham::build(const SpinBlock& b)
 {
-pout << "building Ham renormalized operator...\n";
+//pout << "building Ham renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());

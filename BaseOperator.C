@@ -312,25 +312,25 @@ void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matri
 void SparseMatrix::build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& rotate_matrix, 
                                                    const StateInfo *newStateInfo)
 {
-pout << "maw hello SparseMatrix::build_and_renormalise_transform\n";  
+//pout << "maw hello SparseMatrix::build_and_renormalise_transform\n";  
 
   assert( quantum_ladder.size() > 0 );
   assert( quantum_ladder.back() == deltaQuantum );
   boost::shared_ptr<SparseMatrix> tmp;
   if (orbs.size() == 0) {
-pout << "hello 0op\n";
+//pout << "hello 0op\n";
     tmp = big->get_op_rep(ot, deltaQuantum);
   }
   else if (orbs.size() == 1) {
-pout << "hello 1op  " << orbs[0] << std::endl;
+//pout << "hello 1op  " << orbs[0] << std::endl;
     tmp = big->get_op_rep(ot, deltaQuantum, orbs[0]);
   }
   else if (orbs.size() == 2) {
-pout << "hello 2op  " << orbs[0] << "  " << orbs[1] << std::endl;
+//pout << "hello 2op  " << orbs[0] << "  " << orbs[1] << std::endl;
     tmp = big->get_op_rep(ot, deltaQuantum, orbs[0], orbs[1]);
   }
   else if (orbs.size() == 3) {
-pout << "hello 3op  " << orbs[0] << "  " << orbs[1] << "  " << orbs[2] << std::endl;
+//pout << "hello 3op  " << orbs[0] << "  " << orbs[1] << "  " << orbs[2] << std::endl;
     tmp = big->get_op_rep(ot, quantum_ladder, orbs[0], orbs[1], orbs[2]);
   }
   else
@@ -355,7 +355,7 @@ pout << "hello 3op  " << orbs[0] << "  " << orbs[1] << "  " << orbs[2] << std::e
       ++newQ;
     }
   }
-pout << "done!\n";
+//pout << "done!\n";
 
 }
 

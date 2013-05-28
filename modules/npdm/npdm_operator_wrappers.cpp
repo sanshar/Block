@@ -51,10 +51,10 @@ pout << "getting CCDD operator...\n";
   opReps_.clear();
   // S=0 (+) S=0  =>  S=0
 //FIXME why NOT FERMION????
-  opReps_.push_back( build_compound_operator( false, twoOps, 0, twoOps, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( false, twoOps.at(0), twoOps.at(0), 0, indices_, true ) );
   // S=1 (+) S=1  =>  S=0
 //FIXME why NOT FERMION????
-  opReps_.push_back( build_compound_operator( false, twoOps, 1, twoOps, 1, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( false, twoOps.at(1), twoOps.at(1), 0, indices_, true ) );
 }
 
 //===========================================================================================================================================================
@@ -84,6 +84,10 @@ pout << "getting compound CCD operator...\n";
   int ix, jx, kx;
 
   std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
+pout << "0 CC operator elements:\n";
+pout << *(twoOps[0]);
+pout << "1 CC operator elements:\n";
+pout << *(twoOps[1]);
   ix = twoOps.at(0)->get_orbs(0);
   jx = twoOps.at(0)->get_orbs(1);
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
@@ -95,14 +99,21 @@ pout << "getting compound CCD operator...\n";
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
+pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   opReps_.clear();
   // S=0 (+) S=1/2  =>  S=1/2
-  opReps_.push_back( build_compound_operator( true, twoOps, 0, oneOp, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( true, twoOps.at(0), oneOp.at(0), 0, indices_, true ) );
   // S=1 (+) S=1/2  =>  S=1/2
-  opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( true, twoOps.at(1), oneOp.at(0), 0, indices_, true ) );
   // S=1 (+) S=1/2  =>  S=3/2
-  opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 1, ix, true ) );
+  opReps_.push_back( build_compound_operator( true, twoOps.at(1), oneOp.at(0), 1, indices_, true ) );
+pout << "2a CCD operator elements:\n";
+pout << *(opReps_[0]);
+pout << "2b CCD operator elements:\n";
+pout << *(opReps_[1]);
+pout << "4  CCD operator elements:\n";
+pout << *(opReps_[2]);
 }
 
 //===========================================================================================================================================================
@@ -147,11 +158,11 @@ pout << "getting compound CDD operator...\n";
 //  "((CD)D)";
   opReps_.clear();
   // S=0 (+) S=1/2  =>  S=1/2
-  opReps_.push_back( build_compound_operator( true, twoOps, 0, oneOp, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( true, twoOps.at(0), oneOp.at(0), 0, indices_, true ) );
   // S=1 (+) S=1/2  =>  S=1/2
-  opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 0, ix, true ) );
+  opReps_.push_back( build_compound_operator( true, twoOps.at(1), oneOp.at(0), 0, indices_, true ) );
   // S=1 (+) S=1/2  =>  S=3/2
-  opReps_.push_back( build_compound_operator( true, twoOps, 1, oneOp, 0, 1, ix, true ) );
+  opReps_.push_back( build_compound_operator( true, twoOps.at(1), oneOp.at(0), 1, indices_, true ) );
 
 //  "(C(DD))";
 //FIXME this fails... WHY??
@@ -206,6 +217,13 @@ pout << "getting CCD operator...\n";
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
+pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+pout << "2a CCD operator elements:\n";
+pout << *(opReps_[0]);
+pout << "2b CCD operator elements:\n";
+pout << *(opReps_[1]);
+pout << "4  CCD operator elements:\n";
+pout << *(opReps_[2]);
 
   indices_.push_back( ix );
   indices_.push_back( jx );
@@ -222,6 +240,7 @@ Npdm_op_wrapper_CDD::Npdm_op_wrapper_CDD( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE_CRE_DES).get_size();
   factor_ = 1.0;
   transpose_ = false;
+//FIXME
   build_pattern_ = "((CC)D)";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
@@ -400,6 +419,9 @@ pout << "getting D operator...\n";
   opReps_ = spinBlock_->get_op_array(CRE).get_local_element(idx);
   int ix = opReps_.at(0)->get_orbs(0);
   indices_.push_back(ix);
+pout << "indices  " << ix << std::endl;
+pout << "D operator elements:\n";
+pout << *(opReps_[0]);
 }
 
 //===========================================================================================================================================================
@@ -430,30 +452,26 @@ void Npdm_op_wrapper_NULL::set_local_ops( int idx )
 // NOTE transpose applied to RHS operator here
 
 boost::shared_ptr<SparseMatrix> NpdmSpinOps::build_compound_operator( bool is_fermion,
-                                                                      std::vector< boost::shared_ptr<SparseMatrix> > lhsOps, int ilhs,
-                                                                      std::vector< boost::shared_ptr<SparseMatrix> > rhsOps, int irhs,
-                                                                      int ispin, int ix, bool transpose )
+                                                                      boost::shared_ptr<SparseMatrix> lhsOp,
+                                                                      boost::shared_ptr<SparseMatrix> rhsOp,
+                                                                      int ispin, std::vector<int> indices, bool transpose )
 {
   // Initialize new operator
   boost::shared_ptr<SparseMatrix> newOp (new Cre);
-  newOp->set_orbs() = rhsOps.at(0)->get_orbs();
-  newOp->set_orbs().push_back(ix); 
-  newOp->set_orbs().push_back(ix);
+  assert( lhsOp->get_orbs().size() + rhsOp->get_orbs().size() == indices.size() );
+  newOp->set_orbs() = indices;
   newOp->set_initialised() = true;
   newOp->set_fermion() = is_fermion;
+  newOp->set_deltaQuantum() = ( lhsOp->get_deltaQuantum() - rhsOp->get_deltaQuantum() ).at(ispin);
+  newOp->allocate( spinBlock_->get_stateInfo() );
 
-//FIXME move stuff outside if blocks??
   if (transpose) {
     // Build compound operator as product of LHS and TRANSPOSE( RHS )
-    newOp->set_deltaQuantum() = ( lhsOps.at(ilhs)->get_deltaQuantum() - rhsOps.at(irhs)->get_deltaQuantum() ).at(ispin);
-    newOp->allocate( spinBlock_->get_stateInfo() );
-    operatorfunctions::Product(spinBlock_, *(lhsOps.at(ilhs)), Transposeview(*rhsOps.at(irhs)), *newOp, 1.0 );
+    operatorfunctions::Product(spinBlock_, *lhsOp, Transposeview(*rhsOp), *newOp, 1.0 );
   }
   else {
     // Build compound operator as product of LHS and RHS
-    newOp->set_deltaQuantum() = ( lhsOps.at(ilhs)->get_deltaQuantum() - rhsOps.at(irhs)->get_deltaQuantum() ).at(ispin);
-    newOp->allocate( spinBlock_->get_stateInfo() );
-    operatorfunctions::Product(spinBlock_, *(lhsOps.at(ilhs)), *(rhsOps.at(irhs)), *newOp, 1.0 );
+    operatorfunctions::Product(spinBlock_, *lhsOp, *rhsOp, *newOp, 1.0 );
   }
 
   return newOp;

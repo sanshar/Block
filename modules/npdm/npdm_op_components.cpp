@@ -27,9 +27,10 @@ std::vector<std::tuple<int,int,int> > screened_ccd_indices(const vector<int, std
 {
   // Set up site indices such that (i <= j <= k)  (Note Block mostly sets up with j<=i, but that's not very convenient for us here).
   std::vector<std::tuple<int,int,int> > screened_indices;
+//FIXME  only i=j=k at the moment!!
   for (int k = 0; k < sites.size(); ++k) {
-    for (int j = 0; j <= k; ++j) {
-      for (int i = 0; i <= j; ++i) {
+    for (int j = k; j <= k; ++j) {
+      for (int i = j; i <= j; ++i) {
 //      if (dmrginp.use_partial_two_integrals()) {
         screened_indices.push_back(std::make_tuple(sites[i], sites[j], sites[k]));
 //      }
@@ -97,7 +98,8 @@ pout << "spins = " << spin1.get_s()/2.0 << " " << spin2.get_s()/2.0 << " " << sp
         SparseMatrix& op = *spin_ops[spin_ops.size()-1];
         op.set_orbs() = orbs;
         op.set_initialised() = true;
-        op.set_fermion() = false;
+//FIXME!!! why false or true??
+        op.set_fermion() = true;
         op.set_deltaQuantum() = spinvec123[q];      
         op.set_quantum_ladder() = { spinvec12[p], spinvec123[q] };
         assert( spinvec12[p].particleNumber  == 2 );
@@ -164,7 +166,8 @@ pout << "spins = " << spin1.get_s()/2.0 << " " << spin2.get_s()/2.0 << " " << sp
         SparseMatrix& op = *spin_ops[spin_ops.size()-1];
         op.set_orbs() = orbs;
         op.set_initialised() = true;
-        op.set_fermion() = false;
+//FIXME!!! why false or true??
+        op.set_fermion() = true;
         op.set_deltaQuantum() = spinvec123[q];      
         op.set_quantum_ladder() = { spinvec12[p], spinvec123[q] };
         assert( spinvec12[p].particleNumber  == 2 );

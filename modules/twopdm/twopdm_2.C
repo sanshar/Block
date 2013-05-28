@@ -46,9 +46,22 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
 
   Cre AOp; //This is just an example class
   int totalspin = (&rightOp) ? rightOp.get_spin() : 0;
+//MAWpout << "totalspin  " << totalspin << std::endl;
 
-  if (Aindices != 0)
+  if (Aindices != 0) {
+if (dotindices==3 && rightindices==1) {
+//MAWpout << "Building AOp:\n";
+//MAWpout << "dotOp:\n";
+//MAWpout << dotOp;
+//MAWpout << "rhsOp:\n"; // can't print Transposeview
+//MAWpout << rightOp;
+}
     FormLeftOp(leftBlock, leftOp, dotOp, AOp, totalspin);
+//MAWif (leftindices > 0) { pout << "leftOp:\n"; pout << leftOp; }
+//MAWif (dotindices > 0) { pout << "dotOp:\n"; pout << dotOp; }
+//MAWpout << "AOp:\n";
+//MAWpout << AOp;
+}
   
   //different cases
   if (Aindices == 0 && Bindices == 4)
@@ -105,6 +118,28 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
       Aop.set_orbs() = dotOp.get_orbs();
       Aop.set_deltaQuantum() = dotOp.get_deltaQuantum();
       Aop.allocate(leftBlock->get_stateInfo());
+//MAWpout << "dotOp:\n";
+//MAWpout << dotOp;
+//MAWcout << "dotOp.get_sign():\n";
+//MAWcout << dotOp.get_sign() << std::endl;
+//MAWcout << "dotOp.get_initialised():\n";
+//MAWcout << dotOp.get_initialised() << std::endl;
+//MAWcout << "dotOp.get_fermion():\n";
+//MAWcout << dotOp.get_fermion() << std::endl;
+//MAWcout << "dotOp.get_spin():\n";
+//MAWcout << dotOp.get_spin() << std::endl;
+//MAWcout << "dotOp.get_symm():\n";
+//MAWcout << dotOp.get_symm() << std::endl;
+//MAWcout << "dotOp.get_deltaQuantum():\n";
+//MAWcout << dotOp.get_deltaQuantum() << std::endl;
+//MAWcout << "dotOp.get_orbs():\n";
+//MAWcout << dotOp.get_orbs()[0] << dotOp.get_orbs()[1] << dotOp.get_orbs()[2] << std::endl;
+//MAWcout << "dotOp.get_built():\n";
+//MAWcout << dotOp.get_orbs()[0] << dotOp.get_orbs()[1] << dotOp.get_orbs()[2] << std::endl;
+//MAWcout << "leftBlock->get_stateInfo():\n";
+//MAWcout << leftBlock->get_stateInfo() << std::endl;
+//MAWcout << "Aop.get_orbs():\n";
+//MAWcout << Aop.get_orbs()[0] << Aop.get_orbs()[1] << Aop.get_orbs()[2] << std::endl;
       operatorfunctions::TensorTrace(leftBlock->get_rightBlock(), dotOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
     }
   else

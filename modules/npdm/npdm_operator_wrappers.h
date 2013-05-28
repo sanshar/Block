@@ -39,9 +39,9 @@ class NpdmSpinOps {
 
   protected:
     boost::shared_ptr<SparseMatrix> build_compound_operator( bool is_fermion,
-                                                             std::vector< boost::shared_ptr<SparseMatrix> > lhsOps, int ilhs,
-                                                             std::vector< boost::shared_ptr<SparseMatrix> > rhsOps, int irhs,
-                                                             int ispin, int ix, bool transpose );
+                                                             boost::shared_ptr<SparseMatrix> lhsOp,
+                                                             boost::shared_ptr<SparseMatrix> rhsOp,
+                                                             int ispin, std::vector<int> indices, bool transpose );
 
     SpinBlock * spinBlock_;
     // Number of spatial orbital combinations
