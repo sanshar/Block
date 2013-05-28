@@ -129,7 +129,7 @@ pout << "done!\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//MAW debug
+//MAW debug alternative to REDMATRIX routine
 void SpinAdapted::CreCreDes::build_in_csf_space(const SpinBlock& b)
 {
 pout << "building CreCreDes in CSF space as a product..\n";
@@ -141,7 +141,7 @@ pout << "building CreCreDes in CSF space as a product..\n";
   const int i = get_orbs()[0];
   const int j = get_orbs()[1];
   const int k = get_orbs()[2];
-//pout << "indices = " << i << " " << j << " " << k << std::endl;
+pout << "indices = " << i << " " << j << " " << k << std::endl;
   assert( b.get_op_array(CRE).has(i) );
   assert( b.get_op_array(CRE).has(j) );
   assert( b.get_op_array(CRE).has(k) );
@@ -152,7 +152,6 @@ pout << "building CreCreDes in CSF space as a product..\n";
   SpinQuantum deltaQuantum123 = quantum_ladder.at(1);
   assert( deltaQuantum == deltaQuantum123 );
 
-// THIS WORKS and agrees with REDMATRIX routine, but still total error isn't 0...???
   // Build 2-index as Product first
   const boost::shared_ptr<SparseMatrix> op1 = b.get_op_rep(CRE, getSpinQuantum(i), i);
   const boost::shared_ptr<SparseMatrix> op2 = b.get_op_rep(CRE, getSpinQuantum(j), j);

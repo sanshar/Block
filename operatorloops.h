@@ -52,9 +52,9 @@ pout << "size() = " << vec.size() << std::endl;
 //      if (array.get_op_string() == "CRECRE"     ||
 //          array.get_op_string() == "CREDES"     ||
 //          array.get_op_string() == "CRECREDES")
-      if (array.get_op_string() == "CRECREDES")
-        vec[j]->build_in_csf_space(b);
-      else 
+//      if (array.get_op_string() == "CRECREDES")
+//        vec[j]->build_in_csf_space(b);
+//      else 
         vec[j]->buildUsingCsf(b, ladders, s);
   }
 pout << "done!\n";

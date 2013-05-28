@@ -93,7 +93,7 @@ pout << *(twoOps[1]);
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
   kx = oneOp.at(0)->get_orbs(0);
 
-  // Assumed single site
+  // Assumed single site (i=j=k)
   assert ( ix == jx );
   assert ( jx == kx );
   indices_.push_back( ix );
@@ -148,7 +148,7 @@ pout << "getting compound CDD operator...\n";
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
   kx = oneOp.at(0)->get_orbs(0);
 
-  // Assumed single site
+  // Assumed single site (i=j=k)
   assert ( ix == jx );
   assert ( jx == kx );
   indices_.push_back( ix );
