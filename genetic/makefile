@@ -12,7 +12,7 @@ LIBS=$(BOOSTLIB) -lboost_serialization -lboost_mpi
 
 FLAGS=$(CXXFLAGS)
 
-OBJ_gaopt = main.o CrossOver.o Evaluate.o GAInput.o GAOptimize.o Generation.o Mutation.o RandomGenerator.o ReadIntegral.o
+OBJ_gaopt = main.o fiedler.o CrossOver.o Evaluate.o GAInput.o GAOptimize.o Generation.o Mutation.o RandomGenerator.o ReadIntegral.o
 
 .C.o:
 	$(CXX) $(FLAGS) $(INCLUDES) $(LIBS) -c $*.C

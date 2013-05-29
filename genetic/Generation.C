@@ -1,10 +1,12 @@
+#include <iostream>
 #include <cmath>
 #include "Generation.h"
 #include "genetic_utils.h"
 using namespace std;
 
    void genetic::Generation::AddFiedler(std::vector<int> fiedlerorder){
-   m_cells[0].Create(fiedlerorder);
+      m_cells[0].Create(fiedlerorder);
+      ComputeProbability();
    }
 
 void genetic::Generation::ComputeProbability(void)
@@ -53,7 +55,9 @@ void genetic::Generation::Initialize(void)
 {
   int& nCells = gainput.max_cells;
   m_cells = vector<Cell>(nCells, Cell());
-  for(int i = 0; i < nCells; ++i) m_cells[i].Create(Gene::Random());
+  for(int i = 0; i < nCells; ++i) {
+     m_cells[i].Create(Gene::Random());
+  }
   ComputeProbability();
 }
 

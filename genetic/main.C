@@ -4,6 +4,7 @@
 #include <cmath>
 #include "GAInput.h"
 #include "GAOptimize.h"
+#include "fiedler.h"
 using namespace std;
 
 #ifndef SERIAL
@@ -21,6 +22,7 @@ int main(int argc, char* argv[])
 
   string confFileName;
   string dumpFileName;
+
   for(int i = 1; i < argc; ++i)
   {
     if(strcmp(argv[i], "-config")   == 0) confFileName = argv[++i];
@@ -30,7 +32,9 @@ int main(int argc, char* argv[])
   ifstream confFile(confFileName.c_str());
   ifstream dumpFile(dumpFileName.c_str());
 
-  genetic::Cell final = genetic::gaordering(confFile, dumpFile);
+  std::vector<int> fiedlerv = get_fiedler(dumpFileName, dumpFile);
+
+  genetic::Cell final = genetic::gaordering(confFile, dumpFile, fiedlerv);
 
 #ifndef SERIAL
   if(world.rank() == 0)

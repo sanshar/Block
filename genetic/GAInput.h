@@ -40,7 +40,7 @@ namespace genetic
     double scaling;
     double exponent;
     unsigned int random_seed;
-    bool fiedler;
+    int fiedler;
     SELECT_TYPE select;
 
     GAInput(void);

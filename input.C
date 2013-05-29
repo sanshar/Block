@@ -3,7 +3,7 @@ Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
 This program is integrated in Molpro with the permission of 
-Sandeep Sharma and Garnet K.-L. Chan
+Sandeep Sharma, Roberto Olivares-Amaya and Garnet K.-L. Chan
 */
 
 
@@ -126,7 +126,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_reorder = false;
   m_reorderfile = "";
   m_gaopt = false;
-  m_fiedler = false;
+  m_fiedler = true;
 
   m_orbformat=MOLPROFORM;
 }
@@ -196,26 +196,23 @@ SpinAdapted::Input::Input(const string& config_name)
 	}	
 	  
       }
-      else if (boost::iequals(keyword,  "reorder"))
-      {
-	if(usedkey[REORDER] == 0) 
-	  usedkey_error(keyword, msg);
-	usedkey[REORDER] = 0;
-	if (tok.size() != 2) {
-	  pout << "keyword reorder should be followed by the filename and then an end line"<<endl;
-	  pout << "error found in the following line "<<endl;
-	  pout << msg<<endl;
-	  abort();
-	}	
-	m_reorder = true;
-	m_reorderfile = tok[1];
-      }
-      else if (boost::iequals(keyword,  "fiedler")) {
-         m_fiedler=true;
-         cout << "ROA Fiedler is: " << m_fiedler << endl;
+      else if (boost::iequals(keyword,  "reorder")) {
+      if(usedkey[REORDER] == 0) 
+         usedkey_error(keyword, msg);
+      usedkey[REORDER] = 0;
+      if (tok.size() != 2) {
+        pout << "keyword reorder should be followed by the filename and then an end line"<<endl;
+        pout << "error found in the following line "<<endl;
+        pout << msg<<endl;
+        abort();
+      }	
+      m_reorder = true;
+      m_fiedler = false;
+      m_reorderfile = tok[1];
       }
       else if (boost::iequals(keyword,  "gaopt"))
       {
+        m_fiedler = false;
         if(usedkey[GAORDER] == 0) 
           usedkey_error(keyword, msg);
         usedkey[GAORDER] = 0;
@@ -672,7 +669,7 @@ SpinAdapted::Input::Input(const string& config_name)
 
   ifstream orbitalFile;
   if (mpigetrank() == 0) 
-  CheckFileExistence(orbitalfile, "Orbital file ");
+     CheckFileExistence(orbitalfile, "Orbital file ");
 
   //read the orbitals
   v_1.rhf= true; 
@@ -699,7 +696,6 @@ SpinAdapted::Input::Input(const string& config_name)
     if(gaconffile != "default") gaconfFile.open(gaconffile.c_str(), ios::in);
     if (!m_fiedler) m_fiedlerorder=get_fiedler(orbitalfile, orbitalFile);
     orbitalFile.open(orbitalfile.c_str(), ios::in);
-    cout << "ROA entering getgaorder " << endl;
     getgaorder(gaconfFile, orbitalFile, m_fiedlerorder);
     orbitalFile.close();
   }
@@ -815,11 +811,13 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
       abort();
     }
     reorder.resize(m_norbs/2);
+    pout << "Fiedler-optimized orbital ordering: ";
     for (int i=0; i<m_norbs/2; i++) {
       reorder.at(oldtonew[i]) = i;
-      cout << oldtonew[i] << " ";
+      pout << oldtonew[i]+1 << " ";
     }
-    cout << endl;
+    pout << endl;
+    pout << endl;
   }
   // use Kij-based ordering
   else if (m_gaopt) {

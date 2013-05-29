@@ -74,11 +74,11 @@ genetic::Cell genetic::gaordering(ifstream& confFile, ifstream& dumpFile, std::v
 
 #else
   int ntask = gainput.max_community;
-  best = gaoptimize(genetic::gainput.random_seed);
+  best = gaoptimize(genetic::gainput.random_seed, fiedlerorder);
   cout << "Order #" << 0 << ": " << best << endl;
   for(int i = 1; i < ntask; ++i)
   {
-    Cell comm_cell = gaoptimize(genetic::gainput.random_seed+i);
+    Cell comm_cell = gaoptimize(genetic::gainput.random_seed+i, fiedlerorder);
     cout << "Order #" << i << ": " << comm_cell << endl;
     if(comm_cell < best) best = comm_cell;
   }
@@ -92,9 +92,8 @@ genetic::Cell genetic::gaoptimize(const int& seed, std::vector<int> fiedlerorder
 {
   srand(seed);
   Generation ancestor;
-  // Need to create a function that does not affect this
-  // Now I can add an if command here that if we don't want fiedler, then this is turned off
-  ancestor.AddFiedler(fiedlerorder);
+  if (gainput.fiedler==1)
+     ancestor.AddFiedler(fiedlerorder);
 
   for(int g = 0; g < gainput.max_generation; ++g)
   {

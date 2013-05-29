@@ -14,7 +14,7 @@ genetic::GAInput::GAInput(void)
   exponent       = 2.0;
   select         = GAUSS;
   random_seed    = 1414; //setting default seed
-  fiedler        = true;
+  fiedler        = 1;
 }
 
 genetic::GAInput::GAInput(ifstream& config)
