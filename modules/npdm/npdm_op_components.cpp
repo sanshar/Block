@@ -147,43 +147,6 @@ void Op_component<CreCreDes>::build_iterators(SpinBlock& b)
   }
 }
 
-////
-////    // Combine first 2 indices first
-////    SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
-////    SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
-////    // Note Cre_Cre => plus sign
-////    std::vector<SpinQuantum> spinvec12 = spin1 + spin2;
-////
-////    // Now combine with 3rd index
-////    SpinQuantum spin3 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[2]));
-//////pout << "spins = " << spin1.get_s()/2.0 << " " << spin2.get_s()/2.0 << " " << spin3.get_s()/2.0 << std::endl;
-////    for (int p=0; p < spinvec12.size(); p++) {
-////      assert( spinvec12[p].get_s() == 2*p );
-////      // Note X_Des => minus sign
-////      std::vector<SpinQuantum> spinvec123 = spinvec12[p] - spin3;
-////
-////      // Allocate new operator for each spin component
-////      for (int q=0; q < spinvec123.size(); q++) {
-////        spin_ops.push_back( boost::shared_ptr<CreCreDes>(new CreCreDes) );
-//////FIXME        SparseMatrix& op = *spin_ops[spin_ops.size()-1];
-////        boost::shared_ptr<CreCreDes> op = spin_ops.back();
-////        op->set_orbs() = orbs;
-////        op->set_initialised() = true;
-////        // 3-index ops are fermionic 
-////        op->set_fermion() = true;
-////        op->set_deltaQuantum() = spinvec123[q];      
-////        op->set_quantum_ladder() = { spinvec12[p], spinvec123[q] };
-////        assert( spinvec12[p].particleNumber  == 2 );
-////        assert( spinvec123[p].particleNumber == 1 );
-//////pout << "3-index operators spin composition:\n";
-//////pout << spinvec12[p].get_s()/2.0 << "  " << spinvec123[q].get_s()/2.0 << std::endl;
-////      }
-////    }
-////    assert( m_op.get_local_element(i).size() == 3);
-////  }
-////
-////}
-  
 //===========================================================================================================================================================
 // (Cre,Des,Des)
 //-------------------
@@ -242,7 +205,7 @@ void Op_component<CreDesDes>::build_iterators(SpinBlock& b)
 
     // Create C(DD) structure next
     //----------------------------------------
-    // Des_Des => Cre_Cre => plus sign and transpose (and factor -1??)
+    // Des_Des => Cre_Cre => plus sign and transpose and commute (factor -1??)
     std::vector<SpinQuantum> spinvec23 = spin2 + spin3;
     for (int p=0; p < spinvec23.size(); p++) {
       assert( spinvec23[p].get_s() == 2*p );
@@ -279,41 +242,6 @@ void Op_component<CreDesDes>::build_iterators(SpinBlock& b)
   }
 }
 
-////    // Combine first 2 indices first
-////    SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
-////    SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
-////    // Note Cre_Des => minus sign
-////    std::vector<SpinQuantum> spinvec12 = spin1 - spin2;
-////
-////    // Now combine with 3rd index
-////    SpinQuantum spin3 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[2]));
-//////pout << "spins = " << spin1.get_s()/2.0 << " " << spin2.get_s()/2.0 << " " << spin3.get_s()/2.0 << std::endl;
-////    for (int p=0; p < spinvec12.size(); p++) {
-////      assert( spinvec12[p].get_s() == 2*p );
-////      // Note X_Des => minus sign
-////      std::vector<SpinQuantum> spinvec123 = spinvec12[p] - spin3;
-////
-////      // Allocate new operator for each spin component
-////      for (int q=0; q < spinvec123.size(); q++) {
-////        spin_ops.push_back( boost::shared_ptr<CreDesDes>(new CreDesDes) );
-////        boost::shared_ptr<CreDesDes> op = spin_ops.back();
-////        op->set_orbs() = orbs;
-////        op->set_initialised() = true;
-////        // 3-index ops are fermionic 
-////        op->set_fermion() = true;
-////        op->set_deltaQuantum() = spinvec123[q];      
-////        op->set_quantum_ladder() = { spinvec12[p], spinvec123[q] };
-////        assert( spinvec12[p].particleNumber  == 0 );
-////        assert( spinvec123[p].particleNumber == -1 );
-//pout << "3-index operators spin composition:\n";
-//pout << spinvec12[p].get_s()/2.0 << "  " << spinvec123[q].get_s()/2.0 << std::endl;
-////      }
-////    }
-////    assert( m_op.get_local_element(i).size() == 3);
-////  }
-////
-////}
-  
 //===========================================================================================================================================================
 // (Cre,Des,Cre)
 //-------------------
@@ -328,61 +256,87 @@ string Op_component<CreDesCre>::get_op_string() const {
 template<> 
 void Op_component<CreDesCre>::build_iterators(SpinBlock& b)
 {
-assert(false);
+  // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
+  if (b.get_sites().size () == 0) return; 
+
+  // Set up 3-index (i,j,k) spatial operator indices for this SpinBlock
+  const double screen_tol = dmrginp.screen_tol();
+//FIXME
+  std::vector< std::tuple<int,int,int> > screened_cdc_ix = screened_ccd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
+  m_op.set_tuple_indices(screened_cdc_ix, dmrginp.last_site());      
+  std::vector<int> orbs(3);
+
+  // Allocate new set of operators for each set of spatial orbitals (For 3-index this part cannot be stored all in core, even locally ??)
+  for (int i = 0; i < m_op.local_nnz(); ++i) {
+    orbs = m_op.unmap_local_index(i);
+//pout << "New set of CDC operators:  " << i << std::endl;
+//pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << std::endl;
+    std::vector<boost::shared_ptr<CreDesCre> >& spin_ops = m_op.get_local_element(i);
+//pout << "before size() = " << m_op.get_local_element(i).size() << std::endl;
+
+    SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
+    SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
+    SpinQuantum spin3 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[2]));
+
+    std::vector< std::vector<SpinQuantum> > cd_c_quantum_ladder;
+    std::vector< std::vector<SpinQuantum> > c_dc_quantum_ladder;
+
+    // Create (CD)C structure first
+    //----------------------------------------
+    // Cre_Des => minus sign
+    std::vector<SpinQuantum> spinvec12 = spin1 - spin2;
+    for (int p=0; p < spinvec12.size(); p++) {
+      assert( spinvec12[p].get_s() == 2*p );
+      assert( spinvec12[p].particleNumber == 0 );
+      // X_Cre => plus sign
+      std::vector<SpinQuantum> spinvec123 = spinvec12[p] + spin3;
+      for (int q=0; q < spinvec123.size(); q++) {
+        std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q] };
+        cd_c_quantum_ladder.push_back( tmp );
+        assert( spinvec123[q].particleNumber == 1 );
+      }
+    }
+    assert( cd_c_quantum_ladder.size() == 3 );
+
+    // Create C(DC) structure next
+    //----------------------------------------
+    // Des_Cre => Cre_Des => minus sign and transpose and commute (factor -1??)
+//FIXME how to do DC??
+    std::vector<SpinQuantum> spinvec23 = spin3 - spin2;
+    for (int p=0; p < spinvec23.size(); p++) {
+      assert( spinvec23[p].get_s() == 2*p );
+//FIXME
+      assert( spinvec23[p].particleNumber == 0 );
+//FIXME minus or plus sign???  FACTOR -1 ??
+      std::vector<SpinQuantum> spinvec123 = spin1 + spinvec23[p];
+      for (int q=0; q < spinvec123.size(); q++) {
+        std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q] };
+        c_dc_quantum_ladder.push_back( tmp );
+        assert( spinvec123[q].particleNumber == 1 );
+      }
+    }
+    assert( c_dc_quantum_ladder.size() == 3 );
+
+    // Allocate new operator for each spin component
+    //------------------------------------------------
+    spin_ops.clear();
+    for (int q=0; q < cd_c_quantum_ladder.size(); q++) {
+      spin_ops.push_back( boost::shared_ptr<CreDesCre>(new CreDesCre) );
+      boost::shared_ptr<CreDesCre> op = spin_ops.back();
+      op->set_orbs() = orbs;
+      op->set_initialised() = true;
+      // 3-index ops are fermionic 
+      op->set_fermion() = true;
+      op->set_quantum_ladder()["((CD)C)"] = cd_c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(C(DC))"] = c_dc_quantum_ladder.at(q);
+//FIXME  This should be updated when the build_pattern changes
+//FIXME  Set default
+      op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
+    }
+
+    assert( m_op.get_local_element(i).size() == 3);
+  }
 }
-//////  // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
-//////  if (b.get_sites().size () == 0) return; 
-//////
-//////  // Set up 3-index (i,j,k) spatial operator indices for this SpinBlock
-//////  const double screen_tol = dmrginp.screen_tol();
-////////FIXME
-//////  std::vector< std::tuple<int,int,int> > screened_cdd_ix = screened_ccd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
-//////  m_op.set_tuple_indices(screened_cdd_ix, dmrginp.last_site());      
-//////  std::vector<int> orbs(3);
-//////
-//////  // Allocate new set of operators for each set of spatial orbitals (For 3-index this part cannot be stored all in core, even locally ??)
-//////  for (int i = 0; i < m_op.local_nnz(); ++i) {
-//////    orbs = m_op.unmap_local_index(i);
-////////pout << "New set of CDC operators:  " << i << std::endl;
-////////pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << std::endl;
-//////    std::vector<boost::shared_ptr<CreDesCre> >& spin_ops = m_op.get_local_element(i);
-////////pout << "before size() = " << m_op.get_local_element(i).size() << std::endl;
-//////    spin_ops.clear();
-//////
-//////    // Combine first 2 indices first
-//////    SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
-//////    SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
-//////    // Note Cre_Des => minus sign
-//////    std::vector<SpinQuantum> spinvec12 = spin1 - spin2;
-//////
-//////    // Now combine with 3rd index
-//////    SpinQuantum spin3 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[2]));
-////////pout << "spins = " << spin1.get_s()/2.0 << " " << spin2.get_s()/2.0 << " " << spin3.get_s()/2.0 << std::endl;
-//////    for (int p=0; p < spinvec12.size(); p++) {
-//////      assert( spinvec12[p].get_s() == 2*p );
-//////      // Note X_Cre => plus sign
-//////      std::vector<SpinQuantum> spinvec123 = spinvec12[p] + spin3;
-//////
-//////      // Allocate new operator for each spin component
-//////      for (int q=0; q < spinvec123.size(); q++) {
-//////        spin_ops.push_back( boost::shared_ptr<CreDesCre>(new CreDesCre) );
-//////        boost::shared_ptr<CreDesCre> op = spin_ops.back();
-//////        op->set_orbs() = orbs;
-//////        op->set_initialised() = true;
-//////        // 3-index ops are fermionic 
-//////        op->set_fermion() = true;
-//////        op->set_deltaQuantum() = spinvec123[q];      
-//////        op->set_quantum_ladder() = { spinvec12[p], spinvec123[q] };
-//////        assert( spinvec12[p].particleNumber  == 0 );
-//////        assert( spinvec123[p].particleNumber == 1 );
-////////pout << "3-index operators spin composition:\n";
-////////pout << spinvec12[p].get_s()/2.0 << "  " << spinvec123[q].get_s()/2.0 << std::endl;
-//////      }
-//////    }
-//////    assert( m_op.get_local_element(i).size() == 3);
-//////  }
-//////
-//////}
   
 //===========================================================================================================================================================
 

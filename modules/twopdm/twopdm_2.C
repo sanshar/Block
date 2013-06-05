@@ -347,7 +347,7 @@ if ( abs(val) > 1e-8 ) pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "
       cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<endl;
       //backtrace_symbols_fd(array, size, 2);
       cout << "earlier value: "<<twopdm(i,j,k,l)<<endl<< "new value:     "<<val<<endl;
-//      assert( false );
+      assert( false );
       return;
     }
 

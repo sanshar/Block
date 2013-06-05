@@ -13,7 +13,7 @@ namespace SpinAdapted{
 class CreCreDes: public SpinAdapted::SparseMatrix
 {
   public:
-    CreCreDes() { orbs.resize(3); fermion = true; build_pattern = "((CC)D)";}
+    CreCreDes() { orbs.resize(3); fermion = true; build_pattern = "((CC)D)";} // default build_pattern
     void build_in_csf_space(const SpinBlock& b);
     void build(const SpinBlock& b) ;
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
@@ -25,7 +25,7 @@ class CreCreDes: public SpinAdapted::SparseMatrix
 class CreDesDes: public SpinAdapted::SparseMatrix
 {
   public:
-    CreDesDes() { orbs.resize(3); fermion = true; build_pattern = "((CD)D)";}
+    CreDesDes() { orbs.resize(3); fermion = true; build_pattern = "((CD)D)";} // default build_pattern
     void build_in_csf_space(const SpinBlock& b) {assert(false);}
     void build(const SpinBlock& b) ;
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
@@ -37,7 +37,7 @@ class CreDesDes: public SpinAdapted::SparseMatrix
 class CreDesCre: public SpinAdapted::SparseMatrix
 {
   public:
-    CreDesCre() { orbs.resize(3); fermion = true; build_pattern = "((CD)C)";}
+    CreDesCre() { orbs.resize(3); fermion = true; build_pattern = "((CD)C)";} // default build_pattern
     void build_in_csf_space(const SpinBlock& b);
     void build(const SpinBlock& b) ;
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);

@@ -32,8 +32,8 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_CRE_DES).set_local() = true;
     if (has(CRE_DES_DES))
       set_op_array(CRE_DES_DES).set_local() = true;
-//    if (has(CRE_DES_CRE))
-//      set_op_array(CRE_DES_CRE).set_local() = true;
+    if (has(CRE_DES_CRE))
+      set_op_array(CRE_DES_CRE).set_local() = true;
 
   }
   else if (st == DISTRIBUTED_STORAGE)
@@ -56,8 +56,8 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_CRE_DES).set_local() = false;
     if (has(CRE_DES_DES))
       set_op_array(CRE_DES_DES).set_local() = false;
-//    if (has(CRE_DES_CRE))
-//      set_op_array(CRE_DES_CRE).set_local() = false;
+    if (has(CRE_DES_CRE))
+      set_op_array(CRE_DES_CRE).set_local() = false;
   }
 
 
@@ -98,8 +98,9 @@ pout << "allocating new CreCreDes\n";
 pout << "allocating new CreDesDes\n";
       ret = boost::shared_ptr<Op_component<CreDesDes> >(new Op_component<CreDesDes>(is_core));
       break;
-//    case CRE_DES_CRE:
-//      ret = boost::shared_ptr<Op_component<CreDesCre> >(new Op_component<CreDesCre>(is_core));
+    case CRE_DES_CRE:
+pout << "allocating new CreDesCre\n";
+      ret = boost::shared_ptr<Op_component<CreDesCre> >(new Op_component<CreDesCre>(is_core));
       break;
   }
   return ret;
@@ -134,7 +135,7 @@ pout << "SpinBlock::default_op_components(bool complementary_)\n";
 //pout << "maw setting 3ops\n";
       ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
       ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
-//      ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
+      ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
     }
   }
 
@@ -182,7 +183,7 @@ pout << "SpinBlock::default_op_components(..........) for dot block\n";
 //pout << "maw setting 3ops\n";
           ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
           ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
-//          ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
+          ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
         }
       }
       if (haveCompops) {
@@ -213,7 +214,7 @@ pout << "SpinBlock::default_op_components(..........) for dot block\n";
 //pout << "maw setting 3ops\n";
           ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
           ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);
-//          ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, false);
+          ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, false);
         }
       }
       if (haveCompops) {

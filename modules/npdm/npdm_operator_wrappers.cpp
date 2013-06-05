@@ -425,7 +425,7 @@ Npdm_op_wrapper_CDD::Npdm_op_wrapper_CDD( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_DES_DES).get_size();
-  factor_ = 1.0;
+  factor_ = 0.0;
   transpose_ = false;
 //  build_pattern_ = "((CD)D)";
   build_pattern_ = "0";
@@ -444,6 +444,10 @@ pout << "getting CDD operator...\n";
 
   opReps_ = spinBlock_->get_op_array(CRE_DES_DES).get_local_element(idx);
   build_pattern_ = opReps_.at(0)->get_build_pattern();
+  if ( build_pattern_ == "(C(DD))" ) factor_ = -1.0;
+  else if ( build_pattern_ == "((CD)D)" ) factor_ = 1.0;
+  else assert (false);
+
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
@@ -460,17 +464,16 @@ pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
-if ( (ix == jx) && (jx == kx) ) return false;
-pout << "WARNING: skipping this operator\n";
-return true;
-//  return false;
+//if ( (ix == jx) && (jx == kx) ) return false;
+//pout << "WARNING: skipping this operator\n";
+//return true;
+  return false;
 }
 
 //===========================================================================================================================================================
 
 Npdm_op_wrapper_CDC::Npdm_op_wrapper_CDC( SpinBlock * spinBlock )
 {
-assert(false);
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;
@@ -488,7 +491,6 @@ assert(false);
 bool Npdm_op_wrapper_CDC::set_local_ops( int idx )
 {
 pout << "getting CDC operator...\n";
-assert(false);
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -511,12 +513,13 @@ pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
-//FIXME fails if D and C have same index??
-//if ( (ix == jx) && (jx == kx) ) {
+//FIXME fails!!!
+if ( (ix == jx) && (jx == kx) ) {
+//if ( jx == kx ) {
   pout << "WARNING: skipping this operator\n";
   return true;
-//}
-//  return false;
+}
+  return false;
 }
 
 //===========================================================================================================================================================
@@ -549,10 +552,10 @@ pout << "getting CC operator...\n";
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
 pout << "indices  " << ix << " " << jx << std::endl;
-pout << "0 CC operator elements:\n";
-pout << *(opReps_[0]);
-pout << "1 CC operator elements:\n";
-pout << *(opReps_[1]);
+//pout << "0 CC operator elements:\n";
+//pout << *(opReps_[0]);
+//pout << "1 CC operator elements:\n";
+//pout << *(opReps_[1]);
 
   indices_.push_back( ix );
   indices_.push_back( jx );
@@ -586,10 +589,10 @@ pout << "getting CD operator...\n";
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
 pout << "indices  " << ix << " " << jx << std::endl;
-pout << "0 CD operator elements:\n";
-pout << *(opReps_[0]);
-pout << "1 CD operator elements:\n";
-pout << *(opReps_[1]);
+//pout << "0 CD operator elements:\n";
+//pout << *(opReps_[0]);
+//pout << "1 CD operator elements:\n";
+//pout << *(opReps_[1]);
 
   transpose_ = false;
   indices_.push_back( ix );
@@ -625,6 +628,7 @@ pout << "getting DD operator...\n";
   opReps_ = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
+pout << "indices  " << ix << " " << jx << std::endl;
 
   // Note use of transpose means we store this as (j,i) not (i,j)
   indices_.push_back( jx );

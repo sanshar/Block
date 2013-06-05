@@ -76,6 +76,8 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
 //FIXME Debug extra
 std::cout << 3 << "," << 1 << "," << 0 << std::endl;
 lhs_dot_rhs_types_.insert( std::make_tuple(3,1,0) );
+//std::cout << 2 << "," << 0 << "," << 2 << std::endl;
+//lhs_dot_rhs_types_.insert( std::make_tuple(2,0,2) );
 
 }
 
