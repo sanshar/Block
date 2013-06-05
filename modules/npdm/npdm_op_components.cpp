@@ -28,16 +28,15 @@ std::vector<std::tuple<int,int,int> > screened_ccd_indices(const vector<int, std
   // Set up site indices such that (k <= j <= i)
   std::vector<std::tuple<int,int,int> > screened_indices;
 //FIXME  only i=j=k at the moment!!
-  for (int i = 0; i < sites.size(); ++i) {
-    int j =i ;
-    int k =i ;
-    {
-    {
-//FIXME should this stride order match para_array??
-//pout << "maw New indices:\n";
 //  for (int i = 0; i < sites.size(); ++i) {
-//    for (int j = 0; j <= i; ++j) {
-//      for (int k = 0; k <= j; ++k) {
+//    int j =i ;
+//    int k =i ;
+//    {
+//    {
+//FIXME should this stride order match para_array??
+  for (int i = 0; i < sites.size(); ++i) {
+    for (int j = 0; j <= i; ++j) {
+      for (int k = 0; k <= j; ++k) {
 //      if (dmrginp.use_partial_two_integrals()) {
         screened_indices.push_back(std::make_tuple(sites[i], sites[j], sites[k]));
 //pout << i << " " << j << " " << k << std::endl;

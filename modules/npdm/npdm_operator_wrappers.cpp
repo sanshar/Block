@@ -381,7 +381,8 @@ Npdm_op_wrapper_CCD::Npdm_op_wrapper_CCD( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE_CRE_DES).get_size();
   factor_ = 1.0;
   transpose_ = false;
-  build_pattern_ = "((CC)D)";
+//  build_pattern_ = "((CC)D)";
+  build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
 }
@@ -396,18 +397,19 @@ pout << "getting CCD operator...\n";
   int ix, jx, kx;
 
   opReps_ = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
+  build_pattern_ = opReps_.at(0)->get_build_pattern();
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
 pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
-//pout << "maw " << opReps_.at(0)->get_build_pattern() << std::endl;
+//pout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
 //pout << "2a CCD operator elements:\n";
 //pout << *(opReps_[0]);
 //pout << "2b CCD operator elements:\n";
 //pout << *(opReps_[1]);
 //pout << "4  CCD operator elements:\n";
 //pout << *(opReps_[2]);
-  assert( build_pattern_ == opReps_.at(0)->get_build_pattern() );
+//  assert( build_pattern_ == opReps_.at(0)->get_build_pattern() );
 
   indices_.push_back( ix );
   indices_.push_back( jx );
@@ -425,7 +427,8 @@ Npdm_op_wrapper_CDD::Npdm_op_wrapper_CDD( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE_DES_DES).get_size();
   factor_ = 1.0;
   transpose_ = false;
-  build_pattern_ = "((CD)D)";
+//  build_pattern_ = "((CD)D)";
+  build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
 }
@@ -440,18 +443,19 @@ pout << "getting CDD operator...\n";
   int ix, jx, kx;
 
   opReps_ = spinBlock_->get_op_array(CRE_DES_DES).get_local_element(idx);
+  build_pattern_ = opReps_.at(0)->get_build_pattern();
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
 pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
-//pout << "maw " << opReps_.at(0)->get_build_pattern() << std::endl;
+//pout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
 //pout << "2a CDD operator elements:\n";
 //pout << *(opReps_[0]);
 //pout << "2b CDD operator elements:\n";
 //pout << *(opReps_[1]);
 //pout << "4  CDD operator elements:\n";
 //pout << *(opReps_[2]);
-  assert( build_pattern_ == opReps_.at(0)->get_build_pattern() );
+//  assert( build_pattern_ == opReps_.at(0)->get_build_pattern() );
 
   indices_.push_back( ix );
   indices_.push_back( jx );
@@ -473,7 +477,8 @@ assert(false);
   size_ = spinBlock_->get_op_array(CRE_DES_CRE).get_size();
   factor_ = 1.0;
   transpose_ = false;
-  build_pattern_ = "((CD)C)";
+//  build_pattern_ = "((CD)C)";
+  build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
 }
@@ -489,18 +494,19 @@ assert(false);
   int ix, jx, kx;
 
   opReps_ = spinBlock_->get_op_array(CRE_DES_CRE).get_local_element(idx);
+  build_pattern_ = opReps_.at(0)->get_build_pattern();
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
 pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
-//pout << "maw " << opReps_.at(0)->get_build_pattern() << std::endl;
+//pout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
 //pout << "2a CDC operator elements:\n";
 //pout << *(opReps_[0]);
 //pout << "2b CDC operator elements:\n";
 //pout << *(opReps_[1]);
 //pout << "4  CDC operator elements:\n";
 //pout << *(opReps_[2]);
-  assert( build_pattern_ == opReps_.at(0)->get_build_pattern() );
+//  assert( build_pattern_ == opReps_.at(0)->get_build_pattern() );
 
   indices_.push_back( ix );
   indices_.push_back( jx );
