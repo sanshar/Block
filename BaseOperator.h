@@ -19,6 +19,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "StateInfo.h"
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
+//MAW
+#include <boost/serialization/map.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 
@@ -27,8 +29,9 @@ namespace SpinAdapted{
 class SpinBlock;
 
 //enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP};
-//MAW
-enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP, CRE_CRE_DES, CRE_DES_DES };
+//MAW 3PDM
+enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP, 
+              CRE_CRE_DES, CRE_DES_DES, CRE_DES_CRE };
 
 enum CompType{CD, DD, CCD, C};
 
@@ -71,7 +74,12 @@ class SparseMatrix : public Baseoperator<Matrix>
 	& initialised \
 	& built \
 	& allowedQuantaMatrix \
-	& operatorMatrix & Sign;
+//MAW >>>>>
+	& quantum_ladder \
+	& build_pattern \
+//MAW <<<<<
+	& operatorMatrix \
+   & Sign;
     }
 
  protected:
@@ -83,8 +91,11 @@ class SparseMatrix : public Baseoperator<Matrix>
   ObjectMatrix<Matrix> operatorMatrix;
   SpinQuantum deltaQuantum;
   int Sign;
-//MAW
-  std::vector<SpinQuantum> quantum_ladder;
+//MAW >>>>>
+  // With 3-index ops, there are several ways to build them, and for each way we record the spin ladder components
+  std::string build_pattern;
+  std::map< std::string, std::vector<SpinQuantum> > quantum_ladder;
+//MAW <<<<<
  public:
   SparseMatrix() : orbs(2), initialised(false), built(false), Sign(1), fermion(false){};
   virtual ~SparseMatrix(){};
@@ -104,8 +115,12 @@ class SparseMatrix : public Baseoperator<Matrix>
   int get_spin()const  { return deltaQuantum.get_s();}
   IrrepSpace get_symm()const  { return deltaQuantum.get_symm();}
   SpinQuantum get_deltaQuantum() const { return deltaQuantum; }
-  std::vector<SpinQuantum>  get_quantum_ladder() const { return quantum_ladder; }
-  std::vector<SpinQuantum>& set_quantum_ladder() { return quantum_ladder; }
+//MAW >>>>
+  std::map< std::string, std::vector<SpinQuantum> >  get_quantum_ladder() const { return quantum_ladder; }
+  std::map< std::string, std::vector<SpinQuantum> > &  set_quantum_ladder() { return quantum_ladder; }
+  std::string  get_build_pattern() const { return build_pattern; }
+  std::string& set_build_pattern() { return build_pattern; }
+//MAW <<<<<
   int get_orbs(int i) const 
   { 
     if(i >= orbs.size())

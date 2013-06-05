@@ -13,7 +13,7 @@ namespace SpinAdapted{
 class Cre: public SpinAdapted::SparseMatrix
 {
  public:
-  Cre() { orbs.resize(1); fermion = true;}
+  Cre() { orbs.resize(1); fermion = true; build_pattern = "C";}
 //MAW
   void build_in_csf_space(const SpinBlock& b) {assert(false);}
   void build(const SpinBlock& b) ;
@@ -25,7 +25,7 @@ class Cre: public SpinAdapted::SparseMatrix
 class CreDes: public SpinAdapted::SparseMatrix
 {
  public:
-  CreDes() { orbs.resize(2); fermion = false;}
+  CreDes() { orbs.resize(2); fermion = false; build_pattern = "CD";}
 //MAW
   void build_in_csf_space(const SpinBlock& b);
   void build(const SpinBlock& b) ;
@@ -36,7 +36,7 @@ class CreDes: public SpinAdapted::SparseMatrix
 class CreCre: public SpinAdapted::SparseMatrix
 {
  public:
-  CreCre() { orbs.resize(2); fermion = false;}
+  CreCre() { orbs.resize(2); fermion = false; build_pattern = "CC";}
 //MAW
   void build_in_csf_space(const SpinBlock& b) ;
   void build(const SpinBlock& b) ;

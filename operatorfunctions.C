@@ -115,30 +115,38 @@ void SpinAdapted::operatorfunctions::TensorTraceElement(const SpinBlock *ablock,
   }
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinAdapted::operatorfunctions::Product (const SpinBlock *ablock, const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, Baseoperator<Matrix>& c, double scale)
 {
   const StateInfo* astate = &ablock->get_stateInfo(); 
   if (fabs(scale) < TINY) return;
   int rows = c.nrows();
-  for (int cq = 0; cq < rows; ++cq)
-    for (int cqprime = 0; cqprime < rows; ++cqprime)
-      if (c.allowed(cq, cqprime))
-	for (int aprime = 0; aprime < rows; aprime++)
-	  if (a.allowed(cq, aprime) && b.allowed(aprime, cqprime))
-	  {
-	    int apj = astate->quanta[aprime].get_s(), cqj = astate->quanta[cq].get_s(), cqpj = astate->quanta[cqprime].get_s();
-	    double factor = a.get_scaling(astate->quanta[cq], astate->quanta[aprime]);
-	    factor *= b.get_scaling(astate->quanta[aprime], astate->quanta[cqprime]);
+  for (int cq = 0; cq < rows; ++cq) {
+    for (int cqprime = 0; cqprime < rows; ++cqprime) {
+      if (c.allowed(cq, cqprime)) {
+        for (int aprime = 0; aprime < rows; aprime++) {
+          if (a.allowed(cq, aprime) && b.allowed(aprime, cqprime)) {
+            int apj  = astate->quanta[aprime].get_s(), 
+                cqj  = astate->quanta[cq].get_s(), 
+                cqpj = astate->quanta[cqprime].get_s();
 
-	    factor *= racah(cqpj, b.get_spin(), cqj, a.get_spin(), apj, c.get_spin()) * pow( (1.0*c.get_spin()+1.0)*(1.0*apj+1.0), 0.5 )
-	            *pow(-1.0, static_cast<int>((b.get_spin()+a.get_spin()-c.get_spin())/2.0));
-	    MatrixMultiply(a.operator_element(cq, aprime), a.conjugacy(), b.operator_element(aprime, cqprime), b.conjugacy(),
-			   c.operator_element(cq, cqprime), scale*factor, 1.0);
+            double factor = a.get_scaling(astate->quanta[cq], astate->quanta[aprime]);
+            factor *= b.get_scaling(astate->quanta[aprime], astate->quanta[cqprime]);
+            factor *= racah(cqpj, b.get_spin(), cqj, a.get_spin(), apj, c.get_spin()) * pow( (1.0*c.get_spin()+1.0)*(1.0*apj+1.0), 0.5 )
+                    * pow(-1.0, static_cast<int>((b.get_spin()+a.get_spin()-c.get_spin())/2.0));
 
-	  }
+            MatrixMultiply(a.operator_element(cq, aprime), a.conjugacy(), b.operator_element(aprime, cqprime), b.conjugacy(),
+                           c.operator_element(cq, cqprime), scale*factor, 1.0);
+
+          }
+        }
+      }
+    }
+  }
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinAdapted::operatorfunctions::TensorProduct (const SpinBlock *ablock, const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const SpinBlock *cblock, const StateInfo *cstateinfo, Baseoperator<Matrix>& c, double scale, int num_thrds)
 {
@@ -159,6 +167,7 @@ void SpinAdapted::operatorfunctions::TensorProduct (const SpinBlock *ablock, con
   }
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinAdapted::operatorfunctions::TensorProductElement(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const SpinBlock *cblock, const StateInfo *cstateinfo, Baseoperator<Matrix>& c, Matrix& cel, int cq, int cqprime, double scale)
 {

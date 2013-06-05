@@ -142,6 +142,7 @@ SpinBlock::SpinBlock(const StateInfo& s)
 
 void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
 {
+pout << "SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)\n";
 
   if (twoInt.get() == 0 && dmrginp.use_partial_two_integrals()) { //this is when dummy block is being added for non zero spin
     std::vector<int> o;
@@ -174,8 +175,9 @@ pout << "build_iterators....\n";
   for (int i=0; i< dets.size(); i++)
     ladders[i] = dets[i].spinLadder(min(2,dets[i].S));
 //MAW
-pout << "build_operators....\n";
+pout << "build_operators(dets,ladders)....\n";
   build_operators(dets, ladders);
+pout << "done SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -197,6 +199,8 @@ void SpinBlock::build_iterators()
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
   {
+//MAWout
+std::cout << it->second->get_op_string() << std::endl;
     it->second->build_iterators(*this);
   }
 }
@@ -208,6 +212,8 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core())
+//MAWout
+std::cout << it->second->get_op_string() << std::endl;
         it->second->build_csf_operators(dets, ladders, *this);      
     }
 pout << "done build_csf_operators! (All optypes)\n";
@@ -220,6 +226,8 @@ void SpinBlock::build_operators()
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core()) {
+//MAWout
+std::cout << it->second->get_op_string() << std::endl;
         it->second->build_operators(*this);
       }
     }
@@ -287,12 +295,15 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
 
 void SpinBlock::BuildSumBlock(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState)
 {
+pout << "maw SpinBlock::BuildSumBlock\n";
   dmrginp.buildsumblock -> start();
   BuildSumBlockSkeleton(condition, lBlock, rBlock, compState);
 
+pout << "maw SpinBlock::BuildSumBlock build_iterators()\n";
   build_iterators();
 
   dmrginp.buildblockops -> start();
+pout << "maw SpinBlock::BuildSumBlock build_operators()\n";
   build_operators();
   dmrginp.buildblockops -> stop();
   dmrginp.buildsumblock -> stop();

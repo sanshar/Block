@@ -90,6 +90,7 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
 
   pout <<"\t\t\t Performing Renormalization "<<endl<<endl;
   newSystem.transform_operators(rotateMatrix);
+pout <<"\t\t\t maw done Performing Renormalization "<<endl<<endl;
   if (dmrginp.outputlevel() > 0) 
     mcheck("after rotation and transformation of block");
   if (dmrginp.outputlevel() > 0) 

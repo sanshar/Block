@@ -18,29 +18,29 @@ namespace SpinAdapted {
   }
 
   template<> void Op_component<Cre>::build_iterators(SpinBlock& b)
-    {
+  {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.screen_tol();
       std::vector<int> screened_c_ix = screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1, *b.get_twoInt(), screen_tol); 
       m_op.set_indices(screened_c_ix, dmrginp.last_site());  
       std::vector<int> orbs(1);
       
-      for (int i = 0; i < m_op.local_nnz(); ++i)
-	{
-	  orbs[0] = m_op.get_local_indices()[i];
-	  m_op.get_local_element(i).resize(1);
-	  m_op.get_local_element(i)[0]=boost::shared_ptr<Cre>(new Cre);
-	  SparseMatrix& op = *m_op.get_local_element(i)[0];
-	  op.set_orbs() = orbs;
-	  op.set_initialised() = true;
-	  op.set_fermion() = true;
-	  op.set_deltaQuantum() = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));      
-	  //op.set_deltaQuantum() = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOf(orbs[0]));      
-//MAW
-     op.set_quantum_ladder() = { op.get_deltaQuantum() };
-	}
+      for (int i = 0; i < m_op.local_nnz(); ++i) 
+      {
+        orbs[0] = m_op.get_local_indices()[i];
+        m_op.get_local_element(i).resize(1);
+        m_op.get_local_element(i)[0]=boost::shared_ptr<Cre>(new Cre);
+        SparseMatrix& op = *m_op.get_local_element(i)[0];
+        op.set_orbs() = orbs;
+        op.set_initialised() = true;
+        op.set_fermion() = true;
+        op.set_deltaQuantum() = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));      
+        //op.set_deltaQuantum() = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOf(orbs[0]));      
+        //MAW
+        op.set_quantum_ladder()["(C)"] = { op.get_deltaQuantum() };
+      }
       
-    }
+  }
   
   
   
@@ -86,6 +86,7 @@ namespace SpinAdapted {
 	  orbs = m_op.unmap_local_index(i);
 //MAW <<<<<<
 	  std::vector<boost::shared_ptr<CreDes> >& vec = m_op.get_local_element(i);
+assert( vec.size() == 0);
 	  SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
 	  SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
 	  std::vector<SpinQuantum> spinvec = spin1-spin2;
@@ -98,7 +99,7 @@ namespace SpinAdapted {
 	    op.set_fermion() = false;
 	    op.set_deltaQuantum() = spinvec[j];      
 //MAW
-       op.set_quantum_ladder() = { op.get_deltaQuantum() };
+       op.set_quantum_ladder()["(CD)"] = { op.get_deltaQuantum() };
        assert( op.get_deltaQuantum().particleNumber == 0 );
 	  }
 	}
@@ -137,7 +138,7 @@ namespace SpinAdapted {
 	    op.set_fermion() = false;
 	    op.set_deltaQuantum() = spinvec[j];      
 //MAW
-       op.set_quantum_ladder() = { op.get_deltaQuantum() };
+       op.set_quantum_ladder()["(CC)"] = { op.get_deltaQuantum() };
        assert( op.get_deltaQuantum().particleNumber == 2 );
 	  }
 	}
@@ -177,7 +178,7 @@ namespace SpinAdapted {
 	    op.set_fermion() = false;
 	    op.set_deltaQuantum() = spinvec[j];      
 //MAW
-       op.set_quantum_ladder() = { op.get_deltaQuantum() };
+       op.set_quantum_ladder()["CDcomp"] = { op.get_deltaQuantum() };
 	  }
 	}
     }
@@ -230,7 +231,7 @@ namespace SpinAdapted {
 	    op.set_fermion() = false;
 	    op.set_deltaQuantum() = -spinvec[j];      
 //MAW
-       op.set_quantum_ladder() = { op.get_deltaQuantum() };
+       op.set_quantum_ladder()["DDcomp"] = { op.get_deltaQuantum() };
 	  }
 	}
       
@@ -273,7 +274,7 @@ namespace SpinAdapted {
 	  //op.set_deltaQuantum() = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOfSpatialOrb(orbs[0]) );      
 	  op.set_deltaQuantum() = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]) );      
 //MAW
-     op.set_quantum_ladder() = { op.get_deltaQuantum() };
+     op.set_quantum_ladder()["CCDcomp"] = { op.get_deltaQuantum() };
 	}
     }
   
@@ -304,7 +305,7 @@ namespace SpinAdapted {
       m_op(0)[0]->set_fermion() = false;
       m_op(0)[0]->set_deltaQuantum() = SpinQuantum(0, 0, IrrepSpace(0) );      
 //MAW
-      m_op(0)[0]->set_quantum_ladder() = { m_op(0)[0]->get_deltaQuantum() };
+      m_op(0)[0]->set_quantum_ladder()["Ham"] = { m_op(0)[0]->get_deltaQuantum() };
     }
   
   template<> std::vector<std::vector<int> > Op_component<Ham>::get_array() const 

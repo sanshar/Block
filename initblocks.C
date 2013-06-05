@@ -11,6 +11,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "initblocks.h"
 #include "pario.h"
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const bool &forward, 
                                     const int & forward_starting_size, const int &backward_starting_size,
                                     const int& restartSize, const bool &restart, const bool& warmUp)
@@ -33,6 +35,7 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
   }
   else if (forward)
   {
+pout << "init startingBlock\n";
     startingBlock = SpinBlock(0, forward_starting_size - 1, true);
 pout << "startingBlock built!\n";
     
@@ -62,6 +65,7 @@ pout << "startingBlock built!\n";
   }
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &systemDot, SpinBlock &newSystem, const int &sys_add, const bool &direct, const Storagetype &storage, bool haveNormops, bool haveCompops)
 {
@@ -75,6 +79,8 @@ void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &s
     newSystem.printOperatorSummary();
   }
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, SpinBlock& environmentDot, SpinBlock &newEnvironment, 
                                           const SpinBlock &system, SpinBlock &systemDot,
@@ -236,6 +242,8 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SpinAdapted::InitBlocks::InitBigBlock(SpinBlock &leftBlock, SpinBlock &rightBlock, SpinBlock &big)
 {
   //set big block components
@@ -243,3 +251,5 @@ void SpinAdapted::InitBlocks::InitBigBlock(SpinBlock &leftBlock, SpinBlock &righ
   // build the big block
   big.BuildSumBlock(PARTICLE_SPIN_NUMBER_CONSTRAINT, leftBlock, rightBlock);
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------

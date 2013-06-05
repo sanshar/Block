@@ -80,14 +80,14 @@ std::map< std::vector<int>, int > get_map_to_int( std::vector< std::map< std::ve
       indices_set.insert(it->first);
     }
   }
-  std::cout << "set size = " << indices_set.size() << std::endl;
+//  std::cout << "set size = " << indices_set.size() << std::endl;
 
   // Map group of indices to single integer in arbitrary, but well-defined, order
   int k=0;
   for ( auto it = indices_set.begin(); it != indices_set.end(); ++it ) {
     map_to_int[*it] = k;
     k++; 
-    std::cout << (*it)[0] << (*it)[1] << (*it)[2] << (*it)[3] << std::endl;
+    std::cout << (*it)[0] << " " << (*it)[1] << " " << (*it)[2] << " " << (*it)[3] << std::endl;
   }
 
   return map_to_int;

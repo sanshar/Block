@@ -25,6 +25,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 using namespace boost;
 using namespace std;
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys)
 {
@@ -52,7 +53,9 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   vector<int> spindotsites(2); 
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
+pout << "maw init systemDot"<<endl;
   systemDot = SpinBlock(systemDotStart, systemDotEnd);
+pout << "maw done init systemDot"<<endl;
   SpinBlock environment, environmentDot, newEnvironment;
 
   int environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
@@ -72,8 +75,11 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   envdotsites[0] = environmentDotStart;
   envdotsites[1] = environmentDotEnd;
 
-  if (!sweepParams.get_onedot())
+  if (!sweepParams.get_onedot()) {
+pout << "maw init environmentDot"<<endl;
     environmentDot = SpinBlock(environmentDotStart, environmentDotEnd);
+pout << "maw done init environmentDot"<<endl;
+  }
   
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
@@ -82,14 +88,18 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
       dmrginp.datatransfer -> start();
       system.addAdditionalCompOps();
       dmrginp.datatransfer -> stop();
+pout << "maw InitNewSystemBlock"<<endl;
       InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), 
       			     DISTRIBUTED_STORAGE, dot_with_sys, true);
+pout << "maw done InitNewSystemBlock"<<endl;
       if (dmrginp.outputlevel() > 0)
          mcheck("");
 
+pout << "maw InitNewEnvironmentBlock"<<endl;
       InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot,
 					  sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 					  sweepParams.get_onedot(), nexact, useSlater, !dot_with_sys, true, dot_with_sys);
+pout << "maw done InitNewEnvironmentBlock"<<endl;
       if (dmrginp.outputlevel() > 0)
          mcheck("");
   }
@@ -98,12 +108,16 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     system.addAdditionalCompOps();
     dmrginp.datatransfer -> stop();
     if (dot_with_sys) {
+pout << "maw init newsystemBlock"<<endl;
       InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, dot_with_sys, true);
+pout << "maw done newsystemBlock"<<endl;
 
     }
+pout << "maw init newEnviroBlock"<<endl;
     InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
 					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 					sweepParams.get_onedot(), nexact, useSlater, !dot_with_sys, true, dot_with_sys);
+pout << "maw done init newEnviroBlock"<<endl;
   }
   SpinBlock big;
   if (dot_with_sys) {
@@ -112,23 +126,30 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     newEnvironment.set_loopblock(false);
     if (!sweepParams.get_onedot())
       environment.set_loopblock(false);
+pout << "maw InitBigBlock 1"<<endl;
     InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
+pout << "done InitBigBlock 1"<<endl;
   }
   else{
     if (sweepParams.get_onedot()) {
       system.set_loopblock(false);
       newEnvironment.set_loopblock(true);
       environment.set_loopblock(true);
+pout << "maw InitBigBlock 2"<<endl;
       InitBlocks::InitBigBlock(system, newEnvironment, big); 
+pout << "done InitBigBlock 2"<<endl;
     }
     else {
       newSystem.set_loopblock(false);
       system.set_loopblock(false);
       newEnvironment.set_loopblock(true);
       environment.set_loopblock(false);
+pout << "maw InitBigBlock 3"<<endl;
       InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
+pout << "done InitBigBlock 3"<<endl;
     }
   }
+
   //analyse_operator_distribution(big);
   dmrginp.guessgenT -> stop();
   dmrginp.multiplierT -> start();
@@ -191,6 +212,8 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize)
 {
 
@@ -214,6 +237,8 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
+//MAW
+pout << "do InitStartingBlock!\n";
   InitBlocks::InitStartingBlock (system,forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
 pout << "InitStartingBlock done!\n";
   if(!restart)
@@ -272,12 +297,17 @@ pout << "InitStartingBlock done!\n";
       SpinBlock newSystem;
 
       //Need to substitute by:
-      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian"))
+      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian")) {
       //if (warmUp)// && (sym=="dinfh"||sym=="trans"))
+//MAW
+pout << "maw calling Startup\n";
          Startup(sweepParams, system, newSystem);
+      }
       else {
          if (sweepParams.set_sweep_iter() == 1 && sweepParams.get_block_iter() == 0)
            sweepParams.set_guesstype() = BASIC;
+//MAW
+pout << "maw calling BlockAndDecimate\n";
          BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys);
       }
       
@@ -374,6 +404,9 @@ pout << "InitStartingBlock done!\n";
 
   return finalEnergy[0];
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//FUCK THIS UGLY UNDISCIPLINED CODE
 
 void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem)
 {

@@ -42,6 +42,12 @@ boost::shared_ptr<NpdmSpinOps> init_3_index_operators( SpinBlock * spinBlock, st
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CDD( spinBlock ) );
     return ret;
   } 
+  op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION };
+  if ( cd_type == op ) {
+//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDC( spinBlock ) );
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CDC( spinBlock ) );
+    return ret;
+  } 
   assert(false);
 }
 

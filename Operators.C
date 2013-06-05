@@ -175,20 +175,35 @@ void SpinAdapted::Cre::build(const SpinBlock& b)
   allocate(b.get_stateInfo());
 
   const int i = get_orbs()[0];
+//pout << "maw index = " << i << std::endl;
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
+//pout << "sysBlock:\n";
+//pout << *leftBlock;
+//pout << "dotBlock:\n";
+//pout << *rightBlock;
 
   if (leftBlock->get_op_array(CRE).has(i))
   {      
+//pout << "maw sysBlock has i\n";
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE, deltaQuantum, i);
+//pout << "opC\n";
+//pout << *op;
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+//pout << "renormalized opC\n";
+//pout << *this;
     dmrginp.makeopsT -> stop();
     return;
   }
   if (rightBlock->get_op_array(CRE).has(i))
   {
+//pout << "maw dotBlock has i\n";
     const boost::shared_ptr<SparseMatrix>& op = rightBlock->get_op_rep(CRE, deltaQuantum, i);
+//pout << "opC\n";
+//pout << *op;
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
+//pout << "renormalized opC\n";
+//pout << *this;
     dmrginp.makeopsT -> stop();
     return;
   }  
@@ -232,12 +247,16 @@ double SpinAdapted::Cre::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
 boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Cre::getworkingrepresentation(const SpinBlock* block)
 {
   //assert(this->get_initialised());
+//pout << "Cre::getworkingrepresentation\n";
+//FIXME NOT BUILT sometimes??
   if (this->get_built())
     {
+//pout << "get directly\n";
       return boost::shared_ptr<Cre>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
     }
   else
     {
+//pout << "build first\n";
       boost::shared_ptr<SparseMatrix> rep(new Cre);
       *rep = *this;
       rep->build(*block);
@@ -260,36 +279,61 @@ void SpinAdapted::CreDes::build(const SpinBlock& b)
 
   const int i = get_orbs()[0];
   const int j = get_orbs()[1];
+//pout << "indices  " << i << " " << j << std::endl;
 
-  SpinBlock* leftBlock = b.get_leftBlock();
-  SpinBlock* rightBlock = b.get_rightBlock();
+  SpinBlock* sysBlock = b.get_leftBlock();
+  SpinBlock* dotBlock = b.get_rightBlock();
+//pout << "sysBlock:\n";
+//pout << *sysBlock;
+//pout << "dotBlock:\n";
+//pout << *dotBlock;
 
-  if (leftBlock->get_op_array(CRE_DES).has(i, j))
+  if (sysBlock->get_op_array(CRE_DES).has(i, j))
   {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES, deltaQuantum, i,j);
-    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+//pout << "maw sysBlock has i,j\n";
+    const boost::shared_ptr<SparseMatrix>& op = sysBlock->get_op_rep(CRE_DES, deltaQuantum, i,j);
+    SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
+//pout << "opCD\n";
+//pout << *this;
     return;
   }
-  if (rightBlock->get_op_array(CRE_DES).has(i, j))
+  if (dotBlock->get_op_array(CRE_DES).has(i, j))
   {
-    const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_DES, deltaQuantum, i,j);
-    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
+//pout << "maw dotBlock has i,j\n";
+    const boost::shared_ptr<SparseMatrix> op = dotBlock->get_op_rep(CRE_DES, deltaQuantum, i,j);
+    SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
+//pout << "opCD\n";
+//pout << *this;
     return;
   }  
-  if (leftBlock->get_op_array(CRE).has(i))
+  if (sysBlock->get_op_array(CRE).has(i))
   {
-    const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(i), i);
-    Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(j), j));
-    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, 1.0);
+//pout << "maw sysBlock has i\n";
+    const boost::shared_ptr<SparseMatrix> op1 = sysBlock->get_op_rep(CRE, getSpinQuantum(i), i);
+//pout << "op1\n";
+//pout << *op1;
+//const boost::shared_ptr<SparseMatrix> op2 = dotBlock->get_op_rep(CRE, getSpinQuantum(j), j);
+//pout << "op2\n";
+//pout << *op2;
+    Transposeview top2 = Transposeview(dotBlock->get_op_rep(CRE, getSpinQuantum(j), j));
+    SpinAdapted::operatorfunctions::TensorProduct(sysBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, 1.0);
   }
-  else if (rightBlock->get_op_array(CRE).has(i))
+  else if (dotBlock->get_op_array(CRE).has(i))
   {
-    const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE, getSpinQuantum(i), i);
-    Transposeview top2 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(j), j));
+//pout << "maw dotBlock has i\n";
+    const boost::shared_ptr<SparseMatrix> op1 = dotBlock->get_op_rep(CRE, getSpinQuantum(i), i);
+//pout << "op1\n";
+//pout << *op1;
+//const boost::shared_ptr<SparseMatrix> op2 = sysBlock->get_op_rep(CRE, getSpinQuantum(j), j);
+//pout << "op2\n";
+//pout << *op2;
+  Transposeview top2 = Transposeview(sysBlock->get_op_rep(CRE, getSpinQuantum(j), j));
     double parity = getCommuteParity(op1->get_deltaQuantum(), top2.get_deltaQuantum(), get_deltaQuantum());
-    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
+    SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
+//pout << "opCD\n";
+//pout << *this;
   }
   else
     abort();  
@@ -300,7 +344,7 @@ void SpinAdapted::CreDes::build(const SpinBlock& b)
 //MAW debug
 void SpinAdapted::CreDes::build_in_csf_space(const SpinBlock& b) 
 {
-pout << "building CreDes in CSF space as a product..\n";
+//pout << "building CreDes in CSF space as a product..\n";
   built = true;
   allocate(b.get_stateInfo());
   Sign = 1;
@@ -378,36 +422,58 @@ void SpinAdapted::CreCre::build(const SpinBlock& b)
 
   const int i = get_orbs()[0];
   const int j = get_orbs()[1];
+//pout << "indices  " << i << " " << j << std::endl;
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
+//pout << "sysBlock:\n";
+//pout << *leftBlock;
+//pout << "dotBlock:\n";
+//pout << *rightBlock;
 
   if (leftBlock->get_op_array(CRE_CRE).has(i, j))
   {      
+//pout << "maw sysBlock has i,j\n";
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
+//pout << "opCC\n";
+//pout << *this;
     return;
   }
   if (rightBlock->get_op_array(CRE_CRE).has(i, j))
   {
+//pout << "maw dotBlock has i,j\n";
     const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_CRE, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
+//pout << "opCC\n";
+//pout << *this;
     return;
   }  
   if (leftBlock->get_op_array(CRE).has(i))
   {
+//pout << "maw sysBlock has i\n";
     const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(i), i);
     const boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(j), j);
     SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, 1.0);
+//pout << "op1\n";
+//pout << *op1;
+//pout << "op2\n";
+//pout << *op2;
   }
   else if (rightBlock->get_op_array(CRE).has(i))
   {
     const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE, getSpinQuantum(i), i);
     const boost::shared_ptr<SparseMatrix> op2 = leftBlock->get_op_rep(CRE, getSpinQuantum(j), j);
+//pout << "op1\n";
+//pout << *op1;
+//pout << "op2\n";
+//pout << *op2;
     double parity = getCommuteParity(op1->get_deltaQuantum(), op2->get_deltaQuantum(), get_deltaQuantum());
     SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
+//pout << "opCC\n";
+//pout << *this;
   }
   else
     abort();  
@@ -469,16 +535,16 @@ double SpinAdapted::CreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const 
 
 boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCre::getworkingrepresentation(const SpinBlock* block)
 {
-pout << "CreCre::getworkingrepresentation\n";
+//pout << "CreCre::getworkingrepresentation\n";
   assert(this->get_initialised());
   if (this->get_built())
     {
-pout << "get directly\n";
+//pout << "get directly\n";
       return boost::shared_ptr<CreCre>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
     }
   else
     {
-pout << "build first\n";
+//pout << "build first\n";
       boost::shared_ptr<SparseMatrix> rep(new CreCre);
       *rep = *this;
       rep->build(*block);

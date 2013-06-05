@@ -39,6 +39,7 @@ class SpinBlock
 //MAW 3PDM
       ar.register_type(static_cast<Op_component<CreCreDes> *>(NULL));
       ar.register_type(static_cast<Op_component<CreDesDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesCre> *>(NULL));
       ar & ops;
     }
 
@@ -111,11 +112,13 @@ class SpinBlock
   const Op_component_base& get_op_array(opTypes optype) const {assert(has(optype));return *(ops.find(optype)->second);}
   
   boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const SpinQuantum& s, int i=-1, int j=-1, int k=-1) {
+//pout << "maw Spinblock::get_op_rep\n";
     assert(has(optypes)); 
     Op_component_base& opbase = *ops.find(optypes)->second; 
     return opbase.get_op_rep(s, i, j, k)->getworkingrepresentation(this);
   }
   const boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const SpinQuantum& s, int i=-1, int j=-1, int k=-1) const {
+//pout << "maw Spinblock::get_op_rep\n";
     assert(has(optypes)); 
     Op_component_base& opbase = *ops.find(optypes)->second; 
     return opbase.get_op_rep(s, i, j, k)->getworkingrepresentation(this);
@@ -123,11 +126,13 @@ class SpinBlock
   
 //MAW for more than 2-index ops
   boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1) {
+//pout << "maw Spinblock::get_op_rep 3-index\n";
     assert(has(optypes)); 
     Op_component_base& opbase = *ops.find(optypes)->second; 
     return opbase.get_op_rep(s, i, j, k)->getworkingrepresentation(this);
   }
   const boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1) const {
+//pout << "maw Spinblock::get_op_rep 3-index\n";
     assert(has(optypes)); 
     Op_component_base& opbase = *ops.find(optypes)->second; 
     return opbase.get_op_rep(s, i, j, k)->getworkingrepresentation(this);

@@ -221,6 +221,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
   // We need to distinguish cases where one or more blocks has an empty operator string
   // X_X_X
   if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() > 0) ) {
+pout << "hello X_X_X\n";
     Transposeview lhsOpTr = Transposeview(*lhsOp);
     if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     Transposeview dotOpTr = Transposeview(*dotOp);
@@ -231,6 +232,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
   }
   // X_X_0
   else if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) ) {
+pout << "hello X_X_0\n";
     Transposeview lhsOpTr = Transposeview(*lhsOp);
     if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     Transposeview dotOpTr = Transposeview(*dotOp);
@@ -239,34 +241,39 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
   }
   // X_0_X
   else if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() > 0) ) {
+pout << "hello X_0_X\n";
     Transposeview lhsOpTr = Transposeview(*lhsOp);
     if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *null, *rhsOp, big_);
   }
-  // X_0_0
-  else if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() == 0) ) {
-    Transposeview lhsOpTr = Transposeview(*lhsOp);
-    if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *null, *null, big_);
-  }
   // 0_X_X
   else if ( (lhsOps_.opReps_.size() == 0) && (dotOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() > 0) ) {
+pout << "hello 0_X_X\n";
     Transposeview dotOpTr = Transposeview(*dotOp);
     if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *rhsOp, big_);
   }
+  // X_0_0
+  else if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() == 0) ) {
+pout << "hello X_0_0\n";
+    Transposeview lhsOpTr = Transposeview(*lhsOp);
+    if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
+    expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *null, *null, big_);
+  }
   // 0_X_0
   else if ( (lhsOps_.opReps_.size() == 0) && (dotOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) ) {
+pout << "hello 0_X_0\n";
     Transposeview dotOpTr = Transposeview(*dotOp);
     if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *null, big_);
   }
   // 0_0_X
   else if ( (lhsOps_.opReps_.size() == 0) && (dotOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() > 0) ) {
+pout << "hello 0_0_X\n";
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *null, *null, *rhsOp, big_);
@@ -286,6 +293,7 @@ bool Npdm_expectations::test_for_singlet( int lhs_mult, int dot_mult, int rhs_mu
   int lhs2S = lhs_mult -1;
   int dot2S = dot_mult -1;
   int rhs2S = rhs_mult -1;
+std::cout << "2S =   " << lhs2S << " " << dot2S << " " << rhs2S << std::endl;
 
   // Couple LHS and Dot spin angular momenta and see if any equal RHS  
   for (int twoS = std::abs(lhs2S - dot2S); twoS <= ( lhs2S + dot2S ); twoS += 2 ) {
@@ -304,10 +312,12 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations()
   for (int ilhs = 0; ilhs < lhsOps_.mults_.size(); ++ilhs) {
     for (int idot = 0; idot < dotOps_.mults_.size(); ++idot) {
       for (int irhs = 0; irhs < rhsOps_.mults_.size(); ++irhs) {
-pout << "---------------------------------\n";
 pout << "spin comp: ilhs, idot, irhs = " << ilhs << idot << irhs << std::endl;
 
-        // Check the spin multiplicities of the actual operators we've got is what we think they are!
+        // Check that the spin multiplicities of the actual operators we've got are what we think they are!
+if ( lhsOps_.opReps_.size() > 0 ) {
+pout << lhsOps_.mults_.at(ilhs) -1 << "          " << lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin << std::endl;
+}
         if ( lhsOps_.opReps_.size() > 0 ) assert( lhsOps_.mults_.at(ilhs) -1 == lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );
         if ( dotOps_.opReps_.size() > 0 ) assert( dotOps_.mults_.at(idot) -1 == dotOps_.opReps_.at(idot)->get_deltaQuantum().totalSpin );
         if ( rhsOps_.opReps_.size() > 0 ) assert( rhsOps_.mults_.at(irhs) -1 == rhsOps_.opReps_.at(irhs)->get_deltaQuantum().totalSpin );
@@ -315,6 +325,7 @@ pout << "spin comp: ilhs, idot, irhs = " << ilhs << idot << irhs << std::endl;
         // Screen operator combinations that do not combine to give a singlet
         bool singlet = test_for_singlet( lhsOps_.mults_.at(ilhs), dotOps_.mults_.at(idot), rhsOps_.mults_.at(irhs) );
         if ( singlet ) expectations_.push_back( contract_spin_adapted_operators( ilhs, idot, irhs ) );
+pout << "---------------------------------\n";
       }
     }
   }
@@ -324,6 +335,7 @@ pout << "expectations =\n";
 for (auto it = expectations_.begin(); it != expectations_.end(); ++it) {
   pout << *it << std::endl;
 }
+pout << "---------------------------------\n";
 
 }
 

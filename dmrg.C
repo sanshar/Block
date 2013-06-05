@@ -175,6 +175,7 @@ int calldmrg(char* input, char* output)
     break;
 
   case (TWOPDM):
+pout << "maw doing twopdm\n";
     if (dmrginp.algorithm_method() == TWODOT) {
       pout << "Twopdm not allowed with twodot algorithm" << endl;
       abort();
@@ -191,28 +192,39 @@ int calldmrg(char* input, char* output)
       restart(sweep_tol, reset_iter);
     }
     else {
+pout << "maw twopdm calling dmrg\n";
       dmrg(sweep_tol);
+pout << "maw twopdm done dmrg\n";
     }
 
 
     dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
     dmrginp.Sz() = dmrginp.total_spin_number();
     dmrginp.do_cd() = true;
+    dmrginp.do_3ops() = true;
     dmrginp.screen_tol() = 0.0;
     sweep_copy.restorestate(direction_copy, restartsize_copy);
 
+    //FIXME generate 2-index and 3-index ops
     dmrginp.set_fullrestart() = true;
     sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+pout << "maw twopdm, SweepGenblock::do_one\n";
     SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
+pout << "maw twopdm, done SweepGenblock::do_one\n";
     dmrginp.set_fullrestart() = false;    
 
+    // Compute twopdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
 
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+pout << "maw twopdm calling SweepTwopdm::do_one\n";
       SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
+pout << "maw twopdm done SweepTwopdm::do_one\n";
     }
     sweep_copy.savestate(direction_copy, restartsize_copy);
     break;
+
+
 
   case (RESTART_ONEPDM):
     if(sym == "dinfh") {
@@ -415,7 +427,12 @@ void dmrg(double sweep_tol)
   //initialize array of size m_maxiter or dmrginp.max_iter() for dw and energy
 
 
+  // Do one sweep, return final energy (warmup, forward, norestart)
+pout  << "maw do one warmup sweep forwards\n";
   last_fe = Sweep::do_one(sweepParams, true, true, false, 0);
+pout  << "maw done one warmup sweep forwards\n";
+
+  // Loop until energy change is small
   while ((fabs(last_fe - old_fe) > sweep_tol) || (fabs(last_be - old_be) > sweep_tol) || 
 	 (dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter()+1 >= sweepParams.get_sweep_iter()) )
     {

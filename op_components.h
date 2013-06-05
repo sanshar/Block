@@ -63,6 +63,9 @@ template <> struct ChooseArray<CreCreDes> {
 template <> struct ChooseArray<CreDesDes> {
   typedef para_array_3d<std::vector<boost::shared_ptr<CreDesDes> > > ArrayType;
 };
+template <> struct ChooseArray<CreDesCre> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<CreDesCre> > > ArrayType;
+};
 //MAW 3PDM <<<<<
 
 //===========================================================================================================================================================
@@ -211,8 +214,8 @@ template <class Op> class Op_component : public Op_component_base
     assert( k ==-1 );
     Op* o = 0;
     std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
-std::cout << " s.particleNumber = " << s.particleNumber << std::endl;
-std::cout << " s.totalSpin = " << s.totalSpin << std::endl;
+//MAWstd::cout << " s.particleNumber = " << s.particleNumber << std::endl;
+//MAWstd::cout << " s.totalSpin = " << s.totalSpin << std::endl;
     for (int l=0; l<vec.size(); l++) {
       if ( s == vec[l]->get_deltaQuantum() ) return m_op(i,j,k)[l];
     }
@@ -242,8 +245,9 @@ std::cout << " s.totalSpin = " << s.totalSpin << std::endl;
     assert( k !=-1 );
     Op* o = 0;
     std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
+    std::string build_pattern = vec[0]->get_build_pattern();
     for (int l=0; l<vec.size(); l++) {
-      if ( s == vec[l]->get_quantum_ladder() ) return m_op(i,j,k)[l];
+      if ( s == vec[l]->get_quantum_ladder().at(build_pattern) ) return m_op(i,j,k)[l];
     }
     assert (false);
     return boost::shared_ptr<Op>(o);
@@ -257,9 +261,9 @@ std::cout << " s.totalSpin = " << s.totalSpin << std::endl;
     assert( k !=-1 );
     Op* o = 0;
     const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
-    // MAW FIXME for more than 2-index operators:
+    std::string build_pattern = vec[0]->get_build_pattern();
     for (int l=0; l<vec.size(); l++) {
-      if ( s == vec[l]->get_quantum_ladder() ) return m_op(i,j,k)[l];
+      if ( s == vec[l]->get_quantum_ladder().at(build_pattern) ) return m_op(i,j,k)[l];
     }
     assert (false);
     return boost::shared_ptr<Op>(o);

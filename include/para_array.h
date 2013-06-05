@@ -211,6 +211,13 @@ public:
     for (int i = 0; i < inds.size(); ++i)
       global_indices_map[global_indices[i]] = global_indices[i];
 
+
+//MAW
+//std::cout << "1D para_array; global_indices_map: \n";
+//for (int p=0; p<global_indices_map.size(); ++p) {
+//  std::cout << p << "\t\t" << global_indices_map.at(p) << std::endl;
+//}
+
     if (stored_local) {
       local_indices = global_indices;
     }
@@ -229,11 +236,15 @@ public:
     store.resize(length);    
   }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   void add_local_index(int i)
   {
     local_indices.push_back(i);
     local_indices_map[i] = i;
   }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   /// storage labels
   bool& set_local() { return stored_local; }
@@ -243,6 +254,7 @@ public:
   const std::vector<T>& get_store() const { return store; }  /// deprecated
   const std::vector<int>& get_indices() const { return global_indices; } /**< deprecated */
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   /// returns value at index i
   const T& operator()(int i, int j=-1, int k=-1) const
@@ -253,6 +265,8 @@ public:
     return store[i];
   }    
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   /// returns value at index i
   T& operator()(int i, int j=-1, int k=-1)
   {
@@ -262,23 +276,31 @@ public:
     return store[i];
   }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   /// ith element of local storage
   T& get_local_element(int i)
   {
     return store[local_indices[i]];
   }
   
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   /// ith element of local storage
   const T& get_local_element(int i) const
   {
     return store[local_indices[i]];
   }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   /// returns the ith element of global storage
   T& get_global_element(int i)
   {
     return store[global_indices[i]];
   }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   /// returns the ith element of global storage
   const T& get_global_element(int i) const
@@ -336,6 +358,7 @@ private:
 };
 
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 inline int tristore(int i)
@@ -373,6 +396,8 @@ inline int trimap(int i, int j, int length, bool ut = false)
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 /// parallel 2d lower triangular array class
 /**

@@ -22,7 +22,7 @@ class NpdmSpinOps {
 
   public:
     int size() { return size_; };
-    virtual void set_local_ops( int idx ) { assert(false); };
+    virtual bool set_local_ops( int idx ) { assert(false); };
 
     // Numerical representation of the operators for several total spins (e.g. 2-index op has two forms with spin-1/2 particles)
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_;
@@ -38,7 +38,7 @@ class NpdmSpinOps {
     std::vector<int> indices_;
 
   protected:
-    boost::shared_ptr<SparseMatrix> build_compound_operator( bool is_fermion,
+    boost::shared_ptr<SparseMatrix> build_compound_operator( bool is_fermion, int sign,
                                                              boost::shared_ptr<SparseMatrix> lhsOp,
                                                              boost::shared_ptr<SparseMatrix> rhsOp,
                                                              int ispin, std::vector<int> indices, bool transpose );
@@ -56,7 +56,7 @@ class NpdmSpinOps {
 class Npdm_op_wrapper_compound_CCDD : public NpdmSpinOps {
   public:
     Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBlock );
-    void set_local_ops( int idx );
+    bool set_local_ops( int idx );
 };
 
 //===========================================================================================================================================================
@@ -66,7 +66,7 @@ class Npdm_op_wrapper_compound_CCDD : public NpdmSpinOps {
 class Npdm_op_wrapper_compound_CCD : public NpdmSpinOps {
   public: 
     Npdm_op_wrapper_compound_CCD( SpinBlock * spinBlock );
-    void set_local_ops( int idx );
+    bool set_local_ops( int idx );
 };
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -74,7 +74,15 @@ class Npdm_op_wrapper_compound_CCD : public NpdmSpinOps {
 class Npdm_op_wrapper_compound_CDD : public NpdmSpinOps {
   public: 
     Npdm_op_wrapper_compound_CDD( SpinBlock * spinBlock );
-    void set_local_ops( int idx );
+    bool set_local_ops( int idx );
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_compound_CDC : public NpdmSpinOps {
+  public: 
+    Npdm_op_wrapper_compound_CDC( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
 };
 
 //===========================================================================================================================================================
@@ -84,7 +92,7 @@ class Npdm_op_wrapper_compound_CDD : public NpdmSpinOps {
 class Npdm_op_wrapper_CCD : public NpdmSpinOps {
   public: 
     Npdm_op_wrapper_CCD( SpinBlock * spinBlock );
-    void set_local_ops( int idx );
+    bool set_local_ops( int idx );
 };
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -92,7 +100,15 @@ class Npdm_op_wrapper_CCD : public NpdmSpinOps {
 class Npdm_op_wrapper_CDD : public NpdmSpinOps {
   public: 
     Npdm_op_wrapper_CDD( SpinBlock * spinBlock );
-    void set_local_ops( int idx );
+    bool set_local_ops( int idx );
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_CDC : public NpdmSpinOps {
+  public: 
+    Npdm_op_wrapper_CDC( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
 };
 
 //===========================================================================================================================================================
@@ -102,7 +118,7 @@ class Npdm_op_wrapper_CDD : public NpdmSpinOps {
 class Npdm_op_wrapper_CC : public NpdmSpinOps {
   public: 
     Npdm_op_wrapper_CC( SpinBlock * spinBlock );
-    void set_local_ops( int idx );
+    bool set_local_ops( int idx );
 };
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -110,7 +126,7 @@ class Npdm_op_wrapper_CC : public NpdmSpinOps {
 class Npdm_op_wrapper_CD : public NpdmSpinOps {
   public: 
     Npdm_op_wrapper_CD( SpinBlock * spinBlock );
-    void set_local_ops( int idx );
+    bool set_local_ops( int idx );
 };
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -118,7 +134,7 @@ class Npdm_op_wrapper_CD : public NpdmSpinOps {
 class Npdm_op_wrapper_DD : public NpdmSpinOps {
   public: 
     Npdm_op_wrapper_DD( SpinBlock * spinBlock );
-    void set_local_ops( int idx );
+    bool set_local_ops( int idx );
 };
 
 //===========================================================================================================================================================
@@ -128,7 +144,7 @@ class Npdm_op_wrapper_DD : public NpdmSpinOps {
 class Npdm_op_wrapper_C : public NpdmSpinOps {
   public: 
     Npdm_op_wrapper_C( SpinBlock * spinBlock );
-    void set_local_ops( int idx );
+    bool set_local_ops( int idx );
 };
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,7 +152,7 @@ class Npdm_op_wrapper_C : public NpdmSpinOps {
 class Npdm_op_wrapper_D : public NpdmSpinOps {
   public: 
     Npdm_op_wrapper_D( SpinBlock * spinBlock );
-    void set_local_ops( int idx );
+    bool set_local_ops( int idx );
 };
 
 //===========================================================================================================================================================
@@ -146,7 +162,7 @@ class Npdm_op_wrapper_D : public NpdmSpinOps {
 class Npdm_op_wrapper_NULL : public NpdmSpinOps {
   public: 
     Npdm_op_wrapper_NULL();
-    void set_local_ops( int idx );
+    bool set_local_ops( int idx );
 };
 
 //===========================================================================================================================================================

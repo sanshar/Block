@@ -413,22 +413,24 @@ SpinAdapted::Input::Input(const string& config_name)
         m_maxj = atoi(tok[1].c_str());
       }
       else if (boost::iequals(keyword,  "fci"))
-	m_calc_type = FCI;
+        m_calc_type = FCI;
       else if (boost::iequals(keyword,  "onepdm") || boost::iequals(keyword,  "onerdm") || boost::iequals(keyword,  "ordm"))
-	m_calc_type = ONEPDM;
+        m_calc_type = ONEPDM;
       else if (boost::iequals(keyword,  "twopdm") || boost::iequals(keyword,  "twordm") || boost::iequals(keyword,  "trdm"))
-	m_calc_type = TWOPDM;
+        m_calc_type = TWOPDM;
+      else if (boost::iequals(keyword,  "threepdm") )
+        m_calc_type = THREEPDM;
       else if (boost::iequals(keyword,  "restart_onepdm") || boost::iequals(keyword,  "restart_onerdm") || boost::iequals(keyword,  "restart_ordm"))
-	m_calc_type = RESTART_ONEPDM;
+        m_calc_type = RESTART_ONEPDM;
       else if (boost::iequals(keyword,  "restart_twopdm") || boost::iequals(keyword,  "restart_twordm") || boost::iequals(keyword,  "restart_trdm"))
-	m_calc_type = RESTART_TWOPDM;
+        m_calc_type = RESTART_TWOPDM;
       else if(boost::iequals(keyword,  "prefix") || boost::iequals(keyword,  "scratch"))
       {
 	if(usedkey[PREFIX] == 0) 
 	  usedkey_error(keyword, msg);
-	usedkey[PREFIX] = 0;
-	m_load_prefix = tok[1];
-	m_save_prefix = m_load_prefix;
+     usedkey[PREFIX] = 0;
+     m_load_prefix = tok[1];
+     m_save_prefix = m_load_prefix;
       }
 
 

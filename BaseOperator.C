@@ -142,14 +142,19 @@ void SparseMatrix::buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladd
   built = true;
   allocate(stateinfo);
 
+//FIXME
+//  bool zero_operator = true;
   for (int i=0; i < stateinfo.quanta.size(); i++)
     for (int j=0; j<stateinfo.quanta.size(); j++)
-      if (allowedQuantaMatrix(i,j) )
-        for (int jq =stateinfo.unBlockedIndex[j]; jq < stateinfo.unBlockedIndex[j]+stateinfo.quantaStates[j]; jq++) 
-        {
-          for (int iq =stateinfo.unBlockedIndex[i]; iq < stateinfo.unBlockedIndex[i]+stateinfo.quantaStates[i]; iq++) 
-          operatorMatrix(i,j)(iq-stateinfo.unBlockedIndex[i]+1, jq-stateinfo.unBlockedIndex[j]+1) = redMatrixElement(s[iq], ladders[jq], &b);
+      if (allowedQuantaMatrix(i,j) ) {
+        for (int jq =stateinfo.unBlockedIndex[j]; jq < stateinfo.unBlockedIndex[j]+stateinfo.quantaStates[j]; jq++) {
+          for (int iq =stateinfo.unBlockedIndex[i]; iq < stateinfo.unBlockedIndex[i]+stateinfo.quantaStates[i]; iq++) {
+            operatorMatrix(i,j)(iq-stateinfo.unBlockedIndex[i]+1, jq-stateinfo.unBlockedIndex[j]+1) = redMatrixElement(s[iq], ladders[jq], &b);
+//            zero_operator = false;
+          }
         }
+      }
+//   if ( zero_operator ) build_pattern = "zero_operator";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -312,10 +317,8 @@ void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matri
 void SparseMatrix::build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& rotate_matrix, 
                                                    const StateInfo *newStateInfo)
 {
-//pout << "maw hello SparseMatrix::build_and_renormalise_transform\n";  
+//pout << "\nmaw hello SparseMatrix::build_and_renormalise_transform\n";  
 
-  assert( quantum_ladder.size() > 0 );
-  assert( quantum_ladder.back() == deltaQuantum );
   boost::shared_ptr<SparseMatrix> tmp;
   if (orbs.size() == 0) {
 //pout << "hello 0op\n";
@@ -331,15 +334,27 @@ void SparseMatrix::build_and_renormalise_transform(SpinBlock *big, const opTypes
   }
   else if (orbs.size() == 3) {
 //pout << "hello 3op  " << orbs[0] << "  " << orbs[1] << "  " << orbs[2] << std::endl;
-    tmp = big->get_op_rep(ot, quantum_ladder, orbs[0], orbs[1], orbs[2]);
+    std::string build_pattern_tmp = big->get_op_array(ot).get_element(orbs[0],orbs[1],orbs[2]).at(0)->get_build_pattern();
+//pout << "build_pattern_tmp = " << build_pattern_tmp << std::endl;
+    tmp = big->get_op_rep(ot, quantum_ladder.at(build_pattern_tmp), orbs[0], orbs[1], orbs[2]);
   }
   else
     assert (false);
 
   tmp->built = true;
+//MAW
+//if (orbs.size() ==3) {
+//pout << tmp->get_build_pattern() << std::endl;
+//pout << tmp->get_orbs()[0] << " " << tmp->get_orbs()[1] << " " << tmp->get_orbs()[2] << std::endl;
+//pout << "OpRep:\n";
+//pout << *tmp;
+//}
 
   this->allocate(*newStateInfo);
   this->built = true;
+//MAW 3PDM
+  this->build_pattern = tmp->get_build_pattern();
+
   int newQ = 0;
   for (int Q = 0; Q < rotate_matrix.size (); ++Q) {
     if (rotate_matrix[Q].Ncols () != 0) {
@@ -355,7 +370,7 @@ void SparseMatrix::build_and_renormalise_transform(SpinBlock *big, const opTypes
       ++newQ;
     }
   }
-//pout << "done!\n";
+//pout << "maw done SparseMatrix::build_and_renormalise_transform\n\n";  
 
 }
 

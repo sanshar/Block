@@ -70,23 +70,24 @@ public:
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-   inline int tristore(int i)
+   inline int tristore(int p)
    {
-     return i * (i+1) * (i+2) / 6;
+     return p * (p+1) * (p+2) / 6;
    }
    
    //inline int trimap(int i, int j, int length_, bool ut = false)
    //inline int trimap(int i, int j, int k) const { return ::trimap(i,j,k, length_, upper_triangular_); }
 
    // Returns 1d index from i,j,k
+   // k-index has stride one
    // e.g. length_ = 3; i=j=k=0 => 0; i=j=k=2 => 9
    inline int trimap(int i, int j, int k) const
    {
-     assert ( i<=j );
-     assert ( j<=k );
-     int base_k = k*(k+1)*(k+2)/6;
+     assert ( k<=j );
+     assert ( j<=i );
+     int base_i = i*(i+1)*(i+2)/6;
      int base_j = j*(j+1)/2;
-     return i + base_k + base_j;
+     return k + base_j + base_i;
    } 
 //     if (i>=j)
 //       {
@@ -152,8 +153,8 @@ public:
   /// returns elements at i,j,k
   T& operator()(int i, int j, int k)
   {
-    assert (i <= j);
-    assert (j <= k);
+    assert (k <= j);
+    assert (j <= i);
     assert( has(i,j,k) );
     if (!stored_local_)
       assert( has_local_index( trimap(i,j,k) ) );
@@ -162,8 +163,8 @@ public:
 
   const T& operator()(int i, int j, int k) const
   {
-    assert (i <= j);
-    assert (j <= k);
+    assert (k <= j);
+    assert (j <= i);
     assert(has(i,j,k));
     if (!stored_local_)
       assert( has_local_index( trimap(i,j,k) ) );
