@@ -37,6 +37,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "sweepgenblock.h"
 #include "sweeponepdm.h"
 #include "sweeptwopdm.h"
+//MAW
+#include "sweepthreepdm.h"
 #include "BaseOperator.h"
 #include "dmrg_wrapper.h"
 
@@ -116,6 +118,7 @@ int calldmrg(char* input, char* output)
 
   switch(dmrginp.calc_type()) {
     
+//---------------------------------------------------------------------------
   case (DMRG):
     if (RESTART && !FULLRESTART)
       restart(sweep_tol, reset_iter);
@@ -132,14 +135,17 @@ int calldmrg(char* input, char* output)
     }
     break;
 
+//---------------------------------------------------------------------------
   case (FCI):
     Sweep::fullci(sweep_tol);
     break;
     
+//---------------------------------------------------------------------------
   case (TINYCALC):
     Sweep::tiny(sweep_tol);
     break;
 
+//---------------------------------------------------------------------------
   case (ONEPDM):
     if (dmrginp.algorithm_method() == TWODOT) {
       pout << "Onepdm not allowed with twodot algorithm" << endl;
@@ -174,6 +180,7 @@ int calldmrg(char* input, char* output)
     sweep_copy.savestate(direction_copy, restartsize_copy);
     break;
 
+//---------------------------------------------------------------------------
   case (TWOPDM):
 pout << "maw doing twopdm\n";
     if (dmrginp.algorithm_method() == TWODOT) {
@@ -224,8 +231,59 @@ pout << "maw twopdm done SweepTwopdm::do_one\n";
     sweep_copy.savestate(direction_copy, restartsize_copy);
     break;
 
+//---------------------------------------------------------------------------
+  case (THREEPDM):
+pout << "maw doing threepdm\n";
+    if (dmrginp.algorithm_method() == TWODOT) {
+      pout << "threepdm not allowed with twodot algorithm" << endl;
+      abort();
+    }
+
+    if (RESTART && !FULLRESTART)
+      restart(sweep_tol, reset_iter);
+    else if (FULLRESTART) {
+      fullrestartGenblock();
+      reset_iter = true;
+      sweepParams.restorestate(direction, restartsize);
+      sweepParams.calc_niter();
+      sweepParams.savestate(direction, restartsize);
+      restart(sweep_tol, reset_iter);
+    }
+    else {
+pout << "maw threepdm calling dmrg\n";
+      dmrg(sweep_tol);
+pout << "maw threepdm done dmrg\n";
+    }
 
 
+    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
+    dmrginp.Sz() = dmrginp.total_spin_number();
+    dmrginp.do_cd() = true;
+    dmrginp.do_3ops() = true;
+    dmrginp.screen_tol() = 0.0;
+    sweep_copy.restorestate(direction_copy, restartsize_copy);
+
+    //FIXME generate 2-index and 3-index ops
+    dmrginp.set_fullrestart() = true;
+    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+pout << "maw threepdm, SweepGenblock::do_one\n";
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
+pout << "maw threepdm, done SweepGenblock::do_one\n";
+    dmrginp.set_fullrestart() = false;    
+
+    // Compute threepdm elements
+    for (int state=0; state<dmrginp.nroots(); state++) {
+
+      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+pout << "maw threepdm calling SweepThreepdm::do_one\n";
+      SweepThreepdm::do_one(sweepParams, false, direction, false, 0, state);
+pout << "maw threepdm done SweepThreepdm::do_one\n";
+    }
+    sweep_copy.savestate(direction_copy, restartsize_copy);
+    break;
+
+
+//---------------------------------------------------------------------------
   case (RESTART_ONEPDM):
     if(sym == "dinfh") {
       pout << "One pdm not implemented with dinfh symmetry"<<endl;
@@ -254,6 +312,7 @@ pout << "maw twopdm done SweepTwopdm::do_one\n";
 
     break;
 
+//---------------------------------------------------------------------------
   case (RESTART_TWOPDM):
     if(sym == "dinfh") {
       pout << "Two pdm not implemented with dinfh symmetry"<<endl;

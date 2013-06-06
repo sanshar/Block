@@ -8,8 +8,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include <boost/lexical_cast.hpp>
 #include "MatrixBLAS.h"
+//#include "twopdm.h"
 //FIXME use forward declaration for spinExpectation
-#include "twopdm.h"
+#include "npdm_expectations_engine.h"
 #include "npdm_expectations.h"
 #include "npdm_operators.h"
 #include "npdm_patterns.h"
@@ -47,7 +48,8 @@ std::string Npdm_expectations::get_op_string()
   indices.insert( indices.end(), lhsOps_.indices_.begin(), lhsOps_.indices_.end() );
   indices.insert( indices.end(), dotOps_.indices_.begin(), dotOps_.indices_.end() );
   indices.insert( indices.end(), rhsOps_.indices_.begin(), rhsOps_.indices_.end() );
-  assert (indices.size() == 4);
+//FIXME test for 2PDM or 3PDM
+  assert( (indices.size() == 4) || (indices.size() == 6) );
   pout << "indices = " << indices[0] << "," << indices[1] << "," << indices[2] << "," << indices[3] << std::endl;
 
   // Set up how tensor operator is constructed from (compound) block operators
@@ -78,6 +80,7 @@ std::string Npdm_expectations::get_op_string()
 
 std::vector< std::pair< std::vector<int>, double > > Npdm_expectations::get_nonspin_adapted_expectations( int dim )
 {
+  assert(dim > 0);
   // Contract spin-adapted spatial operators and build singlet expectation values
   build_spin_adapted_singlet_expectations();
   

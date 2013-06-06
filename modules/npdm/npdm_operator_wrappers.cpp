@@ -514,8 +514,8 @@ pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
   indices_.push_back( jx );
   indices_.push_back( kx );
 //FIXME fails!!!
-if ( (ix == jx) && (jx == kx) ) {
-//if ( jx == kx ) {
+//if ( (ix == jx) && (jx == kx) ) {
+if ( jx == kx ) {
   pout << "WARNING: skipping this operator\n";
   return true;
 }
