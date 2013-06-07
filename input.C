@@ -685,21 +685,26 @@ SpinAdapted::Input::Input(const string& config_name)
   mpi::broadcast(world,m_gaopt,0);
 #endif
 
-  if (mpigetrank() == 0) {
      //Fiedler
-     if (m_fiedler) {
-        m_fiedlerorder=get_fiedler(orbitalfile, orbitalFile);
+  if (m_fiedler) {
+     if (mpigetrank() == 0) 
+     m_fiedlerorder=get_fiedler(orbitalfile, orbitalFile);
   }
 
   if (m_gaopt) {
     ifstream gaconfFile;
-    if(gaconffile != "default") gaconfFile.open(gaconffile.c_str(), ios::in);
-    if (!m_fiedler) m_fiedlerorder=get_fiedler(orbitalfile, orbitalFile);
+    if (mpigetrank() == 0) {
+       if(gaconffile != "default") gaconfFile.open(gaconffile.c_str(), ios::in);
+       //to provide as initial guess to gaopt
+       m_fiedlerorder=get_fiedler(orbitalfile, orbitalFile);
+       }
     orbitalFile.open(orbitalfile.c_str(), ios::in);
     getgaorder(gaconfFile, orbitalFile, m_fiedlerorder);
-    orbitalFile.close();
+    if (mpigetrank() == 0) 
+       orbitalFile.close();
   }
 
+    if (mpigetrank() == 0) {
     orbitalFile.open(orbitalfile.c_str(), ios::in);
     readorbitalsfile(orbitalFile, v_1, v_2);
     orbitalFile.close();
@@ -743,7 +748,6 @@ void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& p
 	  abort();
 	}
 	oldtonew.push_back(atoi(tok[i].c_str())-1); //reorder is starting from 1 to n, but internally we store it from 0 to n
-   cout << "ROA tok oldtonew " << tok[i].c_str() << " " << oldtonew[i] << endl;
 	if (oldtonew.back() >m_norbs || oldtonew.back() < 0) {
 	  pout << "Illegal orbital index "<<atoi(tok[i].c_str())<<" in reorder file"<<endl;
 	  abort();
@@ -830,9 +834,9 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     reorder.resize(m_norbs/2);
     for (int i=0; i<m_norbs/2; i++) {
       reorder.at(oldtonew[i]) = i;
-      cout << oldtonew[i] << " ";
+      //cout << oldtonew[i] << " ";
     }
-    cout << endl;
+    //cout << endl;
   }
 
   int orbindex = 0;
