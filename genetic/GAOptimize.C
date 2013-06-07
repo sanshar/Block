@@ -47,6 +47,7 @@ genetic::Cell genetic::gaordering(ifstream& confFile, ifstream& dumpFile, std::v
       for(int j = i + 1; j < K.Ncols(); ++j) ksum += K.element(i, j);
 #ifndef SERIAL
   }
+  mpi::broadcast(world, fiedlerorder, 0);
   mpi::broadcast(world, gainput, 0);
   mpi::broadcast(world, Gene::Length(), 0);
   mpi::broadcast(world, K, 0);
