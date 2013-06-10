@@ -48,6 +48,13 @@ boost::shared_ptr<NpdmSpinOps> init_3_index_operators( SpinBlock * spinBlock, st
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CDC( spinBlock ) );
     return ret;
   } 
+  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION };
+  if ( cd_type == op ) {
+//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCC( spinBlock ) );
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CCC( spinBlock ) );
+    return ret;
+  } 
+  assert(false);
   assert(false);
 }
 
@@ -64,8 +71,12 @@ boost::shared_ptr<NpdmSpinOps> init_2_index_operators( SpinBlock * spinBlock, st
   } 
   op = { Npdm::CREATION, Npdm::DESTRUCTION };
   if ( cd_type == op ) {
-pout << "setting 2-index CRE-DES wrapper\n";
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CD( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::DESTRUCTION, Npdm::CREATION };
+  if ( cd_type == op ) {
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_DC( spinBlock ) );
     return ret;
   } 
   op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION };

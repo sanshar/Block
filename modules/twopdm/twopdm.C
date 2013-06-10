@@ -206,6 +206,7 @@ void assign_twopdm_antisymmetric(array_4d<double>& twopdm, const int i, const in
 if ( abs(val) > 1e-8 ) pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
 //pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
 
+  // Test for duplicates
   if ( twopdm(i, j, k, l) != 0.0 && abs(twopdm(i,j,k,l)-val) > 1e-6)
     {
       void *array[10];
@@ -273,6 +274,7 @@ void twopdm_loop_over_block_operators( Wavefunction & wavefunction,
   boost::shared_ptr<NpdmSpinOps> rhsOps = select_op_wrapper( rhsBlock, rhs_cd_type );
 
   Npdm::Npdm_expectations npdm_expectations( wavefunction, big, *lhsOps, *dotOps, *rhsOps );
+pout << "-------------------------------------------------------------------------------------------\n";
 pout << "lhsOps->size()" << lhsOps->size() << std::endl;
 pout << "dotOps->size()" << dotOps->size() << std::endl;
 pout << "rhsOps->size()" << rhsOps->size() << std::endl;

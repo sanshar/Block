@@ -57,6 +57,12 @@ template <> struct ChooseArray<Ham> {
   typedef para_array_0d<std::vector<boost::shared_ptr<Ham> > > ArrayType;
 };
 //MAW 3PDM >>>>>
+template <> struct ChooseArray<DesCre> {
+  typedef para_array_triang_2d<std::vector<boost::shared_ptr<DesCre> > > ArrayType;
+};
+template <> struct ChooseArray<CreCreCre> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<CreCreCre> > > ArrayType;
+};
 template <> struct ChooseArray<CreCreDes> {
   typedef para_array_3d<std::vector<boost::shared_ptr<CreCreDes> > > ArrayType;
 };

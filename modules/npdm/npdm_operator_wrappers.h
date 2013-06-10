@@ -32,7 +32,7 @@ class NpdmSpinOps {
     std::string build_pattern_;
     // Do we need to transpose the representation before using it?
     bool transpose_;
-    // Do we need to multiply by any constant factors when using it (due to implicit use of commutation relations)?
+    // Do we need to multiply by any constant factors when using it (due to implicit use of commutation relations or such like)?
     double factor_;
     // Effective spatial orbital indices (since due to use of transposition / commutation may not match OpRep.get_orbs() etc)
     std::vector<int> indices_;
@@ -46,7 +46,6 @@ class NpdmSpinOps {
     SpinBlock * spinBlock_;
     // Number of spatial orbital combinations
     int size_;
-
 };
 
 //===========================================================================================================================================================
@@ -85,9 +84,25 @@ class Npdm_op_wrapper_compound_CDC : public NpdmSpinOps {
     bool set_local_ops( int idx );
 };
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_compound_CCC : public NpdmSpinOps {
+  public: 
+    Npdm_op_wrapper_compound_CCC( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+};
+
 //===========================================================================================================================================================
 //  3-INDEX Ops
 //===========================================================================================================================================================
+
+class Npdm_op_wrapper_CCC : public NpdmSpinOps {
+  public: 
+    Npdm_op_wrapper_CCC( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_CCD : public NpdmSpinOps {
   public: 
@@ -126,6 +141,14 @@ class Npdm_op_wrapper_CC : public NpdmSpinOps {
 class Npdm_op_wrapper_CD : public NpdmSpinOps {
   public: 
     Npdm_op_wrapper_CD( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_DC : public NpdmSpinOps {
+  public: 
+    Npdm_op_wrapper_DC( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
 

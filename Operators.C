@@ -20,6 +20,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 //using namespace SpinAdapted::operatorfunctions;
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 bool SpinAdapted::SparseMatrix::nonZeroTensorComponent(Csf& c1, SpinQuantum& opsym, Csf& ladder, int& nonzeroindex, double& cleb)
 {
   nonzeroindex = 0;
@@ -39,6 +41,8 @@ bool SpinAdapted::SparseMatrix::nonZeroTensorComponent(Csf& c1, SpinQuantum& ops
   }
   return found;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 std::vector<double> SpinAdapted::SparseMatrix::calcMatrixElements(Csf& c1, TensorOp& Top, Csf& c2)
 {
@@ -73,6 +77,7 @@ std::vector<double> SpinAdapted::SparseMatrix::calcMatrixElements(Csf& c1, Tenso
   return elements;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, CompType comp, const TwoElectronArray& v_2)
 {
@@ -118,6 +123,8 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
   
   return factor;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, CompType comp, int op2index, const TwoElectronArray& v_2)
 {
@@ -344,6 +351,7 @@ void SpinAdapted::CreDes::build(const SpinBlock& b)
 //MAW debug
 void SpinAdapted::CreDes::build_in_csf_space(const SpinBlock& b) 
 {
+assert(false);
 //pout << "building CreDes in CSF space as a product..\n";
   built = true;
   allocate(b.get_stateInfo());
@@ -358,6 +366,7 @@ void SpinAdapted::CreDes::build_in_csf_space(const SpinBlock& b)
   const boost::shared_ptr<SparseMatrix> op1 = b.get_op_rep(CRE, getSpinQuantum(i), i);
   Transposeview op2 = Transposeview( b.get_op_rep(CRE, getSpinQuantum(j), j) );
   SpinAdapted::operatorfunctions::Product(&b, *op1, op2, *this, 1.0);
+
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -546,6 +555,112 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCre::getworkingrepr
     {
 //pout << "build first\n";
       boost::shared_ptr<SparseMatrix> rep(new CreCre);
+      *rep = *this;
+      rep->build(*block);
+      return rep;
+    }
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//******************DesCre*****************
+
+void SpinAdapted::DesCre::build(const SpinBlock& b)
+{
+//pout << "building DesCre renormalized operator...\n";
+  dmrginp.makeopsT -> start();
+  built = true;
+  allocate(b.get_stateInfo());
+  Sign = 1;
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+//pout << "indices  " << i << " " << j << std::endl;
+
+  SpinBlock* sysBlock = b.get_leftBlock();
+  SpinBlock* dotBlock = b.get_rightBlock();
+
+  if (sysBlock->get_op_array(DES_CRE).has(i, j))
+  {      
+    const boost::shared_ptr<SparseMatrix>& op = sysBlock->get_op_rep(DES_CRE, deltaQuantum, i,j);
+    SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }
+  else if (dotBlock->get_op_array(DES_CRE).has(i, j))
+  {
+    const boost::shared_ptr<SparseMatrix> op = dotBlock->get_op_rep(DES_CRE, deltaQuantum, i,j);
+    SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }  
+  else if (sysBlock->get_op_array(CRE).has(i))
+  {
+    Transposeview opD = Transposeview( sysBlock->get_op_rep(CRE, getSpinQuantum(i), i) );
+    const boost::shared_ptr<SparseMatrix> opC = dotBlock->get_op_rep(CRE, getSpinQuantum(j), j);
+    SpinAdapted::operatorfunctions::TensorProduct(sysBlock, opD, *opC, &b, &(b.get_stateInfo()), *this, 1.0);
+  }
+  else if (dotBlock->get_op_array(CRE).has(i))
+  {
+    Transposeview opD = Transposeview( dotBlock->get_op_rep(CRE, getSpinQuantum(i), i) );
+    const boost::shared_ptr<SparseMatrix> opC = sysBlock->get_op_rep(CRE, getSpinQuantum(j), j);
+    double parity = getCommuteParity( opD.get_deltaQuantum(), opC->get_deltaQuantum(), get_deltaQuantum() );
+    SpinAdapted::operatorfunctions::TensorProduct(dotBlock, opD, *opC, &b, &(b.get_stateInfo()), *this, 1.0*parity);
+  }
+  else
+    assert(false);
+//pout << "opDC\n";
+//pout << *this;
+
+  dmrginp.makeopsT -> stop();
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//MAW debug
+void SpinAdapted::DesCre::build_in_csf_space(const SpinBlock& b) 
+{
+//pout << "building DesCre in CSF space as a product..\n";
+assert(false);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+double SpinAdapted::DesCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
+{
+  double element = 0.0;
+  int I = get_orbs()[0], 
+    J = get_orbs()[1]; //convert spatial id to spin id because slaters need that
+
+  IrrepSpace sym = deltaQuantum.get_symm();
+  int irrep = deltaQuantum.get_symm().getirrep();
+  int spin = deltaQuantum.get_s();
+
+  TensorOp D(I, -1), C(J, 1);
+  TensorOp DC = D.product(C, spin, irrep);
+
+  for (int i=0; i<ladder.size(); i++)
+  {
+    int index = 0; double cleb=0.0;
+    if (nonZeroTensorComponent(c1, deltaQuantum, ladder[i], index, cleb)) {
+      std::vector<double> MatElements = calcMatrixElements(c1, DC, ladder[i]) ;
+      element = MatElements[index]/cleb;
+      break;
+    }
+    else
+      continue;
+  }
+  return element;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::DesCre::getworkingrepresentation(const SpinBlock* block)
+{
+  assert(this->get_initialised());
+  if (this->get_built())
+    {
+      return boost::shared_ptr<DesCre>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
+    }
+  else
+    {
+      boost::shared_ptr<SparseMatrix> rep(new DesCre);
       *rep = *this;
       rep->build(*block);
       return rep;

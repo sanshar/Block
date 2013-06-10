@@ -17,7 +17,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 
 namespace SpinAdapted{
-
 namespace Npdm{
 
 // Forward declaration
@@ -50,7 +49,8 @@ std::string Npdm_expectations::get_op_string()
   indices.insert( indices.end(), rhsOps_.indices_.begin(), rhsOps_.indices_.end() );
 //FIXME test for 2PDM or 3PDM
   assert( (indices.size() == 4) || (indices.size() == 6) );
-  pout << "indices = " << indices[0] << "," << indices[1] << "," << indices[2] << "," << indices[3] << std::endl;
+  pout << "dot indices = "; for (auto it = dotOps_.indices_.begin(); it != dotOps_.indices_.end(); ++it) { pout << *it << " "; } pout << std::endl;
+  pout << "spatial indices = "; for (auto it = indices.begin(); it != indices.end(); ++it) { pout << *it << " "; } pout << std::endl;
 
   // Set up how tensor operator is constructed from (compound) block operators
   std::string build_pattern = "(";
@@ -70,55 +70,9 @@ std::string Npdm_expectations::get_op_string()
       indices.erase( indices.begin() );  
     }
   }
-  std::cout << "op pattern\n";
   std::cout << op_string << std::endl;
 
   return op_string;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-std::vector< std::pair< std::vector<int>, double > > Npdm_expectations::get_nonspin_adapted_expectations( int dim )
-{
-  assert(dim > 0);
-  // Contract spin-adapted spatial operators and build singlet expectation values
-  build_spin_adapted_singlet_expectations();
-  
-  // Now transform to non-spin-adapted spin-orbital representation
-  std::string op_string;
-  // Set up operator string  
-  op_string = get_op_string();
-
-  // b holds the spin-adapted expectation values (we only care about the singlets)
-  ColumnVector x(dim), b(dim);
-  // x holds the non-spin-adapted expectation values
-  x=0.0;
-
-  // Transformation matrix
-  Matrix A(dim,dim);
-  // Vector of spin-orbital indices ordered according to A
-  std::vector< std::vector<int> > so_indices(dim);
-
-  // Parse operator string and set up linear equations
-  npdm_set_up_linear_equations(op_string, expectations_, A, b, so_indices );
-
-//std::cout << "A matrix:\n";
-//for (int i=1; i<7; ++i) { 
-//  for (int j=1; j<7; ++j) {
-//    std::cout << i << "," << j << "\t\t" << A(i,j) << std::endl;
-//  }
-//}
-
-  // Solve A.x = b to get non-spin-adapted expectations in x
-  xsolve_AxeqB(A, b, x);
-
-  // Package transformed elements into container and return
-  std::vector< std::pair< std::vector<int>, double > > new_pdm_elements;
-  for (int i=0; i < so_indices.size(); ++i) {
-    new_pdm_elements.push_back( std::make_pair(so_indices[i], x(i+1)) );
-  } 
-  
-  return new_pdm_elements;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -217,9 +171,9 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
   if ( dotOps_.opReps_.size() > 0 ) dotOp = dotOps_.opReps_.at(idot);
   if ( rhsOps_.opReps_.size() > 0 ) rhsOp = rhsOps_.opReps_.at(irhs);
 
-//if ( lhsOps_.opReps_.size() > 0 ) cout << "lhsOp:\n" << *lhsOp;
-//if ( dotOps_.opReps_.size() > 0 ) cout << "dotOp:\n" << *dotOp;
-//if ( rhsOps_.opReps_.size() > 0 ) cout << "rhsOp:\n" << *rhsOp;
+if ( lhsOps_.opReps_.size() > 0 ) cout << "lhsOp:\n" << *lhsOp;
+if ( dotOps_.opReps_.size() > 0 ) cout << "dotOp:\n" << *dotOp;
+if ( rhsOps_.opReps_.size() > 0 ) cout << "rhsOp:\n" << *rhsOp;
 
   // We need to distinguish cases where one or more blocks has an empty operator string
   // X_X_X
@@ -285,6 +239,7 @@ pout << "hello 0_0_X\n";
 
   // Modify new element with sign factors and return
   double factor = lhsOps_.factor_ * dotOps_.factor_ * rhsOps_.factor_;
+pout << "expectation, factor = " << expectation << ", " << factor  << std::endl;
   return expectation*factor;
 }
 
@@ -296,31 +251,38 @@ bool Npdm_expectations::test_for_singlet( int lhs_mult, int dot_mult, int rhs_mu
   int lhs2S = lhs_mult -1;
   int dot2S = dot_mult -1;
   int rhs2S = rhs_mult -1;
-std::cout << "2S =   " << lhs2S << " " << dot2S << " " << rhs2S << std::endl;
+//std::cout << "2S(lhs,dot,rhs) =   " << lhs2S << " " << dot2S << " " << rhs2S << std::endl;
+
+//if ( (lhs2S == 0) && (dot2S == 0) && (rhs2S == 0) ) return true;
+//else return false;
 
   // Couple LHS and Dot spin angular momenta and see if any equal RHS  
   for (int twoS = std::abs(lhs2S - dot2S); twoS <= ( lhs2S + dot2S ); twoS += 2 ) {
-    if ( twoS == rhs2S ) return true;
+    if ( twoS == rhs2S ) {
+//      std::cout << "\nsinglet found!\n";
+      return true;
+    }
   }
   return false;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// This routine has to generate spin-adapted expectations in the same order as RHS of spin_adapt_to_non_spin_adapt linear equation solver
 
 void Npdm_expectations::build_spin_adapted_singlet_expectations()
 {
   expectations_.clear();
 
-  for (int ilhs = 0; ilhs < lhsOps_.mults_.size(); ++ilhs) {
+  // IMPORTANT: generate spin-components in the same order as RHS of linear equation solver in npdm_set_up_linear_equations routine
+  // i.e. in accordance with the operator string build_pattern
+  for (int irhs = 0; irhs < rhsOps_.mults_.size(); ++irhs) {
     for (int idot = 0; idot < dotOps_.mults_.size(); ++idot) {
-      for (int irhs = 0; irhs < rhsOps_.mults_.size(); ++irhs) {
-pout << "spin comp: ilhs, idot, irhs = " << ilhs << idot << irhs << std::endl;
+      for (int ilhs = 0; ilhs < lhsOps_.mults_.size(); ++ilhs) {
+//pout << "spin comp: ilhs, idot, irhs = " << ilhs << idot << irhs << std::endl;
 
         // Check that the spin multiplicities of the actual operators we've got are what we think they are!
-if ( lhsOps_.opReps_.size() > 0 ) {
-pout << lhsOps_.mults_.at(ilhs) -1 << "          " << lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin << std::endl;
-}
+//if ( lhsOps_.opReps_.size() > 0 ) {
+//pout << lhsOps_.mults_.at(ilhs) -1 << "          " << lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin << std::endl;
+//}
         if ( lhsOps_.opReps_.size() > 0 ) assert( lhsOps_.mults_.at(ilhs) -1 == lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );
         if ( dotOps_.opReps_.size() > 0 ) assert( dotOps_.mults_.at(idot) -1 == dotOps_.opReps_.at(idot)->get_deltaQuantum().totalSpin );
         if ( rhsOps_.opReps_.size() > 0 ) assert( rhsOps_.mults_.at(irhs) -1 == rhsOps_.opReps_.at(irhs)->get_deltaQuantum().totalSpin );
@@ -328,18 +290,75 @@ pout << lhsOps_.mults_.at(ilhs) -1 << "          " << lhsOps_.opReps_.at(ilhs)->
         // Screen operator combinations that do not combine to give a singlet
         bool singlet = test_for_singlet( lhsOps_.mults_.at(ilhs), dotOps_.mults_.at(idot), rhsOps_.mults_.at(irhs) );
         if ( singlet ) expectations_.push_back( contract_spin_adapted_operators( ilhs, idot, irhs ) );
-pout << "---------------------------------\n";
       }
     }
   }
 
 assert (expectations_.size() > 0);
-pout << "expectations =\n";
+pout << "---------------------------------\n";
+pout << "spin-adapted expectations =\n";
 for (auto it = expectations_.begin(); it != expectations_.end(); ++it) {
   pout << *it << std::endl;
 }
 pout << "---------------------------------\n";
 
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+std::vector< std::pair< std::vector<int>, double > > Npdm_expectations::get_nonspin_adapted_expectations( int dim )
+{
+  assert(dim > 0);
+  // Contract spin-adapted spatial operators and build singlet expectation values
+  build_spin_adapted_singlet_expectations();
+  
+  // Now transform to non-spin-adapted spin-orbital representation
+  std::string op_string;
+  // Set up operator string  
+  op_string = get_op_string();
+
+  // b holds the spin-adapted expectation values (we only care about the singlets)
+  ColumnVector x(dim), b(dim);
+  // x holds the non-spin-adapted expectation values
+  x=0.0;
+
+  // Transformation matrix
+  Matrix A(dim,dim);
+  // Vector of spin-orbital indices ordered according to A
+  std::vector< std::vector<int> > so_indices(dim);
+
+  // Parse operator string and set up linear equations
+  npdm_set_up_linear_equations(op_string, expectations_, A, b, so_indices );
+
+//std::cout << "A matrix:\n";
+//for (int i=1; i<(dim+1); ++i) { 
+//  std::cout << i << "\t\t";
+//  for (int j=1; j<(dim+1); ++j) {
+//    std::cout << "  " << A(i,j);
+//  }
+//  std::cout << std::endl;
+//}
+
+//std::cout << "b vector:\n";
+//for (int i=1; i<(dim+1); ++i) { 
+//    std::cout << i << "\t\t" << b(i) << std::endl;
+//}
+
+  // Solve A.x = b to get non-spin-adapted expectations in x
+  xsolve_AxeqB(A, b, x);
+
+  // Package transformed elements into container and return
+  std::vector< std::pair< std::vector<int>, double > > new_pdm_elements;
+  for (int i=0; i < so_indices.size(); ++i) {
+    new_pdm_elements.push_back( std::make_pair(so_indices[i], x(i+1)) );
+  } 
+
+//std::cout << "x vector:\n";
+//for (int i=1; i<(dim+1); ++i) { 
+//    std::cout << i << "\t\t" << x(i) << std::endl;
+//}
+  
+  return new_pdm_elements;
 }
 
 //===========================================================================================================================================================

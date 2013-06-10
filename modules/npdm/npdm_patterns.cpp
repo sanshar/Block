@@ -26,58 +26,79 @@ Npdm_patterns::Npdm_patterns( int pdm_order, int sweep_pos, int end_pos )
 
 void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
 {
-  std::cout << "=================================================================\n";
-  std::cout << "Possible block partitions:\n";
 
+  //---------------
+  // General case
+  //---------------
   int lhs, rhs, dot, dotmax;
-  // General cases
   for (lhs = pdm_order_; lhs >= 0; lhs--) {
     dotmax = 2*pdm_order_ - lhs;
     for (dot = dotmax; dot >= 1; dot--) {
       rhs = 2*pdm_order_ - dot - lhs;
       if ( rhs < pdm_order_ ) {
-        std::cout << lhs << "," << dot << "," << rhs << std::endl;
         lhs_dot_rhs_types_.insert( std::make_tuple(lhs,dot,rhs) );
       }
     }
   }
 
-//-----------------------------------------------------
-//  EDGE CASES 
-//-----------------------------------------------------
-//FIXME make general!!  This only works for 2PDM now
-//-----------------------------------------------------
+  //---------------
+  // Edge cases 
+  //---------------
+  //FIXME make sure no unneccesary patterns
 
-  if ( sweep_pos == 0 ) {
-    std::cout << "Extra block partitions for initial sweep position:\n";
-    std::cout << 4 << "," << 0 << "," << 0 << std::endl;
-    lhs_dot_rhs_types_.insert( std::make_tuple(4,0,0) );
-    std::cout << 3 << "," << 1 << "," << 0 << std::endl;
-    lhs_dot_rhs_types_.insert( std::make_tuple(3,1,0) );
-    std::cout << 3 << "," << 0 << "," << 1 << std::endl;
-    lhs_dot_rhs_types_.insert( std::make_tuple(3,0,1) );
-  }
-  else if ( sweep_pos == end_pos ) {
-    std::cout << "Extra block partitions for final sweep position:\n";
-    std::cout << 0 << "," << 2 << "," << 2 << std::endl;
-    lhs_dot_rhs_types_.insert( std::make_tuple(0,2,2) );
-    std::cout << 2 << "," << 0 << "," << 2 << std::endl;
-    lhs_dot_rhs_types_.insert( std::make_tuple(2,0,2) );
-    std::cout << 1 << "," << 1 << "," << 2 << std::endl;
-    lhs_dot_rhs_types_.insert( std::make_tuple(1,1,2) );
-    std::cout << 0 << "," << 1 << "," << 3 << std::endl;
-    lhs_dot_rhs_types_.insert( std::make_tuple(0,1,3) );
-    std::cout << 1 << "," << 0 << "," << 3 << std::endl;
-    lhs_dot_rhs_types_.insert( std::make_tuple(1,0,3) );
-    std::cout << 0 << "," << 0 << "," << 4 << std::endl;
-    lhs_dot_rhs_types_.insert( std::make_tuple(0,0,4) );
+  // 2PDM
+  if (pdm_order_ == 2) {
+    if ( sweep_pos == 0 ) {
+      lhs_dot_rhs_types_.insert( std::make_tuple(4,0,0) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(3,1,0) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(3,0,1) );
+    }
+    else if ( sweep_pos == end_pos ) {
+      lhs_dot_rhs_types_.insert( std::make_tuple(0,2,2) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(2,0,2) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(1,1,2) );
+
+      lhs_dot_rhs_types_.insert( std::make_tuple(0,1,3) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(1,0,3) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(0,0,4) );
+    }
+  //FIXME Debug extra
+  //lhs_dot_rhs_types_.insert( std::make_tuple(3,1,0) );
+  //lhs_dot_rhs_types_.insert( std::make_tuple(2,0,2) );
   }
 
-//FIXME Debug extra
-std::cout << 3 << "," << 1 << "," << 0 << std::endl;
-lhs_dot_rhs_types_.insert( std::make_tuple(3,1,0) );
-//std::cout << 2 << "," << 0 << "," << 2 << std::endl;
-//lhs_dot_rhs_types_.insert( std::make_tuple(2,0,2) );
+  // 3PDM
+  else if (pdm_order_ == 3) {
+    if ( sweep_pos == 0 ) {
+      lhs_dot_rhs_types_.insert( std::make_tuple(4,2,0) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(4,0,2) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(4,1,1) );
+    }
+    else if ( sweep_pos == end_pos ) {
+      lhs_dot_rhs_types_.insert( std::make_tuple(0,3,3) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(3,0,3) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(1,2,3) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(2,1,3) );
+
+      lhs_dot_rhs_types_.insert( std::make_tuple(0,2,4) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(2,0,4) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(1,1,4) );
+    }
+  }
+
+  else assert(false);
+
+
+  // Print out
+  std::cout << "=================================================================\n";
+  std::cout << "Possible block partitions:\n";
+  for ( auto it = lhs_dot_rhs_types_.begin(); it != lhs_dot_rhs_types_.end(); ++it ) {
+    std::cout << std::get<0>(*it) << "," << std::get<1>(*it) << "," << std::get<2>(*it) << std::endl;
+  }
+  if ( sweep_pos == 0 )
+    std::cout << "Added extra partitions for initial sweep position\n";
+  else if ( sweep_pos == end_pos )
+    std::cout << "Added extra partitions for final sweep position\n";
 
 }
 

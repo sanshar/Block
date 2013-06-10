@@ -87,7 +87,8 @@ std::map< std::vector<int>, int > get_map_to_int( std::vector< std::map< std::ve
   for ( auto it = indices_set.begin(); it != indices_set.end(); ++it ) {
     map_to_int[*it] = k;
     k++; 
-    std::cout << (*it)[0] << " " << (*it)[1] << " " << (*it)[2] << " " << (*it)[3] << std::endl;
+//    pout << "spin indices = ";
+//    for (auto itt = it->begin(); itt != it->end(); ++itt) { pout << *itt << " "; } pout << std::endl;
   }
 
   return map_to_int;
@@ -170,11 +171,12 @@ void apply_permutation( Eigen::MatrixXi & perm_mat, std::vector< std::vector<int
 
 int commute_so_indices_to_pdm_order( std::string& s, std::vector< std::vector<int> >& so_indices)
 {
-  // Trim op string to just get ordering of creations and destructions (cre=0, des=1)
+  // Trim op string to just get ordering of creations and destructions (cre<0, des>0)
   std::vector<int> cd_order;
+  int k=0;
   for ( auto it = s.begin(); it != s.end(); ++it ) {
-    if (*it=='C') cd_order.push_back(0);
-    if (*it=='D') cd_order.push_back(1);
+    if (*it=='C') cd_order.push_back((k++));
+    if (*it=='D') cd_order.push_back(1000+(k++));
   }
   assert ( cd_order.size() == so_indices.at(0).size() );
   int dim = cd_order.size();
@@ -189,17 +191,22 @@ int commute_so_indices_to_pdm_order( std::string& s, std::vector< std::vector<in
     i++;
   }
 
-//FIXME check that we don't commute two identical SO indices
+//FIXME check that we don't commute two C and D ops with identical indices 
 
-  // Sort into CCC..DDD.. order, hence implicitly build permutation matrix
+  // Sort into CCC..DDD.. order, noting that original CC and DD sub-orders are preserved to avoid commuting identical indices;
+  // hence implicitly build permutation matrix.
+  // Note this doesn't preclude commutation of CD with same index, so must manually avoid that by not using such operators! (e.g. CDC 3-index)
   std::sort( perm_mat_pair.begin(), perm_mat_pair.end() );
 
   // Back out permutation matrix as explicit matrix type
   Eigen::MatrixXi perm_mat(dim,dim);
+//std::cout << "perm_mat(i,j)\n";
   for (int i=0; i<dim; i++) {
     for (int j=0; j<dim; j++) {
       perm_mat(i,j) = perm_mat_pair[i].second[j];
+//std::cout << perm_mat(i,j) << " ";
     }
+//std::cout << std::endl;
   }
 
   // Re-order so_indices
@@ -208,6 +215,7 @@ int commute_so_indices_to_pdm_order( std::string& s, std::vector< std::vector<in
   // Parity is just the determinant of permutation matrix
   int parity = perm_mat.determinant();
   assert( abs(parity) == 1 );
+//std::cout << "parity = " << parity << std::endl;
 
   return parity;
 }
@@ -232,6 +240,8 @@ void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matri
   assert(success);
   std::cout << "Setting up linear equations for spin-adaptation transformation...\n";
   std::cout << "Number of compounded tensor operators = " << result.size() << std::endl;
+  assert( result.size() == so_indices.size() );
+  assert( result.size() == b.Nrows() );
 
   // RHS indices (i.e. rows of A) corresponding to singlet expectations
   std::vector<int> singlet_rows;
@@ -241,7 +251,6 @@ void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matri
 
   // Get permutation parity and commute so_indices into NPDM order (i.e. cre,cre..,des,des..)
   int parity = commute_so_indices_to_pdm_order( s, so_indices );  
-//std::cout << "parity = " << parity << std::endl;
 
   // Set up RHS of linear equations (note we assume the ordering of the singlets is consistent with earlier)
   assert( b0.size() == singlet_rows.size() );
@@ -249,8 +258,54 @@ void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matri
   for (int i=0; i < b0.size(); ++i) {
     assert( singlet_rows[i] <= b.Nrows() );
     b( singlet_rows[i] ) = parity*b0[i];
+//pout << singlet_rows[i] << "\t\t" << parity*b0[i] << std::endl;
   }
+
 }
+
+/////////////////////////
+//DEBUG
+//
+//  int dim = 20;
+//  Eigen::MatrixXd Amat(dim,dim);
+//  Eigen::VectorXd xvec(dim);
+//  Eigen::VectorXd bvec(dim);
+//
+//  for (int i=0; i < dim; ++i) {
+//    for (int j=0; j < dim; ++j) {
+//      Amat(i,j) = A(i+1,j+1);
+//    }
+//  }
+//////  std::cout << "Amat\n";
+//////  std::cout << Amat << std::endl;
+//
+//xvec(0  )=   1.89959055084e-21 ;
+//xvec(1  )=   2.75934014869e-22 ;
+//xvec(2  )=   3.11219777415e-21 ;
+//xvec(3  )=   1.58313329369e-05 ;
+//xvec(4  )=   -1.58313329369e-05 ;
+//xvec(5  )=   -6.2735506193e-22 ;
+//xvec(6  )=   -1.58313329369e-05 ;
+//xvec(7  )=   1.58313329369e-05 ;
+//xvec(8  )=   2.14466425391e-22 ;
+//xvec(9 )=    -1.18199994563e-21 ;
+//xvec(10 )=   1.72761681302e-37 ;
+//xvec(11 )=   3.11219777415e-21 ;
+//xvec(12 )=   1.58313329369e-05 ;
+//xvec(13 )=   -1.58313329369e-05 ;
+//xvec(14 )=   -4.45652529234e-21 ;
+//xvec(15 )=   -1.58313329369e-05 ;
+//xvec(16 )=   1.58313329369e-05 ;
+//xvec(17 )=   -1.99286234306e-21 ;
+//xvec(18 )=   7.73535678409e-22 ;
+//xvec(19 )=   -1.64090499098e-21 ;
+//
+//  bvec = Amat*xvec;
+//  std::cout << "model b vector =\n";
+//  std::cout << bvec << std::endl;
+//
+//}
+
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 

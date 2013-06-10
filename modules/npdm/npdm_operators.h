@@ -10,6 +10,29 @@ namespace SpinAdapted{
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+class DesCre: public SpinAdapted::SparseMatrix
+{
+  public:
+    DesCre() { orbs.resize(2); fermion = false; build_pattern = "(DC)";} // default build_pattern
+    void build_in_csf_space(const SpinBlock& b);
+    void build(const SpinBlock& b) ;
+    boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+    double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class CreCreCre: public SpinAdapted::SparseMatrix
+{
+  public:
+    CreCreCre() { orbs.resize(3); fermion = true; build_pattern = "((CC)C)";} // default build_pattern
+    void build(const SpinBlock& b) ;
+    boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+    double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 class CreCreDes: public SpinAdapted::SparseMatrix
 {
   public:

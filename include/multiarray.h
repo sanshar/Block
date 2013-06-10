@@ -220,6 +220,13 @@ template<class T> class array_6d : public vector<T>, public multiarray<T>
     dim3xdim4xdim5xdim6_d(d3*d4*d5*d6),
     dim2xdim3xdim4xdim5xdim6_d(d2*d3*d4*d5*d6),
     vector<T> (d1 * d2 * d3 * d4 * d5 * d6) { }
+//std::cout << "array_6d:  " << d1 << " "
+//<< d2 << " "
+//<< d3 << " "
+//<< d4 << " "
+//<< d5 << " "
+//<< d6 << std::endl;
+// }
 
   T& operator()(const int i, const int j, const int k, const int l, const int m, const int n) 
     { 
