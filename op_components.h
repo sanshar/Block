@@ -60,9 +60,6 @@ template <> struct ChooseArray<Ham> {
 template <> struct ChooseArray<DesCre> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<DesCre> > > ArrayType;
 };
-template <> struct ChooseArray<CreCreCre> {
-  typedef para_array_3d<std::vector<boost::shared_ptr<CreCreCre> > > ArrayType;
-};
 template <> struct ChooseArray<CreCreDes> {
   typedef para_array_3d<std::vector<boost::shared_ptr<CreCreDes> > > ArrayType;
 };
@@ -72,7 +69,17 @@ template <> struct ChooseArray<CreDesDes> {
 template <> struct ChooseArray<CreDesCre> {
   typedef para_array_3d<std::vector<boost::shared_ptr<CreDesCre> > > ArrayType;
 };
-//MAW 3PDM <<<<<
+template <> struct ChooseArray<CreCreCre> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<CreCreCre> > > ArrayType;
+};
+//MAW 4PDM >>>>>
+template <> struct ChooseArray<DesCreDes> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<DesCreDes> > > ArrayType;
+};
+template <> struct ChooseArray<DesDesCre> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<DesDesCre> > > ArrayType;
+};
+//MAW NPDM <<<<<
 
 //===========================================================================================================================================================
 
@@ -217,6 +224,7 @@ template <class Op> class Op_component : public Op_component_base
 
   boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1)
   {
+//pout << "hello base get_op_rep 2-index ops\n";
     assert( k ==-1 );
     Op* o = 0;
     std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
@@ -233,6 +241,7 @@ template <class Op> class Op_component : public Op_component_base
 
   const boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1) const
   {
+//pout << "hello base get_op_rep 2-index ops\n";
     assert( k ==-1 );
     Op* o = 0;
     const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
@@ -245,9 +254,9 @@ template <class Op> class Op_component : public Op_component_base
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // MAW FIXME for more than 2-index operators:
-
   boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1)
   {
+//pout << "hello base get_op_rep n-index ops\n";
     assert( k !=-1 );
     Op* o = 0;
     std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
@@ -261,9 +270,9 @@ template <class Op> class Op_component : public Op_component_base
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // MAW FIXME for more than 2-index operators:
-
   const boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1) const
   {
+//pout << "hello base get_op_rep n-index ops\n";
     assert( k !=-1 );
     Op* o = 0;
     const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);

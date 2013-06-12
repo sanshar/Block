@@ -67,15 +67,15 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
   //different cases
   if (Aindices == 0 && Bindices != 0)
   {
-    //assert( Bindices == 4 ); //2PDM
-    assert( Bindices == 6 ); //3PDM
+//FIXME    assert( Bindices == 4 ); //2PDM
+//FIXME    assert( Bindices == 6 ); //3PDM
     operatorfunctions::TensorMultiply(rightBlock, rightOp, &big, wave2, opw2, dQ, 1.0);
 //MAW    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
   }
   else if (Aindices != 0 && Bindices == 0)
   { 
-    //assert( Aindices == 4 ); //2PDM
-    assert( Aindices == 6 ); //3PDM
+//FIXME    assert( Aindices == 4 ); //2PDM
+//FIXME    assert( Aindices == 6 ); //3PDM
     operatorfunctions::TensorMultiply(leftBlock, AOp, &big, wave2, opw2, dQ, 1.0);
 //MAW    expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
   }

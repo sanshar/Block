@@ -20,6 +20,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "pario.h"
 #include "twopdm.h"
 #include "threepdm.h"
+#include "fourpdm.h"
 #include "npdm_block_and_decimate.h"
 
 #ifndef SERIAL
@@ -128,6 +129,9 @@ void Npdm::BlockAndDecimate (std::string npdm_mode, SweepParams &sweepParams, Sp
   }
   else if ( npdm_mode == "threepdm" ) {
     compute_threepdm_sweep(solution, big, state, sweepPos, endPos);
+  }
+  else if ( npdm_mode == "fourpdm" ) {
+    compute_fourpdm_sweep(solution, big, state, sweepPos, endPos);
   }
   else assert(false);
 //MAW

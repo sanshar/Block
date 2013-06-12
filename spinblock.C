@@ -200,7 +200,7 @@ void SpinBlock::build_iterators()
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
   {
 //MAWout
-std::cout << it->second->get_op_string() << std::endl;
+//std::cout << it->second->get_op_string() << std::endl;
     it->second->build_iterators(*this);
   }
 }
@@ -213,7 +213,7 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
     {
       if(it->second->is_core())
 //MAWout
-std::cout << it->second->get_op_string() << std::endl;
+//std::cout << it->second->get_op_string() << std::endl;
         it->second->build_csf_operators(dets, ladders, *this);      
     }
 pout << "done build_csf_operators! (All optypes)\n";
@@ -227,7 +227,7 @@ void SpinBlock::build_operators()
     {
       if(it->second->is_core()) {
 //MAWout
-std::cout << it->second->get_op_string() << std::endl;
+//std::cout << it->second->get_op_string() << std::endl;
         it->second->build_operators(*this);
       }
     }
@@ -295,15 +295,14 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
 
 void SpinBlock::BuildSumBlock(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState)
 {
-pout << "maw SpinBlock::BuildSumBlock\n";
   dmrginp.buildsumblock -> start();
   BuildSumBlockSkeleton(condition, lBlock, rBlock, compState);
 
-pout << "maw SpinBlock::BuildSumBlock build_iterators()\n";
+//pout << "maw SpinBlock::BuildSumBlock build_iterators()\n";
   build_iterators();
 
   dmrginp.buildblockops -> start();
-pout << "maw SpinBlock::BuildSumBlock build_operators()\n";
+//pout << "maw SpinBlock::BuildSumBlock build_operators()\n";
   build_operators();
   dmrginp.buildblockops -> stop();
   dmrginp.buildsumblock -> stop();

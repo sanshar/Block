@@ -36,9 +36,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "sweep.h"
 #include "sweepgenblock.h"
 #include "sweeponepdm.h"
-#include "sweeptwopdm.h"
 //MAW
+#include "sweeptwopdm.h"
 #include "sweepthreepdm.h"
+#include "sweepfourpdm.h"
 #include "BaseOperator.h"
 #include "dmrg_wrapper.h"
 
@@ -199,34 +200,27 @@ pout << "maw doing twopdm\n";
       restart(sweep_tol, reset_iter);
     }
     else {
-pout << "maw twopdm calling dmrg\n";
       dmrg(sweep_tol);
-pout << "maw twopdm done dmrg\n";
     }
 
 
     dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
     dmrginp.Sz() = dmrginp.total_spin_number();
     dmrginp.do_cd() = true;
-    dmrginp.do_3ops() = true;
     dmrginp.screen_tol() = 0.0;
     sweep_copy.restorestate(direction_copy, restartsize_copy);
 
     //FIXME generate 2-index and 3-index ops
     dmrginp.set_fullrestart() = true;
     sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-pout << "maw twopdm, SweepGenblock::do_one\n";
     SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
-pout << "maw twopdm, done SweepGenblock::do_one\n";
     dmrginp.set_fullrestart() = false;    
 
     // Compute twopdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
 
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-pout << "maw twopdm calling SweepTwopdm::do_one\n";
       SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
-pout << "maw twopdm done SweepTwopdm::do_one\n";
     }
     sweep_copy.savestate(direction_copy, restartsize_copy);
     break;
@@ -250,38 +244,72 @@ pout << "maw doing threepdm\n";
       restart(sweep_tol, reset_iter);
     }
     else {
-pout << "maw threepdm calling dmrg\n";
       dmrg(sweep_tol);
-pout << "maw threepdm done dmrg\n";
     }
-
 
     dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
     dmrginp.Sz() = dmrginp.total_spin_number();
     dmrginp.do_cd() = true;
-    dmrginp.do_3ops() = true;
     dmrginp.screen_tol() = 0.0;
     sweep_copy.restorestate(direction_copy, restartsize_copy);
 
     //FIXME generate 2-index and 3-index ops
     dmrginp.set_fullrestart() = true;
     sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-pout << "maw threepdm, SweepGenblock::do_one\n";
     SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
-pout << "maw threepdm, done SweepGenblock::do_one\n";
     dmrginp.set_fullrestart() = false;    
 
     // Compute threepdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
 
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-pout << "maw threepdm calling SweepThreepdm::do_one\n";
       SweepThreepdm::do_one(sweepParams, false, direction, false, 0, state);
-pout << "maw threepdm done SweepThreepdm::do_one\n";
     }
     sweep_copy.savestate(direction_copy, restartsize_copy);
     break;
 
+//---------------------------------------------------------------------------
+  case (FOURPDM):
+pout << "maw doing fourpdm\n";
+    if (dmrginp.algorithm_method() == TWODOT) {
+      pout << "fourpdm not allowed with twodot algorithm" << endl;
+      abort();
+    }
+
+    if (RESTART && !FULLRESTART)
+      restart(sweep_tol, reset_iter);
+    else if (FULLRESTART) {
+      fullrestartGenblock();
+      reset_iter = true;
+      sweepParams.restorestate(direction, restartsize);
+      sweepParams.calc_niter();
+      sweepParams.savestate(direction, restartsize);
+      restart(sweep_tol, reset_iter);
+    }
+    else {
+      dmrg(sweep_tol);
+    }
+
+    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
+    dmrginp.Sz() = dmrginp.total_spin_number();
+    dmrginp.do_cd() = true;
+    dmrginp.screen_tol() = 0.0;
+    sweep_copy.restorestate(direction_copy, restartsize_copy);
+
+    //FIXME generate 2-index and 3-index ops
+    dmrginp.set_fullrestart() = true;
+    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
+    dmrginp.set_fullrestart() = false;    
+
+    // Compute fourpdm elements
+    for (int state=0; state<dmrginp.nroots(); state++) {
+
+      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+      SweepFourpdm::do_one(sweepParams, false, direction, false, 0, state);
+    }
+    sweep_copy.savestate(direction_copy, restartsize_copy);
+    break;
 
 //---------------------------------------------------------------------------
   case (RESTART_ONEPDM):

@@ -54,16 +54,16 @@ template<class A> void singlethread_build(A& array, SpinBlock& b, std::vector< C
 //          array.get_op_string() == "CREDES"     ||
 //          array.get_op_string() == "CRECREDES"  ||
 //          array.get_op_string() == "CREDESCRE")
-      if (array.get_op_string() == "CREDESDES") {
+//      if (array.get_op_string() == "CREDESDES") {
 //        vec[j]->build_in_csf_space(b);
-        vec[j]->buildUsingCsf(b, ladders, s);
-assert( vec[j]->get_build_pattern() != "CDD" );
+//        vec[j]->buildUsingCsf(b, ladders, s);
+//assert( vec[j]->get_build_pattern() != "CDD" );
 //pout << "maw CDD operator\n";
 //pout << *(vec[j]);
-      }
-      else {
+//      }
+//      else {
         vec[j]->buildUsingCsf(b, ladders, s);
-      }
+//      }
     }
   }
 //pout << "done singlethread_build (csf)!\n";
@@ -86,7 +86,6 @@ template<class A> void singlethread_build(A& array, SpinBlock& b)
 //pout << "size() = " << vec.size() << std::endl;
     for (int j=0; j<vec.size(); j++) {
       vec[j]->build(b);
-assert( vec[j]->get_build_pattern() != "CDD" );
     }
   }
 //pout << "done singlethread_build!\n";

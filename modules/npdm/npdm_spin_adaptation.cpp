@@ -6,10 +6,9 @@
 #include "MatrixBLAS.h"
 
 namespace SpinAdapted {
-
 namespace Npdm {
 
-const expression::grammar<std::vector<TensorOp> ,std::string::const_iterator> eg;
+const expression::grammar< std::vector<TensorOp>, std::string::const_iterator > eg;
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 

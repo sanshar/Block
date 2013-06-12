@@ -165,17 +165,17 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   load_twopdm_binary(twopdm, i, j); 
 //MAW >>>>>>>>>>>>>>>
 //print twopdm
-std::cout << "Final 2PDM:\n";
-for (int i=0; i<2*dmrginp.last_site(); ++i) {
-for (int j=0; j<2*dmrginp.last_site(); ++j) {
-for (int k=0; k<2*dmrginp.last_site(); ++k) {
-for (int l=0; l<2*dmrginp.last_site(); ++l) {
-  if ( abs(twopdm(i,j,k,l)) > 1e-12 ) 
-    std::cout << "maw-so-2pdm  " << i << "," << j << "," << k << "," << l << "\t\t" << twopdm(i,j,k,l) << std::endl;
-}   
-}
-}
-}
+//std::cout << "Final 2PDM:\n";
+//for (int i=0; i<2*dmrginp.last_site(); ++i) {
+//for (int j=0; j<2*dmrginp.last_site(); ++j) {
+//for (int k=0; k<2*dmrginp.last_site(); ++k) {
+//for (int l=0; l<2*dmrginp.last_site(); ++l) {
+//  if ( abs(twopdm(i,j,k,l)) > 1e-12 ) 
+//    std::cout << "maw-so-2pdm  " << i << "," << j << "," << k << "," << l << "\t\t" << twopdm(i,j,k,l) << std::endl;
+//}   
+//}
+//}
+//}
 //MAW <<<<<<<<<<<<<
   //calcenergy(twopdm, i);
   save_twopdm_text(twopdm, i, j);

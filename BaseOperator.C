@@ -334,6 +334,7 @@ void SparseMatrix::build_and_renormalise_transform(SpinBlock *big, const opTypes
   }
   else if (orbs.size() == 3) {
 //pout << "hello 3op  " << orbs[0] << "  " << orbs[1] << "  " << orbs[2] << std::endl;
+//pout << "opType = " << ot << std::endl;
     std::string build_pattern_tmp = big->get_op_array(ot).get_element(orbs[0],orbs[1],orbs[2]).at(0)->get_build_pattern();
 //pout << "build_pattern_tmp = " << build_pattern_tmp << std::endl;
     tmp = big->get_op_rep(ot, quantum_ladder.at(build_pattern_tmp), orbs[0], orbs[1], orbs[2]);

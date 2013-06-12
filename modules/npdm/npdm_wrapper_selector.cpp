@@ -11,7 +11,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
-// Init 4-index (dot) operators
+// Initialize 4-index (dot) operators
 boost::shared_ptr<NpdmSpinOps> init_4_index_operators( SpinBlock * spinBlock, std::vector<Npdm::CD> & cd_type ) {
 
   std::vector<Npdm::CD> op;
@@ -25,7 +25,7 @@ boost::shared_ptr<NpdmSpinOps> init_4_index_operators( SpinBlock * spinBlock, st
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// Init 3-index operators
+// Initialize 3-index operators
 boost::shared_ptr<NpdmSpinOps> init_3_index_operators( SpinBlock * spinBlock, std::vector<Npdm::CD> & cd_type ) {
 
   std::vector<Npdm::CD> op;
@@ -54,12 +54,32 @@ boost::shared_ptr<NpdmSpinOps> init_3_index_operators( SpinBlock * spinBlock, st
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CCC( spinBlock ) );
     return ret;
   } 
-  assert(false);
+  op = { Npdm::DESTRUCTION, Npdm::CREATION, Npdm::DESTRUCTION };
+  if ( cd_type == op ) {
+//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_DCD( spinBlock ) );
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_DCD( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::CREATION };
+  if ( cd_type == op ) {
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_DDC( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
+  if ( cd_type == op ) {
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_DDD( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::DESTRUCTION, Npdm::CREATION, Npdm::CREATION };
+  if ( cd_type == op ) {
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_DCC( spinBlock ) );
+    return ret;
+  } 
   assert(false);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// Init 2-index operators
+// Initialize 2-index operators
 boost::shared_ptr<NpdmSpinOps> init_2_index_operators( SpinBlock * spinBlock, std::vector<Npdm::CD> & cd_type ) {
 
   std::vector<Npdm::CD> op;
@@ -88,7 +108,7 @@ boost::shared_ptr<NpdmSpinOps> init_2_index_operators( SpinBlock * spinBlock, st
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// Init 1-index operators
+// Initialize 1-index operators
 boost::shared_ptr<NpdmSpinOps> init_1_index_operators( SpinBlock * spinBlock, std::vector<Npdm::CD> & cd_type ) {
 
   std::vector<Npdm::CD> op;
@@ -107,7 +127,7 @@ boost::shared_ptr<NpdmSpinOps> init_1_index_operators( SpinBlock * spinBlock, st
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// Init NULL operators
+// Initialize NULL operators
 boost::shared_ptr<NpdmSpinOps> init_0_index_operators() {
   boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_NULL() );
   return ret;

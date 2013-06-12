@@ -342,4 +342,164 @@ template<class T> class array_6d : public vector<T>, public multiarray<T>
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+template<class T> class array_8d : public vector<T>, public multiarray<T>
+{
+ public:
+
+  array_8d() : 
+    dim1_d (0), dim2_d (0), dim3_d (0), dim4_d(0), dim5_d(0), dim6_d(0), dim7_d(0), dim8_d(0), 
+    dim7xdim8_d(0),
+    dim6xdim7xdim8_d(0),
+    dim5xdim6xdim7xdim8_d(0),
+    dim4xdim5xdim6xdim7xdim8_d(0),
+    dim3xdim4xdim5xdim6xdim7xdim8_d(0),
+    dim2xdim3xdim4xdim5xdim6xdim7xdim8_d(0),
+    vector<T> () { }
+
+  array_8d(const int d1, const int d2, const int d3, const int d4, const int d5, const int d6, const int d7, const int d8) : 
+    dim1_d (d1), dim2_d (d2), dim3_d (d3), dim4_d(d4), dim5_d(d5), dim6_d(d6), dim7_d(d7), dim8_d(d8), 
+    dim7xdim8_d( d7*d8 ),
+    dim6xdim7xdim8_d( d6*d7*d8 ),
+    dim5xdim6xdim7xdim8_d( d5*d6*d7*d8 ),
+    dim4xdim5xdim6xdim7xdim8_d( d4*d5*d6*d7*d8 ),
+    dim3xdim4xdim5xdim6xdim7xdim8_d( d3*d4*d5*d6*d7*d8 ),
+    dim2xdim3xdim4xdim5xdim6xdim7xdim8_d( d2*d3*d4*d5*d6*d7*d8 ),
+    vector<T> ( d1*d2*d3*d4*d5*d6*d7*d8 ) { }
+
+  T& operator()(const int i, const int j, const int k, const int l, const int m, const int n, const int p, const int q) 
+    { 
+      assert((0 <= i) && (i < dim1_d)); 
+      assert((0 <= j) && (j < dim2_d)); 
+      assert((0 <= k) && (k < dim3_d)); 
+      assert((0 <= l) && (l < dim4_d));
+      assert((0 <= m) && (m < dim5_d));
+      assert((0 <= n) && (n < dim6_d));
+      assert((0 <= p) && (p < dim7_d));
+      assert((0 <= q) && (q < dim8_d));
+      int u = i * dim2xdim3xdim4xdim5xdim6xdim7xdim8_d 
+            + j * dim3xdim4xdim5xdim6xdim7xdim8_d 
+            + k * dim4xdim5xdim6xdim7xdim8_d 
+            + l * dim5xdim6xdim7xdim8_d 
+            + m * dim6xdim7xdim8_d 
+            + n * dim7xdim8_d 
+            + p * dim8_d 
+            + q;
+      return vector<T>::operator[](u);
+    }
+
+  T operator()(const int i, const int j, const int k, const int l, const int m, const int n, const int p, const int q) const
+    { 
+      assert((0 <= i) && (i < dim1_d)); 
+      assert((0 <= j) && (j < dim2_d)); 
+      assert((0 <= k) && (k < dim3_d)); 
+      assert((0 <= l) && (l < dim4_d));
+      assert((0 <= m) && (m < dim5_d));
+      assert((0 <= n) && (n < dim6_d));
+      assert((0 <= p) && (p < dim7_d));
+      assert((0 <= q) && (q < dim8_d));
+      int u = i * dim2xdim3xdim4xdim5xdim6xdim7xdim8_d 
+            + j * dim3xdim4xdim5xdim6xdim7xdim8_d 
+            + k * dim4xdim5xdim6xdim7xdim8_d 
+            + l * dim5xdim6xdim7xdim8_d 
+            + m * dim6xdim7xdim8_d 
+            + n * dim7xdim8_d 
+            + p * dim8_d 
+            + q;
+      return vector<T>::operator[](u);
+    }
+
+  array_8d<T>& operator+=(const array_8d<T>& C)
+  {
+    assert(dim1() == C.dim1() &&
+           dim2() == C.dim2() &&
+           dim3() == C.dim3() &&
+           dim4() == C.dim4() &&
+           dim5() == C.dim5() &&
+           dim6() == C.dim6() &&
+           dim7() == C.dim7() &&
+           dim8() == C.dim8());
+    for (int i=0; i<C.size(); ++i)
+      (*this)[i]+=C[i];
+    return *this;
+  }
+
+  void Clear()
+  {
+    for (int i=0; i<this->size(); ++i)
+      (*this)[i]=0.;
+  }
+
+  T& operator() (const vector<int>& indices)
+  {
+    assert(indices.size() == 8);
+    return operator()(indices[0], indices[1], indices[2], indices[3], indices[4], indices[5], indices[6], indices[7]);
+  }
+
+  T operator() (const vector<int>& indices) const
+  {
+    assert(indices.size() == 8);
+    return operator()(indices[0], indices[1], indices[2], indices[3], indices[4], indices[5], indices[6], indices[7]);
+  }
+
+  void resize (const int i, const int j, const int k, const int l, const int m, const int n, const int p, const int q) 
+  { 
+    vector<T>::resize (i * j * k * l * m * n * p * q); 
+    dim1_d = i; 
+    dim2_d = j; 
+    dim3_d = k; 
+    dim4_d = l; 
+    dim5_d = m; 
+    dim6_d = n; 
+    dim7_d = p; 
+    dim8_d = q; 
+    dim7xdim8_d = p*q;
+    dim6xdim7xdim8_d = n*p*q;
+    dim5xdim6xdim7xdim8_d = m*n*p*q;
+    dim4xdim5xdim6xdim7xdim8_d = l*m*n*p*q;
+    dim3xdim4xdim5xdim6xdim7xdim8_d = k*l*m*n*p*q;
+    dim2xdim3xdim4xdim5xdim6xdim7xdim8_d = j*k*l*m*n*p*q;
+  }
+  string reflect_type() const { return string("array_8d"); }
+
+  int dim1() const { return dim1_d; }
+  int dim2() const { return dim2_d; }
+  int dim3() const { return dim3_d; }
+  int dim4() const { return dim4_d; } 
+  int dim5() const { return dim5_d; } 
+  int dim6() const { return dim6_d; } 
+  int dim7() const { return dim7_d; } 
+  int dim8() const { return dim8_d; } 
+
+ private:
+  friend class boost::serialization::access;
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version)
+  {
+    ar & dim1_d & dim2_d & dim3_d & dim4_d & dim5_d & dim6_d & dim7_d & dim8_d 
+       & dim2xdim3xdim4xdim5xdim6xdim7xdim8_d
+       & dim3xdim4xdim5xdim6xdim7xdim8_d
+       & dim4xdim5xdim6xdim7xdim8_d
+       & dim5xdim6xdim7xdim8_d
+       & dim6xdim7xdim8_d
+       & dim7xdim8_d;
+    ar & boost::serialization::base_object<std::vector<T> >(*this);
+  }
+  int dim1_d;
+  int dim2_d;
+  int dim3_d;
+  int dim4_d;
+  int dim5_d;
+  int dim6_d;
+  int dim7_d;
+  int dim8_d;
+  int dim2xdim3xdim4xdim5xdim6xdim7xdim8_d;
+  int dim3xdim4xdim5xdim6xdim7xdim8_d;
+  int dim4xdim5xdim6xdim7xdim8_d;
+  int dim5xdim6xdim7xdim8_d;
+  int dim6xdim7xdim8_d;
+  int dim7xdim8_d;
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 #endif

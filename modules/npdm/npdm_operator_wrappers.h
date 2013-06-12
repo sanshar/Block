@@ -59,6 +59,16 @@ class Npdm_op_wrapper_compound_CCDD : public NpdmSpinOps {
 };
 
 //===========================================================================================================================================================
+//  4-INDEX Ops
+//===========================================================================================================================================================
+
+class Npdm_op_wrapper_CCDD : public NpdmSpinOps {
+  public: 
+    Npdm_op_wrapper_CCDD( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+};
+
+//===========================================================================================================================================================
 //  3-INDEX compound Ops
 //===========================================================================================================================================================
 
@@ -89,6 +99,14 @@ class Npdm_op_wrapper_compound_CDC : public NpdmSpinOps {
 class Npdm_op_wrapper_compound_CCC : public NpdmSpinOps {
   public: 
     Npdm_op_wrapper_compound_CCC( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_compound_DCD : public NpdmSpinOps {
+  public: 
+    Npdm_op_wrapper_compound_DCD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
 
@@ -123,6 +141,38 @@ class Npdm_op_wrapper_CDD : public NpdmSpinOps {
 class Npdm_op_wrapper_CDC : public NpdmSpinOps {
   public: 
     Npdm_op_wrapper_CDC( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_DCD : public NpdmSpinOps {
+  public: 
+    Npdm_op_wrapper_DCD( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_DDC : public NpdmSpinOps {
+  public: 
+    Npdm_op_wrapper_DDC( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_DCC : public NpdmSpinOps {
+  public: 
+    Npdm_op_wrapper_DCC( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_DDD : public NpdmSpinOps {
+  public: 
+    Npdm_op_wrapper_DDD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
 

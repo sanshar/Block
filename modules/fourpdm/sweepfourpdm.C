@@ -7,7 +7,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include "npdm_block_and_decimate.h"
-#include "sweepthreepdm.h"
+#include "sweepfourpdm.h"
 #include "global.h"
 #include "solver.h"
 #include "initblocks.h"
@@ -15,7 +15,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "davidson.h"
 #include "linear.h"
 #include "guess_wavefunction.h"
-#include "threepdm.h"
+#include "fourpdm.h"
 #include "density.h"
 #include "davidson.h"
 #include "pario.h"
@@ -32,7 +32,7 @@ namespace SpinAdapted{
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-double SweepThreepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state)
+double SweepFourpdm::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state)
 {
   cout.precision(12);
   SpinBlock system;
@@ -57,10 +57,10 @@ double SweepThreepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const
   bool dot_with_sys = true;
 
   int dim = 2*dmrginp.last_site();
-  array_6d<double> threepdm(dim,dim,dim,dim,dim,dim);
-  threepdm.Clear();
+  array_8d<double> fourpdm(dim,dim,dim,dim,dim,dim,dim,dim);
+  fourpdm.Clear();
   for (int i=0; i<nroots; i++)
-    save_threepdm_binary(threepdm, i, i); 
+    save_fourpdm_binary(fourpdm, i, i); 
 
 
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
@@ -89,7 +89,7 @@ double SweepThreepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const
 	  
       SpinBlock newSystem;
 
-      Npdm::BlockAndDecimate ("threepdm", sweepParams, system, newSystem, warmUp, dot_with_sys, state);
+      Npdm::BlockAndDecimate ("fourpdm", sweepParams, system, newSystem, warmUp, dot_with_sys, state);
 
       for(int j=0;j<nroots;++j)
         pout << "\t\t\t Total block energy for State [ " << j << 
@@ -120,12 +120,12 @@ double SweepThreepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const
 
   int i = state, j = state;
   //for (int j=0; j<=i; j++) {
-  load_threepdm_binary(threepdm, i, j); 
-std::cout << "3PDM done!\n";
-std::cout << "WARNING: not saving full 3PDM spatial binary!\n";
-  save_threepdm_text(threepdm, i, j);
-  save_spatial_threepdm_text(threepdm, i, j);
-//  save_spatial_threepdm_binary(threepdm, i, j);
+  load_fourpdm_binary(fourpdm, i, j); 
+std::cout << "4PDM done!\n";
+std::cout << "WARNING: not saving full 4PDM spatial binary!\n";
+  save_fourpdm_text(fourpdm, i, j);
+  save_spatial_fourpdm_text(fourpdm, i, j);
+//  save_spatial_fourpdm_binary(fourpdm, i, j);
   
 
   // update the static number of iterations

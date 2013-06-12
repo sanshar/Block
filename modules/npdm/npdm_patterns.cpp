@@ -41,11 +41,10 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
     }
   }
 
+  //FIXME make sure no unneccesary patterns
   //---------------
   // Edge cases 
   //---------------
-  //FIXME make sure no unneccesary patterns
-
   // 2PDM
   if (pdm_order_ == 2) {
     if ( sweep_pos == 0 ) {
@@ -57,16 +56,12 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
       lhs_dot_rhs_types_.insert( std::make_tuple(0,2,2) );
       lhs_dot_rhs_types_.insert( std::make_tuple(2,0,2) );
       lhs_dot_rhs_types_.insert( std::make_tuple(1,1,2) );
-
+      //
       lhs_dot_rhs_types_.insert( std::make_tuple(0,1,3) );
       lhs_dot_rhs_types_.insert( std::make_tuple(1,0,3) );
       lhs_dot_rhs_types_.insert( std::make_tuple(0,0,4) );
     }
-  //FIXME Debug extra
-  //lhs_dot_rhs_types_.insert( std::make_tuple(3,1,0) );
-  //lhs_dot_rhs_types_.insert( std::make_tuple(2,0,2) );
   }
-
   // 3PDM
   else if (pdm_order_ == 3) {
     if ( sweep_pos == 0 ) {
@@ -79,15 +74,22 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
       lhs_dot_rhs_types_.insert( std::make_tuple(3,0,3) );
       lhs_dot_rhs_types_.insert( std::make_tuple(1,2,3) );
       lhs_dot_rhs_types_.insert( std::make_tuple(2,1,3) );
-
+      //
       lhs_dot_rhs_types_.insert( std::make_tuple(0,2,4) );
       lhs_dot_rhs_types_.insert( std::make_tuple(2,0,4) );
       lhs_dot_rhs_types_.insert( std::make_tuple(1,1,4) );
     }
   }
-
+  // 4PDM
+  else if (pdm_order_ == 4) {
+    if ( sweep_pos == 0 ) {
+      std::cout << "WARNING: 4PDM edge cases NYI!\n";
+    }
+    else if ( sweep_pos == end_pos ) {
+      std::cout << "WARNING: 4PDM edge cases NYI!\n";
+    }
+  }
   else assert(false);
-
 
   // Print out
   std::cout << "=================================================================\n";

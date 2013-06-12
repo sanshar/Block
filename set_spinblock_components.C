@@ -38,6 +38,11 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_DES_DES).set_local() = true;
     if (has(CRE_DES_CRE))
       set_op_array(CRE_DES_CRE).set_local() = true;
+//FIXME MAW 4PDM
+    if (has(DES_CRE_DES))
+      set_op_array(DES_CRE_DES).set_local() = true;
+    if (has(DES_DES_CRE))
+      set_op_array(DES_DES_CRE).set_local() = true;
 
   }
   else if (st == DISTRIBUTED_STORAGE)
@@ -66,6 +71,11 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_DES_DES).set_local() = false;
     if (has(CRE_DES_CRE))
       set_op_array(CRE_DES_CRE).set_local() = false;
+//FIXME MAW 4PDM
+    if (has(DES_CRE_DES))
+      set_op_array(DES_CRE_DES).set_local() = false;
+    if (has(DES_DES_CRE))
+      set_op_array(DES_DES_CRE).set_local() = false;
   }
 
 
@@ -99,24 +109,26 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
       break;
 //FIXME MAW 3PDM
     case DES_CRE:
-pout << "allocating new DES_CRE\n";
       ret = boost::shared_ptr<Op_component<DesCre> >(new Op_component<DesCre>(is_core));
       break;
     case CRE_CRE_CRE:
-pout << "allocating new CreCreCre\n";
       ret = boost::shared_ptr<Op_component<CreCreCre> >(new Op_component<CreCreCre>(is_core));
       break;
     case CRE_CRE_DES:
-pout << "allocating new CreCreDes\n";
       ret = boost::shared_ptr<Op_component<CreCreDes> >(new Op_component<CreCreDes>(is_core));
       break;
     case CRE_DES_DES:
-pout << "allocating new CreDesDes\n";
       ret = boost::shared_ptr<Op_component<CreDesDes> >(new Op_component<CreDesDes>(is_core));
       break;
     case CRE_DES_CRE:
-pout << "allocating new CreDesCre\n";
       ret = boost::shared_ptr<Op_component<CreDesCre> >(new Op_component<CreDesCre>(is_core));
+      break;
+//FIXME MAW 4PDM
+    case DES_CRE_DES:
+      ret = boost::shared_ptr<Op_component<DesCreDes> >(new Op_component<DesCreDes>(is_core));
+      break;
+    case DES_DES_CRE:
+      ret = boost::shared_ptr<Op_component<DesDesCre> >(new Op_component<DesDesCre>(is_core));
       break;
   }
   return ret;
@@ -147,13 +159,21 @@ pout << "SpinBlock::default_op_components(bool complementary_)\n";
     ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
     ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
 //FIXME MAW 3PDM
-    if (dmrginp.do_3ops()) {
-//pout << "maw setting 3ops\n";
+    if ( (dmrginp.calc_type() == TWOPDM) ||
+         (dmrginp.calc_type() == THREEPDM) ||
+         (dmrginp.calc_type() == FOURPDM) ) {
       ops[DES_CRE] = make_new_op(DES_CRE, true);
-      ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
       ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
       ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
-      ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
+      if ( (dmrginp.calc_type() == THREEPDM) ||
+           (dmrginp.calc_type() == FOURPDM) ) {
+        ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
+        ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
+        if ( dmrginp.calc_type() == FOURPDM ) {
+          ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
+          ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
+        }
+      }
     }
   }
 
@@ -196,14 +216,21 @@ pout << "SpinBlock::default_op_components(..........) for dot block\n";
         ops[CRE_DES] = make_new_op(CRE_DES, true);
         ops[CRE_CRE] = make_new_op(CRE_CRE, true);
 //FIXME MAW 3PDM
-//pout << "maw setting 3ops?\n";
-        if (dmrginp.do_3ops()) {
-//pout << "maw setting 3ops\n";
+        if ( (dmrginp.calc_type() == TWOPDM) ||
+             (dmrginp.calc_type() == THREEPDM) ||
+             (dmrginp.calc_type() == FOURPDM) ) {
           ops[DES_CRE] = make_new_op(DES_CRE, true);
-          ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
           ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
           ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
-          ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
+          if ( (dmrginp.calc_type() == THREEPDM) ||
+               (dmrginp.calc_type() == FOURPDM) ) {
+            ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
+            ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
+            if ( dmrginp.calc_type() == FOURPDM ) {
+              ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
+              ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
+            }
+          }
         }
       }
       if (haveCompops) {
@@ -229,14 +256,21 @@ pout << "SpinBlock::default_op_components(..........) for dot block\n";
         ops[CRE_DES] = make_new_op(CRE_DES, false);
         ops[CRE_CRE] = make_new_op(CRE_CRE, false);
 //FIXME MAW 3PDM
-//pout << "maw setting 3ops?\n";
-        if (dmrginp.do_3ops()) {
-//pout << "maw setting 3ops\n";
+        if ( (dmrginp.calc_type() == TWOPDM) ||
+             (dmrginp.calc_type() == THREEPDM) ||
+             (dmrginp.calc_type() == FOURPDM) ) {
           ops[DES_CRE] = make_new_op(DES_CRE, false);
-          ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, false);
           ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
           ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);
-          ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, false);
+          if ( (dmrginp.calc_type() == THREEPDM) ||
+               (dmrginp.calc_type() == FOURPDM) ) {
+            ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, false);
+            ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, false);
+            if ( dmrginp.calc_type() == FOURPDM ) {
+              ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, false);
+              ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
+            }
+          }
         }
       }
       if (haveCompops) {

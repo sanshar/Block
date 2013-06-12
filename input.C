@@ -420,6 +420,8 @@ SpinAdapted::Input::Input(const string& config_name)
         m_calc_type = TWOPDM;
       else if (boost::iequals(keyword,  "threepdm") )
         m_calc_type = THREEPDM;
+      else if (boost::iequals(keyword,  "fourpdm") )
+        m_calc_type = FOURPDM;
       else if (boost::iequals(keyword,  "restart_onepdm") || boost::iequals(keyword,  "restart_onerdm") || boost::iequals(keyword,  "restart_ordm"))
         m_calc_type = RESTART_ONEPDM;
       else if (boost::iequals(keyword,  "restart_twopdm") || boost::iequals(keyword,  "restart_twordm") || boost::iequals(keyword,  "restart_trdm"))

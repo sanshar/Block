@@ -25,31 +25,32 @@ std::vector<std::tuple<int,int,int> > screened_ccd_indices(const vector<int, std
                                                            const vector<int, std::allocator<int> >& interactingix,
                                                            const TwoElectronArray& twoe, double thresh)
 {
-  // Set up site indices such that (k <= j <= i)
   std::vector<std::tuple<int,int,int> > screened_indices;
-//FIXME  only i=j=k at the moment!!
-//  for (int i = 0; i < sites.size(); ++i) {
-//    int j =i ;
-//    int k =i ;
-//    {
-//    {
-//FIXME should this stride order match para_array??
-  for (int i = 0; i < sites.size(); ++i) {
-    for (int j = 0; j <= i; ++j) {
-      for (int k = 0; k <= j; ++k) {
-//      if (dmrginp.use_partial_two_integrals()) {
-        screened_indices.push_back(std::make_tuple(sites[i], sites[j], sites[k]));
-//pout << i << " " << j << " " << k << std::endl;
 
-//      }
-//FIXME
-//      else {
-//        if (screen_ccd_interaction(indices[i], indices[j], interactingix, twoe, thresh))
-//          screened_indices.push_back(make_pair(indices[i], indices[j]));
-//      }
+  if ( true ) {
+    // Set up site indices such that (k <= j <= i)
+  //FIXME should this stride order match para_array??
+    for (int i = 0; i < sites.size(); ++i) {
+      for (int j = 0; j <= i; ++j) {
+        for (int k = 0; k <= j; ++k) {
+  //      if (dmrginp.use_partial_two_integrals()) {
+          screened_indices.push_back(std::make_tuple(sites[i], sites[j], sites[k]));
+  //      }
+  //FIXME
+  //      else {
+  //        if (screen_ccd_interaction(indices[i], indices[j], interactingix, twoe, thresh))
+  //          screened_indices.push_back(make_pair(indices[i], indices[j]));
+  //      }
+        }
       }
     }
   }
+  else {
+    // i=k=k
+    for (int i = 0; i < sites.size(); ++i) 
+      screened_indices.push_back(std::make_tuple(sites[i], sites[i], sites[i]));
+  }
+
   return screened_indices;
 }
 
@@ -67,7 +68,6 @@ string Op_component<CreCreCre>::get_op_string() const {
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
-
 template<> 
 void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
 {
@@ -95,7 +95,7 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
     std::vector< std::vector<SpinQuantum> > cc_c_quantum_ladder;
     std::vector< std::vector<SpinQuantum> > c_cc_quantum_ladder;
 
-    // Create (CC)C structure first
+    // Create (CC)C structure
     //----------------------------------------
     // Cre_Cre => plus sign
     std::vector<SpinQuantum> spinvec12 = spin1 + spin2;
@@ -112,7 +112,7 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
     }
     assert( cc_c_quantum_ladder.size() == 3 );
 
-    // Create C(CC) structure next
+    // Create C(CC) structure
     //----------------------------------------
     // Cre_Cre => plus sign
     std::vector<SpinQuantum> spinvec23 = spin2 + spin3;
@@ -188,7 +188,7 @@ void Op_component<CreCreDes>::build_iterators(SpinBlock& b)
     std::vector< std::vector<SpinQuantum> > cc_d_quantum_ladder;
     std::vector< std::vector<SpinQuantum> > c_cd_quantum_ladder;
 
-    // Create (CC)D structure first
+    // Create (CC)D structure
     //----------------------------------------
     // Cre_Cre => plus sign
     std::vector<SpinQuantum> spinvec12 = spin1 + spin2;
@@ -205,7 +205,7 @@ void Op_component<CreCreDes>::build_iterators(SpinBlock& b)
     }
     assert( cc_d_quantum_ladder.size() == 3 );
 
-    // Create C(CD) structure next
+    // Create C(CD) structure
     //----------------------------------------
     // Cre_Des => minus sign
     std::vector<SpinQuantum> spinvec23 = spin2 - spin3;
@@ -282,7 +282,7 @@ void Op_component<CreDesDes>::build_iterators(SpinBlock& b)
     std::vector< std::vector<SpinQuantum> > cd_d_quantum_ladder;
     std::vector< std::vector<SpinQuantum> > c_dd_quantum_ladder;
 
-    // Create (CD)D structure first
+    // Create (CD)D structure
     //----------------------------------------
     // Cre_Des => minus sign
     std::vector<SpinQuantum> spinvec12 = spin1 - spin2;
@@ -299,7 +299,7 @@ void Op_component<CreDesDes>::build_iterators(SpinBlock& b)
     }
     assert( cd_d_quantum_ladder.size() == 3 );
 
-    // Create C(DD) structure next
+    // Create C(DD) structure
     //----------------------------------------
     // Des_Des => Cre_Cre => plus sign and transpose and commute (factor -1??)
     std::vector<SpinQuantum> spinvec23 = spin2 + spin3;
@@ -377,7 +377,7 @@ void Op_component<CreDesCre>::build_iterators(SpinBlock& b)
     std::vector< std::vector<SpinQuantum> > cd_c_quantum_ladder;
     std::vector< std::vector<SpinQuantum> > c_dc_quantum_ladder;
 
-    // Create (CD)C structure first
+    // Create (CD)C structure
     //----------------------------------------
     // Cre_Des => minus sign
     std::vector<SpinQuantum> spinvec12 = spin1 - spin2;
@@ -394,7 +394,7 @@ void Op_component<CreDesCre>::build_iterators(SpinBlock& b)
     }
     assert( cd_c_quantum_ladder.size() == 3 );
 
-    // Create C(DC) structure next
+    // Create C(DC) structure
     //----------------------------------------
     // Des_Cre => Cre_Des => minus sign and transpose and commute (factor -1??)
 //FIXME how to do DC??
@@ -435,6 +435,190 @@ void Op_component<CreDesCre>::build_iterators(SpinBlock& b)
 }
   
 //===========================================================================================================================================================
+// (Des,Cre,Des)
+//-------------------
 
+template<> 
+string Op_component<DesCreDes>::get_op_string() const {
+  return "DESCREDES";
 }
 
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+template<> 
+void Op_component<DesCreDes>::build_iterators(SpinBlock& b)
+{
+  // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
+  if (b.get_sites().size () == 0) return; 
+
+  // Set up 3-index (i,j,k) spatial operator indices for this SpinBlock
+  const double screen_tol = dmrginp.screen_tol();
+//FIXME
+  std::vector< std::tuple<int,int,int> > screened_dcd_ix = screened_ccd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
+  m_op.set_tuple_indices(screened_dcd_ix, dmrginp.last_site());      
+  std::vector<int> orbs(3);
+
+  // Allocate new set of operators for each set of spatial orbitals (For 3-index this part cannot be stored all in core, even locally ??)
+  for (int i = 0; i < m_op.local_nnz(); ++i) {
+    orbs = m_op.unmap_local_index(i);
+//pout << "New set of DCD operators:  " << i << std::endl;
+//pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << std::endl;
+    std::vector<boost::shared_ptr<DesCreDes> >& spin_ops = m_op.get_local_element(i);
+
+    SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
+    SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
+    SpinQuantum spin3 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[2]));
+
+    std::vector< std::vector<SpinQuantum> > dc_d_quantum_ladder;
+    std::vector< std::vector<SpinQuantum> > d_cd_quantum_ladder;
+
+    // Create (DC)D structure
+    //----------------------------------------
+    // Des_Cre => minus, plus
+    std::vector<SpinQuantum> spinvec12 = -spin1 + spin2;
+    for (int p=0; p < spinvec12.size(); p++) {
+      assert( spinvec12[p].get_s() == 2*p );
+      assert( spinvec12[p].particleNumber == 0 );
+      // X_Des => minus sign
+      std::vector<SpinQuantum> spinvec123 = spinvec12[p] - spin3;
+      for (int q=0; q < spinvec123.size(); q++) {
+        std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q] };
+        dc_d_quantum_ladder.push_back( tmp );
+        assert( spinvec123[q].particleNumber == -1 );
+      }
+    }
+    assert( dc_d_quantum_ladder.size() == 3 );
+
+    // Create D(CD) structure
+    //----------------------------------------
+    // Cre_Des => plus sign
+    std::vector<SpinQuantum> spinvec23 = spin2 - spin3;
+    for (int p=0; p < spinvec23.size(); p++) {
+      assert( spinvec23[p].get_s() == 2*p );
+      assert( spinvec23[p].particleNumber == 0 );
+      // D_(CD) => minus, plus sign //FIXME ???
+      std::vector<SpinQuantum> spinvec123 = - spin1 + spinvec23[p];
+      for (int q=0; q < spinvec123.size(); q++) {
+        std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q] };
+        d_cd_quantum_ladder.push_back( tmp );
+        assert( spinvec123[q].particleNumber == -1 );
+      }
+    }
+    assert( d_cd_quantum_ladder.size() == 3 );
+
+    // Allocate new operator for each spin component
+    //------------------------------------------------
+    spin_ops.clear();
+    for (int q=0; q < dc_d_quantum_ladder.size(); q++) {
+      spin_ops.push_back( boost::shared_ptr<DesCreDes>(new DesCreDes) );
+      boost::shared_ptr<DesCreDes> op = spin_ops.back();
+      op->set_orbs() = orbs;
+      op->set_initialised() = true;
+      // 3-index ops are fermionic 
+      op->set_fermion() = true;
+      op->set_quantum_ladder()["((DC)D)"] = dc_d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(D(CD))"] = d_cd_quantum_ladder.at(q);
+//FIXME  This should be updated when the build_pattern changes
+//FIXME  Set default
+      op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
+    }
+
+    assert( m_op.get_local_element(i).size() == 3);
+  }
+}
+
+
+//===========================================================================================================================================================
+// (Des,Des,Cre)
+//-------------------
+
+template<> 
+string Op_component<DesDesCre>::get_op_string() const {
+  return "DesDesCre";
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+template<> 
+void Op_component<DesDesCre>::build_iterators(SpinBlock& b)
+{
+  // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
+  if (b.get_sites().size () == 0) return; 
+
+  // Set up 3-index (i,j,k) spatial operator indices for this SpinBlock
+  const double screen_tol = dmrginp.screen_tol();
+//FIXME
+  std::vector< std::tuple<int,int,int> > screened_ddc_ix = screened_ccd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
+  m_op.set_tuple_indices(screened_ddc_ix, dmrginp.last_site());      
+  std::vector<int> orbs(3);
+
+  // Allocate new set of operators for each set of spatial orbitals (For 3-index this part cannot be stored all in core, even locally ??)
+  for (int i = 0; i < m_op.local_nnz(); ++i) {
+    orbs = m_op.unmap_local_index(i);
+//pout << "New set of DDC operators:  " << i << std::endl;
+//pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << std::endl;
+    std::vector<boost::shared_ptr<DesDesCre> >& spin_ops = m_op.get_local_element(i);
+
+    SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
+    SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
+    SpinQuantum spin3 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[2]));
+
+    std::vector< std::vector<SpinQuantum> > dd_c_quantum_ladder;
+    std::vector< std::vector<SpinQuantum> > d_dc_quantum_ladder;
+
+    // Create (DD)C structure
+    //----------------------------------------
+    // DD => CC => minus sign and transpose and commute (factor -1??)
+    std::vector<SpinQuantum> spinvec12 = spin1 + spin2;
+    for (int p=0; p < spinvec12.size(); p++) {
+      assert( spinvec12[p].get_s() == 2*p );
+      assert( spinvec12[p].particleNumber == 2 );
+      // DD_Cre => minus, plus sign ?? FIXME
+      std::vector<SpinQuantum> spinvec123 = -spinvec12[p] + spin3;
+      for (int q=0; q < spinvec123.size(); q++) {
+        std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q] };
+        dd_c_quantum_ladder.push_back( tmp );
+        assert( spinvec123[q].particleNumber == -1 );
+      }
+    }
+    assert( dd_c_quantum_ladder.size() == 3 );
+
+    // Create D(DC) structure
+    //----------------------------------------
+    // DC => minus, plus sign
+    std::vector<SpinQuantum> spinvec23 = -spin2 + spin3;
+    for (int p=0; p < spinvec23.size(); p++) {
+      assert( spinvec23[p].get_s() == 2*p );
+      assert( spinvec23[p].particleNumber == 0 );
+      // D_(DC) => minus, minus sign ?? //FIXME
+      std::vector<SpinQuantum> spinvec123 = -spin1 - spinvec23[p];
+      for (int q=0; q < spinvec123.size(); q++) {
+        std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q] };
+        d_dc_quantum_ladder.push_back( tmp );
+        assert( spinvec123[q].particleNumber == -1 );
+      }
+    }
+    assert( d_dc_quantum_ladder.size() == 3 );
+
+    // Allocate new operator for each spin component
+    //------------------------------------------------
+    spin_ops.clear();
+    for (int q=0; q < dd_c_quantum_ladder.size(); q++) {
+      spin_ops.push_back( boost::shared_ptr<DesDesCre>(new DesDesCre) );
+      boost::shared_ptr<DesDesCre> op = spin_ops.back();
+      op->set_orbs() = orbs;
+      op->set_initialised() = true;
+      // 3-index ops are fermionic 
+      op->set_fermion() = true;
+      op->set_quantum_ladder()["((DD)C)"] = dd_c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(D(DC))"] = d_dc_quantum_ladder.at(q);
+//FIXME  This should be updated when the build_pattern changes
+//FIXME  Set default
+      op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
+    }
+
+    assert( m_op.get_local_element(i).size() == 3);
+  }
+}
+
+//===========================================================================================================================================================
+
+}
