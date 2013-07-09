@@ -1,5 +1,5 @@
 /*                                                                           
-Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
+Developed by Sandeep Sharma, Roberto Olivares-Amaya and Garnet K.-L. Chan, 2012                      
 Copyright (c) 2012, Garnet K.-L. Chan                                        
                                                                              
 This program is integrated in Molpro with the permission of 
@@ -245,6 +245,14 @@ SpinAdapted::Input::Input(const string& config_name)
            m_gaopt = true;
            gaconffile = tok[1];
         }
+      }
+      else if (boost::iequals(keyword, "fiedler")){
+        m_fiedler = true;
+      }
+      else if (boost::iequals(keyword, "noreorder") || boost::iequals(keyword, "nofiedler")) {
+        m_fiedler = false;
+        m_gaopt = false;
+        m_reorder = false;
       }
 
       else if (boost::iequals(keyword,  "schedule"))
