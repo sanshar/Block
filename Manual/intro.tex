@@ -29,7 +29,7 @@
 
 {\large
 \begin{center}
-Sandeep Sharma and Garnet Kin-Lic Chan\\
+Sandeep Sharma, Roberto Olivares-Amaya and Garnet Kin-Lic Chan\\
 \vspace{0.2in}
 with contributions from\\
 \vspace{0.2in}
@@ -394,12 +394,21 @@ The point-group symmetry of the state is specified using the keyword \texttt{irr
 If this is left blank, Block will assume that the wavefunction transforms according to the most symmetric representation.
 
 \subsubsection{Schedule}
-The schedule defines the renormalised states $M$ used in successive DMRG sweeps. It is more economical to perform the initial sweeps with small $M$ and
-then to gradually increase $M$. The simplest option to select \texttt{schedule default} and the maximum number of renormalized states, \texttt{maxM} as in the
-input file above. Block
-will then automatically choose a sweep schedule as well as set defaults for various tolerances. The default sweep schedule increases $M$ in 
-the increments 50, 100, 250, 500, 1000, 2500, 5000, 10000 every 3 sweep iterations until \texttt{maxM} is reached.
-For finer control over the sweeps, we recommend using a more advanced input. An example input is:
+
+The schedule defines the renormalised states $M$ used in successive DMRG
+sweeps. It is more economical to perform the initial sweeps with small $M$ and
+then to gradually increase $M$. The simplest option to select \texttt{schedule
+default} and the maximum number of renormalized states, \texttt{maxM} as in the
+input file above. Block will then automatically choose a sweep schedule as well
+as set defaults for various tolerances.  The default sweep schedule for active
+spaces larger than 12 orbitals begins with $M$ at 500 (for 8 sweeps), then increases
+to a value of 1000 (8 sweeps) and then has a substantial increment of 1000
+every 4 iterations until \texttt{maxM} is reached.~\footnote{ When the orbital
+space is smaller than 12 the increments 50, 100, 250, 500, 1000, 2500, 5000,
+10000 every 3 sweep iterations until \texttt{maxM} is reached.} For finer
+control over the sweeps, we recommend using a more advanced input. An example
+input is:
+
 \begin{verbatim}
 schedule 
 0 50 1e-5 1e-4
@@ -419,54 +428,76 @@ has the format
 \begin{verbatim}
 sweep_iteration M davidson_tolerance noise
 \end{verbatim}
-sweep\_iteration is the sweep at which the new sweep parameters should take effect. For example, in the above, in  first 4 sweeps $M=50$, the tolerance of the Davidson algorithm is $1\times 10^{-5}$, the perturbative  noise is $1 \times 10^{-5}$; in the next 4 sweeps $M=200$, etc.
 
-\texttt{maxiter} gives the maximum number of sweep iterations to be performed. In the above example, in sweep iterations 20 to 30, $M=2000$, the davidson tolerance is $1\times 10^{-9}$, and the noise is 0. Notice, that the noise should be turned off in the last line if one wishes to obtain a converged Block energy.
+sweep\_iteration is the sweep at which the new sweep parameters should take
+effect. For example, in the above, in  first 4 sweeps $M=50$, the tolerance of
+the Davidson algorithm is $1\times 10^{-5}$, the perturbative  noise is $1
+\times 10^{-5}$; in the next 4 sweeps $M=200$, etc.
 
-\texttt{sweep\_tol} gives the final tolerance on the DMRG energy. It is analogous to an energy convergence threshold in other quantum chemistry methods. 
-The DMRG program will exit if either \texttt{sweep\_tol} or \texttt{maxiter} is satisfied.
+\texttt{maxiter} gives the maximum number of sweep iterations to be performed.
+In the above example, in sweep iterations 20 to 30, $M=2000$, the davidson
+tolerance is $1\times 10^{-9}$, and the noise is 0. Notice, that the noise
+should be turned off in the last line if one wishes to obtain a converged Block
+energy.
 
-\texttt{twodot\_to\_onedot} specifies the sweep at which the switch is made from a twodot to a onedot algorithm. The recommended choice is to 
-start with twodot algorithm and then switch to onedot algorithm a few sweeps after the maximum M has been reached (see Section~\ref{sec:appendix1}). 
-With the default schedule, the algorithm switches from twodot to onedot two sweeps after the maximum M has been reached. 
-To do a calculation entirely with the twodot or the onedot algorithm, replace the \texttt{twodot\_to\_onedot} line with \texttt{twodot}
-or \texttt{onedot} respectively (no additional number follows these commands). 
+\texttt{sweep\_tol} gives the final tolerance on the DMRG energy. It is
+analogous to an energy convergence threshold in other quantum chemistry
+methods.  The DMRG program will exit if either \texttt{sweep\_tol} or
+\texttt{maxiter} is satisfied.
+
+\texttt{twodot\_to\_onedot} specifies the sweep at which the switch is made
+from a twodot to a onedot algorithm. The recommended choice is to start with
+twodot algorithm and then switch to onedot algorithm a few sweeps after the
+maximum M has been reached (see Section~\ref{sec:appendix1}).  With the default
+schedule, the algorithm switches from twodot to onedot two sweeps after the
+maximum M has been reached.  To do a calculation entirely with the twodot or
+the onedot algorithm, replace the \texttt{twodot\_to\_onedot} line with
+\texttt{twodot} or \texttt{onedot} respectively (no additional number follows
+these commands). 
 
 \subsection{Additional options}
 
 \subsubsection{State-averaged calculations}
-Block is able to perform state-averaged calculations where more than a single state can be targeted in the same calculation. Currently 
-the states in the state-average must be \emph{of the same symmetry}. Once the symmetry of the states is specified using the keywords \texttt{nelec, spin} and \texttt{irrep} 
-all that needs to be done is to give the number of states and the weights of each state. This is specified using the keyword \texttt{nroots} and \texttt{weights} respectively. For example, to target two states with equal weights, one uses
-\begin{verbatim}
-nroots 2
-weights 0.5 0.5
-\end{verbatim}
-Currently, the implementation of the Davidson algorithm is somewhat inefficient for a large number of roots.
+Block is able to perform state-averaged calculations where more than a single
+state can be targeted in the same calculation. Currently the states in the
+state-average must be \emph{of the same symmetry}. Once the symmetry of the
+states is specified using the keywords \texttt{nelec, spin} and \texttt{irrep}
+all that needs to be done is to give the number of states and the weights of
+each state. This is specified using the keyword \texttt{nroots} and
+\texttt{weights} respectively. For example, to target two states with equal
+weights, one uses \begin{verbatim} nroots 2 weights 0.5 0.5 \end{verbatim}
+Currently, the implementation of the Davidson algorithm is somewhat inefficient
+for a large number of roots.
 
 \subsubsection{Reduced density matrices (RDM)}
 
-One-particle and two-particle density matrices can be calculated and output using the keywords \texttt{onerdm} or \texttt{twordm}.
-If a calculation has been completed, Block is able to use the scratch files from the previous calculation to compute
-the density matrices. To perform this kind of calculation,  use the keywords \texttt{restart\_onerdm} and \texttt{restart\_twordm}.
+One-particle and two-particle density matrices can be calculated and output
+using the keywords \texttt{onerdm} or \texttt{twordm}.  If a calculation has
+been completed, Block is able to use the scratch files from the previous
+calculation to compute the density matrices. To perform this kind of
+calculation,  use the keywords \texttt{restart\_onerdm} and
+\texttt{restart\_twordm}.
 
-The one-particle and two-particle density matrices of the $n$th state are calculated and stored in a text file name \texttt{spatial\_onepdm.n.n} and \texttt{spatial\_twopdm.n.n} respectively, starting with $n=0$. For example, the ground-state one-particle density matrix is stored in \texttt{spatial\_onepdm.0.0}.
-Each line of the one-particle density matrix file contains 3 numbers, the first two
-are the orbital indices and the last number is the density matrix element:\\
-\texttt{
-\\i j $<a_i^\dag a_j>$\\
-}
-\\and for the two-particle density matrix:\\
-\texttt{
-\\i j k l $<a_i^\dag a_j^\dag a_k a_l>$\\
-}
+The one-particle and two-particle density matrices of the $n$th state are
+calculated and stored in a text file name \texttt{spatial\_onepdm.n.n} and
+\texttt{spatial\_twopdm.n.n} respectively, starting with $n=0$. For example,
+the ground-state one-particle density matrix is stored in
+\texttt{spatial\_onepdm.0.0}.  Each line of the one-particle density matrix
+file contains 3 numbers, the first two are the orbital indices and the last
+number is the density matrix element:
+\\ \texttt{ \\i j $<a_i^\dag a_j>$\\ }
+\\and for the two-particle density matrix:
+\\ \texttt{ \\i j k l $<a_i^\dag
+a_j^\dag a_k a_l>$\\ } 
 \\Note that the orbital labels start from 0.
 
 \subsubsection{Restarting a calculation}
- Calculations can be restarted, using the scratch files generated in the previous calculation, by specifying the keyword \texttt{restart}.
+Calculations can be restarted, using the scratch files generated in the
+previous calculation, by specifying the keyword \texttt{restart}.
 
 \subsubsection{Scratch directory}
-The directory to which all the scratch files are written can be specified using the keyword \texttt{scratch}  followed by the directory name
+The directory to which all the scratch files are written can be specified using
+the keyword \texttt{scratch}  followed by the directory name
 \begin{verbatim}
 scratch dirname
 \end{verbatim}
@@ -475,8 +506,6 @@ scratch dirname
 
 \label{sec:dmrg_convergence}
 
-{\bf Note. Convergence monitoring is likely to be simplified in future DMRG releases. Currently
-it requires some careful manual work}.
 
 As described in section \ref{sec:appendix1}, a DMRG calculation consists of a number of sweeps (sweep iterations); each sweep
 is itself composed of a number of block iterations equal to $k-4$, where $k$ is the total number of orbitals. Within a DMRG calculation
@@ -513,6 +542,10 @@ linear relationship.
 %along with the associated noise settings, with a reasonable noise setting. Here we see the linear dependence of the energy as a function of the discarded weight.
 %Also plotted is an example of the same calculation without any noise, where one can observe the plateau-like behaviour, indicating poor convergence.
 
+{\bf Note.  To simplify convergence monitoring, we have implemented a least
+squares minimization of the last sweep for each $M$ (we currently use the last
+three of these $M$. This enables the user to see how after one is from
+convergence.}
 
 
 \section{Computational considerations}\label{sec:computation}
@@ -825,15 +858,6 @@ the energy of an approximate DMRG calculation may be  extrapolated with respect 
 Energy extrapolation should always be carried out using truncation errors defined near the middle of the two-site DMRG sweep.
 
 \section{Orbital choice and ordering in DMRG}\label{sec:appendix2}
-\begin{figure}
- \begin{center}
- \resizebox{50mm}{!}{\includegraphics{cyclic.eps}}
- \end{center}
- \caption{\emph{Snake-like} ordering of orbitals in a ring-like molecule.}
- \label{fig:order}
- \end{figure}
-
-{\bf Note. Orbital ordering is likely to be more automated in future Block releases. Currently it requires some careful manual work}.
 
 In common with many multi-reference methods, choosing an active space to correlate in DMRG can
 require some trial and error. However, unlike a standard CASCI wavefunction, the {\it DMRG wavefunction will also  change under both active space rotation and under reordering of the orbitals}.
@@ -857,9 +881,51 @@ we recommend the following respective orderings,
 \item Group bonding orbitals with their corresponding antibonding orbitals into clusters, then order in real-space,
 \item Order in real-space.
 \end{enumerate}
-Examples of (1) and (3) are given above in this manual. Currently, both orbital localisation and ordering is chosen manually in the Block program.
 
+Examples of (1) and (3) are given above in this manual. 
 
+\subsection{Orbital ordering}
+
+Besides a manual ordering scheme,  we have developed two techniques to obtain
+an automatic orbital ordering. These are briefly detailed below. 
+
+\subsubsection{Fiedler vector ordering}
+The Fiedler vector is the second eigenvector of the graph Laplacian. In
+simpler terms, it defines a 1-D embedding of the graph (\textit{i.e.}, the
+orbitals) on a line. We use the exchange matrix elements, $K_{ij}$ to minimize
+the cost function.
+
+The Fiedler vector is an extremely cost-effective tool to obtain an automatic
+orbital ordering. We have found it useful for systems up to 20-30 orbitals.
+For larger active spaces, we recommend the usage of the genetic algorithm.
+
+\subsubsection{Genetic algorithm ordering}
+
+We use a genetic algorithm, where the cost function is the average interaction
+distance weighted by the exchange integrals. This can be defined as the root
+mean of $K_{ij}R_{ij}^{2}$, where $K_{ij}$ is the exchange integral elements;
+and $R_{ij}$ the distance between the $i$th and $j$th sites.
+
+\subsubsection{Orbital ordering options}
+There are three localization options for \texttt{BLOCK}:
+\begin{itemize}
+	\item \texttt{gaopt default}, uses the default parameters for the genetic
+		algorithm;
+	\item \texttt{reorder reorder.dat}, uses a manual reordering scheme,
+		where the user writes a file \textit{e.g.} \texttt{reorder.dat}, 
+		with the desired ordering
+	\item \texttt{BLANK}, Fiedler vector is used by default.
+   \item \texttt{noreorder}, No reordering is used.
+
+\end{itemize}
+ 
+\begin{figure}
+ \begin{center}
+ \resizebox{50mm}{!}{\includegraphics{cyclic.eps}}
+ \end{center}
+ \caption{\emph{Snake-like} ordering of orbitals in a ring-like molecule.}
+ \label{fig:order}
+ \end{figure}
 %\section{Appendix: Orbital ordering}
 
 %\bibliography{reference}
