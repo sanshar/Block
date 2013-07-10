@@ -202,17 +202,54 @@ void accumulate_fourpdm(array_8d<double>& fourpdm)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void get_even_and_odd_perms( const std::vector<int> mnpq, std::vector< std::vector<int> > & even_perms, std::vector< std::vector<int> > & odd_perms )
+{
+
+  // Get all even and odd mnpq permutations
+  bool even = false;
+
+  // Must sort them to get all possible permutations
+  std::vector<int> foo = mnpq;
+  std::sort( foo.begin(), foo.end() );
+
+  // Get first set
+  std::vector< std::vector<int> > perms1;
+  do { 
+    perms1.push_back( foo ); 
+    if (foo == mnpq) even = true; 
+  } while ( next_even_permutation(foo.begin(), foo.end()) );
+
+  // Re-sort and swap LAST TWO elements to ensure we get all the remaining permutations
+  std::sort( foo.begin(), foo.end() );
+  assert( foo.size() == 4 );
+  std::swap( foo[2], foo[3] );
+
+  // Get second set
+  std::vector< std::vector<int> > perms2;
+  do { 
+    perms2.push_back( foo ); 
+  } while ( next_even_permutation(foo.begin(), foo.end()) );
+
+  // Assign as even or odd permutations
+  even_perms = perms1;
+  odd_perms = perms2;
+  if (!even) std::swap( even_perms, odd_perms );
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // The number of possible combinations are (4!)**2
 
 void assign_fourpdm_antisymmetric(array_8d<double>& fourpdm, 
                                   const int i, const int j, const int k, const int l, const int m, const int n, const int p, const int q,
                                   const double val)
 {
-if ( abs(val) > 1e-8 ) {
-  pout << "so-fourpdm val: i,j,k,l,m,n,p,q = " 
-       << i << "," << j << "," << k << "," << l << "," << m << "," << n << "," << p << "," << q
-       << "\t\t" << val << endl;
-}
+//if ( abs(val) > 1e-8 ) {
+//  pout << "so-fourpdm val: i,j,k,l,m,n,p,q = " 
+//       << i << "," << j << "," << k << "," << l << "," << m << "," << n << "," << p << "," << q
+//       << "\t\t" << val << endl;
+//}
 
   // Test for duplicates
   if ( fourpdm(i,j,k,l,m,n,p,q) != 0.0 && abs(fourpdm(i,j,k,l,m,n,p,q)-val) > 1e-6) {
@@ -236,46 +273,16 @@ if ( abs(val) > 1e-8 ) {
 
   if ( abs(val) < 1e-14 ) return;
 
-//FIXME simplify into a subroutine
-//-------------------------------------------------
-  // Get all even and odd ijkl permutations
-  std::vector<int> ijkl = {i,j,k,l};
-  bool even = false;
-  // Must sort them to get all possible permutations
-  std::vector<int> foo = ijkl;
-  std::sort( foo.begin(), foo.end() );
-  std::vector< std::vector<int> > perms1;
-  do { perms1.push_back( foo ); if (foo == ijkl) even = true; } while ( next_even_permutation(foo.begin(), foo.end()) );
-  // Re-sort and swap LAST TWO elements to ensure we get all the remaining permutations
-  std::sort( foo.begin(), foo.end() );
-  std::swap( foo[2], foo[3] );
-  std::vector< std::vector<int> > perms2;
-  do { perms2.push_back( foo ); } while ( next_even_permutation(foo.begin(), foo.end()) );
-  // Assign as even or odd
-  std::vector< std::vector<int> > ijkl_even = perms1;
-  std::vector< std::vector<int> > ijkl_odd = perms2;
-  if (!even) std::swap( ijkl_even, ijkl_odd );
+  // Get all even and odd permutations
+  const std::vector<int> ijkl = {i,j,k,l};
+  std::vector< std::vector<int> > ijkl_even, ijkl_odd;
+  get_even_and_odd_perms( ijkl, ijkl_even, ijkl_odd );
   assert ( ijkl_even.size() + ijkl_odd.size() == 24 );
 
-  // Get all even and odd mnpq permutations
-  std::vector<int> mnpq = {m,n,p,q};
-  even = false;
-  // Must sort them to get all possible permutations
-  foo = mnpq;
-  std::sort( foo.begin(), foo.end() );
-  perms1.clear();
-  do { perms1.push_back( foo ); if (foo == mnpq) even = true; } while ( next_even_permutation(foo.begin(), foo.end()) );
-  // Re-sort and swap LAST TWO elements to ensure we get all the remaining permutations
-  std::sort( foo.begin(), foo.end() );
-  std::swap( foo[2], foo[3] );
-  perms2.clear();
-  do { perms2.push_back( foo ); } while ( next_even_permutation(foo.begin(), foo.end()) );
-  // Assign as even or odd permutations
-  std::vector< std::vector<int> > mnpq_even = perms1;
-  std::vector< std::vector<int> > mnpq_odd = perms2;
-  if (!even) std::swap( mnpq_even, mnpq_odd );
+  const std::vector<int> mnpq = {m,n,p,q};
+  std::vector< std::vector<int> > mnpq_even, mnpq_odd;
+  get_even_and_odd_perms( mnpq, mnpq_even, mnpq_odd );
   assert ( mnpq_even.size() + mnpq_odd.size() == 24 );
-//-------------------------------------------------
 
   // Even-Even terms
   for ( auto u = ijkl_even.begin(); u != ijkl_even.end(); ++u )

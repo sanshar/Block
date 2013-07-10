@@ -29,6 +29,7 @@ void fourpdm_loop_over_block_operators( Wavefunction & wavefunction,
                                          std::vector<Npdm::CD> & rhs_cd,
                                          array_8d<double> & fourpdm );
 
+void get_even_and_odd_perms(const std::vector<int> mnpq, std::vector< std::vector<int> > & even_perms, std::vector< std::vector<int> > & odd_perms);
 void assign_fourpdm_antisymmetric(array_8d<double>& fourpdm, const int i, const int j, const int k, const int l, const double val);
 void save_fourpdm_text(const array_8d<double>& fourpdm, const int &i, const int &j);
 void save_spatial_fourpdm_text(const array_8d<double>& fourpdm, const int &i, const int &j);
