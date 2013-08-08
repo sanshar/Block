@@ -95,7 +95,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_add_noninteracting_orbs = true;
   m_no_transform = false;
   m_do_fci = false;
-  m_do_cd = false;
+  m_do_npdm_ops = false;
   m_maxiter = 10;
   m_screen_tol = 1.00e-20;
 
@@ -495,9 +495,9 @@ SpinAdapted::Input::Input(const string& config_name)
       }
 
 
-      else if (boost::iequals(keyword,  "docd") || boost::iequals(keyword,  "do_cd"))
+      else if (boost::iequals(keyword,  "docd") || boost::iequals(keyword,  "do_npdm_ops"))
       {
-        m_do_cd = true;
+        m_do_npdm_ops = true;
       }
 
 

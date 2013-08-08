@@ -11,6 +11,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "pario.h"
 
 namespace SpinAdapted{
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys)
 {
   //mcheck("at the start of block and decimate");
@@ -79,6 +82,8 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize)
 {
 
@@ -126,4 +131,7 @@ double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
     }
   return sweepParams.get_lowest_energy()[0];
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 }

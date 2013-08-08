@@ -132,6 +132,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 	  
       SpinBlock newSystem;
 
+      // Build 2pdm elements
       Npdm::BlockAndDecimate ("twopdm", sweepParams, system, newSystem, warmUp, dot_with_sys, state);
 
       for(int j=0;j<nroots;++j)

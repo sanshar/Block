@@ -41,7 +41,7 @@ EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
 #CXX = g++
-#MPICXX = mpic++
+MPICXX = mpic++
 CXX=g++44 -std=c++0x
 OMPI_CXX=g++44 -std=c++0x
 

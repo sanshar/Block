@@ -81,7 +81,7 @@ public:
   virtual bool has(const std::vector<int>& orbs) const {};
   virtual const std::vector<T>& get_store() const {};
   virtual const std::vector<int>& get_indices() const {};
-  virtual int trimap(int i, int j) const {};
+  virtual int trimap_2d(int i, int j) const {};
   virtual T& get(const std::vector<int>& orbs)=0;
 //MAW
 //  virtual const std::pair<int, int> unmap_local_index(int i) const { assert(false); };
@@ -103,6 +103,7 @@ template<class T> class para_array_0d : public para_sparse_vector<T>
 public:
 
   /// implements para_sparse_vector interface by forwarding to para_array_1d
+  const int num_indices() { return 0; }
 
   void clear() { store.clear(); }
   int local_nnz() const { return store.local_nnz(); }
@@ -168,6 +169,9 @@ template<class T> class para_array_1d : public para_sparse_vector<T>
 public:
   para_array_1d() : stored_local(true) {}
   
+  // This is designed for 1-index operators
+  const int num_indices() { return 1; }
+
   /// clears all elements
   void clear()
   {
@@ -219,14 +223,18 @@ public:
 //}
 
     if (stored_local) {
+//cout << "1D para_array stored local\n";
       local_indices = global_indices;
     }
-    else
-      {      
-	for (int i = 0; i < global_indices.size(); ++i)
-	  if (processorindex(global_indices[i]) == mpigetrank())
-	    local_indices.push_back(global_indices[i]);
+    else {
+//cout << "1D para_array spread over procs\n";
+      for (int i = 0; i < global_indices.size(); ++i) {
+        if (processorindex(global_indices[i]) == mpigetrank()) {
+//cout << "global_indices[i], mpigetrank() = " << global_indices[i] << "; " <<  mpigetrank() << endl;
+          local_indices.push_back(global_indices[i]);
+        }
       }
+    }
 
     local_indices_map.resize(length);
     for (int i = 0; i < length; ++i) local_indices_map[i] = -1;
@@ -358,20 +366,20 @@ private:
 };
 
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//===========================================================================================================================================================
 
 
-inline int tristore(int i)
+inline int tristore_2d(int i)
 {
   return i * (i + 1) / 2;
 }
 
-inline int trimap(int i, int j, int length, bool ut = false)
+inline int trimap_2d(int i, int j, int length, bool ut = false)
 {
   if (i>=j) 
     {
       //if (ut)
-      //return tristore(i) + j;
+      //return tristore_2d(i) + j;
       
       int halflen = length/2;
       //there are three slots
@@ -381,14 +389,14 @@ inline int trimap(int i, int j, int length, bool ut = false)
       
       //first check if our case is in slot 1
       if (i>=halflen && j >= halflen)
-        return tristore(length - j - 1) + length - i - 1;
+        return tristore_2d(length - j - 1) + length - i - 1;
       else if (i < halflen && j <halflen)
-        return tristore(length - halflen - 1) + length - halflen + tristore(i) + j;
+        return tristore_2d(length - halflen - 1) + length - halflen + tristore_2d(i) + j;
       else {
-        int base= tristore(length - halflen - 1) + length - halflen + tristore(halflen);
+        int base= tristore_2d(length - halflen - 1) + length - halflen + tristore_2d(halflen);
         return base + (i-halflen)*(halflen) + (j);
       }
-      //return tristore(length - j - 1) + length - i - 1;
+      //return tristore_2d(length - j - 1) + length - i - 1;
     }
   else 
     assert(false);
@@ -396,7 +404,6 @@ inline int trimap(int i, int j, int length, bool ut = false)
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 /// parallel 2d lower triangular array class
@@ -408,6 +415,9 @@ template<class T> class para_array_triang_2d : public para_sparse_vector<T>
 {
 public:
   para_array_triang_2d() : stored_local(true), upper_triangular(false) {}
+
+  // This is designed for 2-index operators
+  const int num_indices() { return 2; }
 
   /// exposes storage
   const std::vector<T>& get_store() const { return store; }	/**< deprecated */
@@ -489,20 +499,20 @@ public:
     assert (i >= j);
     assert(has(i, j));
     if (!stored_local)
-      assert(has_local_index(trimap(i, j)));
-    return store[trimap(i, j)];
+      assert(has_local_index(trimap_2d(i, j)));
+    return store[trimap_2d(i, j)];
   }
   const T& operator()(int i, int j, int k=-1) const
   {
     assert (i >= j);
     assert(has(i, j));
     if (!stored_local)
-      assert(has_local_index(trimap(i, j)));
-    return store[trimap(i, j)];
+      assert(has_local_index(trimap_2d(i, j)));
+    return store[trimap_2d(i, j)];
   }
 
   /// query whether elements are non-null
-  bool has(int i, int j, int k=-1) const { return has_global_index(trimap(i, j)); }
+  bool has(int i, int j, int k=-1) const { return has_global_index(trimap_2d(i, j)); }
   bool has(const std::vector<int>& orbs) const
   {
     assert(orbs.size() == 2);
@@ -510,11 +520,11 @@ public:
   }
   bool has_global_index(int i, int j, int k=-1) const
   {
-    return has_global_index(trimap(i, j));
+    return has_global_index(trimap_2d(i, j));
   }
   bool has_local_index(int i, int j, int k=-1) const
   {
-    return has_local_index(trimap(i, j));
+    return has_local_index(trimap_2d(i, j));
   }
   bool has_global_index(int i) const
   {
@@ -532,9 +542,9 @@ public:
   }
 
   /// returns 1d index from i, j
-  int trimap(int i, int j) const
+  int trimap_2d(int i, int j) const
   {
-    return ::trimap(i, j, length, upper_triangular);
+    return ::trimap_2d(i, j, length, upper_triangular);
   }
 
   /// returns i j for ith element of global storage
@@ -557,7 +567,7 @@ public:
 
   void add_local_indices(int i, int j)
   {
-    int index = trimap(i, j);
+    int index = trimap_2d(i, j);
     local_indices.push_back(index);
     local_indices_map[index]= index;
     // I am not updating local_index_pair because it seems to do nothing
@@ -579,15 +589,13 @@ public:
     length = len;
     upper_triangular = ut;
 
-    int length_1d = tristore(len);
+    int length_1d = tristore_2d(len);
 
     /* this part is different from set_indices */
-    for (std::vector<std::pair<int, int> >::const_iterator ptr = occupied.begin(); 
-	 ptr != occupied.end(); ++ptr)
-      {
-	global_indices.push_back(trimap(ptr->first, ptr->second));
-	global_index_pair.push_back(*ptr);
-      }
+    for (std::vector<std::pair<int, int> >::const_iterator ptr = occupied.begin(); ptr != occupied.end(); ++ptr) {
+      global_indices.push_back(trimap_2d(ptr->first, ptr->second));
+      global_index_pair.push_back(*ptr);
+    }
 				 
     global_indices_map.resize(length_1d);
     for (int i = 0; i < length_1d; ++i) global_indices_map[i] = -1;
@@ -607,28 +615,32 @@ private:
    */
   void setup_local_indices()
   {
-    int length_1d = tristore(length);
-    if (stored_local)
-      {
-	local_indices = global_indices;
-	local_indices_map = global_indices_map;
-	local_index_pair = global_index_pair;
-      }
-    else
-      {
-	local_indices_map.resize(length_1d);
-	int rank = mpigetrank();
-	for (int i = 0; i < length_1d; ++i) local_indices_map[i] = -1;
-	for (int i = 0; i < global_indices.size(); ++i)
-	  if (processorindex(global_indices[i]) == rank)
-	    {
-	      local_indices.push_back(global_indices[i]);
-	      local_indices_map[global_indices[i]] = global_indices[i];
-	      local_index_pair.push_back(global_index_pair[i]);
-	    }
+    int length_1d = tristore_2d(length);
+    if (stored_local) {
+//      cout << "2D para_array stored local\n";
+      local_indices = global_indices;
+      local_indices_map = global_indices_map;
+      local_index_pair = global_index_pair;
+    }
+    else {
+      local_indices_map.resize(length_1d);
+      int rank = mpigetrank();
+//      cout << "2D para_array spread over procs\n";
 
-      }  
+      for (int i = 0; i < length_1d; ++i) local_indices_map[i] = -1;
+
+      for (int i = 0; i < global_indices.size(); ++i) {
+        if (processorindex(global_indices[i]) == rank) {
+          local_indices.push_back(global_indices[i]);
+          local_indices_map[global_indices[i]] = global_indices[i];
+          local_index_pair.push_back(global_index_pair[i]);
+//          cout << "global_index_pair[i], mpigetrank() = " << global_index_pair[i].first << "," << global_index_pair[i].second << "; " <<  mpigetrank() << endl;
+        }
+      }
+      
+    }  
   }
+
   friend class boost::serialization::access;
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)

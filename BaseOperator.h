@@ -70,17 +70,18 @@ class SparseMatrix : public Baseoperator<Matrix>
     void serialize(Archive & ar, const unsigned int version)
     {
       ar & orbs \
-	& deltaQuantum \
-	& fermion \
-	& initialised \
-	& built \
-	& allowedQuantaMatrix \
+         & deltaQuantum \
+         & fermion \
+         & initialised \
+         & built \
+         & built_on_disk \
+         & allowedQuantaMatrix \
 //MAW >>>>>
-	& quantum_ladder \
-	& build_pattern \
+         & quantum_ladder \
+         & build_pattern \
 //MAW <<<<<
-	& operatorMatrix \
-   & Sign;
+         & operatorMatrix \
+         & Sign;
     }
 
  protected:
@@ -89,6 +90,8 @@ class SparseMatrix : public Baseoperator<Matrix>
   ObjectMatrix<char> allowedQuantaMatrix;
   bool initialised;
   bool built;
+//MAW
+  bool built_on_disk;
   ObjectMatrix<Matrix> operatorMatrix;
   SpinQuantum deltaQuantum;
   int Sign;
@@ -144,11 +147,15 @@ class SparseMatrix : public Baseoperator<Matrix>
   void allocate(const StateInfo& s);
   void allocate(const StateInfo& sr, const StateInfo& sc);
   void allocate(const SpinBlock& b);
+//MAW
+  void deallocate(const SpinBlock& b);
   virtual boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) =0;
 //MAW debug
   virtual void build_in_csf_space(const SpinBlock& b) {assert(false);}
   virtual void build(const SpinBlock& b) =0;
   void buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s) ;
+//MAW
+  void buildUsingCsfOnDisk(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s, std::ofstream& ofs) ;
   virtual double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b=0)=0;
   double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, const TwoElectronArray& v_2);
   double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, int op2index, const TwoElectronArray& v_2);
@@ -173,8 +180,7 @@ class SparseMatrix : public Baseoperator<Matrix>
   void OperatorMatrixReference(ObjectMatrix<Matrix*>& m, const std::vector<int>& oldToNewStateI, const std::vector<int>& oldToNewStateJ);
 
   void renormalise_transform(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo);
-  void build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& rotate_matrix, 
-				       const StateInfo *newStateInfo);
+//MAW  void build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& rotate_matrix, const StateInfo *newStateInfo);
   SparseMatrix& operator+=(const SparseMatrix& other);
 };
 

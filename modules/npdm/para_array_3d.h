@@ -11,6 +11,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include <tuple>
 #include <vector>
+#include "pario.h"
 //#include <iostream>
 //#include <utility>
 //#ifndef SERIAL
@@ -35,6 +36,9 @@ public:
   para_array_3d() : stored_local_(true), upper_triangular_(false) {}
 
   bool is_upper() const { return upper_triangular_; }
+
+  // This is designed for 3-index operators
+  const int num_indices() { return 3; }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -70,18 +74,15 @@ public:
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-   inline int tristore(int p)
+   inline int tristore_3d(int p)
    {
      return p * (p+1) * (p+2) / 6;
    }
    
-   //inline int trimap(int i, int j, int length_, bool ut = false)
-   //inline int trimap(int i, int j, int k) const { return ::trimap(i,j,k, length_, upper_triangular_); }
-
    // Returns 1d index from i,j,k
    // k-index has stride one
    // e.g. length_ = 3; i=j=k=0 => 0; i=j=k=2 => 9
-   inline int trimap(int i, int j, int k) const
+   inline int trimap_3d(int i, int j, int k) const
    {
      assert ( k<=j );
      assert ( j<=i );
@@ -89,42 +90,16 @@ public:
      int base_j = j*(j+1)/2;
      return k + base_j + base_i;
    } 
-//     if (i>=j)
-//       {
-//         //if (ut)
-//         //return tristore(i) + j;
-//   
-//         int halflen = length_/2;
-//         //there are three slots
-//         //slot1 i >= halflen and j>= halflen
-//         //slot2 i<halflen and j < halflen
-//         //slot3 i >= halflen and j<halflen
-//   
-//         //first check if our case is in slot 1
-//         if (i>=halflen && j >= halflen)
-//           return tristore(length_ - j - 1) + length_ - i - 1;
-//         else if (i < halflen && j <halflen)
-//           return tristore(length_ - halflen - 1) + length_ - halflen + tristore(i) + j;
-//         else {
-//           int base= tristore(length_ - halflen - 1) + length_ - halflen + tristore(halflen);
-//           return base + (i-halflen)*(halflen) + (j);
-//         }
-//         //return tristore(length_ - j - 1) + length_ - i - 1;
-//       }
-//     else
-//       assert(false);
-//     return 0;
-//   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //FIXME change all .at(ix) to [ix]
 
   /// query whether elements are non-null
-  bool has(int i, int j, int k) const { return has_global_index( trimap(i,j,k) ); }
+  bool has(int i, int j, int k) const { return has_global_index( trimap_3d(i,j,k) ); }
   bool has(const std::vector<int>& orbs) const { assert(orbs.size() == 3); return has(orbs[0], orbs[1], orbs[2]); }
 
-  bool has_global_index(int i, int j, int k) const { return has_global_index( trimap(i,j,k) ); }
-  bool has_local_index(int i, int j, int k) const { return has_local_index( trimap(i,j,k) ); }
+  bool has_global_index(int i, int j, int k) const { return has_global_index( trimap_3d(i,j,k) ); }
+  bool has_local_index(int i, int j, int k) const { return has_local_index( trimap_3d(i,j,k) ); }
   bool has_global_index(int i) const { return (global_indices_map_.at(i) != -1); }
   bool has_local_index(int i) const { return (local_indices_map_.at(i) != -1); }
 
@@ -157,8 +132,8 @@ public:
     assert (j <= i);
     assert( has(i,j,k) );
     if (!stored_local_)
-      assert( has_local_index( trimap(i,j,k) ) );
-    return store_.at( trimap(i,j,k) );
+      assert( has_local_index( trimap_3d(i,j,k) ) );
+    return store_.at( trimap_3d(i,j,k) );
   }
 
   const T& operator()(int i, int j, int k) const
@@ -167,8 +142,8 @@ public:
     assert (j <= i);
     assert(has(i,j,k));
     if (!stored_local_)
-      assert( has_local_index( trimap(i,j,k) ) );
-    return store_.at(trimap(i,j,k));
+      assert( has_local_index( trimap_3d(i,j,k) ) );
+    return store_.at(trimap_3d(i,j,k));
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -199,9 +174,11 @@ public:
 
   para_array_3d<T>* clone() const { return new para_array_3d<T>(*this); }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   void add_local_indices(int i, int j, int k)
   {
-    int index = trimap(i,j,k);
+    int index = trimap_3d(i,j,k);
     local_indices_.push_back(index);
     local_indices_map_.at(index)= index;
   }
@@ -222,12 +199,12 @@ public:
     for (auto it = occupied.begin(); it != occupied.end(); ++it) {
       // internally implement tuple as std::vector<int>(3)
       std::vector<int> tuple = { std::get<0>(*it), std::get<1>(*it), std::get<2>(*it) };
-      global_indices_.push_back( trimap( tuple[0], tuple[1], tuple[2] ) );
+      global_indices_.push_back( trimap_3d( tuple[0], tuple[1], tuple[2] ) );
       global_index_tuple_.push_back( tuple );
     }
 
     // Global indices map
-    int length_1d = tristore(len);
+    int length_1d = tristore_3d(len);
     global_indices_map_.resize(length_1d);
     for (int i=0; i < length_1d; ++i) {
       global_indices_map_.at(i) = -1;
@@ -242,7 +219,7 @@ public:
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
+//FIXME unneccesary .at() in vectors!!
 private:
   /**
    * having filled out the global indices, assign indices
@@ -250,7 +227,8 @@ private:
    */
   void setup_local_indices()
   {
-    int length_1d = tristore(length_);
+cout << "setup_local_indices()\n";
+    int length_1d = tristore_3d(length_);
     if (stored_local_) {
       local_indices_ = global_indices_;
       local_indices_map_ = global_indices_map_;
@@ -259,12 +237,26 @@ private:
     else {
       local_indices_map_.resize(length_1d);
       int rank = mpigetrank();
-      for (int i = 0; i < length_1d; ++i) local_indices_map_.at(i) = -1;
-      for (int i = 0; i < global_indices_.size(); ++i) {
-        if (processorindex(global_indices_.at(i)) == rank) {
-          local_indices_.push_back(global_indices_.at(i));
-          local_indices_map_.at(global_indices_.at(i)) = global_indices_.at(i);
-          local_index_tuple_.push_back(global_index_tuple_.at(i));
+      for (int p = 0; p < length_1d; ++p) local_indices_map_.at(p) = -1;
+
+      for (int p = 0; p < global_indices_.size(); ++p) {
+        //if (processorindex(global_indices_.at(p)) == rank) {
+
+        // Design this so that 2-index ops and 3-index ops built from them have the same mpi rank (e.g. (1,2) and (1,2,3) have same rank)
+        int i = global_index_tuple_.at(p)[0];
+        int j = global_index_tuple_.at(p)[1];
+        int k = global_index_tuple_.at(p)[2];
+
+        // ij is the global index of the two indices as used in the 2-index para_array class
+        int ij = trimap_2d(i, j, length_);
+        // ij_proc is the mpi proc the 2-index op would be assigned to if distributed
+        int ij_proc = processorindex(ij);
+cout << "mpirank = " << rank << "; i,j,k = " << i << " "<< j << " "<< k << "; ij_proc = " << ij_proc << endl;
+        // Assign 3-index operator to same mpi proc as (i,j) 2-index op
+        if ( ij_proc == rank) {
+          local_indices_.push_back(global_indices_.at(p));
+          local_indices_map_.at(global_indices_.at(p)) = global_indices_.at(p);
+          local_index_tuple_.push_back(global_index_tuple_.at(p));
         }
       }
     }

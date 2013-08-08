@@ -14,6 +14,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "pario.h"
 
 namespace SpinAdapted{
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys, int state)
 {
   if (dmrginp.outputlevel() > 0) 
@@ -38,11 +41,13 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
   vector<int> spindotsites(2); 
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
+  //MAW Initialise dot and build operators via CSF
   systemDot = SpinBlock(systemDotStart, systemDotEnd);
 
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
   system.addAdditionalCompOps();
+  //MAW Combine system with dot and build operators not via CSF
   InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, dot_with_sys, true);
 
 
@@ -57,11 +62,14 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
     //this should be done when we actually have wavefunctions stored, otherwise not!!
     SpinBlock environment, environmentDot, newEnvironment;
     int environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
+
     InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
-					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-					sweepParams.get_onedot(), nexact, useSlater, true, true, true);
+                                        sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
+                                        sweepParams.get_onedot(), nexact, useSlater, true, true, true);
+
     SpinBlock big;
     InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
+
     DiagonalMatrix e;
     std::vector<Wavefunction> solution(1);
     
@@ -99,6 +107,8 @@ pout <<"\t\t\t maw done Performing Renormalization "<<endl<<endl;
     newSystem.printOperatorSummary();
   //mcheck("After renorm transform");
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state)
 {
@@ -155,8 +165,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
       else
         sweepParams.set_guesstype() = BASIC;
       
-      if (dmrginp.outputlevel() > 0) 
-	pout << "\t\t\t Blocking and Decimating " << endl;
+      if (dmrginp.outputlevel() > 0) pout << "\t\t\t Blocking and Decimating " << endl;
 	  
       SpinBlock newSystem;
 
@@ -189,4 +198,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
 
   return finalEnergy[0];
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 }

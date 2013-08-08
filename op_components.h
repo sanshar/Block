@@ -96,9 +96,11 @@ class Op_component_base
   bool m_core;
   bool m_deriv;
  public:
+  virtual void build_iterators(SpinBlock& b)=0;
   virtual void build_operators(SpinBlock& b)=0;
   virtual void build_csf_operators(std::vector< Csf >& dets, std::vector< std::vector<Csf> >& ladders, SpinBlock& b) = 0;
-  virtual void build_iterators(SpinBlock& b)=0;
+//MAW  virtual void build_and_renormalise_transform(SpinBlock* b, const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *newStateInfo)=0;
+  virtual void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) =0;
   //virtual string type_name() = 0;
   virtual int get_size() const =0;
   virtual int size() const=0;
@@ -158,9 +160,72 @@ template <class Op> class Op_component : public Op_component_base
   virtual void add_local_indices(int i, int j=-1, int k=-1){};
   void clear(){m_op.clear();}
   void build_iterators(SpinBlock& b);
-  void build_operators(SpinBlock& b) {singlethread_build(*this, b); }
-  void build_csf_operators(std::vector< Csf >& c, vector< vector<Csf> >& ladders, SpinBlock& b) {singlethread_build(*this, b, c, ladders); }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//FIXME MAW for 3-index operators (or larger) we specialize these functions to build/modify operators out of core (on disk)
+
+  void build_csf_operators(std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders, SpinBlock& b) { 
+pout << "Op_component::build_csf_operators " << m_op.num_indices() << std::endl;
+
+    if ( m_op.num_indices() < 3 ) {
+      // Build in core
+//       singlethread_build(*this, b, c, ladders);
+      for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsf, _1, boost::ref(b), boost::ref(ladders), boost::ref(c)) );
+    }
+    else {
+      // Build on disk
+pout << "op_string = " << get_op_string() << std::endl;
+      std::string file = "3index.tmp";
+      std::ofstream ofs(file.c_str(), std::ios::binary);
+//       ofs = b.open_3index_file( get_op_string() );
+      for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsfOnDisk, _1, 
+                                                  boost::ref(b), boost::ref(ladders), boost::ref(c), boost::ref(ofs)) );
+      ofs.close();
+// Open file on disk linked to spinblock, use op_string.
+// Check if already exists.
+// Build in usual way, but deallocate operator after storing to disk.  Set flag to say it's on disk.
+// Close file.
+//assert(false);
+     }
+  }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  void build_operators(SpinBlock& b) { 
+pout << "Op_component::build_operators " << m_op.num_indices() << std::endl;
+    if ( m_op.num_indices() < 3 ) {
+      // Build in core
+      singlethread_build(*this, b); 
+    }
+    else {
+      // Build on disk
+      singlethread_build(*this, b); 
+//      assert(false);
+    }
+  }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) {
+pout << "Op_component::renormalise_transform " << m_op.num_indices() << std::endl;
+    if ( m_op.num_indices() < 3 ) {
+      // Build in core
+      for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), stateinfo) );
+    }
+    else {
+      // Build on disk
+      for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), stateinfo) );
+//      assert(false);
+    }
+  }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//  void build_and_renormalise_transform(SpinBlock* b, const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *newStateInfo) { 
+//    build_operators(*b);
+//    renormalise_transform(rotateMatrix, newStateInfo);
+//  }
+//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   std::vector<boost::shared_ptr<SparseMatrix> > get_local_element(int i) 

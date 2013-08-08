@@ -18,7 +18,7 @@ namespace SpinAdapted{
 Npdm_op_wrapper_compound_CCDD::Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBlock )
 {
   // Assume single site block
-  assert( spinBlock->get_sites().size() == 1 );
+  assert( spinBlock->size() == 1 );
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;
@@ -117,9 +117,8 @@ pout << "getting CCDD operator...\n";
 
 Npdm_op_wrapper_compound_CCD::Npdm_op_wrapper_compound_CCD( SpinBlock * spinBlock )
 {
-  assert( false );
   // Assume single site block
-  assert( spinBlock->get_sites().size() == 1 );
+  assert( spinBlock->size() == 1 );
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;
@@ -168,9 +167,8 @@ pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
 Npdm_op_wrapper_compound_CDD::Npdm_op_wrapper_compound_CDD( SpinBlock * spinBlock )
 {
-  assert( false );
   // Assume single site block
-  assert( spinBlock->get_sites().size() == 1 );
+  assert( spinBlock->size() == 1 );
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;
@@ -258,9 +256,8 @@ pout << "getting compound CDD operator...\n";
 
 Npdm_op_wrapper_compound_CDC::Npdm_op_wrapper_compound_CDC( SpinBlock * spinBlock )
 {
-  assert( false );
   // Assume single site block
-  assert( spinBlock->get_sites().size() == 1 );
+  assert( spinBlock->size() == 1 );
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;
@@ -423,9 +420,8 @@ pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
 Npdm_op_wrapper_compound_CCC::Npdm_op_wrapper_compound_CCC( SpinBlock * spinBlock )
 {
-  assert( false );
   // Assume single site block
-  assert( spinBlock->get_sites().size() == 1 );
+  assert( spinBlock->size() == 1 );
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;
@@ -474,9 +470,8 @@ pout << "getting compound CCC operator...\n";
 
 Npdm_op_wrapper_compound_DCD::Npdm_op_wrapper_compound_DCD( SpinBlock * spinBlock )
 {
-//  assert( false );
   // Assume single site block
-  assert( spinBlock->get_sites().size() == 1 );
+  assert( spinBlock->size() == 1 );
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;

@@ -11,14 +11,48 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
-// Initialize 4-index (dot) operators
-boost::shared_ptr<NpdmSpinOps> init_4_index_operators( SpinBlock * spinBlock, std::vector<Npdm::CD> & cd_type ) {
+// Initialize 4-index operators built using RI approximation (exact on dot block)
+boost::shared_ptr<NpdmSpinOps> init_RI_4_index_operators( SpinBlock * spinBlock, std::vector<Npdm::CD> & cd_type ) {
 
   std::vector<Npdm::CD> op;
 
   op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
   if ( cd_type == op ) {
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCDD( spinBlock ) );
+    return ret;
+  } 
+  assert(false);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// Initialize 3-index operators built using RI approximation (exact on dot block)
+boost::shared_ptr<NpdmSpinOps> init_RI_3_index_operators( SpinBlock * spinBlock, std::vector<Npdm::CD> & cd_type ) {
+
+  std::vector<Npdm::CD> op;
+
+  op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION };
+  if ( cd_type == op ) {
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCD( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
+  if ( cd_type == op ) {
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDD( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION };
+  if ( cd_type == op ) {
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDC( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION };
+  if ( cd_type == op ) {
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCC( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::DESTRUCTION, Npdm::CREATION, Npdm::DESTRUCTION };
+  if ( cd_type == op ) {
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_DCD( spinBlock ) );
     return ret;
   } 
   assert(false);
@@ -32,31 +66,26 @@ boost::shared_ptr<NpdmSpinOps> init_3_index_operators( SpinBlock * spinBlock, st
 
   op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION };
   if ( cd_type == op ) {
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCD( spinBlock ) );
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CCD( spinBlock ) );
     return ret;
   } 
   op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
   if ( cd_type == op ) {
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDD( spinBlock ) );
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CDD( spinBlock ) );
     return ret;
   } 
   op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION };
   if ( cd_type == op ) {
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDC( spinBlock ) );
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CDC( spinBlock ) );
     return ret;
   } 
   op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION };
   if ( cd_type == op ) {
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCC( spinBlock ) );
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CCC( spinBlock ) );
     return ret;
   } 
   op = { Npdm::DESTRUCTION, Npdm::CREATION, Npdm::DESTRUCTION };
   if ( cd_type == op ) {
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_DCD( spinBlock ) );
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_DCD( spinBlock ) );
     return ret;
   } 
@@ -139,12 +168,22 @@ boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::ve
 
   boost::shared_ptr<NpdmSpinOps> ret;
 
-  if ( cd_type.size() == 0 ) ret = init_0_index_operators();
-  else if ( cd_type.size() == 1 ) ret = init_1_index_operators( spinBlock, cd_type );
-  else if ( cd_type.size() == 2 ) ret = init_2_index_operators( spinBlock, cd_type );
-  else if ( cd_type.size() == 3 ) ret = init_3_index_operators( spinBlock, cd_type );
-  else if ( cd_type.size() == 4 ) ret = init_4_index_operators( spinBlock, cd_type );
-  else assert(false);
+  if ( cd_type.size() == 0 ) { ret = init_0_index_operators(); return ret; }
+  if ( cd_type.size() == 1 ) { ret = init_1_index_operators( spinBlock, cd_type ); return ret; }
+  if ( cd_type.size() == 2 ) { ret = init_2_index_operators( spinBlock, cd_type ); return ret; }
+
+  if (spinBlock->size() == 1) {
+    // Many-body basis is complete, so exploit RI to build many-index operators on fly (e.g. dot block)
+//    if      ( cd_type.size() == 3 ) ret = init_RI_3_index_operators( spinBlock, cd_type );
+    if      ( cd_type.size() == 3 ) ret = init_3_index_operators( spinBlock, cd_type );
+    else if ( cd_type.size() == 4 ) ret = init_RI_4_index_operators( spinBlock, cd_type );
+    else assert(false);
+  }
+  else {
+    // Many-body basis is incomplete, so cannot exploit RI exactly
+    if ( cd_type.size() == 3 ) ret = init_3_index_operators( spinBlock, cd_type );
+    else assert(false);
+  }
 
   return ret;
 }

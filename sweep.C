@@ -406,7 +406,6 @@ pout << "maw calling BlockAndDecimate\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//FUCK THIS UGLY UNDISCIPLINED CODE
 
 void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem)
 {

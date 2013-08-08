@@ -263,6 +263,8 @@ void assign_fourpdm_antisymmetric(array_8d<double>& fourpdm,
     return;
   }
 
+  if ( abs(val) < 1e-14 ) return;
+
   // If indices are not all unique, then all elements should be zero (and next_even_permutation fails)
   std::vector<int> v = {i,j,k,l};
   std::sort( v.begin(), v.end() );
@@ -270,8 +272,6 @@ void assign_fourpdm_antisymmetric(array_8d<double>& fourpdm,
   std::vector<int> w = {m,n,p,q};
   std::sort( w.begin(), w.end() );
   if ( (w[0]==w[1]) || (w[1]==w[2]) || (w[2]==w[3]) ) { if (abs(val) > 1e-15) assert(false); return; }
-
-  if ( abs(val) < 1e-14 ) return;
 
   // Get all even and odd permutations
   const std::vector<int> ijkl = {i,j,k,l};
@@ -351,8 +351,8 @@ void fourpdm_loop_over_block_operators( Wavefunction & wavefunction,
   SpinBlock* dotBlock = lhsdotBlock->get_rightBlock();
 
   boost::shared_ptr<NpdmSpinOps> lhsOps = select_op_wrapper( lhsBlock, lhs_cd_type );
-  boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );
   boost::shared_ptr<NpdmSpinOps> rhsOps = select_op_wrapper( rhsBlock, rhs_cd_type );
+  boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );
 
   Npdm::Npdm_expectations npdm_expectations( wavefunction, big, *lhsOps, *dotOps, *rhsOps );
 

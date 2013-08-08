@@ -27,7 +27,7 @@ class SpinBlock
     void serialize(Archive & ar, const unsigned int version)
     {
       ar & localstorage & name & complementary & hasMemoryAllocated & normal & direct & loopblock
-	& sites & complementary_sites & stateInfo;
+         & sites & complementary_sites & stateInfo;
       //FIX ME!! remove register_type stuff and add BOOST_CLASS_EXPORT to op_components.h (will take longer to compile)                     
       ar.register_type(static_cast<Op_component<Cre> *>(NULL));
       ar.register_type(static_cast<Op_component<CreDes> *>(NULL));
@@ -77,6 +77,9 @@ class SpinBlock
   static void store (bool forward, const vector<int>& sites, SpinBlock& b);
   void Save (std::ofstream &ofs);
   void Load (std::ifstream &ifs);
+//MAW
+  std::string open_3index_file (std::string op_string);
+
 
   const boost::shared_ptr<TwoElectronArray> get_twoInt() const {return twoInt;}
   double memoryUsed();
@@ -116,6 +119,7 @@ class SpinBlock
   Op_component_base& get_op_array(opTypes optype){assert(has(optype));return *(ops.find(optype)->second);}
   const Op_component_base& get_op_array(opTypes optype) const {assert(has(optype));return *(ops.find(optype)->second);}
   
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
   boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const SpinQuantum& s, int i=-1, int j=-1, int k=-1) {
 //pout << "hello get_op_rep 2-index ops  =" << optypes << std::endl;
     assert(has(optypes)); 
@@ -143,6 +147,7 @@ class SpinBlock
     return opbase.get_op_rep(s, i, j, k)->getworkingrepresentation(this);
   }
 //MAW <<<<<
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   void operator= (const SpinBlock& b);
   void build_iterators();

@@ -71,11 +71,12 @@ void Npdm::BlockAndDecimate (std::string npdm_mode, SweepParams &sweepParams, Sp
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
   system.addAdditionalCompOps();
+//FIXME MAW change depending on forward or backward which operators are assigned to which mpi procs
   InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, true, true);
   
   InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
-				      sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-				      sweepParams.get_onedot(), nexact, useSlater, true, true, true);
+                                      sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
+                                      sweepParams.get_onedot(), nexact, useSlater, true, true, true);
   SpinBlock big;
   newSystem.set_loopblock(true);
   system.set_loopblock(false);
@@ -105,12 +106,12 @@ void Npdm::BlockAndDecimate (std::string npdm_mode, SweepParams &sweepParams, Sp
 #ifndef SERIAL
   mpi::broadcast(world,rotateMatrix,0);
 #endif
-#ifdef SERIAL
-  const int numprocs = 1;
-#endif
-#ifndef SERIAL
-  const int numprocs = world.size();
-#endif
+//#ifdef SERIAL
+//  const int numprocs = 1;
+//#endif
+//#ifndef SERIAL
+//  const int numprocs = world.size();
+//#endif
 // >>>>>>>>> MAW
 //  if (sweepParams.get_block_iter() == 0)
 //    compute_twopdm_initial(solution, system, systemDot, newSystem, newEnvironment, big, numprocs, state);

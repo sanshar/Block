@@ -166,6 +166,7 @@ pout << "SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)\n";
   std::vector< Csf > dets = CSFUTIL::spinfockstrings(new_sites);
 
   stateInfo = StateInfo(dets);
+//MAW note LOCAL_STORAGE for this (used by Dot block?)
   setstoragetype(LOCAL_STORAGE);
   complementary_sites = make_complement(sites);
 //MAW
@@ -199,10 +200,18 @@ void SpinBlock::build_iterators()
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
   {
-//MAWout
-//std::cout << it->second->get_op_string() << std::endl;
     it->second->build_iterators(*this);
+//MAW
+//    if ( it->second->num_indices() < 3 ) {
+//      // Setup for in-core build
+//      it->second->build_iterators(*this);
+//    }
+//    else {
+//      // Setup for on-disk build
+//      open_3index_file
+//    }
   }
+pout << "done build_iterators! (All optypes)\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -212,11 +221,8 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core())
-//MAWout
-//std::cout << it->second->get_op_string() << std::endl;
         it->second->build_csf_operators(dets, ladders, *this);      
     }
-pout << "done build_csf_operators! (All optypes)\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -226,12 +232,9 @@ void SpinBlock::build_operators()
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core()) {
-//MAWout
-//std::cout << it->second->get_op_string() << std::endl;
         it->second->build_operators(*this);
       }
     }
-pout << "done build_operators! (All optypes)\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -303,6 +306,7 @@ void SpinBlock::BuildSumBlock(int condition, SpinBlock& lBlock, SpinBlock& rBloc
 
   dmrginp.buildblockops -> start();
 //pout << "maw SpinBlock::BuildSumBlock build_operators()\n";
+  // Operators builts from previous operators (not CSF!) (c.f.  build_operators(dets, ladders); )
   build_operators();
   dmrginp.buildblockops -> stop();
   dmrginp.buildsumblock -> stop();
@@ -446,8 +450,10 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum> qnumbers, std::vector<int> distribution, 
-				  bool random, const bool haveNormops)
+                                  bool random, const bool haveNormops)
 {
   name = get_name();
 
@@ -466,8 +472,7 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   std::vector< Csf > det_ex;
   Timer slatertimer;
 
-  for (int i = 0; i < qnumbers.size (); ++i)
-    {
+  for (int i = 0; i < qnumbers.size (); ++i) {
       if (distribution [i] == 0 || (qnumbers [i].get_n() > 2*sites.size ())) continue;
       det_ex = Csf::distribute (qnumbers [i].get_n(), qnumbers [i].get_s(), IrrepVector(qnumbers [i].get_symm().getirrep(), 0) , sites [0],
                                    sites [0] + sites.size (), dmrginp.last_site());
@@ -475,20 +480,19 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
       multimap <double, Csf > slater_emap;
 
       for (int j = 0; j < det_ex.size(); ++j) {
-	slater_emap.insert (pair <double, Csf > (csf_energy (det_ex[j]), det_ex[j]));
+        slater_emap.insert (pair <double, Csf > (csf_energy (det_ex[j]), det_ex[j]));
       }
 
       multimap <double, Csf >::iterator m = slater_emap.begin();
       int sz = det_ex.size();
       det_ex.resize (min (distribution [i], sz));
-      for (int j = 0; j < det_ex.size(); ++j)
-        {
-          det_ex[j] = m->second;
-          ++m;
-        }
+      for (int j = 0; j < det_ex.size(); ++j) {
+        det_ex[j] = m->second;
+        ++m;
+      }
 
       copy (det_ex.begin(), det_ex.end(), back_inserter (dets));
-    }
+  }
 
   std::multimap<SpinQuantum, Csf > tmp;
   for (int i = 0; i < dets.size (); ++i) {
@@ -504,6 +508,7 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
 
   stateInfo = StateInfo (dets);
   twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
+//MAW
   build_iterators();
 
   if (dmrginp.outputlevel() > 0) 
@@ -513,10 +518,12 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   for (int i=0; i< dets.size(); i++)
     ladders[i] = dets[i].spinLadder(min(2, dets[i].S));
 
-
+//MAW
   build_operators(dets, ladders);
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t time in slater operator build " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 }

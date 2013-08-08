@@ -25,6 +25,7 @@ namespace SpinAdapted{
 namespace SweepGenblock
 {
   void BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys, int state);
+//2PDM    SweepGenblock::do_one(sweepParams,      false,        !direction,                false,            0,                  0); //this will generate the cd operators
   double do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state);
 };
 }

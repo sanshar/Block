@@ -31,8 +31,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 namespace SpinAdapted{
 class SpinBlock;
-//********************************************************************************************
-//loop over all local operators and build them
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// Loop over all local operators and build them
 // different version include multithread build, single thread build and single thread build from csf
 
 template<class A> void singlethread_build(A& array, SpinBlock& b, std::vector< Csf >& s, vector< vector<Csf> >& ladders)
@@ -41,8 +42,6 @@ template<class A> void singlethread_build(A& array, SpinBlock& b, std::vector< C
 #pragma omp parallel default(shared)
 #pragma omp for schedule(guided) nowait
 #endif
-//pout << array.get_op_string() << std::endl;
-//pout << "singlethread_build (csf) = " << array.get_size() << std::endl;
   for (int i = 0; i < array.get_size(); ++i) {
     //typedef typename A::OpType Op;
 //pout << "array.get_local_element(i)  " << i << std::endl;
@@ -50,24 +49,14 @@ template<class A> void singlethread_build(A& array, SpinBlock& b, std::vector< C
 //pout << "size() = " << vec.size() << std::endl;
     assert(vec.size()<4);
     for (int j=0; j<vec.size(); j++) {
-//      if (array.get_op_string() == "CRECRE"     ||
-//          array.get_op_string() == "CREDES"     ||
-//          array.get_op_string() == "CRECREDES"  ||
-//          array.get_op_string() == "CREDESCRE")
-//      if (array.get_op_string() == "CREDESDES") {
-//        vec[j]->build_in_csf_space(b);
-//        vec[j]->buildUsingCsf(b, ladders, s);
-//assert( vec[j]->get_build_pattern() != "CDD" );
-//pout << "maw CDD operator\n";
-//pout << *(vec[j]);
-//      }
-//      else {
-        vec[j]->buildUsingCsf(b, ladders, s);
-//      }
+      // MAW don't build if already built!
+      if ( ! vec[j]->get_built() ) vec[j]->buildUsingCsf(b, ladders, s);
+//      vec[j]->buildUsingCsf(b, ladders, s);
     }
   }
-//pout << "done singlethread_build (csf)!\n";
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 template<class A> void singlethread_build(A& array, SpinBlock& b)
 {
@@ -75,27 +64,22 @@ template<class A> void singlethread_build(A& array, SpinBlock& b)
 #pragma omp parallel default(shared)
 #pragma omp for schedule(guided) nowait
 #endif
-//pout << array.get_op_string() << std::endl;
-//pout << "singlethread_build\n";
   for (int i = 0; i < array.get_size(); ++i) {
     //typedef typename A::OpType Op;
     //std::vector<boost::shared_ptr<Op> >& vec = array.get_local_element(i);
-//pout << "array.get_local_element(i)  " << i << std::endl;
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
     assert(vec.size()<4);
-//pout << "size() = " << vec.size() << std::endl;
     for (int j=0; j<vec.size(); j++) {
-      vec[j]->build(b);
+      // MAW don't build if already built!
+      if ( ! vec[j]->get_built() ) vec[j]->build(b);
+//      vec[j]->build(b);
     }
   }
-//pout << "done singlethread_build!\n";
 }
-//*****************************************************************************
 
-
-//****************************************************************************
-//execute a function on all elements of an array
-//single thread and multithread versions of the code
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// Execute a function on all elements of an array
+// single thread and multithread versions of the code
 template<typename T2, class A> void for_all_singlethread(A& array, const T2& func)
 {
   int i;
@@ -106,6 +90,8 @@ template<typename T2, class A> void for_all_singlethread(A& array, const T2& fun
     }
   }
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T2, class A> void for_all_multithread(A& array, const T2& func)
 {
@@ -119,6 +105,8 @@ template<typename T2, class A> void for_all_multithread(A& array, const T2& func
     }
 }
  
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 template<typename T2, class A> void for_all_operators_multithread(A& array, const T2& func)
 {
   int i;
@@ -146,10 +134,20 @@ template<typename T2, class A> void for_all_operators_multithread(A& array, cons
   }
 }
 
-//*****************************************************************************
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+template<typename T2, class A> void for_all_operators_on_disk(A& array, const T2& func)
+{
+  for (int i = 0; i < array.get_size(); ++i) {
+    std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
+    assert(vec.size()<4);
+    for (int j=0; j<vec.size(); j++){
+      func( *(vec.at(j)) );
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 }
 #endif
-
-

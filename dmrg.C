@@ -100,6 +100,7 @@ int calldmrg(char* input, char* output)
 
   ReadInput(input);
   MAX_THRD = dmrginp.thrds_per_node()[mpigetrank()];
+std::cout << "mpi MAX_THRD = " << MAX_THRD << std::endl;
 #ifdef _OPENMP
   omp_set_num_threads(MAX_THRD);
 #endif
@@ -168,7 +169,7 @@ int calldmrg(char* input, char* output)
 
     dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
     dmrginp.Sz() = dmrginp.total_spin_number();
-    dmrginp.do_cd() = true;
+    dmrginp.do_npdm_ops() = true;
     dmrginp.screen_tol() = 0.0;
 
     sweep_copy.restorestate(direction_copy, restartsize_copy);
@@ -206,7 +207,7 @@ pout << "maw doing twopdm\n";
 
     dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
     dmrginp.Sz() = dmrginp.total_spin_number();
-    dmrginp.do_cd() = true;
+    dmrginp.do_npdm_ops() = true;
     dmrginp.screen_tol() = 0.0;
     sweep_copy.restorestate(direction_copy, restartsize_copy);
 
@@ -218,7 +219,6 @@ pout << "maw doing twopdm\n";
 
     // Compute twopdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
-
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
       SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
     }
@@ -249,7 +249,7 @@ pout << "maw doing threepdm\n";
 
     dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
     dmrginp.Sz() = dmrginp.total_spin_number();
-    dmrginp.do_cd() = true;
+    dmrginp.do_npdm_ops() = true;
     dmrginp.screen_tol() = 0.0;
     sweep_copy.restorestate(direction_copy, restartsize_copy);
 
@@ -261,7 +261,6 @@ pout << "maw doing threepdm\n";
 
     // Compute threepdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
-
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
       SweepThreepdm::do_one(sweepParams, false, direction, false, 0, state);
     }
@@ -292,7 +291,7 @@ pout << "maw doing fourpdm\n";
 
     dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
     dmrginp.Sz() = dmrginp.total_spin_number();
-    dmrginp.do_cd() = true;
+    dmrginp.do_npdm_ops() = true;
     dmrginp.screen_tol() = 0.0;
     sweep_copy.restorestate(direction_copy, restartsize_copy);
 
@@ -304,7 +303,6 @@ pout << "maw doing fourpdm\n";
 
     // Compute fourpdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
-
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
       SweepFourpdm::do_one(sweepParams, false, direction, false, 0, state);
     }
@@ -326,7 +324,7 @@ pout << "maw doing fourpdm\n";
 
     dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
     dmrginp.Sz() = dmrginp.total_spin_number();
-    dmrginp.do_cd() = true;
+    dmrginp.do_npdm_ops() = true;
     dmrginp.screen_tol() = 0.0;
 
     sweep_copy.restorestate(direction_copy, restartsize_copy);
@@ -354,7 +352,7 @@ pout << "maw doing fourpdm\n";
 
     dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
     dmrginp.Sz() = dmrginp.total_spin_number();
-    dmrginp.do_cd() = true;
+    dmrginp.do_npdm_ops() = true;
     dmrginp.screen_tol() = 0.0;    
     sweep_copy.restorestate(direction_copy, restartsize_copy);
 

@@ -8,13 +8,12 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include <boost/lexical_cast.hpp>
 #include "MatrixBLAS.h"
-//#include "twopdm.h"
+#include "pario.h"
 //FIXME use forward declaration for spinExpectation
 #include "npdm_expectations_engine.h"
 #include "npdm_expectations.h"
 #include "npdm_operators.h"
 #include "npdm_patterns.h"
-
 
 namespace SpinAdapted{
 namespace Npdm{
@@ -70,7 +69,7 @@ std::string Npdm_expectations::get_op_string()
       indices.erase( indices.begin() );  
     }
   }
-  std::cout << op_string << std::endl;
+  pout << op_string << std::endl;
 
   return op_string;
 }
@@ -120,9 +119,9 @@ std::string Npdm_expectations::get_op_string()
 //  if ( build_pattern == test ) return CC_D_D;
 //
 //  for (auto i = build_pattern.begin(); i != build_pattern.end(); ++i) {
-//    std::cout << *i;
+//    pout << *i;
 //  }
-//  std::cout << std::endl;
+//  pout << std::endl;
 //  assert( false );
 //
 //}
@@ -171,9 +170,9 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
   if ( dotOps_.opReps_.size() > 0 ) dotOp = dotOps_.opReps_.at(idot);
   if ( rhsOps_.opReps_.size() > 0 ) rhsOp = rhsOps_.opReps_.at(irhs);
 
-//if ( lhsOps_.opReps_.size() > 0 ) cout << "lhsOp:\n" << *lhsOp;
-//if ( dotOps_.opReps_.size() > 0 ) cout << "dotOp:\n" << *dotOp;
-//if ( rhsOps_.opReps_.size() > 0 ) cout << "rhsOp:\n" << *rhsOp;
+//if ( lhsOps_.opReps_.size() > 0 ) pout << "lhsOp:\n" << *lhsOp;
+//if ( dotOps_.opReps_.size() > 0 ) pout << "dotOp:\n" << *dotOp;
+//if ( rhsOps_.opReps_.size() > 0 ) pout << "rhsOp:\n" << *rhsOp;
 
   // We need to distinguish cases where one or more blocks has an empty operator string
   // X_X_X
@@ -251,7 +250,7 @@ bool Npdm_expectations::test_for_singlet( int lhs_mult, int dot_mult, int rhs_mu
   int lhs2S = lhs_mult -1;
   int dot2S = dot_mult -1;
   int rhs2S = rhs_mult -1;
-//std::cout << "2S(lhs,dot,rhs) =   " << lhs2S << " " << dot2S << " " << rhs2S << std::endl;
+//pout << "2S(lhs,dot,rhs) =   " << lhs2S << " " << dot2S << " " << rhs2S << std::endl;
 
 //if ( (lhs2S == 0) && (dot2S == 0) && (rhs2S == 0) ) return true;
 //else return false;
@@ -259,7 +258,7 @@ bool Npdm_expectations::test_for_singlet( int lhs_mult, int dot_mult, int rhs_mu
   // Couple LHS and Dot spin angular momenta and see if any equal RHS  
   for (int twoS = std::abs(lhs2S - dot2S); twoS <= ( lhs2S + dot2S ); twoS += 2 ) {
     if ( twoS == rhs2S ) {
-//      std::cout << "\nsinglet found!\n";
+//      pout << "\nsinglet found!\n";
       return true;
     }
   }
@@ -295,10 +294,11 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations()
   }
 
 assert (expectations_.size() > 0);
-pout << "---------------------------------\n";
-pout << "spin-adapted expectations =\n";
+cout << "---------------------------------\n";
+cout << "spin-adapted expectations =\n";
+cout << "mpirank = " << mpigetrank() << endl;
 for (auto it = expectations_.begin(); it != expectations_.end(); ++it) {
-  pout << *it << std::endl;
+  cout << *it << std::endl;
 }
 pout << "---------------------------------\n";
 
@@ -330,18 +330,18 @@ std::vector< std::pair< std::vector<int>, double > > Npdm_expectations::get_nons
   // Parse operator string and set up linear equations
   npdm_set_up_linear_equations(op_string, expectations_, A, b, so_indices );
 
-//std::cout << "A matrix:\n";
+//pout << "A matrix:\n";
 //for (int i=1; i<(dim+1); ++i) { 
-//  std::cout << i << "\t\t";
+//  pout << i << "\t\t";
 //  for (int j=1; j<(dim+1); ++j) {
-//    std::cout << "  " << A(i,j);
+//    pout << "  " << A(i,j);
 //  }
-//  std::cout << std::endl;
+//  pout << std::endl;
 //}
 
-//std::cout << "b vector:\n";
+//pout << "b vector:\n";
 //for (int i=1; i<(dim+1); ++i) { 
-//    std::cout << i << "\t\t" << b(i) << std::endl;
+//    pout << i << "\t\t" << b(i) << std::endl;
 //}
 
   // Solve A.x = b to get non-spin-adapted expectations in x
@@ -353,9 +353,9 @@ std::vector< std::pair< std::vector<int>, double > > Npdm_expectations::get_nons
     new_pdm_elements.push_back( std::make_pair(so_indices[i], x(i+1)) );
   } 
 
-//std::cout << "x vector:\n";
+//pout << "x vector:\n";
 //for (int i=1; i<(dim+1); ++i) { 
-//    std::cout << i << "\t\t" << x(i) << std::endl;
+//    pout << i << "\t\t" << x(i) << std::endl;
 //}
   
   return new_pdm_elements;

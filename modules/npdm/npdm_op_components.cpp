@@ -12,6 +12,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 //
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 
+#include <boost/format.hpp>
+#include <fstream>
+#include <stdio.h>
 #include "spinblock.h"
 #include "op_components.h"
 //#include "screen.h"
@@ -68,6 +71,50 @@ string Op_component<CreCreCre>::get_op_string() const {
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+//template<> 
+//void Op_component<CreCreCre>::build_csf_operators(std::vector< Csf >& c, vector< vector<Csf> >& ladders, SpinBlock& b) 
+//{
+//  cout << "MAW building CreCreCre csf operators on DISK...\n";
+//
+//  std::string file;
+//  file = str(boost::format("%s%s%d%s") % dmrginp.save_prefix() % "/CCC_3index_ops-"% mpigetrank() % ".tmp" );
+//  pout << "\t\t\t CreCreCre operators file :: " << file << endl;
+//  std::ofstream ofs(file.c_str(), std::ios::binary);
+//
+//  singlethread_build(*this, b, c, ladders);
+//
+//  ofs.close();
+//}
+//
+////-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+//template<> 
+//void Op_component<CreCreCre>::build_operators(SpinBlock& b)
+//{
+//  cout << "MAW building CreCreCre renormalized operators on DISK...\n";
+//  assert(false);
+//
+////  std::string file;
+////  file = str(boost::format("%s%s%d%s") % dmrginp.save_prefix() % "/CCC_3index_ops-"% mpigetrank() % ".tmp" );
+////  pout << "\t\t\t CreCreCre operators file :: " << file << endl;
+////  std::ofstream ofs(file.c_str(), std::ios::binary);
+//  
+//  singlethread_build(*this, b);
+//
+////  ofs.close();
+//
+//}
+//
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+//template<> 
+//void Op_component<CreCreCre>::transform_operators(SpinBlock& b)
+//{
+//  cout << "MAW transforming CreCreCre renormalized operators on DISK...\n";
+//
+//  singlethread_build(*this, b);
+//
+//}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
 void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
 {
@@ -92,6 +139,9 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
     SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
     SpinQuantum spin3 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[2]));
 
+    // Quantum ladder components give spin of each sub-contraction
+    // e.g. cc_c_quantum_ladder[0] is spin of cc 2-index op
+    //      cc_c_quantum_ladder[1] is spin of c 1-index op
     std::vector< std::vector<SpinQuantum> > cc_c_quantum_ladder;
     std::vector< std::vector<SpinQuantum> > c_cc_quantum_ladder;
 

@@ -19,6 +19,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "pario.h"
 namespace SpinAdapted{
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBlock& b)
 {
@@ -40,6 +41,7 @@ std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBloc
   return file;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b)
 {
@@ -58,12 +60,15 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b)
   //pout << "\t\t\t block save disk time " << disktimer.elapsedwalltime() << " " << disktimer.elapsedcputime() << endl;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SpinBlock::Save (std::ofstream &ofs)
 {
   boost::archive::binary_oarchive save_block(ofs);
   save_block << *this;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //helper function
 void SpinBlock::Load (std::ifstream & ifs)
 {
@@ -71,12 +76,25 @@ void SpinBlock::Load (std::ifstream & ifs)
   load_block >> *this;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//MAW
+std::string SpinBlock::open_3index_file (std::string op_string)
+{
+  std::string file;
+//  file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/3index"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
+  file = str(boost::format("%s%s%d%s") % dmrginp.save_prefix() % "/3index" % mpigetrank() % ".tmp" );
+  return file;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::remove_normal_ops()
 {
   ops.erase(CRE_CRE);
   ops.erase(CRE_DES);
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::sendcompOps(Op_component_base& opcomp, int I, int J, int optype, int compsite)
 {
@@ -89,16 +107,20 @@ void SpinBlock::sendcompOps(Op_component_base& opcomp, int I, int J, int optype,
 #endif
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SpinBlock::recvcompOps(Op_component_base& opcomp, int I, int J, int optype)
 {
 #ifndef SERIAL
   boost::mpi::communicator world;
   std::vector<boost::shared_ptr<SparseMatrix> > oparray = opcomp.get_element(I,J);
   for(int i=0; i<oparray.size(); i++) {
-    world.recv(processorindex(trimap(I, J, dmrginp.last_site())), optype+i*10+1000*J+100000*I, *oparray[i]);
+    world.recv(processorindex(trimap_2d(I, J, dmrginp.last_site())), optype+i*10+1000*J+100000*I, *oparray[i]);
   }
 #endif
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::addAdditionalCompOps()
 {
@@ -125,12 +147,12 @@ void SpinBlock::addAdditionalCompOps()
     if (compsite == dotopindex) continue;
     int I = (compsite > dotopindex) ? compsite : dotopindex;
     int J = (compsite > dotopindex) ? dotopindex : compsite;
-    if (processorindex(compsite) == processorindex(trimap(I, J, length)))
+    if (processorindex(compsite) == processorindex(trimap_2d(I, J, length)))
       continue;
     if (processorindex(compsite) == mpigetrank())
     {
       bool other_proc_has_ops = true;
-      world.recv(processorindex(trimap(I, J, length)), 0, other_proc_has_ops);
+      world.recv(processorindex(trimap_2d(I, J, length)), 0, other_proc_has_ops);
       //this will potentially receive some ops
       if (other_proc_has_ops) {
 	ops[CRE_DESCOMP]->add_local_indices(I, J);
@@ -143,7 +165,7 @@ void SpinBlock::addAdditionalCompOps()
     {
       
       //this will potentially send some ops
-      if (processorindex(trimap(I, J, length)) == mpigetrank()) {
+      if (processorindex(trimap_2d(I, J, length)) == mpigetrank()) {
 	bool this_proc_has_ops = ops[CRE_DESCOMP]->has_local_index(I, J);
 	world.send(processorindex(compsite), 0, this_proc_has_ops);
 	if (this_proc_has_ops) {
@@ -160,6 +182,8 @@ void SpinBlock::addAdditionalCompOps()
   }
 #endif
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
 {
@@ -181,7 +205,10 @@ pout << "in SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)\n"
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
     if (! it->second->is_core()) {
-      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, boost::ref(rotateMatrix) , &newStateInfo));
+      it->second->build_operators( *this );
+      it->second->renormalise_transform( rotateMatrix, &newStateInfo );
+//MAW      it->second->build_and_renormalise_transform( this, it->first, rotateMatrix, &newStateInfo );
+//MAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, boost::ref(rotateMatrix) , &newStateInfo));
     }
   }
 
@@ -201,7 +228,8 @@ pout << "in SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)\n"
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if ( it->second->is_core())
-      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), (&this->stateInfo)));
+      it->second->renormalise_transform( rotateMatrix, &newStateInfo );
+//MAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), (&this->stateInfo)));
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if (! it->second->is_core())
@@ -216,7 +244,8 @@ pout << "in SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)\n"
   if (rightBlock)
     rightBlock->clear();
 
-
 pout << "done SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)\n";
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 }

@@ -159,39 +159,6 @@ void save_averaged_threepdm(const int &nroots)
 ///  NYI
   assert(false);
 }
-// 2pdm version:
-//----------------
-//  if(!mpigetrank())
-//  {
-//    array_6d<double> threepdm;
-//    char file[5000];
-//    for(int i=0;i<nroots;++i)
-//    {
-//      sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/threepdm.", i, i);
-//      ifstream ifs(file);
-//      int size = 0;
-//      ifs >> size;
-//      if(i==0)
-//        threepdm.resize(size,size,size,size);
-//      int k,l,m,n;
-//      double val;
-//      while(ifs >> k)
-//      {
-//        ifs >> l >> m >> n >> val;
-//        threepdm(k,l,m,n) += dmrginp.weights()[i]*val;
-//      }
-//    }
-//    sprintf (file, "%s%s", dmrginp.save_prefix().c_str(),"/threepdm");
-//    ofstream ofs(file);
-//    ofs << threepdm.dim1() << endl;
-//    for(int k=0;k<threepdm.dim1();++k)
-//      for(int l=0;l<threepdm.dim2();++l)
-//        for(int m=0;m<threepdm.dim3();++m)
-//          for(int n=0;n<threepdm.dim4();++n)
-//            ofs << boost::format("%d %d %d %d %20.14e\n") % k % l % m % n % threepdm(k,l,m,n);
-//
-//    ofs.close();
-//  }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -227,7 +194,6 @@ void assign_threepdm_antisymmetric(array_6d<double>& threepdm,
                                    const int i, const int j, const int k, const int l, const int m, const int n, 
                                    const double val)
 {
-
 //if ( abs(val) > 1e-8 ) {
 //  pout << "so-threepdm val: i,j,k,l,m,n = " 
 //       << i << "," << j << "," << k << "," << l << "," << m << "," << n
@@ -347,8 +313,8 @@ void threepdm_loop_over_block_operators( Wavefunction & wavefunction,
   SpinBlock* dotBlock = lhsdotBlock->get_rightBlock();
 
   boost::shared_ptr<NpdmSpinOps> lhsOps = select_op_wrapper( lhsBlock, lhs_cd_type );
-  boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );
   boost::shared_ptr<NpdmSpinOps> rhsOps = select_op_wrapper( rhsBlock, rhs_cd_type );
+  boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );
 
   Npdm::Npdm_expectations npdm_expectations( wavefunction, big, *lhsOps, *dotOps, *rhsOps );
 //pout << "-------------------------------------------------------------------------------------------\n";

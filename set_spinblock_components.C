@@ -10,9 +10,13 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "spinblock.h"
 
 namespace SpinAdapted{
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SpinBlock::setstoragetype(Storagetype st)
 {
   if (st == LOCAL_STORAGE)
+//  if (true)
   {
     localstorage = true;
     if (has(CRE))
@@ -77,9 +81,11 @@ void SpinBlock::setstoragetype(Storagetype st)
     if (has(DES_DES_CRE))
       set_op_array(DES_DES_CRE).set_local() = false;
   }
-
+  else assert(false);
 
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bool &is_core)
 {
@@ -134,7 +140,9 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
   return ret;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//this is used for the dot block ??
 void SpinBlock::default_op_components(bool complementary_)
 {
 pout << "SpinBlock::default_op_components(bool complementary_)\n";
@@ -159,20 +167,17 @@ pout << "SpinBlock::default_op_components(bool complementary_)\n";
     ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
     ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
 //FIXME MAW 3PDM
-    if ( (dmrginp.calc_type() == TWOPDM) ||
-         (dmrginp.calc_type() == THREEPDM) ||
-         (dmrginp.calc_type() == FOURPDM) ) {
+    if ( (dmrginp.calc_type() == THREEPDM) ||
+         (dmrginp.calc_type() == TWOPDM) ) {
+//FIXME MAW or FOURPDM?
       ops[DES_CRE] = make_new_op(DES_CRE, true);
       ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
       ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
-      if ( (dmrginp.calc_type() == THREEPDM) ||
-           (dmrginp.calc_type() == FOURPDM) ) {
-        ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
-        ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
-        if ( dmrginp.calc_type() == FOURPDM ) {
-          ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
-          ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
-        }
+      ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
+      ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
+      if ( dmrginp.calc_type() == FOURPDM ) {
+        ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
+        ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
       }
     }
   }
@@ -181,15 +186,18 @@ pout << "SpinBlock::default_op_components(bool complementary_)\n";
 
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::set_big_components()
 {
   setstoragetype(DISTRIBUTED_STORAGE);
-
   ops[HAM] = make_new_op(HAM, false);
 }
 
-//this is used for the dot block
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//this is used for the dot block ??
+//MAW used by SpinAdapted::InitBlocks::InitNewSystemBlock when extending system with a dot??
 void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops)
 {
 pout << "SpinBlock::default_op_components(..........) for dot block\n";
@@ -216,20 +224,17 @@ pout << "SpinBlock::default_op_components(..........) for dot block\n";
         ops[CRE_DES] = make_new_op(CRE_DES, true);
         ops[CRE_CRE] = make_new_op(CRE_CRE, true);
 //FIXME MAW 3PDM
-        if ( (dmrginp.calc_type() == TWOPDM) ||
-             (dmrginp.calc_type() == THREEPDM) ||
-             (dmrginp.calc_type() == FOURPDM) ) {
+        if ( (dmrginp.calc_type() == THREEPDM) ||
+             (dmrginp.calc_type() == TWOPDM) ) {
+//FIXME MAW or FOURPDM?
           ops[DES_CRE] = make_new_op(DES_CRE, true);
           ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
           ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
-          if ( (dmrginp.calc_type() == THREEPDM) ||
-               (dmrginp.calc_type() == FOURPDM) ) {
-            ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
-            ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
-            if ( dmrginp.calc_type() == FOURPDM ) {
-              ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
-              ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
-            }
+          ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
+          ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
+          if ( dmrginp.calc_type() == FOURPDM ) {
+            ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
+            ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
           }
         }
       }
@@ -252,24 +257,21 @@ pout << "SpinBlock::default_op_components(..........) for dot block\n";
     ops[HAM] = make_new_op(HAM, true);
 
     if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
-      if (haveNormops || dmrginp.do_cd()) {
+      if (haveNormops || dmrginp.do_npdm_ops()) {
         ops[CRE_DES] = make_new_op(CRE_DES, false);
         ops[CRE_CRE] = make_new_op(CRE_CRE, false);
 //FIXME MAW 3PDM
-        if ( (dmrginp.calc_type() == TWOPDM) ||
-             (dmrginp.calc_type() == THREEPDM) ||
-             (dmrginp.calc_type() == FOURPDM) ) {
+        if ( (dmrginp.calc_type() == THREEPDM) ||
+//FIXME MAW or FOURPDM? Not TWOPDM!?
+             (dmrginp.calc_type() == TWOPDM) ) {
           ops[DES_CRE] = make_new_op(DES_CRE, false);
           ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
           ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);
-          if ( (dmrginp.calc_type() == THREEPDM) ||
-               (dmrginp.calc_type() == FOURPDM) ) {
-            ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, false);
-            ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, false);
-            if ( dmrginp.calc_type() == FOURPDM ) {
-              ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, false);
-              ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
-            }
+          ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, false);
+          ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, false);
+          if ( dmrginp.calc_type() == FOURPDM ) {
+            ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, false);
+            ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
           }
         }
       }

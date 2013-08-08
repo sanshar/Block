@@ -2,6 +2,7 @@
 #include <string>
 #include <set>
 #include <Eigen/Dense>
+#include "pario.h"
 #include "npdm_spin_adaptation.h"
 #include "MatrixBLAS.h"
 
@@ -24,7 +25,7 @@ std::map< std::vector<int>, double > get_matrix_row ( const TensorOp& op, bool &
   if (op.Spin%2 == 0) {
     for (int ilz = 0; ilz<op.rows; ilz++){
       //int lz = op.lz[ilz];
-//      std::cout <<"printing operator with Sz = "<<0<<" and row = "<< ilz<<" and total spin "<<op.Spin<<" and irrep "<<op.irrep<<endl;;
+//      pout <<"printing operator with Sz = "<<0<<" and row = "<< ilz<<" and total spin "<<op.Spin<<" and irrep "<<op.irrep<<endl;;
       for (int i=0; i<op.Szops[op.Spin/2].size(); i++) {
         if (op.Szops[ilz*(op.Spin+1)+op.Spin/2][i] != 0.0) {
           coeff = op.Szops[ilz*(op.Spin+1)+op.Spin/2][i];
@@ -41,7 +42,7 @@ std::map< std::vector<int>, double > get_matrix_row ( const TensorOp& op, bool &
   else {
     for (int ilz = 0; ilz<op.rows; ilz++){
       //int lz = op.lz[ilz];
-//      std::cout <<"printing operator with Sz = "<<-op.Spin<<" and row = "<< ilz<<" and total spin "<<op.Spin<<" and irrep "<<op.irrep<<endl;;
+//      pout <<"printing operator with Sz = "<<-op.Spin<<" and row = "<< ilz<<" and total spin "<<op.Spin<<" and irrep "<<op.irrep<<endl;;
       for (int i=0; i<op.Szops[op.Spin].size(); i++) {
         if (op.Szops[ilz*(op.Spin+1)+op.Spin][i] != 0.0) {
           coeff = op.Szops[ilz*(op.Spin+1)+op.Spin][i];
@@ -56,12 +57,12 @@ std::map< std::vector<int>, double > get_matrix_row ( const TensorOp& op, bool &
     }
   }
 
-//  std::cout << "matrix_row:\n";
+//  pout << "matrix_row:\n";
 //  for ( auto it = matrix_row.begin(); it != matrix_row.end(); ++it ) {
 //    assert( it->first.size() == 4 );
-//   std::cout << (it->first)[0] << (it->first)[1] << (it->first)[2] << (it->first)[3] << std::endl;
+//   pout << (it->first)[0] << (it->first)[1] << (it->first)[2] << (it->first)[3] << std::endl;
 //  }
-//  std::cout << "-----------------------------\n";
+//  pout << "-----------------------------\n";
 
   return matrix_row;
 }
@@ -79,7 +80,7 @@ std::map< std::vector<int>, int > get_map_to_int( std::vector< std::map< std::ve
       indices_set.insert(it->first);
     }
   }
-//  std::cout << "set size = " << indices_set.size() << std::endl;
+//  pout << "set size = " << indices_set.size() << std::endl;
 
   // Map group of indices to single integer in arbitrary, but well-defined, order
   int k=0;
@@ -199,13 +200,13 @@ int commute_so_indices_to_pdm_order( std::string& s, std::vector< std::vector<in
 
   // Back out permutation matrix as explicit matrix type
   Eigen::MatrixXi perm_mat(dim,dim);
-//std::cout << "perm_mat(i,j)\n";
+//pout << "perm_mat(i,j)\n";
   for (int i=0; i<dim; i++) {
     for (int j=0; j<dim; j++) {
       perm_mat(i,j) = perm_mat_pair[i].second[j];
-//std::cout << perm_mat(i,j) << " ";
+//pout << perm_mat(i,j) << " ";
     }
-//std::cout << std::endl;
+//pout << std::endl;
   }
 
   // Re-order so_indices
@@ -214,7 +215,7 @@ int commute_so_indices_to_pdm_order( std::string& s, std::vector< std::vector<in
   // Parity is just the determinant of permutation matrix
   int parity = perm_mat.determinant();
   assert( abs(parity) == 1 );
-//std::cout << "parity = " << parity << std::endl;
+//pout << "parity = " << parity << std::endl;
 
   return parity;
 }
@@ -231,14 +232,14 @@ void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matri
   //FIXME
   // Edge case: ()((CxCx)... (Arises when LHS and Dot blocks are empty)
   if ( not success ) {
-    std::cout << "WARNING: something wasn't quite perfect in parsing the operator string!\n";
+    pout << "WARNING: something wasn't quite perfect in parsing the operator string!\n";
     s.erase( s.begin() );   
     s.erase( s.begin() );   
     success = parse(iter, end, eg, result) ;		 
   }
   assert(success);
-  std::cout << "Setting up linear equations for spin-adaptation transformation...\n";
-  std::cout << "Number of compounded tensor operators = " << result.size() << std::endl;
+  pout << "Setting up linear equations for spin-adaptation transformation...\n";
+  pout << "Number of compounded tensor operators = " << result.size() << std::endl;
   assert( result.size() == so_indices.size() );
   assert( result.size() == b.Nrows() );
 
@@ -275,8 +276,8 @@ void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matri
 //      Amat(i,j) = A(i+1,j+1);
 //    }
 //  }
-//////  std::cout << "Amat\n";
-//////  std::cout << Amat << std::endl;
+//////  pout << "Amat\n";
+//////  pout << Amat << std::endl;
 //
 //xvec(0  )=   1.89959055084e-21 ;
 //xvec(1  )=   2.75934014869e-22 ;
@@ -300,8 +301,8 @@ void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matri
 //xvec(19 )=   -1.64090499098e-21 ;
 //
 //  bvec = Amat*xvec;
-//  std::cout << "model b vector =\n";
-//  std::cout << bvec << std::endl;
+//  pout << "model b vector =\n";
+//  pout << bvec << std::endl;
 //
 //}
 

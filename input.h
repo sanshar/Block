@@ -79,7 +79,7 @@ class Input {
   solveTypes m_solve_type;
   bool m_do_deriv;
   bool m_do_fci;
-  bool m_do_cd;
+  bool m_do_npdm_ops;
   bool m_set_Sz;
   int m_maxiter;
   double m_screen_tol;
@@ -138,7 +138,7 @@ class Input {
     ar & m_save_prefix & m_load_prefix & m_direct & m_max_lanczos_dimension;
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat & m_reorder & m_gaopt & m_gaorder;
-    ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_cd;
+    ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_npdm_ops;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
@@ -296,8 +296,8 @@ class Input {
   SpinQuantum effective_molecule_quantum() {if (!m_add_noninteracting_orbs) return m_molecule_quantum; else return SpinQuantum(total_particle_number() + total_spin_number(), 0, total_symmetry_number());}  
   std::vector<double>& get_orbenergies() {return m_orbenergies;}
   int getHFQuanta(const SpinBlock& b) const;
-  const bool &do_cd() const {return m_do_cd;}
-  bool &do_cd() {return m_do_cd;}
+  const bool &do_npdm_ops() const {return m_do_npdm_ops;}
+  bool &do_npdm_ops() {return m_do_npdm_ops;}
   int slater_size() const {return m_norbs;}
 };
 }
