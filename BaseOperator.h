@@ -152,13 +152,14 @@ class SparseMatrix : public Baseoperator<Matrix>
   void allocate(const SpinBlock& b);
 //MAW
   void deallocate(const SpinBlock& b);
+  void deallocate(const StateInfo& stateinfo);
   virtual boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) =0;
 //MAW >>>>>>
   virtual void build_in_csf_space(const SpinBlock& b) {assert(false);}
   virtual void build(const SpinBlock& b) =0;
   virtual void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) =0;
   void buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s) ;
-  void buildUsingCsfOnDisk(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s, std::ofstream& ofs) ;
+//  void buildUsingCsfOnDisk(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s, std::ofstream& ofs) ;
   void read_from_disk(std::ifstream& ifs);
 //MAW <<<<<<
   virtual double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b=0)=0;
@@ -186,7 +187,7 @@ class SparseMatrix : public Baseoperator<Matrix>
 
   void renormalise_transform(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo);
 //MAW
-  void renormalise_transform_on_disk(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo, std::ifstream& ifs, std::ofstream& ofs);
+  void renormalise_transform_on_disk(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo, std::ifstream& ifs);
 //MAW  void build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& rotate_matrix, const StateInfo *newStateInfo);
   SparseMatrix& operator+=(const SparseMatrix& other);
 };

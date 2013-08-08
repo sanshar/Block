@@ -88,15 +88,24 @@ void SparseMatrix::allocate(const StateInfo& sr, const StateInfo& sc)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//MAW
+//FIXME this duplication is related to the shitty mess of being able to call get_stateInfo() method or not earlier on...
 void SparseMatrix::deallocate(const SpinBlock& b)
+{
+  StateInfo stateinfo = b.get_stateInfo();
+
+  for (int i=0; i < stateinfo.quanta.size(); i++)
+    for (int j=0; j<stateinfo.quanta.size(); j++)
+      if (allowedQuantaMatrix (i,j)) operatorMatrix(i,j).ReSize(0,0);
+
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//MAW
+void SparseMatrix::deallocate(const StateInfo& stateinfo)
 {
 //  Clear();
 //  CleanUp();
 //  allowedQuantaMatrix.ReSize (0,0);
 //  operatorMatrix.ReSize (0,0);
-
-  StateInfo stateinfo = b.get_stateInfo();
 
   for (int i=0; i < stateinfo.quanta.size(); i++)
     for (int j=0; j<stateinfo.quanta.size(); j++)
@@ -160,24 +169,24 @@ void SparseMatrix::read_from_disk(std::ifstream& ifs)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //MAW
-void SparseMatrix::buildUsingCsfOnDisk(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s, std::ofstream& ofs) 
-{
-  buildUsingCsf(b, ladders, s);
-//  pout << "memory used before = " << memoryUsed(b) << std::endl;
-
-  // Store on disk
-  boost::archive::binary_oarchive save_op(ofs);
-  save_op << *this;
-
-  // Deallocate memory for operator representation
-  built_on_disk = true;
-//FIXME
-  built = false;
-  deallocate(b);
-//  pout << "memory used after = " << memoryUsed(b) << std::endl;
-
-}
-
+//void SparseMatrix::buildUsingCsfOnDisk(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s, std::ofstream& ofs) 
+//{
+//  buildUsingCsf(b, ladders, s);
+////  pout << "memory used before = " << memoryUsed(b) << std::endl;
+//
+//  // Store on disk
+//  boost::archive::binary_oarchive save_op(ofs);
+//  save_op << *this;
+//
+//  // Deallocate memory for operator representation
+//  built_on_disk = true;
+////FIXME
+//  built = false;
+//  deallocate(b);
+////  pout << "memory used after = " << memoryUsed(b) << std::endl;
+//
+//}
+//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
   
 void SparseMatrix::buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s) 
@@ -327,26 +336,20 @@ void SparseMatrix::OperatorMatrixReference (ObjectMatrix<Matrix*>& m, const std:
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //MAW
-void SparseMatrix::renormalise_transform_on_disk(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo, 
-                                                 std::ifstream& ifs, std::ofstream& ofs) 
+void SparseMatrix::renormalise_transform_on_disk(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo, std::ifstream& ifs) 
 {
-//FIXME  assert( built_on_disk );
   // Retrieve from disk
+  assert( get_built_on_disk() );
+//FIXME test orb indices?
   boost::archive::binary_iarchive load_op(ifs);
   load_op >> *this;
 
   // Renormalize
   renormalise_transform(rotate_matrix, stateinfo);
 
-  // Store on disk
-  boost::archive::binary_oarchive save_op(ofs);
-  save_op << *this;
-
   // Deallocate memory for operator representation
-  built_on_disk = true;
-//FIXME
-//  built = false;
-//  deallocate(b);
+  built = false;
+//  deallocate(*stateinfo);
 
 }
 

@@ -9,6 +9,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #ifndef SPIN_OP_COMPONENTS_H
 #define SPIN_OP_COMPONENTS_H
+#include <stdio.h>
 #include <boost/function.hpp>
 #include <boost/functional.hpp>
 #include <boost/lexical_cast.hpp>
@@ -28,6 +29,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 namespace SpinAdapted{
 
+//FIXME why do we need this declaration?
 class SpinBlock;
 
 //===========================================================================================================================================================
@@ -100,7 +102,7 @@ class Op_component_base
   virtual void build_iterators(SpinBlock& b)=0;
   virtual void build_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::string& sysfile, std::string& dotfile) = 0;
   virtual void build_csf_operators(SpinBlock& b, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) = 0;
-  virtual void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) =0;
+  virtual void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) =0;
   //virtual string type_name() = 0;
   virtual int get_size() const =0;
   virtual int size() const=0;
@@ -189,18 +191,13 @@ pout << "Op_component::build_csf_operators " << m_op.num_indices() << std::endl;
       // Build on disk (assume we are building from scratch)
 pout << ofile << std::endl;
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
+//FIXME why doesn't this work?       StateInfo sti = b.get_stateInfo();
       for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::buildUsingCsf, _1,boost::ref(b), boost::ref(ladders), boost::ref(c)) );
       ofs.close();
-
 //DEBUG now read back into core, as if always done in core
       std::ifstream ifs(ofile.c_str(), std::ios::binary);
       for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs)) );
       ifs.close();
-
-// Open file on disk linked to spinblock, use op_string.
-// Check if already exists.
-// Build in usual way, but deallocate operator after storing to disk.  Set flag to say it's on disk.
-// Close file.
     }
     else assert(false);
   }
@@ -214,15 +211,15 @@ pout << "Op_component::build_operators " << get_op_string() << " " << m_op.num_i
       singlethread_build(*this, b); 
     }
 //    else if ( m_op.num_indices() == 3 ) {
-//    else if ( ot == CRE_CRE_CRE ) {
-    else if ( false ) {
+    else if ( ot == CRE_CRE_CRE ) {
+//    else if ( false ) {
       // Build on disk (reading from disk, as necessary)
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
       std::ifstream sysfs(sysfile.c_str(), std::ios::binary);
       std::ifstream dotfs(dotfile.c_str(), std::ios::binary);
-//pout << "ofile = " << ofile << std::endl;
-//pout << "sysfile = " << sysfile << std::endl;
-//pout << "dotfile = " << dotfile << std::endl;
+pout << "ofile = " << ofile << std::endl;
+pout << "sysfile = " << sysfile << std::endl;
+pout << "dotfile = " << dotfile << std::endl;
       for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::build_from_disk, _1, boost::ref(b), boost::ref(sysfs), boost::ref(dotfs)) );
       ofs.close();
       sysfs.close();
@@ -234,32 +231,34 @@ pout << "Op_component::build_operators " << get_op_string() << " " << m_op.num_i
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) {
-pout << "Op_component::renormalise_transform " << m_op.num_indices() << std::endl;
+  void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo* s) {
+pout << "Op_component::renormalise_transform " <<  get_op_string() << " " << m_op.num_indices() << std::endl;
     if ( m_op.num_indices() < 3 ) {
       // Build in core
-      for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), stateinfo) );
+      for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );
     }
-    else if ( m_op.num_indices() == 3 ) {
-      for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), stateinfo) );
-//      // Build on disk (load, renormalize, save)
-//      std::string ifile = get_filename();
-//      std::ifstream ifs(ifile.c_str(), std::ios::binary);
-//FIXME how do we deal with name change??
-//      std::string ofile = get_filename() + ".renorm";
-//      std::ofstream ofs(ofile.c_str(), std::ios::binary);
-//      for_all_operators_on_disk( *this, bind(&SparseMatrix::renormalise_transform_on_disk, _1, 
-//                                             boost::ref(rotateMatrix), stateinfo, boost::ref(ifs), boost::ref(ofs)) );
-//      ifs.close();
-//      ofs.close();
-//
-////DEBUG now read back into core, as if always done in core
-//      std::ifstream ifs2(ofile.c_str(), std::ios::binary);
-//      for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs2)) );
-//      ifs2.close();
-
+//    else if ( m_op.num_indices() == 3 ) {
+    else if ( ot == CRE_CRE_CRE ) {
+      // Build on disk (load, renormalize, save)
+      std::string ifile = get_filename();
+      std::string ofile = get_filename() + ".renorm";
+pout << "ifile = " << ifile << std::endl;
+      std::ifstream ifs(ifile.c_str(), std::ios::binary);
+      std::ofstream ofs(ofile.c_str(), std::ios::binary);
+      for_all_operators_on_disk( *this, *s, ofs, bind(&SparseMatrix::renormalise_transform_on_disk, _1, boost::ref(rotateMatrix), s, boost::ref(ifs)) );
+      ifs.close();
+      ofs.close();
+      //FIXME Rename file (can we do this in place?)
+      int result;
+      result = rename( ofile.c_str() , ifile.c_str() );
+      assert( result == 0 );
+//DEBUG now read back into core, as if always done in core
+      std::ifstream ifs2(ifile.c_str(), std::ios::binary);
+      for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs2)) );
+      ifs2.close();
     }
-    else assert(false);
+    else //assert(false);
+      for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

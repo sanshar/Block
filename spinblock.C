@@ -266,7 +266,7 @@ void SpinBlock::renormalise_transform(const std::vector<Matrix>& rotateMatrix, c
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core()) {
-        it->second->renormalise_transform(rotateMatrix, stateinfo);
+        it->second->renormalise_transform(it->first, rotateMatrix, stateinfo);
       }
     }
 }
