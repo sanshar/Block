@@ -136,9 +136,10 @@ class SparseMatrix : public Baseoperator<Matrix>
   const std::vector<int>& get_orbs() const { return orbs; }
   std::vector<int>& set_orbs() { return orbs; }
   const bool& get_built() const { return built; }
+  bool& set_built() { return built; }  
 //MAW
   const bool& get_built_on_disk() const { return built_on_disk; }
-  bool& set_built() { return built; }  
+  bool& set_built_on_disk() { return built_on_disk; }  
   double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const {return 1.0;}
 
   void resize(int n, int c) { operatorMatrix.ReSize(n, c); allowedQuantaMatrix.ReSize(n, c); }
@@ -152,13 +153,14 @@ class SparseMatrix : public Baseoperator<Matrix>
 //MAW
   void deallocate(const SpinBlock& b);
   virtual boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) =0;
-//MAW debug
+//MAW >>>>>>
   virtual void build_in_csf_space(const SpinBlock& b) {assert(false);}
   virtual void build(const SpinBlock& b) =0;
+  virtual void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) =0;
   void buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s) ;
   void buildUsingCsfOnDisk(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s, std::ofstream& ofs) ;
   void read_from_disk(std::ifstream& ifs);
-//MAW
+//MAW <<<<<<
   virtual double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b=0)=0;
   double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, const TwoElectronArray& v_2);
   double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, int op2index, const TwoElectronArray& v_2);
@@ -252,6 +254,8 @@ public:
   }
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata;}
   void build(const SpinBlock& b){};
+//MAW
+  void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) {};
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b){return 0.0;}
 }; 
 

@@ -33,6 +33,8 @@ public:
 
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return boost::shared_ptr<SparseMatrix> (this);}
   void build(const SpinBlock& b) {}
+//MAW
+  void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) {};
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b=0) {return 0.0;}
   void CollectFrom(const RowVector& C);
   void FlattenInto(Matrix& C);

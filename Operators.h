@@ -9,6 +9,7 @@ typedef boost::function<void (std::vector<boost::shared_ptr<SpinAdapted::SparseM
 
 namespace SpinAdapted{
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Cre: public SpinAdapted::SparseMatrix
 {
@@ -16,11 +17,13 @@ class Cre: public SpinAdapted::SparseMatrix
   Cre() { orbs.resize(1); fermion = true; build_pattern = "C";}
 //MAW
   void build_in_csf_space(const SpinBlock& b) {assert(false);}
+  void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
 };
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class CreDes: public SpinAdapted::SparseMatrix
 {
@@ -28,10 +31,13 @@ class CreDes: public SpinAdapted::SparseMatrix
   CreDes() { orbs.resize(2); fermion = false; build_pattern = "CD";}
 //MAW
   void build_in_csf_space(const SpinBlock& b);
+  void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
 };
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class CreCre: public SpinAdapted::SparseMatrix
 {
@@ -39,11 +45,14 @@ class CreCre: public SpinAdapted::SparseMatrix
   CreCre() { orbs.resize(2); fermion = false; build_pattern = "CC";}
 //MAW
   void build_in_csf_space(const SpinBlock& b) ;
+  void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
 };
 
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class CreDesComp: public SpinAdapted::SparseMatrix
 {
@@ -51,12 +60,15 @@ class CreDesComp: public SpinAdapted::SparseMatrix
   CreDesComp() { orbs.resize(2); fermion = false;}
 //MAW
   void build_in_csf_space(const SpinBlock& b) {assert(false);}
-  void build_fromcd(SpinBlock& b);
+  void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
+//MAW  void build_fromcd(SpinBlock& b);
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
 };
 
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class DesDesComp: public SpinAdapted::SparseMatrix
 {
@@ -64,11 +76,14 @@ class DesDesComp: public SpinAdapted::SparseMatrix
   DesDesComp() { orbs.resize(2); fermion = false;}
 //MAW
   void build_in_csf_space(const SpinBlock& b) {assert(false);}
-  void build_fromcc(SpinBlock& b);
+  void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
+//MAW  void build_fromcc(SpinBlock& b);
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
 };
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 class CreCreDesComp: public SpinAdapted::SparseMatrix
@@ -77,10 +92,13 @@ class CreCreDesComp: public SpinAdapted::SparseMatrix
   CreCreDesComp() { orbs.resize(1); fermion = true;}
 //MAW
   void build_in_csf_space(const SpinBlock& b) {assert(false);}
+  void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
 };
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Ham: public SpinAdapted::SparseMatrix
 {
@@ -88,12 +106,13 @@ class Ham: public SpinAdapted::SparseMatrix
   Ham() { fermion = false;}
 //MAW
   void build_in_csf_space(const SpinBlock& b) {assert(false);}
+  void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
 };
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 }
-
-
 #endif

@@ -227,7 +227,7 @@ private:
    */
   void setup_local_indices()
   {
-cout << "setup_local_indices()\n";
+//cout << "setup_local_indices()\n";
     int length_1d = tristore_3d(length_);
     if (stored_local_) {
       local_indices_ = global_indices_;
@@ -251,7 +251,7 @@ cout << "setup_local_indices()\n";
         int ij = trimap_2d(i, j, length_);
         // ij_proc is the mpi proc the 2-index op would be assigned to if distributed
         int ij_proc = processorindex(ij);
-cout << "mpirank = " << rank << "; i,j,k = " << i << " "<< j << " "<< k << "; ij_proc = " << ij_proc << endl;
+//cout << "mpirank = " << rank << "; i,j,k = " << i << " "<< j << " "<< k << "; ij_proc = " << ij_proc << endl;
         // Assign 3-index operator to same mpi proc as (i,j) 2-index op
         if ( ij_proc == rank) {
           local_indices_.push_back(global_indices_.at(p));

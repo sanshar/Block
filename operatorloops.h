@@ -36,7 +36,7 @@ class SpinBlock;
 // Loop over all local operators and build them
 // different version include multithread build, single thread build and single thread build from csf
 
-template<class A> void singlethread_build(A& array, SpinBlock& b, std::vector< Csf >& s, vector< vector<Csf> >& ladders)
+template<class A> void singlethread_build_using_csf(A& array, SpinBlock& b, std::vector< Csf >& s, vector< vector<Csf> >& ladders)
 {
 #ifdef _OPENMP
 #pragma omp parallel default(shared)
@@ -119,34 +119,54 @@ template<typename T2, class A> void for_all_operators_multithread(A& array, cons
 #ifdef _OPENMP
     #pragma omp for schedule(guided) nowait
 #endif
-//pout << array.get_op_string() << std::endl;
-//pout << "maw for_all_operators_multithread\n";
     for (i = 0; i < array.get_size(); ++i) {
-//pout << "maw array.get_local_element(i)  " << i << std::endl;
       std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
       assert(vec.size()<4);
       for (int j=0; j<vec.size(); j++){
-//FIXME MAW        func(*vec[j]);
-//pout << "operator\n";
-//pout << *(vec.at(j)) << std::endl;
         func( *(vec.at(j)) );
       }
     }
-//pout << "maw done for_all_operators_multithread\n";
   }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-//FIXME this is same as above....?
 template<typename T2, class A> void for_all_operators_on_disk(A& array, const T2& func)
 {
-//FIXME This order is reversed from order of storage, but it's just a dummy loop over the ops stored on disk??
   for (int i = 0; i < array.get_size(); ++i) {
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
     assert(vec.size()<4);
     for (int j=0; j<vec.size(); j++){
+      // Note test that we previously built on disk
+      assert( vec.at(j)->get_built_on_disk() );
       func( *(vec.at(j)) );
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// Used with functions designed to build operators in core, but here we actually write to disk instead
+template<typename T2, class A> void for_all_operators_to_disk(A& array, SpinBlock& b, std::ofstream& ofs, const T2& func)
+{
+  for (int i = 0; i < array.get_size(); ++i) {
+    std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
+    assert(vec.size()<4);
+    for (int j=0; j<vec.size(); j++){
+      // MAW don't build if already built!
+      assert( ! vec.at(j)->get_built() );
+      assert( ! vec.at(j)->get_built_on_disk() );
+
+      // Apply function to operator
+      func( *(vec.at(j)) );
+
+      // Store on disk
+      vec.at(j)->set_built_on_disk() = true;
+      boost::archive::binary_oarchive save_op(ofs);
+      save_op << *(vec.at(j));
+           
+      // Deallocate memory for operator representation
+      vec.at(j)->set_built() = false;
+      vec.at(j)->deallocate(b);
     }
   }
 }

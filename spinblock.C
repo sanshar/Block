@@ -209,8 +209,33 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
-      if(it->second->is_core())
-        it->second->build_csf_operators(dets, ladders, *this);      
+      if(it->second->is_core()) {
+        // Output file for operators written to disk
+        std::string ofile = it->second->get_filename();
+        // Build operators from CSFs
+        it->second->build_csf_operators(*this, ofile, dets, ladders);
+      }
+    }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void SpinBlock::build_virtual_operators()
+{
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
+    {
+      opTypes ot = it->first;
+//MAW note ! here
+      if(! it->second->is_core()) {
+        // Output file for operators written to disk
+        std::string ofile = it->second->get_filename();
+        // Input file for operators written to disk on sysblock
+        std::string sysfile = get_leftBlock()->ops[ot]->get_filename();
+        // Input file for operators written to disk on dotblock
+        std::string dotfile = get_rightBlock()->ops[ot]->get_filename();
+        // Build operators
+        it->second->build_operators(*this, ot, ofile, sysfile, dotfile);
+      }
     }
 }
 
@@ -220,8 +245,16 @@ void SpinBlock::build_operators()
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
+      opTypes ot = it->first;
       if(it->second->is_core()) {
-        it->second->build_operators(*this);
+        // Output file for operators written to disk
+        std::string ofile = it->second->get_filename();
+        // Input file for operators written to disk on sysblock
+        std::string sysfile = get_leftBlock()->ops[ot]->get_filename();
+        // Input file for operators written to disk on dotblock
+        std::string dotfile = get_rightBlock()->ops[ot]->get_filename();
+        // Build operators
+        it->second->build_operators(*this, ot, ofile, sysfile, dotfile);
       }
     }
 }

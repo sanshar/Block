@@ -98,8 +98,8 @@ class Op_component_base
   bool m_deriv;
  public:
   virtual void build_iterators(SpinBlock& b)=0;
-  virtual void build_operators(SpinBlock& b)=0;
-  virtual void build_csf_operators(std::vector< Csf >& dets, std::vector< std::vector<Csf> >& ladders, SpinBlock& b) = 0;
+  virtual void build_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::string& sysfile, std::string& dotfile) = 0;
+  virtual void build_csf_operators(SpinBlock& b, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) = 0;
   virtual void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) =0;
   //virtual string type_name() = 0;
   virtual int get_size() const =0;
@@ -148,6 +148,8 @@ template <class Op> class Op_component : public Op_component_base
   typedef Op OpType; 
   paraarray m_op;
   int uniqueID;
+//MAW use for unique filename for disk-based operator storage 
+  static int nIDgenerator; // (this is just declaration; note definition below!)
 
  public:
   std::string get_op_string() const;
@@ -162,8 +164,6 @@ template <class Op> class Op_component : public Op_component_base
   virtual void add_local_indices(int i, int j=-1, int k=-1){};
   void clear(){m_op.clear();}
   void build_iterators(SpinBlock& b);
-//MAW use for unique filename for disk-based operator storage 
-  static int nIDgenerator; // (this is just declaration; note definition below!)
 //FIXME this uniquely labels wrt op_components of the same type (e.g. CRECRECRE) but won't distinguish e.g. CRECRE and CREDES on same spinblock.
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -177,26 +177,23 @@ template <class Op> class Op_component : public Op_component_base
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //FIXME MAW for 3-index operators (or larger) we specialize these functions to build/modify operators out of core (on disk)
 
-  void build_csf_operators(std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders, SpinBlock& b) { 
+  void build_csf_operators(SpinBlock& b, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) { 
 pout << "Op_component::build_csf_operators " << m_op.num_indices() << std::endl;
 
     if ( m_op.num_indices() < 3 ) {
       // Build in core
-//       singlethread_build(*this, b, c, ladders);
-      for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsf, _1, boost::ref(b), boost::ref(ladders), boost::ref(c)) );
+      singlethread_build_using_csf( *this, b, c, ladders);
+//      for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsf, _1, boost::ref(b), boost::ref(ladders), boost::ref(c)) );
     }
-    else {
+    else if ( m_op.num_indices() == 3 ) {
       // Build on disk (assume we are building from scratch)
-pout << "op_string = " << get_op_string() << std::endl;
-      std::string file = get_filename();
-      std::ofstream ofs(file.c_str(), std::ios::binary);
-//       ofs = b.open_3index_file( get_op_string() );
-      for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsfOnDisk, _1, 
-                                                 boost::ref(b), boost::ref(ladders), boost::ref(c), boost::ref(ofs)) );
+pout << ofile << std::endl;
+      std::ofstream ofs(ofile.c_str(), std::ios::binary);
+      for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::buildUsingCsf, _1,boost::ref(b), boost::ref(ladders), boost::ref(c)) );
       ofs.close();
 
 //DEBUG now read back into core, as if always done in core
-      std::ifstream ifs(file.c_str(), std::ios::binary);
+      std::ifstream ifs(ofile.c_str(), std::ios::binary);
       for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs)) );
       ifs.close();
 
@@ -204,35 +201,35 @@ pout << "op_string = " << get_op_string() << std::endl;
 // Check if already exists.
 // Build in usual way, but deallocate operator after storing to disk.  Set flag to say it's on disk.
 // Close file.
-//assert(false);
-     }
+    }
+    else assert(false);
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  void build_operators(SpinBlock& b) { 
-pout << "Op_component::build_operators " << m_op.num_indices() << std::endl;
+  void build_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::string& sysfile, std::string& dotfile) { 
+pout << "Op_component::build_operators " << get_op_string() << " " << m_op.num_indices() << std::endl;
     if ( m_op.num_indices() < 3 ) {
       // Build in core
       singlethread_build(*this, b); 
     }
-    else {
-      singlethread_build(*this, b); 
-//      // Build on disk from core ops first
-//      std::string ofile = "3index_big.tmp";
-//      std::ofstream ofs(ofile.c_str(), std::ios::binary);
-//      for_all_operators_multithread( *this, bind(&SparseMatrix::build_on_disk, _1, boost::ref(b), boost::ref(ofs)) );
-//
-//      // Build on disk from out of core ops next
-//      std::string ilhs = "3index.tmp";
-//      std::ifstream ilhs(ilhs.c_str(), std::ios::binary);
-//      std::string irhs = "3index.tmp";
-//      std::ifstream irhs(irhs.c_str(), std::ios::binary);
-//
-//      singlethread_build(*this, b); 
-//      ofs.close();
-//      assert(false);
+//    else if ( m_op.num_indices() == 3 ) {
+//    else if ( ot == CRE_CRE_CRE ) {
+    else if ( false ) {
+      // Build on disk (reading from disk, as necessary)
+      std::ofstream ofs(ofile.c_str(), std::ios::binary);
+      std::ifstream sysfs(sysfile.c_str(), std::ios::binary);
+      std::ifstream dotfs(dotfile.c_str(), std::ios::binary);
+//pout << "ofile = " << ofile << std::endl;
+//pout << "sysfile = " << sysfile << std::endl;
+//pout << "dotfile = " << dotfile << std::endl;
+      for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::build_from_disk, _1, boost::ref(b), boost::ref(sysfs), boost::ref(dotfs)) );
+      ofs.close();
+      sysfs.close();
+      dotfs.close();
     }
+    else //assert(false);
+      singlethread_build(*this, b); 
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -243,18 +240,26 @@ pout << "Op_component::renormalise_transform " << m_op.num_indices() << std::end
       // Build in core
       for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), stateinfo) );
     }
-    else {
+    else if ( m_op.num_indices() == 3 ) {
       for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), stateinfo) );
 //      // Build on disk (load, renormalize, save)
-//      std::string ifile = "3index.tmp";
+//      std::string ifile = get_filename();
 //      std::ifstream ifs(ifile.c_str(), std::ios::binary);
-//      std::string ofile = "3index_renorm.tmp";
+//FIXME how do we deal with name change??
+//      std::string ofile = get_filename() + ".renorm";
 //      std::ofstream ofs(ofile.c_str(), std::ios::binary);
 //      for_all_operators_on_disk( *this, bind(&SparseMatrix::renormalise_transform_on_disk, _1, 
 //                                             boost::ref(rotateMatrix), stateinfo, boost::ref(ifs), boost::ref(ofs)) );
 //      ifs.close();
 //      ofs.close();
+//
+////DEBUG now read back into core, as if always done in core
+//      std::ifstream ifs2(ofile.c_str(), std::ios::binary);
+//      for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs2)) );
+//      ifs2.close();
+
     }
+    else assert(false);
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
