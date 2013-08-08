@@ -7,6 +7,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
+#include <boost/format.hpp>
 #include "spinblock.h"
 
 namespace SpinAdapted{
@@ -141,7 +142,6 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
 //this is used for the dot block ??
 void SpinBlock::default_op_components(bool complementary_)
 {
@@ -288,4 +288,6 @@ pout << "SpinBlock::default_op_components(..........) for dot block\n";
   }
 
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 }

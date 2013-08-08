@@ -38,6 +38,7 @@ class SpinBlock
       ar.register_type(static_cast<Op_component<Ham> *>(NULL));
 //MAW 3PDM
       ar.register_type(static_cast<Op_component<DesCre> *>(NULL));
+//FIXME do we need to store these too if using separate disk-based 3-index operator storage?
       ar.register_type(static_cast<Op_component<CreCreDes> *>(NULL));
       ar.register_type(static_cast<Op_component<CreDesDes> *>(NULL));
       ar.register_type(static_cast<Op_component<CreDesCre> *>(NULL));
@@ -78,8 +79,8 @@ class SpinBlock
   void Save (std::ofstream &ofs);
   void Load (std::ifstream &ifs);
 //MAW
-  std::string open_3index_file (std::string op_string);
-
+//  std::string open_3index_file (std::string op_string);
+//  void init_operator_filenames();
 
   const boost::shared_ptr<TwoElectronArray> get_twoInt() const {return twoInt;}
   double memoryUsed();
@@ -153,6 +154,8 @@ class SpinBlock
   void build_iterators();
   void build_operators(std::vector<Csf >& s, std::vector< std::vector<Csf> >& ladders);
   void build_operators();
+//MAW
+  void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo);
   void BuildSumBlock(int condition, SpinBlock& b_1, SpinBlock& b_2, StateInfo* compState=0);
   void BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState=0);
   void BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum> qnumbers, std::vector<int> distribution, bool random, 

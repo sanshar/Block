@@ -79,14 +79,13 @@ ostream& operator<< (ostream& os, const SpinBlock& b)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// Constructors
 
 SpinBlock::SpinBlock () : 
   localstorage(false),
   name (rand()), 
   hasMemoryAllocated (false),
   direct(false), complementary(false), normal(true), leftBlock(0), rightBlock(0) { }
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 SpinBlock::SpinBlock(int start, int finish, bool is_complement) :  
   name (rand()), 
@@ -201,17 +200,7 @@ void SpinBlock::build_iterators()
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
   {
     it->second->build_iterators(*this);
-//MAW
-//    if ( it->second->num_indices() < 3 ) {
-//      // Setup for in-core build
-//      it->second->build_iterators(*this);
-//    }
-//    else {
-//      // Setup for on-disk build
-//      open_3index_file
-//    }
   }
-pout << "done build_iterators! (All optypes)\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -233,6 +222,18 @@ void SpinBlock::build_operators()
     {
       if(it->second->is_core()) {
         it->second->build_operators(*this);
+      }
+    }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void SpinBlock::renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) 
+{
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
+    {
+      if(it->second->is_core()) {
+        it->second->renormalise_transform(rotateMatrix, stateinfo);
       }
     }
 }

@@ -101,7 +101,7 @@ class SparseMatrix : public Baseoperator<Matrix>
   std::map< std::string, std::vector<SpinQuantum> > quantum_ladder;
 //MAW <<<<<
  public:
-  SparseMatrix() : orbs(2), initialised(false), built(false), Sign(1), fermion(false){};
+  SparseMatrix() : orbs(2), initialised(false), built(false), built_on_disk(false), Sign(1), fermion(false){};
   virtual ~SparseMatrix(){};
   int nrows() const { return allowedQuantaMatrix.nrows(); }
   int ncols() const { return allowedQuantaMatrix.ncols(); }
@@ -136,6 +136,8 @@ class SparseMatrix : public Baseoperator<Matrix>
   const std::vector<int>& get_orbs() const { return orbs; }
   std::vector<int>& set_orbs() { return orbs; }
   const bool& get_built() const { return built; }
+//MAW
+  const bool& get_built_on_disk() const { return built_on_disk; }
   bool& set_built() { return built; }  
   double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const {return 1.0;}
 
@@ -154,8 +156,9 @@ class SparseMatrix : public Baseoperator<Matrix>
   virtual void build_in_csf_space(const SpinBlock& b) {assert(false);}
   virtual void build(const SpinBlock& b) =0;
   void buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s) ;
-//MAW
   void buildUsingCsfOnDisk(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s, std::ofstream& ofs) ;
+  void read_from_disk(std::ifstream& ifs);
+//MAW
   virtual double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b=0)=0;
   double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, const TwoElectronArray& v_2);
   double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, int op2index, const TwoElectronArray& v_2);
@@ -180,6 +183,8 @@ class SparseMatrix : public Baseoperator<Matrix>
   void OperatorMatrixReference(ObjectMatrix<Matrix*>& m, const std::vector<int>& oldToNewStateI, const std::vector<int>& oldToNewStateJ);
 
   void renormalise_transform(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo);
+//MAW
+  void renormalise_transform_on_disk(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo, std::ifstream& ifs, std::ofstream& ofs);
 //MAW  void build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& rotate_matrix, const StateInfo *newStateInfo);
   SparseMatrix& operator+=(const SparseMatrix& other);
 };

@@ -50,8 +50,9 @@ template<class A> void singlethread_build(A& array, SpinBlock& b, std::vector< C
     assert(vec.size()<4);
     for (int j=0; j<vec.size(); j++) {
       // MAW don't build if already built!
-      if ( ! vec[j]->get_built() ) vec[j]->buildUsingCsf(b, ladders, s);
-//      vec[j]->buildUsingCsf(b, ladders, s);
+      assert ( ! vec[j]->get_built() ) ;
+      assert ( ! vec[j]->get_built_on_disk() ) ;
+      vec[j]->buildUsingCsf(b, ladders, s);
     }
   }
 }
@@ -71,8 +72,9 @@ template<class A> void singlethread_build(A& array, SpinBlock& b)
     assert(vec.size()<4);
     for (int j=0; j<vec.size(); j++) {
       // MAW don't build if already built!
-      if ( ! vec[j]->get_built() ) vec[j]->build(b);
-//      vec[j]->build(b);
+      assert ( ! vec[j]->get_built() ) ;
+      assert ( ! vec[j]->get_built_on_disk() ) ;
+      vec[j]->build(b);
     }
   }
 }
@@ -136,8 +138,10 @@ template<typename T2, class A> void for_all_operators_multithread(A& array, cons
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//FIXME this is same as above....?
 template<typename T2, class A> void for_all_operators_on_disk(A& array, const T2& func)
 {
+//FIXME This order is reversed from order of storage, but it's just a dummy loop over the ops stored on disk??
   for (int i = 0; i < array.get_size(); ++i) {
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
     assert(vec.size()<4);

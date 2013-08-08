@@ -150,6 +150,15 @@ double SparseMatrix::memoryUsed(const SpinBlock& b)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void SparseMatrix::read_from_disk(std::ifstream& ifs) 
+{
+  boost::archive::binary_iarchive load_op(ifs);
+  load_op >> *this;
+  built = true;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //MAW
 void SparseMatrix::buildUsingCsfOnDisk(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s, std::ofstream& ofs) 
 {
@@ -162,8 +171,9 @@ void SparseMatrix::buildUsingCsfOnDisk(const SpinBlock& b, vector< vector<Csf> >
 
   // Deallocate memory for operator representation
   built_on_disk = true;
-//  built = false;
-//  deallocate(b);
+//FIXME
+  built = false;
+  deallocate(b);
 //  pout << "memory used after = " << memoryUsed(b) << std::endl;
 
 }
@@ -173,7 +183,7 @@ void SparseMatrix::buildUsingCsfOnDisk(const SpinBlock& b, vector< vector<Csf> >
 void SparseMatrix::buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s) 
 {
   StateInfo stateinfo = b.get_stateInfo();
-  assert( ! built );
+  assert( not (built or built_on_disk) );
   built = true;
   allocate(stateinfo);
 
@@ -316,6 +326,31 @@ void SparseMatrix::OperatorMatrixReference (ObjectMatrix<Matrix*>& m, const std:
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//MAW
+void SparseMatrix::renormalise_transform_on_disk(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo, 
+                                                 std::ifstream& ifs, std::ofstream& ofs) 
+{
+//FIXME  assert( built_on_disk );
+  // Retrieve from disk
+  boost::archive::binary_iarchive load_op(ifs);
+  load_op >> *this;
+
+  // Renormalize
+  renormalise_transform(rotate_matrix, stateinfo);
+
+  // Store on disk
+  boost::archive::binary_oarchive save_op(ofs);
+  save_op << *this;
+
+  // Deallocate memory for operator representation
+  built_on_disk = true;
+//FIXME
+//  built = false;
+//  deallocate(b);
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //Renormalization functions for core and virtual operators                                                                                
 void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo)
@@ -323,7 +358,7 @@ void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matri
   // Cannot instantiate a SparseMatrix and so instantiating a Cre
   ObjectMatrix<Matrix> tmp = operatorMatrix; 
 
-  // new allocations
+  // new allocations (actually reallocate?)
   this->allocate(*stateinfo); 
 
   int newQ = 0;

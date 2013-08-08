@@ -78,13 +78,13 @@ void SpinBlock::Load (std::ifstream & ifs)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //MAW
-std::string SpinBlock::open_3index_file (std::string op_string)
-{
-  std::string file;
-//  file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/3index"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
-  file = str(boost::format("%s%s%d%s") % dmrginp.save_prefix() % "/3index" % mpigetrank() % ".tmp" );
-  return file;
-}
+//std::string SpinBlock::open_3index_file (std::string op_string)
+//{
+//  std::string file;
+////  file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/3index"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
+//  file = str(boost::format("%s%s%d%s") % dmrginp.save_prefix() % "/3index" % mpigetrank() % ".tmp" );
+//  return file;
+//}
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -203,6 +203,8 @@ pout << "in SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)\n"
     }
   StateInfo newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
 
+//MAW >>>>>>>
+//FIXME Note  (! it->second->is_core()) which prevents use of spinblock functions
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
     if (! it->second->is_core()) {
       it->second->build_operators( *this );
@@ -211,6 +213,7 @@ pout << "in SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)\n"
 //MAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, boost::ref(rotateMatrix) , &newStateInfo));
     }
   }
+//MAW <<<<<<<
 
   stateInfo = newStateInfo;
   stateInfo.AllocatePreviousStateInfo ();
@@ -226,10 +229,8 @@ pout << "in SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)\n"
   }
   Timer transformtimer;
 
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    if ( it->second->is_core())
-      it->second->renormalise_transform( rotateMatrix, &newStateInfo );
-//MAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), (&this->stateInfo)));
+//MAW
+  renormalise_transform( rotateMatrix, &newStateInfo );
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if (! it->second->is_core())

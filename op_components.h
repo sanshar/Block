@@ -11,6 +11,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #define SPIN_OP_COMPONENTS_H
 #include <boost/function.hpp>
 #include <boost/functional.hpp>
+#include <boost/lexical_cast.hpp>
 #include <para_array.h>
 //MAW
 #include <para_array_3d.h>
@@ -99,7 +100,6 @@ class Op_component_base
   virtual void build_iterators(SpinBlock& b)=0;
   virtual void build_operators(SpinBlock& b)=0;
   virtual void build_csf_operators(std::vector< Csf >& dets, std::vector< std::vector<Csf> >& ladders, SpinBlock& b) = 0;
-//MAW  virtual void build_and_renormalise_transform(SpinBlock* b, const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *newStateInfo)=0;
   virtual void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) =0;
   //virtual string type_name() = 0;
   virtual int get_size() const =0;
@@ -125,6 +125,7 @@ class Op_component_base
   virtual boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1) = 0;
   virtual const boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1) const = 0;
   virtual std::string get_op_string() const = 0;
+  virtual std::string get_filename() const = 0;
   virtual ~Op_component_base() {}  
 };
 
@@ -139,18 +140,19 @@ template <class Op> class Op_component : public Op_component_base
   {
     ar & boost::serialization::base_object<Op_component_base>(*this);
     ar.register_type(static_cast<Op *>(NULL));
-    ar & m_op;
+    ar & m_op & uniqueID;
   }
 
  protected:
   typedef typename ChooseArray<Op>::ArrayType paraarray;
   typedef Op OpType; 
   paraarray m_op;
+  int uniqueID;
 
  public:
   std::string get_op_string() const;
-  Op_component() {m_deriv=false;}
-  Op_component(bool core) {m_core=core;m_deriv=false;}
+  Op_component() { m_deriv=false; uniqueID = nIDgenerator++; }
+  Op_component(bool core) { m_core=core; m_deriv=false; uniqueID = nIDgenerator++;}
   bool& set_local() {return m_op.set_local();}
   bool is_local() const {return m_op.is_local();}
   int get_size() const {return m_op.local_nnz();}
@@ -160,6 +162,17 @@ template <class Op> class Op_component : public Op_component_base
   virtual void add_local_indices(int i, int j=-1, int k=-1){};
   void clear(){m_op.clear();}
   void build_iterators(SpinBlock& b);
+//MAW use for unique filename for disk-based operator storage 
+  static int nIDgenerator; // (this is just declaration; note definition below!)
+//FIXME this uniquely labels wrt op_components of the same type (e.g. CRECRECRE) but won't distinguish e.g. CRECRE and CREDES on same spinblock.
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//MAW use for unique filename for disk-based operator storage -- note we need optype prefix!
+  std::string get_filename() const { 
+    std::string file;
+    file = get_op_string() + "_" + boost::lexical_cast<std::string>(uniqueID) + ".tmp"; 
+    return file;
+  }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //FIXME MAW for 3-index operators (or larger) we specialize these functions to build/modify operators out of core (on disk)
@@ -173,14 +186,20 @@ pout << "Op_component::build_csf_operators " << m_op.num_indices() << std::endl;
       for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsf, _1, boost::ref(b), boost::ref(ladders), boost::ref(c)) );
     }
     else {
-      // Build on disk
+      // Build on disk (assume we are building from scratch)
 pout << "op_string = " << get_op_string() << std::endl;
-      std::string file = "3index.tmp";
+      std::string file = get_filename();
       std::ofstream ofs(file.c_str(), std::ios::binary);
 //       ofs = b.open_3index_file( get_op_string() );
       for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsfOnDisk, _1, 
-                                                  boost::ref(b), boost::ref(ladders), boost::ref(c), boost::ref(ofs)) );
+                                                 boost::ref(b), boost::ref(ladders), boost::ref(c), boost::ref(ofs)) );
       ofs.close();
+
+//DEBUG now read back into core, as if always done in core
+      std::ifstream ifs(file.c_str(), std::ios::binary);
+      for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs)) );
+      ifs.close();
+
 // Open file on disk linked to spinblock, use op_string.
 // Check if already exists.
 // Build in usual way, but deallocate operator after storing to disk.  Set flag to say it's on disk.
@@ -198,8 +217,20 @@ pout << "Op_component::build_operators " << m_op.num_indices() << std::endl;
       singlethread_build(*this, b); 
     }
     else {
-      // Build on disk
       singlethread_build(*this, b); 
+//      // Build on disk from core ops first
+//      std::string ofile = "3index_big.tmp";
+//      std::ofstream ofs(ofile.c_str(), std::ios::binary);
+//      for_all_operators_multithread( *this, bind(&SparseMatrix::build_on_disk, _1, boost::ref(b), boost::ref(ofs)) );
+//
+//      // Build on disk from out of core ops next
+//      std::string ilhs = "3index.tmp";
+//      std::ifstream ilhs(ilhs.c_str(), std::ios::binary);
+//      std::string irhs = "3index.tmp";
+//      std::ifstream irhs(irhs.c_str(), std::ios::binary);
+//
+//      singlethread_build(*this, b); 
+//      ofs.close();
 //      assert(false);
     }
   }
@@ -213,19 +244,19 @@ pout << "Op_component::renormalise_transform " << m_op.num_indices() << std::end
       for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), stateinfo) );
     }
     else {
-      // Build on disk
       for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), stateinfo) );
-//      assert(false);
+//      // Build on disk (load, renormalize, save)
+//      std::string ifile = "3index.tmp";
+//      std::ifstream ifs(ifile.c_str(), std::ios::binary);
+//      std::string ofile = "3index_renorm.tmp";
+//      std::ofstream ofs(ofile.c_str(), std::ios::binary);
+//      for_all_operators_on_disk( *this, bind(&SparseMatrix::renormalise_transform_on_disk, _1, 
+//                                             boost::ref(rotateMatrix), stateinfo, boost::ref(ifs), boost::ref(ofs)) );
+//      ifs.close();
+//      ofs.close();
     }
   }
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//  void build_and_renormalise_transform(SpinBlock* b, const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *newStateInfo) { 
-//    build_operators(*b);
-//    renormalise_transform(rotateMatrix, newStateInfo);
-//  }
-//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   std::vector<boost::shared_ptr<SparseMatrix> > get_local_element(int i) 
@@ -352,6 +383,8 @@ pout << "Op_component::renormalise_transform " << m_op.num_indices() << std::end
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 };
+
+template <class Op> int Op_component<Op>::nIDgenerator = 1;
 
 //===========================================================================================================================================================
 }
