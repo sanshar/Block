@@ -338,11 +338,23 @@ void SparseMatrix::OperatorMatrixReference (ObjectMatrix<Matrix*>& m, const std:
 //MAW
 void SparseMatrix::renormalise_transform_on_disk(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo, std::ifstream& ifs) 
 {
-  // Retrieve from disk
-  assert( get_built_on_disk() );
-//FIXME test orb indices?
-  boost::archive::binary_iarchive load_op(ifs);
-  load_op >> *this;
+  // Retrieve operator from disk
+  assert( built_on_disk );
+  if (false) {
+    boost::archive::binary_iarchive load_op(ifs);
+    load_op >> *this;
+  } 
+  else {
+    // DEBUG option
+    boost::shared_ptr<SparseMatrix> op (new Cre);
+    boost::archive::binary_iarchive load_op(ifs);
+    load_op >> *op;
+    // Assume this is the operator we want, and expand it to the big block
+    assert( this->get_orbs()[0] == op->get_orbs()[0] );
+    assert( this->get_orbs()[1] == op->get_orbs()[1] );
+    assert( this->get_orbs()[2] == op->get_orbs()[2] );
+    *this = *op;
+  }
 
   // Renormalize
   renormalise_transform(rotate_matrix, stateinfo);

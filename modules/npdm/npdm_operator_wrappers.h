@@ -21,8 +21,11 @@ namespace SpinAdapted{
 class NpdmSpinOps {
 
   public:
-    int size() { return size_; };
-    virtual bool set_local_ops( int idx ) { assert(false); };
+//FIXME filename for disk-based storage
+    int size() { return size_; }
+    virtual bool set_local_ops( int idx ) { assert(false); }
+    // Input file stream for disk-based operators used to build NPDM
+    std::ifstream ifs;
 
     // Numerical representation of the operators for several total spins (e.g. 2-index op has two forms with spin-1/2 particles)
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_;

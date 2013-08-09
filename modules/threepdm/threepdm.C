@@ -315,6 +315,9 @@ void threepdm_loop_over_block_operators( Wavefunction & wavefunction,
   boost::shared_ptr<NpdmSpinOps> lhsOps = select_op_wrapper( lhsBlock, lhs_cd_type );
   boost::shared_ptr<NpdmSpinOps> rhsOps = select_op_wrapper( rhsBlock, rhs_cd_type );
   boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );
+//FIXME open ifstream for lhs if 3-index (dot and rhs should never be 3-index)
+// Perhaps could initialize and hold ifstream itself as member of lhsOps object if it's a big operator
+//lhsOps->get_filename()
 
   Npdm::Npdm_expectations npdm_expectations( wavefunction, big, *lhsOps, *dotOps, *rhsOps );
 //pout << "-------------------------------------------------------------------------------------------\n";
@@ -329,9 +332,18 @@ void threepdm_loop_over_block_operators( Wavefunction & wavefunction,
   if (skip) return;
   if ( lhsOps->opReps_.size() > 0 ) assert( dotOps->mults_.size() == dotOps->opReps_.size() );
 
+//  // Prepare for disk-based operators if needed
+//  std::vector<Npdm::CD> op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION };
+//  if ( lhs_cd_type == op ) {
+//    std::string ifile = lhsOps->get_filename();
+//    ifs.open(ifile.c_str(), ios::binary);
+//  }
+
   // Many spatial combinations on left block
   for ( int ilhs = 0; ilhs < lhsOps->size(); ++ilhs ) {
     skip = lhsOps->set_local_ops( ilhs );
+//FIXME  set_local_ops_from_disk( ifs ) if 3-index operator (3-index should be on outer loop)
+
     if (skip) continue;
 //pout << "lhsOps->indices_.size() " << lhsOps->indices_.size() << std::endl;
 //pout << "lhsOps->opReps_.size() " << lhsOps->opReps_.size() << std::endl;
@@ -356,6 +368,10 @@ void threepdm_loop_over_block_operators( Wavefunction & wavefunction,
       assign_threepdm_elements( new_spin_orbital_elements, threepdm );
     }
   }
+
+  // Close file if needed (put in wrapper destructor??)
+  if ( lhsOps->ifs.is_open() ) lhsOps->ifs.close();
+
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

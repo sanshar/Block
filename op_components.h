@@ -250,7 +250,7 @@ pout << "ifile = " << ifile << std::endl;
       ofs.close();
       //FIXME Rename file (can we do this in place?)
       int result;
-      result = rename( ofile.c_str() , ifile.c_str() );
+      result = rename( ofile.c_str(), ifile.c_str() );
       assert( result == 0 );
 //DEBUG now read back into core, as if always done in core
       std::ifstream ifs2(ifile.c_str(), std::ios::binary);

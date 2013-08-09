@@ -538,6 +538,12 @@ Npdm_op_wrapper_CCC::Npdm_op_wrapper_CCC( SpinBlock * spinBlock )
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
+//FIXME
+//Only init this if we know we want to use disk-based?  Test built_on_disk?
+  // For disk-based storage
+  std::string ifile = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
+  ifs.open(ifile.c_str(), ios::binary);
+  // Put ifs.close in destructor???
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -549,7 +555,27 @@ pout << "getting CCC operator...\n";
   indices_.clear();
   int ix, jx, kx;
 
-  opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+//  opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+
+
+  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+  opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+//FIXME
+// read next operator from file instead of from core (new method, or modify this one?)
+// ifs stream should be sent as an argument, instead of idx and load_op >> opReps_ (actually need to load the full spin-set, not just one)
+  assert( opReps_tmp.at(0)->get_built_on_disk() );
+  opReps_.clear();
+  for (int i = 0; i < opReps_tmp.size(); i++) {
+     pout << "MAW reading CCC spin-op from disk for NPDM... " << i << std::endl;
+     boost::archive::binary_iarchive load_op(ifs);
+     boost::shared_ptr<SparseMatrix> op (new Cre);
+     load_op >> *op;
+     opReps_.push_back(op);
+  }
+  pout << "MAW done reading CCC spin-ops...\n ";
+
+
+
   build_pattern_ = opReps_.at(0)->get_build_pattern();
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
