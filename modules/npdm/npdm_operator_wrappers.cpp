@@ -555,16 +555,16 @@ pout << "getting CCC operator...\n";
   indices_.clear();
   int ix, jx, kx;
 
+//FIXME READ OPERATORS FROM CORE
 //  opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
 
 
+//FIXME READ OPERATORS FROM DISK HERE
   std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
   opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
-//FIXME
-// read next operator from file instead of from core (new method, or modify this one?)
-// ifs stream should be sent as an argument, instead of idx and load_op >> opReps_ (actually need to load the full spin-set, not just one)
   assert( opReps_tmp.at(0)->get_built_on_disk() );
   opReps_.clear();
+  // Read in full spin-set from disk
   for (int i = 0; i < opReps_tmp.size(); i++) {
      pout << "MAW reading CCC spin-op from disk for NPDM... " << i << std::endl;
      boost::archive::binary_iarchive load_op(ifs);
@@ -572,8 +572,6 @@ pout << "getting CCC operator...\n";
      load_op >> *op;
      opReps_.push_back(op);
   }
-  pout << "MAW done reading CCC spin-ops...\n ";
-
 
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
