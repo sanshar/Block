@@ -23,40 +23,132 @@ namespace SpinAdapted {
   
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 //FIXME update SCREEN.C
+//
+//std::vector<std::tuple<int,int,int> > screened_ccd_indices(const vector<int, std::allocator<int> >& sites,
+//                                                           const vector<int, std::allocator<int> >& interactingix,
+//                                                           const TwoElectronArray& twoe, double thresh)
+//{
+//  std::vector<std::tuple<int,int,int> > screened_indices;
+//
+//  if ( true ) {
+//    // Set up site indices such that (k <= j <= i)
+//  //FIXME should this stride order match para_array??
+//    for (int i = 0; i < sites.size(); ++i) {
+//      for (int j = 0; j <= i; ++j) {
+//        for (int k = 0; k <= j; ++k) {
+//  //      if (dmrginp.use_partial_two_integrals()) {
+//          screened_indices.push_back(std::make_tuple(sites[i], sites[j], sites[k]));
+//  //      }
+//  //FIXME
+//  //      else {
+//  //        if (screen_ccd_interaction(indices[i], indices[j], interactingix, twoe, thresh))
+//  //          screened_indices.push_back(make_pair(indices[i], indices[j]));
+//  //      }
+//        }
+//      }
+//    }
+//  }
+//  else {
+//    // i=k=k
+//    for (int i = 0; i < sites.size(); ++i) 
+//      screened_indices.push_back(std::make_tuple(sites[i], sites[i], sites[i]));
+//  }
+//
+//  return screened_indices;
+//}
+//
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+// Choose 3-index tuples on this MPI process such that 2-index are available to build them
 
-std::vector<std::tuple<int,int,int> > screened_ccd_indices(const vector<int, std::allocator<int> >& sites,
-                                                           const vector<int, std::allocator<int> >& interactingix,
-                                                           const TwoElectronArray& twoe, double thresh)
+std::vector<std::tuple<int,int,int> > get_local_3index_tuples(SpinBlock& b)
 {
-  std::vector<std::tuple<int,int,int> > screened_indices;
+  std::vector<std::tuple<int,int,int> > tuples;
 
-  if ( true ) {
-    // Set up site indices such that (k <= j <= i)
-  //FIXME should this stride order match para_array??
-    for (int i = 0; i < sites.size(); ++i) {
-      for (int j = 0; j <= i; ++j) {
-        for (int k = 0; k <= j; ++k) {
-  //      if (dmrginp.use_partial_two_integrals()) {
-          screened_indices.push_back(std::make_tuple(sites[i], sites[j], sites[k]));
-  //      }
-  //FIXME
-  //      else {
-  //        if (screen_ccd_interaction(indices[i], indices[j], interactingix, twoe, thresh))
-  //          screened_indices.push_back(make_pair(indices[i], indices[j]));
-  //      }
-        }
-      }
-    }
+  SpinBlock* sysBlock = b.get_leftBlock();
+  SpinBlock* dotBlock = b.get_rightBlock();
+  
+  assert( dotBlock != NULL );
+  assert( dotBlock->get_sites().size() == 1 );
+
+  // Forward or backwards sweep 
+  bool forward = true;
+  if ( sysBlock->get_sites()[0] > dotBlock->get_sites()[0] ) forward = false;
+  cout << "MAW CCC iterators forward? p" << mpigetrank() << " = " << forward << std::endl;
+  int dot = dotBlock->get_sites()[0];
+  pout << "dot = " << dot << std::endl;
+
+  // 3 on dot
+  tuples.push_back( std::make_tuple(dot, dot, dot) );
+  // 2 on dot
+  for (auto i = sysBlock->get_sites().begin(); i != sysBlock->get_sites().end(); ++i) {
+     if ( forward )
+       tuples.push_back( std::make_tuple(dot, dot, *i) );
+     else
+       tuples.push_back( std::make_tuple(*i, dot, dot) );
   }
-  else {
-    // i=k=k
-    for (int i = 0; i < sites.size(); ++i) 
-      screened_indices.push_back(std::make_tuple(sites[i], sites[i], sites[i]));
+  // 1 on dot
+//FIXME check that these are local!
+  std::vector< std::vector<int> > ij_array = sysBlock->get_op_array(CRE_CRE).get_array();
+  for (auto ij = ij_array.begin(); ij != ij_array.end(); ++ij) {
+     pout << "ij = " << (*ij)[0] << "," << (*ij)[1] << std::endl;
+     assert( (*ij)[0] >= (*ij)[1] );
+     if ( forward )
+       tuples.push_back( std::make_tuple(dot, (*ij)[0], (*ij)[1]) );
+     else
+       tuples.push_back( std::make_tuple((*ij)[0], (*ij)[1], dot) );
+  }
+  std::vector< std::vector<int> > ijk_array = sysBlock->get_op_array(CRE_CRE_CRE).get_array();
+  // 0 on dot
+  for (auto ijk = ijk_array.begin(); ijk != ijk_array.end(); ++ijk) {
+     assert( (*ijk)[0] >= (*ijk)[1] );
+     assert( (*ijk)[1] >= (*ijk)[2] );
+     tuples.push_back( std::make_tuple((*ijk)[0], (*ijk)[1], (*ijk)[2]) );
   }
 
-  return screened_indices;
+  return tuples;
 }
 
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+// Choose 3-index tuples on this MPI process such that 2-index are available to build them
+
+//FIXME screening?
+std::vector<std::tuple<int,int,int> > get_3index_tuples(SpinBlock& b, bool& global_is_local)
+{
+  std::vector<std::tuple<int,int,int> > tuples;
+
+  if ( b.get_leftBlock() != NULL ) {
+    // Generate only mpi local tuples for compound block, consistent with existing operators on sys and dot
+    global_is_local = true;
+    tuples = get_local_3index_tuples(b);    
+  }
+  else {
+    // Generate all tuples such that (k <= j <= i) and let para_array assign them to local processes as necessary
+    global_is_local = false;
+    std::vector<int> sites = b.get_sites();
+    for (int i = 0; i < sites.size(); ++i)
+      for (int j = 0; j <= i; ++j)
+        for (int k = 0; k <= j; ++k)
+          tuples.push_back(std::make_tuple(sites[i], sites[j], sites[k]));
+  }
+
+  return tuples;
+}
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+//
+//bool is_forward(SpinBlock& b) 
+//{
+//  SpinBlock* sysBlock = b.get_leftBlock();
+//  SpinBlock* dotBlock = b.get_rightBlock();
+//  
+//  assert( dotBlock != NULL );
+//  assert( dotBlock->get_sites().size() == 1 );
+//  bool forward = true;
+//  if ( sysBlock->get_sites()[0] > dotBlock->get_sites()[0] ) forward = false;
+//  cout << "MAW CCC iterators forward? p" << mpigetrank() << " = " << forward << std::endl;
+//
+//  return forward;
+//}
+//
 //===========================================================================================================================================================
 
 //FIXME the 3-index routines below have a lot of common ground that could be re-implemented more clearly
@@ -78,16 +170,18 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
   if (b.get_sites().size () == 0) return; 
 
   // Set up 3-index (i,j,k) spatial operator indices for this SpinBlock
-  const double screen_tol = dmrginp.screen_tol();
-//FIXME
-  std::vector< std::tuple<int,int,int> > screened_ccc_ix = screened_ccd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
-  m_op.set_tuple_indices(screened_ccc_ix, dmrginp.last_site());      
-  std::vector<int> orbs(3);
+//  const double screen_tol = dmrginp.screen_tol();
+//  std::vector< std::tuple<int,int,int> > tuples = screened_ccd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
+  bool global_is_local = false;
+  std::vector< std::tuple<int,int,int> > tuples = get_3index_tuples(b, global_is_local);
+  m_op.set_tuple_indices(tuples, dmrginp.last_site(), global_is_local);      
 
-  // Allocate new set of operators for each set of spatial orbitals (For 3-index this part cannot be stored all in core, even locally ??)
+  // Allocate new set of operators for each set of spatial orbitals
+//FIXME check that we have load balancing
+cout << "New set of CCC operators: p" << mpigetrank() << "; size = " << m_op.local_nnz() << std::endl;
+  std::vector<int> orbs(3);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
-//pout << "New set of CCC operators:  " << i << std::endl;
 //pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << std::endl;
     std::vector<boost::shared_ptr<CreCreCre> >& spin_ops = m_op.get_local_element(i);
 
@@ -174,13 +268,12 @@ void Op_component<CreCreDes>::build_iterators(SpinBlock& b)
   if (b.get_sites().size () == 0) return; 
 
   // Set up 3-index (i,j,k) spatial operator indices for this SpinBlock
-  const double screen_tol = dmrginp.screen_tol();
-//FIXME
-  std::vector< std::tuple<int,int,int> > screened_ccd_ix = screened_ccd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
-  m_op.set_tuple_indices(screened_ccd_ix, dmrginp.last_site());      
-  std::vector<int> orbs(3);
+  bool global_is_local = false;
+  std::vector< std::tuple<int,int,int> > tuples = get_3index_tuples(b, global_is_local);
+  m_op.set_tuple_indices(tuples, dmrginp.last_site(), global_is_local);      
 
-  // Allocate new set of operators for each set of spatial orbitals (For 3-index this part cannot be stored all in core, even locally ??)
+  // Allocate new set of operators for each set of spatial orbitals
+  std::vector<int> orbs(3);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
 //pout << "New set of CCD operators:  " << i << std::endl;
@@ -267,13 +360,12 @@ void Op_component<CreDesDes>::build_iterators(SpinBlock& b)
   if (b.get_sites().size () == 0) return; 
 
   // Set up 3-index (i,j,k) spatial operator indices for this SpinBlock
-  const double screen_tol = dmrginp.screen_tol();
-//FIXME
-  std::vector< std::tuple<int,int,int> > screened_cdd_ix = screened_ccd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
-  m_op.set_tuple_indices(screened_cdd_ix, dmrginp.last_site());      
-  std::vector<int> orbs(3);
+  bool global_is_local = false;
+  std::vector< std::tuple<int,int,int> > tuples = get_3index_tuples(b, global_is_local);
+  m_op.set_tuple_indices(tuples, dmrginp.last_site(), global_is_local);      
 
-  // Allocate new set of operators for each set of spatial orbitals (For 3-index this part cannot be stored all in core, even locally ??)
+  // Allocate new set of operators for each set of spatial orbitals
+  std::vector<int> orbs(3);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
 //pout << "New set of CDD operators:  " << i << std::endl;
@@ -362,13 +454,12 @@ void Op_component<CreDesCre>::build_iterators(SpinBlock& b)
   if (b.get_sites().size () == 0) return; 
 
   // Set up 3-index (i,j,k) spatial operator indices for this SpinBlock
-  const double screen_tol = dmrginp.screen_tol();
-//FIXME
-  std::vector< std::tuple<int,int,int> > screened_cdc_ix = screened_ccd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
-  m_op.set_tuple_indices(screened_cdc_ix, dmrginp.last_site());      
-  std::vector<int> orbs(3);
+  bool global_is_local = false;
+  std::vector< std::tuple<int,int,int> > tuples = get_3index_tuples(b, global_is_local);
+  m_op.set_tuple_indices(tuples, dmrginp.last_site(), global_is_local);      
 
-  // Allocate new set of operators for each set of spatial orbitals (For 3-index this part cannot be stored all in core, even locally ??)
+  // Allocate new set of operators for each set of spatial orbitals
+  std::vector<int> orbs(3);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
 //pout << "New set of CDC operators:  " << i << std::endl;
@@ -457,13 +548,12 @@ void Op_component<DesCreDes>::build_iterators(SpinBlock& b)
   if (b.get_sites().size () == 0) return; 
 
   // Set up 3-index (i,j,k) spatial operator indices for this SpinBlock
-  const double screen_tol = dmrginp.screen_tol();
-//FIXME
-  std::vector< std::tuple<int,int,int> > screened_dcd_ix = screened_ccd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
-  m_op.set_tuple_indices(screened_dcd_ix, dmrginp.last_site());      
-  std::vector<int> orbs(3);
+  bool global_is_local = false;
+  std::vector< std::tuple<int,int,int> > tuples = get_3index_tuples(b, global_is_local);
+  m_op.set_tuple_indices(tuples, dmrginp.last_site(), global_is_local);      
 
-  // Allocate new set of operators for each set of spatial orbitals (For 3-index this part cannot be stored all in core, even locally ??)
+  // Allocate new set of operators for each set of spatial orbitals
+  std::vector<int> orbs(3);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
 //pout << "New set of DCD operators:  " << i << std::endl;
@@ -550,13 +640,12 @@ void Op_component<DesDesCre>::build_iterators(SpinBlock& b)
   if (b.get_sites().size () == 0) return; 
 
   // Set up 3-index (i,j,k) spatial operator indices for this SpinBlock
-  const double screen_tol = dmrginp.screen_tol();
-//FIXME
-  std::vector< std::tuple<int,int,int> > screened_ddc_ix = screened_ccd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
-  m_op.set_tuple_indices(screened_ddc_ix, dmrginp.last_site());      
-  std::vector<int> orbs(3);
+  bool global_is_local = false;
+  std::vector< std::tuple<int,int,int> > tuples = get_3index_tuples(b, global_is_local);
+  m_op.set_tuple_indices(tuples, dmrginp.last_site(), global_is_local);      
 
-  // Allocate new set of operators for each set of spatial orbitals (For 3-index this part cannot be stored all in core, even locally ??)
+  // Allocate new set of operators for each set of spatial orbitals
+  std::vector<int> orbs(3);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
 //pout << "New set of DDC operators:  " << i << std::endl;

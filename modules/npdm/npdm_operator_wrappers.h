@@ -46,7 +46,7 @@ class NpdmSpinOps {
                                                              boost::shared_ptr<SparseMatrix> rhsOp,
                                                              int ispin, std::vector<int> indices, bool transpose );
 
-    SpinBlock * spinBlock_;
+    SpinBlock* spinBlock_;
     // Number of spatial orbital combinations
     int size_;
 };

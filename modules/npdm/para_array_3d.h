@@ -33,9 +33,7 @@ template<class T> class para_array_3d;
 template<class T> class para_array_3d : public para_sparse_vector<T>
 {
 public:
-  para_array_3d() : stored_local_(true), upper_triangular_(false) {}
-
-  bool is_upper() const { return upper_triangular_; }
+  para_array_3d() : stored_local_(true) {}
 
   // This is designed for 3-index operators
   const int num_indices() { return 3; }
@@ -179,8 +177,14 @@ public:
   void add_local_indices(int i, int j, int k)
   {
     int index = trimap_3d(i,j,k);
+    std::vector<int> tuple = { i,j,k };
     local_indices_.push_back(index);
-    local_indices_map_.at(index)= index;
+    local_indices_map_.at(index) = index;
+    local_index_tuple_.push_back( tuple );
+    //FIXME MAW also update global, even though this wasn't done before
+    global_indices_.push_back(index);
+    global_indices_map_.at(index) = index;
+    global_index_tuple_.push_back( tuple );
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -189,11 +193,10 @@ public:
   *
   * see corresponding set_indices member fn.
   */
-  void set_tuple_indices(const std::vector<std::tuple<int,int,int> >& occupied, int len, bool ut = false)
+  void set_tuple_indices(const std::vector<std::tuple<int,int,int> >& occupied, int len, const bool& global_is_local)
   {
     clear();
     length_ = len;
-    upper_triangular_ = ut;
 
     // Global indices
     for (auto it = occupied.begin(); it != occupied.end(); ++it) {
@@ -215,49 +218,38 @@ public:
     store_.resize(length_1d);
 
     // Now setup local indices
-    setup_local_indices();
+    setup_local_indices(global_is_local);
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//FIXME unneccesary .at() in vectors!!
+
 private:
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
   /**
    * having filled out the global indices, assign indices
    * to individual processors (i.e. local indices)
    */
-  void setup_local_indices()
+  void setup_local_indices(const bool& global_is_local)
   {
-//cout << "setup_local_indices()\n";
     int length_1d = tristore_3d(length_);
-    if (stored_local_) {
+    if (stored_local_ || global_is_local) {
       local_indices_ = global_indices_;
       local_indices_map_ = global_indices_map_;
       local_index_tuple_ = global_index_tuple_;
     }
     else {
       local_indices_map_.resize(length_1d);
-      int rank = mpigetrank();
       for (int p = 0; p < length_1d; ++p) local_indices_map_.at(p) = -1;
 
       for (int p = 0; p < global_indices_.size(); ++p) {
-        //if (processorindex(global_indices_.at(p)) == rank) {
-
-        // Design this so that 2-index ops and 3-index ops built from them have the same mpi rank (e.g. (1,2) and (1,2,3) have same rank)
-        int i = global_index_tuple_.at(p)[0];
-        int j = global_index_tuple_.at(p)[1];
-        int k = global_index_tuple_.at(p)[2];
-
-        // ij is the global index of the two indices as used in the 2-index para_array class
-        int ij = trimap_2d(i, j, length_);
-        // ij_proc is the mpi proc the 2-index op would be assigned to if distributed
-        int ij_proc = processorindex(ij);
-//cout << "mpirank = " << rank << "; i,j,k = " << i << " "<< j << " "<< k << "; ij_proc = " << ij_proc << endl;
-        // Assign 3-index operator to same mpi proc as (i,j) 2-index op
-        if ( ij_proc == rank) {
+        if ( processorindex(global_indices_[p]) == mpigetrank() ) {
+        //if ( is_global_local(forward, p) ) {
           local_indices_.push_back(global_indices_.at(p));
           local_indices_map_.at(global_indices_.at(p)) = global_indices_.at(p);
           local_index_tuple_.push_back(global_index_tuple_.at(p));
         }
+
       }
     }
   }
@@ -269,7 +261,6 @@ private:
   void serialize(Archive & ar, const unsigned int version)
   {
     ar & stored_local_
-       & upper_triangular_
        & length_
        & global_indices_
        & global_indices_map_
@@ -288,7 +279,6 @@ private:
   std::vector<std::vector<int> > local_index_tuple_;
   std::vector<T> store_;
   bool stored_local_;
-  bool upper_triangular_;
   int length_;
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------

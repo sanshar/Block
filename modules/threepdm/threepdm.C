@@ -188,7 +188,6 @@ void accumulate_threepdm(array_6d<double>& threepdm)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// The number of possible combinations are (3!)**2
 
 void assign_threepdm_antisymmetric(array_6d<double>& threepdm, 
                                    const int i, const int j, const int k, const int l, const int m, const int n, 
@@ -223,7 +222,7 @@ void assign_threepdm_antisymmetric(array_6d<double>& threepdm,
   if ( (w[0]==w[1]) || (w[1]==w[2]) ) { if (abs(val) > 1e-15) assert(false); return; }
 
 
-  // The number of possible combinations are (3!)**2
+  // The number of possible combinations is (3!)**2  (For 4pdm and higher we use a general implementation)
   threepdm(i, j, k, l, m, n) =  val;
   threepdm(i, j, k, l, n, m) = -val;
   threepdm(i, j, k, n, m, l) = -val;
@@ -300,6 +299,39 @@ void assign_threepdm_elements( std::vector< std::pair< std::vector<int>, double 
 
 //===========================================================================================================================================================
 
+void do_threepdm_inner_loop( array_6d<double> & threepdm, 
+                             boost::shared_ptr<NpdmSpinOps>& lhsOps,
+                             boost::shared_ptr<NpdmSpinOps>& rhsOps,
+                             boost::shared_ptr<NpdmSpinOps>& dotOps,
+                             Npdm::Npdm_expectations& npdm_expectations )
+{
+
+//pout << "lhsOps->indices_.size() " << lhsOps->indices_.size() << std::endl;
+//pout << "lhsOps->opReps_.size() " << lhsOps->opReps_.size() << std::endl;
+//pout << "dotOps->indices_.size() " << dotOps->indices_.size() << std::endl;
+//pout << "dotOps->opReps_.size() " << dotOps->opReps_.size() << std::endl;
+    if ( lhsOps->opReps_.size() > 0 ) assert( lhsOps->mults_.size() == lhsOps->opReps_.size() );
+
+    // Many spatial combinations on right block
+    for ( int irhs = 0; irhs < rhsOps->size(); ++irhs ) {
+      bool skip = rhsOps->set_local_ops( irhs );
+      if (skip) continue;
+//pout << "rhsOps->indices_.size() " << rhsOps->indices_.size() << std::endl;
+//pout << "rhsOps->opReps_.size() " << rhsOps->opReps_.size() << std::endl;
+//pout << "-------------------------------------------------------------------------------------------\n";
+//pout << "spatial: ilhs, irhs = " << ilhs << ", " << irhs << std::endl;
+      if ( rhsOps->opReps_.size() > 0 ) assert( rhsOps->mults_.size() == rhsOps->opReps_.size() );
+
+      // Get non-spin-adapated 3PDM elements after building spin-adapted elements
+      std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( 20 );
+
+      // Assign threepdm elements
+      assign_threepdm_elements( new_spin_orbital_elements, threepdm );
+    }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void threepdm_loop_over_block_operators( Wavefunction & wavefunction, 
                                          const SpinBlock & big, 
                                          std::vector<Npdm::CD> & lhs_cd_type,
@@ -307,6 +339,8 @@ void threepdm_loop_over_block_operators( Wavefunction & wavefunction,
                                          std::vector<Npdm::CD> & rhs_cd_type,
                                          array_6d<double> & threepdm )
 {
+  boost::mpi::communicator world;
+
   SpinBlock* rhsBlock = big.get_rightBlock();
   SpinBlock* lhsdotBlock = big.get_leftBlock();
   SpinBlock* lhsBlock = lhsdotBlock->get_leftBlock();
@@ -333,30 +367,16 @@ void threepdm_loop_over_block_operators( Wavefunction & wavefunction,
   // Many spatial combinations on left block
   for ( int ilhs = 0; ilhs < lhsOps->size(); ++ilhs ) {
     skip = lhsOps->set_local_ops( ilhs );
-
     if (skip) continue;
-//pout << "lhsOps->indices_.size() " << lhsOps->indices_.size() << std::endl;
-//pout << "lhsOps->opReps_.size() " << lhsOps->opReps_.size() << std::endl;
-//pout << "dotOps->indices_.size() " << dotOps->indices_.size() << std::endl;
-//pout << "dotOps->opReps_.size() " << dotOps->opReps_.size() << std::endl;
-    if ( lhsOps->opReps_.size() > 0 ) assert( lhsOps->mults_.size() == lhsOps->opReps_.size() );
 
-    // Many spatial combinations on right block
-    for ( int irhs = 0; irhs < rhsOps->size(); ++irhs ) {
-      skip = rhsOps->set_local_ops( irhs );
-      if (skip) continue;
-//pout << "rhsOps->indices_.size() " << rhsOps->indices_.size() << std::endl;
-//pout << "rhsOps->opReps_.size() " << rhsOps->opReps_.size() << std::endl;
-//pout << "-------------------------------------------------------------------------------------------\n";
-//pout << "spatial: ilhs, irhs = " << ilhs << ", " << irhs << std::endl;
-      if ( rhsOps->opReps_.size() > 0 ) assert( rhsOps->mults_.size() == rhsOps->opReps_.size() );
+//    std::vector< boost::shared_ptr<NpdmSpinOps> > all_lhsOps;
+//    boost::mpi::all_gather( world, lhsOps, all_lhsOps );
+//    assert( all_lhsOps.size() == world.size() );
 
-      // Get non-spin-adapated 3PDM elements after building spin-adapted elements
-      std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( 20 );
 
-      // Assign threepdm elements
-      assign_threepdm_elements( new_spin_orbital_elements, threepdm );
-    }
+
+    do_threepdm_inner_loop( threepdm, lhsOps, rhsOps, dotOps, npdm_expectations );
+
   }
 
   // Close file if needed (put in wrapper destructor??)

@@ -12,7 +12,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <stdio.h>
 #include <boost/function.hpp>
 #include <boost/functional.hpp>
-#include <boost/lexical_cast.hpp>
+#include <boost/format.hpp>
 #include <para_array.h>
 //MAW
 #include <para_array_3d.h>
@@ -149,6 +149,7 @@ template <class Op> class Op_component : public Op_component_base
   typedef typename ChooseArray<Op>::ArrayType paraarray;
   typedef Op OpType; 
   paraarray m_op;
+//FIXME this uniquely labels wrt op_components of the same type (e.g. CRECRECRE) but won't distinguish e.g. CRECRE and CREDES on same spinblock.
   int uniqueID;
 //MAW use for unique filename for disk-based operator storage 
   static int nIDgenerator; // (this is just declaration; note definition below!)
@@ -166,13 +167,12 @@ template <class Op> class Op_component : public Op_component_base
   virtual void add_local_indices(int i, int j=-1, int k=-1){};
   void clear(){m_op.clear();}
   void build_iterators(SpinBlock& b);
-//FIXME this uniquely labels wrt op_components of the same type (e.g. CRECRECRE) but won't distinguish e.g. CRECRE and CREDES on same spinblock.
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //MAW use for unique filename for disk-based operator storage -- note we need optype prefix!
   std::string get_filename() const { 
     std::string file;
-    file = get_op_string() + "_" + boost::lexical_cast<std::string>(uniqueID) + ".tmp"; 
+    file = str( boost::format("%s%s%s%s%d%s%d%s") % dmrginp.load_prefix() % "/" % get_op_string() % "_" % uniqueID % "_p" % mpigetrank() % ".tmp" ); 
     return file;
   }
 
