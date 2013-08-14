@@ -1268,6 +1268,10 @@ void SpinAdapted::Input::performSanityTest()
          m_sweep_iter_schedule.push_back(31); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(5.0e-6);  m_sweep_noise_schedule.push_back(5.0e-5);
        }
        }    
+       //In the case that we want to do only the minimum calculation
+       if (m_maxM==50){
+         m_sweep_iter_schedule.push_back(4); m_sweep_state_schedule.push_back(50); m_sweep_tol_schedule.push_back(1.0e-5);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
        lastiter = m_sweep_iter_schedule.back();
        m_sweep_iter_schedule.push_back(lastiter+2); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(sweeptol/10.0);  m_sweep_noise_schedule.push_back(0.0e-5);
     }
@@ -1363,6 +1367,10 @@ void SpinAdapted::Input::performSanityTest()
        }
        }
 
+       //In the case that we want to do only the minimum calculation
+       if (m_maxM==500){
+         m_sweep_iter_schedule.push_back(8); m_sweep_state_schedule.push_back(500); m_sweep_tol_schedule.push_back(5.0e-5);  m_sweep_noise_schedule.push_back(5.0e-5);
+       }
        lastiter = m_sweep_iter_schedule.back();
        m_sweep_iter_schedule.push_back(lastiter+2); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(sweeptol/10.0);  m_sweep_noise_schedule.push_back(0.0e-5);
     }
