@@ -702,7 +702,8 @@ SpinAdapted::Input::Input(const string& config_name)
   if (m_gaopt) {
     ifstream gaconfFile;
     if (mpigetrank() == 0) {
-       if(gaconffile != "default") gaconfFile.open(gaconffile.c_str(), ios::in);
+       if(gaconffile != "default") 
+          gaconfFile.open(gaconffile.c_str(), ios::in);
        //to provide as initial guess to gaopt
        m_fiedlerorder=get_fiedler(orbitalfile, orbitalFile);
        }
@@ -808,10 +809,10 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     ifstream reorderFile(m_reorderfile.c_str());
     CheckFileExistence(m_reorderfile, "Reorder file ");
     readreorderfile(reorderFile, reorder, oldtonew);
-    for (int i=0; i<m_norbs/2; i++) {
-      cout << oldtonew[i] << " ";
-    }
-    cout << endl;
+    //for (int i=0; i<m_norbs/2; i++) {
+    //  cout << oldtonew[i] << " ";
+    //}
+    //cout << endl;
   }
   // use Fiedler-based ordering
   // m_fiedler and m_gaopt can be consolidated 

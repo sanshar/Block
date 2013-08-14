@@ -57,7 +57,7 @@ ifeq ($(notdir $(firstword $(CXX))),icpc)
    ifeq ($(OPENMP), yes)
       OPENMP_FLAGS= -openmp -D_OPENMP 
    endif
-	OPT = -O3 -funroll-loops $(OPENMP_FLAGS)
+	OPT = -DNDEBUG -O3 -funroll-loops $(OPENMP_FLAGS)
 #	OPT = -g
 #	CXX = icc
 endif
@@ -66,7 +66,7 @@ ifeq ($(notdir $(firstword $(CXX))),g++)
    ifeq ($(OPENMP), yes)
       OPENMP_FLAGS= -fopenmp -D_OPENMP 
    endif
-	OPT = -O3
+	OPT = -DNDEBUG -O3
 #	OPT = -g
 endif
 
