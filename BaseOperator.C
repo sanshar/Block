@@ -15,6 +15,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 namespace SpinAdapted{
 
+
 double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
 {
   int aspin = a.get_s(), airrep = a.get_symm().getirrep();
@@ -33,15 +34,50 @@ double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
     double clebspatial = Symmetry::spatial_cg(airrep, birrep, cirrep, al, bl, 0);
     if (fabs(cleb) <= 1.0e-14 || fabs(clebspatial) <= 1.0e-14)
       continue;
-    else
+    else {
       //return parity*cleb*clebdinfh/cleb_(bspin, bsz, aspin, asz, cspin, cspin)/Symmetry::spatial_cg(birrep, airrep, cirrep, bl, al, 0);
-      return parity*cleb*clebspatial/clebsch(bspin, bsz, aspin, asz, cspin, cspin)/Symmetry::spatial_cg(birrep, airrep, cirrep, bl, al, 0);
+      double spinscale = cleb/clebsch(bspin, bsz, aspin, asz, cspin, cspin);
+      double spatscale = clebspatial/Symmetry::spatial_cg(birrep, airrep, cirrep, bl, al, 0);
+
+      return parity*spinscale*spatscale;
+    }
   }
   cout << "Major trouble, getCommuteParity asked for three inappropriate operators"<<endl;
   cout << a<<"  "<<b<<"  "<<c<<endl;
   return 1.0;
 }
 
+
+double Transposeview::get_scaling(SpinQuantum leftq, SpinQuantum rightq) const 
+{
+  //if (conjugacy() == 'n') {return 1.0;}
+
+  int lspin = leftq.get_s(), lirrep = leftq.get_symm().getirrep();
+  int rspin = rightq.get_s(), rirrep = rightq.get_symm().getirrep();
+  int cspin = opdata->get_deltaQuantum().get_s(), cirrep = opdata->get_deltaQuantum().get_symm().getirrep();
+
+  for (int lsz = -lspin; lsz<lspin+1; lsz+=2)
+  for (int rsz = -rspin; rsz<rspin+1; rsz+=2)
+  for (int ll = 0; ll<Symmetry::sizeofIrrep(lirrep); ll++)
+  for (int rl = 0; rl<Symmetry::sizeofIrrep(rirrep); rl++)
+  {
+    double cleb = clebsch(lspin, lsz, cspin, cspin, rspin, rsz);
+    double clebspatial = Symmetry::spatial_cg(lirrep, cirrep, rirrep, ll, 0, rl);
+    if (fabs(cleb) <= 1.0e-14 || fabs(clebspatial) <= 1.0e-14)
+      continue;
+    else {
+      ///CHANGE THE SPATIAL_CG cirrep,1 to cirrep,0 depending on how the transpose works out!!!
+      double spinscale =  cleb/clebsch(rspin, rsz, cspin, -cspin, lspin, lsz);
+      double spatscale =  clebspatial/Symmetry::spatial_cg(rirrep, cirrep, lirrep, rl, Symmetry::sizeofIrrep(cirrep)-1, ll);  
+
+      
+      return spinscale*spatscale;
+    }
+  }
+  cout << "Major trouble, inappropriate arguments to get_scaling!!!"<<endl;
+  exit(0);
+  return 1.0;
+}
 
 
 void SparseMatrix::allocate(const SpinBlock& b)

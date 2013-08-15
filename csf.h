@@ -103,6 +103,15 @@ public:
       (*it).second /= sqrt(norm);
   }
 
+  double norm()
+  {
+    double norm=0;
+    map<Slater, double >::iterator it = det_rep.begin();
+    for (; it!= det_rep.end(); it++)
+      norm += pow((*it).second,2);
+    return norm;
+  }
+
      
   bool isempty()
   {
@@ -111,6 +120,16 @@ public:
 	return false;
     return true;
   }
+
+  bool operator== (const Csf& s) const
+  {
+    if (SpinQuantum(n, S, sym_is()) == SpinQuantum(s.n, s.S, s.sym_is()))
+      return true;
+    else
+      return false;
+  }
+
+
 
   bool operator< (const Csf& s) const;
   friend ostream& operator<< (ostream& os, const Csf& s)

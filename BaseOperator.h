@@ -177,44 +177,7 @@ public:
   const Matrix& operator()(int i, int j) const { return opdata->operator()(j, i); }
   Matrix& operator()(int i, int j) { return opdata->operator()(j, i); }
   char conjugacy() const { if (opdata->conjugacy() == 'n') return 't'; else return 'n';}
-  double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const 
-  {
-    int rights = rightq.get_s(), lefts = leftq.get_s();
-    int leftirrep = leftq.get_symm().getirrep(), rightirrep = rightq.get_symm().getirrep();
-    int lS, rS, lirrep, rirrep;
-    double scale = 1.0;
-    if (conjugacy() == 'n') {return 1.0;}
-    else {lS = rights; rS = lefts; lirrep = rightirrep; rirrep = leftirrep;}
-    if (opdata->get_deltaQuantum().get_s() == 2)
-    {
-      if (lS == rS)
-	scale = 1.0;
-      else if (lS == rS+2)
-	scale = -1.0*sqrt((rS+3.0)/(rS+1.0));
-      else if (rS == lS+2)
-	scale = -1.0*sqrt((lS+1.0)/(lS+3.0));
-      else
-	{cout<< "inappropriate left and right spin states"<<endl;exit(0);}
-    }
-    else if (opdata->get_deltaQuantum().get_s() == 0)
-      scale = 1.0;
-    else if (opdata->get_deltaQuantum().get_s() == 1)
-    {
-      if (lS+1 == rS)
-	scale = -1.0*sqrt((lS+1.0)/(lS+2.0));
-      else if (lS == rS+1)
-	scale = sqrt((rS+2.0)/(rS+1.0));
-      else
-	{cout<< "inappropriate left and right spin states "<<endl;exit(0);}
-    }
-    if (Symmetry::sizeofIrrep(opdata->get_deltaQuantum().get_symm().getirrep()) != 1) {
-      if (Symmetry::sizeofIrrep(rirrep) == 1)
-	scale = scale* sqrt(2.0);
-      else if (Symmetry::sizeofIrrep(lirrep) == 1)
-	scale = scale/sqrt(2.0);
-    }
-    return scale;
-  }
+  double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata;}
   void build(const SpinBlock& b){};
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b){return 0.0;}

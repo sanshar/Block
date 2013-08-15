@@ -12,6 +12,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "global.h"
 #include "couplingCoeffs.h"
 #include "boost/shared_ptr.hpp"
+#include "tensor_operator.h"
 
 SpinAdapted::Csf::Csf( const map<Slater, double>& p_dets, const int p_n, const int p_S, const int p_Sz, const IrrepVector p_irrep) : det_rep(p_dets), n(p_n), S(p_S), Sz(p_Sz), irrep(p_irrep)
 {
@@ -230,101 +231,76 @@ void SpinAdapted::CSFUTIL::TensorProduct(Csf& lhs, Csf& rhs, vector< Csf >& outp
 
 std::vector<SpinAdapted::Csf > SpinAdapted::CSFUTIL::spinfockstrings(const std::vector<int>& orbs)
 {
-  int latticelen = Slater().size();
-  /* first extract out alpha orbs and beta orbs from orbs */
-  std::vector<bool> aorbs, borbs;
+
+  int I = orbs[0];  //assuming there is only one orbital
+  std::vector<TensorOp>  tensorops(1, TensorOp(I, 1));
+  IrrepSpace Irrep = SymmetryOfSpatialOrb(orbs[0]); 
+  SpinQuantum sQ(1, 1, Irrep);
+
+  int irrepsize = Symmetry::sizeofIrrep(Irrep.getirrep());
 
   std::vector<Csf > singleSiteCsf;
-  std::vector<int> numcsfs;
+
+
+  std::vector<bool> occ_rep1(Slater().size(),0), occ_rep2(Slater().size(),0);
+  occ_rep2[dmrginp.spatial_to_spin()[I]+2*irrepsize-2] = 1;
+  Slater s1(occ_rep1, 1), s2(occ_rep2, 1); map<Slater, double > m1, m2;
+  m1[s1]= 1.0; m2[s2] = 1.0;
+  singleSiteCsf.push_back( Csf(m1, 0, 0, 0, IrrepVector(0,0))); //0,0,0
+  singleSiteCsf.push_back( Csf(m2, 1, 1, 1, IrrepVector(Irrep.getirrep(), irrepsize-1))); //1,1,L
   
-  for (int i=0; i<orbs.size(); i++)
-  {
-    int I = orbs[i];
-    IrrepSpace Irrep = SymmetryOfSpatialOrb(orbs[i]); 
-    IrrepSpace Irrep2 = (Irrep+Irrep).back(); 
-    IrrepSpace Irrep3 = *(Irrep2+Irrep).begin(); 
-    IrrepSpace Irrep4 = *(Irrep3+Irrep).begin(); 
+  for (int nele = 2; nele < 2*irrepsize+1; nele++) {
 
-    int index = Symmetry::sizeofIrrep(Irrep.getirrep())==1 ? 0 : 2;
+    std::vector<SpinQuantum> quanta;
+    std::vector<TensorOp> newtensorops;
+    for (int i=0; i<tensorops.size(); i++) {
+      quanta = SpinQuantum(nele-1, tensorops[i].Spin, IrrepSpace(tensorops[i].irrep)) + sQ;
 
-    std::vector<bool> occ_rep1(Slater().size(),0), 
-                      occ_rep2(Slater().size(),0), 
-                      occ_rep3(Slater().size(),0);
+      for (int j=0; j<quanta.size(); j++) {
+	TensorOp newop = TensorOp(I,1).product(tensorops[i], quanta[j].totalSpin, quanta[j].get_symm().getirrep());
+	//cout <<"******"<<endl<< quanta[j]<<"  "<<SpinQuantum(nele-1, tensorops[i].Spin, IrrepSpace(tensorops[i].irrep))<<endl;
+	//cout << newop<<endl;
+	map<Slater, double> m;
+	for (int k=0; k<newop.Szops[newop.Szops.size()-1-newop.Spin].size(); k++) {
+	  if (newop.Szops[newop.Szops.size()-1-newop.Spin][k] != 0.0) {
+	    std::vector<bool> occ_rep(Slater().size(), 0);
+	    Slater s(occ_rep,1);
+	    for (int k2=newop.opindices[k].size()-1; k2>=0; k2--) {
+	      s.c(newop.opindices[k][k2]);
+	    }
+	    if (s.isempty()) {
+	      continue;
+	    }
+	    map<Slater, double>::iterator itout = m.find(s);
+	    if (itout == m.end())
+	      m[s] = s.alpha.getSign()*newop.Szops[newop.Szops.size()-1-newop.Spin][k];
+	    else
+	      m[s] += s.alpha.getSign()*newop.Szops[newop.Szops.size()-1-newop.Spin][k];
+	  }
+	}
 
-    occ_rep2[dmrginp.spatial_to_spin()[I]+index] = 1;
-    occ_rep3[dmrginp.spatial_to_spin()[I]+index] = 1; occ_rep3[dmrginp.spatial_to_spin()[I]+1+index] = 1;
-
-    Slater s1(occ_rep1, 1), s2(occ_rep2, 1), s3(occ_rep3, 1);
-    map<Slater, double> m1, m2, m3, m4, m5, m6, m7;
-    m1[s1]= 1.0; m2[s2]= 1.0; m3[s3]= 1.0;
-    singleSiteCsf.push_back( Csf(m1, 0, 0, 0, IrrepVector(0,0))); //0,0,0
-    singleSiteCsf.push_back( Csf(m2, 1, 1, 1, IrrepVector(Irrep.getirrep(), index/2))); //1,1,L
-    singleSiteCsf.push_back( Csf(m3, 2, 0, 0, IrrepVector(Irrep2.getirrep(), index/2))); //2,0,2L
-    if (Symmetry::sizeofIrrep(Irrep.getirrep()) == 1) {
-      numcsfs.push_back(3);
-      continue;
+	Csf csf = Csf(m, nele, quanta[j].totalSpin, quanta[j].totalSpin, IrrepVector(quanta[j].get_symm().getirrep(),Symmetry::sizeofIrrep(quanta[j].get_symm().getirrep())-1)) ; 
+	
+	if (!csf.isempty() && csf.norm() >1e-10) {
+	  csf.normalize();
+	  if (find(singleSiteCsf.begin(), singleSiteCsf.end(), csf) == singleSiteCsf.end()) {
+	    singleSiteCsf.push_back( csf);
+	    newtensorops.push_back(newop);
+	  }
+	}
+      }
     }
 
-    std::vector<bool> occ_rep4(Slater().size(),0), 
-                      occ_rep5(Slater().size(),0), 
-                      occ_rep6(Slater().size(),0), 
-                      occ_rep7(Slater().size(),0),
-                      occ_rep8(Slater().size(),0);
-
-    occ_rep4[dmrginp.spatial_to_spin()[I]] = 1; occ_rep4[dmrginp.spatial_to_spin()[I]+3] = 1;
-    occ_rep5[dmrginp.spatial_to_spin()[I]+1] = 1; occ_rep5[dmrginp.spatial_to_spin()[I]+2] = 1;
-    m4[Slater(occ_rep4, 1)] = -1.0/sqrt(2.0); m4[Slater(occ_rep5, 1)] = 1.0/sqrt(2.0);
-    singleSiteCsf.push_back( Csf(m4, 2, 0, 0, IrrepVector((Irrep+Irrep)[0].getirrep(), 0))); //2,0,0
-
-    occ_rep6[dmrginp.spatial_to_spin()[I]] = 1; occ_rep6[dmrginp.spatial_to_spin()[I] +2] = 1;
-    m5[Slater(occ_rep6, 1)] = 1.0;
-    singleSiteCsf.push_back( Csf(m5, 2, 2, 2, IrrepVector((Irrep+Irrep)[1].getirrep(), 0))); //2,2,0
-
-    occ_rep7[dmrginp.spatial_to_spin()[I]+2] = 1; occ_rep7[dmrginp.spatial_to_spin()[I]+3] = 1; occ_rep7[dmrginp.spatial_to_spin()[I]] = 1;
-    m6[Slater(occ_rep7, 1)] = 1.0;
-    singleSiteCsf.push_back( Csf(m6, 3, 1, 1, IrrepVector(Irrep3.getirrep(), 1))); //3,1,L
-
-    occ_rep8[dmrginp.spatial_to_spin()[I]] = 1; occ_rep8[dmrginp.spatial_to_spin()[I]+1] = 1;
-    occ_rep8[dmrginp.spatial_to_spin()[I] +2] = 1; occ_rep8[dmrginp.spatial_to_spin()[I] +3] = 1;
-    m7[Slater(occ_rep8, 1)] = 1.0;
-    singleSiteCsf.push_back( Csf(m7, 4, 0, 0, IrrepVector(Irrep4.getirrep(), 0))); //4,0,0
-
-    //change the order of csf2 and csf3 so they are ordered 200 and then 202L
-    int len = singleSiteCsf.size();
-    Csf temp = singleSiteCsf[len-4];
-    singleSiteCsf[len-4] = singleSiteCsf[len-5];
-    singleSiteCsf[len-5] = temp;
-    numcsfs.push_back(7);
+    tensorops = newtensorops;
   }
 
-  std::vector< Csf > output, prevoutput;
-  for (int i=0;i<numcsfs[0];i++) {
-    output.push_back(singleSiteCsf[i]);
-  }
-  int csfindex = numcsfs[0];
+  //for (int i=0; i<singleSiteCsf.size(); i++)
+  //cout << singleSiteCsf[i]<<endl;
 
-  for (int i2=1; i2<orbs.size(); i2++) {
+  sort(singleSiteCsf.begin(), singleSiteCsf.end());
 
-    int outputsize = output.size();
-    for (int i=0;i<outputsize;i++) 
-      prevoutput.push_back(output[i]);
-    output.clear();
+  return singleSiteCsf;
 
-
-    for (int j=0; j<prevoutput.size(); j++)
-      for (int k=0; k<numcsfs[i2]; k++) {
-	CSFUTIL::TensorProduct(prevoutput[j], singleSiteCsf[csfindex+k], output);
-      }
-      
-
-    prevoutput.clear();
-    csfindex += numcsfs[i2];
-  }	
-  const Csfcompare csfcompare;
-  sort(output.begin(), output.end());
-
-  return output;
-	    
 }
 
 std::vector< SpinAdapted::Csf > SpinAdapted::Csf::distribute (const int n, const int sp, const IrrepVector &sym, const int left, const int right, const int edge)
