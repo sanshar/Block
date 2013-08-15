@@ -34,14 +34,14 @@ Npdm_op_wrapper_compound_CCDD::Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBl
 
 bool Npdm_op_wrapper_compound_CCDD::set_local_ops( int idx )
 {
-pout << "getting CCDD operator...\n";
+cout << "getting CCDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx, lx;
   std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
   ix = twoOps.at(0)->get_orbs(0);
   jx = twoOps.at(0)->get_orbs(1);
-pout << "indices  " << ix << " " << ix << " " << ix << " " << ix << std::endl;
+cout << "indices  " << ix << " " << ix << " " << ix << " " << ix << std::endl;
 
   // Assumed single site
   assert ( ix == jx );
@@ -91,7 +91,7 @@ Npdm_op_wrapper_CCDD::Npdm_op_wrapper_CCDD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CCDD::set_local_ops( int idx )
 {
-pout << "getting CCDD operator...\n";
+cout << "getting CCDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx, lx;
@@ -134,7 +134,7 @@ Npdm_op_wrapper_compound_CCD::Npdm_op_wrapper_compound_CCD( SpinBlock * spinBloc
 
 bool Npdm_op_wrapper_compound_CCD::set_local_ops( int idx )
 {
-pout << "getting compound CCD operator...\n";
+cout << "getting compound CCD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -151,7 +151,7 @@ pout << "getting compound CCD operator...\n";
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
-pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   opReps_.clear();
   // S=0 (+) S=1/2  =>  S=1/2
@@ -184,7 +184,7 @@ Npdm_op_wrapper_compound_CDD::Npdm_op_wrapper_compound_CDD( SpinBlock * spinBloc
 
 bool Npdm_op_wrapper_compound_CDD::set_local_ops( int idx )
 {
-pout << "getting compound CDD operator...\n";
+cout << "getting compound CDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -243,12 +243,12 @@ pout << "getting compound CDD operator...\n";
 //  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 1, indices_, true ) );
 
 // PRINT
-//pout << "2a CDD operator elements:\n";
-//pout << *(opReps_[0]);
-//pout << "2b CDD operator elements:\n";
-//pout << *(opReps_[1]);
-//pout << "4  CDD operator elements:\n";
-//pout << *(opReps_[2]);
+//cout << "2a CDD operator elements:\n";
+//cout << *(opReps_[0]);
+//cout << "2b CDD operator elements:\n";
+//cout << *(opReps_[1]);
+//cout << "4  CDD operator elements:\n";
+//cout << *(opReps_[2]);
   return false;
 }
 
@@ -273,7 +273,7 @@ Npdm_op_wrapper_compound_CDC::Npdm_op_wrapper_compound_CDC( SpinBlock * spinBloc
 
 bool Npdm_op_wrapper_compound_CDC::set_local_ops( int idx )
 {
-pout << "getting compound CDC operator...\n";
+cout << "getting compound CDC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -283,12 +283,12 @@ pout << "getting compound CDC operator...\n";
   jx = twoOps.at(0)->get_orbs(1);
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
   kx = oneOp.at(0)->get_orbs(0);
-//pout << "singlet CD operator elements:\n";
-//pout << *(twoOps[0]);
-//pout << "triplet CD operator elements:\n";
-//pout << *(twoOps[1]);
-//pout << "half C operator elements:\n";
-//pout << *(oneOp[0]);
+//cout << "singlet CD operator elements:\n";
+//cout << *(twoOps[0]);
+//cout << "triplet CD operator elements:\n";
+//cout << *(twoOps[1]);
+//cout << "half C operator elements:\n";
+//cout << *(oneOp[0]);
 
   // Assumed single site (i=j=k)
   assert ( ix == jx );
@@ -296,7 +296,7 @@ pout << "getting compound CDC operator...\n";
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
-pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
 //----------
 // 1st way
@@ -361,8 +361,8 @@ pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 //  cdOp->set_deltaQuantum() = ( oneOp.at(0)->get_deltaQuantum() - oneOp.at(0)->get_deltaQuantum() ).at(0);
 //  cdOp->allocate( spinBlock_->get_stateInfo() );
 //  operatorfunctions::Product(spinBlock_, *oneOp.at(0), Transposeview(*oneOp.at(0)), *cdOp, 1.0 );
-//pout << "singlet CD operator elements (built by me):\n";
-//pout << *cdOp;
+//cout << "singlet CD operator elements (built by me):\n";
+//cout << *cdOp;
 //  // S=0 (+) S=1/2  =>  S=1/2
 //  boost::shared_ptr<SparseMatrix> cdcOp (new Cre);
 //  cdcOp->set_orbs() = indices_;
@@ -372,14 +372,14 @@ pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 //  cdcOp->allocate( spinBlock_->get_stateInfo() );
 //  operatorfunctions::Product(spinBlock_, *cdOp, *oneOp.at(0), *cdcOp, 1.0 );
 //  opReps_.push_back( cdcOp );
-////pout << *cdcOp;
+////cout << *cdcOp;
 //
 //  // CD s=1
 //  cdOp->set_deltaQuantum() = ( oneOp.at(0)->get_deltaQuantum() - oneOp.at(0)->get_deltaQuantum() ).at(1);
 //  cdOp->allocate( spinBlock_->get_stateInfo() );
 //  operatorfunctions::Product(spinBlock_, *oneOp.at(0), Transposeview(*oneOp.at(0)), *cdOp, 1.0 );
-//pout << "triplet CD operator elements (built by me):\n";
-//pout << *cdOp;
+//cout << "triplet CD operator elements (built by me):\n";
+//cout << *cdOp;
 //  // S=1 (+) S=1/2  =>  S=1/2
 //  boost::shared_ptr<SparseMatrix> cdcOp2 (new Cre);
 //  cdcOp2->set_orbs() = indices_;
@@ -400,17 +400,17 @@ pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 //  opReps_.push_back( cdcOp3 );
 
 // PRINT
-//pout << "CDC operator elements (built by me):\n";
-//pout << "2a CDC operator elements:\n";
-//pout << *(opReps_[0]);
-//pout << "2b CDC operator elements:\n";
-//pout << *(opReps_[1]);
-//pout << "4  CDC operator elements:\n";
-//pout << *(opReps_[2]);
+//cout << "CDC operator elements (built by me):\n";
+//cout << "2a CDC operator elements:\n";
+//cout << *(opReps_[0]);
+//cout << "2b CDC operator elements:\n";
+//cout << *(opReps_[1]);
+//cout << "4  CDC operator elements:\n";
+//cout << *(opReps_[2]);
 
   if ( jx == kx ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    pout << "WARNING: skipping this operator\n";
+    cout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -437,7 +437,7 @@ Npdm_op_wrapper_compound_CCC::Npdm_op_wrapper_compound_CCC( SpinBlock * spinBloc
 
 bool Npdm_op_wrapper_compound_CCC::set_local_ops( int idx )
 {
-pout << "getting compound CCC operator...\n";
+cout << "getting compound CCC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -487,7 +487,7 @@ Npdm_op_wrapper_compound_DCD::Npdm_op_wrapper_compound_DCD( SpinBlock * spinBloc
 
 bool Npdm_op_wrapper_compound_DCD::set_local_ops( int idx )
 {
-pout << "getting compound DCD operator...\n";
+cout << "getting compound DCD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -515,7 +515,7 @@ pout << "getting compound DCD operator...\n";
 
   if ( ix == jx ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    pout << "WARNING: skipping this operator\n";
+    cout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -542,15 +542,15 @@ Npdm_op_wrapper_CCC::Npdm_op_wrapper_CCC( SpinBlock * spinBlock )
 //Only init this if we know we want to use disk-based?  Test built_on_disk?
   // For disk-based storage
   std::string ifile = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
-  ifs.open(ifile.c_str(), ios::binary);
-  // Put ifs.close in destructor???
+  ifs_.open(ifile.c_str(), ios::binary);
+  // Put ifs_.close in destructor???
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 bool Npdm_op_wrapper_CCC::set_local_ops( int idx )
 {
-pout << "getting CCC operator...\n";
+cout << "getting CCC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -566,8 +566,8 @@ pout << "getting CCC operator...\n";
   opReps_.clear();
   // Read in full spin-set from disk
   for (int i = 0; i < opReps_tmp.size(); i++) {
-     pout << "MAW reading CCC spin-op from disk for NPDM... " << i << std::endl;
-     boost::archive::binary_iarchive load_op(ifs);
+     cout << "MAW reading CCC spin-op from disk for NPDM... " << i << std::endl;
+     boost::archive::binary_iarchive load_op(ifs_);
      boost::shared_ptr<SparseMatrix> op (new Cre);
      load_op >> *op;
      opReps_.push_back(op);
@@ -578,14 +578,14 @@ pout << "getting CCC operator...\n";
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
-//pout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
-//pout << "2a CCC operator elements:\n";
-//pout << *(opReps_[0]);
-//pout << "2b CCC operator elements:\n";
-//pout << *(opReps_[1]);
-//pout << "4  CCC operator elements:\n";
-//pout << *(opReps_[2]);
+cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//cout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
+//cout << "2a CCC operator elements:\n";
+//cout << *(opReps_[0]);
+//cout << "2b CCC operator elements:\n";
+//cout << *(opReps_[1]);
+//cout << "4  CCC operator elements:\n";
+//cout << *(opReps_[2]);
 //  assert( build_pattern_ == opReps_.at(0)->get_build_pattern() );
 
   indices_.push_back( ix );
@@ -614,7 +614,7 @@ Npdm_op_wrapper_CCD::Npdm_op_wrapper_CCD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CCD::set_local_ops( int idx )
 {
-pout << "getting CCD operator...\n";
+cout << "getting CCD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -624,14 +624,14 @@ pout << "getting CCD operator...\n";
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
-//pout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
-//pout << "2a CCD operator elements:\n";
-//pout << *(opReps_[0]);
-//pout << "2b CCD operator elements:\n";
-//pout << *(opReps_[1]);
-//pout << "4  CCD operator elements:\n";
-//pout << *(opReps_[2]);
+cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//cout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
+//cout << "2a CCD operator elements:\n";
+//cout << *(opReps_[0]);
+//cout << "2b CCD operator elements:\n";
+//cout << *(opReps_[1]);
+//cout << "4  CCD operator elements:\n";
+//cout << *(opReps_[2]);
 //  assert( build_pattern_ == opReps_.at(0)->get_build_pattern() );
 
   indices_.push_back( ix );
@@ -660,7 +660,7 @@ Npdm_op_wrapper_CDD::Npdm_op_wrapper_CDD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CDD::set_local_ops( int idx )
 {
-pout << "getting CDD operator...\n";
+cout << "getting CDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -674,21 +674,21 @@ pout << "getting CDD operator...\n";
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
-//pout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
-//pout << "2a CDD operator elements:\n";
-//pout << *(opReps_[0]);
-//pout << "2b CDD operator elements:\n";
-//pout << *(opReps_[1]);
-//pout << "4  CDD operator elements:\n";
-//pout << *(opReps_[2]);
+cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//cout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
+//cout << "2a CDD operator elements:\n";
+//cout << *(opReps_[0]);
+//cout << "2b CDD operator elements:\n";
+//cout << *(opReps_[1]);
+//cout << "4  CDD operator elements:\n";
+//cout << *(opReps_[2]);
 //  assert( build_pattern_ == opReps_.at(0)->get_build_pattern() );
 
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
 //if ( (ix == jx) && (jx == kx) ) return false;
-//pout << "WARNING: skipping this operator\n";
+//cout << "WARNING: skipping this operator\n";
 //return true;
   return false;
 
@@ -715,7 +715,7 @@ Npdm_op_wrapper_CDC::Npdm_op_wrapper_CDC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CDC::set_local_ops( int idx )
 {
-pout << "getting CDC operator...\n";
+cout << "getting CDC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -725,14 +725,14 @@ pout << "getting CDC operator...\n";
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
   if ( jx == kx ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    pout << "WARNING: skipping this operator\n";
+    cout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -757,7 +757,7 @@ Npdm_op_wrapper_DCD::Npdm_op_wrapper_DCD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_DCD::set_local_ops( int idx )
 {
-pout << "getting DCD operator...\n";
+cout << "getting DCD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -767,14 +767,14 @@ pout << "getting DCD operator...\n";
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
   if ( ix == jx ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    pout << "WARNING: skipping this operator\n";
+    cout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -799,7 +799,7 @@ Npdm_op_wrapper_DDC::Npdm_op_wrapper_DDC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
 {
-pout << "getting DDC operator...\n";
+cout << "getting DDC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -809,14 +809,14 @@ pout << "getting DDC operator...\n";
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
   if ( (jx == kx) || (ix == kx) ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    pout << "WARNING: skipping this operator\n";
+    cout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -842,7 +842,7 @@ Npdm_op_wrapper_DCC::Npdm_op_wrapper_DCC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
 {
-pout << "getting DCC operator...\n";
+cout << "getting DCC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -856,7 +856,7 @@ pout << "getting DCC operator...\n";
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   // Note use of transpose means we store this as (k,j,i) not (i,j,k)
   indices_.push_back( kx );
@@ -864,7 +864,7 @@ pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
   indices_.push_back( ix );
   if ( (jx == kx) || (ix == kx) ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    pout << "WARNING: skipping this operator\n";
+    cout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -890,7 +890,7 @@ Npdm_op_wrapper_DDD::Npdm_op_wrapper_DDD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_DDD::set_local_ops( int idx )
 {
-pout << "getting DDD operator...\n";
+cout << "getting DDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -904,7 +904,7 @@ pout << "getting DDD operator...\n";
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   // Note use of transpose means we store this as (k,j,i) not (i,j,k)
   indices_.push_back( kx );
@@ -934,7 +934,7 @@ Npdm_op_wrapper_CC::Npdm_op_wrapper_CC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CC::set_local_ops( int idx )
 {
-pout << "getting CC operator...\n";
+cout << "getting CC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx;
@@ -942,11 +942,11 @@ pout << "getting CC operator...\n";
   opReps_ = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
-pout << "indices  " << ix << " " << jx << std::endl;
-//pout << "singlet CC operator elements:\n";
-//pout << *(opReps_[0]);
-//pout << "triplet CC operator elements:\n";
-//pout << *(opReps_[1]);
+cout << "indices  " << ix << " " << jx << std::endl;
+//cout << "singlet CC operator elements:\n";
+//cout << *(opReps_[0]);
+//cout << "triplet CC operator elements:\n";
+//cout << *(opReps_[1]);
 
   indices_.push_back( ix );
   indices_.push_back( jx );
@@ -971,7 +971,7 @@ Npdm_op_wrapper_CD::Npdm_op_wrapper_CD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CD::set_local_ops( int idx )
 {
-pout << "getting CD operator...\n";
+cout << "getting CD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx;
@@ -979,11 +979,11 @@ pout << "getting CD operator...\n";
   opReps_ = spinBlock_->get_op_array(CRE_DES).get_local_element(idx);
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
-pout << "indices  " << ix << " " << jx << std::endl;
-//pout << "singlet CD operator elements:\n";
-//pout << *(opReps_[0]);
-//pout << "triplet CD operator elements:\n";
-//pout << *(opReps_[1]);
+cout << "indices  " << ix << " " << jx << std::endl;
+//cout << "singlet CD operator elements:\n";
+//cout << *(opReps_[0]);
+//cout << "triplet CD operator elements:\n";
+//cout << *(opReps_[1]);
 
   transpose_ = false;
   indices_.push_back( ix );
@@ -1011,7 +1011,7 @@ Npdm_op_wrapper_DC::Npdm_op_wrapper_DC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_DC::set_local_ops( int idx )
 {
-pout << "getting DC operator...\n";
+cout << "getting DC operator...\n";
 
   // Spatial orbital indices
   indices_.clear();
@@ -1020,17 +1020,17 @@ pout << "getting DC operator...\n";
   opReps_ = spinBlock_->get_op_array(DES_CRE).get_local_element(idx);
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
-//pout << "singlet DC operator elements:\n";
-//pout << *(opReps_[0]);
-//pout << "triplet DC operator elements:\n";
-//pout << *(opReps_[1]);
+//cout << "singlet DC operator elements:\n";
+//cout << *(opReps_[0]);
+//cout << "triplet DC operator elements:\n";
+//cout << *(opReps_[1]);
 
   indices_.push_back( ix );
   indices_.push_back( jx );
-pout << "indices  " << ix << " " << jx << std::endl;
+cout << "indices  " << ix << " " << jx << std::endl;
 if ( ix == jx ) {
   //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-  pout << "WARNING: skipping this operator\n";
+  cout << "WARNING: skipping this operator\n";
   return true;
 }
   return false;
@@ -1075,7 +1075,7 @@ if ( ix == jx ) {
 ////
 ////if ( i == j ) {
 ////  //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-////  pout << "WARNING: skipping this operator\n";
+////  cout << "WARNING: skipping this operator\n";
 ////  return true;
 ////}
 ////  return false;
@@ -1102,7 +1102,7 @@ Npdm_op_wrapper_DD::Npdm_op_wrapper_DD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_DD::set_local_ops( int idx )
 {
-pout << "getting DD operator...\n";
+cout << "getting DD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx;
@@ -1114,7 +1114,7 @@ pout << "getting DD operator...\n";
   // Note use of transpose means we store this as (j,i) not (i,j)
   indices_.push_back( jx );
   indices_.push_back( ix );
-pout << "indices  " << ix << " " << jx << std::endl;
+cout << "indices  " << ix << " " << jx << std::endl;
   return false;
 }
 
@@ -1139,7 +1139,7 @@ Npdm_op_wrapper_C::Npdm_op_wrapper_C( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_C::set_local_ops( int idx )
 {
-pout << "getting C operator...\n";
+cout << "getting C operator...\n";
   indices_.clear();
   opReps_ = spinBlock_->get_op_array(CRE).get_local_element(idx);
   int ix = opReps_.at(0)->get_orbs(0);
@@ -1166,14 +1166,14 @@ Npdm_op_wrapper_D::Npdm_op_wrapper_D( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_D::set_local_ops( int idx )
 {
-pout << "getting D operator...\n";
+cout << "getting D operator...\n";
   indices_.clear();
   opReps_ = spinBlock_->get_op_array(CRE).get_local_element(idx);
   int ix = opReps_.at(0)->get_orbs(0);
   indices_.push_back(ix);
-pout << "indices  " << ix << std::endl;
-//pout << "D operator elements:\n";
-//pout << *(opReps_[0]);
+cout << "indices  " << ix << std::endl;
+//cout << "D operator elements:\n";
+//cout << *(opReps_[0]);
   return false;
 }
 
@@ -1219,10 +1219,10 @@ boost::shared_ptr<SparseMatrix> NpdmSpinOps::build_compound_operator( bool is_fe
   newOp->set_fermion() = is_fermion;
   if (sign == 1) newOp->set_deltaQuantum() = ( lhsOp->get_deltaQuantum() + rhsOp->get_deltaQuantum() ).at(ispin);
   else newOp->set_deltaQuantum() = ( lhsOp->get_deltaQuantum() - rhsOp->get_deltaQuantum() ).at(ispin);
-//pout << "Building compound operator.......................................................\n";
-//pout << "2*lhs spin = " << lhsOp->get_deltaQuantum().get_s() << std::endl;
-//pout << "2*rhs spin = " << rhsOp->get_deltaQuantum().get_s() << std::endl;
-//pout << "2*total spin = " << newOp->get_deltaQuantum().get_s() << std::endl;
+//cout << "Building compound operator.......................................................\n";
+//cout << "2*lhs spin = " << lhsOp->get_deltaQuantum().get_s() << std::endl;
+//cout << "2*rhs spin = " << rhsOp->get_deltaQuantum().get_s() << std::endl;
+//cout << "2*total spin = " << newOp->get_deltaQuantum().get_s() << std::endl;
   newOp->allocate( spinBlock_->get_stateInfo() );
 
   if (transpose) {
@@ -1233,8 +1233,8 @@ boost::shared_ptr<SparseMatrix> NpdmSpinOps::build_compound_operator( bool is_fe
     // Build compound operator as product of LHS and RHS
     operatorfunctions::Product(spinBlock_, *lhsOp, *rhsOp, *newOp, 1.0 );
   }
-//pout << *newOp;
-//pout << "Done Building compound operator.......................................................\n";
+//cout << *newOp;
+//cout << "Done Building compound operator.......................................................\n";
 
   return newOp;
 }

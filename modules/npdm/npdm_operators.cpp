@@ -1206,7 +1206,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesCre::getworkingr
 
 void SpinAdapted::CreCreCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs)
 {
-cout << "building CreCreCre renormalized operator on disk...\n";
+//cout << "building CreCreCre renormalized operator on disk...\n";
 //FIXME timer
 //  dmrginp.makeopsT -> start();
   built = true;
@@ -1273,7 +1273,7 @@ cout << "maw dot(i,j,k)\n";
 
 void SpinAdapted::CreCreCre::build(const SpinBlock& b)
 {
-cout << "building CreCreCre renormalized operator...\n";
+//cout << "building CreCreCre renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -1282,14 +1282,14 @@ cout << "building CreCreCre renormalized operator...\n";
   const int i = get_orbs()[0];
   const int j = get_orbs()[1];
   const int k = get_orbs()[2];
-cout << "i,j,k = " << i << " " << j << " " << k << endl;
+//cout << "i,j,k = " << i << " " << j << " " << k << endl;
 
   SpinBlock* sysBlock = b.get_leftBlock();
   SpinBlock* dotBlock = b.get_rightBlock();
 
   // Sys has i,j,k
   if (sysBlock->get_op_array(CRE_CRE_CRE).has_local_index(i,j,k)) {
-cout << "maw sys(i,j,k)\n";
+//cout << "maw sys(i,j,k)\n";
     std::string build_pattern_old = sysBlock->get_op_array(CRE_CRE_CRE).get_element(i,j,k).at(0)->get_build_pattern();
     assert( build_pattern_old == sysBlock->get_op_array(CRE_CRE_CRE).get_element(i,j,k).at(1)->get_build_pattern() );
     assert( build_pattern_old == sysBlock->get_op_array(CRE_CRE_CRE).get_element(i,j,k).at(2)->get_build_pattern() );
@@ -1317,7 +1317,7 @@ cout << "maw dot(i,j,k)\n";
   }
   // Dot has j,k;
   else if (dotBlock->get_op_array(CRE_CRE).has_local_index(j,k)) {
-cout << "maw dot(j,k)\n";
+//cout << "maw dot(j,k)\n";
     assert( j == k );
     assert( sysBlock->get_op_array(CRE).has_local_index(i) );
     build_pattern = "(C(CC))";
@@ -1328,7 +1328,7 @@ cout << "maw dot(j,k)\n";
   }
   // Sys has i,j
   else if (sysBlock->get_op_array(CRE_CRE).has_local_index(i,j)) {
-cout << "maw dot(k)\n";
+//cout << "maw dot(k)\n";
     assert( dotBlock->get_op_array(CRE).has_local_index(k) );
     build_pattern = "((CC)C)";
     const boost::shared_ptr<SparseMatrix>& opCC = sysBlock->get_op_rep(CRE_CRE, quantum_ladder.at(build_pattern).at(0), i,j);
@@ -1338,7 +1338,7 @@ cout << "maw dot(k)\n";
   }
   // Sys has j,k;
   else if (sysBlock->get_op_array(CRE_CRE).has_local_index(j,k)) {
-cout << "maw sys(j,k)\n";
+//cout << "maw sys(j,k)\n";
     assert( dotBlock->get_op_array(CRE).has_local_index(i) );
     build_pattern = "(C(CC))";
     const boost::shared_ptr<SparseMatrix>& opC  = dotBlock->get_op_rep(CRE, getSpinQuantum(i), i);
@@ -1348,11 +1348,11 @@ cout << "maw sys(j,k)\n";
 //FIXME parity broken ??
     double parity = getCommuteParity( opC->get_deltaQuantum(), opCC->get_deltaQuantum(), get_deltaQuantum() );
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *opC, *opCC, &b, &(b.get_stateInfo()), *this, 1.0*parity);
-cout << "done sys(j,k)\n";
+//cout << "done sys(j,k)\n";
   }
   // Dot has i,j
   else if (dotBlock->get_op_array(CRE_CRE).has_local_index(i,j)) {
-cout << "maw dot(i,j)\n";
+//cout << "maw dot(i,j)\n";
     assert( i == j );
     assert( sysBlock->get_op_array(CRE).has_local_index(k) );
     build_pattern = "((CC)C)";
@@ -1377,14 +1377,14 @@ cout << "maw dot(i,j)\n";
 
 double SpinAdapted::CreCreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
-cout << "building CreCreCre explicitly from CSF..\n";
-cout << "mpirank = " << mpigetrank() << endl;
+//cout << "building CreCreCre explicitly from CSF..\n";
+//cout << "mpirank = " << mpigetrank() << endl;
   assert( build_pattern == "((CC)C)" );
   double element = 0.0;
   int I = get_orbs()[0]; 
   int J = get_orbs()[1];
   int K = get_orbs()[2];
-cout << "i,j,k = " << I << " " << J << " " << K << endl;
+//cout << "i,j,k = " << I << " " << J << " " << K << endl;
 
   // Must take into account how the 3-index is built from a combination of 2-index and 1-index
   std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("((CC)C)");

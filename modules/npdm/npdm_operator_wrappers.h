@@ -1,8 +1,8 @@
-/*                                                                           
-Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
-Copyright (c) 2012, Garnet K.-L. Chan                                        
-                                                                             
-This program is integrated in Molpro with the permission of 
+/*
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012
+Copyright (c) 2012, Garnet K.-L. Chan
+
+This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
@@ -11,8 +11,14 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include "operatorfunctions.h"
 #include "npdm_patterns.h"
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/export.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/string.hpp>
 
 namespace SpinAdapted{
+
 
 //===========================================================================================================================================================
 //  BASE CLASS
@@ -20,12 +26,35 @@ namespace SpinAdapted{
 //FIXME constructors / destructors
 class NpdmSpinOps {
 
+  private:
+  friend class boost::serialization::access;
+  template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+cout << "serializing class NpdmSpinOps base\n";
+      // Note we don't archive ifs_ or spinBlock_
+      boost::serialization::void_cast_register<Cre, SparseMatrix>();
+      ar & factor_ \
+         & transpose_;
+//      ar & mults_ \
+//         & build_pattern_ \
+//         & transpose_ \
+//         & factor_ \
+//         & build_pattern_ \
+//         & size_;
+//      ar.register_type(static_cast<Cre *>(NULL));
+//      ar & opReps_;
+    }
+//         & ifs_ \
+//         & spinBlock_ \
+
   public:
+
 //FIXME filename for disk-based storage
     int size() { return size_; }
     virtual bool set_local_ops( int idx ) { assert(false); }
     // Input file stream for disk-based operators used to build NPDM
-    std::ifstream ifs;
+    std::ifstream ifs_;
 
     // Numerical representation of the operators for several total spins (e.g. 2-index op has two forms with spin-1/2 particles)
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_;
@@ -39,6 +68,8 @@ class NpdmSpinOps {
     double factor_;
     // Effective spatial orbital indices (since due to use of transposition / commutation may not match OpRep.get_orbs() etc)
     std::vector<int> indices_;
+    // Number of spatial orbital combinations
+    int size_;
 
   protected:
     boost::shared_ptr<SparseMatrix> build_compound_operator( bool is_fermion, int sign,
@@ -47,8 +78,6 @@ class NpdmSpinOps {
                                                              int ispin, std::vector<int> indices, bool transpose );
 
     SpinBlock* spinBlock_;
-    // Number of spatial orbital combinations
-    int size_;
 };
 
 //===========================================================================================================================================================
@@ -56,7 +85,18 @@ class NpdmSpinOps {
 //===========================================================================================================================================================
 
 class Npdm_op_wrapper_compound_CCDD : public NpdmSpinOps {
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+cout << "serializing class Npdm_op_wrapper_compound_CCDD\n";
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+//        ar.register_type<Npdm_op_wrapper_compound_CCDD>();
+    }
   public:
+//FIXME constructors / destructors??
     Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -66,7 +106,17 @@ class Npdm_op_wrapper_compound_CCDD : public NpdmSpinOps {
 //===========================================================================================================================================================
 
 class Npdm_op_wrapper_CCDD : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+cout << "serializing class Npdm_op_wrapper_CCDD\n";
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+//        ar.register_type<Npdm_op_wrapper_CCDD>();
+    }
+  public:
     Npdm_op_wrapper_CCDD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -76,7 +126,15 @@ class Npdm_op_wrapper_CCDD : public NpdmSpinOps {
 //===========================================================================================================================================================
 
 class Npdm_op_wrapper_compound_CCD : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_compound_CCD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -84,7 +142,15 @@ class Npdm_op_wrapper_compound_CCD : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_compound_CDD : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_compound_CDD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -92,7 +158,15 @@ class Npdm_op_wrapper_compound_CDD : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_compound_CDC : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_compound_CDC( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -100,7 +174,15 @@ class Npdm_op_wrapper_compound_CDC : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_compound_CCC : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_compound_CCC( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -108,7 +190,15 @@ class Npdm_op_wrapper_compound_CCC : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_compound_DCD : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_compound_DCD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -118,7 +208,15 @@ class Npdm_op_wrapper_compound_DCD : public NpdmSpinOps {
 //===========================================================================================================================================================
 
 class Npdm_op_wrapper_CCC : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_CCC( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -126,7 +224,15 @@ class Npdm_op_wrapper_CCC : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_CCD : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_CCD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -134,7 +240,15 @@ class Npdm_op_wrapper_CCD : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_CDD : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_CDD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -142,7 +256,15 @@ class Npdm_op_wrapper_CDD : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_CDC : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_CDC( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -150,7 +272,15 @@ class Npdm_op_wrapper_CDC : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_DCD : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_DCD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -158,7 +288,15 @@ class Npdm_op_wrapper_DCD : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_DDC : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_DDC( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -166,7 +304,15 @@ class Npdm_op_wrapper_DDC : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_DCC : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_DCC( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -174,7 +320,15 @@ class Npdm_op_wrapper_DCC : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_DDD : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_DDD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -184,7 +338,15 @@ class Npdm_op_wrapper_DDD : public NpdmSpinOps {
 //===========================================================================================================================================================
 
 class Npdm_op_wrapper_CC : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_CC( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -192,7 +354,15 @@ class Npdm_op_wrapper_CC : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_CD : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_CD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -200,7 +370,15 @@ class Npdm_op_wrapper_CD : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_DC : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_DC( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -208,7 +386,15 @@ class Npdm_op_wrapper_DC : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_DD : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_DD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -218,7 +404,15 @@ class Npdm_op_wrapper_DD : public NpdmSpinOps {
 //===========================================================================================================================================================
 
 class Npdm_op_wrapper_C : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_C( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -226,7 +420,15 @@ class Npdm_op_wrapper_C : public NpdmSpinOps {
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class Npdm_op_wrapper_D : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_D( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 };
@@ -236,14 +438,47 @@ class Npdm_op_wrapper_D : public NpdmSpinOps {
 //===========================================================================================================================================================
 
 class Npdm_op_wrapper_NULL : public NpdmSpinOps {
-  public: 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        // serialize base class information
+        ar & boost::serialization::base_object<NpdmSpinOps>(*this);
+    }
+  public:
     Npdm_op_wrapper_NULL();
     bool set_local_ops( int idx );
 };
 
 //===========================================================================================================================================================
 
+//BOOST_CLASS_EXPORT( NpdmSpinOps );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_compound_CCDD );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_CCDD );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_compound_CCD );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_compound_CDD );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_compound_CDC );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_compound_CCC );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_compound_DCD );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_CCC );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_CCD );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_CDD );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_CDC );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_DCD );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_DDC );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_DCC );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_DDD );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_CC );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_CD );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_DC );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_DD );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_C );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_D );
+//BOOST_CLASS_EXPORT( Npdm_op_wrapper_NULL );
+//
+
 }
 
 #endif
- 
+

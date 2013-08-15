@@ -7,11 +7,21 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include <boost/format.hpp>
-#ifndef SERIAL
+//FIXME#ifndef SERIAL
 #include <boost/mpi/environment.hpp>
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi.hpp>
-#endif
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/string.hpp>
+#include <boost/serialization/export.hpp>
+//#include <boost/serialization/utility.hpp> // for std::pair
+//DEBUG >>>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+//DEBUG <<<
+//FIXME#endif
 #include "execinfo.h"
 
 #include "threepdm.h"
@@ -193,11 +203,11 @@ void assign_threepdm_antisymmetric(array_6d<double>& threepdm,
                                    const int i, const int j, const int k, const int l, const int m, const int n, 
                                    const double val)
 {
-//if ( abs(val) > 1e-8 ) {
-//  pout << "so-threepdm val: i,j,k,l,m,n = " 
-//       << i << "," << j << "," << k << "," << l << "," << m << "," << n
-//       << "\t\t" << val << endl;
-//}
+if ( abs(val) > 1e-8 ) {
+  cout << "so-threepdm val: i,j,k,l,m,n = " 
+       << i << "," << j << "," << k << "," << l << "," << m << "," << n
+       << "\t\t" << val << endl;
+}
 
   // Test for duplicates
   if ( threepdm(i,j,k,l,m,n) != 0.0 && abs(threepdm(i,j,k,l,m,n)-val) > 1e-6) {
@@ -207,7 +217,7 @@ void assign_threepdm_antisymmetric(array_6d<double>& threepdm,
     cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<endl;
     //backtrace_symbols_fd(array, size, 2);
     cout << "earlier value: " << threepdm(i,j,k,l,m,n) << endl << "new value:     " <<val<<endl;
-    assert( false );
+//    assert( false );
     return;
   }
 
@@ -216,10 +226,10 @@ void assign_threepdm_antisymmetric(array_6d<double>& threepdm,
   // If indices are not all unique, then all elements should be zero (and next_even_permutation fails)
   std::vector<int> v = {i,j,k};
   std::sort( v.begin(), v.end() );
-  if ( (v[0]==v[1]) || (v[1]==v[2]) ) { if (abs(val) > 1e-15) assert(false); return; }
+//  if ( (v[0]==v[1]) || (v[1]==v[2]) ) { if (abs(val) > 1e-15) std::cout << abs(val) << std::endl; assert(false); return; }
   std::vector<int> w = {l,m,n};
   std::sort( w.begin(), w.end() );
-  if ( (w[0]==w[1]) || (w[1]==w[2]) ) { if (abs(val) > 1e-15) assert(false); return; }
+//  if ( (w[0]==w[1]) || (w[1]==w[2]) ) { if (abs(val) > 1e-15) std::cout << abs(val) << std::endl; assert(false); return; }
 
 
   // The number of possible combinations is (3!)**2  (For 4pdm and higher we use a general implementation)
@@ -332,6 +342,108 @@ void do_threepdm_inner_loop( array_6d<double> & threepdm,
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+std::vector< std::pair<bool, boost::shared_ptr<NpdmSpinOps>> > get_all_mpi_ops( const bool local_skip, boost::shared_ptr<NpdmSpinOps>& local_ops, 
+                                                                                std::vector< boost::mpi::request > & reqs )
+{
+  boost::mpi::communicator world;
+  std::vector< std::pair<bool, boost::shared_ptr<NpdmSpinOps>> > all_ops;
+  reqs.clear();
+
+  // First element is local set of spin operators
+  std::pair<bool, boost::shared_ptr<NpdmSpinOps>> local_pair = std::make_pair( local_skip, local_ops );
+  all_ops.push_back( local_pair );
+//FIXME only distribute ops that are non-local
+//if ( local_ops->indices_.size() > 3 ) assert(false);
+//if ( local_ops->indices_.size() < 2 ) assert(false);
+return all_ops;
+//----------------------------------------------
+
+  boost::shared_ptr<NpdmSpinOps> nonlocal_ops (new NpdmSpinOps);
+//FIXME what kind of copy/assignment is this???
+///  nonlocal_ops = local_ops;
+  nonlocal_ops->size_ = local_ops->size_;
+  nonlocal_ops->mults_ = local_ops->mults_;
+  nonlocal_ops->build_pattern_ = local_ops->build_pattern_;
+  nonlocal_ops->transpose_ = local_ops->transpose_;
+  nonlocal_ops->factor_ = local_ops->factor_;
+
+//  assert( nonlocal_ops->indices_ == local_ops->indices_ );
+//  assert( nonlocal_ops->opReps_.size() > 0 );
+// Seems to be a shallow copy!
+//  nonlocal_ops->opReps_.clear();
+//  assert( local_ops->opReps_.size() > 0 );
+//  nonlocal_ops->indices_.clear();
+//  assert( local_ops->indices_.size() > 0 );
+
+
+//    boost::shared_ptr<SparseMatrix> op (new Cre);
+////    ia2 >> *(lhsOps->opReps_.at(0));
+//    ia2 >> *op;
+//    assert( op_new->opReps_.size() == 0 );
+//    op_new->opReps_.push_back(op) ;
+
+  nonlocal_ops->opReps_.clear();
+  for ( int i = 0; i < local_ops->opReps_.size(); ++i) {
+    boost::shared_ptr<SparseMatrix> op (new Cre);
+    nonlocal_ops->opReps_.push_back(op);
+  }
+
+  // Now send operators to other MPI ranks in non-blocking fashion
+  bool nonlocal_skip;
+//  for (int i=0; i < world.size(); ++i) {
+//cout << "MAW mpi ops " << i << " communicate rank=" << mpigetrank() << std::endl;
+
+  if ( mpigetrank() == 0) {
+    // Send
+    world.send(1, 0, local_skip);
+    world.send(1, 1, local_ops->indices_);
+    for ( int i = 0; i < local_ops->opReps_.size(); ++i)
+      world.send(1, i+2, *(local_ops->opReps_.at(i)) );
+//    reqs.push_back( world.isend(1, 0, local_skip) );
+//    reqs.push_back( world.isend(1, 1, local_ops->indices_) );
+//    reqs.push_back( world.isend(1, 2, local_ops->opReps_) );
+    // Recv
+    world.recv(1, 30, nonlocal_skip);
+    world.recv(1, 40, nonlocal_ops->indices_);
+    for ( int i = 0; i < local_ops->opReps_.size(); ++i)
+      world.recv(1, i+50, *(nonlocal_ops->opReps_.at(i)) );
+//    reqs.push_back( world.irecv(1, 3, nonlocal_skip) );
+//    reqs.push_back( world.irecv(1, 4, nonlocal_ops->indices_) );
+//    reqs.push_back( world.irecv(1, 5, nonlocal_ops->opReps_) );
+  }
+  else if ( mpigetrank() == 1) {
+    // Send
+    world.send(0, 30, local_skip);
+    world.send(0, 40, local_ops->indices_);
+    for ( int i = 0; i < local_ops->opReps_.size(); ++i)
+      world.send(0, i+50, *(local_ops->opReps_.at(i)) );
+//    reqs.push_back( world.isend(0, 3, local_skip) );
+//    reqs.push_back( world.isend(0, 4, local_ops->indices_) );
+//    reqs.push_back( world.isend(0, 5, local_ops->opReps_) );
+    // Recv
+    world.recv(0, 0, nonlocal_skip);
+    world.recv(0, 1, nonlocal_ops->indices_);
+    for ( int i = 0; i < local_ops->opReps_.size(); ++i)
+      world.recv(0, i+2, *(nonlocal_ops->opReps_.at(i)) );
+//    reqs.push_back( world.irecv(0, 0, nonlocal_skip) );
+//    reqs.push_back( world.irecv(0, 1, nonlocal_ops->indices_) );
+//    reqs.push_back( world.irecv(0, 2, nonlocal_ops->opReps_) );
+  }
+  else
+    assert(false);
+
+cout << local_ops->build_pattern_ << "; local skip = " << local_skip << std::endl;
+cout << nonlocal_ops->build_pattern_ << "; nonlocal skip = " << nonlocal_skip << std::endl;
+  std::pair<bool, boost::shared_ptr<NpdmSpinOps>> nonlocal_pair = std::make_pair( nonlocal_skip, nonlocal_ops );
+  all_ops.push_back( nonlocal_pair );
+
+
+
+  return all_ops;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void threepdm_loop_over_block_operators( Wavefunction & wavefunction, 
                                          const SpinBlock & big, 
                                          std::vector<Npdm::CD> & lhs_cd_type,
@@ -352,11 +464,11 @@ void threepdm_loop_over_block_operators( Wavefunction & wavefunction,
   boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );
 
   Npdm::Npdm_expectations npdm_expectations( wavefunction, big, *lhsOps, *dotOps, *rhsOps );
-//pout << "-------------------------------------------------------------------------------------------\n";
-//pout << "lhsOps->size()" << lhsOps->size() << std::endl;
-//pout << "dotOps->size()" << dotOps->size() << std::endl;
-//pout << "rhsOps->size()" << rhsOps->size() << std::endl;
-//pout << "------\n";
+//cout << "-------------------------------------------------------------------------------------------\n";
+cout << "lhsOps->size() = " << lhsOps->size() << "; rank = " << mpigetrank() <<  std::endl;
+//cout << "dotOps->size()" << dotOps->size() << std::endl;
+//cout << "rhsOps->size()" << rhsOps->size() << std::endl;
+//cout << "------\n";
 
   // Only one spatial combination on the dot block
   assert( dotOps->size() == 1 );
@@ -365,22 +477,115 @@ void threepdm_loop_over_block_operators( Wavefunction & wavefunction,
   if ( lhsOps->opReps_.size() > 0 ) assert( dotOps->mults_.size() == dotOps->opReps_.size() );
 
   // Many spatial combinations on left block
+  assert( lhsOps->size() > 0 );
   for ( int ilhs = 0; ilhs < lhsOps->size(); ++ilhs ) {
     skip = lhsOps->set_local_ops( ilhs );
-    if (skip) continue;
+//    if (skip) continue;
 
 //    std::vector< boost::shared_ptr<NpdmSpinOps> > all_lhsOps;
 //    boost::mpi::all_gather( world, lhsOps, all_lhsOps );
 //    assert( all_lhsOps.size() == world.size() );
 
 
+//cout << "DEBUG doing!\n";
+//DEBUG >>>>>>>>>>>>>>>>>>>>>>
+//BROKEN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//////    // save data to archive
+//////        std::ofstream ofs("crap.tmp");
+//////        boost::archive::text_oarchive oa(ofs);
+//////
+//////        oa.register_type<Npdm_op_wrapper_compound_CCDD>();
+//////
+//////
+//////        // write class instance to archive
+//////cout << "MAW about to serialize\n";
+//////        oa << lhsOps;
+//////        ofs.close();
+//////
+//////cout << "MAW about to read back\n";
+//////    // ... some time later restore the class instance to its orginal state
+////////    boost::shared_ptr<NpdmSpinOps> op_new (new Npdm_op_wrapper_compound_CCDD(lhsBlock));
+////////    boost::shared_ptr<NpdmSpinOps> op_new;
+//////      Npdm_op_wrapper_compound_CCDD op_new(lhsBlock);
+//////cout << "MAW 1\n";
+//////        // create and open an archive for input
+//////        std::ifstream ifs("crap.tmp");
+//////cout << "MAW 2\n";
+//////        boost::archive::text_iarchive ia(ifs);
+//////cout << "MAW 3\n";
+//////        // read class state from archive
+//////        ia >> op_new;
+//////cout << "op_new.factor_ , lhsOps->factor_  = " << op_new.factor_ << "," << lhsOps->factor_ << std::endl;
+//////assert(op_new.factor_ == lhsOps->factor_);
+//////assert(op_new.transpose_ == lhsOps->transpose_);
+//////        // archive and stream closed when destructors are called
+//////        
+///--------------------------------------------------------------------------------------
 
-    do_threepdm_inner_loop( threepdm, lhsOps, rhsOps, dotOps, npdm_expectations );
+////  ONLY NEED TO COMMUNICATE SKIP, INDICES_ AND OPREPS_, EVERYTHING ELSE SHOULD BE THE SAME!
+//        boost::shared_ptr<NpdmSpinOps> op_new (new Npdm_op_wrapper_compound_CCDD(lhsBlock));
+//    // save data to archive
+//        std::ofstream ofs("crap.tmp");
+//        boost::archive::text_oarchive oa(ofs);
+//        oa << lhsOps->indices_;
+//        ofs.close();
+//        // communciate
+//        std::ifstream ifs("crap.tmp");
+//        boost::archive::text_iarchive ia(ifs);
+//        ia >> op_new->indices_;
+//      assert( op_new->indices_.size() == lhsOps->indices_.size() );
+//      cout << "op_new->indices_[0] , lhsOps->indices_[0]  = " << op_new->indices_[0] << "," << lhsOps->indices_[0] << std::endl;
+//      assert(op_new->indices_ == lhsOps->indices_);
+//
+///// OPREPS
+//        assert ( lhsOps->opReps_.size() > 0 );
+//        // create and open an archive for opreps
+//        std::ofstream ofs2("crap2.tmp");
+//        boost::archive::text_oarchive oa2(ofs2);
+//   cout << "about to write opReps! size = " << lhsOps->opReps_.size() << std::endl;
+//        oa2 << *(lhsOps->opReps_.at(0));
+//        ofs2.close();
+//   cout << "done writing opReps!\n";
+//        // communciate
+//        std::ifstream ifs2("crap2.tmp");
+//        boost::archive::text_iarchive ia2(ifs2);
+//   cout << "about to read opReps!  size = " << op_new->opReps_.size() << std::endl;
+//    boost::shared_ptr<SparseMatrix> op (new Cre);
+////    ia2 >> *(lhsOps->opReps_.at(0));
+//    ia2 >> *op;
+//    assert( op_new->opReps_.size() == 0 );
+//    op_new->opReps_.push_back(op) ;
+//    cout << "lhsOps:\n";
+//    cout << *lhsOps->opReps_.at(0) << std::endl;
+//    cout << "new_op:\n";
+//    cout << *op_new->opReps_.at(0) << std::endl;
+//
+//
+//cout << "DEBUG tested!\n";
+////assert(false);
+//DEBUG <<<<<<<<<<<<<<<<<<<<<<
 
+
+    std::vector< boost::mpi::request > reqs;
+    std::vector< std::pair<bool, boost::shared_ptr<NpdmSpinOps>> > all_lhsOps = get_all_mpi_ops( skip, lhsOps, reqs ); 
+
+    for ( auto lhs_mpi_op = all_lhsOps.begin(); lhs_mpi_op != all_lhsOps.end(); ++lhs_mpi_op ) {
+      // First element is local lhsOps so no need to wait
+      if ( ! lhs_mpi_op->first ) {
+        do_threepdm_inner_loop( threepdm, lhs_mpi_op->second, rhsOps, dotOps, npdm_expectations );
+      }
+      // Check all MPI communication of lhsOps is finished (or part of it?) and wait if necessary
+//std::cout << "Waiting for MPI comm to finish... " << mpigetrank() << std::endl;
+//      boost::mpi::wait_all(reqs.begin(), reqs.end());
+//std::cout << "MPI comm done!  " << mpigetrank() << std::endl;
+//      reqs.clear();
+    }
+
+  // Synchronize all MPI ranks here ??
   }
 
   // Close file if needed (put in wrapper destructor??)
-  if ( lhsOps->ifs.is_open() ) lhsOps->ifs.close();
+  if ( lhsOps->ifs_.is_open() ) lhsOps->ifs_.close();
 
 }
 
@@ -391,6 +596,7 @@ void compute_threepdm_sweep(std::vector<Wavefunction> & wavefunctions, const Spi
 
   pout << "===========================================================================================\n";
   pout << "3PDM sweep position = "<< sweepPos << " (" << endPos << ")\n";
+assert(false);
 
   // 3pdm array built so far
   int dim = 2*big.size();
@@ -412,8 +618,15 @@ void compute_threepdm_sweep(std::vector<Wavefunction> & wavefunctions, const Spi
     std::vector<Npdm::CD> lhs_cd_type = pattern->at('l');
     std::vector<Npdm::CD> dot_cd_type = pattern->at('d');
     std::vector<Npdm::CD> rhs_cd_type = pattern->at('r');
+
 //FIXME
-//std::vector<Npdm::CD> foo = {Npdm::DESTRUCTION,Npdm::CREATION,Npdm::DESTRUCTION};
+//if ( lhs_cd_type.size() > 3 ) continue;
+//if ( lhs_cd_type.size() < 2 ) continue;
+//FIXME
+//std::vector<Npdm::CD> lhs = {Npdm::CREATION,Npdm::DESTRUCTION,Npdm::CREATION};
+//if ( (lhs_cd_type != lhs) ) continue;
+//std::vector<Npdm::CD> rhs = {Npdm::CREATION,Npdm::DESTRUCTION,Npdm::DESTRUCTION};
+//if ( (rhs_cd_type != rhs) ) continue;
 //if ( (lhs_cd_type == foo) || (rhs_cd_type == foo) || (dot_cd_type == foo) ) continue;
 //if ( lhs_cd_type.size() == 2  &&
 //     dot_cd_type.size() == 2  &&

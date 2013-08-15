@@ -232,14 +232,14 @@ void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matri
   //FIXME
   // Edge case: ()((CxCx)... (Arises when LHS and Dot blocks are empty)
   if ( not success ) {
-    pout << "WARNING: something wasn't quite perfect in parsing the operator string!\n";
+    cout << "WARNING: something wasn't quite perfect in parsing the operator string!\n";
     s.erase( s.begin() );   
     s.erase( s.begin() );   
     success = parse(iter, end, eg, result) ;		 
   }
   assert(success);
-  pout << "Setting up linear equations for spin-adaptation transformation...\n";
-  pout << "Number of compounded tensor operators = " << result.size() << std::endl;
+  cout << "Setting up linear equations for spin-adaptation transformation...\n";
+  cout << "Number of compounded tensor operators = " << result.size() << std::endl;
   assert( result.size() == so_indices.size() );
   assert( result.size() == b.Nrows() );
 

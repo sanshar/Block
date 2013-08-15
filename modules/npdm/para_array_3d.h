@@ -193,17 +193,31 @@ public:
   *
   * see corresponding set_indices member fn.
   */
-  void set_tuple_indices(const std::vector<std::tuple<int,int,int> >& occupied, int len, const bool& global_is_local)
+  void set_tuple_indices(const std::map< std::tuple<int,int,int>, int >& occupied, int len)
   {
     clear();
     length_ = len;
 
-    // Global indices
     for (auto it = occupied.begin(); it != occupied.end(); ++it) {
-      // internally implement tuple as std::vector<int>(3)
-      std::vector<int> tuple = { std::get<0>(*it), std::get<1>(*it), std::get<2>(*it) };
-      global_indices_.push_back( trimap_3d( tuple[0], tuple[1], tuple[2] ) );
+      std::vector<int> tuple = { std::get<0>(it->first), std::get<1>(it->first), std::get<2>(it->first) };
+      int rank = it->second; 
+      // Global indices
+      int idx = trimap_3d( tuple[0], tuple[1], tuple[2] );
+      global_indices_.push_back( idx );
       global_index_tuple_.push_back( tuple );
+      // Local indices
+      if ( rank == mpigetrank() ) {
+        // Assign to requested rank
+        local_indices_.push_back( idx );
+        local_index_tuple_.push_back( tuple );
+      }
+      else if ( rank == -1 ) {
+        // Load balance equally over ranks
+        if ( processorindex( idx ) == mpigetrank() ) {
+          local_indices_.push_back( idx );
+          local_index_tuple_.push_back( tuple );
+        }
+      }
     }
 
     // Global indices map
@@ -217,8 +231,15 @@ public:
     }
     store_.resize(length_1d);
 
-    // Now setup local indices
-    setup_local_indices(global_is_local);
+    // Local indices map
+    local_indices_map_.resize(length_1d);
+    for (int i=0; i < length_1d; ++i) {
+      local_indices_map_.at(i) = -1;
+    }
+    for (int i=0; i < local_indices_.size(); ++i) {
+      local_indices_map_.at( local_indices_.at(i) ) = local_indices_.at(i);
+    }
+
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -226,33 +247,35 @@ public:
 private:
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-  /**
-   * having filled out the global indices, assign indices
-   * to individual processors (i.e. local indices)
-   */
-  void setup_local_indices(const bool& global_is_local)
-  {
-    int length_1d = tristore_3d(length_);
-    if (stored_local_ || global_is_local) {
-      local_indices_ = global_indices_;
-      local_indices_map_ = global_indices_map_;
-      local_index_tuple_ = global_index_tuple_;
-    }
-    else {
-      local_indices_map_.resize(length_1d);
-      for (int p = 0; p < length_1d; ++p) local_indices_map_.at(p) = -1;
-
-      for (int p = 0; p < global_indices_.size(); ++p) {
-        if ( processorindex(global_indices_[p]) == mpigetrank() ) {
-        //if ( is_global_local(forward, p) ) {
-          local_indices_.push_back(global_indices_.at(p));
-          local_indices_map_.at(global_indices_.at(p)) = global_indices_.at(p);
-          local_index_tuple_.push_back(global_index_tuple_.at(p));
-        }
-
-      }
-    }
-  }
+//  /**
+//   * having filled out the global indices, assign indices
+//   * to individual processors (i.e. local indices)
+//   */
+//  void setup_local_indices( const std::map< std::tuple<int,int,int>, int >& occupied)
+//  {
+//    int length_1d = tristore_3d(length_);
+//    if (stored_local_) {
+//      assert(false);
+////      local_indices_ = global_indices_;
+////      local_indices_map_ = global_indices_map_;
+////      local_index_tuple_ = global_index_tuple_;
+////    }
+//    else {
+//      local_indices_map_.resize(length_1d);
+//      for (int p = 0; p < length_1d; ++p) local_indices_map_.at(p) = -1;
+//
+//      for (int p = 0; p < global_indices_.size(); ++p) {
+//       
+//
+//        if ( processorindex(global_indices_[p]) == mpigetrank() ) {
+//          local_indices_.push_back(global_indices_.at(p));
+//          local_indices_map_.at(global_indices_.at(p)) = global_indices_.at(p);
+//          local_index_tuple_.push_back(global_index_tuple_.at(p));
+//        }
+//
+//      }
+//    }
+//  }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 

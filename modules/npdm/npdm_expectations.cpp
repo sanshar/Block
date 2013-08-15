@@ -48,8 +48,8 @@ std::string Npdm_expectations::get_op_string()
   indices.insert( indices.end(), rhsOps_.indices_.begin(), rhsOps_.indices_.end() );
 //FIXME test for 2PDM or 3PDM
   assert( (indices.size() == 4) || (indices.size() == 6) || (indices.size() == 8) );
-  pout << "dot indices = "; for (auto it = dotOps_.indices_.begin(); it != dotOps_.indices_.end(); ++it) { pout << *it << " "; } pout << std::endl;
-  pout << "spatial indices = "; for (auto it = indices.begin(); it != indices.end(); ++it) { pout << *it << " "; } pout << std::endl;
+  cout << "dot indices = "; for (auto it = dotOps_.indices_.begin(); it != dotOps_.indices_.end(); ++it) { cout << *it << " "; } cout << std::endl;
+  cout << "spatial indices = "; for (auto it = indices.begin(); it != indices.end(); ++it) { cout << *it << " "; } cout << std::endl;
 
   // Set up how tensor operator is constructed from (compound) block operators
   std::string build_pattern = "(";
@@ -69,7 +69,7 @@ std::string Npdm_expectations::get_op_string()
       indices.erase( indices.begin() );  
     }
   }
-  pout << op_string << std::endl;
+  cout << op_string << std::endl;
 
   return op_string;
 }
@@ -300,7 +300,7 @@ cout << "mpirank = " << mpigetrank() << endl;
 for (auto it = expectations_.begin(); it != expectations_.end(); ++it) {
   cout << *it << std::endl;
 }
-pout << "---------------------------------\n";
+cout << "---------------------------------\n";
 
 }
 
