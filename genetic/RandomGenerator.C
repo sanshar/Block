@@ -31,31 +31,3 @@ vector <int> genetic::ReadSequence(const int& nSize) {
   //ROA: need to continue
   return sequence;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
