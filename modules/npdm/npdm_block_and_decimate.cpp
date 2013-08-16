@@ -21,6 +21,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "twopdm.h"
 #include "threepdm.h"
 #include "fourpdm.h"
+#include "npdm_driver.h"
 #include "npdm_block_and_decimate.h"
 
 #ifndef SERIAL
@@ -126,7 +127,9 @@ void Npdm::BlockAndDecimate (std::string npdm_mode, SweepParams &sweepParams, Sp
   int sweepPos = sweepParams.get_block_iter();
   int endPos = sweepParams.get_n_iters()-1;
   if ( npdm_mode == "twopdm" ) {
-    compute_twopdm_sweep(solution, big, state, sweepPos, endPos);
+//    compute_twopdm_sweep(solution, big, state, sweepPos, endPos);
+    Npdm_driver twopdm_driver(solution, big);
+    twopdm_driver.compute_npdm_sweep(state, sweepPos, endPos);
   }
   else if ( npdm_mode == "threepdm" ) {
     compute_threepdm_sweep(solution, big, state, sweepPos, endPos);

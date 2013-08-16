@@ -168,7 +168,7 @@ pout << "SpinBlock::default_op_components(bool complementary_)\n";
     ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
 //FIXME MAW 3PDM
     if ( (dmrginp.calc_type() == THREEPDM) ||
-         (dmrginp.calc_type() == TWOPDM) ) {
+         (dmrginp.calc_type() == FOURPDM) ) {
 //FIXME MAW or FOURPDM?
       ops[DES_CRE] = make_new_op(DES_CRE, true);
       ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
@@ -225,7 +225,7 @@ pout << "SpinBlock::default_op_components(..........) for dot block\n";
         ops[CRE_CRE] = make_new_op(CRE_CRE, true);
 //FIXME MAW 3PDM
         if ( (dmrginp.calc_type() == THREEPDM) ||
-             (dmrginp.calc_type() == TWOPDM) ) {
+             (dmrginp.calc_type() == FOURPDM) ) {
 //FIXME MAW or FOURPDM?
           ops[DES_CRE] = make_new_op(DES_CRE, true);
           ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
@@ -262,8 +262,7 @@ pout << "SpinBlock::default_op_components(..........) for dot block\n";
         ops[CRE_CRE] = make_new_op(CRE_CRE, false);
 //FIXME MAW 3PDM
         if ( (dmrginp.calc_type() == THREEPDM) ||
-//FIXME MAW or FOURPDM? Not TWOPDM!?
-             (dmrginp.calc_type() == TWOPDM) ) {
+             (dmrginp.calc_type() == FOURPDM) ) {
           ops[DES_CRE] = make_new_op(DES_CRE, false);
           ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
           ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);

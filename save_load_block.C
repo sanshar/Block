@@ -187,7 +187,6 @@ void SpinBlock::addAdditionalCompOps()
 
 void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
 {
-pout << "in SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)\n";
   StateInfo oldStateInfo = stateInfo;
   std::vector<SpinQuantum> newQuanta;
   std::vector<int> newQuantaStates;
@@ -246,7 +245,6 @@ pout << "in SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)\n"
   if (rightBlock)
     rightBlock->clear();
 
-pout << "done SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

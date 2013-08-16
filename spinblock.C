@@ -95,7 +95,6 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
   complementary = is_complement;
   normal = !is_complement;
 //MAW
-pout << "calling default op_components...\n";
   default_op_components(is_complement);
   std::vector<int> sites; 
   if (dmrginp.use_partial_two_integrals()) {
@@ -124,9 +123,7 @@ pout << "calling default op_components...\n";
       sites[i] = lower + i;
 
 //MAW
-pout << "calling BuildTensorProductBlock(sites)...\n";   
   BuildTensorProductBlock(sites);   
-pout << "done BuildTensorProductBlock(sites)!\n";   
 }
 
 SpinBlock::SpinBlock (const SpinBlock& b) { *this = b; }
@@ -141,7 +138,7 @@ SpinBlock::SpinBlock(const StateInfo& s)
 
 void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
 {
-pout << "SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)\n";
+cout << "SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)\n";
 
   if (twoInt.get() == 0 && dmrginp.use_partial_two_integrals()) { //this is when dummy block is being added for non zero spin
     std::vector<int> o;
@@ -169,15 +166,13 @@ pout << "SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)\n";
   setstoragetype(LOCAL_STORAGE);
   complementary_sites = make_complement(sites);
 //MAW
-pout << "build_iterators....\n";
   build_iterators();
   std::vector< std::vector<Csf> > ladders; ladders.resize(dets.size());
   for (int i=0; i< dets.size(); i++)
     ladders[i] = dets[i].spinLadder(min(2,dets[i].S));
 //MAW
-pout << "build_operators(dets,ladders)....\n";
   build_operators(dets, ladders);
-pout << "done SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)\n";
+//cout << "done SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -216,10 +211,14 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
         it->second->build_csf_operators(*this, ofile, dets, ladders);
       }
     }
+//DEBUG print out numbers of operators on each MPI process
+if (has(CRE)) cout << "Number of C CSF operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
+if (has(CRE_CRE)) cout << "Number of CC CSF operators on p" << mpigetrank() << " = " << ops[CRE_CRE]->get_size() << " local, " << ops[CRE_CRE]->size() << " global\n";
+if (has(CRE_CRE_CRE)) cout << "Number of CCC CSF operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
+//FIXME can we remove this function -- almost same as below
 void SpinBlock::build_virtual_operators()
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
@@ -237,6 +236,10 @@ void SpinBlock::build_virtual_operators()
         it->second->build_operators(*this, ot, ofile, sysfile, dotfile);
       }
     }
+//DEBUG print out numbers of operators on each MPI process
+if (has(CRE)) cout << "Number of C (virt?) operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
+if (has(CRE_CRE)) cout << "Number of CC (virt?) operators on p" << mpigetrank() << " = " << ops[CRE_CRE]->get_size() << " local, " << ops[CRE_CRE]->size() << " global\n";
+if (has(CRE_CRE_CRE)) cout << "Number of CCC (virt?) operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -257,6 +260,10 @@ void SpinBlock::build_operators()
         it->second->build_operators(*this, ot, ofile, sysfile, dotfile);
       }
     }
+//DEBUG print out numbers of operators on each MPI process
+if (has(CRE)) cout << "Number of C operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
+if (has(CRE_CRE)) cout << "Number of CC operators on p" << mpigetrank() << " = " << ops[CRE_CRE]->get_size() << " local, " << ops[CRE_CRE]->size() << " global\n";
+if (has(CRE_CRE_CRE)) cout << "Number of CCC operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

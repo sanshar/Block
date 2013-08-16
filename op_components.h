@@ -180,7 +180,7 @@ template <class Op> class Op_component : public Op_component_base
 //FIXME MAW for 3-index operators (or larger) we specialize these functions to build/modify operators out of core (on disk)
 
   void build_csf_operators(SpinBlock& b, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) { 
-pout << "Op_component::build_csf_operators " << m_op.num_indices() << std::endl;
+//pout << "Op_component::build_csf_operators " << m_op.num_indices() << std::endl;
 
     if ( m_op.num_indices() < 3 ) {
       // Build in core
@@ -189,7 +189,7 @@ pout << "Op_component::build_csf_operators " << m_op.num_indices() << std::endl;
     }
     else if ( m_op.num_indices() == 3 ) {
       // Build on disk (assume we are building from scratch)
-pout << ofile << std::endl;
+//pout << ofile << std::endl;
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
 //FIXME why doesn't this work?       StateInfo sti = b.get_stateInfo();
       for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::buildUsingCsf, _1,boost::ref(b), boost::ref(ladders), boost::ref(c)) );
@@ -205,7 +205,7 @@ pout << ofile << std::endl;
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   void build_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::string& sysfile, std::string& dotfile) { 
-pout << "Op_component::build_operators " << get_op_string() << " " << m_op.num_indices() << std::endl;
+//pout << "Op_component::build_operators " << get_op_string() << " " << m_op.num_indices() << std::endl;
     if ( m_op.num_indices() < 3 ) {
       // Build in core
       singlethread_build(*this, b); 
@@ -217,9 +217,9 @@ pout << "Op_component::build_operators " << get_op_string() << " " << m_op.num_i
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
       std::ifstream sysfs(sysfile.c_str(), std::ios::binary);
       std::ifstream dotfs(dotfile.c_str(), std::ios::binary);
-pout << "ofile = " << ofile << std::endl;
-pout << "sysfile = " << sysfile << std::endl;
-pout << "dotfile = " << dotfile << std::endl;
+//pout << "ofile = " << ofile << std::endl;
+//pout << "sysfile = " << sysfile << std::endl;
+//pout << "dotfile = " << dotfile << std::endl;
       for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::build_from_disk, _1, boost::ref(b), boost::ref(sysfs), boost::ref(dotfs)) );
       ofs.close();
       sysfs.close();
@@ -232,7 +232,7 @@ pout << "dotfile = " << dotfile << std::endl;
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo* s) {
-pout << "Op_component::renormalise_transform " <<  get_op_string() << " " << m_op.num_indices() << std::endl;
+//pout << "Op_component::renormalise_transform " <<  get_op_string() << " " << m_op.num_indices() << std::endl;
     if ( m_op.num_indices() < 3 ) {
       // Build in core
       for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );
@@ -242,7 +242,7 @@ pout << "Op_component::renormalise_transform " <<  get_op_string() << " " << m_o
       // Build on disk (load, renormalize, save)
       std::string ifile = get_filename();
       std::string ofile = get_filename() + ".renorm";
-pout << "ifile = " << ifile << std::endl;
+//pout << "ifile = " << ifile << std::endl;
       std::ifstream ifs(ifile.c_str(), std::ios::binary);
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
       for_all_operators_on_disk( *this, *s, ofs, bind(&SparseMatrix::renormalise_transform_on_disk, _1, boost::ref(rotateMatrix), s, boost::ref(ifs)) );

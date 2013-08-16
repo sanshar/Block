@@ -175,12 +175,11 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
   m_op.set_tuple_indices( tuples, dmrginp.last_site() );
 
   // Allocate new set of operators for each set of spatial orbitals
-//FIXME check that we have load balancing
-cout << "New set of CCC operators: p" << mpigetrank() << "; local size = " << m_op.local_nnz() << "; global size = " << m_op.global_nnz() << std::endl;
+  //cout << "New set of CCC operators: p" << mpigetrank() << "; local size = " << m_op.local_nnz() << "; global size = " << m_op.global_nnz() << std::endl;
   std::vector<int> orbs(3);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
-cout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << std::endl;
+    //cout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << std::endl;
     std::vector<boost::shared_ptr<CreCreCre> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));

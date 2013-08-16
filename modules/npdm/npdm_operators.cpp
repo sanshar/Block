@@ -1217,14 +1217,14 @@ void SpinAdapted::CreCreCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
   const int i = get_orbs()[0];
   const int j = get_orbs()[1];
   const int k = get_orbs()[2];
-cout << "i,j,k = " << i << " " << j << " " << k << endl;
+//cout << "i,j,k = " << i << " " << j << " " << k << endl;
 
   SpinBlock* sysBlock = b.get_leftBlock();
   SpinBlock* dotBlock = b.get_rightBlock();
 
   // Sys has i,j,k
   if (sysBlock->get_op_array(CRE_CRE_CRE).has_local_index(i,j,k)) {
-cout << "maw sys(i,j,k)\n";
+//cout << "maw sys(i,j,k)\n";
     assert( sysBlock->get_op_array(CRE_CRE_CRE).get_element(i,j,k).at(0)->get_built_on_disk() );
     // Retrieve from disk 3-index operator on sys block
     boost::shared_ptr<SparseMatrix> op (new CreCreCre);
@@ -1243,7 +1243,7 @@ cout << "maw sys(i,j,k)\n";
   }
   // Dot has i,j,k
   else if (dotBlock->get_op_array(CRE_CRE_CRE).has_local_index(i,j,k)) {
-cout << "maw dot(i,j,k)\n";
+//cout << "maw dot(i,j,k)\n";
     assert( dotBlock->get_op_array(CRE_CRE_CRE).get_element(i,j,k).at(0)->get_built_on_disk() );
     // Retrieve from disk 3-index operator on dot block
     boost::shared_ptr<SparseMatrix> op (new CreCreCre);
@@ -1302,7 +1302,7 @@ void SpinAdapted::CreCreCre::build(const SpinBlock& b)
   }
   // Dot has i,j,k
   else if (dotBlock->get_op_array(CRE_CRE_CRE).has_local_index(i,j,k)) {
-cout << "maw dot(i,j,k)\n";
+//cout << "maw dot(i,j,k)\n";
     assert( i == j );
     assert( j == k );
     std::string build_pattern_old = dotBlock->get_op_array(CRE_CRE_CRE).get_element(i,j,k).at(0)->get_build_pattern();

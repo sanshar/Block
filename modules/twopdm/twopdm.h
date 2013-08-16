@@ -29,6 +29,8 @@ void twopdm_loop_over_block_operators( Wavefunction & wavefunction,
                                        std::vector<Npdm::CD> & rhs_cd,
                                        array_4d<double> & twopdm );
 
+void assign_twopdm_elements( std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements, array_4d<double> & twopdm );
+
 void assign_twopdm_antisymmetric(array_4d<double>& twopdm, const int i, const int j, const int k, const int l, const double val);
 void save_twopdm_text(const array_4d<double>& twopdm, const int &i, const int &j);
 void save_spatial_twopdm_text(const array_4d<double>& twopdm, const int &i, const int &j);
