@@ -16,8 +16,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "davidson.h"
 #include "linear.h"
 #include "guess_wavefunction.h"
-#include "twopdm.h"
-#include "threepdm.h"
+#include "twopdm_driver.h"
+//#include "threepdm.h"
 #include "density.h"
 #include "davidson.h"
 #include "pario.h"
@@ -100,10 +100,12 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   sweepParams.savestate(forward, system.get_sites().size());
   bool dot_with_sys = true;
 
-  array_4d<double> twopdm(2*dmrginp.last_site(), 2*dmrginp.last_site(), 2*dmrginp.last_site(), 2*dmrginp.last_site());
-  twopdm.Clear();
+  //MAW
+  Twopdm_driver twopdm_driver;
+  twopdm_driver.resize_array(2*dmrginp.last_site());
+  twopdm_driver.clear_array();
   for (int i=0; i<nroots; i++)
-    save_twopdm_binary(twopdm, i, i); 
+    twopdm_driver.save_npdm_binary(i, i); 
 
 
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
@@ -133,7 +135,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
       SpinBlock newSystem;
 
       // Build 2pdm elements
-      Npdm::BlockAndDecimate ("twopdm", sweepParams, system, newSystem, warmUp, dot_with_sys, state);
+      Npdm::BlockAndDecimate(twopdm_driver, sweepParams, system, newSystem, warmUp, dot_with_sys, state);
 
       for(int j=0;j<nroots;++j)
         pout << "\t\t\t Total block energy for State [ " << j << 
@@ -163,7 +165,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
 
   int i = state, j = state;
-  load_twopdm_binary(twopdm, i, j); 
+  twopdm_driver.load_npdm_binary(i, j); 
 //MAW >>>>>>>>>>>>>>>
 //print twopdm
 //std::cout << "Final 2PDM:\n";
@@ -179,9 +181,9 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 //}
 //MAW <<<<<<<<<<<<<
   //calcenergy(twopdm, i);
-  save_twopdm_text(twopdm, i, j);
-  save_spatial_twopdm_text(twopdm, i, j);
-  save_spatial_twopdm_binary(twopdm, i, j);
+  twopdm_driver.save_npdm_text(i, j);
+  twopdm_driver.save_spatial_npdm_text(i, j);
+  twopdm_driver.save_spatial_npdm_binary(i, j);
   
 
   // update the static number of iterations

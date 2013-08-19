@@ -21,15 +21,12 @@ namespace Npdm{
 class Npdm_expectations {
  
   public:
-    Npdm_expectations( Wavefunction & wavefunction, 
-                       const SpinBlock & big, 
+    Npdm_expectations( int order, Wavefunction & wavefunction, const SpinBlock & big, 
                        NpdmSpinOps & lhsOps,
                        NpdmSpinOps & dotOps,
                        NpdmSpinOps & rhsOps );
 
-    std::vector< std::pair< std::vector<int>, double > > get_nonspin_adapted_expectations( int dim );
-//    void transform_spin_adapt_to_nonspin_adapt( array_4d<double> & twopdm );
-//    void old_transform_spin_adapt_to_nonspin_adapt( array_4d<double> & twopdm );
+    std::vector< std::pair< std::vector<int>, double > > get_nonspin_adapted_expectations();
 
   private:
     std::vector< double > expectations_;
@@ -38,11 +35,11 @@ class Npdm_expectations {
     NpdmSpinOps & lhsOps_;
     NpdmSpinOps & dotOps_;
     NpdmSpinOps & rhsOps_;
+    int npdm_order_;
 
     void build_spin_adapted_singlet_expectations();
     double contract_spin_adapted_operators( int ilhs, int idot, int irhs );
     bool test_for_singlet( int lhs_mult, int dot_mult, int rhs_mult );
-//    Oporder old_parse_build_pattern( std::vector<char> build_pattern );
     std::string get_op_string();
 
 };

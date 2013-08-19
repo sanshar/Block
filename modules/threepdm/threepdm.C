@@ -333,7 +333,7 @@ void do_threepdm_inner_loop( array_6d<double> & threepdm,
       if ( rhsOps->opReps_.size() > 0 ) assert( rhsOps->mults_.size() == rhsOps->opReps_.size() );
 
       // Get non-spin-adapated 3PDM elements after building spin-adapted elements
-      std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( 20 );
+      std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations();
 
       // Assign threepdm elements
       assign_threepdm_elements( new_spin_orbital_elements, threepdm );
@@ -463,7 +463,7 @@ void threepdm_loop_over_block_operators( Wavefunction & wavefunction,
   boost::shared_ptr<NpdmSpinOps> rhsOps = select_op_wrapper( rhsBlock, rhs_cd_type );
   boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );
 
-  Npdm::Npdm_expectations npdm_expectations( wavefunction, big, *lhsOps, *dotOps, *rhsOps );
+  Npdm::Npdm_expectations npdm_expectations( 3, wavefunction, big, *lhsOps, *dotOps, *rhsOps );
 //cout << "-------------------------------------------------------------------------------------------\n";
 cout << "lhsOps->size() = " << lhsOps->size() << "; rank = " << mpigetrank() <<  std::endl;
 //cout << "dotOps->size()" << dotOps->size() << std::endl;

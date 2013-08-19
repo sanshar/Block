@@ -89,7 +89,8 @@ double SweepThreepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const
 	  
       SpinBlock newSystem;
 
-      Npdm::BlockAndDecimate ("threepdm", sweepParams, system, newSystem, warmUp, dot_with_sys, state);
+assert(false);
+//      Npdm::BlockAndDecimate ("threepdm", sweepParams, system, newSystem, warmUp, dot_with_sys, state);
 
       for(int j=0;j<nroots;++j)
         pout << "\t\t\t Total block energy for State [ " << j << 

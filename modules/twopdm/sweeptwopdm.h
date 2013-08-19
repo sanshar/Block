@@ -16,7 +16,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "davidson.h"
 #include "linear.h"
 #include "guess_wavefunction.h"
-#include "twopdm.h"
 
 #ifndef SERIAL
 #include <boost/mpi/communicator.hpp>
