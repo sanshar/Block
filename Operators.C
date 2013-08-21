@@ -101,14 +101,14 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
       for (i2 =0; i2<iSz2.size(); i2++) {
 	vector<int>& Ind1 = op1.opindices[i1], Ind2 = op2.opindices[i2]; 
 	if (comp == CD) {
-	  factor += (-v_2(Ind1[0], Ind2[0], Ind2[1], Ind1[1]) + 
-		     v_2(Ind2[0], Ind1[0], Ind2[1], Ind1[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
+	  factor += 0.5*(-v_2(Ind1[0], Ind2[0], Ind2[1], Ind1[1]) - v_2(Ind2[0], Ind1[0], Ind1[1], Ind2[1]) 
+			 + v_2(Ind2[0], Ind1[0], Ind2[1], Ind1[1]) + v_2(Ind1[0], Ind2[0], Ind1[1], Ind2[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
 	}
 	else if (comp == DD) {
-	  factor += 0.5*(v_2(Ind1[0], Ind1[1], Ind2[1], Ind2[0]))*iSz1.at(i1)*iSz2.at(i2)/cleb;	  
+	  factor += 0.5*(v_2(Ind1[0], Ind1[1], Ind2[1], Ind2[0]) )*iSz1.at(i1)*iSz2.at(i2)/cleb;	  
 	}
 	else if (comp == CCD) {
-	  factor += v_2(Ind1[0], Ind1[1], Ind2[0], Ind1[2])*iSz1.at(i1)*iSz2.at(i2)/cleb;
+	  factor += 0.5*(v_2(Ind1[0], Ind1[1], Ind2[0], Ind1[2]) - v_2(Ind1[1], Ind1[0], Ind2[0], Ind1[2]) )*iSz1.at(i1)*iSz2.at(i2)/cleb;
 	}
 	else if (comp == C) {
 	  factor += 0.5*v_1(Ind1[0], Ind2[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;
@@ -910,7 +910,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
   {
     if (finish) break;
     bool isLallowed = Symmetry::spatial_cg(ladder[i].sym_is().getirrep(), 0, c1.sym_is().getirrep(), ladder[i].row(), 0, c1.row())!=0;
-    if ((c1.Sz != ladder[i].Sz && c1.S != ladder[i].S) || !isLallowed)
+    if ((c1.Sz != ladder[i].Sz || c1.S != ladder[i].S) || !isLallowed)
       continue;
     else
       finish = true;
