@@ -27,6 +27,8 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
 {
   SweepParams sweepParams;
   sweepParams.set_sweep_parameters();
+  //SpinBlock sysdotmp(0,1);
+
   SpinBlock system;
   InitBlocks::InitStartingBlock(system, true, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
 
@@ -61,7 +63,13 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   Op_component_base& oparray = system.get_op_array(CRE_CRE_DESCOMP);
   for (int i=0; i<oparray.get_size(); i++)
     cout <<oparray.get_local_element(i)[0]->get_orbs(0)<<endl<< *(oparray.get_local_element(i)[0]->getworkingrepresentation(&system))<<endl;
+
+  
+  Op_component_base& oparray2 = sysdotmp.get_op_array(CRE_CRE_DESCOMP);
+  for (int i=0; i<oparray2.get_size(); i++)
+    cout <<oparray2.get_local_element(i)[0]->get_orbs(0)<<endl<< *(oparray2.get_local_element(i)[0]->getworkingrepresentation(&sysdotmp))<<endl;
   */
+
 
   pout <<"\t\t\t System Block :: "<< system;
   pout <<"\t\t\t Environment Block :: "<< environment;

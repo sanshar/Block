@@ -210,10 +210,11 @@ class TensorOp {
     else {
       for (int ilz = 0; ilz<op.rows; ilz++){
 	//int lz = op.lz[ilz];
-	os <<"printing operator with Sz = "<<-op.Spin<<" and row = "<< ilz<<" and total spin "<<op.Spin<<" and irrep "<<op.irrep<<endl;;
+	os <<"printing operator with Sz = "<<op.Spin<<" and row = "<< ilz<<" and total spin "<<op.Spin<<" and irrep "<<op.irrep<<endl;;
+
 	for (int i=0; i<op.Szops[op.Spin].size(); i++) {
-	  if (op.Szops[ilz*(op.Spin+1)+op.Spin][i] != 0.0) {
-	    os << op.Szops[ilz*(op.Spin+1)+op.Spin][i]<<"   ";
+	  if (op.Szops[ilz*(op.Spin+1)][i] != 0.0) {
+	    os << op.Szops[ilz*(op.Spin+1)][i]<<"   ";
 	    for (int j=0; j<op.opindices[i].size(); j++)
 	      os<<op.opindices[i][j]<<" ";
 	    os<<endl;

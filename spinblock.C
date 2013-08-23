@@ -162,7 +162,15 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
   complementary_sites = make_complement(sites);
   build_iterators();
 
-
+  /*
+  for (int i=0; i<dets.size(); i++) {
+    cout << "******* "<<endl;
+    cout << dets[i]<<endl;
+    for (int j=0; j<ladders[i].size(); j++)
+      cout << ladders[i][j]<<endl;
+  }
+  //exit(0);
+  */
 
   build_operators(dets, ladders);
 

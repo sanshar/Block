@@ -149,7 +149,7 @@ public:
 
 namespace CSFUTIL {
   std::vector< Csf > spinfockstrings(const std::vector<int>& orbs, std::vector<std::vector<Csf> >& ladders);  
-  void TensorProduct(Csf& rhs, Csf& lhs, vector< Csf >& output);  
+  void TensorProduct(Csf& lhs, vector<Csf>& lhs_csfs, Csf& rhs, vector<Csf>& rhs_csfs, vector< Csf >& output, vector< vector<Csf> >& outputladder);
   Csf applyTensorOp(const TensorOp& newop, int spinL);
   vector< vector<int> > generate_partitions(int k);
 }

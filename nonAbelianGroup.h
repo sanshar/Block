@@ -103,9 +103,9 @@ namespace SpinAdapted {
       irrepNames.push_back("A1"); irrepNames.push_back("A2"); irrepNames.push_back("E1"), irrepNames.push_back("E2");
       irrepSizes.push_back(1); irrepSizes.push_back(1); irrepSizes.push_back(2); irrepSizes.push_back(2);
 
-      int multarray1[] = {2,1,0};
-      int multarray2[] = {3,1,0};
-      int multarray3[] = {3,2};
+      int multarray1[] = {0,1,2};//{2,1,0};
+      int multarray2[] = {0,1,3};//{3,1,0};
+      int multarray3[] = {2,3};
 
       //read_multiplication Table
       multiplicationTable.ReSize(4,4);
