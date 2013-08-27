@@ -21,26 +21,21 @@ namespace Npdm{
 class Npdm_expectations {
  
   public:
-    Npdm_expectations( int order, Wavefunction & wavefunction, const SpinBlock & big, 
-                       NpdmSpinOps & lhsOps,
-                       NpdmSpinOps & dotOps,
-                       NpdmSpinOps & rhsOps );
+    Npdm_expectations( const int order, Wavefunction & wavefunction, const SpinBlock & big );
 
-    std::vector< std::pair< std::vector<int>, double > > get_nonspin_adapted_expectations();
+    std::vector< std::pair< std::vector<int>, double > > 
+      get_nonspin_adapted_expectations(NpdmSpinOps_base& lhsOps, NpdmSpinOps_base& rhsOps, NpdmSpinOps_base& dotOps );
 
   private:
     std::vector< double > expectations_;
     Wavefunction & wavefunction_; 
     const SpinBlock & big_; 
-    NpdmSpinOps & lhsOps_;
-    NpdmSpinOps & dotOps_;
-    NpdmSpinOps & rhsOps_;
-    int npdm_order_;
+    const int npdm_order_;
 
-    void build_spin_adapted_singlet_expectations();
-    double contract_spin_adapted_operators( int ilhs, int idot, int irhs );
+    double contract_spin_adapted_operators( int ilhs, int idot, int irhs, NpdmSpinOps_base& lhsOps, NpdmSpinOps_base& rhsOps, NpdmSpinOps_base& dotOps );
+    void build_spin_adapted_singlet_expectations( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps );
+    std::string get_op_string( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps );
     bool test_for_singlet( int lhs_mult, int dot_mult, int rhs_mult );
-    std::string get_op_string();
 
 };
 

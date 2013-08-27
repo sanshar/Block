@@ -6,6 +6,12 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
+#include <fstream>
+// include headers that implement a archive in simple text format
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+
+#include <boost/mpi.hpp>
 #include <vector>
 #include <multiarray.h>
 #include "spinblock.h"
@@ -23,173 +29,235 @@ boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::ve
 
 //===========================================================================================================================================================
 
-void Npdm_driver::do_npdm_inner_loop( boost::shared_ptr<NpdmSpinOps> & lhsOps,
-                                      boost::shared_ptr<NpdmSpinOps> & dotOps,
-                                      boost::shared_ptr<NpdmSpinOps> & rhsOps,
-                                      Npdm::Npdm_expectations & npdm_expectations )
-  {
-  
-  //pout << "lhsOps->indices_.size() " << lhsOps->indices_.size() << std::endl;
-  //pout << "lhsOps->opReps_.size() " << lhsOps->opReps_.size() << std::endl;
-  //pout << "dotOps->indices_.size() " << dotOps->indices_.size() << std::endl;
-  //pout << "dotOps->opReps_.size() " << dotOps->opReps_.size() << std::endl;
-      if ( lhsOps->opReps_.size() > 0 ) assert( lhsOps->mults_.size() == lhsOps->opReps_.size() );
-  
-      // Many spatial combinations on right block
-      for ( int irhs = 0; irhs < rhsOps->size(); ++irhs ) {
-        bool skip = rhsOps->set_local_ops( irhs );
-        if (skip) continue;
-  //pout << "rhsOps->indices_.size() " << rhsOps->indices_.size() << std::endl;
-  //pout << "rhsOps->opReps_.size() " << rhsOps->opReps_.size() << std::endl;
-  //pout << "-------------------------------------------------------------------------------------------\n";
-  //pout << "spatial: ilhs, irhs = " << ilhs << ", " << irhs << std::endl;
-        if ( rhsOps->opReps_.size() > 0 ) assert( rhsOps->mults_.size() == rhsOps->opReps_.size() );
-  
-        // Get non-spin-adapated 3PDM elements after building spin-adapted elements
-        std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations();
-  
-        // Assign npdm elements
-        assign_npdm_elements( new_spin_orbital_elements );
-      }
+std::vector< std::pair<bool, NpdmSpinOps_base> >
+Npdm_driver::get_all_mpi_ops( const bool local_skip, NpdmSpinOps & local_ops, std::vector< boost::mpi::request > & reqs )
+{
+  boost::mpi::communicator world;
+//std::cout.flush();
+//world.barrier();
+//std::cout << "entering get_all_mpi_ops, rank = " << mpigetrank() << std::endl;
+//std::cout.flush();
+  std::vector< std::pair<bool, NpdmSpinOps_base> > all_ops;
+  reqs.clear();
+
+  // First element is local set of spin operators
+  NpdmSpinOps_base local_base(local_ops);
+  std::pair<bool, NpdmSpinOps_base> local_pair = std::make_pair( local_skip, local_base );
+  all_ops.push_back( local_pair );
+  // Serial calculation
+  if (world.size() == 1) return all_ops;
+
+//--- boost serialization broken for NpdmSpinOps_base object!!!   
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+//        // save data to archive
+//    boost::shared_ptr<SparseMatrix> op (new Cre);
+//    op = local_base.opReps_.at(0);
+//          std::ofstream ofs("crap.tmp");
+//          boost::archive::text_oarchive oa(ofs);
+//          oa << *(local_base.opReps_.at(0));
+//          oa << *op;
+//          ofs.close();
+//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+  // Nonlocal is other in 2-proc case
+  bool nonlocal_skip;
+  NpdmSpinOps_base nonlocal_base;
+
+//std::cout.flush();
+//world.barrier();
+
+  // Do MPI communication
+  if ( mpigetrank() == 0) {
+    // Send to 1
+cout << "sending to rank 1\n";
+    world.send(1, 0, local_skip);
+//    local_base.send_mpi_obj(1, 100);
+cout << "sending to rank 1 done\n";
+    // Recv from 1
+cout << "receiving from rank 1\n";
+    world.recv(1, 300, nonlocal_skip);
+//    nonlocal_base.recv_mpi_obj(1, 400, local_base.opReps_.size());
+cout << "receiving from rank 1 done\n";
   }
-  
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-  
-std::vector< std::pair<bool, boost::shared_ptr<NpdmSpinOps>> > 
-  Npdm_driver::get_all_mpi_ops( const bool local_skip, boost::shared_ptr<NpdmSpinOps>& local_ops, std::vector< boost::mpi::request > & reqs )
-  {
-    boost::mpi::communicator world;
-    std::vector< std::pair<bool, boost::shared_ptr<NpdmSpinOps>> > all_ops;
-    reqs.clear();
-  
-    // First element is local set of spin operators
-    std::pair<bool, boost::shared_ptr<NpdmSpinOps>> local_pair = std::make_pair( local_skip, local_ops );
-    all_ops.push_back( local_pair );
-  //FIXME only distribute ops that are non-local
-  //if ( local_ops->indices_.size() > 3 ) assert(false);
-  //if ( local_ops->indices_.size() < 2 ) assert(false);
+  else if ( mpigetrank() == 1) {
+    // Recv from 0
+cout << "receiving from rank 0\n";
+    world.recv(0, 0, nonlocal_skip);
+//    nonlocal_base.recv_mpi_obj(0, 100, local_base.opReps_.size());
+cout << "receiving from rank 0 done\n";
+    // Send to 0
+cout << "sending to rank 0\n";
+    world.send(0, 300, local_skip);
+//    local_base.send_mpi_obj(0, 400);
+cout << "sending to rank 0 done\n";
+  }
+  else
+    assert(false);
+
+//  std::pair<const bool, NpdmSpinOps_base> nonlocal_pair = std::make_pair( nonlocal_skip, nonlocal_base );
+//  all_ops.push_back( nonlocal_pair );
+
   return all_ops;
-  //----------------------------------------------
-  
-    boost::shared_ptr<NpdmSpinOps> nonlocal_ops (new NpdmSpinOps);
-  //FIXME what kind of copy/assignment is this???
-  ///  nonlocal_ops = local_ops;
-    nonlocal_ops->size_ = local_ops->size_;
-    nonlocal_ops->mults_ = local_ops->mults_;
-    nonlocal_ops->build_pattern_ = local_ops->build_pattern_;
-    nonlocal_ops->transpose_ = local_ops->transpose_;
-    nonlocal_ops->factor_ = local_ops->factor_;
-  
-  //  assert( nonlocal_ops->indices_ == local_ops->indices_ );
-  //  assert( nonlocal_ops->opReps_.size() > 0 );
-  // Seems to be a shallow copy!
-  //  nonlocal_ops->opReps_.clear();
-  //  assert( local_ops->opReps_.size() > 0 );
-  //  nonlocal_ops->indices_.clear();
-  //  assert( local_ops->indices_.size() > 0 );
-  
-  
-  //    boost::shared_ptr<SparseMatrix> op (new Cre);
-  ////    ia2 >> *(lhsOps->opReps_.at(0));
-  //    ia2 >> *op;
-  //    assert( op_new->opReps_.size() == 0 );
-  //    op_new->opReps_.push_back(op) ;
-  
-    nonlocal_ops->opReps_.clear();
-    for ( int i = 0; i < local_ops->opReps_.size(); ++i) {
-      boost::shared_ptr<SparseMatrix> op (new Cre);
-      nonlocal_ops->opReps_.push_back(op);
-    }
-  
-    // Now send operators to other MPI ranks in non-blocking fashion
-    bool nonlocal_skip;
-  //cout << "MAW mpi ops " << i << " communicate rank=" << mpigetrank() << std::endl;
-  
-    if ( mpigetrank() == 0) {
-      // Send
-      world.send(1, 0, local_skip);
-      world.send(1, 1, local_ops->indices_);
-      for ( int i = 0; i < local_ops->opReps_.size(); ++i)
-        world.send(1, i+2, *(local_ops->opReps_.at(i)) );
-  //    reqs.push_back( world.isend(1, 0, local_skip) );
-  //    reqs.push_back( world.isend(1, 1, local_ops->indices_) );
-  //    reqs.push_back( world.isend(1, 2, local_ops->opReps_) );
-      // Recv
-      world.recv(1, 30, nonlocal_skip);
-      world.recv(1, 40, nonlocal_ops->indices_);
-      for ( int i = 0; i < local_ops->opReps_.size(); ++i)
-        world.recv(1, i+50, *(nonlocal_ops->opReps_.at(i)) );
-  //    reqs.push_back( world.irecv(1, 3, nonlocal_skip) );
-  //    reqs.push_back( world.irecv(1, 4, nonlocal_ops->indices_) );
-  //    reqs.push_back( world.irecv(1, 5, nonlocal_ops->opReps_) );
-    }
-    else if ( mpigetrank() == 1) {
-      // Send
-      world.send(0, 30, local_skip);
-      world.send(0, 40, local_ops->indices_);
-      for ( int i = 0; i < local_ops->opReps_.size(); ++i)
-        world.send(0, i+50, *(local_ops->opReps_.at(i)) );
-  //    reqs.push_back( world.isend(0, 3, local_skip) );
-  //    reqs.push_back( world.isend(0, 4, local_ops->indices_) );
-  //    reqs.push_back( world.isend(0, 5, local_ops->opReps_) );
-      // Recv
-      world.recv(0, 0, nonlocal_skip);
-      world.recv(0, 1, nonlocal_ops->indices_);
-      for ( int i = 0; i < local_ops->opReps_.size(); ++i)
-        world.recv(0, i+2, *(nonlocal_ops->opReps_.at(i)) );
-  //    reqs.push_back( world.irecv(0, 0, nonlocal_skip) );
-  //    reqs.push_back( world.irecv(0, 1, nonlocal_ops->indices_) );
-  //    reqs.push_back( world.irecv(0, 2, nonlocal_ops->opReps_) );
-    }
-    else
-      assert(false);
-  
-  cout << local_ops->build_pattern_ << "; local skip = " << local_skip << std::endl;
-  cout << nonlocal_ops->build_pattern_ << "; nonlocal skip = " << nonlocal_skip << std::endl;
-    std::pair<bool, boost::shared_ptr<NpdmSpinOps>> nonlocal_pair = std::make_pair( nonlocal_skip, nonlocal_ops );
-    all_ops.push_back( nonlocal_pair );
-  
-  
-  
-    return all_ops;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_driver::do_npdm_inner_loop( Npdm::Npdm_expectations & npdm_expectations, NpdmSpinOps_base & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps ) 
+{
+
+  if ( dotOps.opReps_.size() > 0 ) assert( dotOps.mults_.size() == dotOps.opReps_.size() );
+  if ( lhsOps.opReps_.size() > 0 ) assert( lhsOps.mults_.size() == lhsOps.opReps_.size() );
+
+  // Many spatial combinations on right block
+  for ( int irhs = 0; irhs < rhsOps.size(); ++irhs ) {
+    bool skip = rhsOps.set_local_ops( irhs );
+    if (skip) continue;
+    if ( rhsOps.opReps_.size() > 0 ) assert( rhsOps.mults_.size() == rhsOps.opReps_.size() );
+
+    // Get non-spin-adapated 3PDM elements after building spin-adapted elements
+    std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements;
+    new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( lhsOps, rhsOps, dotOps );
+
+    // Assign npdm elements
+    assign_npdm_elements( new_spin_orbital_elements );
   }
-  
+}
+
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
   
-void Npdm_driver::npdm_loop_over_block_operators( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big,
-                                                  std::vector<Npdm::CD> & lhs_cd_type,
-                                                  std::vector<Npdm::CD> & dot_cd_type,
-                                                  std::vector<Npdm::CD> & rhs_cd_type )
-  {
-    boost::mpi::communicator world;
+int Npdm_driver::get_mpi_max_lhs_size( int my_size )
+{
+  int maxsize;
+  boost::mpi::communicator world;
+  std::vector<int> all_sizes;
+  all_gather(world, my_size, all_sizes);
+  maxsize = *std::max_element( all_sizes.begin(), all_sizes.end() );
+  assert( my_size <= maxsize );
+  return maxsize;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_driver::npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm_expectations,
+                                                  NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps ) 
+{
+
+  boost::mpi::communicator world;
+//cout << "-------------------------------------------------------------------------------------------\n";
+//cout << "lhsOps.size() = " << lhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
+//cout << "dotOps.size() = " << dotOps.size() << "; rank = " << mpigetrank() <<  std::endl;
+//cout << "rhsOps.size() = " << rhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
+
+  // All MPI threads must be synchronised here so they all work on same operator pattern simultaneously
+  std::cout.flush();
+  world.barrier();
+  int lhs_maxsize = get_mpi_max_lhs_size( lhsOps.size() );
+
+  // Only one spatial combination on the dot block
+  assert( dotOps.size() == 1 );
+  bool skip = dotOps.set_local_ops( 0 );
+  if (skip) return;
+
+  // Many spatial combinations on left block
+  assert( lhsOps.size() > 0 );
+  for ( int ilhs = 0; ilhs < lhs_maxsize; ++ilhs ) {
+    // Set local operators as dummy if load-balancing isn't perfect
+    if ( ilhs < lhsOps.size() )
+      skip = lhsOps.set_local_ops( ilhs );
+    else
+      skip = true;
+
+    std::vector< boost::mpi::request > reqs;
+    std::vector< std::pair<bool, NpdmSpinOps_base> > all_lhsOps = get_all_mpi_ops( skip, lhsOps, reqs ); 
+
+    for ( auto lhs_mpi_ops = all_lhsOps.begin(); lhs_mpi_ops != all_lhsOps.end(); ++lhs_mpi_ops ) {
+      if ( ! lhs_mpi_ops->first ) {
+        do_npdm_inner_loop( npdm_expectations, lhs_mpi_ops->second, rhsOps, dotOps ); 
+      }
+    }
+    // Synchronize all MPI ranks here
+    std::cout.flush();
+    world.barrier();
+
+  }
+
+  // Close file if needed (put in wrapper destructor??)
+  if ( lhsOps.ifs_.is_open() ) lhsOps.ifs_.close();
+
+}
   
-    SpinBlock* rhsBlock = big.get_rightBlock();
-    SpinBlock* lhsdotBlock = big.get_leftBlock();
-    SpinBlock* lhsBlock = lhsdotBlock->get_leftBlock();
-    SpinBlock* dotBlock = lhsdotBlock->get_rightBlock();
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_driver::compute_npdm_sweep(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int state, int sweepPos, int endPos)
+{
+
+  boost::mpi::communicator world;
+  pout << "===========================================================================================\n";
+  pout << "NPDM sweep position = "<< sweepPos << " (" << endPos << ")\n";
+
+  // Npdm array built so far
+  load_npdm_binary(state, state);
   
-  // CHOICE OF READ FROM DISK OR NOT DONE INSIDE THE WRAPPER!!
+  // Initialize class that computes expectation values when sent LHS, Dot and RHS operator spin-sets from this spin-block
+  Npdm::Npdm_expectations npdm_expectations( npdm_order_, wavefunctions.at(0), big );
+
+  // Get LHS, Dot and RHS spin-blocks
+  SpinBlock* rhsBlock = big.get_rightBlock();
+  SpinBlock* lhsdotBlock = big.get_leftBlock();
+  SpinBlock* lhsBlock = lhsdotBlock->get_leftBlock();
+  SpinBlock* dotBlock = lhsdotBlock->get_rightBlock();
+
+  // Loop over NPDM operator patterns
+  Npdm::Npdm_patterns npdm_patterns( npdm_order_, sweepPos, endPos );
+
+  for (auto pattern = npdm_patterns.ldr_cd_begin(); pattern != npdm_patterns.ldr_cd_end(); ++pattern) {
+//    pout << "===========================================================================================\n";
+    cout << "=============================================================================== " << mpigetrank() << std::endl;
+
+    std::cout << "Doing pattern: rank " << mpigetrank() << std::endl;
+    npdm_patterns.print_cd_string( pattern->at('l') );
+    npdm_patterns.print_cd_string( pattern->at('d') );
+    npdm_patterns.print_cd_string( pattern->at('r') );
+    std::cout << std::endl;
+    std::vector<Npdm::CD> lhs_cd_type = pattern->at('l');
+    std::vector<Npdm::CD> dot_cd_type = pattern->at('d');
+    std::vector<Npdm::CD> rhs_cd_type = pattern->at('r');
+
+    // CHOICE OF READ FROM DISK OR NOT DONE INSIDE THE WRAPPER!!
     boost::shared_ptr<NpdmSpinOps> lhsOps = select_op_wrapper( lhsBlock, lhs_cd_type );
     boost::shared_ptr<NpdmSpinOps> rhsOps = select_op_wrapper( rhsBlock, rhs_cd_type );
     boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );
+
+//FIXME rewind files if wrapper reads from disk on RHS
+//    assert( rhs_cd_type.size() < 3 );
+
+//FIXME
+//if ( lhs_cd_type.size() > 3 ) continue;
+//if ( lhs_cd_type.size() < 2 ) continue;
+//FIXME
+//std::vector<Npdm::CD> lhs = {Npdm::CREATION,Npdm::DESTRUCTION,Npdm::CREATION};
+//if ( (lhs_cd_type != lhs) ) continue;
+//std::vector<Npdm::CD> rhs = {Npdm::CREATION,Npdm::DESTRUCTION,Npdm::DESTRUCTION};
+//if ( (rhs_cd_type != rhs) ) continue;
+//if ( (lhs_cd_type == foo) || (rhs_cd_type == foo) || (dot_cd_type == foo) ) continue;
+//if ( lhs_cd_type.size() == 2  &&
+//     dot_cd_type.size() == 2  &&
+//     rhs_cd_type.size() == 2 )
+    // Compute all irreducible PDM elements generated by this block operator pattern at this sweep position
+    npdm_loop_over_block_operators( npdm_expectations, *lhsOps, *rhsOps, *dotOps );
+  }
   
-    Npdm::Npdm_expectations npdm_expectations( npdm_order_, wavefunctions.at(0), big, *lhsOps, *dotOps, *rhsOps );
-  //cout << "-------------------------------------------------------------------------------------------\n";
-  cout << "lhsOps->size() = " << lhsOps->size() << "; rank = " << mpigetrank() <<  std::endl;
-  //cout << "dotOps->size()" << dotOps->size() << std::endl;
-  //cout << "rhsOps->size()" << rhsOps->size() << std::endl;
-  //cout << "------\n";
-  
-    // Only one spatial combination on the dot block
-    assert( dotOps->size() == 1 );
-    bool skip = dotOps->set_local_ops( 0 );
-    if (skip) return;
-    if ( lhsOps->opReps_.size() > 0 ) assert( dotOps->mults_.size() == dotOps->opReps_.size() );
-  
-    // Many spatial combinations on left block
-    assert( lhsOps->size() > 0 );
-    for ( int ilhs = 0; ilhs < lhsOps->size(); ++ilhs ) {
-      skip = lhsOps->set_local_ops( ilhs );
+  // Combine NPDM elements from this sweep point with others
+  accumulate_npdm();
+  save_npdm_binary(state, state);
+
+}
+
+//===========================================================================================================================================================
+
+}
+
+
   //    if (skip) continue;
   
   //    std::vector< boost::shared_ptr<NpdmSpinOps> > all_lhsOps;
@@ -276,79 +344,112 @@ void Npdm_driver::npdm_loop_over_block_operators( std::vector<Wavefunction> & wa
   //DEBUG <<<<<<<<<<<<<<<<<<<<<<
   
   
-      std::vector< boost::mpi::request > reqs;
-      std::vector< std::pair<bool, boost::shared_ptr<NpdmSpinOps>> > all_lhsOps = get_all_mpi_ops( skip, lhsOps, reqs ); 
+//      std::vector< boost::mpi::request > reqs;
+//      std::vector< std::pair<bool, boost::shared_ptr<NpdmSpinOps>> > all_lhsOps = get_all_mpi_ops( skip, lhsOps, reqs ); 
   
-      for ( auto lhs_mpi_op = all_lhsOps.begin(); lhs_mpi_op != all_lhsOps.end(); ++lhs_mpi_op ) {
-        // First element is local lhsOps so no need to wait
-        if ( ! lhs_mpi_op->first ) {
-          do_npdm_inner_loop( lhs_mpi_op->second, dotOps, rhsOps, npdm_expectations );
-        }
-        // Check all MPI communication of lhsOps is finished (or part of it?) and wait if necessary
-  //std::cout << "Waiting for MPI comm to finish... " << mpigetrank() << std::endl;
-  //      boost::mpi::wait_all(reqs.begin(), reqs.end());
-  //std::cout << "MPI comm done!  " << mpigetrank() << std::endl;
-  //      reqs.clear();
-      }
+//      for ( auto lhs_mpi_op = all_lhsOps.begin(); lhs_mpi_op != all_lhsOps.end(); ++lhs_mpi_op ) {
+//        // First element is local lhsOps so no need to wait
+//        if ( ! lhs_mpi_op->first ) {
+//          do_npdm_inner_loop( npdm_expectations, lhs_mpi_op->second, rhsOps, dotOps ); 
+//        }
+//        // Check all MPI communication of lhsOps is finished (or part of it?) and wait if necessary
+//  //std::cout << "Waiting for MPI comm to finish... " << mpigetrank() << std::endl;
+//  //      boost::mpi::wait_all(reqs.begin(), reqs.end());
+//  //std::cout << "MPI comm done!  " << mpigetrank() << std::endl;
+//  //      reqs.clear();
+//      }
   
-    // Synchronize all MPI ranks here ??
-    }
-  
-    // Close file if needed (put in wrapper destructor??)
-    if ( lhsOps->ifs_.is_open() ) lhsOps->ifs_.close();
-  
-  }
-  
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//    // Synchronize all MPI ranks here ??
+//    }
+//  
+//    // Close file if needed (put in wrapper destructor??)
+//    if ( lhsOps.ifs_.is_open() ) lhsOps.ifs_.close();
+//  
+//  }
+//  
 
-void Npdm_driver::compute_npdm_sweep(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int state, int sweepPos, int endPos)
-{
-  
-    pout << "===========================================================================================\n";
-    pout << "NPDM sweep position = "<< sweepPos << " (" << endPos << ")\n";
-  
-    // Npdm array built so far
-    load_npdm_binary(state, state);
-    
-    // Loop over NPDM operator patterns
-    Npdm::Npdm_patterns npdm_patterns( npdm_order_, sweepPos, endPos );
-  
-    for (auto pattern = npdm_patterns.ldr_cd_begin(); pattern != npdm_patterns.ldr_cd_end(); ++pattern) {
-  
-      pout << "===========================================================================================\n";
-      std::cout << "Doing pattern:\n";
-      npdm_patterns.print_cd_string( pattern->at('l') );
-      npdm_patterns.print_cd_string( pattern->at('d') );
-      npdm_patterns.print_cd_string( pattern->at('r') );
-      std::cout << std::endl;
-  
-      std::vector<Npdm::CD> lhs_cd_type = pattern->at('l');
-      std::vector<Npdm::CD> dot_cd_type = pattern->at('d');
-      std::vector<Npdm::CD> rhs_cd_type = pattern->at('r');
-  
-  //FIXME
-  //if ( lhs_cd_type.size() > 3 ) continue;
-  //if ( lhs_cd_type.size() < 2 ) continue;
-  //FIXME
-  //std::vector<Npdm::CD> lhs = {Npdm::CREATION,Npdm::DESTRUCTION,Npdm::CREATION};
-  //if ( (lhs_cd_type != lhs) ) continue;
-  //std::vector<Npdm::CD> rhs = {Npdm::CREATION,Npdm::DESTRUCTION,Npdm::DESTRUCTION};
-  //if ( (rhs_cd_type != rhs) ) continue;
-  //if ( (lhs_cd_type == foo) || (rhs_cd_type == foo) || (dot_cd_type == foo) ) continue;
-  //if ( lhs_cd_type.size() == 2  &&
-  //     dot_cd_type.size() == 2  &&
-  //     rhs_cd_type.size() == 2 )
-      // Compute all irreducible PDM elements generated by this block operator pattern at this sweep position
-      npdm_loop_over_block_operators( wavefunctions, big, lhs_cd_type, dot_cd_type, rhs_cd_type);
-    }
-    
-    // Combine NPDM elements from this sweep point with others
-    accumulate_npdm();
-    save_npdm_binary(state, state);
-  
-  }
-
-//===========================================================================================================================================================
-
-}
-
+//----------------------------------------------
+//
+//  boost::shared_ptr<NpdmSpinOps> nonlocal_ops (new NpdmSpinOps);
+////FIXME what kind of copy/assignment is this???
+/////  nonlocal_ops = local_ops;
+//  nonlocal_ops->size_ = local_ops->size_;
+//  nonlocal_ops->mults_ = local_ops->mults_;
+//  nonlocal_ops->build_pattern_ = local_ops->build_pattern_;
+//  nonlocal_ops->transpose_ = local_ops->transpose_;
+//  nonlocal_ops->factor_ = local_ops->factor_;
+//
+////  assert( nonlocal_ops->indices_ == local_ops->indices_ );
+////  assert( nonlocal_ops->opReps_.size() > 0 );
+//// Seems to be a shallow copy!
+////  nonlocal_ops->opReps_.clear();
+////  assert( local_ops->opReps_.size() > 0 );
+////  nonlocal_ops->indices_.clear();
+////  assert( local_ops->indices_.size() > 0 );
+//
+//
+////    boost::shared_ptr<SparseMatrix> op (new Cre);
+//////    ia2 >> *(lhsOps->opReps_.at(0));
+////    ia2 >> *op;
+////    assert( op_new->opReps_.size() == 0 );
+////    op_new->opReps_.push_back(op) ;
+//
+//  nonlocal_ops->opReps_.clear();
+//  for ( int i = 0; i < local_ops->opReps_.size(); ++i) {
+//    boost::shared_ptr<SparseMatrix> op (new Cre);
+//    nonlocal_ops->opReps_.push_back(op);
+//  }
+//
+//  // Now send operators to other MPI ranks in non-blocking fashion
+//  bool nonlocal_skip;
+////cout << "MAW mpi ops " << i << " communicate rank=" << mpigetrank() << std::endl;
+//
+//  if ( mpigetrank() == 0) {
+//    // Send
+//    world.send(1, 0, local_skip);
+//    world.send(1, 1, local_ops->indices_);
+//    for ( int i = 0; i < local_ops->opReps_.size(); ++i)
+//      world.send(1, i+2, *(local_ops->opReps_.at(i)) );
+////    reqs.push_back( world.isend(1, 0, local_skip) );
+////    reqs.push_back( world.isend(1, 1, local_ops->indices_) );
+////    reqs.push_back( world.isend(1, 2, local_ops->opReps_) );
+//    // Recv
+//    world.recv(1, 30, nonlocal_skip);
+//    world.recv(1, 40, nonlocal_ops->indices_);
+//    for ( int i = 0; i < local_ops->opReps_.size(); ++i)
+//      world.recv(1, i+50, *(nonlocal_ops->opReps_.at(i)) );
+////    reqs.push_back( world.irecv(1, 3, nonlocal_skip) );
+////    reqs.push_back( world.irecv(1, 4, nonlocal_ops->indices_) );
+////    reqs.push_back( world.irecv(1, 5, nonlocal_ops->opReps_) );
+//  }
+//  else if ( mpigetrank() == 1) {
+//    // Send
+//    world.send(0, 30, local_skip);
+//    world.send(0, 40, local_ops->indices_);
+//    for ( int i = 0; i < local_ops->opReps_.size(); ++i)
+//      world.send(0, i+50, *(local_ops->opReps_.at(i)) );
+////    reqs.push_back( world.isend(0, 3, local_skip) );
+////    reqs.push_back( world.isend(0, 4, local_ops->indices_) );
+////    reqs.push_back( world.isend(0, 5, local_ops->opReps_) );
+//    // Recv
+//    world.recv(0, 0, nonlocal_skip);
+//    world.recv(0, 1, nonlocal_ops->indices_);
+//    for ( int i = 0; i < local_ops->opReps_.size(); ++i)
+//      world.recv(0, i+2, *(nonlocal_ops->opReps_.at(i)) );
+////    reqs.push_back( world.irecv(0, 0, nonlocal_skip) );
+////    reqs.push_back( world.irecv(0, 1, nonlocal_ops->indices_) );
+////    reqs.push_back( world.irecv(0, 2, nonlocal_ops->opReps_) );
+//  }
+//  else
+//    assert(false);
+//
+//cout << local_ops->build_pattern_ << "; local skip = " << local_skip << std::endl;
+//cout << nonlocal_ops->build_pattern_ << "; nonlocal skip = " << nonlocal_skip << std::endl;
+//  std::pair<bool, boost::shared_ptr<NpdmSpinOps>> nonlocal_pair = std::make_pair( nonlocal_skip, nonlocal_ops );
+//  all_ops.push_back( nonlocal_pair );
+//
+//
+//
+//  return all_ops;
+//}
+//  

@@ -23,41 +23,35 @@ void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matri
 
 //===========================================================================================================================================================
 
-Npdm_expectations::Npdm_expectations( int order, Wavefunction & wavefunction, const SpinBlock & big, 
-                                      NpdmSpinOps & lhsOps,
-                                      NpdmSpinOps & dotOps,
-                                      NpdmSpinOps & rhsOps )
+Npdm_expectations::Npdm_expectations( const int order, Wavefunction & wavefunction, const SpinBlock & big )
 : npdm_order_(order),
   wavefunction_(wavefunction),
-  big_(big),
-  lhsOps_(lhsOps),
-  dotOps_(dotOps),
-  rhsOps_(rhsOps)
+  big_(big)
 { }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-std::string Npdm_expectations::get_op_string()
+std::string Npdm_expectations::get_op_string( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps )
 {
 
   // Set up npdm element indices
   std::vector<int> indices;
-  indices.reserve( lhsOps_.indices_.size() + dotOps_.indices_.size() + rhsOps_.indices_.size() );
-  indices.insert( indices.end(), lhsOps_.indices_.begin(), lhsOps_.indices_.end() );
-  indices.insert( indices.end(), dotOps_.indices_.begin(), dotOps_.indices_.end() );
-  indices.insert( indices.end(), rhsOps_.indices_.begin(), rhsOps_.indices_.end() );
+  indices.reserve( lhsOps.indices_.size() + dotOps.indices_.size() + rhsOps.indices_.size() );
+  indices.insert( indices.end(), lhsOps.indices_.begin(), lhsOps.indices_.end() );
+  indices.insert( indices.end(), dotOps.indices_.begin(), dotOps.indices_.end() );
+  indices.insert( indices.end(), rhsOps.indices_.begin(), rhsOps.indices_.end() );
 //FIXME tests
   assert( (indices.size() == 4) || (indices.size() == 6) || (indices.size() == 8) );
-  cout << "dot indices = "; for (auto it = dotOps_.indices_.begin(); it != dotOps_.indices_.end(); ++it) { cout << *it << " "; } cout << std::endl;
+  cout << "dot indices = "; for (auto it = dotOps.indices_.begin(); it != dotOps.indices_.end(); ++it) { cout << *it << " "; } cout << std::endl;
   cout << "spatial indices = "; for (auto it = indices.begin(); it != indices.end(); ++it) { cout << *it << " "; } cout << std::endl;
 
   // Set up how tensor operator is constructed from (compound) block operators
   std::string build_pattern = "(";
-  build_pattern.reserve( lhsOps_.build_pattern_.size() + dotOps_.build_pattern_.size() + rhsOps_.build_pattern_.size() + 2 );
-  build_pattern.insert( build_pattern.end(), lhsOps_.build_pattern_.begin(), lhsOps_.build_pattern_.end() );
-  build_pattern.insert( build_pattern.end(), dotOps_.build_pattern_.begin(), dotOps_.build_pattern_.end() );
+  build_pattern.reserve( lhsOps.build_pattern_.size() + dotOps.build_pattern_.size() + rhsOps.build_pattern_.size() + 2 );
+  build_pattern.insert( build_pattern.end(), lhsOps.build_pattern_.begin(), lhsOps.build_pattern_.end() );
+  build_pattern.insert( build_pattern.end(), dotOps.build_pattern_.begin(), dotOps.build_pattern_.end() );
   build_pattern.push_back( ')' );
-  build_pattern.insert( build_pattern.end(), rhsOps_.build_pattern_.begin(), rhsOps_.build_pattern_.end() );
+  build_pattern.insert( build_pattern.end(), rhsOps.build_pattern_.begin(), rhsOps.build_pattern_.end() );
 
   // Combine indices and build_pattern into one string
   std::string op_string;
@@ -76,78 +70,79 @@ std::string Npdm_expectations::get_op_string()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, int irhs )
+double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, int irhs, 
+                                                           NpdmSpinOps_base& lhsOps, NpdmSpinOps_base& rhsOps, NpdmSpinOps_base& dotOps )
 {
 //FIXME is null_deleter() necessary below?
   SparseMatrix* null = 0; 
   double expectation;
 
   boost::shared_ptr<SparseMatrix> lhsOp, dotOp, rhsOp;
-  if ( lhsOps_.opReps_.size() > 0 ) lhsOp = lhsOps_.opReps_.at(ilhs);
-  if ( dotOps_.opReps_.size() > 0 ) dotOp = dotOps_.opReps_.at(idot);
-  if ( rhsOps_.opReps_.size() > 0 ) rhsOp = rhsOps_.opReps_.at(irhs);
+  if ( lhsOps.opReps_.size() > 0 ) lhsOp = lhsOps.opReps_.at(ilhs);
+  if ( dotOps.opReps_.size() > 0 ) dotOp = dotOps.opReps_.at(idot);
+  if ( rhsOps.opReps_.size() > 0 ) rhsOp = rhsOps.opReps_.at(irhs);
 
-//if ( lhsOps_.opReps_.size() > 0 ) pout << "lhsOp:\n" << *lhsOp;
-//if ( dotOps_.opReps_.size() > 0 ) pout << "dotOp:\n" << *dotOp;
-//if ( rhsOps_.opReps_.size() > 0 ) pout << "rhsOp:\n" << *rhsOp;
+//if ( lhsOps.opReps_.size() > 0 ) pout << "lhsOp:\n" << *lhsOp;
+//if ( dotOps.opReps_.size() > 0 ) pout << "dotOp:\n" << *dotOp;
+//if ( rhsOps.opReps_.size() > 0 ) pout << "rhsOp:\n" << *rhsOp;
 
   // We need to distinguish cases where one or more blocks has an empty operator string
   // X_X_X
-  if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() > 0) ) {
+  if ( (lhsOps.opReps_.size() > 0) && (dotOps.opReps_.size() > 0) && (rhsOps.opReps_.size() > 0) ) {
     Transposeview lhsOpTr = Transposeview(*lhsOp);
-    if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
+    if ( lhsOps.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     Transposeview dotOpTr = Transposeview(*dotOp);
-    if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
+    if ( dotOps.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);
-    if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
+    if ( rhsOps.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_);
   }
   // X_X_0
-  else if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) ) {
+  else if ( (lhsOps.opReps_.size() > 0) && (dotOps.opReps_.size() > 0) && (rhsOps.opReps_.size() == 0) ) {
     Transposeview lhsOpTr = Transposeview(*lhsOp);
-    if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
+    if ( lhsOps.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     Transposeview dotOpTr = Transposeview(*dotOp);
-    if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
+    if ( dotOps.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *null, big_);
   }
   // X_0_X
-  else if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() > 0) ) {
+  else if ( (lhsOps.opReps_.size() > 0) && (dotOps.opReps_.size() == 0) && (rhsOps.opReps_.size() > 0) ) {
     Transposeview lhsOpTr = Transposeview(*lhsOp);
-    if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
+    if ( lhsOps.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);
-    if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
+    if ( rhsOps.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *null, *rhsOp, big_);
   }
   // 0_X_X
-  else if ( (lhsOps_.opReps_.size() == 0) && (dotOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() > 0) ) {
+  else if ( (lhsOps.opReps_.size() == 0) && (dotOps.opReps_.size() > 0) && (rhsOps.opReps_.size() > 0) ) {
     Transposeview dotOpTr = Transposeview(*dotOp);
-    if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
+    if ( dotOps.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);
-    if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
+    if ( rhsOps.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *rhsOp, big_);
   }
   // X_0_0
-  else if ( (lhsOps_.opReps_.size() > 0) && (dotOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() == 0) ) {
+  else if ( (lhsOps.opReps_.size() > 0) && (dotOps.opReps_.size() == 0) && (rhsOps.opReps_.size() == 0) ) {
     Transposeview lhsOpTr = Transposeview(*lhsOp);
-    if ( lhsOps_.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
+    if ( lhsOps.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *null, *null, big_);
   }
   // 0_X_0
-  else if ( (lhsOps_.opReps_.size() == 0) && (dotOps_.opReps_.size() > 0) && (rhsOps_.opReps_.size() == 0) ) {
+  else if ( (lhsOps.opReps_.size() == 0) && (dotOps.opReps_.size() > 0) && (rhsOps.opReps_.size() == 0) ) {
     Transposeview dotOpTr = Transposeview(*dotOp);
-    if ( dotOps_.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
+    if ( dotOps.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *null, big_);
   }
   // 0_0_X
-  else if ( (lhsOps_.opReps_.size() == 0) && (dotOps_.opReps_.size() == 0) && (rhsOps_.opReps_.size() > 0) ) {
+  else if ( (lhsOps.opReps_.size() == 0) && (dotOps.opReps_.size() == 0) && (rhsOps.opReps_.size() > 0) ) {
     Transposeview rhsOpTr = Transposeview(*rhsOp);
-    if ( rhsOps_.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
+    if ( rhsOps.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *null, *null, *rhsOp, big_);
   }
   else assert(false);
 
   // Modify new element with sign factors and return
-  double factor = lhsOps_.factor_ * dotOps_.factor_ * rhsOps_.factor_;
+  double factor = lhsOps.factor_ * dotOps.factor_ * rhsOps.factor_;
 //pout << "expectation, factor = " << expectation << ", " << factor  << std::endl;
   return expectation*factor;
 }
@@ -177,28 +172,28 @@ bool Npdm_expectations::test_for_singlet( int lhs_mult, int dot_mult, int rhs_mu
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Npdm_expectations::build_spin_adapted_singlet_expectations()
+void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps )
 {
   expectations_.clear();
 
   // IMPORTANT: generate spin-components in the same order as RHS of linear equation solver in npdm_set_up_linear_equations routine
   // i.e. in accordance with the operator string build_pattern
-  for (int irhs = 0; irhs < rhsOps_.mults_.size(); ++irhs) {
-    for (int idot = 0; idot < dotOps_.mults_.size(); ++idot) {
-      for (int ilhs = 0; ilhs < lhsOps_.mults_.size(); ++ilhs) {
+  for (int irhs = 0; irhs < rhsOps.mults_.size(); ++irhs) {
+    for (int idot = 0; idot < dotOps.mults_.size(); ++idot) {
+      for (int ilhs = 0; ilhs < lhsOps.mults_.size(); ++ilhs) {
 //pout << "spin comp: ilhs, idot, irhs = " << ilhs << idot << irhs << std::endl;
 
         // Check that the spin multiplicities of the actual operators we've got are what we think they are!
-//if ( lhsOps_.opReps_.size() > 0 ) {
-//pout << lhsOps_.mults_.at(ilhs) -1 << "          " << lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin << std::endl;
+//if ( lhsOps.opReps_.size() > 0 ) {
+//pout << lhsOps.mults_.at(ilhs) -1 << "          " << lhsOps.opReps_.at(ilhs)->get_deltaQuantum().totalSpin << std::endl;
 //}
-        if ( lhsOps_.opReps_.size() > 0 ) assert( lhsOps_.mults_.at(ilhs) -1 == lhsOps_.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );
-        if ( dotOps_.opReps_.size() > 0 ) assert( dotOps_.mults_.at(idot) -1 == dotOps_.opReps_.at(idot)->get_deltaQuantum().totalSpin );
-        if ( rhsOps_.opReps_.size() > 0 ) assert( rhsOps_.mults_.at(irhs) -1 == rhsOps_.opReps_.at(irhs)->get_deltaQuantum().totalSpin );
+        if ( lhsOps.opReps_.size() > 0 ) assert( lhsOps.mults_.at(ilhs) -1 == lhsOps.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );
+        if ( dotOps.opReps_.size() > 0 ) assert( dotOps.mults_.at(idot) -1 == dotOps.opReps_.at(idot)->get_deltaQuantum().totalSpin );
+        if ( rhsOps.opReps_.size() > 0 ) assert( rhsOps.mults_.at(irhs) -1 == rhsOps.opReps_.at(irhs)->get_deltaQuantum().totalSpin );
 
         // Screen operator combinations that do not combine to give a singlet
-        bool singlet = test_for_singlet( lhsOps_.mults_.at(ilhs), dotOps_.mults_.at(idot), rhsOps_.mults_.at(irhs) );
-        if ( singlet ) expectations_.push_back( contract_spin_adapted_operators( ilhs, idot, irhs ) );
+        bool singlet = test_for_singlet( lhsOps.mults_.at(ilhs), dotOps.mults_.at(idot), rhsOps.mults_.at(irhs) );
+        if ( singlet ) expectations_.push_back( contract_spin_adapted_operators( ilhs, idot, irhs, lhsOps, rhsOps, dotOps ) );
       }
     }
   }
@@ -216,9 +211,10 @@ cout << "---------------------------------\n";
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector< std::pair< std::vector<int>, double > > Npdm_expectations::get_nonspin_adapted_expectations()
+std::vector< std::pair< std::vector<int>, double > > 
+Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps )
 {
-  // Initialize dimension of spin-adapted to non-spin adapted transformation
+  // Initialize dimension of spin-adapted to non-spin-adapted transformation
   int dim;
   if ( npdm_order_ == 2 ) dim = 6;
   else if ( npdm_order_ == 3 ) dim = 20;
@@ -226,13 +222,9 @@ std::vector< std::pair< std::vector<int>, double > > Npdm_expectations::get_nons
   else assert(false);
 
   // Contract spin-adapted spatial operators and build singlet expectation values
-  build_spin_adapted_singlet_expectations();
+  build_spin_adapted_singlet_expectations( lhsOps, rhsOps, dotOps );
   
   // Now transform to non-spin-adapted spin-orbital representation
-  std::string op_string;
-  // Set up operator string  
-  op_string = get_op_string();
-
   // b holds the spin-adapted expectation values (we only care about the singlets)
   ColumnVector x(dim), b(dim);
   // x holds the non-spin-adapted expectation values
@@ -244,6 +236,7 @@ std::vector< std::pair< std::vector<int>, double > > Npdm_expectations::get_nons
   std::vector< std::vector<int> > so_indices(dim);
 
   // Parse operator string and set up linear equations
+  std::string op_string = get_op_string( lhsOps, rhsOps, dotOps );
   npdm_set_up_linear_equations(op_string, expectations_, A, b, so_indices );
 
 //pout << "A matrix:\n";
@@ -278,89 +271,6 @@ std::vector< std::pair< std::vector<int>, double > > Npdm_expectations::get_nons
 }
 
 //===========================================================================================================================================================
-//
-//Oporder Npdm_expectations::old_parse_build_pattern( std::vector<char> build_pattern )
-//{
-//
-//  std::vector<char> test;
-//
-//for (auto it = build_pattern.begin(); it != build_pattern.end(); ++it) {
-//  pout << *it;
-//}
-//pout << std::endl;
-//
-//  // 2,2,0
-//  test = { '(','(','C','C',')','(','D','D',')',')' };
-//  if ( build_pattern == test ) return CC_DD;  // (C2 VERIFIED)
-//  test = { '(','(','C','D',')','(','C','D',')',')' };
-//  if ( build_pattern == test ) return CD_CD;
-//
-//  // 2,1,1
-//  test = { '(','(','C','C',')','(','D',')',')','(','D',')' };
-//  if ( build_pattern == test ) return CC_D_D;
-//  test = { '(','(','C','D',')','(','C',')',')','(','D',')' };
-//  if ( build_pattern == test ) return CD_CD;  // ???
-//  test = { '(','(','C','D',')','(','D',')',')','(','C',')' };
-//  if ( build_pattern == test ) return CD_D_C; 
-//
-//  // 1,3,0  (C2 VERIFIED)
-//  test = { '(','(','C',')','(','C','(','D','D',')',')',')' };
-//  if ( build_pattern == test ) return CC_D_D;
-//
-//  // 1,2,1 
-//  test = { '(','(','C',')','(','C','D',')',')','(','D',')' };
-//  if ( build_pattern == test ) return C_CD_D;  // (H2O verified)
-//  test = { '(','(','C',')','(','D','D',')',')','(','C',')' };
-//  if ( build_pattern == test ) return D_CC_D; // ????
-//
-//  // 0,4,0  (VERIFIED)
-//  test = { '(','(','(','C','C',')','(','D','D',')',')',')' };
-//  if ( build_pattern == test ) return CC_DD;
-//
-//  // 0,3,1  (C2 VERIFIED)
-//  test = { '(','(','(','C','C',')','D',')',')','(','D',')' };
-//  if ( build_pattern == test ) return CC_D_D;
-//
-//  for (auto i = build_pattern.begin(); i != build_pattern.end(); ++i) {
-//    pout << *i;
-//  }
-//  pout << std::endl;
-//  assert( false );
-//
-//}
-//
-////-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//void Npdm_expectations::old_transform_spin_adapt_to_nonspin_adapt( array_4d<double> & twopdm ) 
-//{
-//
-//  // Set-up npdm element indices
-//  std::vector<int> indices;
-//  indices.reserve( lhsOps_.indices_.size() + dotOps_.indices_.size() + rhsOps_.indices_.size() );
-//  indices.insert( indices.end(), lhsOps_.indices_.begin(), lhsOps_.indices_.end() );
-//  indices.insert( indices.end(), dotOps_.indices_.begin(), dotOps_.indices_.end() );
-//  indices.insert( indices.end(), rhsOps_.indices_.begin(), rhsOps_.indices_.end() );
-//  assert (indices.size() == 4);
-//pout << "indices = " << indices[0] << "," << indices[1] << "," << indices[2] << "," << indices[3] << std::endl;
-//
-//  // Set-up how tensor operator is constructed from (compound) block operators
-//  std::vector<char> build_pattern = { '(' };
-//  build_pattern.reserve( lhsOps_.build_pattern_.size() + dotOps_.build_pattern_.size() + rhsOps_.build_pattern_.size() + 2 );
-//  build_pattern.insert( build_pattern.end(), lhsOps_.build_pattern_.begin(), lhsOps_.build_pattern_.end() );
-//  build_pattern.insert( build_pattern.end(), dotOps_.build_pattern_.begin(), dotOps_.build_pattern_.end() );
-//  build_pattern.push_back( ')' );
-//  build_pattern.insert( build_pattern.end(), rhsOps_.build_pattern_.begin(), rhsOps_.build_pattern_.end() );
-//
-//  // Call old code for transforming spin-adapted expectation values and twopdm update
-//  // Translate our format for the build pattern into the types used by the old twopdm implementation
-//  Oporder build_pattern_type = old_parse_build_pattern( build_pattern );  
-//  assert( expectations_.size() > 0 );
-////if ( build_pattern_type == CD_CD )
-//  spin_to_nonspin( indices, expectations_, twopdm, build_pattern_type, true );
-//
-//}
-//
-////-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 }
 }

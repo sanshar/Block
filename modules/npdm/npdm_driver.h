@@ -36,19 +36,16 @@ class Npdm_driver {
   
     int npdm_order_;
   
-    void do_npdm_inner_loop( boost::shared_ptr<NpdmSpinOps> & lhsOps,
-                             boost::shared_ptr<NpdmSpinOps> & dotOps,
-                             boost::shared_ptr<NpdmSpinOps> & rhsOps,
-                             Npdm::Npdm_expectations & npdm_expectations );
-    
-    std::vector< std::pair<bool, boost::shared_ptr<NpdmSpinOps>> > 
-      get_all_mpi_ops( const bool local_skip, boost::shared_ptr<NpdmSpinOps>& local_ops, std::vector< boost::mpi::request > & reqs );
-    
-    void npdm_loop_over_block_operators( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big,
-                                         std::vector<Npdm::CD> & lhs_cd_type,
-                                         std::vector<Npdm::CD> & dot_cd_type,
-                                         std::vector<Npdm::CD> & rhs_cd_type );
+    void do_npdm_inner_loop( Npdm::Npdm_expectations & npdm_expectations, NpdmSpinOps_base & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps );
+    void npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm_expectations, NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps );
+
+    std::vector<std::pair<bool, NpdmSpinOps_base>> 
+      get_all_mpi_ops(const bool local_skip, NpdmSpinOps & local_ops, std::vector< boost::mpi::request > & reqs);
   
+    int get_mpi_max_lhs_size( int my_size );
+//    void send_mpi_obj( int rank, int id, NpdmSpinOps_base & obj );
+//    void recv_mpi_obj( int rank, int id, NpdmSpinOps_base & obj );
+
     virtual void accumulate_npdm() = 0;
     virtual void load_npdm_binary(const int &i, const int &j) = 0;
     virtual void save_npdm_binary(const int &i, const int &j) = 0;

@@ -354,7 +354,7 @@ void fourpdm_loop_over_block_operators( Wavefunction & wavefunction,
   boost::shared_ptr<NpdmSpinOps> rhsOps = select_op_wrapper( rhsBlock, rhs_cd_type );
   boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );
 
-  Npdm::Npdm_expectations npdm_expectations( 4, wavefunction, big, *lhsOps, *dotOps, *rhsOps );
+//  Npdm::Npdm_expectations npdm_expectations( 4, wavefunction, big, *lhsOps, *dotOps, *rhsOps );
 
   // Only one spatial combination on the dot block
   assert( dotOps->size() == 1 );
@@ -375,10 +375,10 @@ void fourpdm_loop_over_block_operators( Wavefunction & wavefunction,
       if ( rhsOps->opReps_.size() > 0 ) assert( rhsOps->mults_.size() == rhsOps->opReps_.size() );
 
       // Get non-spin-adapated 4PDM elements after building spin-adapted elements
-      std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations();
+//      std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations();
 
       // Assign fourpdm elements
-      assign_fourpdm_elements( new_spin_orbital_elements, fourpdm );
+//      assign_fourpdm_elements( new_spin_orbital_elements, fourpdm );
     }
   }
 }

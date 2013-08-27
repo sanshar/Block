@@ -176,6 +176,7 @@ Npdm_op_wrapper_compound_CDD::Npdm_op_wrapper_compound_CDD( SpinBlock * spinBloc
   factor_ = 1.0;
   transpose_ = false;
 //  build_pattern_ = "((CD)D)";
+  build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
 }
@@ -559,6 +560,7 @@ cout << "getting CCC operator...\n";
 //  opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
 
 
+assert(false);
 //FIXME READ OPERATORS FROM DISK HERE
   std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
   opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);

@@ -7,7 +7,6 @@
 #include <vector>
 #include "pario.h"
 #include "npdm_patterns.h"
-using namespace std; // only for pout
 
 namespace SpinAdapted {
 namespace Npdm {
@@ -85,24 +84,24 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
   // 4PDM
   else if (pdm_order_ == 4) {
     if ( sweep_pos == 0 ) {
-      pout << "WARNING: 4PDM edge cases NYI!\n";
+      std::cout << "WARNING: 4PDM edge cases NYI!\n";
     }
     else if ( sweep_pos == end_pos ) {
-      pout << "WARNING: 4PDM edge cases NYI!\n";
+      std::cout << "WARNING: 4PDM edge cases NYI!\n";
     }
   }
   else assert(false);
 
   // Print out
-  pout << "=================================================================\n";
-  pout << "Possible block partitions:\n";
+  std::cout << "=================================================================\n";
+  std::cout << "Possible block partitions:\n";
   for ( auto it = lhs_dot_rhs_types_.begin(); it != lhs_dot_rhs_types_.end(); ++it ) {
-    pout << std::get<0>(*it) << "," << std::get<1>(*it) << "," << std::get<2>(*it) << std::endl;
+    std::cout << std::get<0>(*it) << "," << std::get<1>(*it) << "," << std::get<2>(*it) << std::endl;
   }
   if ( sweep_pos == 0 )
-    pout << "Added extra partitions for initial sweep position\n";
+    std::cout << "Added extra partitions for initial sweep position\n";
   else if ( sweep_pos == end_pos )
-    pout << "Added extra partitions for final sweep position\n";
+    std::cout << "Added extra partitions for final sweep position\n";
 
 }
 
@@ -151,10 +150,10 @@ void Npdm_patterns::build_cre_des_types()
   add_operator( pdm_order_-1, pdm_order_, cd_type );
 
   // Print out
-  pout << "=================================================================\n";
-  pout << "Creation/destruction patterns:\n";
+  std::cout << "=================================================================\n";
+  std::cout << "Creation/destruction patterns:\n";
   for (auto iter = cre_des_types_.begin(); iter != cre_des_types_.end(); iter++) {
-    print_cd_string(*iter); pout << std::endl;
+    print_cd_string(*iter); std::cout << std::endl;
   }
 }
 
@@ -192,7 +191,7 @@ bool Npdm_patterns::is_rhs_gte_lhs( std::vector<int> & vec1, std::vector<int> & 
 {
   assert(vec1.size() == vec2.size());
   //print_int_string(vec1);
-  //print_int_string(vec2);  pout << std::endl;
+  //print_int_string(vec2);  std::cout << std::endl;
   for (int i=0; i != vec1.size(); i++) {
     if (vec2[i] > vec1[i]) return true;
     if (vec2[i] < vec1[i]) return false;
@@ -249,15 +248,15 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
 {
 
   ldr_cd_types_.clear();
-  pout << "=================================================================\n";
-  pout << "Spin-1/2 fermionic operator patterns for DMRG blocks:\n";
+  std::cout << "=================================================================\n";
+  std::cout << "Spin-1/2 fermionic operator patterns for DMRG blocks:\n";
 
   // Loop over LHS, Dot, RHS patterns
   for (auto ldr_iter = lhs_dot_rhs_types_.begin(); ldr_iter != lhs_dot_rhs_types_.end(); ldr_iter++) {
     int ilhs = std::get<0>(*ldr_iter);
     int idot = std::get<1>(*ldr_iter);
     int irhs = std::get<2>(*ldr_iter);
-    pout << ilhs << "," << idot << "," << irhs << "\n";
+    std::cout << ilhs << "," << idot << "," << irhs << "\n";
 
     // Loop over creation-destruction patterns
     for (auto cd_iter = cre_des_types_.begin(); cd_iter != cre_des_types_.end(); cd_iter++) {
@@ -284,7 +283,7 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
       if ( not is_valid_ldr_type( cd_pattern ) ) continue;
       print_cd_string( lhs_cd );
       print_cd_string( dot_cd );
-      print_cd_string( rhs_cd ); pout << "\n";
+      print_cd_string( rhs_cd ); std::cout << "\n";
 
       ldr_cd_types_.insert( cd_pattern );
       if ( lhs_cd.size() != 0 ) lhs_cd_types_.insert( lhs_cd );
@@ -298,25 +297,25 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //
 //  // Print out
-//  pout << "----------------------------------\n";
+//  std::cout << "----------------------------------\n";
 //  for (auto iter = ldr_cd_types_.begin(); iter != ldr_cd_types_.end(); iter++) {
 //    print_cd_string( iter->at('l') );
 //    print_cd_string( iter->at('d') );
 //    print_cd_string( iter->at('r') );
-//    pout << std::endl;
+//    std::cout << std::endl;
 //  }
-//  pout << "Number of unique patterns = " << ldr_cd_types_.size() << std::endl;
+//  std::cout << "Number of unique patterns = " << ldr_cd_types_.size() << std::endl;
 //
 //
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Npdm_patterns::print_int_string( const std::vector<int> & vec )
 {
-  pout << "(";
+  std::cout << "(";
   for (auto op = vec.begin(); op != vec.end(); op++) {
-     pout << *op;
+     std::cout << *op;
   }
-  pout << ")";
+  std::cout << ")";
 
 }
 
@@ -325,13 +324,13 @@ void Npdm_patterns::print_int_string( const std::vector<int> & vec )
 void Npdm_patterns::print_cd_string( const std::vector<CD> & cdvec )
 {
   char cd;
-  pout << "(";
+  std::cout << "(";
   for (auto op = cdvec.begin(); op != cdvec.end(); op++) {
      cd = '.';
      if (*op == CREATION) cd = '+';
-     pout << cd;
+     std::cout << cd;
   }
-  pout << ")";
+  std::cout << ")";
 
 }
 
