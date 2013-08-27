@@ -1,0 +1,15 @@
+For different compiler use
+
+Have to compile in two parts?
+
+(1) 
+export CXX=g++
+export OMPI_CXX=g++
+
+(2) 
+export CXX='g++44 -std=c++0x'
+export OMPI_CXX='g++44 -std=c++0x'
+
+
+REMEMBER I PUT IN MICHELS change in rotationmat.C
+
