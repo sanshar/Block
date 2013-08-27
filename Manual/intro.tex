@@ -45,6 +45,7 @@ Jonathan Dorando and Debashree Ghosh
 \tableofcontents
 \newpage
 \pagenumbering{arabic}
+
 \section{Introduction}
 
 Block implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry. 
@@ -76,52 +77,35 @@ As of the current beta release, Block implements the following features:
 \item A convenient interface to the Molpro program package.
 \end{itemize}
 
-\section{Licence and how to cite}\label{sec:papers}
-
-Block is distributed under the GNU GPL licence which is reproduced in the file \texttt{LICENSE}. In addition, Block contains a 
-full copy of the Newmat C++ matrix library by Robert Davies.
-
-We would appreciate if you cite the following papers in publications resulting from the use of Block:
-\begin{itemize}
- \item G. K.-L. Chan and M. Head-Gordon, \emph{J. Chem. Phys.} \textbf{116}, 4462 (2002),
- \item G. K.-L. Chan, \emph{J. Chem. Phys.} \textbf{120}, 3172 (2004),
- \item D. Ghosh, J. Hachmann, T. Yanai, and G. K.-L. Chan, \emph{J. Chem. Phys.}, {\bf 128}, 144117 (2008),
- \item S. Sharma and G. K-.L. Chan, \emph{J. Chem. Phys.} \textbf{136}, 124121 (2012).
-\end{itemize}
-
-In addition, a useful list of DMRG references relevant to quantum chemistry
-can be found in the article above by Sharma and Chan.
-
 \section{Installation}\label{sec:install}
 Block is written in C++ and requires a C++ compiler. It has the following additional dependencies:
 \begin{itemize}
 \item Complete BLAS, LAPACK, and Boost C++ libraries,
 \item For parallel execution MPI must be installed, and the Boost MPI library must have been compiled with the same version of MPI,
-\item Depending on the operating system, you may wish to install a custom malloc (see below, and section \ref{sec:computation}),
-\item To run the tests, Python needs to be installed.
+\item Depending on the operating system, you may wish to install a custom malloc (see Sec.~\ref{sec:appInstall}, and Sec. \ref{sec:computation}),
+\item python, to run the tests.To run the tests, Python needs to be installed.
 \end{itemize}
 The program has been tested on Linux systems, although we expect it to run on other Unix type operating systems as well. 
 
-Block is compiled using the makefile supplied in the distribution. The following customizations need to be made to the makefile.
+%maybe switch to appendix
+\subsection{makefile}
+Block is compiled using the makefile supplied in the distribution. The following customizations need to be made to the makefile. More details follow in Sec.~\ref{sec:appInstall}
 \begin{itemize}
  \item \textbf{Boost}\\The variable \texttt{BOOST} should be set to the location of the Boost installation. 
 \item \textbf{Lapack and Blas}\\ The variable \texttt{LAPACKBLAS} should be
 set to the linking command for the BLAS and LAPACK libraries.
 \item \textbf{Compiler}\\
    By default, Block is set up to use the gcc compiler. If you wish to use the Intel C++ compiler you should modify the variable \texttt{CXX} to \texttt{icpc}.
-While the code has not been tested with other compilers, the variable \texttt{CXX}  can be changed as appropriate for different compilers.
-\item \textbf{Custom malloc}\\
-DMRG calculations allocate and deallocate small blocks of memory a large number of times during a single calculation. For large scale calculations,
-this can lead to significant memory fragmentation over time. In some cases, this can be significantly ameliorated by installing a
-custom memory allocator. The linking command for the memory allocator is given by the variable \texttt{MALLOC},
 \item \textbf{Parallel execution}\\
-If one wishes to use only the serial version of Block, no more changes are necessary. To compile the
-parallel version of the code, \texttt{USE\_MPI} should be set to \texttt{true}.  If an mpi enabled c++ wrapper compiler ``mpic++'' is available then no further changes are necessary. If this is not the case then \texttt{MPICXX} should be changed to the name of the parallel C++ compiler.  Also in absence of the wrapper compiler additional mpi libraries need to be specified manually using the variable \texttt{MPI\_LIB}. %\texttt{CXX} should be changed to the name of the parallel C++ compiler or wrapper (e.g. mpic++). In general, the parallel wrapper will automatically link the appropriate MPI libraries. However, if MPI libraries need to be linked manually, \texttt{MPI\_LIB} should be set to the appropriate linking command.
-%% To install the parallel version of the code the variable \textsf{USE\_MPI} should be set to \textsf{yes}. If an mpi enabled c++ wrapper compiler ``mpic++'' is available then no further changes are necessary. If this is not the case then one needs to manually change two entries, line 36 and line 37, of the makefile. Line 36 defines the variable \textsf{MPI\_LIB}. In addition to the linking Qcdmrg with the mpi boost library, additional mpi libraries need to be specified. The location of these will depend on the platform and also the flavor of mpi installed. Line 37 defines the variable \textsf{CXX} as \textsf{mpic++}; this has to be changed to the usual c++ compiler one is interested in using e.g. g++ for the case of gcc compiler.
+	is enabled by default. Make sure that the \texttt{MPI\_LIB} variable points to the location of the boost\_mpi library. If one wishes to use only the serial version of Block, modify the \texttt{USE\_MPI} variable to \texttt{false}. More details on the parallel execution are available in Sec.~\ref{sec:appInstall}.
 \end{itemize}
 
 \section{Running and testing the code}
 Block can be tested by executing the script \texttt{runtest} in the  directory \texttt{dmrg\_tests}. The tests require Python to be installed on the system.
+\begin{verbatim}
+cd dmrg_tests
+./runtests
+\end{verbatim}
 
 The stand-alone code can be executed using the command
 \begin{verbatim}
@@ -130,13 +114,8 @@ block.spin_adapted input.dat > output.dat
 \texttt{input.dat} is the input file and the output of the program is piped 
 into the output file \texttt{output.dat}.
 
-
-
-
 %% The variational freedom in the wavefunction is parameterized by $M$, the
 %% number of renormalized states. As $M$ is increased, the DMRG wavefunction becomes exact.
-
-
 
 
 %% There are two kinds of orbital correlation where it is especially beneficial to use the DMRG. These are
@@ -155,8 +134,6 @@ into the output file \texttt{output.dat}.
 
 
 %% In general
-
-
 
 %% ; formally
 %% FCI is always reproduced when $M \approx \sqrt{N_d}$, where $N_d$ is the full Hilbert space size. In many
@@ -194,84 +171,42 @@ molpro input.mol > output.mol
 block.spin_adapted input.dat > output.dat
 \end{verbatim}
 
-Similarly to other multi-reference quantum chemistry methods, the DMRG
-is not a black-box technique. Thus while it is easy to setup a DMRG input file, understanding the theory will be helpful 
-to use the method in an optimal way. If you have not
-previously run other DMRG calculations, we highly recommend
-reading the discussion  in sections \ref{sec:appendix1} and \ref{sec:appendix2}. 
-Several aspects of the Block input also directly refer to the concepts in sections \ref{sec:appendix1} and \ref{sec:appendix2}. 
+For in depth detail to DMRG, Sec.~\ref{sec:appendix1}--\ref{sec:appendix2}
+refer to a discussion of the DMRG method.  In the following we provide the
+method necessary to run a DMRG calculation.  The rest of the detais are
+available in Sec.~\ref{sec:appDetails}.  Several aspects of the Block input
+also directly refer to the concepts in the sections above.
 
 We can break down the tasks needed to successfully setup, run, and monitor a DMRG calculation as follows:
 \begin{enumerate}
 \item {\bf Molpro} Generate orbitals and select an active space. 
-\item {\bf Molpro} Rotate the active space orbitals and choose an orbital ordering.
+\item {\bf Molpro} Rotate the active space orbitals
 \item {\bf Molpro} Dump the integrals for the Block program.
+\item {\bf Block} Choose an orbital ordering (default)
 \item {\bf Block} Set up Block input, execute Block program.
 \item {\bf Block} Monitor DMRG energy convergence as a function of $M$. For additional accuracy, extrapolate energy as a function of discarded weight. 
 \end{enumerate}
 
-The most common pitfalls are in steps 2 and 5. In step 2, a good choice of orbitals and ordering in DMRG is situation specific. Currently
-it requires some human input and recommended choices are given in section \ref{sec:appendix2}. In step 5,
-in difficult molecules it is possible for a DMRG calculation to get stuck in a local minimum. The theoretical reasons for this are discussed in section \ref{sec:appendix1};
-practical strategies to correct this are given in section \ref{sec:convergence1} and section \ref{sec:convergence2}.
+%The most common pitfalls are in steps 2 and 6. In step 2, a good choice of orbitals and ordering in DMRG is situation specific. 
+%Currently
+%it requires some human input and recommended choices are given in section \ref{sec:appendix2}. In step 5,
+%in difficult molecules it is possible for a DMRG calculation to get stuck in a local minimum. The theoretical reasons for this are discussed in section \ref{sec:appendix1};
+%practical strategies to correct this are given in section \ref{sec:convergence1} and section \ref{sec:convergence2}.
 
-We now go through steps 1-5 in more detail. We will use the simple example of benzene in a minimal basis as our test example, and we will use Block
+We now go through steps 1--6 in more detail. We will use the simple example of benzene in a minimal basis as our test example, and we will use Block
 to carry out a calculation in the CAS(6,6) space. As a more realistic application of the DMRG, we will next discuss a calculation on the Cr$_2$ molecule
-in a CAS(24,30) space.
+in a CAS(24,30) space and porphine in a CAS(24, 24) space.
 
 %% The current distribution of the Block program is provided with an interface to the Molpro package. Consequently, we shall
 %%  use Molpro in our examples below. 
 
-
 \subsection{Generating the orbitals and integrals using Molpro}
-
-We first generate the orbitals and integrals for DMRG using the Molpro 2010.2 package. 
+We first generate the orbitals and integrals for DMRG using the Molpro 2012.2 package. 
 (Note that to use Block with another program package, you need to
-to generate integrals in the Molpro FCIDUMP text integral format. The format of the FCIDUMP file is described below in this section). We first identify
+to generate integrals in the Molpro FCIDUMP text integral format. The format of the FCIDUMP file is described in Sec.~\ref{sec:appFCIDUMP}. 
+We first identify
 the $\pi$ electron active space (step 1), localize the orbitals to make atomic like $p_z$ orbitals and prepare to reorder them as in Fig. \ref{fig:order} (step 2),
 and dump the corresponding one- and two-electron integrals for the Block program (step 3). All this may be carried out using the Molpro input file,
-{
-\begin{verbatim}
-angstrom
-symmetry, nosym
-geomtyp=xyz
-geometry={
-C  0.000  1.396  0.000
-C  1.209  0.698  0.000
-C  1.209 -0.698  0.000
-C  0.000 -1.396  0.000
-C -1.209 -0.698  0.000
-C -1.209  0.698  0.000
-H  0.000  2.479  0.000
-H  2.147  1.240  0.000
-H  2.147 -1.240  0.000
-H  0.000 -2.479  0.000
-H -2.147 -1.240  0.000
-H -2.147  1.240  0.000
-}
-basis=sto-3g
-{rhf
-wf, 42, 1, 0
-}
-{mcscf,
-occ, 21
-frozen, 20
-rotate, 19.1, 17.1, 0
-}
-
-{locali, pipek, locmethod=3
-thresh, 1d-12, 1e-5
-core, 18
-occ, 24
-}
-
-{fci,
-core, 18
-occ, 24
-dump
-}
-\end{verbatim}
-}
 
 \begin{enumerate}
  \item First, a restricted Hartree-Fock calculation is performed. No symmetry is 
@@ -289,9 +224,13 @@ At this stage, all the orbitals are delocalized.
 %% \label{fig:orb19}
 %% \end{figure}
 
-\item We recognize that benzene is a ring-like molecule, and that a good orbital choice
-for the DMRG calculation is the set of localized orbitals (section \ref{sec:appendix2}). In Molpro, the orbitals to be localized need to be arranged
-contiguously. We thus exchange the 17th orbital with the 19th, using the \texttt{rotate} directive in the \texttt{mcscf} program. 
+\item We recognize that benzene is a ring-like molecule, and that a good
+	orbital choice for the DMRG calculation is the set of localized
+	orbitals (section \ref{sec:appendix2}). In Molpro, the orbitals to be
+	localized need to be arranged contiguously. We thus exchange the 17th
+	orbital with the 19th, using the \texttt{rotate} directive in the
+	\texttt{mcscf} program. The \texttt{merge} program is a more robust
+	method to localize the orbitals.
 
 %% \begin{figure}
 %% \begin{center}
@@ -301,32 +240,14 @@ contiguously. We thus exchange the 17th orbital with the 19th, using the \texttt
 %% \label{fig:orb19_loc}
 %% \end{figure}
 
-\item The six $\pi$ and $\pi^*$ orbitals are localized using the \texttt{locali} command, yielding a set of 6 $p_z$ atomic-like orbitals. 
+\item The six $\pi$ and $\pi^*$ orbitals are localized using the
+	\texttt{locali} command, yielding a set of 6 $p_z$ atomic-like
+	orbitals. 
 
-\item The \texttt{fci} program is used to dump out one- and two-electron integrals and information on the irreducible representations of the orbitals. The resulting file is named \texttt{FCIDUMP}. This contains all the orbital information required by Block.
-\end{enumerate}
-
-For users who wish to generate their own \texttt{FCIDUMP} file using an external program, the first few lines of \texttt{FCIDUMP} are as follows:
-\begin{verbatim}
-&FCI NORB=  6
- ORBSYM=1,1,1,1,1,1
-&END
-   0.692891195085      1  1  1  1
-   0.680896658317E-03  2  1  1  1
-\end{verbatim}
-The first line gives the total number of active orbitals using the keyword \texttt{NORB=}. The second line uses the keyword \texttt{ORBSYM=}, which is followed by the irreducible representation of the active orbitals. The irreps are labelled from 1 to 8 and are given in Table~\ref{tab:irrep}.
-Each line following the keyword \texttt{END} has 5 numbers, the first number is the one-electron or two-electron integral and the next 4 integers are the orbital indices. The two body integrals are given in chemists' notation, so a line containing two-body integrals will be\\
-\texttt{
-\\$( a b|cd)$ a b c d\\}
- 
-The one-body integrals only need two indices, and the last two indices are just 0 and 0; so a typical line containing one body integral will be\\
-\texttt{
-\\$\langle a|b\rangle$ a b 0 0\\}
-
-Finally if one is performing an active space calculation, then the core energy can be specified with all four incides equal to 0, e.g.
-\begin{verbatim}
-core_energy 0 0 0 0
-\end{verbatim}
+\item The \texttt{fci} program is used to dump out one- and two-electron
+integrals and information on the irreducible representations of the orbitals.
+The resulting file is named \texttt{FCIDUMP}. This contains all the orbital
+information required by Block.  \end{enumerate}
 
 \begin{table}\label{tab:irrep}
 \begin{center}
@@ -709,6 +630,47 @@ callDMRG(inputf, outputf);\\
 } 
 where \texttt{inputf} and \texttt{outputf} are C-style character arrays specifying the Block input and output files respectively.
 
+\section{Licence and how to cite}\label{sec:papers}
+
+Block is distributed under the GNU GPL licence which is reproduced in the file \texttt{LICENSE}. In addition, Block contains a 
+full copy of the Newmat C++ matrix library by Robert Davies.
+
+We would appreciate if you cite the following papers in publications resulting from the use of Block:
+\begin{itemize}
+ \item G. K.-L. Chan and M. Head-Gordon, \emph{J. Chem. Phys.} \textbf{116}, 4462 (2002),
+ \item G. K.-L. Chan, \emph{J. Chem. Phys.} \textbf{120}, 3172 (2004),
+ \item D. Ghosh, J. Hachmann, T. Yanai, and G. K.-L. Chan, \emph{J. Chem. Phys.}, {\bf 128}, 144117 (2008),
+ \item S. Sharma and G. K-.L. Chan, \emph{J. Chem. Phys.} \textbf{136}, 124121 (2012).
+\end{itemize}
+
+In addition, a useful list of DMRG references relevant to quantum chemistry
+can be found in the article above by Sharma and Chan.
+
+\section{Appendix: Additional installation details}\label{sec:appInstall}
+\begin{itemize}
+	\item \textbf{Custom malloc}\\
+DMRG calculations allocate and deallocate small blocks of memory a large number of times during a single calculation. For large scale calculations,
+this can lead to significant memory fragmentation over time. In some cases, this can be significantly ameliorated by installing a
+custom memory allocator. The linking command for the memory allocator is given by the variable \texttt{MALLOC},
+	\item 
+If an mpi enabled c++ wrapper compiler ``mpic++'' is available then no further changes are necessary. If this is not the case then \texttt{MPICXX} should be changed to the name of the parallel C++ compiler.  Also in absence of the wrapper compiler additional mpi libraries need to be specified manually using the variable \texttt{MPI\_LIB}. %\texttt{CXX} should be changed to the name of the parallel C++ compiler or wrapper (e.g. mpic++). In general, the parallel wrapper will automatically link the appropriate MPI libraries. However, if MPI libraries need to be linked manually, \texttt{MPI\_LIB} should be set to the appropriate linking command.
+%% To install the parallel version of the code the variable \textsf{USE\_MPI} should be set to \textsf{yes}. If an mpi enabled c++ wrapper compiler ``mpic++'' is available then no further changes are necessary. If this is not the case then one needs to manually change two entries, line 36 and line 37, of the makefile. Line 36 defines the variable \textsf{MPI\_LIB}. In addition to the linking Qcdmrg with the mpi boost library, additional mpi libraries need to be specified. The location of these will depend on the platform and also the flavor of mpi installed. Line 37 defines the variable \textsf{CXX} as \textsf{mpic++}; this has to be changed to the usual c++ compiler one is interested in using e.g. g++ for the case of gcc compiler.
+\end{itemize}
+
+\section{Appendix: Input and calculation details}
+\label{sec:appDetails}
+We can break down the tasks needed to successfully setup, run, and monitor a DMRG calculation as follows:
+\begin{enumerate}
+\item {\bf Molpro} Generate orbitals and select an active space. 
+\item {\bf Molpro} Rotate the active space orbitals
+\item {\bf Molpro} Dump the integrals for the Block program.
+\item {\bf Block} Choose an orbital ordering (default)
+\item {\bf Block} Set up Block input, execute Block program.
+\item {\bf Block} Monitor DMRG energy convergence as a function of $M$. For additional accuracy, extrapolate energy as a function of discarded weight. 
+\end{enumerate}
+
+
+
 \section{Appendix: Introduction to DMRG concepts}\label{sec:appendix1}
 
 Here, we briefly describe some of the theory and ideas behind the DMRG. 
@@ -928,7 +890,76 @@ There are three localization options for \texttt{BLOCK}:
  \end{figure}
 %\section{Appendix: Orbital ordering}
 
+ \section{Appendix: FCIDUMP}\label{sec:appFCIDUMP}
+For users who wish to generate their own \texttt{FCIDUMP} file using an external program, the first few lines of \texttt{FCIDUMP} are as follows:
+\begin{verbatim}
+&FCI NORB=  6
+ ORBSYM=1,1,1,1,1,1
+&END
+   0.692891195085      1  1  1  1
+   0.680896658317E-03  2  1  1  1
+\end{verbatim}
+The first line gives the total number of active orbitals using the keyword \texttt{NORB=}. The second line uses the keyword \texttt{ORBSYM=}, which is followed by the irreducible representation of the active orbitals. The irreps are labelled from 1 to 8 and are given in Table~\ref{tab:irrep}.
+Each line following the keyword \texttt{END} has 5 numbers, the first number is the one-electron or two-electron integral and the next 4 integers are the orbital indices. The two body integrals are given in chemists' notation, so a line containing two-body integrals will be\\
+\texttt{
+\\$( a b|cd)$ a b c d\\}
+ 
+The one-body integrals only need two indices, and the last two indices are just 0 and 0; so a typical line containing one body integral will be\\
+\texttt{
+\\$\langle a|b\rangle$ a b 0 0\\}
+
+Finally if one is performing an active space calculation, then the core energy can be specified with all four incides equal to 0, e.g.
+\begin{verbatim}
+core_energy 0 0 0 0
+\end{verbatim}
+
+
 %\bibliography{reference}
 
+ \section{Appendix: Molpro input files}\label{sec:appMolpro}
+
+ \subsection{Benzene molecule}
+{
+\begin{verbatim}
+angstrom
+symmetry, nosym
+geomtyp=xyz
+geometry={
+C  0.000  1.396  0.000
+C  1.209  0.698  0.000
+C  1.209 -0.698  0.000
+C  0.000 -1.396  0.000
+C -1.209 -0.698  0.000
+C -1.209  0.698  0.000
+H  0.000  2.479  0.000
+H  2.147  1.240  0.000
+H  2.147 -1.240  0.000
+H  0.000 -2.479  0.000
+H -2.147 -1.240  0.000
+H -2.147  1.240  0.000
+}
+basis=sto-3g
+{rhf
+wf, 42, 1, 0
+}
+{mcscf,
+occ, 21
+frozen, 20
+rotate, 19.1, 17.1, 0
+}
+
+{locali, pipek, locmethod=3
+thresh, 1d-12, 1e-5
+core, 18
+occ, 24
+}
+
+{fci,
+core, 18
+occ, 24
+dump
+}
+\end{verbatim}
+}
 
 \end{document}
