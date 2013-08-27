@@ -201,54 +201,63 @@ in a CAS(24,30) space and porphine in a CAS(24, 24) space.
 %%  use Molpro in our examples below. 
 
 \subsection{Generating the orbitals and integrals using Molpro}
-We first generate the orbitals and integrals for DMRG using the Molpro 2012.2 package. 
-(Note that to use Block with another program package, you need to
-to generate integrals in the Molpro FCIDUMP text integral format. The format of the FCIDUMP file is described in Sec.~\ref{sec:appFCIDUMP}. 
-We first identify
-the $\pi$ electron active space (step 1), localize the orbitals to make atomic like $p_z$ orbitals and prepare to reorder them as in Fig. \ref{fig:order} (step 2),
-and dump the corresponding one- and two-electron integrals for the Block program (step 3). All this may be carried out using the Molpro input file,
 
-\begin{enumerate}
- \item First, a restricted Hartree-Fock calculation is performed. No symmetry is 
-used (\texttt{symmetry,nosym}), because we wish to generate atomic-like $p_z$ orbitals
-for the DMRG calculation, which requires localizing the orbitals across different irreducible representations. 
+We first generate the orbitals and integrals for DMRG using the Molpro 2012.2
+package.  (Note that to use Block with another program package, you need to to
+generate integrals in the Molpro FCIDUMP text integral format. The format of
+the FCIDUMP file is described in Sec.~\ref{sec:appFCIDUMP}).  We first identify
+the $\pi$ electron active space (step 1), localize the orbitals to make atomic
+like $p_z$, and dump the corresponding one- and two-electron integrals for the
+Block program (step 3). All this may be carried out using the Molpro input
+file located in Sec.~\ref{sec:appMolprobenz}.
 
-In general, the Hartree-Fock orbitals need to be visualized to see which orbitals should be in the active space. For example, in this calculation, 
-we find that orbitals 17, 20 and 21 are $\pi$ orbitals, and orbitals 22, 23 and 24 are $\pi*$ orbitals. 
-At this stage, all the orbitals are delocalized.
-%% \begin{figure}
-%% \begin{center}
-%% \resizebox{80mm}{!}{\includegraphics{orb19.eps}}
-%% \end{center}
-%% \caption{17$^{th}$ canonical hartree fock molecular orbital of benzene molecule showing the lowest energy $\pi$ orbital.}
-%% \label{fig:orb19}
-%% \end{figure}
 
-\item We recognize that benzene is a ring-like molecule, and that a good
-	orbital choice for the DMRG calculation is the set of localized
-	orbitals (section \ref{sec:appendix2}). In Molpro, the orbitals to be
-	localized need to be arranged contiguously. We thus exchange the 17th
-	orbital with the 19th, using the \texttt{rotate} directive in the
-	\texttt{mcscf} program. The \texttt{merge} program is a more robust
-	method to localize the orbitals.
+\subsection{Block input file}
 
-%% \begin{figure}
-%% \begin{center}
-%% \resizebox{80mm}{!}{\includegraphics{orb19_loc.eps}}
-%% \end{center}
-%% \caption{A localized molecular orbital of benzene molecule obtained by localizing $\pi$ and $\pi^*$ molecular orbitals.}
-%% \label{fig:orb19_loc}
-%% \end{figure}
+We are now ready to carry out a DMRG calculation. The simplest input file is shown below:
 
-\item The six $\pi$ and $\pi^*$ orbitals are localized using the
-	\texttt{locali} command, yielding a set of 6 $p_z$ atomic-like
-	orbitals. 
+\begin{verbatim}
+orbitals FCIDUMP
+reorder reorder.dat
+nelec 6 
+spin 0
+irrep 1
+schedule default
+maxM 50
+sweep_tol 1e-9
+\end{verbatim}
 
-\item The \texttt{fci} program is used to dump out one- and two-electron
-integrals and information on the irreducible representations of the orbitals.
-The resulting file is named \texttt{FCIDUMP}. This contains all the orbital
-information required by Block.  \end{enumerate}
+We now discuss each line in turn.
 
+\subsubsection{Orbital file}
+The integral file is specified after the keyword \texttt{orbitals}. 
+If you use \texttt{MOLPRO} to generate integrals, the default filename is \texttt{FCIDUMP}.
+
+\subsubsection{Reordering orbitals}
+%Modify
+As discussed below in Sec.~\ref{sec:appendix2}, an ordering of the orbitals
+which minimizes long-range entanglement can greatly increase the accuracy of a
+DMRG calculation for a given $M$.  Orbital reordering is performed by Block
+using the keyword \texttt{reorder}, followed by a filename containing the new
+orbital ordering.  
+The \texttt{reorder} key is optional. In this case, we wish to arrange the orbitals
+such that they follow a snake-like structure as in Fig.~\ref{fig:order}
+For our benzene example, the localized $p_z$
+orbitals obtained from Molpro are centered on carbon atoms (labelling them
+around the ring) as 5, 2, 1, 4, 3, 6. A better ordering  is to arrange them
+such that they are centred around carbon atoms 1, 2, 6, 5, 3, 4.  To achieve
+this, in the reorder file (\texttt{reorder.dat} in the above input), we write
+the line 
+\begin{verbatim} 3 2 6 1 5 4 \end{verbatim}. 
+
+However, this can be avoided since we have implemented two ordering mechanisms. If one does not add a \texttt{reorder} keyword, then the Fiedler vector automatically
+reorders the orbitals (\texttt{fiedler} keyword is equivalent).
+
+For a more robust ordering, add instead the keyword \texttt{gaopt default}. This
+performs a genetic algorithm calculation to effectively find an ideal ordering.
+
+
+\subsubsection{Wavefunction specification}
 \begin{table}\label{tab:irrep}
 \begin{center}
 \caption{Labels corresponding to the irreps of the various point groups allowed in Block.}
@@ -272,50 +281,15 @@ Label & \multicolumn{4}{c}{Point Groups}\\
 \end{center}
 \end{table}
 
-\subsection{Block input file}
-
-We are now ready to carry out a DMRG calculation. The simplest input file is shown below:
-
-\begin{verbatim}
-orbitals FCIDUMP
-reorder reorder.dat
-nelec 6 
-spin 0
-irrep 1
-schedule default
-maxM 50
-sweep_tol 1e-9
-\end{verbatim}
-
-We now discuss each line in turn.
-
-\subsubsection{Orbital file}
-The integral file is specified after the keyword \texttt{orbitals}. 
-If you use Molpro to generate integrals, the default filename is \texttt{FCIDUMP}.
-
-\subsubsection{Reordering orbitals}
-
-As discussed in section \ref{sec:appendix2}, an ordering of the orbitals which minimizes long-range
-entanglement can greatly increase the accuracy
-of a DMRG calculation for a given $M$. Orbital reordering is
-performed by Block using the keyword \texttt{reorder},
-followed by a filename containing the new orbital ordering.
-For example in our benzene example, the localized $p_z$ orbitals obtained from Molpro are centered on carbon atoms 
-(labelling them around the ring) as 5, 2, 1, 4, 3, 6. A better ordering  (see section \ref{sec:appendix2}) is to
-arrange them such that they are centred around carbon atoms 1, 2, 6, 5, 3, 4. 
-To achieve this, in the reorder file (\texttt{reorder.dat} in the above input), we write the line
-\begin{verbatim}
-3 2 6 1 5 4
-\end{verbatim}
-
-
-\subsubsection{Wavefunction specification}
-
 The point-group symmetry of the state is specified using the keyword \texttt{irrep} following the labels Table~\ref{tab:irrep}.
 If this is left blank, Block will assume that the wavefunction transforms according to the most symmetric representation.
 
 \subsubsection{Schedule}
+%Modify
+We currently have implemented a default sweep schedule. These parameters have proved robust for large systems, although theref
 
+
+%Move to appendix
 The schedule defines the renormalised states $M$ used in successive DMRG
 sweeps. It is more economical to perform the initial sweeps with small $M$ and
 then to gradually increase $M$. The simplest option to select \texttt{schedule
@@ -330,19 +304,19 @@ space is smaller than 12 the increments 50, 100, 250, 500, 1000, 2500, 5000,
 control over the sweeps, we recommend using a more advanced input. An example
 input is:
 
-\begin{verbatim}
-schedule 
-0 50 1e-5 1e-4
-4 200 1e-5 1e-4
-8 500 1e-5 1e-4
-12 1000 1e-5 1e-5
-16 1500 1e-5 1e-5
-20 2000 1e-9 0e-5
-end
-maxiter 30
-sweep_tol 1e-9
-twodot_to_onedot 22
-\end{verbatim}
+%\begin{verbatim}
+%schedule 
+%0 50 1e-5 1e-4
+%4 200 1e-5 1e-4
+%8 500 1e-5 1e-4
+%12 1000 1e-5 1e-5
+%16 1500 1e-5 1e-5
+%20 2000 1e-9 0e-5
+%end
+%maxiter 30
+%sweep_tol 1e-9
+%twodot_to_onedot 22
+%\end{verbatim}
 
 Between \texttt{schedule} and \texttt{end} each line
 has the format
@@ -919,6 +893,51 @@ core_energy 0 0 0 0
  \section{Appendix: Molpro input files}\label{sec:appMolpro}
 
  \subsection{Benzene molecule}
+ \label{sec:appMolprobenz}
+\begin{enumerate}
+
+ \item First, a restricted Hartree-Fock calculation is performed. No symmetry
+	 is used (\texttt{symmetry,nosym}), because we wish to generate
+	 atomic-like $p_z$ orbitals for the DMRG calculation, which requires
+	 localizing the orbitals across different irreducible representations. 
+
+In general, the Hartree-Fock orbitals need to be visualized to see which
+orbitals should be in the active space. For example, in this calculation, we
+find that orbitals 17, 20 and 21 are $\pi$ orbitals, and orbitals 22, 23 and 24
+are $\pi*$ orbitals.  At this stage, all the orbitals are delocalized.
+
+%% \begin{figure}
+%% \begin{center}
+%% \resizebox{80mm}{!}{\includegraphics{orb19.eps}}
+%% \end{center}
+%% \caption{17$^{th}$ canonical hartree fock molecular orbital of benzene molecule showing the lowest energy $\pi$ orbital.}
+%% \label{fig:orb19}
+%% \end{figure}
+
+\item We recognize that benzene is a ring-like molecule, and that a good
+	orbital choice for the DMRG calculation is the set of localized
+	orbitals (section \ref{sec:appendix2}). In Molpro, the orbitals to be
+	localized need to be arranged contiguously. We thus exchange the 17th
+	orbital with the 19th, using the \texttt{rotate} directive in the
+	\texttt{mcscf} program. The \texttt{merge} program is a more robust
+	method to localize the orbitals.
+
+%% \begin{figure}
+%% \begin{center}
+%% \resizebox{80mm}{!}{\includegraphics{orb19_loc.eps}}
+%% \end{center}
+%% \caption{A localized molecular orbital of benzene molecule obtained by localizing $\pi$ and $\pi^*$ molecular orbitals.}
+%% \label{fig:orb19_loc}
+%% \end{figure}
+
+\item The six $\pi$ and $\pi^*$ orbitals are localized using the
+	\texttt{locali} command, yielding a set of 6 $p_z$ atomic-like
+	orbitals. 
+
+\item The \texttt{fci} program is used to dump out one- and two-electron
+integrals and information on the irreducible representations of the orbitals.
+The resulting file is named \texttt{FCIDUMP}. This contains all the orbital
+information required by Block.  \end{enumerate}
 {
 \begin{verbatim}
 angstrom
