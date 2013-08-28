@@ -925,6 +925,7 @@ Npdm_op_wrapper_CC::Npdm_op_wrapper_CC( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
+if (size_ == 0) cout << "CC zero size; rank = " << mpigetrank() << std::endl;
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "(CC)";
@@ -942,6 +943,7 @@ cout << "getting CC operator...\n";
   int ix, jx;
 
   opReps_ = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
+if (opReps_.size() == 0) cout << "CC opReps_ zero size; rank = " << mpigetrank() << std::endl;
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
 cout << "indices  " << ix << " " << jx << std::endl;

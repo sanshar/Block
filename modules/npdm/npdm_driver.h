@@ -39,8 +39,7 @@ class Npdm_driver {
     void do_npdm_inner_loop( Npdm::Npdm_expectations & npdm_expectations, NpdmSpinOps_base & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps );
     void npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm_expectations, NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps );
 
-    std::vector<std::pair<bool, NpdmSpinOps_base>> 
-      get_all_mpi_ops(const bool local_skip, NpdmSpinOps & local_ops, std::vector< boost::mpi::request > & reqs);
+    std::vector<NpdmSpinOps_base> get_all_mpi_ops(const bool local_skip, NpdmSpinOps & local_ops, std::vector< boost::mpi::request > & reqs);
   
     int get_mpi_max_lhs_size( int my_size );
 //    void send_mpi_obj( int rank, int id, NpdmSpinOps_base & obj );

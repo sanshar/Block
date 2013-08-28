@@ -31,84 +31,51 @@ boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::ve
 
 unsigned int get_mpi_tag( int rank0, int rank1, int lda )
 {
-  return 100 * (rank0 * lda + rank1);
+  unsigned int tag = rank0 * lda + rank1;
+  assert( tag < 42949672 );
+  return 100 * tag;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector< std::pair<bool, NpdmSpinOps_base> >
-Npdm_driver::get_all_mpi_ops( const bool local_skip, NpdmSpinOps & local_ops, std::vector< boost::mpi::request > & reqs )
+std::vector<NpdmSpinOps_base> Npdm_driver::get_all_mpi_ops( const bool local_skip, NpdmSpinOps & local_ops, std::vector< boost::mpi::request > & reqs )
 {
   boost::mpi::communicator world;
-  std::vector< std::pair<bool, NpdmSpinOps_base> > all_ops;
+  std::vector< NpdmSpinOps_base > all_ops;
   reqs.clear();
 
   // First element is local set of spin operators
   NpdmSpinOps_base local_base(local_ops);
-  std::pair<bool, NpdmSpinOps_base> local_pair = std::make_pair( local_skip, local_base );
-  all_ops.push_back( local_pair );
+  if ( ! local_skip ) all_ops.push_back( local_base );
 
   // Serial calculation
   if (world.size() == 1) return all_ops;
 
-//--- boost serialization broken for NpdmSpinOps_base object!!!   
-//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//        // save data to archive
-//    boost::shared_ptr<SparseMatrix> op (new Cre);
-//    op = local_base.opReps_.at(0);
-//          std::ofstream ofs("crap.tmp");
-//          boost::archive::text_oarchive oa(ofs);
-//          oa << *(local_base.opReps_.at(0));
-//          oa << *op;
-//          ofs.close();
-//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-
   // Do MPI blocking communication //FIXME non-blocking?
   for (int rank = 0; rank < world.size(); ++rank) {
     if ( rank != mpigetrank() ) {
+
       // Send to non-local rank
       unsigned int tag = get_mpi_tag(mpigetrank(), rank, world.size());
       assert( tag%100 == 0 );
       world.send(rank, tag, local_skip);
-      local_base.send_mpi_obj(rank, tag+1, tag+50);
+      int local_size = local_base.opReps_.size();
+      world.send(rank, tag+1, local_size);
+      if ( ! local_skip ) local_base.send_mpi_obj(rank, tag+2, tag+50);
+
       // Recv from non-local rank
       bool nonlocal_skip;
       NpdmSpinOps_base nonlocal_base;
       tag = get_mpi_tag(rank, mpigetrank(), world.size());
       world.recv(rank, tag, nonlocal_skip);
-      nonlocal_base.recv_mpi_obj(rank, tag+1, tag+50, local_base.opReps_.size());
+      int nonlocal_size;
+      world.recv(rank, tag+1, nonlocal_size);
+      if ( ! nonlocal_skip ) nonlocal_base.recv_mpi_obj(rank, tag+2, tag+50, nonlocal_size);
+
       // Store non-local data
-      std::pair<const bool, NpdmSpinOps_base> nonlocal_pair = std::make_pair( nonlocal_skip, nonlocal_base );
-      all_ops.push_back( nonlocal_pair );
+      if ( ! nonlocal_skip ) all_ops.push_back( nonlocal_base );
     }
   }
-
-//  // Nonlocal is other in 2-proc case
-//  bool nonlocal_skip;
-//  NpdmSpinOps_base nonlocal_base;
-//
-//  if ( mpigetrank() == 0) {
-//    // Send to 1
-//    world.send(1, 0, local_skip);
-//    local_base.send_mpi_obj(1, 200, 250);
-//    // Recv from 1
-//    world.recv(1, 100, nonlocal_skip);
-//    nonlocal_base.recv_mpi_obj(1, 300, 350, local_base.opReps_.size());
-//  }
-//  else if ( mpigetrank() == 1) {
-//    // Send to 0
-//    world.send(0, 100, local_skip);
-//    local_base.send_mpi_obj(0, 300, 350);
-//    // Recv from 0
-//    world.recv(0, 0, nonlocal_skip);
-//    nonlocal_base.recv_mpi_obj(0, 200, 250, local_base.opReps_.size());
-//  }
-//  else
-//    assert(false);
-//
-//  std::pair<const bool, NpdmSpinOps_base> nonlocal_pair = std::make_pair( nonlocal_skip, nonlocal_base );
-//  all_ops.push_back( nonlocal_pair );
 
   return all_ops;
 }
@@ -161,8 +128,8 @@ cout << "lhsOps.size() = " << lhsOps.size() << "; rank = " << mpigetrank() <<  s
 //cout << "dotOps.size() = " << dotOps.size() << "; rank = " << mpigetrank() <<  std::endl;
 //cout << "rhsOps.size() = " << rhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
 
-  // All MPI threads must be synchronised here so they all work on same operator pattern simultaneously
-  std::cout.flush();
+  // MPI threads must be synchronised here so they all work on same operator pattern simultaneously
+std::cout.flush();
   world.barrier();
   int lhs_maxsize = get_mpi_max_lhs_size( lhsOps.size() );
 
@@ -173,7 +140,6 @@ cout << "lhsOps.size() = " << lhsOps.size() << "; rank = " << mpigetrank() <<  s
   if (skip) return;
 
   // Many spatial combinations on left block
-  assert( lhsOps.size() > 0 );
   for ( int ilhs = 0; ilhs < lhs_maxsize; ++ilhs ) {
     // Set local operators as dummy if load-balancing isn't perfect
     if ( ilhs < lhsOps.size() )
@@ -183,16 +149,12 @@ cout << "lhsOps.size() = " << lhsOps.size() << "; rank = " << mpigetrank() <<  s
 
     // Collect LHS ops across all MPI ranks
     std::vector< boost::mpi::request > reqs;
-    std::vector< std::pair<bool, NpdmSpinOps_base> > all_lhsOps = get_all_mpi_ops( skip, lhsOps, reqs ); 
+    std::vector< NpdmSpinOps_base > all_lhsOps = get_all_mpi_ops( skip, lhsOps, reqs ); 
 
-//cout << "about to call loop over LHS; skip = " << skip << " ; rank = " << mpigetrank() <<  std::endl;
     // Contract all LHS ops with local RHS ops
-    for ( auto lhs_mpi_ops = all_lhsOps.begin(); lhs_mpi_ops != all_lhsOps.end(); ++lhs_mpi_ops ) {
-      if ( ! lhs_mpi_ops->first ) {
-//cout << "about to call inner loop over LHS; rank = " << mpigetrank() <<  std::endl;
-        do_npdm_inner_loop( npdm_expectations, lhs_mpi_ops->second, rhsOps, dotOps ); 
-      }
-    }
+    for ( auto lhs_mpi_ops = all_lhsOps.begin(); lhs_mpi_ops != all_lhsOps.end(); ++lhs_mpi_ops ) 
+      do_npdm_inner_loop( npdm_expectations, *lhs_mpi_ops, rhsOps, dotOps ); 
+
     // Synchronize all MPI ranks here
     std::cout.flush();
     world.barrier();
