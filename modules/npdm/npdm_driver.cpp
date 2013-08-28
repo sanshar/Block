@@ -6,11 +6,6 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#include <fstream>
-// include headers that implement a archive in simple text format
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-
 #include <boost/mpi.hpp>
 #include <vector>
 #include <multiarray.h>
@@ -21,6 +16,17 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "npdm_patterns.h"
 #include "npdm_expectations.h"
 #include "npdm_operator_wrappers.h"
+
+#include "global.h"
+#include "solver.h"
+#include "initblocks.h"
+#include "rotationmat.h"
+#include "davidson.h"
+#include "linear.h"
+#include "guess_wavefunction.h"
+#include "density.h"
+#include "davidson.h"
+#include "pario.h"
 
 namespace SpinAdapted{
 
@@ -232,203 +238,215 @@ void Npdm_driver::compute_npdm_sweep(std::vector<Wavefunction> & wavefunctions, 
 
 }
 
-//===========================================================================================================================================================
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_driver::npdm_block_and_decimate( SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
+                                           const bool &useSlater, const bool& dot_with_sys, int state)
+{
+  //mcheck("at the start of block and decimate");
+  // figure out if we are going forward or backwards
+  dmrginp.guessgenT -> start();
+  bool forward = (system.get_sites() [0] == 0);
+  SpinBlock systemDot;
+  SpinBlock envDot;
+  int systemDotStart, systemDotEnd;
+  int systemDotSize = sweepParams.get_sys_add() - 1;
+  if (forward)
+  {
+    systemDotStart = *system.get_sites().rbegin () + 1;
+    systemDotEnd = systemDotStart + systemDotSize;
+  }
+  else
+  {
+    systemDotStart = system.get_sites() [0] - 1;
+    systemDotEnd = systemDotStart - systemDotSize;
+  }
+  vector<int> spindotsites(2); 
+  spindotsites[0] = systemDotStart;
+  spindotsites[1] = systemDotEnd;
+  //if (useSlater) {
+    systemDot = SpinBlock(systemDotStart, systemDotEnd);
+    //SpinBlock::store(true, systemDot.get_sites(), systemDot);
+    //}
+    //else
+    //SpinBlock::restore(true, spindotsites, systemDot);
+  SpinBlock environment, environmentDot, newEnvironment;
+
+  int environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
+
+  const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
+
+  system.addAdditionalCompOps();
+//FIXME MAW change depending on forward or backward which operators are assigned to which mpi procs
+  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, true, true);
+  
+  InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
+                                      sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
+                                      sweepParams.get_onedot(), nexact, useSlater, true, true, true);
+  SpinBlock big;
+  newSystem.set_loopblock(true);
+  system.set_loopblock(false);
+  newEnvironment.set_loopblock(false);
+  InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
+
+  const int nroots = dmrginp.nroots();
+  std::vector<Wavefunction> solution(1);
+
+  DiagonalMatrix e;
+  GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, true, 0.0); 
+
+#ifndef SERIAL
+  mpi::communicator world;
+  mpi::broadcast(world, solution, 0);
+#endif
+
+  std::vector<Matrix> rotateMatrix;
+  DensityMatrix tracedMatrix;
+  tracedMatrix.allocate(newSystem.get_stateInfo());
+  tracedMatrix.makedensitymatrix(solution, big, std::vector<double>(1,1.0), 0.0, 0.0, false);
+  rotateMatrix.clear();
+  if (!mpigetrank())
+    double error = newSystem.makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
+  
+
+#ifndef SERIAL
+  mpi::broadcast(world,rotateMatrix,0);
+#endif
+
+//MAW
+  int sweepPos = sweepParams.get_block_iter();
+  int endPos = sweepParams.get_n_iters()-1;
+  compute_npdm_sweep(solution, big, state, sweepPos, endPos);
+//MAW
+
+  SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
+
+  //for(int i=0;i<dmrginp.nroots();++i)
+  solution[0].SaveWavefunctionInfo (big.get_stateInfo(), big.get_leftBlock()->get_sites(), state);
+
+  newSystem.transform_operators(rotateMatrix);
 
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  //    if (skip) continue;
-  
-  //    std::vector< boost::shared_ptr<NpdmSpinOps> > all_lhsOps;
-  //    boost::mpi::all_gather( world, lhsOps, all_lhsOps );
-  //    assert( all_lhsOps.size() == world.size() );
-  
-  
-  //cout << "DEBUG doing!\n";
-  //DEBUG >>>>>>>>>>>>>>>>>>>>>>
-  //BROKEN!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  //////    // save data to archive
-  //////        std::ofstream ofs("crap.tmp");
-  //////        boost::archive::text_oarchive oa(ofs);
-  //////
-  //////        oa.register_type<Npdm_op_wrapper_compound_CCDD>();
-  //////
-  //////
-  //////        // write class instance to archive
-  //////cout << "MAW about to serialize\n";
-  //////        oa << lhsOps;
-  //////        ofs.close();
-  //////
-  //////cout << "MAW about to read back\n";
-  //////    // ... some time later restore the class instance to its orginal state
-  ////////    boost::shared_ptr<NpdmSpinOps> op_new (new Npdm_op_wrapper_compound_CCDD(lhsBlock));
-  ////////    boost::shared_ptr<NpdmSpinOps> op_new;
-  //////      Npdm_op_wrapper_compound_CCDD op_new(lhsBlock);
-  //////cout << "MAW 1\n";
-  //////        // create and open an archive for input
-  //////        std::ifstream ifs("crap.tmp");
-  //////cout << "MAW 2\n";
-  //////        boost::archive::text_iarchive ia(ifs);
-  //////cout << "MAW 3\n";
-  //////        // read class state from archive
-  //////        ia >> op_new;
-  //////cout << "op_new.factor_ , lhsOps->factor_  = " << op_new.factor_ << "," << lhsOps->factor_ << std::endl;
-  //////assert(op_new.factor_ == lhsOps->factor_);
-  //////assert(op_new.transpose_ == lhsOps->transpose_);
-  //////        // archive and stream closed when destructors are called
-  //////        
-  ///--------------------------------------------------------------------------------------
-  
-  ////  ONLY NEED TO COMMUNICATE SKIP, INDICES_ AND OPREPS_, EVERYTHING ELSE SHOULD BE THE SAME!
-  //        boost::shared_ptr<NpdmSpinOps> op_new (new Npdm_op_wrapper_compound_CCDD(lhsBlock));
-  //    // save data to archive
-  //        std::ofstream ofs("crap.tmp");
-  //        boost::archive::text_oarchive oa(ofs);
-  //        oa << lhsOps->indices_;
-  //        ofs.close();
-  //        // communciate
-  //        std::ifstream ifs("crap.tmp");
-  //        boost::archive::text_iarchive ia(ifs);
-  //        ia >> op_new->indices_;
-  //      assert( op_new->indices_.size() == lhsOps->indices_.size() );
-  //      cout << "op_new->indices_[0] , lhsOps->indices_[0]  = " << op_new->indices_[0] << "," << lhsOps->indices_[0] << std::endl;
-  //      assert(op_new->indices_ == lhsOps->indices_);
-  //
-  ///// OPREPS
-  //        assert ( lhsOps->opReps_.size() > 0 );
-  //        // create and open an archive for opreps
-  //        std::ofstream ofs2("crap2.tmp");
-  //        boost::archive::text_oarchive oa2(ofs2);
-  //   cout << "about to write opReps! size = " << lhsOps->opReps_.size() << std::endl;
-  //        oa2 << *(lhsOps->opReps_.at(0));
-  //        ofs2.close();
-  //   cout << "done writing opReps!\n";
-  //        // communciate
-  //        std::ifstream ifs2("crap2.tmp");
-  //        boost::archive::text_iarchive ia2(ifs2);
-  //   cout << "about to read opReps!  size = " << op_new->opReps_.size() << std::endl;
-  //    boost::shared_ptr<SparseMatrix> op (new Cre);
-  ////    ia2 >> *(lhsOps->opReps_.at(0));
-  //    ia2 >> *op;
-  //    assert( op_new->opReps_.size() == 0 );
-  //    op_new->opReps_.push_back(op) ;
-  //    cout << "lhsOps:\n";
-  //    cout << *lhsOps->opReps_.at(0) << std::endl;
-  //    cout << "new_op:\n";
-  //    cout << *op_new->opReps_.at(0) << std::endl;
-  //
-  //
-  //cout << "DEBUG tested!\n";
-  ////assert(false);
-  //DEBUG <<<<<<<<<<<<<<<<<<<<<<
-  
-  
-//      std::vector< boost::mpi::request > reqs;
-//      std::vector< std::pair<bool, boost::shared_ptr<NpdmSpinOps>> > all_lhsOps = get_all_mpi_ops( skip, lhsOps, reqs ); 
-  
-//      for ( auto lhs_mpi_op = all_lhsOps.begin(); lhs_mpi_op != all_lhsOps.end(); ++lhs_mpi_op ) {
-//        // First element is local lhsOps so no need to wait
-//        if ( ! lhs_mpi_op->first ) {
-//          do_npdm_inner_loop( npdm_expectations, lhs_mpi_op->second, rhsOps, dotOps ); 
-//        }
-//        // Check all MPI communication of lhsOps is finished (or part of it?) and wait if necessary
-//  //std::cout << "Waiting for MPI comm to finish... " << mpigetrank() << std::endl;
-//  //      boost::mpi::wait_all(reqs.begin(), reqs.end());
-//  //std::cout << "MPI comm done!  " << mpigetrank() << std::endl;
-//  //      reqs.clear();
-//      }
-  
-//    // Synchronize all MPI ranks here ??
-//    }
-//  
-//    // Close file if needed (put in wrapper destructor??)
-//    if ( lhsOps.ifs_.is_open() ) lhsOps.ifs_.close();
-//  
-//  }
-//  
+double Npdm_driver::do_one_sweep(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state)
+{
+  cout.precision(12);
+  SpinBlock system;
+  const int nroots = dmrginp.nroots();
+  std::vector<double> finalEnergy(nroots,0.);
+  std::vector<double> finalEnergy_spins(nroots,0.);
+  double finalError = 0.;
 
-//----------------------------------------------
-//
-//  boost::shared_ptr<NpdmSpinOps> nonlocal_ops (new NpdmSpinOps);
-////FIXME what kind of copy/assignment is this???
-/////  nonlocal_ops = local_ops;
-//  nonlocal_ops->size_ = local_ops->size_;
-//  nonlocal_ops->mults_ = local_ops->mults_;
-//  nonlocal_ops->build_pattern_ = local_ops->build_pattern_;
-//  nonlocal_ops->transpose_ = local_ops->transpose_;
-//  nonlocal_ops->factor_ = local_ops->factor_;
-//
-////  assert( nonlocal_ops->indices_ == local_ops->indices_ );
-////  assert( nonlocal_ops->opReps_.size() > 0 );
-//// Seems to be a shallow copy!
-////  nonlocal_ops->opReps_.clear();
-////  assert( local_ops->opReps_.size() > 0 );
-////  nonlocal_ops->indices_.clear();
-////  assert( local_ops->indices_.size() > 0 );
-//
-//
-////    boost::shared_ptr<SparseMatrix> op (new Cre);
-//////    ia2 >> *(lhsOps->opReps_.at(0));
-////    ia2 >> *op;
-////    assert( op_new->opReps_.size() == 0 );
-////    op_new->opReps_.push_back(op) ;
-//
-//  nonlocal_ops->opReps_.clear();
-//  for ( int i = 0; i < local_ops->opReps_.size(); ++i) {
-//    boost::shared_ptr<SparseMatrix> op (new Cre);
-//    nonlocal_ops->opReps_.push_back(op);
-//  }
-//
-//  // Now send operators to other MPI ranks in non-blocking fashion
-//  bool nonlocal_skip;
-////cout << "MAW mpi ops " << i << " communicate rank=" << mpigetrank() << std::endl;
-//
-//  if ( mpigetrank() == 0) {
-//    // Send
-//    world.send(1, 0, local_skip);
-//    world.send(1, 1, local_ops->indices_);
-//    for ( int i = 0; i < local_ops->opReps_.size(); ++i)
-//      world.send(1, i+2, *(local_ops->opReps_.at(i)) );
-////    reqs.push_back( world.isend(1, 0, local_skip) );
-////    reqs.push_back( world.isend(1, 1, local_ops->indices_) );
-////    reqs.push_back( world.isend(1, 2, local_ops->opReps_) );
-//    // Recv
-//    world.recv(1, 30, nonlocal_skip);
-//    world.recv(1, 40, nonlocal_ops->indices_);
-//    for ( int i = 0; i < local_ops->opReps_.size(); ++i)
-//      world.recv(1, i+50, *(nonlocal_ops->opReps_.at(i)) );
-////    reqs.push_back( world.irecv(1, 3, nonlocal_skip) );
-////    reqs.push_back( world.irecv(1, 4, nonlocal_ops->indices_) );
-////    reqs.push_back( world.irecv(1, 5, nonlocal_ops->opReps_) );
-//  }
-//  else if ( mpigetrank() == 1) {
-//    // Send
-//    world.send(0, 30, local_skip);
-//    world.send(0, 40, local_ops->indices_);
-//    for ( int i = 0; i < local_ops->opReps_.size(); ++i)
-//      world.send(0, i+50, *(local_ops->opReps_.at(i)) );
-////    reqs.push_back( world.isend(0, 3, local_skip) );
-////    reqs.push_back( world.isend(0, 4, local_ops->indices_) );
-////    reqs.push_back( world.isend(0, 5, local_ops->opReps_) );
-//    // Recv
-//    world.recv(0, 0, nonlocal_skip);
-//    world.recv(0, 1, nonlocal_ops->indices_);
-//    for ( int i = 0; i < local_ops->opReps_.size(); ++i)
-//      world.recv(0, i+2, *(nonlocal_ops->opReps_.at(i)) );
-////    reqs.push_back( world.irecv(0, 0, nonlocal_skip) );
-////    reqs.push_back( world.irecv(0, 1, nonlocal_ops->indices_) );
-////    reqs.push_back( world.irecv(0, 2, nonlocal_ops->opReps_) );
-//  }
-//  else
-//    assert(false);
-//
-//cout << local_ops->build_pattern_ << "; local skip = " << local_skip << std::endl;
-//cout << nonlocal_ops->build_pattern_ << "; nonlocal skip = " << nonlocal_skip << std::endl;
-//  std::pair<bool, boost::shared_ptr<NpdmSpinOps>> nonlocal_pair = std::make_pair( nonlocal_skip, nonlocal_ops );
-//  all_ops.push_back( nonlocal_pair );
-//
-//
-//
-//  return all_ops;
+  sweepParams.set_sweep_parameters();
+  // a new renormalisation sweep routine
+  pout << ((forward) ? "\t\t\t Starting renormalisation sweep in forwards direction" : "\t\t\t Starting renormalisation sweep in backwards direction") << endl;
+  pout << "\t\t\t ============================================================================ " << endl;
+  
+  InitBlocks::InitStartingBlock (system,forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+  if(!restart)
+    sweepParams.set_block_iter() = 0;
+ 
+  pout << "\t\t\t Starting block is :: " << endl << system << endl;
+  if (!restart) 
+    SpinBlock::store (forward, system.get_sites(), system); // if restart, just restoring an existing block --
+  sweepParams.savestate(forward, system.get_sites().size());
+  bool dot_with_sys = true;
+
+  //MAW
+  npdm_resize_array(2*dmrginp.last_site());
+  npdm_clear_array();
+  for (int i=0; i<nroots; i++)
+    save_npdm_binary(i, i); 
+
+
+  for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
+    {
+      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+      pout << "\t\t\t ----------------------------" << endl;
+      if (forward)
+	pout << "\t\t\t Current direction is :: Forwards " << endl;
+      else
+	pout << "\t\t\t Current direction is :: Backwards " << endl;
+
+      //if (SHOW_MORE) pout << "system block" << endl << system << endl;
+  
+      if (dmrginp.no_transform())
+	      sweepParams.set_guesstype() = BASIC;
+      else if (!warmUp && sweepParams.get_block_iter() != 0) 
+  	    sweepParams.set_guesstype() = TRANSFORM;
+      else if (!warmUp && sweepParams.get_block_iter() == 0 && 
+                ((dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter() != sweepParams.get_sweep_iter()) ||
+                  dmrginp.algorithm_method() != TWODOT_TO_ONEDOT))
+        sweepParams.set_guesstype() = TRANSPOSE;
+      else
+        sweepParams.set_guesstype() = BASIC;
+      
+      pout << "\t\t\t Blocking and Decimating " << endl;
+	  
+      SpinBlock newSystem;
+
+      // Build Npdm elements
+      npdm_block_and_decimate(sweepParams, system, newSystem, warmUp, dot_with_sys, state);
+
+      for(int j=0;j<nroots;++j)
+        pout << "\t\t\t Total block energy for State [ " << j << 
+	  " ] with " << sweepParams.get_keep_states()<<" :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+
+      finalEnergy_spins = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy_spins() : finalEnergy_spins);
+      finalEnergy = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy() : finalEnergy);
+      finalError = max(sweepParams.get_lowest_error(),finalError);
+
+      system = newSystem;
+
+      pout << system<<endl;
+      
+      SpinBlock::store (forward, system.get_sites(), system);	 	
+
+      pout << "\t\t\t saving state " << system.get_sites().size() << endl;
+      ++sweepParams.set_block_iter();
+      sweepParams.savestate(forward, system.get_sites().size());
+    }
+  //for(int j=0;j<nroots;++j)
+  {int j = state;
+    pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
+	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
+  }
+  pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
+  pout << "\t\t\t ============================================================================ " << endl;
+
+
+  int i = state, j = state;
+  load_npdm_binary(i, j); 
+//MAW >>>>>>>>>>>>>>>
+//print twopdm
+//std::cout << "Final 2PDM:\n";
+//for (int i=0; i<2*dmrginp.last_site(); ++i) {
+//for (int j=0; j<2*dmrginp.last_site(); ++j) {
+//for (int k=0; k<2*dmrginp.last_site(); ++k) {
+//for (int l=0; l<2*dmrginp.last_site(); ++l) {
+//  if ( abs(twopdm(i,j,k,l)) > 1e-12 ) 
+//    std::cout << "maw-so-2pdm  " << i << "," << j << "," << k << "," << l << "\t\t" << twopdm(i,j,k,l) << std::endl;
+//}   
 //}
-//  
+//}
+//}
+//MAW <<<<<<<<<<<<<
+  //calcenergy(twopdm, i);
+  save_npdm_text(i, j);
+  save_spatial_npdm_text(i, j);
+  save_spatial_npdm_binary(i, j);
+  
+
+  // update the static number of iterations
+
+  ++sweepParams.set_sweep_iter();
+
+  return finalEnergy[0];
+
+}
+
+//===========================================================================================================================================================
+
+}

@@ -30,24 +30,29 @@ class Npdm_driver {
   
     Npdm_driver() : npdm_order_(-1) { }
     Npdm_driver(int order) : npdm_order_(order) { }
+    double do_one_sweep(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state);
 
+  protected:
+
+    int npdm_order_;
+
+    int get_mpi_max_lhs_size( int my_size );
+    std::vector<NpdmSpinOps_base> get_all_mpi_ops(const bool local_skip, NpdmSpinOps & local_ops, std::vector< boost::mpi::request > & reqs);
+    void do_npdm_inner_loop( Npdm::Npdm_expectations & npdm_expectations, NpdmSpinOps_base & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps );
+    void npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm_expectations, NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps );
     void compute_npdm_sweep(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int state, int sweepPos, int endPos);
+
+    void npdm_block_and_decimate(SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
+                                 const bool &useSlater, const bool& dot_with_sys, int state);
+
     virtual void save_npdm_text(const int &i, const int &j) = 0;
     virtual void save_npdm_binary(const int &i, const int &j) = 0;
     virtual void save_spatial_npdm_text(const int &i, const int &j) = 0;
     virtual void save_spatial_npdm_binary(const int &i, const int &j) = 0;
     virtual void load_npdm_binary(const int &i, const int &j) = 0;
-    virtual void resize_array(int dim) = 0;
-    virtual void clear_array() = 0;
+    virtual void npdm_resize_array(int dim) = 0;
+    virtual void npdm_clear_array() = 0;
   
-  protected:
-  
-    int npdm_order_;
-  
-    int get_mpi_max_lhs_size( int my_size );
-    void do_npdm_inner_loop( Npdm::Npdm_expectations & npdm_expectations, NpdmSpinOps_base & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps );
-    void npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm_expectations, NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps );
-    std::vector<NpdmSpinOps_base> get_all_mpi_ops(const bool local_skip, NpdmSpinOps & local_ops, std::vector< boost::mpi::request > & reqs);
     virtual void assign_npdm_elements( std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements) = 0;
     virtual void accumulate_npdm() = 0;
 

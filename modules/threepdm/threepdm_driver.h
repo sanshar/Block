@@ -6,8 +6,8 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#ifndef TWOPDM_DRIVER_HEADER_H
-#define TWOPDM_DRIVER_HEADER_H
+#ifndef THREEPDM_DRIVER_HEADER_H
+#define THREEPDM_DRIVER_HEADER_H
 
 #include <boost/format.hpp>
 #ifndef SERIAL
@@ -20,35 +20,31 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <multiarray.h>
 #include <vector>
 #include "npdm_driver.h"
-//#include "npdm_patterns.h"
-//#include "npdm_expectations.h"
-//#include "npdm_operator_wrappers.h"
 
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
-class Twopdm_driver : public Npdm_driver {
+class Threepdm_driver : public Npdm_driver {
 
 public:
-  Twopdm_driver() : Npdm_driver(2) { }
+  Threepdm_driver() : Npdm_driver(3) { }
   void save_npdm_text(const int &i, const int &j);
   void save_npdm_binary(const int &i, const int &j);
   void save_spatial_npdm_text(const int &i, const int &j);
   void save_spatial_npdm_binary(const int &i, const int &j);
   void load_npdm_binary(const int &i, const int &j);
-  void npdm_resize_array(int dim) { twopdm.resize(dim,dim,dim,dim); }
-  void npdm_clear_array() { twopdm.Clear(); }
+  void npdm_resize_array(int dim) { threepdm.resize(dim,dim,dim,dim,dim,dim); }
+  void npdm_clear_array() { threepdm.Clear(); }
 
 protected:
-//  void save_averaged_twopdm(const int &nroots);
   void accumulate_npdm();
-  void assign_npdm_antisymmetric(const int i, const int j, const int k, const int l, const double val);
+  void assign_npdm_antisymmetric(const int i, const int j, const int k, const int l, const int m, const int n, const double val);
   void assign_npdm_elements(std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements);
   void calcenergy(int state);
 
 private:
-  array_4d<double> twopdm;
+  array_6d<double> threepdm;
 
 };
 

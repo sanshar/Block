@@ -9,9 +9,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "npdm.h"
 #include "sweepgenblock.h"
 #include "sweep_params.h"
-#include "npdm_sweep.h"
 #include "sweeponepdm.h"
 #include "twopdm_driver.h"
+#include "threepdm_driver.h"
 
 void dmrg(double sweep_tol);
 void restart(double sweep_tol, bool reset_iter);
@@ -74,20 +74,21 @@ void npdm( int npdm_order )
   case (2):
     // Compute twopdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
-      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
       Twopdm_driver twopdm_driver;
-      NpdmSweep::do_one(twopdm_driver, sweepParams, false, direction, false, 0, state);
+      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+      twopdm_driver.do_one_sweep(sweepParams, false, direction, false, 0, state);
     }
     break;
 
   case (3):
     // Compute threepdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
+      Threepdm_driver threepdm_driver;
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-assert(false);
-//      SweepThreepdm::do_one(sweepParams, false, direction, false, 0, state);
+      threepdm_driver.do_one_sweep(sweepParams, false, direction, false, 0, state);
     }
     break;
+
   case (4):
     // Compute fourpdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
@@ -142,9 +143,9 @@ void npdm_restart( int npdm_order )
 
   case (2):
     for (int state=0; state<dmrginp.nroots(); state++) {
-      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
       Twopdm_driver twopdm_driver;
-      NpdmSweep::do_one(twopdm_driver, sweepParams, false, direction, false, 0, state);
+      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+      twopdm_driver.do_one_sweep(sweepParams, false, direction, false, 0, state);
     }
     break;
   }

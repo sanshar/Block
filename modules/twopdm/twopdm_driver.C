@@ -13,11 +13,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/mpi.hpp>
 #endif
 #include "execinfo.h"
-
 #include "twopdm_driver.h"
-//#include "npdm_patterns.h"
-//#include "npdm_expectations.h"
-//#include "npdm_operator_wrappers.h"
 
 namespace SpinAdapted{
 

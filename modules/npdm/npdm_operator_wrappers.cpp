@@ -560,7 +560,7 @@ cout << "getting CCC operator...\n";
 //  opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
 
 
-assert(false);
+//assert(false);
 //FIXME READ OPERATORS FROM DISK HERE
   std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
   opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
