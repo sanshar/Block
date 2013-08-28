@@ -29,6 +29,13 @@ boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::ve
 
 //===========================================================================================================================================================
 
+unsigned int get_mpi_tag( int rank0, int rank1, int lda )
+{
+  return 100 * (rank0 * lda + rank1);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 std::vector< std::pair<bool, NpdmSpinOps_base> >
 Npdm_driver::get_all_mpi_ops( const bool local_skip, NpdmSpinOps & local_ops, std::vector< boost::mpi::request > & reqs )
 {
@@ -56,32 +63,52 @@ Npdm_driver::get_all_mpi_ops( const bool local_skip, NpdmSpinOps & local_ops, st
 //          ofs.close();
 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-  // Nonlocal is other in 2-proc case
-  bool nonlocal_skip;
-  NpdmSpinOps_base nonlocal_base;
 
-  // Do MPI communication
-  if ( mpigetrank() == 0) {
-    // Send to 1
-    world.send(1, 0, local_skip);
-    local_base.send_mpi_obj(1, 100);
-    // Recv from 1
-    world.recv(1, 300, nonlocal_skip);
-    nonlocal_base.recv_mpi_obj(1, 400, local_base.opReps_.size());
+  // Do MPI blocking communication //FIXME non-blocking?
+  for (int rank = 0; rank < world.size(); ++rank) {
+    if ( rank != mpigetrank() ) {
+      // Send to non-local rank
+      unsigned int tag = get_mpi_tag(mpigetrank(), rank, world.size());
+      assert( tag%100 == 0 );
+      world.send(rank, tag, local_skip);
+      local_base.send_mpi_obj(rank, tag+1, tag+50);
+      // Recv from non-local rank
+      bool nonlocal_skip;
+      NpdmSpinOps_base nonlocal_base;
+      tag = get_mpi_tag(rank, mpigetrank(), world.size());
+      world.recv(rank, tag, nonlocal_skip);
+      nonlocal_base.recv_mpi_obj(rank, tag+1, tag+50, local_base.opReps_.size());
+      // Store non-local data
+      std::pair<const bool, NpdmSpinOps_base> nonlocal_pair = std::make_pair( nonlocal_skip, nonlocal_base );
+      all_ops.push_back( nonlocal_pair );
+    }
   }
-  else if ( mpigetrank() == 1) {
-    // Recv from 0
-    world.recv(0, 0, nonlocal_skip);
-    nonlocal_base.recv_mpi_obj(0, 100, local_base.opReps_.size());
-    // Send to 0
-    world.send(0, 300, local_skip);
-    local_base.send_mpi_obj(0, 400);
-  }
-  else
-    assert(false);
 
-  std::pair<const bool, NpdmSpinOps_base> nonlocal_pair = std::make_pair( nonlocal_skip, nonlocal_base );
-  all_ops.push_back( nonlocal_pair );
+//  // Nonlocal is other in 2-proc case
+//  bool nonlocal_skip;
+//  NpdmSpinOps_base nonlocal_base;
+//
+//  if ( mpigetrank() == 0) {
+//    // Send to 1
+//    world.send(1, 0, local_skip);
+//    local_base.send_mpi_obj(1, 200, 250);
+//    // Recv from 1
+//    world.recv(1, 100, nonlocal_skip);
+//    nonlocal_base.recv_mpi_obj(1, 300, 350, local_base.opReps_.size());
+//  }
+//  else if ( mpigetrank() == 1) {
+//    // Send to 0
+//    world.send(0, 100, local_skip);
+//    local_base.send_mpi_obj(0, 300, 350);
+//    // Recv from 0
+//    world.recv(0, 0, nonlocal_skip);
+//    nonlocal_base.recv_mpi_obj(0, 200, 250, local_base.opReps_.size());
+//  }
+//  else
+//    assert(false);
+//
+//  std::pair<const bool, NpdmSpinOps_base> nonlocal_pair = std::make_pair( nonlocal_skip, nonlocal_base );
+//  all_ops.push_back( nonlocal_pair );
 
   return all_ops;
 }
@@ -130,7 +157,7 @@ void Npdm_driver::npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm
 
   boost::mpi::communicator world;
 //cout << "-------------------------------------------------------------------------------------------\n";
-//cout << "lhsOps.size() = " << lhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
+cout << "lhsOps.size() = " << lhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
 //cout << "dotOps.size() = " << dotOps.size() << "; rank = " << mpigetrank() <<  std::endl;
 //cout << "rhsOps.size() = " << rhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
 
@@ -139,9 +166,10 @@ void Npdm_driver::npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm
   world.barrier();
   int lhs_maxsize = get_mpi_max_lhs_size( lhsOps.size() );
 
-  // Only one spatial combination on the dot block
+  // Only one spatial combination on the dot block (including NULL)
   assert( dotOps.size() == 1 );
   bool skip = dotOps.set_local_ops( 0 );
+//FIXME is this skip OK in parallel?
   if (skip) return;
 
   // Many spatial combinations on left block
@@ -153,18 +181,21 @@ void Npdm_driver::npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm
     else
       skip = true;
 
+    // Collect LHS ops across all MPI ranks
     std::vector< boost::mpi::request > reqs;
     std::vector< std::pair<bool, NpdmSpinOps_base> > all_lhsOps = get_all_mpi_ops( skip, lhsOps, reqs ); 
 
+//cout << "about to call loop over LHS; skip = " << skip << " ; rank = " << mpigetrank() <<  std::endl;
+    // Contract all LHS ops with local RHS ops
     for ( auto lhs_mpi_ops = all_lhsOps.begin(); lhs_mpi_ops != all_lhsOps.end(); ++lhs_mpi_ops ) {
       if ( ! lhs_mpi_ops->first ) {
+//cout << "about to call inner loop over LHS; rank = " << mpigetrank() <<  std::endl;
         do_npdm_inner_loop( npdm_expectations, lhs_mpi_ops->second, rhsOps, dotOps ); 
       }
     }
     // Synchronize all MPI ranks here
     std::cout.flush();
     world.barrier();
-
   }
 
   // Close file if needed (put in wrapper destructor??)

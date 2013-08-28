@@ -62,41 +62,37 @@ class NpdmSpinOps_base {
 
 //FIXME put in implementation file
 //FIXME  Do like this since serialization of whole object broken!!
-    void send_mpi_obj( int rank, int id )
+    void send_mpi_obj( int rank, unsigned int tag_lo, unsigned int tag_hi )
     {
-//    cout << "sending MPIobj\n";
-      assert (id%100 == 0);
       boost::mpi::communicator world;
-      assert( opReps_.size() < 90 );
+      int k = tag_lo;
       for ( int i = 0; i < opReps_.size(); ++i) {
-        world.send(rank, id+i, *(opReps_.at(i)) );
+        world.send(rank, k++, *(opReps_.at(i)) );
       }
-      world.send(rank, id+91, mults_);
-      world.send(rank, id+92, build_pattern_);
-      world.send(rank, id+93, transpose_);
-      world.send(rank, id+94, factor_);
-      world.send(rank, id+95, indices_);
-//    cout << "sending MPIobj done!\n";
+      world.send(rank, k++, mults_);
+      world.send(rank, k++, build_pattern_);
+      world.send(rank, k++, transpose_);
+      world.send(rank, k++, factor_);
+      world.send(rank, k++, indices_);
+      assert( k < tag_hi );
     }
       
-    void recv_mpi_obj( int rank, int id, int size )
+    void recv_mpi_obj( int rank, unsigned int tag_lo, unsigned int tag_hi, int size )
     {
-//    cout << "recving MPIobj\n";
-      assert (id%100 == 0);
       boost::mpi::communicator world;
       assert( opReps_.size() == 0 );
-      opReps_.clear();
+      int k = tag_lo;
       for ( int i = 0; i < size; ++i) {
         boost::shared_ptr<SparseMatrix> op (new Cre);
-        world.recv(rank, id+i, *op );
+        world.recv(rank, k++, *op );
         opReps_.push_back(op);
       }
-      world.recv(rank, id+91, mults_);
-      world.recv(rank, id+92, build_pattern_);
-      world.recv(rank, id+93, transpose_);
-      world.recv(rank, id+94, factor_);
-      world.recv(rank, id+95, indices_);
-//    cout << "recving MPIobj done!\n";
+      world.recv(rank, k++, mults_);
+      world.recv(rank, k++, build_pattern_);
+      world.recv(rank, k++, transpose_);
+      world.recv(rank, k++, factor_);
+      world.recv(rank, k++, indices_);
+      assert( k < tag_hi );
     }
 
 //  private:
