@@ -45,6 +45,7 @@ protected:
   void accumulate_npdm();
   void assign_npdm_antisymmetric(const int i, const int j, const int k, const int l, const double val);
   void assign_npdm_elements(std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements);
+  void calcenergy(int state);
 
 private:
   array_4d<double> twopdm;

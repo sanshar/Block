@@ -6,24 +6,14 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#include "IntegralMatrix.h"
+#include <include/communicate.h>
 #include <fstream>
+#include "IntegralMatrix.h"
 #include "input.h"
 #include "pario.h"
 #include "global.h"
 #include "orbstring.h"
 #include "least_squares.h"
-#include <include/communicate.h>
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-//the following can be removed later
-#include <boost/archive/binary_iarchive.hpp>
-#include <boost/archive/binary_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/format.hpp>
 #include "spinblock.h"
 #include "StateInfo.h"
 #include "operatorfunctions.h"
@@ -35,20 +25,18 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "density.h"
 #include "sweep.h"
 #include "sweepgenblock.h"
-#include "sweeponepdm.h"
-//MAW
-#include "sweeptwopdm.h"
-#include "sweepthreepdm.h"
-#include "sweepfourpdm.h"
 #include "BaseOperator.h"
 #include "dmrg_wrapper.h"
+#include "npdm.h"
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 #ifndef SERIAL
 #include <boost/mpi/environment.hpp>
 #include <boost/mpi/communicator.hpp>
 #include <boost/mpi.hpp>
 #endif
-#include "pario.h"
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -111,16 +99,14 @@ std::cout << "mpi MAX_THRD = " << MAX_THRD << std::endl;
   double sweep_tol = 1e-7;
   sweep_tol = dmrginp.get_sweep_tol();
   bool direction;
+  bool direction_copy; 
   int restartsize;
+  int restartsize_copy;
   SweepParams sweepParams;
-
   SweepParams sweep_copy;
-  bool direction_copy; int restartsize_copy;
-
 
   switch(dmrginp.calc_type()) {
     
-//---------------------------------------------------------------------------
   case (DMRG):
     if (RESTART && !FULLRESTART)
       restart(sweep_tol, reset_iter);
@@ -137,237 +123,36 @@ std::cout << "mpi MAX_THRD = " << MAX_THRD << std::endl;
     }
     break;
 
-//---------------------------------------------------------------------------
   case (FCI):
     Sweep::fullci(sweep_tol);
     break;
     
-//---------------------------------------------------------------------------
   case (TINYCALC):
     Sweep::tiny(sweep_tol);
     break;
 
-//---------------------------------------------------------------------------
   case (ONEPDM):
-    if (dmrginp.algorithm_method() == TWODOT) {
-      pout << "Onepdm not allowed with twodot algorithm" << endl;
-      abort();
-    }
-    if (RESTART && !FULLRESTART)
-      restart(sweep_tol, reset_iter);
-    else if (FULLRESTART) {
-      fullrestartGenblock();
-      reset_iter = true;
-      sweepParams.restorestate(direction, restartsize);
-      sweepParams.calc_niter();
-      sweepParams.savestate(direction, restartsize);
-      restart(sweep_tol, reset_iter);
-    }
-    else {
-      dmrg(sweep_tol);
-    }
-
-    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
-    dmrginp.Sz() = dmrginp.total_spin_number();
-    dmrginp.do_npdm_ops() = true;
-    dmrginp.screen_tol() = 0.0;
-
-    sweep_copy.restorestate(direction_copy, restartsize_copy);
-    dmrginp.set_fullrestart() = true;
-    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
-    dmrginp.set_fullrestart() = false;    
-
-    SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
-    sweep_copy.savestate(direction_copy, restartsize_copy);
+    Npdm::npdm(1);
     break;
 
-//---------------------------------------------------------------------------
   case (TWOPDM):
-pout << "maw doing twopdm\n";
-    if (dmrginp.algorithm_method() == TWODOT) {
-      pout << "Twopdm not allowed with twodot algorithm" << endl;
-      abort();
-    }
-
-    if (RESTART && !FULLRESTART)
-      restart(sweep_tol, reset_iter);
-    else if (FULLRESTART) {
-      fullrestartGenblock();
-      reset_iter = true;
-      sweepParams.restorestate(direction, restartsize);
-      sweepParams.calc_niter();
-      sweepParams.savestate(direction, restartsize);
-      restart(sweep_tol, reset_iter);
-    }
-    else {
-      dmrg(sweep_tol);
-    }
-
-
-    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
-    dmrginp.Sz() = dmrginp.total_spin_number();
-    dmrginp.do_npdm_ops() = true;
-    dmrginp.screen_tol() = 0.0;
-    sweep_copy.restorestate(direction_copy, restartsize_copy);
-
-    //FIXME generate 2-index and 3-index ops
-    dmrginp.set_fullrestart() = true;
-    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
-    dmrginp.set_fullrestart() = false;    
-
-    // Compute twopdm elements
-    for (int state=0; state<dmrginp.nroots(); state++) {
-      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-      SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
-    }
-    sweep_copy.savestate(direction_copy, restartsize_copy);
+    Npdm::npdm(2);
     break;
 
-//---------------------------------------------------------------------------
   case (THREEPDM):
-pout << "maw doing threepdm\n";
-    if (dmrginp.algorithm_method() == TWODOT) {
-      pout << "threepdm not allowed with twodot algorithm" << endl;
-      abort();
-    }
-
-    if (RESTART && !FULLRESTART)
-      restart(sweep_tol, reset_iter);
-    else if (FULLRESTART) {
-      fullrestartGenblock();
-      reset_iter = true;
-      sweepParams.restorestate(direction, restartsize);
-      sweepParams.calc_niter();
-      sweepParams.savestate(direction, restartsize);
-      restart(sweep_tol, reset_iter);
-    }
-    else {
-      dmrg(sweep_tol);
-    }
-
-    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
-    dmrginp.Sz() = dmrginp.total_spin_number();
-    dmrginp.do_npdm_ops() = true;
-    dmrginp.screen_tol() = 0.0;
-    sweep_copy.restorestate(direction_copy, restartsize_copy);
-
-    //FIXME generate 2-index and 3-index ops
-    dmrginp.set_fullrestart() = true;
-    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
-    dmrginp.set_fullrestart() = false;    
-
-    // Compute threepdm elements
-    for (int state=0; state<dmrginp.nroots(); state++) {
-      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-      SweepThreepdm::do_one(sweepParams, false, direction, false, 0, state);
-    }
-    sweep_copy.savestate(direction_copy, restartsize_copy);
+    Npdm::npdm(3);
     break;
 
-//---------------------------------------------------------------------------
   case (FOURPDM):
-pout << "maw doing fourpdm\n";
-    if (dmrginp.algorithm_method() == TWODOT) {
-      pout << "fourpdm not allowed with twodot algorithm" << endl;
-      abort();
-    }
-
-    if (RESTART && !FULLRESTART)
-      restart(sweep_tol, reset_iter);
-    else if (FULLRESTART) {
-      fullrestartGenblock();
-      reset_iter = true;
-      sweepParams.restorestate(direction, restartsize);
-      sweepParams.calc_niter();
-      sweepParams.savestate(direction, restartsize);
-      restart(sweep_tol, reset_iter);
-    }
-    else {
-      dmrg(sweep_tol);
-    }
-
-    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
-    dmrginp.Sz() = dmrginp.total_spin_number();
-    dmrginp.do_npdm_ops() = true;
-    dmrginp.screen_tol() = 0.0;
-    sweep_copy.restorestate(direction_copy, restartsize_copy);
-
-    //FIXME generate 2-index and 3-index ops
-    dmrginp.set_fullrestart() = true;
-    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
-    dmrginp.set_fullrestart() = false;    
-
-    // Compute fourpdm elements
-    for (int state=0; state<dmrginp.nroots(); state++) {
-      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-      SweepFourpdm::do_one(sweepParams, false, direction, false, 0, state);
-    }
-    sweep_copy.savestate(direction_copy, restartsize_copy);
+    Npdm::npdm(4);
     break;
 
-//---------------------------------------------------------------------------
   case (RESTART_ONEPDM):
-    if(sym == "dinfh") {
-      pout << "One pdm not implemented with dinfh symmetry"<<endl;
-      abort();
-    }
-    sweepParams.restorestate(direction, restartsize);
-    if(!sweepParams.get_onedot() || dmrginp.algorithm_method() == TWODOT) {
-      pout << "Onepdm only runs for the onedot algorithm" << endl;
-      abort();
-    }
-
-
-    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
-    dmrginp.Sz() = dmrginp.total_spin_number();
-    dmrginp.do_npdm_ops() = true;
-    dmrginp.screen_tol() = 0.0;
-
-    sweep_copy.restorestate(direction_copy, restartsize_copy);
-    dmrginp.set_fullrestart() = true;
-    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
-    dmrginp.set_fullrestart() = false;    
-
-    SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
-    sweep_copy.savestate(direction_copy, restartsize_copy);
-
+    Npdm::npdm_restart(1);
     break;
 
-//---------------------------------------------------------------------------
   case (RESTART_TWOPDM):
-    if(sym == "dinfh") {
-      pout << "Two pdm not implemented with dinfh symmetry"<<endl;
-      abort();
-    }
-    sweepParams.restorestate(direction, restartsize);
-    if(!sweepParams.get_onedot() || dmrginp.algorithm_method() == TWODOT) {
-      pout << "Twopdm only runs for the onedot algorithm" << endl;
-      abort();
-    }
-
-    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
-    dmrginp.Sz() = dmrginp.total_spin_number();
-    dmrginp.do_npdm_ops() = true;
-    dmrginp.screen_tol() = 0.0;    
-    sweep_copy.restorestate(direction_copy, restartsize_copy);
-
-    dmrginp.set_fullrestart() = true;
-    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
-    dmrginp.set_fullrestart() = false;    
-
-    for (int state=0; state<dmrginp.nroots(); state++) {
-
-      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-      SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
-    }
-    sweep_copy.savestate(direction_copy, restartsize_copy);
-
+    Npdm::npdm_restart(2);
     break;
   }
 
