@@ -12,6 +12,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "sweeponepdm.h"
 #include "twopdm_driver.h"
 #include "threepdm_driver.h"
+#include "fourpdm_driver.h"
 
 void dmrg(double sweep_tol);
 void restart(double sweep_tol, bool reset_iter);
@@ -90,9 +91,9 @@ void npdm( int npdm_order )
   case (4):
     // Compute fourpdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
+      Fourpdm_driver fourpdm_driver;
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-assert(false);
-//      SweepFourpdm::do_one(sweepParams, false, direction, false, 0, state);
+      fourpdm_driver.do_one_sweep(sweepParams, false, direction, false, 0, state);
     }
     break;
   }
