@@ -48,7 +48,7 @@ Jonathan Dorando and Debashree Ghosh
 \pagenumbering{arabic}
 
 %\begin{comment}
-\section{Introduction}
+%\section{Introduction}
 Block implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry. 
 The DMRG is a variational wavefunction method. Compared to other quantum chemical methods, 
 {\it it  efficiently describes strong, multi-reference correlation in
@@ -220,10 +220,10 @@ We can break down the tasks needed to successfully setup, run, and monitor a DMR
 \begin{enumerate}
 \item  Generate orbitals and select an active space. 
 \item  Rotate/localize active space orbitals, if desired
-\item  Dump the integrals for the Block program.
+\item  Dump the integrals for the Block program
 \item {\bf Block} Choose an orbital ordering (default)
-\item {\bf Block} Set up Block input, execute Block program.
-\item {\bf Block} Monitor DMRG energy convergence as a function of $M$. For additional accuracy, extrapolate energy as a function of discarded weight. 
+\item {\bf Block} Set up Block input, execute Block program
+\item {\bf Block} Monitor DMRG energy convergence as a function of $M$. For additional accuracy, extrapolate energy as a function of discarded weight 
 \end{enumerate}
 
 %The most common pitfalls are in steps 2 and 6. In step 2, a good choice of orbitals and ordering in DMRG is situation specific. 
@@ -239,7 +239,7 @@ in a CAS(24,30) space and porphine in a CAS(24, 24) space.
 %% The current distribution of the Block program is provided with an interface to the Molpro package. Consequently, we shall
 %%  use Molpro in our examples below. 
 
-\subsection{Generating the orbitals and integrals using Molpro}
+\subsubsection{Generating the orbitals and integrals using Molpro}
 
 We first generate the orbitals and integrals for DMRG using the Molpro 2012.2
 package. {Note, if you have the Molpro interface installed, you would normally
@@ -256,7 +256,7 @@ file located in Sec.~\ref{sec:appMolprobenz}.
 
 \subsection{Block input file}
 
-We are now ready to carry out a DMRG calculation. The simplest input file for our benzene example is shown below:
+We are now ready to carry out a DMRG calculation. The simplest input file for our benzene example is shown below (note this is the input file for the standalone calculations):
 
 \begin{verbatim}
 nelec 6 
@@ -531,9 +531,9 @@ more general molecules, an optimal choice is less clear-cut, but there are sever
 (1) is typically useful for small molecules (e.g. diatomics) and if the molecule has high symmetry, especially since high point group symmetry leads to significant speedups in the DMRG program.
 (3) is useful in TM systems where atomic-like $d$ orbitals are in the active space. (2) may be considered a general purpose choice. 
 
-\subsubsection{Orbital ordering}
+\subsection{Orbital ordering}
 
-Besides a manual ordering scheme,  we have developed two techniques to obtain
+We have developed two techniques to obtain
 an automatic orbital ordering. These are briefly detailed below. 
 
 \begin{enumerate}
@@ -563,16 +563,18 @@ As detailed above, there are three localization options for \texttt{BLOCK}:
 		where the user writes a file \textit{e.g.} \texttt{reorder.dat}, 
 		with the desired ordering
 	\item \texttt{BLANK}, Fiedler vector is used by default.
-   \item \texttt{noreorder}, No reordering is used.
+	 \item \texttt{noreorder}, No reordering is used.
 
 \end{itemize}
- 
-\begin{figure}
- \begin{center}
- \resizebox{50mm}{!}{\includegraphics{cyclic.eps}}
- \end{center}
- \caption{\emph{Snake-like} ordering of orbitals in a ring-like molecule.}
- \label{fig:order}
+
+We recommend the following respective orderings:
+\begin{enumerate}
+\item Group bonding orbitals with their corresponding antibonding orbitals, then order the groups by average energy or average occupation number;
+\item Group bonding orbitals with their corresponding antibonding orbitals into clusters, then order in real-space;
+\item Order in real-space.
+\end{enumerate}
+
+\begin{figure} \begin{center} \resizebox{50mm}{!}{\includegraphics{cyclic.eps}} \end{center} \caption{\emph{Snake-like} ordering of orbitals in a ring-like molecule.} \label{fig:order}
  \end{figure}
 %\subsection{Appendix: Orbital ordering}
 
@@ -595,7 +597,7 @@ We would appreciate if you cite the following papers in publications resulting f
 In addition, a useful list of DMRG references relevant to quantum chemistry
 can be found in the article above by Sharma and Chan.
 
-\subsubsection{Calling Block as an external subroutine}
+\subsection{Calling Block as an external subroutine}
 \label{sec:External}
 The makefile distributed with Block code can be used to generate a library file
 called \texttt{libqcdmrg.a}. To call Block as a subroutine from a C++ program,
@@ -904,6 +906,25 @@ The reorder.dat file is used to reorder orbitals to place the bonding and anti-b
 30,  6,  3, 18, 21            
 %\end{verbatim}
 
+\subsubsection{$\pi$-active space of porphine}
+
+We provide a \texttt{MOLPRO} input file for the porphine molecule in Sec.~\ref{sec:PorphineInp}. We localize the $\pi$-orbitals, in a similar fashion to the 
+benzene case. We generate a (24e, 24o) active space. The energy is minimized to 
+below 0.1 m$E_h$ at M=2000.
+
+\textbf{BLOCK input file}
+\begin{verbatim}
+nelec 24
+point_group c1
+spin 0
+irrep 1
+schedule default
+maxm 2000
+twodot
+sweep_tol 1e-9
+orbitals FCIDUMP
+gaopt default
+\end{verbatim}
 
 \subsection{Appendix: Molpro input files}\label{sec:appMolpro}
 
@@ -1035,6 +1056,107 @@ occ, 8,3,3,1,5,2,2,0;
 
 {fci;
 core,4,1,1,0,4,1,1,0;
+dump
+}
+\end{verbatim}
+
+\subsubsection{Porphine, $C_1$ symmetry, fully-localized orbitals}
+\label{sec:PorphineInp}
+
+\textbf{molpro input file}
+
+\begin{verbatim}
+angstrom
+geomtyp = xyz
+geometry = {
+N 1.9764 0.0000 0.0000
+N 0.0000 1.9884 0.0000
+N -1.9764 0.0000 0.0000
+N 0.0000 -1.9884 0.0000
+C 2.8182 -1.0903 0.0000
+C 2.8182 1.0903 0.0000
+C 1.0918 2.8249 0.0000
+C -1.0918 2.8249 0.0000
+C -2.8182 1.0903 0.0000
+C -2.8182 -1.0903 0.0000
+C -1.0918 -2.8249 0.0000
+C 1.0918 -2.8249 0.0000
+C 4.1961 -0.6773 0.0000
+C 4.1961 0.6773 0.0000
+C 0.6825 4.1912 0.0000
+C -0.6825 4.1912 0.0000
+C -4.1961 0.6773 0.0000
+C -4.1961 -0.6773 0.0000
+C -0.6825 -4.1912 0.0000
+C 0.6825 -4.1912 0.0000
+H 5.0441 -1.3538 0.0000
+H 5.0441 1.3538 0.0000
+H 1.3558 5.0416 0.0000
+H -1.3558 5.0416 0.0000
+H -5.0441 1.3538 0.0000
+H -5.0441 -1.3538 0.0000
+H -1.3558 -5.0416 0.0000
+H 1.3558 -5.0416 0.0000
+C 2.4150 2.4083 0.0000
+C -2.4150 2.4083 0.0000
+C -2.4150 -2.4083 0.0000
+C 2.4150 -2.4083 0.0000
+H 3.1855 3.1752 0.0000
+H -3.1855 3.1752 0.0000
+H -3.1855 -3.1752 0.0000
+H 3.1855 -3.1752 0.0000
+}
+basis=vdz
+gprint, orbital= 500
+{rhf
+core 0,0,0,0,0,0,0,0
+}
+
+symmetry, nosym
+{rhf
+maxit, 1
+start, 2100.2
+save, 2101.2
+print, orbital=500
+}
+
+{merge
+orbital, 2101.2
+add 1.1,396.1,1.1
+rotate 70.1, 73.1, 90
+rotate 68.1, 72.1, 90
+rotate 62.1, 71.1, 90
+rotate 61.1, 70.1, 90
+rotate 58.1, 69.1, 90
+rotate 92.1, 85.1, 90
+rotate 94.1, 86.1, 90
+rotate 95.1, 87.1, 90
+rotate 96.1, 88.1, 90
+rotate 101.1, 89.1, 90
+rotate 102.1, 90.1, 90
+rotate 103.1, 91.1, 90
+rotate 104.1, 92.1, 90
+save 2102.2
+}
+
+{rhf;
+start 2102.2
+maxit, 1
+save 2103.2
+}
+
+{locali, pipek, locmethod=3
+orbital,  2103.2
+thresh, 1d-12, 1e-5
+core, 68
+occ,  92
+save, 2104.2
+}
+
+{fci
+orbital, 2105.2
+core, 68
+occ,  92
 dump
 }
 \end{verbatim}
