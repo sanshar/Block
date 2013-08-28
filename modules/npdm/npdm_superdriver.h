@@ -6,41 +6,29 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#ifndef NPDM_DRIVER_HEADER_H
-#define NPDM_DRIVER_HEADER_H
+#ifndef NPDM_SUPERDRIVER_HEADER_H
+#define NPDM_SUPERDRIVER_HEADER_H
 
 #include <vector>
 #include <multiarray.h>
 #include "spinblock.h"
 #include "wavefunction.h"
 #include "BaseOperator.h"
-#include "npdm_superdriver.h"
-#include "npdm_patterns.h"
-#include "npdm_expectations.h"
-#include "npdm_operator_wrappers.h"
 
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
-class Npdm_driver : public Npdm_superdriver {
+class Npdm_superdriver {
 
   public:
-    Npdm_driver() : npdm_order_(-1) { }
-    Npdm_driver(int order) : npdm_order_(order) { }
+    double do_one_sweep(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state);
 
   protected:
-    int npdm_order_;
+    void npdm_block_and_decimate(SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
+                                 const bool &useSlater, const bool& dot_with_sys, int state);
 
-    int get_mpi_max_lhs_size( int my_size );
-    std::vector<NpdmSpinOps_base> get_all_mpi_ops(const bool local_skip, NpdmSpinOps & local_ops, std::vector< boost::mpi::request > & reqs);
-    void do_npdm_inner_loop( Npdm::Npdm_expectations & npdm_expectations, NpdmSpinOps_base & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps );
-    void npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm_expectations, NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps );
-    void compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int state, int sweepPos, int endPos);
-
-    virtual void assign_npdm_elements( std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements) = 0;
-    virtual void accumulate_npdm() = 0;
-
+    virtual void compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int state, int sweepPos, int endPos) = 0;
     virtual void save_npdm_text(const int &i, const int &j) = 0;
     virtual void save_npdm_binary(const int &i, const int &j) = 0;
     virtual void save_spatial_npdm_text(const int &i, const int &j) = 0;
@@ -48,7 +36,7 @@ class Npdm_driver : public Npdm_superdriver {
     virtual void load_npdm_binary(const int &i, const int &j) = 0;
     virtual void npdm_resize_array(int dim) = 0;
     virtual void npdm_clear_array() = 0;
-  
+
 };
   
 //===========================================================================================================================================================

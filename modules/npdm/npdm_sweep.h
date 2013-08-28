@@ -7,16 +7,14 @@
 //*/
 //
 //
-//#ifndef NPDM_BLOCK_AND_DECIMATE_HEADER
-//#define NPDM_BLOCK_AND_DECIMATE_HEADER
+//#ifndef NPDM_SWEEP_HEADER
+//#define NPDM_SWEEP_HEADER
 //#include "global.h"
 //#include "solver.h"
 //#include "initblocks.h"
 //#include "rotationmat.h"
 //#include "davidson.h"
 //#include "linear.h"
-//#include "density.h"
-//#include "pario.h"
 //#include "guess_wavefunction.h"
 //#include "npdm_driver.h"
 //
@@ -28,17 +26,11 @@
 //using namespace std;
 //
 //namespace SpinAdapted{
-//namespace Npdm{
-//
-////-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//void BlockAndDecimate( Npdm_driver& npdm_driver, SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
-//                       const bool &useSlater, const bool& dot_with_sys, int state);
-//
-////-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
+//namespace NpdmSweep
+//{
+//  double do_one(Npdm_driver & npdm_driver, SweepParams &sweepParams, const bool &warmUp, const bool &forward,
+//                const bool &restart, const int &restartSize, int state);
 //}
 //}
 //
 //#endif
-//

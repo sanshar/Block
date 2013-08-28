@@ -61,6 +61,7 @@ void npdm( int npdm_order )
   sweep_copy.restorestate(direction_copy, restartsize_copy);
   dmrginp.set_fullrestart() = true;
   sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+//FIXME don't compute unnecessary operators until NOW
   SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
   dmrginp.set_fullrestart() = false;
 
@@ -70,7 +71,6 @@ void npdm( int npdm_order )
     SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
     sweep_copy.savestate(direction_copy, restartsize_copy);
     break;
-
   case (2):
     // Compute twopdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
@@ -79,7 +79,6 @@ void npdm( int npdm_order )
       twopdm_driver.do_one_sweep(sweepParams, false, direction, false, 0, state);
     }
     break;
-
   case (3):
     // Compute threepdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
@@ -88,7 +87,6 @@ void npdm( int npdm_order )
       threepdm_driver.do_one_sweep(sweepParams, false, direction, false, 0, state);
     }
     break;
-
   case (4):
     // Compute fourpdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
@@ -97,7 +95,6 @@ assert(false);
 //      SweepFourpdm::do_one(sweepParams, false, direction, false, 0, state);
     }
     break;
-
   }
   sweep_copy.savestate(direction_copy, restartsize_copy);
 
@@ -140,7 +137,6 @@ void npdm_restart( int npdm_order )
     SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
     sweep_copy.savestate(direction_copy, restartsize_copy);
     break;
-
   case (2):
     for (int state=0; state<dmrginp.nroots(); state++) {
       Twopdm_driver twopdm_driver;
