@@ -531,53 +531,6 @@ more general molecules, an optimal choice is less clear-cut, but there are sever
 (1) is typically useful for small molecules (e.g. diatomics) and if the molecule has high symmetry, especially since high point group symmetry leads to significant speedups in the DMRG program.
 (3) is useful in TM systems where atomic-like $d$ orbitals are in the active space. (2) may be considered a general purpose choice. 
 
-\subsection{Orbital ordering}
-
-We have developed two techniques to obtain
-an automatic orbital ordering. These are briefly detailed below. 
-
-\begin{enumerate}
-	\item \textbf{Fiedler vector ordering}\\
-The Fiedler vector is the second eigenvector of the graph Laplacian. In
-simpler terms, it defines a 1-D embedding of the graph (\textit{i.e.}, the
-orbitals) on a line. We use the exchange matrix elements, $K_{ij}$ to minimize
-the cost function.
-
-The Fiedler vector is an extremely cost-effective tool to obtain an automatic
-orbital ordering. We have found it useful for systems up to 20-30 orbitals.
-For larger active spaces, we recommend the usage of the genetic algorithm.
-
-\item \textbf{Genetic algorithm ordering} \\
-We use a genetic algorithm, where the cost function is the average interaction
-distance weighted by the exchange integrals. This can be defined as the root
-mean of $K_{ij}R_{ij}^{2}$, where $K_{ij}$ is the exchange integral elements;
-and $R_{ij}$ the distance between the $i$th and $j$th sites.
-\end{enumerate}
-
-As detailed above, there are three localization options for \texttt{BLOCK}:
-
-\begin{itemize}
-	\item \texttt{gaopt default}, uses the default parameters for the genetic
-		algorithm;
-	\item \texttt{reorder reorder.dat}, uses a manual reordering scheme,
-		where the user writes a file \textit{e.g.} \texttt{reorder.dat}, 
-		with the desired ordering
-	\item \texttt{BLANK}, Fiedler vector is used by default.
-	 \item \texttt{noreorder}, No reordering is used.
-
-\end{itemize}
-
-We recommend the following respective orderings:
-\begin{enumerate}
-\item Group bonding orbitals with their corresponding antibonding orbitals, then order the groups by average energy or average occupation number;
-\item Group bonding orbitals with their corresponding antibonding orbitals into clusters, then order in real-space;
-\item Order in real-space.
-\end{enumerate}
-
-\begin{figure} \begin{center} \resizebox{50mm}{!}{\includegraphics{cyclic.eps}} \end{center} \caption{\emph{Snake-like} ordering of orbitals in a ring-like molecule.} \label{fig:order}
- \end{figure}
-%\subsection{Appendix: Orbital ordering}
-
 
 \section{Appendix: Technical issues}
 
@@ -704,6 +657,53 @@ the onedot algorithm, replace the \texttt{twodot\_to\_onedot} line with
 these commands). 
 
 \texttt{Default schedule for small systems} When systems are smaller than 12 orbitals, the default schedule starts from $M=50$ and increases to 100, 250, 500, 1000, 2500, 5000, 10000 every 3 sweep iterations until \texttt{maxM} is reached.
+
+\subsubsection{Orbital ordering}
+
+We have developed two techniques to obtain
+an automatic orbital ordering. These are briefly detailed below. 
+
+\begin{enumerate}
+	\item \textbf{Fiedler vector ordering}\\
+The Fiedler vector is the second eigenvector of the graph Laplacian. In
+simpler terms, it defines a 1-D embedding of the graph (\textit{i.e.}, the
+orbitals) on a line. We use the exchange matrix elements, $K_{ij}$ to minimize
+the cost function.
+
+The Fiedler vector is an extremely cost-effective tool to obtain an automatic
+orbital ordering. We have found it useful for systems up to 20-30 orbitals.
+For larger active spaces, we recommend the usage of the genetic algorithm.
+
+\item \textbf{Genetic algorithm ordering} \\
+We use a genetic algorithm, where the cost function is the average interaction
+distance weighted by the exchange integrals. This can be defined as the root
+mean of $K_{ij}R_{ij}^{2}$, where $K_{ij}$ is the exchange integral elements;
+and $R_{ij}$ the distance between the $i$th and $j$th sites.
+\end{enumerate}
+
+As detailed above, there are three localization options for \texttt{BLOCK}:
+
+\begin{itemize}
+	\item \texttt{gaopt default}, uses the default parameters for the genetic
+		algorithm;
+	\item \texttt{reorder reorder.dat}, uses a manual reordering scheme,
+		where the user writes a file \textit{e.g.} \texttt{reorder.dat}, 
+		with the desired ordering
+	\item \texttt{BLANK}, Fiedler vector is used by default.
+	 \item \texttt{noreorder}, No reordering is used.
+
+\end{itemize}
+
+We recommend the following respective orderings:
+\begin{enumerate}
+\item Group bonding orbitals with their corresponding antibonding orbitals, then order the groups by average energy or average occupation number;
+\item Group bonding orbitals with their corresponding antibonding orbitals into clusters, then order in real-space;
+\item Order in real-space.
+\end{enumerate}
+
+\begin{figure} \begin{center} \resizebox{50mm}{!}{\includegraphics{cyclic.eps}} \end{center} \caption{\emph{Snake-like} ordering of orbitals in a ring-like molecule.} \label{fig:order}
+ \end{figure}
+%\subsection{Appendix: Orbital ordering}
 
 \subsubsection{Monitoring and convergence of the DMRG calculation}
 \label{sec:dmrg_convergence}
