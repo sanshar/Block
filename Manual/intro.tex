@@ -7,6 +7,7 @@
 \usepackage{hyperref}
 \usepackage{graphicx}
 \usepackage{color}
+\usepackage{verbatim}
 \bibliographystyle{abbrv}
 
 \usepackage{amsmath}
@@ -46,8 +47,8 @@ Jonathan Dorando and Debashree Ghosh
 \newpage
 \pagenumbering{arabic}
 
+%\begin{comment}
 \section{Introduction}
-
 Block implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry. 
 The DMRG is a variational wavefunction method. Compared to other quantum chemical methods, 
 {\it it  efficiently describes strong, multi-reference correlation in
@@ -65,6 +66,7 @@ complete active space (CAS) techniques. Thus, if you are interested in
 \item and, standard chemical accuracy (1 kcal/mol in energy differences),
 \end{itemize}
 then the DMRG may be the right method for you.
+%\end{comment}
 
 \section{Capabilities}
 
@@ -78,17 +80,35 @@ As of the current beta release, Block implements the following features:
 \end{itemize}
 
 \section{Installation}\label{sec:install}
+
+Block can either be built as a standalone or through one of its interfaces to external programs. Please Sec.~\ref{sec:External} for including \texttt{BLOCK} as an external library.
+
+\subsection{Molpro}
+\texttt{MOLPRO} fetches a copy of the most recent stable \texttt{BLOCK}
+code, and compiles it. For this, the
+
+\begin{verbatim}
+-Block
+\end{verbatim}
+
+flag must be called when running \begin{verbatim}./configure\end{verbatim}. Please refer to the Molpro manaul for more details.
+
+\subsection{Orca}
+
+\texttt{BLOCK} is enabled in \texttt{ORCA} by enabling the flag \texttt{USE\_DMRG = YES} in the Makefile
+
+\subsection{Standalone}
 Block is written in C++ and requires a C++ compiler. It has the following additional dependencies:
 \begin{itemize}
 \item Complete BLAS, LAPACK, and Boost C++ libraries,
 \item For parallel execution MPI must be installed, and the Boost MPI library must have been compiled with the same version of MPI,
 \item Depending on the operating system, you may wish to install a custom malloc (see Sec.~\ref{sec:appInstall}, and Sec. \ref{sec:computation}),
-\item python, to run the tests.
+\item Python, to run the tests.
 \end{itemize}
 The program has been tested on Linux systems, although we expect it to run on other Unix type operating systems as well. 
 
 %maybe switch to appendix
-\subsection{makefile}
+\subsubsection{makefile}
 Block is compiled using the makefile supplied in the distribution. The following customizations need to be made to the makefile. More details follow in Sec.~\ref{sec:appInstall}
 \begin{itemize}
  \item \textbf{Boost}\\The variable \texttt{BOOST} should be set to the location of the Boost installation. 
@@ -97,8 +117,15 @@ set to the linking command for the BLAS and LAPACK libraries.
 \item \textbf{Compiler}\\
    By default, Block is set up to use the gcc compiler. If you wish to use the Intel C++ compiler you should modify the variable \texttt{CXX} to \texttt{icpc}.
 \item \textbf{Parallel execution}\\
-	is enabled by default. Make sure that the \texttt{MPI\_LIB} variable points to the location of the boost\_mpi library. If one wishes to use only the serial version of Block, modify the \texttt{USE\_MPI} variable to \texttt{false}. More details on the parallel execution are available in Sec.~\ref{sec:appInstall}.
+	is enabled by default. Make sure that the \texttt{MPI\_LIB} variable points to the location of the boost\_mpi library. If one wishes to use only the serial version of Block, modify the \texttt{USE\_MPI} variable to \texttt{false}.
+	If an mpi enabled c++ wrapper compiler ``mpic++'' is available then no further changes are necessary. If this is not the case then \texttt{MPICXX} should be changed to the name of the parallel C++ compiler.  Also in absence of the wrapper compiler additional mpi libraries need to be specified manually using the variable \texttt{MPI\_LIB}. %\texttt{CXX} should be changed to the name of the parallel C++ compiler or wrapper (e.g. mpic++). In general, the parallel wrapper will automatically link the appropriate MPI libraries. However, if MPI libraries need to be linked manually, \texttt{MPI\_LIB} should be set to the appropriate linking command.
+%% To install the parallel version of the code the variable \textsf{USE\_MPI} should be set to \textsf{yes}. If an mpi enabled c++ wrapper compiler ``mpic++'' is available then no further changes are necessary. If this is not the case then one needs to manually change two entries, line 36 and line 37, of the makefile. Line 36 defines the variable \textsf{MPI\_LIB}. In addition to the linking Qcdmrg with the mpi boost library, additional mpi libraries need to be specified. The location of these will depend on the platform and also the flavor of mpi installed. Line 37 defines the variable \textsf{CXX} as \textsf{mpic++}; this has to be changed to the usual c++ compiler one is interested in using e.g. g++ for the case of gcc compiler.
+	\item \textbf{Custom malloc}\\
+DMRG calculations allocate and deallocate small blocks of memory a large number of times during a single calculation. For large scale calculations,
+this can lead to significant memory fragmentation over time. In some cases, this can be significantly ameliorated by installing a
+custom memory allocator. The linking command for the memory allocator is given by the variable \texttt{MALLOC},
 \end{itemize}
+
 
 \section{Running and testing the code}
 Block can be tested by executing the script \texttt{runtest} in the  directory \texttt{dmrg\_tests}. The tests require Python to be installed on the system.
@@ -107,7 +134,7 @@ cd dmrg_tests
 ./runtests
 \end{verbatim}
 
-The stand-alone code can be executed using the command
+The standalone code can be executed using the command
 \begin{verbatim}
 block.spin_adapted input.dat > output.dat
 \end{verbatim}
@@ -162,10 +189,22 @@ into the output file \texttt{output.dat}.
 
 \section{Block input and calculations}
 
-\subsection{Overview}
+\subsection{Molpro interface}
 
-Block does not generate its own integrals and orbitals; these must be supplied externally. Block
-is currently distributed  with a Molpro interface. This makes running a DMRG calculation for a chemical problem a simple two-step process, e.g.
+If you have compiled \texttt{MOLPRO} with the \texttt{BLOCK} options, you can run DMRG calculations directly. Please refer to the \texttt{MOLPRO} manual for more details.
+
+
+\subsection{Standalone}
+
+Block does not generate its own integrals and orbitals; these must be supplied
+externally. 
+\texttt{BLOCK} reads integrals in Molpro's \texttt{FCIDUMP} format. For more details
+on this format, see Sec.~\ref{sec:appFCIDUMP}.
+
+When running on standalone, this makes
+running a DMRG calculation for a chemical problem a simple two-step process,
+e.g.
+
 \begin{verbatim}
 molpro input.mol > output.mol
 block.spin_adapted input.dat > output.dat
@@ -179,9 +218,9 @@ also directly refer to the concepts in the sections above.
 
 We can break down the tasks needed to successfully setup, run, and monitor a DMRG calculation as follows:
 \begin{enumerate}
-\item {\bf Molpro} Generate orbitals and select an active space. 
-\item {\bf Molpro} Rotate the active space orbitals
-\item {\bf Molpro} Dump the integrals for the Block program.
+\item  Generate orbitals and select an active space. 
+\item  Rotate/localize active space orbitals, if desired
+\item  Dump the integrals for the Block program.
 \item {\bf Block} Choose an orbital ordering (default)
 \item {\bf Block} Set up Block input, execute Block program.
 \item {\bf Block} Monitor DMRG energy convergence as a function of $M$. For additional accuracy, extrapolate energy as a function of discarded weight. 
@@ -203,9 +242,12 @@ in a CAS(24,30) space and porphine in a CAS(24, 24) space.
 \subsection{Generating the orbitals and integrals using Molpro}
 
 We first generate the orbitals and integrals for DMRG using the Molpro 2012.2
-package.  (Note that to use Block with another program package, you need to to
-generate integrals in the Molpro FCIDUMP text integral format. The format of
-the FCIDUMP file is described in Sec.~\ref{sec:appFCIDUMP}).  We first identify
+package. {Note, if you have the Molpro interface installed, you would normally
+run Block directly as part of Molpro. Here we are using Molpro only to generate
+integrals for a subsequent standalone DMRG run, to illustrate how the
+standalone DMRG program can be used with a generic quantum chemistry code). }
+
+We first identify
 the $\pi$ electron active space (step 1), localize the orbitals to make atomic
 like $p_z$, and dump the corresponding one- and two-electron integrals for the
 Block program (step 3). All this may be carried out using the Molpro input
@@ -219,7 +261,6 @@ We are now ready to carry out a DMRG calculation. The simplest input file for ou
 \begin{verbatim}
 nelec 6 
 orbitals FCIDUMP
-{reorder reorder.dat}
 spin 0
 irrep 1
 schedule default
@@ -471,7 +512,7 @@ the energy of an approximate DMRG calculation may be  extrapolated with respect 
 %of this linear energy relationship, which will instead show a plateau behaviour.
 Energy extrapolation should always be carried out using truncation errors defined near the middle of the two-site DMRG sweep.
 
-\subsection{Orbital choice and ordering in DMRG}\label{sec:appendix2}
+\subsection{Orbital choice}\label{sec:appendix2}
 
 In common with many multi-reference methods, choosing an active space to correlate in DMRG can
 require some trial and error. However, unlike a standard CASCI wavefunction, the {\it DMRG wavefunction will also  change under both active space rotation and under reordering of the orbitals}.
@@ -488,15 +529,7 @@ more general molecules, an optimal choice is less clear-cut, but there are sever
 \item Fully localized (atomic-like) orbitals.
 \end{enumerate}
 (1) is typically useful for small molecules (e.g. diatomics) and if the molecule has high symmetry, especially since high point group symmetry leads to significant speedups in the DMRG program.
-(3) is useful in TM systems where atomic-like $d$ orbitals are in the active space. (2) may be considered a general purpose choice. With these orbital choices,
-we recommend the following respective orderings,
-\begin{enumerate}
-\item Group bonding orbitals with their corresponding antibonding orbitals, then order the groups by average energy or average occupation number,
-\item Group bonding orbitals with their corresponding antibonding orbitals into clusters, then order in real-space,
-\item Order in real-space.
-\end{enumerate}
-
-Examples of (1) and (3) are given above in this manual. 
+(3) is useful in TM systems where atomic-like $d$ orbitals are in the active space. (2) may be considered a general purpose choice. 
 
 \subsubsection{Orbital ordering}
 
@@ -562,19 +595,12 @@ We would appreciate if you cite the following papers in publications resulting f
 In addition, a useful list of DMRG references relevant to quantum chemistry
 can be found in the article above by Sharma and Chan.
 
-\subsection{Additional installation details}\label{sec:appInstall}
-\begin{itemize}
-	\item \textbf{Custom malloc}\\
-DMRG calculations allocate and deallocate small blocks of memory a large number of times during a single calculation. For large scale calculations,
-this can lead to significant memory fragmentation over time. In some cases, this can be significantly ameliorated by installing a
-custom memory allocator. The linking command for the memory allocator is given by the variable \texttt{MALLOC},
-	\item 
-If an mpi enabled c++ wrapper compiler ``mpic++'' is available then no further changes are necessary. If this is not the case then \texttt{MPICXX} should be changed to the name of the parallel C++ compiler.  Also in absence of the wrapper compiler additional mpi libraries need to be specified manually using the variable \texttt{MPI\_LIB}. %\texttt{CXX} should be changed to the name of the parallel C++ compiler or wrapper (e.g. mpic++). In general, the parallel wrapper will automatically link the appropriate MPI libraries. However, if MPI libraries need to be linked manually, \texttt{MPI\_LIB} should be set to the appropriate linking command.
-%% To install the parallel version of the code the variable \textsf{USE\_MPI} should be set to \textsf{yes}. If an mpi enabled c++ wrapper compiler ``mpic++'' is available then no further changes are necessary. If this is not the case then one needs to manually change two entries, line 36 and line 37, of the makefile. Line 36 defines the variable \textsf{MPI\_LIB}. In addition to the linking Qcdmrg with the mpi boost library, additional mpi libraries need to be specified. The location of these will depend on the platform and also the flavor of mpi installed. Line 37 defines the variable \textsf{CXX} as \textsf{mpic++}; this has to be changed to the usual c++ compiler one is interested in using e.g. g++ for the case of gcc compiler.
-\end{itemize}
-
 \subsubsection{Calling Block as an external subroutine}
-The makefile distributed with Block code can be used to generate a dynamic library file called \texttt{libqcdmrg.so}. To call Block as a subroutine from a C++ program, the library file has to be linked to the program. A DMRG calculation can be performed using the function call\\
+\label{sec:External}
+The makefile distributed with Block code can be used to generate a library file
+called \texttt{libqcdmrg.a}. To call Block as a subroutine from a C++ program,
+the library file has to be linked to the program. A DMRG calculation can be
+performed using the function call\\
 \texttt{
 callDMRG(inputf, outputf);\\
 } 
