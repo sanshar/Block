@@ -33,10 +33,6 @@ std::vector< std::pair<bool, NpdmSpinOps_base> >
 Npdm_driver::get_all_mpi_ops( const bool local_skip, NpdmSpinOps & local_ops, std::vector< boost::mpi::request > & reqs )
 {
   boost::mpi::communicator world;
-//std::cout.flush();
-//world.barrier();
-//std::cout << "entering get_all_mpi_ops, rank = " << mpigetrank() << std::endl;
-//std::cout.flush();
   std::vector< std::pair<bool, NpdmSpinOps_base> > all_ops;
   reqs.clear();
 
@@ -44,6 +40,7 @@ Npdm_driver::get_all_mpi_ops( const bool local_skip, NpdmSpinOps & local_ops, st
   NpdmSpinOps_base local_base(local_ops);
   std::pair<bool, NpdmSpinOps_base> local_pair = std::make_pair( local_skip, local_base );
   all_ops.push_back( local_pair );
+
   // Serial calculation
   if (world.size() == 1) return all_ops;
 
@@ -63,39 +60,28 @@ Npdm_driver::get_all_mpi_ops( const bool local_skip, NpdmSpinOps & local_ops, st
   bool nonlocal_skip;
   NpdmSpinOps_base nonlocal_base;
 
-//std::cout.flush();
-//world.barrier();
-
   // Do MPI communication
   if ( mpigetrank() == 0) {
     // Send to 1
-cout << "sending to rank 1\n";
     world.send(1, 0, local_skip);
-//    local_base.send_mpi_obj(1, 100);
-cout << "sending to rank 1 done\n";
+    local_base.send_mpi_obj(1, 100);
     // Recv from 1
-cout << "receiving from rank 1\n";
     world.recv(1, 300, nonlocal_skip);
-//    nonlocal_base.recv_mpi_obj(1, 400, local_base.opReps_.size());
-cout << "receiving from rank 1 done\n";
+    nonlocal_base.recv_mpi_obj(1, 400, local_base.opReps_.size());
   }
   else if ( mpigetrank() == 1) {
     // Recv from 0
-cout << "receiving from rank 0\n";
     world.recv(0, 0, nonlocal_skip);
-//    nonlocal_base.recv_mpi_obj(0, 100, local_base.opReps_.size());
-cout << "receiving from rank 0 done\n";
+    nonlocal_base.recv_mpi_obj(0, 100, local_base.opReps_.size());
     // Send to 0
-cout << "sending to rank 0\n";
     world.send(0, 300, local_skip);
-//    local_base.send_mpi_obj(0, 400);
-cout << "sending to rank 0 done\n";
+    local_base.send_mpi_obj(0, 400);
   }
   else
     assert(false);
 
-//  std::pair<const bool, NpdmSpinOps_base> nonlocal_pair = std::make_pair( nonlocal_skip, nonlocal_base );
-//  all_ops.push_back( nonlocal_pair );
+  std::pair<const bool, NpdmSpinOps_base> nonlocal_pair = std::make_pair( nonlocal_skip, nonlocal_base );
+  all_ops.push_back( nonlocal_pair );
 
   return all_ops;
 }
