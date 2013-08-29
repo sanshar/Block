@@ -119,8 +119,8 @@ void Npdm_driver::npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm
 
   boost::mpi::communicator world;
 //cout << "-------------------------------------------------------------------------------------------\n";
-cout << "lhsOps.size() = " << lhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
-//cout << "dotOps.size() = " << dotOps.size() << "; rank = " << mpigetrank() <<  std::endl;
+//cout << "lhsOps.size() = " << lhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
+cout << "dotOps.size() = " << dotOps.size() << "; rank = " << mpigetrank() <<  std::endl;
 //cout << "rhsOps.size() = " << rhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
 
   // MPI threads must be synchronised here so they all work on same operator pattern simultaneously

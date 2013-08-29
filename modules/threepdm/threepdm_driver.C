@@ -163,12 +163,12 @@ void Threepdm_driver::accumulate_npdm()
   {
     for(int p=1; p<world.size(); ++p) {
       world.recv(p, p, tmp_recv);
-      for(int i=0; i<threepdm.dim1()/2; ++i)
-        for(int j=0; j<threepdm.dim2()/2; ++j)
-          for(int k=0; k<threepdm.dim3()/2; ++k)
-            for(int l=0; l<threepdm.dim4()/2; ++l)
-              for(int m=0; m<threepdm.dim5()/2; ++m)
-                for(int n=0; n<threepdm.dim6()/2; ++n) 
+      for(int i=0; i<threepdm.dim1(); ++i)
+        for(int j=0; j<threepdm.dim2(); ++j)
+          for(int k=0; k<threepdm.dim3(); ++k)
+            for(int l=0; l<threepdm.dim4(); ++l)
+              for(int m=0; m<threepdm.dim5(); ++m)
+                for(int n=0; n<threepdm.dim6(); ++n) 
                   if(tmp_recv(i,j,k,l,m,n) != 0.0) threepdm(i,j,k,l,m,n) = tmp_recv(i,j,k,l,m,n);
     }
   }

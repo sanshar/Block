@@ -176,14 +176,14 @@ void Fourpdm_driver::accumulate_npdm()
   {
     for(int u=1; u<world.size(); ++u) {
       world.recv(u, u, tmp_recv);
-      for(int i=0; i<fourpdm.dim1()/2; ++i)
-        for(int j=0; j<fourpdm.dim2()/2; ++j)
-          for(int k=0; k<fourpdm.dim3()/2; ++k)
-            for(int l=0; l<fourpdm.dim4()/2; ++l)
-              for(int m=0; m<fourpdm.dim5()/2; ++m)
-                for(int n=0; n<fourpdm.dim6()/2; ++n) 
-                  for(int p=0; p<fourpdm.dim7()/2; ++p) 
-                    for(int q=0; q<fourpdm.dim8()/2; ++q) 
+      for(int i=0; i<fourpdm.dim1(); ++i)
+        for(int j=0; j<fourpdm.dim2(); ++j)
+          for(int k=0; k<fourpdm.dim3(); ++k)
+            for(int l=0; l<fourpdm.dim4(); ++l)
+              for(int m=0; m<fourpdm.dim5(); ++m)
+                for(int n=0; n<fourpdm.dim6(); ++n) 
+                  for(int p=0; p<fourpdm.dim7(); ++p) 
+                    for(int q=0; q<fourpdm.dim8(); ++q) 
                       if ( tmp_recv(i,j,k,l,m,n,p,q) != 0.0 ) fourpdm(i,j,k,l,m,n,p,q) = tmp_recv(i,j,k,l,m,n,p,q);
     }
   }

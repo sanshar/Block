@@ -182,7 +182,7 @@ template <class Op> class Op_component : public Op_component_base
   void build_csf_operators(SpinBlock& b, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) { 
 //pout << "Op_component::build_csf_operators " << m_op.num_indices() << std::endl;
 
-    if ( m_op.num_indices() < 3 ) {
+    if ( m_op.num_indices() < 10 ) {
       // Build in core
       singlethread_build_using_csf( *this, b, c, ladders);
 //      for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsf, _1, boost::ref(b), boost::ref(ladders), boost::ref(c)) );
@@ -191,7 +191,6 @@ template <class Op> class Op_component : public Op_component_base
       // Build on disk (assume we are building from scratch)
 //pout << ofile << std::endl;
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
-//FIXME why doesn't this work?       StateInfo sti = b.get_stateInfo();
       for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::buildUsingCsf, _1,boost::ref(b), boost::ref(ladders), boost::ref(c)) );
       ofs.close();
 //DEBUG now read back into core, as if always done in core
@@ -206,7 +205,7 @@ template <class Op> class Op_component : public Op_component_base
 
   void build_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::string& sysfile, std::string& dotfile) { 
 //pout << "Op_component::build_operators " << get_op_string() << " " << m_op.num_indices() << std::endl;
-    if ( m_op.num_indices() < 3 ) {
+    if ( m_op.num_indices() < 10 ) {
       // Build in core
       singlethread_build(*this, b); 
     }
@@ -233,7 +232,7 @@ template <class Op> class Op_component : public Op_component_base
 
   void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo* s) {
 //pout << "Op_component::renormalise_transform " <<  get_op_string() << " " << m_op.num_indices() << std::endl;
-    if ( m_op.num_indices() < 3 ) {
+    if ( m_op.num_indices() < 10 ) {
       // Build in core
       for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );
     }

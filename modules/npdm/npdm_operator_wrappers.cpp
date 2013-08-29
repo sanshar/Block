@@ -543,7 +543,7 @@ Npdm_op_wrapper_CCC::Npdm_op_wrapper_CCC( SpinBlock * spinBlock )
 //Only init this if we know we want to use disk-based?  Test built_on_disk?
   // For disk-based storage
   std::string ifile = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
-  ifs_.open(ifile.c_str(), ios::binary);
+///FIXME DISK  ifs_.open(ifile.c_str(), ios::binary);
   // Put ifs_.close in destructor???
 }
 
@@ -557,9 +557,9 @@ cout << "getting CCC operator...\n";
   int ix, jx, kx;
 
 //FIXME READ OPERATORS FROM CORE
-//  opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+  opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
 
-
+/*
 //assert(false);
 //FIXME READ OPERATORS FROM DISK HERE
   std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
@@ -574,6 +574,7 @@ cout << "getting CCC operator...\n";
      load_op >> *op;
      opReps_.push_back(op);
   }
+*/
 
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
