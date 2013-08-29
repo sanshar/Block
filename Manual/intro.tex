@@ -131,7 +131,7 @@ custom memory allocator. The linking command for the memory allocator is given b
 Block can be tested by executing the script \texttt{runtest} in the  directory \texttt{dmrg\_tests}. The tests require Python to be installed on the system.
 \begin{verbatim}
 cd dmrg_tests
-./runtests
+./runtest
 \end{verbatim}
 
 The standalone code can be executed using the command
@@ -216,14 +216,14 @@ method necessary to run a DMRG calculation.  The rest of the details are
 available in Sec.~\ref{sec:appDetails}.  Several aspects of the Block input
 also directly refer to the concepts in the sections above.
 
-We can break down the tasks needed to successfully setup, run, and monitor a DMRG calculation as follows:
+We can break down the tasks needed to successfully setup, run, and monitor a DMRG calculation as follows (bold indicates that the step is run by \texttt{BLOCK}):
 \begin{enumerate}
 \item  Generate orbitals and select an active space. 
 \item  Rotate/localize active space orbitals, if desired
 \item  Dump the integrals for the Block program
-\item {\bf Block} Choose an orbital ordering (default)
-\item {\bf Block} Set up Block input, execute Block program
-\item {\bf Block} Monitor DMRG energy convergence as a function of $M$. For additional accuracy, extrapolate energy as a function of discarded weight 
+\item {\bf Choose an orbital ordering }
+\item {\bf  Set up Block input, execute Block program}
+\item {\bf  Monitor DMRG energy convergence as a function of $M$}. For additional accuracy, extrapolate energy as a function of discarded weight 
 \end{enumerate}
 
 %The most common pitfalls are in steps 2 and 6. In step 2, a good choice of orbitals and ordering in DMRG is situation specific. 
