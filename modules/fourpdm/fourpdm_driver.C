@@ -23,7 +23,7 @@ namespace SpinAdapted{
 
 void Fourpdm_driver::save_npdm_text(const int &i, const int &j)
 {
-  if(!mpigetrank())
+  if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/fourpdm.", i, j);
@@ -50,7 +50,7 @@ void Fourpdm_driver::save_spatial_npdm_text(const int &i, const int &j)
 {
 std::cout << "Building spatial 4pdm\n";
   double factor = 1.0;
-  if(!mpigetrank())
+  if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.", i, j);
@@ -125,7 +125,7 @@ void Fourpdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
 
 void Fourpdm_driver::save_npdm_binary(const int &i, const int &j)
 {
-  if(!mpigetrank())
+  if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/fourpdm.", i, j);
@@ -140,7 +140,10 @@ void Fourpdm_driver::save_npdm_binary(const int &i, const int &j)
 
 void Fourpdm_driver::load_npdm_binary(const int &i, const int &j)
 {
-  if(!mpigetrank())
+pout << "load_fourpdm_binary\n";
+cout.flush();
+assert(false);
+  if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/fourpdm.", i, j);
@@ -152,7 +155,7 @@ void Fourpdm_driver::load_npdm_binary(const int &i, const int &j)
 #ifndef SERIAL
   mpi::communicator world;
   mpi::broadcast(world,fourpdm,0);
-  if(mpigetrank())
+  if( mpigetrank() != 0)
     fourpdm.Clear();
 #endif
 }
@@ -172,7 +175,7 @@ void Fourpdm_driver::accumulate_npdm()
 #ifndef SERIAL
   array_8d<double> tmp_recv;
   mpi::communicator world;
-  if (!mpigetrank())
+  if( mpigetrank() == 0)
   {
     for(int u=1; u<world.size(); ++u) {
       world.recv(u, u, tmp_recv);

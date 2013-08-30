@@ -21,7 +21,7 @@ namespace SpinAdapted{
 
 void Threepdm_driver::save_npdm_text(const int &i, const int &j)
 {
-  if(!mpigetrank())
+  if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/threepdm.", i, j);
@@ -46,7 +46,7 @@ void Threepdm_driver::save_spatial_npdm_text(const int &i, const int &j)
 {
 //FIXME  2pdm spatial has a factor of 1/2 in front of it  ???
   double factor = 1.0;
-  if(!mpigetrank())
+  if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j);
@@ -78,7 +78,7 @@ void Threepdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
 {
 //FIXME  2pdm spatial has a factor of 1/2 in front of it  ???
   double factor = 1.0;
-  if(!mpigetrank())
+  if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_binary_threepdm.", i, j);
@@ -112,7 +112,7 @@ void Threepdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
 
 void Threepdm_driver::save_npdm_binary(const int &i, const int &j)
 {
-  if(!mpigetrank())
+  if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/threepdm.", i, j);
@@ -127,21 +127,38 @@ void Threepdm_driver::save_npdm_binary(const int &i, const int &j)
 
 void Threepdm_driver::load_npdm_binary(const int &i, const int &j)
 {
-  if(!mpigetrank())
+pout << "load_threepdm_binary\n";
+cout.flush();
+assert(false); // <<<< CAN WE RETHINK USE OF DISK FOR NPDM?
+  if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/threepdm.", i, j);
     std::ifstream ifs(file, std::ios::binary);
     boost::archive::binary_iarchive load(ifs);
+cout << "loading... load_threepdm_binary\n";
+cout.flush();
     load >> threepdm;
     ifs.close();
   }
-#ifndef SERIAL
-  mpi::communicator world;
-  mpi::broadcast(world,threepdm,0);
-  if(mpigetrank())
-    threepdm.Clear();
-#endif
+
+//cout << threepdm(0,0,0,0,0,0) << endl;
+//cout << threepdm(1,2,3,4,5,6) << endl;
+//#ifndef SERIAL
+//cout << "broadcasting1... load_threepdm_binary\n";
+//cout.flush();
+//
+//assert(false); // MEMORY USE LARGE HERE!!!
+//  mpi::communicator world;
+//  mpi::broadcast(world,threepdm,0);
+//cout << "broadcasting2... load_threepdm_binary\n";
+//cout.flush();
+//  if( mpigetrank() != 0)
+//    threepdm.Clear();
+//#endif
+
+cout << "all done... load_threepdm_binary\n";
+cout.flush();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -159,9 +176,13 @@ void Threepdm_driver::accumulate_npdm()
 #ifndef SERIAL
   array_6d<double> tmp_recv;
   mpi::communicator world;
-  if (!mpigetrank())
+//cout << "threepdm size = " << threepdm.get_size() << " ; rank = " << mpigetrank() << endl;
+//cout.flush();
+//threepdm.resize(26,26,26,26,26,26);
+  if( mpigetrank() == 0)
   {
     for(int p=1; p<world.size(); ++p) {
+//assert(false); // MEMORY USE LARGE HERE!!!  Is this why it crashes sometimes?
       world.recv(p, p, tmp_recv);
       for(int i=0; i<threepdm.dim1(); ++i)
         for(int j=0; j<threepdm.dim2(); ++j)

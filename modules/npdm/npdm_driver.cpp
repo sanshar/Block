@@ -24,6 +24,27 @@ boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::ve
 
 //===========================================================================================================================================================
 
+void Npdm_driver::save_full_array(int i, int j) 
+{
+  // Combine NPDM elements from all mpi ranks and save one binary file
+  accumulate_npdm();
+  save_npdm_binary(i, j);
+  // Dump spatial and text NPDM files
+  save_npdm_text(i, j);
+  save_spatial_npdm_text(i, j);
+  save_spatial_npdm_binary(i, j);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_driver::save_sparse_array(int i, int j) 
+{
+  // Save nonredundant npdm elements from each mpi rank as separate files
+  sparse_array_.dump_file(i,j);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 unsigned int get_mpi_tag( int rank0, int rank1, int lda )
 {
   unsigned int tag = rank0 * lda + rank1;
@@ -93,8 +114,9 @@ void Npdm_driver::do_npdm_inner_loop( Npdm::Npdm_expectations & npdm_expectation
     std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements;
     new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( lhsOps, rhsOps, dotOps );
 
-    // Assign npdm elements
-    assign_npdm_elements( new_spin_orbital_elements );
+    // Store new npdm elements
+    sparse_array_.insert( new_spin_orbital_elements );
+    if ( use_full_array_ ) assign_npdm_elements( new_spin_orbital_elements );
   }
 }
 
@@ -162,16 +184,13 @@ std::cout.flush();
   
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int state, int sweepPos, int endPos)
+void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos)
 {
 
   boost::mpi::communicator world;
   pout << "===========================================================================================\n";
   pout << "NPDM sweep position = "<< sweepPos << " (" << endPos << ")\n";
 
-  // Npdm array built so far
-  load_npdm_binary(state, state);
-  
   // Initialize class that computes expectation values when sent LHS, Dot and RHS operator spin-sets from this spin-block
   Npdm::Npdm_expectations npdm_expectations( npdm_order_, wavefunctions.at(0), big );
 
@@ -185,8 +204,7 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
   Npdm::Npdm_patterns npdm_patterns( npdm_order_, sweepPos, endPos );
 
   for (auto pattern = npdm_patterns.ldr_cd_begin(); pattern != npdm_patterns.ldr_cd_end(); ++pattern) {
-//    pout << "===========================================================================================\n";
-    cout << "=============================================================================== " << mpigetrank() << std::endl;
+    pout << "===========================================================================================\n";
 
     std::cout << "Doing pattern: rank " << mpigetrank() << std::endl;
     npdm_patterns.print_cd_string( pattern->at('l') );
@@ -221,10 +239,6 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
     npdm_loop_over_block_operators( npdm_expectations, *lhsOps, *rhsOps, *dotOps );
   }
   
-  // Combine NPDM elements from this sweep point with others
-  accumulate_npdm();
-  save_npdm_binary(state, state);
-
 }
 
 //===========================================================================================================================================================

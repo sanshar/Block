@@ -6,31 +6,20 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#include <boost/mpi.hpp>
-#include <vector>
-#include <multiarray.h>
-#include "spinblock.h"
-#include "wavefunction.h"
-#include "BaseOperator.h"
-#include "npdm_superdriver.h"
+#include "npdm.h"
 
-#include "global.h"
-#include "solver.h"
-#include "initblocks.h"
-#include "rotationmat.h"
-#include "davidson.h"
-#include "linear.h"
-#include "guess_wavefunction.h"
-#include "density.h"
-#include "davidson.h"
-#include "pario.h"
+void dmrg(double sweep_tol);
+void restart(double sweep_tol, bool reset_iter);
+void ReadInput(char* conf);
+void fullrestartGenblock();
 
-namespace SpinAdapted{
+namespace SpinAdapted {
+namespace Npdm {
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Npdm_superdriver::npdm_block_and_decimate( SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
-                                                const bool &useSlater, const bool& dot_with_sys, const int state)
+void npdm_block_and_decimate( Npdm_driver& npdm_driver, SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
+                              const bool &useSlater, const bool& dot_with_sys, const int state)
 {
   //mcheck("at the start of block and decimate");
   // figure out if we are going forward or backwards
@@ -104,7 +93,7 @@ void Npdm_superdriver::npdm_block_and_decimate( SweepParams &sweepParams, SpinBl
 //MAW
   int sweepPos = sweepParams.get_block_iter();
   int endPos = sweepParams.get_n_iters()-1;
-  compute_npdm_elements(solution, big, sweepPos, endPos);
+  npdm_driver.compute_npdm_elements(solution, big, sweepPos, endPos);
 //MAW
 
   SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
@@ -118,8 +107,8 @@ void Npdm_superdriver::npdm_block_and_decimate( SweepParams &sweepParams, SpinBl
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-double Npdm_superdriver::do_one_sweep(SweepParams &sweepParams, const bool &warmUp, const bool &forward, 
-                                      const bool &restart, const int &restartSize, const int state)
+double npdm_do_one_sweep(Npdm_driver& npdm_driver, SweepParams &sweepParams, const bool &warmUp, const bool &forward, 
+                         const bool &restart, const int &restartSize, const int state)
 {
   cout.precision(12);
   SpinBlock system;
@@ -144,19 +133,19 @@ double Npdm_superdriver::do_one_sweep(SweepParams &sweepParams, const bool &warm
   bool dot_with_sys = true;
 
   // NPDM storage is either as full array_Nd<T>, which we fully allocate here, or in sparse format allocated dynamically
-  if ( ! use_sparse_npdm_ ) {
-    npdm_resize_array(2*dmrginp.last_site());
-    npdm_clear_array();
+  if ( npdm_driver.use_full_array_ ) {
+    npdm_driver.resize_npdm_array(2*dmrginp.last_site());
+    npdm_driver.clear_npdm_array();
   }
 
-  for (int i=0; i<nroots; i++)
-//FIXME only allows for one root at present (actually, trivial to change...)
+  for (int i=0; i<nroots; i++) {
+//FIXME only allows for one root at present (actually, should be trivial to change...)
 assert(i==0);
 //MAW    save_npdm_binary(i, i); 
 
-  // Loop over all block sites
-  for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
-    {
+    // Loop over all block sites
+    for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) {
+
       pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
       if (forward) pout << "\t\t\t Current direction is :: Forwards " << endl;
@@ -180,7 +169,7 @@ assert(i==0);
       SpinBlock newSystem;
 
       // Build Npdm elements
-      npdm_block_and_decimate(sweepParams, system, newSystem, warmUp, dot_with_sys, state);
+      npdm_block_and_decimate(npdm_driver, sweepParams, system, newSystem, warmUp, dot_with_sys, state);
 
       for(int j=0;j<nroots;++j)
         pout << "\t\t\t Total block energy for State [ " << j << 
@@ -199,7 +188,10 @@ assert(i==0);
       pout << "\t\t\t saving state " << system.get_sites().size() << endl;
       ++sweepParams.set_block_iter();
       sweepParams.savestate(forward, system.get_sites().size());
+
     }
+  }
+
   //for(int j=0;j<nroots;++j)
   {int j = state;
     pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
@@ -209,28 +201,148 @@ assert(i==0);
   pout << "\t\t\t ============================================================================ " << endl;
 
 
+  // Combine NPDM elements from all mpi ranks and dump files
   int i = state, j = state;
-//  load_npdm_binary(i, j); 
+  npdm_driver.save_sparse_array(i,j);
+  if ( npdm_driver.use_full_array_ ) npdm_driver.save_full_array(i,j);
 
-assert(false); //<<<<<<<< SPARSE OR FULL NPDMs?
-  // Combine NPDM elements from all mpi ranks
-  accumulate_npdm();
-  save_npdm_binary(i, j);
-
-  // Save spatial and text NPDM
-  save_npdm_text(i, j);
-  save_spatial_npdm_text(i, j);
-  save_spatial_npdm_binary(i, j);
-  
-
-  // update the static number of iterations
-
+  // Update the static number of iterations
   ++sweepParams.set_sweep_iter();
 
   return finalEnergy[0];
 
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void npdm( int npdm_order )
+{
+
+  double sweep_tol = 1e-7;
+  sweep_tol = dmrginp.get_sweep_tol();
+  bool direction;
+  int restartsize;
+  bool direction_copy; int restartsize_copy;
+  SweepParams sweepParams;
+  SweepParams sweep_copy;
+
+  if (dmrginp.algorithm_method() == TWODOT) {
+    pout << "Npdm not allowed with twodot algorithm" << endl;
+    abort();
+  }
+
+  if (RESTART && !FULLRESTART)
+    restart(sweep_tol, reset_iter);
+  else if (FULLRESTART) {
+    fullrestartGenblock();
+    reset_iter = true;
+    sweepParams.restorestate(direction, restartsize);
+    sweepParams.calc_niter();
+    sweepParams.savestate(direction, restartsize);
+    restart(sweep_tol, reset_iter);
+  }
+  else {
+    dmrg(sweep_tol);
+  }
+
+  dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
+  dmrginp.Sz() = dmrginp.total_spin_number();
+  dmrginp.do_npdm_ops() = true;
+  dmrginp.screen_tol() = 0.0;
+
+  sweep_copy.restorestate(direction_copy, restartsize_copy);
+  dmrginp.set_fullrestart() = true;
+  sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+//FIXME don't compute unnecessary operators until NOW
+  SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
+  dmrginp.set_fullrestart() = false;
+
+  switch (npdm_order) {
+  case (1):
+    // Compute onepdm elements
+    SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
+    sweep_copy.savestate(direction_copy, restartsize_copy);
+    break;
+  case (2):
+    // Compute twopdm elements
+    for (int state=0; state<dmrginp.nroots(); state++) {
+      Twopdm_driver twopdm_driver;
+      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+      npdm_do_one_sweep(twopdm_driver, sweepParams, false, direction, false, 0, state);
+    }
+    break;
+  case (3):
+    // Compute threepdm elements
+    for (int state=0; state<dmrginp.nroots(); state++) {
+      Threepdm_driver threepdm_driver;
+      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+      npdm_do_one_sweep(threepdm_driver, sweepParams, false, direction, false, 0, state);
+    }
+    break;
+  case (4):
+    // Compute fourpdm elements
+    for (int state=0; state<dmrginp.nroots(); state++) {
+      Fourpdm_driver fourpdm_driver;
+      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+      npdm_do_one_sweep(fourpdm_driver, sweepParams, false, direction, false, 0, state);
+    }
+    break;
+  }
+  sweep_copy.savestate(direction_copy, restartsize_copy);
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void npdm_restart( int npdm_order )
+{
+  bool direction;
+  int restartsize;
+  bool direction_copy; int restartsize_copy;
+  SweepParams sweepParams;
+  SweepParams sweep_copy;
+
+  if(sym == "dinfh") {
+    pout << "Npdm not implemented with dinfh symmetry"<<endl;
+    abort();
+  }
+
+  sweepParams.restorestate(direction, restartsize);
+  if(!sweepParams.get_onedot() || dmrginp.algorithm_method() == TWODOT) {
+    pout << "Npdm only runs for the onedot algorithm" << endl;
+    abort();
+  }
+
+  dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
+  dmrginp.Sz() = dmrginp.total_spin_number();
+  dmrginp.do_npdm_ops() = true;
+  dmrginp.screen_tol() = 0.0;
+
+  sweep_copy.restorestate(direction_copy, restartsize_copy);
+  dmrginp.set_fullrestart() = true;
+  sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+  SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
+  dmrginp.set_fullrestart() = false;
+
+  switch (npdm_order) {
+  case (1):
+    SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
+    sweep_copy.savestate(direction_copy, restartsize_copy);
+    break;
+  case (2):
+    for (int state=0; state<dmrginp.nroots(); state++) {
+      Twopdm_driver twopdm_driver;
+      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+      npdm_do_one_sweep(twopdm_driver, sweepParams, false, direction, false, 0, state);
+    }
+    break;
+  }
+  sweep_copy.savestate(direction_copy, restartsize_copy);
+
+}
+
 //===========================================================================================================================================================
 
 }
+}
+

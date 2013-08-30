@@ -160,6 +160,11 @@ template<class T> class array_4d : public vector<T>, public multiarray<T>
       (*this)[i]=0.;
   }
 
+  int get_size()
+  {
+    return vector<T>::size();
+  }
+
   T& operator() (const vector<int>& indices)
   {
     assert(indices.size() == 4);
@@ -279,6 +284,11 @@ template<class T> class array_6d : public vector<T>, public multiarray<T>
   {
     for (int i=0; i<this->size(); ++i)
       (*this)[i]=0.;
+  }
+
+  int get_size()
+  {
+    return vector<T>::size();
   }
 
   T& operator() (const vector<int>& indices)
@@ -427,6 +437,11 @@ template<class T> class array_8d : public vector<T>, public multiarray<T>
   {
     for (int i=0; i<this->size(); ++i)
       (*this)[i]=0.;
+  }
+
+  int get_size()
+  {
+    return vector<T>::size();
   }
 
   T& operator() (const vector<int>& indices)

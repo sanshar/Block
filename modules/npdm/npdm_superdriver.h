@@ -18,17 +18,22 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
+// We wrote this base class because it only has two methods of its own, which are very similar to many in the legacy Block code
 
 class Npdm_superdriver {
 
   public:
-    double do_one_sweep(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state);
+    Npdm_superdriver() : use_sparse_npdm_(true) {}
+    double do_one_sweep(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int const state);
 
   protected:
-    void npdm_block_and_decimate(SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
-                                 const bool &useSlater, const bool& dot_with_sys, int state);
+    bool use_sparse_npdm_;
 
-    virtual void compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int state, int sweepPos, int endPos) = 0;
+  private:
+    void npdm_block_and_decimate(SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
+                                 const bool &useSlater, const bool& dot_with_sys, const int state);
+
+    virtual void compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos) = 0;
     virtual void save_npdm_text(const int &i, const int &j) = 0;
     virtual void save_npdm_binary(const int &i, const int &j) = 0;
     virtual void save_spatial_npdm_text(const int &i, const int &j) = 0;
@@ -36,6 +41,7 @@ class Npdm_superdriver {
     virtual void load_npdm_binary(const int &i, const int &j) = 0;
     virtual void npdm_resize_array(int dim) = 0;
     virtual void npdm_clear_array() = 0;
+    virtual void accumulate_npdm() = 0;
 
 };
   

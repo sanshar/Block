@@ -21,7 +21,7 @@ namespace SpinAdapted{
 
 void Twopdm_driver::save_npdm_text(const int &i, const int &j)
 {
-  if(!mpigetrank())
+  if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/twopdm.", i, j);
@@ -41,7 +41,7 @@ void Twopdm_driver::save_npdm_text(const int &i, const int &j)
 void Twopdm_driver::save_spatial_npdm_text(const int &i, const int &j)
 {
   //the spatial has a factor of 1/2 in front of it 
-  if(!mpigetrank())
+  if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j);
@@ -71,7 +71,7 @@ void Twopdm_driver::save_spatial_npdm_text(const int &i, const int &j)
 void Twopdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
 {
   //the spatial has a factor of 1/2 in front of it 
-  if(!mpigetrank())
+  if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_binary_twopdm.", i, j);
@@ -95,10 +95,11 @@ void Twopdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//FIXME these are easily moved to Npdm_driver methods
 
 void Twopdm_driver::save_npdm_binary(const int &i, const int &j)
 {
-  if(!mpigetrank())
+  if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/twopdm.", i, j);
@@ -113,7 +114,8 @@ void Twopdm_driver::save_npdm_binary(const int &i, const int &j)
 
 void Twopdm_driver::load_npdm_binary(const int &i, const int &j)
 {
-  if(!mpigetrank())
+assert(false); // <<<< CAN WE RETHINK USE OF DISK FOR NPDM?
+  if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/twopdm.", i, j);
@@ -122,12 +124,13 @@ void Twopdm_driver::load_npdm_binary(const int &i, const int &j)
     load >> twopdm;
     ifs.close();
   }
-#ifndef SERIAL
-  mpi::communicator world;
-  mpi::broadcast(world,twopdm,0);
-  if(mpigetrank())
-    twopdm.Clear();
-#endif
+//#ifndef SERIAL
+//  mpi::communicator world;
+//  mpi::broadcast(world,twopdm,0);
+//FIXME this is a contradiction --- BUT IS IT GOOD TO CLEAR TO SAVE MEMORY???
+//  if( mpigetrank() != 0)
+//    twopdm.Clear();
+//#endif
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -174,23 +177,19 @@ void Twopdm_driver::accumulate_npdm()
 #ifndef SERIAL
   array_4d<double> tmp_recv;
   mpi::communicator world;
-  if (!mpigetrank())
-    {
-      for(int i=1;i<world.size();++i)
-	{
-	  world.recv(i, i, tmp_recv);
-	  for(int k=0;k<twopdm.dim1();++k)
-	    for(int l=0;l<twopdm.dim2();++l)
-	      for(int m=0;m<twopdm.dim3();++m)
-		for(int n=0;n<twopdm.dim4();++n)
-		  if(tmp_recv(k,l,m,n) != 0.)
-		    twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
-	}
-    }
-  else
-    {
-      world.send(0, mpigetrank(), twopdm);
-    }
+  if( mpigetrank() == 0) {
+    for(int i=1;i<world.size();++i) {
+      world.recv(i, i, tmp_recv);
+      for(int k=0;k<twopdm.dim1();++k)
+        for(int l=0;l<twopdm.dim2();++l)
+          for(int m=0;m<twopdm.dim3();++m)
+            for(int n=0;n<twopdm.dim4();++n)
+              if(tmp_recv(k,l,m,n) != 0.) twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
+	 }
+  }
+  else {
+    world.send(0, mpigetrank(), twopdm);
+  }
 #endif
 }
 

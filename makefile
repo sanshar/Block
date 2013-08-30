@@ -98,7 +98,7 @@ endif
 
 SRC_genetic = genetic/CrossOver.C genetic/Evaluate.C genetic/GAInput.C genetic/GAOptimize.C genetic/Generation.C genetic/Mutation.C genetic/RandomGenerator.C genetic/ReadIntegral.C
 
-SRC_npdm = npdm.C modules/npdm/npdm_superdriver.cpp modules/npdm/npdm_driver.cpp modules/npdm/npdm_patterns.cpp modules/npdm/npdm_operator_wrappers.cpp modules/npdm/npdm_expectations.cpp modules/npdm/npdm_operators.cpp modules/npdm/npdm_op_components.cpp modules/npdm/npdm_wrapper_selector.cpp modules/npdm/npdm_spin_adaptation.cpp modules/npdm/npdm_expectations_engine.cpp modules/threepdm/threepdm_driver.C modules/fourpdm/fourpdm_driver.C 
+SRC_npdm = modules/npdm/npdm.C modules/npdm/npdm_driver.cpp modules/npdm/npdm_patterns.cpp modules/npdm/npdm_operator_wrappers.cpp modules/npdm/npdm_expectations.cpp modules/npdm/npdm_operators.cpp modules/npdm/npdm_op_components.cpp modules/npdm/npdm_wrapper_selector.cpp modules/npdm/npdm_spin_adaptation.cpp modules/npdm/npdm_expectations_engine.cpp modules/threepdm/threepdm_driver.C modules/fourpdm/fourpdm_driver.C modules/npdm/npdm_sparse_array.cpp
 
 SRC_spin_adapted =  dmrg.C least_squares.C set_spinblock_components.C linear.C main.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C anglib.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/twopdm_driver.C $(SRC_genetic) $(SRC_npdm)
 

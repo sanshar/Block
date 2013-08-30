@@ -32,22 +32,22 @@ class Twopdm_driver : public Npdm_driver {
 
 public:
   Twopdm_driver() : Npdm_driver(2) { }
+
+private:
   void save_npdm_text(const int &i, const int &j);
   void save_npdm_binary(const int &i, const int &j);
   void save_spatial_npdm_text(const int &i, const int &j);
   void save_spatial_npdm_binary(const int &i, const int &j);
   void load_npdm_binary(const int &i, const int &j);
-  void npdm_resize_array(int dim) { twopdm.resize(dim,dim,dim,dim); }
-  void npdm_clear_array() { twopdm.Clear(); }
-
-protected:
-//  void save_averaged_twopdm(const int &nroots);
+  void resize_npdm_array(int dim) { twopdm.resize(dim,dim,dim,dim); }
+  void clear_npdm_array() { twopdm.Clear(); }
   void accumulate_npdm();
+
+//  void save_averaged_twopdm(const int &nroots);
   void assign_npdm_antisymmetric(const int i, const int j, const int k, const int l, const double val);
   void assign_npdm_elements(std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements);
   void calcenergy(int state);
 
-private:
   array_4d<double> twopdm;
 
 };
