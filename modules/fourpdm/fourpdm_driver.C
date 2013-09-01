@@ -26,7 +26,7 @@ void Fourpdm_driver::save_npdm_text(const int &i, const int &j)
   if( mpigetrank() == 0)
   {
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/fourpdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/fourpdm.", i, j,".txt");
     ofstream ofs(file);
     ofs << fourpdm.dim1() << endl;
 

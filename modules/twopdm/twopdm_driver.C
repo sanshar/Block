@@ -24,7 +24,7 @@ void Twopdm_driver::save_npdm_text(const int &i, const int &j)
   if( mpigetrank() == 0)
   {
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/twopdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/twopdm.", i, j,".txt");
     ofstream ofs(file);
     ofs << twopdm.dim1() << endl;
     for(int k=0;k<twopdm.dim1();++k)

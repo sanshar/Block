@@ -29,7 +29,7 @@ void Npdm_sparse_array::insert( std::vector< std::pair< std::vector<int>, double
 void Npdm_sparse_array::dump_file(int i, int j)
 {
   char file[5000];
-  sprintf( file, "%s%s%d.%d.p%d", dmrginp.save_prefix().c_str(),"/npdm_nonredundant.", i, j, mpigetrank() );
+  sprintf( file, "%s%s%d.%d.p%d", dmrginp.save_prefix().c_str(),"/nonredundant_npdm.", i, j, mpigetrank() );
   std::ofstream ofs(file, std::ios::binary);
   boost::archive::binary_oarchive save(ofs);
   save << sparse_array_;

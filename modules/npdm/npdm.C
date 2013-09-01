@@ -202,6 +202,7 @@ assert(i==0);
 
 
   // Combine NPDM elements from all mpi ranks and dump files
+  assert(state==0);
   int i = state, j = state;
   npdm_driver.save_sparse_array(i,j);
   if ( npdm_driver.use_full_array_ ) npdm_driver.save_full_array(i,j);

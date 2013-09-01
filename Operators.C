@@ -473,6 +473,7 @@ void SpinAdapted::CreCre::build(const SpinBlock& b)
   }
   else if (rightBlock->get_op_array(CRE).has(i))
   {
+//pout << "maw dotBlock has i\n";
     const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE, getSpinQuantum(i), i);
     const boost::shared_ptr<SparseMatrix> op2 = leftBlock->get_op_rep(CRE, getSpinQuantum(j), j);
 //pout << "op1\n";
@@ -493,7 +494,7 @@ void SpinAdapted::CreCre::build(const SpinBlock& b)
 //MAW debug
 void SpinAdapted::CreCre::build_in_csf_space(const SpinBlock& b) 
 {
-pout << "building CreCre in CSF space as a product..\n";
+//pout << "building CreCre in CSF space as a product..\n";
   built = true;
   allocate(b.get_stateInfo());
   Sign = 1;

@@ -1348,7 +1348,6 @@ void SpinAdapted::CreCreCre::build(const SpinBlock& b)
 //FIXME parity broken ??
     double parity = getCommuteParity( opC->get_deltaQuantum(), opCC->get_deltaQuantum(), get_deltaQuantum() );
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *opC, *opCC, &b, &(b.get_stateInfo()), *this, 1.0*parity);
-//cout << "done sys(j,k)\n";
   }
   // Dot has i,j
   else if (dotBlock->get_op_array(CRE_CRE).has_local_index(i,j)) {

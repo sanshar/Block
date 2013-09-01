@@ -86,23 +86,27 @@ std::map< std::tuple<int,int,int>, int > get_local_3index_tuples(SpinBlock& b)
   }
 
   // 1 on dot
+//FIXME we assume CRE_CRE is representative of all 2-index ops (pass opType in general???)
   std::vector< std::vector<int> > ij_array = sysBlock->get_op_array(CRE_CRE).get_array();
   for (auto ij = ij_array.begin(); ij != ij_array.end(); ++ij) {
      int i = (*ij)[0];
      int j = (*ij)[1];
      assert( i >= j );
-     if ( forward )
-       if ( i == j )
-         // Assumes 2-index is duplicated on all ranks for i==j and this stops 3-index being duplicated
+     if ( forward ) {
+       if ( sysBlock->get_op_array(CRE_CRE).is_local() )
+//FIXME not convinced this reliably removes duplicate 3-index ops
+         // When 2-index is duplicated on all ranks we don't want 3-index being duplicated too
          tuples[ std::make_tuple( dot, i, j) ] = -1; 
        else
          tuples[ std::make_tuple( dot, i, j) ] = mpigetrank();
-     else
-       if ( i == j )
-         // Assumes 2-index is duplicated on all ranks for i==j and this stops 3-index being duplicated
+     } 
+     else {
+       if ( sysBlock->get_op_array(CRE_CRE).is_local() )
+         // When 2-index is duplicated on all ranks we don't want 3-index being duplicated too
          tuples[ std::make_tuple( i, j, dot) ] = -1;
        else
          tuples[ std::make_tuple( i, j, dot) ] = mpigetrank();
+     }
   }
 
   // 0 on dot
@@ -118,6 +122,10 @@ std::map< std::tuple<int,int,int>, int > get_local_3index_tuples(SpinBlock& b)
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 // Choose 3-index tuples on this MPI process such that 2-index are available to build them
+// There are three cases:
+//   (1) 3-index must be done on this thread  (e.g. built from 2-index on this thread)
+//   (2) 3-index could be done on this thread if load-balancing wants it 
+//   (3) 3-index must not be done on this thread (it has to be done on another and we don't want duplicates)
 
 //FIXME screening?
 std::map< std::tuple<int,int,int>, int > get_3index_tuples(SpinBlock& b)
@@ -170,8 +178,13 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
 
   // Set up 3-index (i,j,k) spatial operator indices for this SpinBlock
 //  const double screen_tol = dmrginp.screen_tol();
+  assert( dmrginp.screen_tol() == 0 ); //FIXME otherwise some 1 or 2-index ops will be absent when we try to build the 3-index guy
 //  std::vector< std::tuple<int,int,int> > tuples = screened_ccd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
   std::map< std::tuple<int,int,int>, int > tuples = get_3index_tuples(b);
+//cout << "CCC indices\n";
+//for (auto it = tuples.begin(); it != tuples.end(); ++it) {
+//  cout << "p" << mpigetrank() << ": " << std::get<0>(it->first) << "," << std::get<1>(it->first) << "," << std::get<2>(it->first) << " ; mode = " << it->second << endl;
+//}
   m_op.set_tuple_indices( tuples, dmrginp.last_site() );
 
   // Allocate new set of operators for each set of spatial orbitals
