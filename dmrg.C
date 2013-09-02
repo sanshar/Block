@@ -298,9 +298,7 @@ void dmrg(double sweep_tol)
 
 
   // Do one sweep, return final energy (warmup, forward, norestart)
-pout  << "maw do one warmup sweep forwards\n";
   last_fe = Sweep::do_one(sweepParams, true, true, false, 0);
-pout  << "maw done one warmup sweep forwards\n";
 
   // Loop until energy change is small
   while ((fabs(last_fe - old_fe) > sweep_tol) || (fabs(last_be - old_be) > sweep_tol) || 

@@ -204,11 +204,11 @@ void Threepdm_driver::accumulate_npdm()
 
 void Threepdm_driver::assign_npdm_antisymmetric(const int i, const int j, const int k, const int l, const int m, const int n, const double val)
 {
-if ( abs(val) > 1e-8 ) {
-  cout << "so-threepdm val: i,j,k,l,m,n = " 
-       << i << "," << j << "," << k << "," << l << "," << m << "," << n
-       << "\t\t" << val << endl;
-}
+//if ( abs(val) > 1e-8 ) {
+//  cout << "so-threepdm val: i,j,k,l,m,n = " 
+//       << i << "," << j << "," << k << "," << l << "," << m << "," << n
+//       << "\t\t" << val << endl;
+//}
 
   // Test for duplicates
   if ( threepdm(i,j,k,l,m,n) != 0.0 && abs(threepdm(i,j,k,l,m,n)-val) > 1e-6) {

@@ -32,6 +32,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 class SpinBlock;
 
+//FIXME Lots of duplication and redundancy in routines below!!  Clean up!
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // Loop over all local operators and build them
 // different version include multithread build, single thread build and single thread build from csf

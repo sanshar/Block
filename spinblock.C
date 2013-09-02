@@ -138,7 +138,6 @@ SpinBlock::SpinBlock(const StateInfo& s)
 
 void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
 {
-cout << "SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)\n";
 
   if (twoInt.get() == 0 && dmrginp.use_partial_two_integrals()) { //this is when dummy block is being added for non zero spin
     std::vector<int> o;
@@ -172,7 +171,6 @@ cout << "SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)\n";
     ladders[i] = dets[i].spinLadder(min(2,dets[i].S));
 //MAW
   build_operators(dets, ladders);
-//cout << "done SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -342,11 +340,9 @@ void SpinBlock::BuildSumBlock(int condition, SpinBlock& lBlock, SpinBlock& rBloc
   dmrginp.buildsumblock -> start();
   BuildSumBlockSkeleton(condition, lBlock, rBlock, compState);
 
-//pout << "maw SpinBlock::BuildSumBlock build_iterators()\n";
   build_iterators();
 
   dmrginp.buildblockops -> start();
-//pout << "maw SpinBlock::BuildSumBlock build_operators()\n";
   // Operators builts from previous operators (not CSF!) (c.f.  build_operators(dets, ladders); )
   build_operators();
   dmrginp.buildblockops -> stop();
@@ -549,7 +545,6 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
 
   stateInfo = StateInfo (dets);
   twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
-//MAW
   build_iterators();
 
   if (dmrginp.outputlevel() > 0) 
@@ -559,7 +554,6 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   for (int i=0; i< dets.size(); i++)
     ladders[i] = dets[i].spinLadder(min(2, dets[i].S));
 
-//MAW
   build_operators(dets, ladders);
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t time in slater operator build " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;

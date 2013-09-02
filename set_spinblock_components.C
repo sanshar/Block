@@ -145,7 +145,7 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
 //this is used for the dot block ??
 void SpinBlock::default_op_components(bool complementary_)
 {
-pout << "SpinBlock::default_op_components(bool complementary_)\n";
+//pout << "SpinBlock::default_op_components(bool complementary_)\n";
   if (complementary_)
   {
     this->complementary = true;
@@ -166,18 +166,18 @@ pout << "SpinBlock::default_op_components(bool complementary_)\n";
     ops[CRE_CRE] = make_new_op(CRE_CRE, true);
     ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
     ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
-//FIXME MAW 3PDM
-    if ( (dmrginp.calc_type() == THREEPDM) ||
-         (dmrginp.calc_type() == FOURPDM) ) {
-//FIXME MAW or FOURPDM?
-      ops[DES_CRE] = make_new_op(DES_CRE, true);
-      ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
-      ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
-      ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
-      ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
-      if ( dmrginp.calc_type() == FOURPDM ) {
-        ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
-        ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
+    if ( dmrginp.do_npdm_ops() ) {
+      if ( (dmrginp.calc_type() == THREEPDM) ||
+           (dmrginp.calc_type() == FOURPDM) ) {
+        ops[DES_CRE] = make_new_op(DES_CRE, true);
+        ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
+        ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
+        ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
+        ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
+        if ( dmrginp.calc_type() == FOURPDM ) {
+          ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
+          ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
+        }
       }
     }
   }
@@ -200,7 +200,7 @@ void SpinBlock::set_big_components()
 //MAW used by SpinAdapted::InitBlocks::InitNewSystemBlock when extending system with a dot??
 void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops)
 {
-pout << "SpinBlock::default_op_components(..........) for dot block\n";
+//pout << "SpinBlock::default_op_components(..........) for dot block\n";
   this->direct = direct;
   if (lBlock.is_complementary() || rBlock.is_complementary())
   {
@@ -221,22 +221,22 @@ pout << "SpinBlock::default_op_components(..........) for dot block\n";
 
     if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
       if (haveNormops) {
+        assert(false); // << if (haveNormops || dmrginp.do_npdm_ops()) not tested
         ops[CRE_DES] = make_new_op(CRE_DES, true);
         ops[CRE_CRE] = make_new_op(CRE_CRE, true);
-//FIXME MAW 3PDM
-        if ( (dmrginp.calc_type() == THREEPDM) ||
-             (dmrginp.calc_type() == FOURPDM) ) {
-//FIXME MAW or FOURPDM?
-          ops[DES_CRE] = make_new_op(DES_CRE, true);
-          ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
-          ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
-          ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
-          ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
-          if ( dmrginp.calc_type() == FOURPDM ) {
-            ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
-            ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
+//        if ( dmrginp.do_npdm_ops() ) {
+          if ( (dmrginp.calc_type() == THREEPDM) ||
+               (dmrginp.calc_type() == FOURPDM) ) {
+            ops[DES_CRE] = make_new_op(DES_CRE, true);
+            ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
+            ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
+            ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
+            ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
+            if ( dmrginp.calc_type() == FOURPDM ) {
+              ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
+              ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
+            }
           }
-        }
       }
       if (haveCompops) {
         ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
@@ -251,7 +251,7 @@ pout << "SpinBlock::default_op_components(..........) for dot block\n";
   }
   else
   {
-    // op_components for a single dot block
+    // op_components for a single dot block ??
     ops[CRE] = make_new_op(CRE, false); //this should definitely be false, we not have copies of CRE is all the procs
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
     ops[HAM] = make_new_op(HAM, true);
@@ -260,17 +260,18 @@ pout << "SpinBlock::default_op_components(..........) for dot block\n";
       if (haveNormops || dmrginp.do_npdm_ops()) {
         ops[CRE_DES] = make_new_op(CRE_DES, false);
         ops[CRE_CRE] = make_new_op(CRE_CRE, false);
-//FIXME MAW 3PDM
-        if ( (dmrginp.calc_type() == THREEPDM) ||
-             (dmrginp.calc_type() == FOURPDM) ) {
-          ops[DES_CRE] = make_new_op(DES_CRE, false);
-          ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
-          ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);
-          ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, false);
-          ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, false);
-          if ( dmrginp.calc_type() == FOURPDM ) {
-            ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, false);
-            ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
+        if ( dmrginp.do_npdm_ops() ) {
+          if ( (dmrginp.calc_type() == THREEPDM) ||
+               (dmrginp.calc_type() == FOURPDM) ) {
+            ops[DES_CRE] = make_new_op(DES_CRE, false);
+            ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
+            ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);
+            ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, false);
+            ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, false);
+            if ( dmrginp.calc_type() == FOURPDM ) {
+              ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, false);
+              ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
+            }
           }
         }
       }

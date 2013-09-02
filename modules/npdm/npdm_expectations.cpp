@@ -198,14 +198,14 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_bas
     }
   }
 
-assert (expectations_.size() > 0);
-cout << "---------------------------------\n";
-cout << "spin-adapted expectations =\n";
-cout << "mpirank = " << mpigetrank() << endl;
-for (auto it = expectations_.begin(); it != expectations_.end(); ++it) {
-  cout << *it << std::endl;
-}
-cout << "---------------------------------\n";
+  assert (expectations_.size() > 0);
+//cout << "---------------------------------\n";
+//cout << "spin-adapted expectations =\n";
+//cout << "mpirank = " << mpigetrank() << endl;
+//for (auto it = expectations_.begin(); it != expectations_.end(); ++it) {
+//  cout << *it << std::endl;
+//}
+//cout << "---------------------------------\n";
 
 }
 

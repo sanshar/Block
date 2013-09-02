@@ -238,8 +238,8 @@ void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matri
     success = parse(iter, end, eg, result) ;		 
   }
   assert(success);
-  cout << "Setting up linear equations for spin-adaptation transformation...\n";
-  cout << "Number of compounded tensor operators = " << result.size() << std::endl;
+//  cout << "Setting up linear equations for spin-adaptation transformation...\n";
+//  cout << "Number of compounded tensor operators = " << result.size() << std::endl;
   assert( result.size() == so_indices.size() );
   assert( result.size() == b.Nrows() );
 

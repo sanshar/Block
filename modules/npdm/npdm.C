@@ -246,16 +246,16 @@ void npdm( int npdm_order )
     dmrg(sweep_tol);
   }
 
-  dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
+  // Screening can break things for NPDM (e.g. smaller operators won't be available from which to build larger ones etc...?)
+  dmrginp.screen_tol() = 0.0;
   dmrginp.Sz() = dmrginp.total_spin_number();
   dmrginp.do_npdm_ops() = true;
-  dmrginp.screen_tol() = 0.0;
 
+  // Prepare NPDM operators
   sweep_copy.restorestate(direction_copy, restartsize_copy);
   dmrginp.set_fullrestart() = true;
   sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-//FIXME don't compute unnecessary operators until NOW
-  SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0); //this will generate the cd operators
+  SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0);
   dmrginp.set_fullrestart() = false;
 
   switch (npdm_order) {
@@ -285,6 +285,8 @@ void npdm( int npdm_order )
     for (int state=0; state<dmrginp.nroots(); state++) {
       Fourpdm_driver fourpdm_driver;
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+      // Not all 4-index ops are implemented yet!!
+      assert(false);
       npdm_do_one_sweep(fourpdm_driver, sweepParams, false, direction, false, 0, state);
     }
     break;

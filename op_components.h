@@ -182,21 +182,21 @@ template <class Op> class Op_component : public Op_component_base
   void build_csf_operators(SpinBlock& b, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) { 
 //pout << "Op_component::build_csf_operators " << m_op.num_indices() << std::endl;
 
-    if ( m_op.num_indices() < 10 ) {
+    if ( m_op.num_indices() < 3 ) {
       // Build in core
-      singlethread_build_using_csf( *this, b, c, ladders);
-//      for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsf, _1, boost::ref(b), boost::ref(ladders), boost::ref(c)) );
+      for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsf, _1, boost::ref(b), boost::ref(ladders), boost::ref(c)) );
     }
     else if ( m_op.num_indices() == 3 ) {
       // Build on disk (assume we are building from scratch)
-//pout << ofile << std::endl;
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
       for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::buildUsingCsf, _1,boost::ref(b), boost::ref(ladders), boost::ref(c)) );
       ofs.close();
-//DEBUG now read back into core, as if always done in core
-      std::ifstream ifs(ofile.c_str(), std::ios::binary);
-      for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs)) );
-      ifs.close();
+      // DEBUG only: now read back into core
+      if (true) { 
+        std::ifstream ifs(ofile.c_str(), std::ios::binary);
+        for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs)) );
+        ifs.close();
+      }
     }
     else assert(false);
   }
