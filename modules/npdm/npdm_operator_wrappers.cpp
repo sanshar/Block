@@ -543,7 +543,7 @@ Npdm_op_wrapper_CCC::Npdm_op_wrapper_CCC( SpinBlock * spinBlock )
 //Only init this if we know we want to use disk-based?  Test built_on_disk?
   // For disk-based storage
   std::string ifile = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
-///FIXME DISK  ifs_.open(ifile.c_str(), ios::binary);
+  ifs_.open(ifile.c_str(), ios::binary);
   // Put ifs_.close in destructor???
 }
 
@@ -556,10 +556,6 @@ cout << "getting CCC operator...\n";
   indices_.clear();
   int ix, jx, kx;
 
-//FIXME READ OPERATORS FROM CORE
-  opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
-
-/*
 //assert(false);
 //FIXME READ OPERATORS FROM DISK HERE
   std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
@@ -568,14 +564,14 @@ cout << "getting CCC operator...\n";
   opReps_.clear();
   // Read in full spin-set from disk
   for (int i = 0; i < opReps_tmp.size(); i++) {
-     cout << "MAW reading CCC spin-op from disk for NPDM... " << i << std::endl;
      boost::archive::binary_iarchive load_op(ifs_);
      boost::shared_ptr<SparseMatrix> op (new Cre);
      load_op >> *op;
      opReps_.push_back(op);
   }
-*/
 
+//FIXME READ OPERATORS FROM CORE
+//  opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
   ix = opReps_.at(0)->get_orbs(0);
@@ -611,6 +607,12 @@ Npdm_op_wrapper_CCD::Npdm_op_wrapper_CCD( SpinBlock * spinBlock )
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
+//FIXME
+//Only init this if we know we want to use disk-based?  Test built_on_disk?
+  // For disk-based storage
+  std::string ifile = spinBlock_->get_op_array(CRE_CRE_DES).get_filename();
+  ifs_.open(ifile.c_str(), ios::binary);
+  // Put ifs_.close in destructor???
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -622,7 +624,24 @@ cout << "getting CCD operator...\n";
   indices_.clear();
   int ix, jx, kx;
 
-  opReps_ = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
+//assert(false);
+//FIXME READ OPERATORS FROM DISK HERE
+  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+  opReps_tmp = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
+  assert( opReps_tmp.at(0)->get_built_on_disk() );
+  opReps_.clear();
+  // Read in full spin-set from disk
+  for (int i = 0; i < opReps_tmp.size(); i++) {
+     boost::archive::binary_iarchive load_op(ifs_);
+     boost::shared_ptr<SparseMatrix> op (new Cre);
+     load_op >> *op;
+     opReps_.push_back(op);
+  }
+
+//  opReps_ = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
+
+
+
   build_pattern_ = opReps_.at(0)->get_build_pattern();
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -657,6 +676,12 @@ Npdm_op_wrapper_CDD::Npdm_op_wrapper_CDD( SpinBlock * spinBlock )
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
+//FIXME
+//Only init this if we know we want to use disk-based?  Test built_on_disk?
+  // For disk-based storage
+  std::string ifile = spinBlock_->get_op_array(CRE_DES_DES).get_filename();
+  ifs_.open(ifile.c_str(), ios::binary);
+  // Put ifs_.close in destructor???
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -668,7 +693,23 @@ cout << "getting CDD operator...\n";
   indices_.clear();
   int ix, jx, kx;
 
-  opReps_ = spinBlock_->get_op_array(CRE_DES_DES).get_local_element(idx);
+//assert(false);
+//FIXME READ OPERATORS FROM DISK HERE
+  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+  opReps_tmp = spinBlock_->get_op_array(CRE_DES_DES).get_local_element(idx);
+  assert( opReps_tmp.at(0)->get_built_on_disk() );
+  opReps_.clear();
+  // Read in full spin-set from disk
+  for (int i = 0; i < opReps_tmp.size(); i++) {
+     boost::archive::binary_iarchive load_op(ifs_);
+     boost::shared_ptr<SparseMatrix> op (new Cre);
+     load_op >> *op;
+     opReps_.push_back(op);
+  }
+
+//  opReps_ = spinBlock_->get_op_array(CRE_DES_DES).get_local_element(idx);
+
+
   build_pattern_ = opReps_.at(0)->get_build_pattern();
   if ( build_pattern_ == "(C(DD))" ) factor_ = -1.0;
   else if ( build_pattern_ == "((CD)D)" ) factor_ = 1.0;
@@ -712,6 +753,12 @@ Npdm_op_wrapper_CDC::Npdm_op_wrapper_CDC( SpinBlock * spinBlock )
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
+//FIXME
+//Only init this if we know we want to use disk-based?  Test built_on_disk?
+  // For disk-based storage
+  std::string ifile = spinBlock_->get_op_array(CRE_DES_CRE).get_filename();
+  ifs_.open(ifile.c_str(), ios::binary);
+  // Put ifs_.close in destructor???
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -723,7 +770,23 @@ cout << "getting CDC operator...\n";
   indices_.clear();
   int ix, jx, kx;
 
-  opReps_ = spinBlock_->get_op_array(CRE_DES_CRE).get_local_element(idx);
+//assert(false);
+//FIXME READ OPERATORS FROM DISK HERE
+  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+  opReps_tmp = spinBlock_->get_op_array(CRE_DES_CRE).get_local_element(idx);
+  assert( opReps_tmp.at(0)->get_built_on_disk() );
+  opReps_.clear();
+  // Read in full spin-set from disk
+  for (int i = 0; i < opReps_tmp.size(); i++) {
+     boost::archive::binary_iarchive load_op(ifs_);
+     boost::shared_ptr<SparseMatrix> op (new Cre);
+     load_op >> *op;
+     opReps_.push_back(op);
+  }
+
+//  opReps_ = spinBlock_->get_op_array(CRE_DES_CRE).get_local_element(idx);
+
+
   build_pattern_ = opReps_.at(0)->get_build_pattern();
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -754,6 +817,12 @@ Npdm_op_wrapper_DCD::Npdm_op_wrapper_DCD( SpinBlock * spinBlock )
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
+//FIXME
+//Only init this if we know we want to use disk-based?  Test built_on_disk?
+  // For disk-based storage
+  std::string ifile = spinBlock_->get_op_array(DES_CRE_DES).get_filename();
+  ifs_.open(ifile.c_str(), ios::binary);
+  // Put ifs_.close in destructor???
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -765,7 +834,23 @@ cout << "getting DCD operator...\n";
   indices_.clear();
   int ix, jx, kx;
 
-  opReps_ = spinBlock_->get_op_array(DES_CRE_DES).get_local_element(idx);
+//assert(false);
+//FIXME READ OPERATORS FROM DISK HERE
+  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+  opReps_tmp = spinBlock_->get_op_array(DES_CRE_DES).get_local_element(idx);
+  assert( opReps_tmp.at(0)->get_built_on_disk() );
+  opReps_.clear();
+  // Read in full spin-set from disk
+  for (int i = 0; i < opReps_tmp.size(); i++) {
+     boost::archive::binary_iarchive load_op(ifs_);
+     boost::shared_ptr<SparseMatrix> op (new Cre);
+     load_op >> *op;
+     opReps_.push_back(op);
+  }
+
+//  opReps_ = spinBlock_->get_op_array(DES_CRE_DES).get_local_element(idx);
+
+
   build_pattern_ = opReps_.at(0)->get_build_pattern();
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -796,6 +881,12 @@ Npdm_op_wrapper_DDC::Npdm_op_wrapper_DDC( SpinBlock * spinBlock )
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
+//FIXME
+//Only init this if we know we want to use disk-based?  Test built_on_disk?
+  // For disk-based storage
+  std::string ifile = spinBlock_->get_op_array(DES_DES_CRE).get_filename();
+  ifs_.open(ifile.c_str(), ios::binary);
+  // Put ifs_.close in destructor???
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -807,7 +898,23 @@ cout << "getting DDC operator...\n";
   indices_.clear();
   int ix, jx, kx;
 
-  opReps_ = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
+//assert(false);
+//FIXME READ OPERATORS FROM DISK HERE
+  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+  opReps_tmp = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
+  assert( opReps_tmp.at(0)->get_built_on_disk() );
+  opReps_.clear();
+  // Read in full spin-set from disk
+  for (int i = 0; i < opReps_tmp.size(); i++) {
+     boost::archive::binary_iarchive load_op(ifs_);
+     boost::shared_ptr<SparseMatrix> op (new Cre);
+     load_op >> *op;
+     opReps_.push_back(op);
+  }
+
+//  opReps_ = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
+
+
   build_pattern_ = opReps_.at(0)->get_build_pattern();
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -839,6 +946,13 @@ Npdm_op_wrapper_DCC::Npdm_op_wrapper_DCC( SpinBlock * spinBlock )
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
+//FIXME
+//Only init this if we know we want to use disk-based?  Test built_on_disk?
+  // For disk-based storage
+//FIXME TEST IF FILE IS ALREADY BEING READ???
+  std::string ifile = spinBlock_->get_op_array(DES_DES_CRE).get_filename();
+  ifs_.open(ifile.c_str(), ios::binary);
+  // Put ifs_.close in destructor???
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -850,7 +964,24 @@ cout << "getting DCC operator...\n";
   indices_.clear();
   int ix, jx, kx;
 
-  opReps_ = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
+//assert(false);
+//FIXME READ OPERATORS FROM DISK HERE
+  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+  opReps_tmp = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
+  assert( opReps_tmp.at(0)->get_built_on_disk() );
+  opReps_.clear();
+  // Read in full spin-set from disk
+  for (int i = 0; i < opReps_tmp.size(); i++) {
+     boost::archive::binary_iarchive load_op(ifs_);
+     boost::shared_ptr<SparseMatrix> op (new Cre);
+     load_op >> *op;
+     opReps_.push_back(op);
+  }
+
+//  opReps_ = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
+
+
+
   std::string tmp = opReps_.at(0)->get_build_pattern();
   if ( tmp == "((DD)C)" ) build_pattern_ = "(D(CC))";
   else if ( tmp == "(D(DC))" ) build_pattern_ = "((DC)C)";
@@ -887,6 +1018,13 @@ Npdm_op_wrapper_DDD::Npdm_op_wrapper_DDD( SpinBlock * spinBlock )
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
+//FIXME
+//Only init this if we know we want to use disk-based?  Test built_on_disk?
+  // For disk-based storage
+//FIXME TEST IF FILE IS ALREADY BEING READ???
+  std::string ifile = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
+  ifs_.open(ifile.c_str(), ios::binary);
+  // Put ifs_.close in destructor???
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -898,7 +1036,24 @@ cout << "getting DDD operator...\n";
   indices_.clear();
   int ix, jx, kx;
 
-  opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+//assert(false);
+//FIXME READ OPERATORS FROM DISK HERE
+  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+  opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+  assert( opReps_tmp.at(0)->get_built_on_disk() );
+  opReps_.clear();
+  // Read in full spin-set from disk
+  for (int i = 0; i < opReps_tmp.size(); i++) {
+     boost::archive::binary_iarchive load_op(ifs_);
+     boost::shared_ptr<SparseMatrix> op (new Cre);
+     load_op >> *op;
+     opReps_.push_back(op);
+  }
+
+//  opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+
+
+
   std::string tmp = opReps_.at(0)->get_build_pattern();
   if ( tmp == "((CC)C)" ) build_pattern_ = "(D(DD))";
   else if ( tmp == "(C(CC))" ) build_pattern_ = "((DD)D)";

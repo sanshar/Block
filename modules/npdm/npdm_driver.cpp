@@ -28,11 +28,11 @@ void Npdm_driver::save_full_array(int i, int j)
 {
   // Combine NPDM elements from all mpi ranks and save one binary file
   accumulate_npdm();
-  save_npdm_binary(i, j);
+//FIXME  save_npdm_binary(i, j);
   // Dump spatial and text NPDM files
-  save_npdm_text(i, j);
+//FIXME  save_npdm_text(i, j);
   save_spatial_npdm_text(i, j);
-  save_spatial_npdm_binary(i, j);
+//FIXME  save_spatial_npdm_binary(i, j);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

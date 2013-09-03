@@ -202,11 +202,12 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
+      opTypes ot = it->first;
       if(it->second->is_core()) {
         // Output file for operators written to disk
         std::string ofile = it->second->get_filename();
         // Build operators from CSFs
-        it->second->build_csf_operators(*this, ofile, dets, ladders);
+        it->second->build_csf_operators(*this, ot, ofile, dets, ladders);
       }
     }
 //DEBUG print out numbers of operators on each MPI process

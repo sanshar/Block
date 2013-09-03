@@ -9,6 +9,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //
 // Extension of Operators.C for 3-index operators
+//FIXME there's a lot of duplication, especially in build_from_disk... Templates??
 //
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -129,6 +130,73 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::DesCre::getworkingrepr
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  (Cre,Cre,Des)
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void SpinAdapted::CreCreDes::build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs)
+{
+//cout << "building CreCreDes renormalized operator on disk...\n";
+//FIXME timer
+//  dmrginp.makeopsT -> start();
+  built = true;
+//FIXME allocation/deallocation
+  allocate(b.get_stateInfo());
+  Sign = 1;
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+  const int k = get_orbs()[2];
+//cout << "i,j,k = " << i << " " << j << " " << k << endl;
+
+  SpinBlock* sysBlock = b.get_leftBlock();
+  SpinBlock* dotBlock = b.get_rightBlock();
+
+  // Sys has i,j,k
+  if (sysBlock->get_op_array(CRE_CRE_DES).has_local_index(i,j,k)) {
+//cout << "maw disk sys(i,j,k)\n";
+    assert( sysBlock->get_op_array(CRE_CRE_DES).get_element(i,j,k).at(0)->get_built_on_disk() );
+    // Retrieve from disk 3-index operator on sys block
+    boost::shared_ptr<SparseMatrix> op (new CreCreDes);
+    boost::archive::binary_iarchive load_op(sysfs);
+    load_op >> *op;
+    // Assume this is the operator we want, and expand it to the big block
+    assert( i == op->get_orbs()[0] );
+    assert( j == op->get_orbs()[1] );
+    assert( k == op->get_orbs()[2] );
+    // Build according to previous build_pattern
+    std::string build_pattern_old = op->get_build_pattern();
+    build_pattern = build_pattern_old;
+    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }
+  // Dot has i,j,k
+  else if (dotBlock->get_op_array(CRE_CRE_DES).has_local_index(i,j,k)) {
+//cout << "maw dot(i,j,k)\n";
+    assert( dotBlock->get_op_array(CRE_CRE_DES).get_element(i,j,k).at(0)->get_built_on_disk() );
+    // Retrieve from disk 3-index operator on dot block
+    boost::shared_ptr<SparseMatrix> op (new CreCreDes);
+    boost::archive::binary_iarchive load_op(dotfs);
+    load_op >> *op;
+    // Assume this is the operator we want, and expand it to the big block
+    assert( i == op->get_orbs()[0] );
+    assert( j == op->get_orbs()[1] );
+    assert( k == op->get_orbs()[2] );
+    // Build according to previous build_pattern
+    std::string build_pattern_old = op->get_build_pattern();
+    build_pattern = build_pattern_old;
+    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }
+  else {
+    // Build from in-core 1 and 2-index operators
+    build(b);
+  }
+
+//  dmrginp.makeopsT -> stop();
+
+}
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinAdapted::CreCreDes::build(const SpinBlock& b)
@@ -777,6 +845,73 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreDes::getworkingr
 //  (Cre,Des,Des)
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+void SpinAdapted::CreDesDes::build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs)
+{
+//cout << "building CreDesDes renormalized operator on disk...\n";
+//FIXME timer
+//  dmrginp.makeopsT -> start();
+  built = true;
+//FIXME allocation/deallocation
+  allocate(b.get_stateInfo());
+  Sign = 1;
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+  const int k = get_orbs()[2];
+//cout << "i,j,k = " << i << " " << j << " " << k << endl;
+
+  SpinBlock* sysBlock = b.get_leftBlock();
+  SpinBlock* dotBlock = b.get_rightBlock();
+
+  // Sys has i,j,k
+  if (sysBlock->get_op_array(CRE_DES_DES).has_local_index(i,j,k)) {
+//cout << "maw disk sys(i,j,k)\n";
+    assert( sysBlock->get_op_array(CRE_DES_DES).get_element(i,j,k).at(0)->get_built_on_disk() );
+    // Retrieve from disk 3-index operator on sys block
+    boost::shared_ptr<SparseMatrix> op (new CreDesDes);
+    boost::archive::binary_iarchive load_op(sysfs);
+    load_op >> *op;
+    // Assume this is the operator we want, and expand it to the big block
+    assert( i == op->get_orbs()[0] );
+    assert( j == op->get_orbs()[1] );
+    assert( k == op->get_orbs()[2] );
+    // Build according to previous build_pattern
+    std::string build_pattern_old = op->get_build_pattern();
+    build_pattern = build_pattern_old;
+    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }
+  // Dot has i,j,k
+  else if (dotBlock->get_op_array(CRE_DES_DES).has_local_index(i,j,k)) {
+//cout << "maw dot(i,j,k)\n";
+    assert( dotBlock->get_op_array(CRE_DES_DES).get_element(i,j,k).at(0)->get_built_on_disk() );
+    // Retrieve from disk 3-index operator on dot block
+    boost::shared_ptr<SparseMatrix> op (new CreDesDes);
+    boost::archive::binary_iarchive load_op(dotfs);
+    load_op >> *op;
+    // Assume this is the operator we want, and expand it to the big block
+    assert( i == op->get_orbs()[0] );
+    assert( j == op->get_orbs()[1] );
+    assert( k == op->get_orbs()[2] );
+    // Build according to previous build_pattern
+    std::string build_pattern_old = op->get_build_pattern();
+    build_pattern = build_pattern_old;
+    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }
+  else {
+    // Build from in-core 1 and 2-index operators
+    build(b);
+  }
+
+//  dmrginp.makeopsT -> stop();
+
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SpinAdapted::CreDesDes::build(const SpinBlock& b)
 {
 //cout << "building CreDesDes renormalized operator...\n";
@@ -958,6 +1093,73 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesDes::getworkingr
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  (Cre,Des,Cre)
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void SpinAdapted::CreDesCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs)
+{
+//cout << "building CreDesCre renormalized operator on disk...\n";
+//FIXME timer
+//  dmrginp.makeopsT -> start();
+  built = true;
+//FIXME allocation/deallocation
+  allocate(b.get_stateInfo());
+  Sign = 1;
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+  const int k = get_orbs()[2];
+//cout << "i,j,k = " << i << " " << j << " " << k << endl;
+
+  SpinBlock* sysBlock = b.get_leftBlock();
+  SpinBlock* dotBlock = b.get_rightBlock();
+
+  // Sys has i,j,k
+  if (sysBlock->get_op_array(CRE_DES_CRE).has_local_index(i,j,k)) {
+//cout << "maw disk sys(i,j,k)\n";
+    assert( sysBlock->get_op_array(CRE_DES_CRE).get_element(i,j,k).at(0)->get_built_on_disk() );
+    // Retrieve from disk 3-index operator on sys block
+    boost::shared_ptr<SparseMatrix> op (new CreDesCre);
+    boost::archive::binary_iarchive load_op(sysfs);
+    load_op >> *op;
+    // Assume this is the operator we want, and expand it to the big block
+    assert( i == op->get_orbs()[0] );
+    assert( j == op->get_orbs()[1] );
+    assert( k == op->get_orbs()[2] );
+    // Build according to previous build_pattern
+    std::string build_pattern_old = op->get_build_pattern();
+    build_pattern = build_pattern_old;
+    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }
+  // Dot has i,j,k
+  else if (dotBlock->get_op_array(CRE_DES_CRE).has_local_index(i,j,k)) {
+//cout << "maw dot(i,j,k)\n";
+    assert( dotBlock->get_op_array(CRE_DES_CRE).get_element(i,j,k).at(0)->get_built_on_disk() );
+    // Retrieve from disk 3-index operator on dot block
+    boost::shared_ptr<SparseMatrix> op (new CreDesCre);
+    boost::archive::binary_iarchive load_op(dotfs);
+    load_op >> *op;
+    // Assume this is the operator we want, and expand it to the big block
+    assert( i == op->get_orbs()[0] );
+    assert( j == op->get_orbs()[1] );
+    assert( k == op->get_orbs()[2] );
+    // Build according to previous build_pattern
+    std::string build_pattern_old = op->get_build_pattern();
+    build_pattern = build_pattern_old;
+    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }
+  else {
+    // Build from in-core 1 and 2-index operators
+    build(b);
+  }
+
+//  dmrginp.makeopsT -> stop();
+
+}
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinAdapted::CreDesCre::build(const SpinBlock& b)
@@ -1224,7 +1426,7 @@ void SpinAdapted::CreCreCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
 
   // Sys has i,j,k
   if (sysBlock->get_op_array(CRE_CRE_CRE).has_local_index(i,j,k)) {
-//cout << "maw sys(i,j,k)\n";
+//cout << "maw disk sys(i,j,k)\n";
     assert( sysBlock->get_op_array(CRE_CRE_CRE).get_element(i,j,k).at(0)->get_built_on_disk() );
     // Retrieve from disk 3-index operator on sys block
     boost::shared_ptr<SparseMatrix> op (new CreCreCre);
@@ -1236,9 +1438,9 @@ void SpinAdapted::CreCreCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
     assert( k == op->get_orbs()[2] );
     // Build according to previous build_pattern
     std::string build_pattern_old = op->get_build_pattern();
-    build_pattern == build_pattern_old;
-    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
     SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has i,j,k
@@ -1255,9 +1457,9 @@ void SpinAdapted::CreCreCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
     assert( k == op->get_orbs()[2] );
     // Build according to previous build_pattern
     std::string build_pattern_old = op->get_build_pattern();
-    build_pattern == build_pattern_old;
-    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
     SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   else {
@@ -1445,6 +1647,73 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreCre::getworkingr
 //  (Des,Cre,Des)
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+void SpinAdapted::DesCreDes::build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs)
+{
+//cout << "building DesCreDes renormalized operator on disk...\n";
+//FIXME timer
+//  dmrginp.makeopsT -> start();
+  built = true;
+//FIXME allocation/deallocation
+  allocate(b.get_stateInfo());
+  Sign = 1;
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+  const int k = get_orbs()[2];
+//cout << "i,j,k = " << i << " " << j << " " << k << endl;
+
+  SpinBlock* sysBlock = b.get_leftBlock();
+  SpinBlock* dotBlock = b.get_rightBlock();
+
+  // Sys has i,j,k
+  if (sysBlock->get_op_array(DES_CRE_DES).has_local_index(i,j,k)) {
+//cout << "maw disk sys(i,j,k)\n";
+    assert( sysBlock->get_op_array(DES_CRE_DES).get_element(i,j,k).at(0)->get_built_on_disk() );
+    // Retrieve from disk 3-index operator on sys block
+    boost::shared_ptr<SparseMatrix> op (new DesCreDes);
+    boost::archive::binary_iarchive load_op(sysfs);
+    load_op >> *op;
+    // Assume this is the operator we want, and expand it to the big block
+    assert( i == op->get_orbs()[0] );
+    assert( j == op->get_orbs()[1] );
+    assert( k == op->get_orbs()[2] );
+    // Build according to previous build_pattern
+    std::string build_pattern_old = op->get_build_pattern();
+    build_pattern = build_pattern_old;
+    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }
+  // Dot has i,j,k
+  else if (dotBlock->get_op_array(DES_CRE_DES).has_local_index(i,j,k)) {
+//cout << "maw dot(i,j,k)\n";
+    assert( dotBlock->get_op_array(DES_CRE_DES).get_element(i,j,k).at(0)->get_built_on_disk() );
+    // Retrieve from disk 3-index operator on dot block
+    boost::shared_ptr<SparseMatrix> op (new DesCreDes);
+    boost::archive::binary_iarchive load_op(dotfs);
+    load_op >> *op;
+    // Assume this is the operator we want, and expand it to the big block
+    assert( i == op->get_orbs()[0] );
+    assert( j == op->get_orbs()[1] );
+    assert( k == op->get_orbs()[2] );
+    // Build according to previous build_pattern
+    std::string build_pattern_old = op->get_build_pattern();
+    build_pattern = build_pattern_old;
+    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }
+  else {
+    // Build from in-core 1 and 2-index operators
+    build(b);
+  }
+
+//  dmrginp.makeopsT -> stop();
+
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SpinAdapted::DesCreDes::build(const SpinBlock& b)
 {
 //cout << "building DesCreDes renormalized operator...\n";
@@ -1604,6 +1873,73 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::DesCreDes::getworkingr
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  (Des,Des,Cre)
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void SpinAdapted::DesDesCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs)
+{
+//cout << "building DesDesCre renormalized operator on disk...\n";
+//FIXME timer
+//  dmrginp.makeopsT -> start();
+  built = true;
+//FIXME allocation/deallocation
+  allocate(b.get_stateInfo());
+  Sign = 1;
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+  const int k = get_orbs()[2];
+//cout << "i,j,k = " << i << " " << j << " " << k << endl;
+
+  SpinBlock* sysBlock = b.get_leftBlock();
+  SpinBlock* dotBlock = b.get_rightBlock();
+
+  // Sys has i,j,k
+  if (sysBlock->get_op_array(DES_DES_CRE).has_local_index(i,j,k)) {
+//cout << "maw disk sys(i,j,k)\n";
+    assert( sysBlock->get_op_array(DES_DES_CRE).get_element(i,j,k).at(0)->get_built_on_disk() );
+    // Retrieve from disk 3-index operator on sys block
+    boost::shared_ptr<SparseMatrix> op (new DesDesCre);
+    boost::archive::binary_iarchive load_op(sysfs);
+    load_op >> *op;
+    // Assume this is the operator we want, and expand it to the big block
+    assert( i == op->get_orbs()[0] );
+    assert( j == op->get_orbs()[1] );
+    assert( k == op->get_orbs()[2] );
+    // Build according to previous build_pattern
+    std::string build_pattern_old = op->get_build_pattern();
+    build_pattern = build_pattern_old;
+    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }
+  // Dot has i,j,k
+  else if (dotBlock->get_op_array(DES_DES_CRE).has_local_index(i,j,k)) {
+//cout << "maw dot(i,j,k)\n";
+    assert( dotBlock->get_op_array(DES_DES_CRE).get_element(i,j,k).at(0)->get_built_on_disk() );
+    // Retrieve from disk 3-index operator on dot block
+    boost::shared_ptr<SparseMatrix> op (new DesDesCre);
+    boost::archive::binary_iarchive load_op(dotfs);
+    load_op >> *op;
+    // Assume this is the operator we want, and expand it to the big block
+    assert( i == op->get_orbs()[0] );
+    assert( j == op->get_orbs()[1] );
+    assert( k == op->get_orbs()[2] );
+    // Build according to previous build_pattern
+    std::string build_pattern_old = op->get_build_pattern();
+    build_pattern = build_pattern_old;
+    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
+  }
+  else {
+    // Build from in-core 1 and 2-index operators
+    build(b);
+  }
+
+//  dmrginp.makeopsT -> stop();
+
+}
+
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinAdapted::DesDesCre::build(const SpinBlock& b)

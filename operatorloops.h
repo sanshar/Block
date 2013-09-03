@@ -152,7 +152,6 @@ template<typename T2, class A> void for_all_operators_to_disk(A& array, const Sp
            
       // Deallocate memory for operator representation
       vec.at(j)->set_built() = false;
-//      vec.at(j)->deallocate(stateinfo);
       vec.at(j)->deallocate(b);
     }
   }

@@ -101,7 +101,7 @@ class Op_component_base
  public:
   virtual void build_iterators(SpinBlock& b)=0;
   virtual void build_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::string& sysfile, std::string& dotfile) = 0;
-  virtual void build_csf_operators(SpinBlock& b, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) = 0;
+  virtual void build_csf_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) = 0;
   virtual void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) =0;
   //virtual string type_name() = 0;
   virtual int get_size() const =0;
@@ -179,8 +179,7 @@ template <class Op> class Op_component : public Op_component_base
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //FIXME MAW for 3-index operators (or larger) we specialize these functions to build/modify operators out of core (on disk)
 
-  void build_csf_operators(SpinBlock& b, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) { 
-//pout << "Op_component::build_csf_operators " << m_op.num_indices() << std::endl;
+  void build_csf_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) { 
 
     if ( m_op.num_indices() < 3 ) {
       // Build in core
@@ -192,79 +191,78 @@ template <class Op> class Op_component : public Op_component_base
       for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::buildUsingCsf, _1,boost::ref(b), boost::ref(ladders), boost::ref(c)) );
       ofs.close();
       // DEBUG only: now read back into core
-      if (true) { 
+      if (false) { 
         std::ifstream ifs(ofile.c_str(), std::ios::binary);
         for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs)) );
         ifs.close();
       }
     }
-    else assert(false);
+    else 
+      assert(false);
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   void build_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::string& sysfile, std::string& dotfile) { 
-//pout << "Op_component::build_operators " << get_op_string() << " " << m_op.num_indices() << std::endl;
-    if ( m_op.num_indices() < 10 ) {
+
+    if ( m_op.num_indices() < 3 ) {
       // Build in core
       singlethread_build(*this, b); 
     }
-//    else if ( m_op.num_indices() == 3 ) {
-    else if ( ot == CRE_CRE_CRE ) {
-//    else if ( false ) {
+    else if ( m_op.num_indices() == 3 ) {
       // Build on disk (reading from disk, as necessary)
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
       std::ifstream sysfs(sysfile.c_str(), std::ios::binary);
       std::ifstream dotfs(dotfile.c_str(), std::ios::binary);
-//pout << "ofile = " << ofile << std::endl;
-//pout << "sysfile = " << sysfile << std::endl;
-//pout << "dotfile = " << dotfile << std::endl;
       for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::build_from_disk, _1, boost::ref(b), boost::ref(sysfs), boost::ref(dotfs)) );
       ofs.close();
       sysfs.close();
       dotfs.close();
+      // DEBUG only: now read back into core
+      if (false) { 
+        std::ifstream ifs(ofile.c_str(), std::ios::binary);
+        for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs)) );
+        ifs.close();
+      }
     }
-    else //assert(false);
-      singlethread_build(*this, b); 
+    else 
+      assert(false);
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo* s) {
-//pout << "Op_component::renormalise_transform " <<  get_op_string() << " " << m_op.num_indices() << std::endl;
-    if ( m_op.num_indices() < 10 ) {
+
+    if ( m_op.num_indices() < 3 ) {
       // Build in core
       for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );
     }
-//    else if ( m_op.num_indices() == 3 ) {
-    else if ( ot == CRE_CRE_CRE ) {
+    else if ( m_op.num_indices() == 3 ) {
       // Build on disk (load, renormalize, save)
       std::string ifile = get_filename();
       std::string ofile = get_filename() + ".renorm";
-//pout << "ifile = " << ifile << std::endl;
       std::ifstream ifs(ifile.c_str(), std::ios::binary);
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
       for_all_operators_on_disk( *this, *s, ofs, bind(&SparseMatrix::renormalise_transform_on_disk, _1, boost::ref(rotateMatrix), s, boost::ref(ifs)) );
       ifs.close();
       ofs.close();
-      //FIXME Rename file (can we do this in place?)
-      int result;
-      result = rename( ofile.c_str(), ifile.c_str() );
+      int result = rename( ofile.c_str(), ifile.c_str() );
       assert( result == 0 );
-//DEBUG now read back into core, as if always done in core
-      std::ifstream ifs2(ifile.c_str(), std::ios::binary);
-      for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs2)) );
-      ifs2.close();
+      // DEBUG only: now read back into core
+      if (false) { 
+        std::ifstream ifs2(ifile.c_str(), std::ios::binary);
+        for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs2)) );
+        ifs2.close();
+      }
     }
-    else //assert(false);
-      for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );
+    else 
+      assert(false);
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   std::vector<boost::shared_ptr<SparseMatrix> > get_local_element(int i) 
   {
-//pout << "op_components.h get_local_element(i)\n";
     std::vector<boost::shared_ptr<SparseMatrix> > vec(m_op.get_local_element(i).size());
     for (int l=0; l<vec.size(); l++)
       vec[l] = m_op.get_local_element(i)[l]; 
@@ -323,12 +321,9 @@ template <class Op> class Op_component : public Op_component_base
 
   boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1)
   {
-//pout << "hello base get_op_rep 2-index ops\n";
     assert( k ==-1 );
     Op* o = 0;
     std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
-//MAWstd::cout << " s.particleNumber = " << s.particleNumber << std::endl;
-//MAWstd::cout << " s.totalSpin = " << s.totalSpin << std::endl;
     for (int l=0; l<vec.size(); l++) {
       if ( s == vec[l]->get_deltaQuantum() ) return m_op(i,j,k)[l];
     }
@@ -340,7 +335,6 @@ template <class Op> class Op_component : public Op_component_base
 
   const boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1) const
   {
-//pout << "hello base get_op_rep 2-index ops\n";
     assert( k ==-1 );
     Op* o = 0;
     const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
@@ -355,7 +349,6 @@ template <class Op> class Op_component : public Op_component_base
 // MAW FIXME for more than 2-index operators:
   boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1)
   {
-//pout << "hello base get_op_rep n-index ops\n";
     assert( k !=-1 );
     Op* o = 0;
     std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
@@ -371,7 +364,6 @@ template <class Op> class Op_component : public Op_component_base
 // MAW FIXME for more than 2-index operators:
   const boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1) const
   {
-//pout << "hello base get_op_rep n-index ops\n";
     assert( k !=-1 );
     Op* o = 0;
     const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);

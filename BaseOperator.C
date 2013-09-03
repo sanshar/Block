@@ -358,11 +358,6 @@ void SparseMatrix::renormalise_transform_on_disk(const std::vector<Matrix>& rota
 
   // Renormalize
   renormalise_transform(rotate_matrix, stateinfo);
-
-  // Deallocate memory for operator representation
-  built = false;
-//  deallocate(*stateinfo);
-
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -373,6 +368,7 @@ void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matri
   // Cannot instantiate a SparseMatrix and so instantiating a Cre
   ObjectMatrix<Matrix> tmp = operatorMatrix; 
 
+  //FIXME
   // new allocations (actually reallocate?)
   this->allocate(*stateinfo); 
 
