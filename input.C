@@ -96,6 +96,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_no_transform = false;
   m_do_fci = false;
   m_do_npdm_ops = false;
+  m_do_npdm_in_core = false;
   m_maxiter = 10;
   m_screen_tol = 1.00e-20;
 
@@ -498,6 +499,10 @@ SpinAdapted::Input::Input(const string& config_name)
       else if (boost::iequals(keyword,  "docd") || boost::iequals(keyword,  "do_npdm_ops"))
       {
         m_do_npdm_ops = true;
+      }
+      else if (boost::iequals(keyword,  "do_npdm_in_core"))
+      {
+        m_do_npdm_in_core = true;
       }
 
 

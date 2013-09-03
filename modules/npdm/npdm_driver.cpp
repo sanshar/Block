@@ -142,11 +142,11 @@ void Npdm_driver::npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm
   boost::mpi::communicator world;
 //cout << "-------------------------------------------------------------------------------------------\n";
 //cout << "lhsOps.size() = " << lhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
-cout << "dotOps.size() = " << dotOps.size() << "; rank = " << mpigetrank() <<  std::endl;
+//cout << "dotOps.size() = " << dotOps.size() << "; rank = " << mpigetrank() <<  std::endl;
 //cout << "rhsOps.size() = " << rhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
 
   // MPI threads must be synchronised here so they all work on same operator pattern simultaneously
-std::cout.flush();
+  std::cout.flush();
   world.barrier();
   int lhs_maxsize = get_mpi_max_lhs_size( lhsOps.size() );
 
@@ -206,11 +206,11 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
   for (auto pattern = npdm_patterns.ldr_cd_begin(); pattern != npdm_patterns.ldr_cd_end(); ++pattern) {
     pout << "===========================================================================================\n";
 
-    std::cout << "Doing pattern: rank " << mpigetrank() << std::endl;
+    pout << "Doing pattern:\n";
     npdm_patterns.print_cd_string( pattern->at('l') );
     npdm_patterns.print_cd_string( pattern->at('d') );
     npdm_patterns.print_cd_string( pattern->at('r') );
-    std::cout << std::endl;
+    pout << std::endl;
     std::vector<Npdm::CD> lhs_cd_type = pattern->at('l');
     std::vector<Npdm::CD> dot_cd_type = pattern->at('d');
     std::vector<Npdm::CD> rhs_cd_type = pattern->at('r');

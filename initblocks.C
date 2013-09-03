@@ -35,9 +35,7 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
   }
   else if (forward)
   {
-pout << "init startingBlock\n";
     startingBlock = SpinBlock(0, forward_starting_size - 1, true);
-pout << "startingBlock built!\n";
     
     if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s() != 0)
     {

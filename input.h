@@ -80,6 +80,7 @@ class Input {
   bool m_do_deriv;
   bool m_do_fci;
   bool m_do_npdm_ops;
+  bool m_do_npdm_in_core;
   bool m_set_Sz;
   int m_maxiter;
   double m_screen_tol;
@@ -138,7 +139,7 @@ class Input {
     ar & m_save_prefix & m_load_prefix & m_direct & m_max_lanczos_dimension;
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat & m_reorder & m_gaopt & m_gaorder;
-    ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_npdm_ops;
+    ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_npdm_ops & m_do_npdm_in_core;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
@@ -298,6 +299,8 @@ class Input {
   int getHFQuanta(const SpinBlock& b) const;
   const bool &do_npdm_ops() const {return m_do_npdm_ops;}
   bool &do_npdm_ops() {return m_do_npdm_ops;}
+  const bool &do_npdm_in_core() const {return m_do_npdm_in_core;}
+  bool &do_npdm_in_core() {return m_do_npdm_in_core;}
   int slater_size() const {return m_norbs;}
 };
 }

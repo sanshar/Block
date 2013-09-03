@@ -26,6 +26,7 @@ namespace SpinAdapted{
 class Npdm_driver {
 
   public:
+    // FIXME flag to use full npdm array is hard-coded here; make input keyword
     Npdm_driver() : npdm_order_(-1), use_full_array_(true) {};
     Npdm_driver(int order) : npdm_order_(order), use_full_array_(true) {};
 

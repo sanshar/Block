@@ -181,11 +181,7 @@ template <class Op> class Op_component : public Op_component_base
 
   void build_csf_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) { 
 
-    if ( m_op.num_indices() < 3 ) {
-      // Build in core
-      for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsf, _1, boost::ref(b), boost::ref(ladders), boost::ref(c)) );
-    }
-    else if ( m_op.num_indices() == 3 ) {
+    if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
       // Build on disk (assume we are building from scratch)
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
       for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::buildUsingCsf, _1,boost::ref(b), boost::ref(ladders), boost::ref(c)) );
@@ -197,19 +193,17 @@ template <class Op> class Op_component : public Op_component_base
         ifs.close();
       }
     }
-    else 
-      assert(false);
+    else {
+      // Build in core
+      for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsf, _1, boost::ref(b), boost::ref(ladders), boost::ref(c)) );
+    }
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   void build_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::string& sysfile, std::string& dotfile) { 
 
-    if ( m_op.num_indices() < 3 ) {
-      // Build in core
-      singlethread_build(*this, b); 
-    }
-    else if ( m_op.num_indices() == 3 ) {
+    if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
       // Build on disk (reading from disk, as necessary)
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
       std::ifstream sysfs(sysfile.c_str(), std::ios::binary);
@@ -225,19 +219,17 @@ template <class Op> class Op_component : public Op_component_base
         ifs.close();
       }
     }
-    else 
-      assert(false);
+    else {
+      // Build in core
+      singlethread_build(*this, b); 
+    }
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo* s) {
 
-    if ( m_op.num_indices() < 3 ) {
-      // Build in core
-      for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );
-    }
-    else if ( m_op.num_indices() == 3 ) {
+    if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
       // Build on disk (load, renormalize, save)
       std::string ifile = get_filename();
       std::string ofile = get_filename() + ".renorm";
@@ -255,8 +247,10 @@ template <class Op> class Op_component : public Op_component_base
         ifs2.close();
       }
     }
-    else 
-      assert(false);
+    else {
+      // Build in core
+      for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );
+    }
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -6,6 +6,7 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
+#include "global.h"
 #include "npdm_patterns.h"
 #include "npdm_operator_wrappers.h"
 
@@ -34,14 +35,14 @@ Npdm_op_wrapper_compound_CCDD::Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBl
 
 bool Npdm_op_wrapper_compound_CCDD::set_local_ops( int idx )
 {
-cout << "getting CCDD operator...\n";
+//cout << "getting CCDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx, lx;
   std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
   ix = twoOps.at(0)->get_orbs(0);
   jx = twoOps.at(0)->get_orbs(1);
-cout << "indices  " << ix << " " << ix << " " << ix << " " << ix << std::endl;
+//cout << "indices  " << ix << " " << ix << " " << ix << " " << ix << std::endl;
 
   // Assumed single site
   assert ( ix == jx );
@@ -91,7 +92,7 @@ Npdm_op_wrapper_CCDD::Npdm_op_wrapper_CCDD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CCDD::set_local_ops( int idx )
 {
-cout << "getting CCDD operator...\n";
+//cout << "getting CCDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx, lx;
@@ -134,7 +135,7 @@ Npdm_op_wrapper_compound_CCD::Npdm_op_wrapper_compound_CCD( SpinBlock * spinBloc
 
 bool Npdm_op_wrapper_compound_CCD::set_local_ops( int idx )
 {
-cout << "getting compound CCD operator...\n";
+//cout << "getting compound CCD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -151,7 +152,7 @@ cout << "getting compound CCD operator...\n";
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
-cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   opReps_.clear();
   // S=0 (+) S=1/2  =>  S=1/2
@@ -185,7 +186,7 @@ Npdm_op_wrapper_compound_CDD::Npdm_op_wrapper_compound_CDD( SpinBlock * spinBloc
 
 bool Npdm_op_wrapper_compound_CDD::set_local_ops( int idx )
 {
-cout << "getting compound CDD operator...\n";
+//cout << "getting compound CDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -274,7 +275,7 @@ Npdm_op_wrapper_compound_CDC::Npdm_op_wrapper_compound_CDC( SpinBlock * spinBloc
 
 bool Npdm_op_wrapper_compound_CDC::set_local_ops( int idx )
 {
-cout << "getting compound CDC operator...\n";
+//cout << "getting compound CDC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -297,7 +298,7 @@ cout << "getting compound CDC operator...\n";
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
-cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
 //----------
 // 1st way
@@ -438,7 +439,7 @@ Npdm_op_wrapper_compound_CCC::Npdm_op_wrapper_compound_CCC( SpinBlock * spinBloc
 
 bool Npdm_op_wrapper_compound_CCC::set_local_ops( int idx )
 {
-cout << "getting compound CCC operator...\n";
+//cout << "getting compound CCC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -488,7 +489,7 @@ Npdm_op_wrapper_compound_DCD::Npdm_op_wrapper_compound_DCD( SpinBlock * spinBloc
 
 bool Npdm_op_wrapper_compound_DCD::set_local_ops( int idx )
 {
-cout << "getting compound DCD operator...\n";
+//cout << "getting compound DCD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -535,49 +536,49 @@ Npdm_op_wrapper_CCC::Npdm_op_wrapper_CCC( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_size();
   factor_ = 1.0;
   transpose_ = false;
-//  build_pattern_ = "((CC)C)";
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
-//FIXME
-//Only init this if we know we want to use disk-based?  Test built_on_disk?
   // For disk-based storage
-  std::string ifile = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
-  ifs_.open(ifile.c_str(), ios::binary);
-  // Put ifs_.close in destructor???
+//FIXME  // Put ifs_.close in destructor???
+//FIXME TEST IF FILE IS ALREADY BEING READ???
+  if ( ! dmrginp.do_npdm_in_core() ) {
+    std::string ifile = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
+    ifs_.open(ifile.c_str(), ios::binary);
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 bool Npdm_op_wrapper_CCC::set_local_ops( int idx )
 {
-cout << "getting CCC operator...\n";
+//cout << "getting CCC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
 
-//assert(false);
-//FIXME READ OPERATORS FROM DISK HERE
-  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
-  opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
-  assert( opReps_tmp.at(0)->get_built_on_disk() );
-  opReps_.clear();
-  // Read in full spin-set from disk
-  for (int i = 0; i < opReps_tmp.size(); i++) {
-     boost::archive::binary_iarchive load_op(ifs_);
-     boost::shared_ptr<SparseMatrix> op (new Cre);
-     load_op >> *op;
-     opReps_.push_back(op);
+  // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() )
+    opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+  else {
+    std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+    opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+    assert( opReps_tmp.at(0)->get_built_on_disk() );
+    opReps_.clear();
+    // Read in full spin-set from disk
+    for (int i = 0; i < opReps_tmp.size(); i++) {
+       boost::archive::binary_iarchive load_op(ifs_);
+       boost::shared_ptr<SparseMatrix> op (new Cre);
+       load_op >> *op;
+       opReps_.push_back(op);
+    }
   }
-
-//FIXME READ OPERATORS FROM CORE
-//  opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 //cout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
 //cout << "2a CCC operator elements:\n";
 //cout << *(opReps_[0]);
@@ -603,50 +604,47 @@ Npdm_op_wrapper_CCD::Npdm_op_wrapper_CCD( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE_CRE_DES).get_size();
   factor_ = 1.0;
   transpose_ = false;
-//  build_pattern_ = "((CC)D)";
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
-//FIXME
-//Only init this if we know we want to use disk-based?  Test built_on_disk?
   // For disk-based storage
-  std::string ifile = spinBlock_->get_op_array(CRE_CRE_DES).get_filename();
-  ifs_.open(ifile.c_str(), ios::binary);
-  // Put ifs_.close in destructor???
+  if ( ! dmrginp.do_npdm_in_core() ) {
+    std::string ifile = spinBlock_->get_op_array(CRE_CRE_DES).get_filename();
+    ifs_.open(ifile.c_str(), ios::binary);
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 bool Npdm_op_wrapper_CCD::set_local_ops( int idx )
 {
-cout << "getting CCD operator...\n";
+//cout << "getting CCD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
 
-//assert(false);
-//FIXME READ OPERATORS FROM DISK HERE
-  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
-  opReps_tmp = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
-  assert( opReps_tmp.at(0)->get_built_on_disk() );
-  opReps_.clear();
-  // Read in full spin-set from disk
-  for (int i = 0; i < opReps_tmp.size(); i++) {
-     boost::archive::binary_iarchive load_op(ifs_);
-     boost::shared_ptr<SparseMatrix> op (new Cre);
-     load_op >> *op;
-     opReps_.push_back(op);
+  // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() )
+    opReps_ = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
+  else {
+    std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+    opReps_tmp = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
+    assert( opReps_tmp.at(0)->get_built_on_disk() );
+    opReps_.clear();
+    // Read in full spin-set from disk
+    for (int i = 0; i < opReps_tmp.size(); i++) {
+       boost::archive::binary_iarchive load_op(ifs_);
+       boost::shared_ptr<SparseMatrix> op (new Cre);
+       load_op >> *op;
+       opReps_.push_back(op);
+    }
   }
-
-//  opReps_ = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
-
-
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 //cout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
 //cout << "2a CCD operator elements:\n";
 //cout << *(opReps_[0]);
@@ -672,43 +670,41 @@ Npdm_op_wrapper_CDD::Npdm_op_wrapper_CDD( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE_DES_DES).get_size();
   factor_ = 0.0;
   transpose_ = false;
-//  build_pattern_ = "((CD)D)";
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
-//FIXME
-//Only init this if we know we want to use disk-based?  Test built_on_disk?
   // For disk-based storage
-  std::string ifile = spinBlock_->get_op_array(CRE_DES_DES).get_filename();
-  ifs_.open(ifile.c_str(), ios::binary);
-  // Put ifs_.close in destructor???
+  if ( ! dmrginp.do_npdm_in_core() ) {
+    std::string ifile = spinBlock_->get_op_array(CRE_DES_DES).get_filename();
+    ifs_.open(ifile.c_str(), ios::binary);
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 bool Npdm_op_wrapper_CDD::set_local_ops( int idx )
 {
-cout << "getting CDD operator...\n";
+//cout << "getting CDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
 
-//assert(false);
-//FIXME READ OPERATORS FROM DISK HERE
-  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
-  opReps_tmp = spinBlock_->get_op_array(CRE_DES_DES).get_local_element(idx);
-  assert( opReps_tmp.at(0)->get_built_on_disk() );
-  opReps_.clear();
-  // Read in full spin-set from disk
-  for (int i = 0; i < opReps_tmp.size(); i++) {
-     boost::archive::binary_iarchive load_op(ifs_);
-     boost::shared_ptr<SparseMatrix> op (new Cre);
-     load_op >> *op;
-     opReps_.push_back(op);
+  // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() )
+    opReps_ = spinBlock_->get_op_array(CRE_DES_DES).get_local_element(idx);
+  else {
+    std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+    opReps_tmp = spinBlock_->get_op_array(CRE_DES_DES).get_local_element(idx);
+    assert( opReps_tmp.at(0)->get_built_on_disk() );
+    opReps_.clear();
+    // Read in full spin-set from disk
+    for (int i = 0; i < opReps_tmp.size(); i++) {
+       boost::archive::binary_iarchive load_op(ifs_);
+       boost::shared_ptr<SparseMatrix> op (new Cre);
+       load_op >> *op;
+       opReps_.push_back(op);
+    }
   }
-
-//  opReps_ = spinBlock_->get_op_array(CRE_DES_DES).get_local_element(idx);
-
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
   if ( build_pattern_ == "(C(DD))" ) factor_ = -1.0;
@@ -718,7 +714,7 @@ cout << "getting CDD operator...\n";
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 //cout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
 //cout << "2a CDD operator elements:\n";
 //cout << *(opReps_[0]);
@@ -749,49 +745,47 @@ Npdm_op_wrapper_CDC::Npdm_op_wrapper_CDC( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(CRE_DES_CRE).get_size();
   factor_ = 1.0;
   transpose_ = false;
-//  build_pattern_ = "((CD)C)";
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
-//FIXME
-//Only init this if we know we want to use disk-based?  Test built_on_disk?
   // For disk-based storage
-  std::string ifile = spinBlock_->get_op_array(CRE_DES_CRE).get_filename();
-  ifs_.open(ifile.c_str(), ios::binary);
-  // Put ifs_.close in destructor???
+  if ( ! dmrginp.do_npdm_in_core() ) {
+    std::string ifile = spinBlock_->get_op_array(CRE_DES_CRE).get_filename();
+    ifs_.open(ifile.c_str(), ios::binary);
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 bool Npdm_op_wrapper_CDC::set_local_ops( int idx )
 {
-cout << "getting CDC operator...\n";
+//cout << "getting CDC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
 
-//assert(false);
-//FIXME READ OPERATORS FROM DISK HERE
-  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
-  opReps_tmp = spinBlock_->get_op_array(CRE_DES_CRE).get_local_element(idx);
-  assert( opReps_tmp.at(0)->get_built_on_disk() );
-  opReps_.clear();
-  // Read in full spin-set from disk
-  for (int i = 0; i < opReps_tmp.size(); i++) {
-     boost::archive::binary_iarchive load_op(ifs_);
-     boost::shared_ptr<SparseMatrix> op (new Cre);
-     load_op >> *op;
-     opReps_.push_back(op);
+  // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() )
+    opReps_ = spinBlock_->get_op_array(CRE_DES_CRE).get_local_element(idx);
+  else {
+    std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+    opReps_tmp = spinBlock_->get_op_array(CRE_DES_CRE).get_local_element(idx);
+    assert( opReps_tmp.at(0)->get_built_on_disk() );
+    opReps_.clear();
+    // Read in full spin-set from disk
+    for (int i = 0; i < opReps_tmp.size(); i++) {
+       boost::archive::binary_iarchive load_op(ifs_);
+       boost::shared_ptr<SparseMatrix> op (new Cre);
+       load_op >> *op;
+       opReps_.push_back(op);
+    }
   }
-
-//  opReps_ = spinBlock_->get_op_array(CRE_DES_CRE).get_local_element(idx);
-
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   indices_.push_back( ix );
   indices_.push_back( jx );
@@ -817,45 +811,44 @@ Npdm_op_wrapper_DCD::Npdm_op_wrapper_DCD( SpinBlock * spinBlock )
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
-//FIXME
-//Only init this if we know we want to use disk-based?  Test built_on_disk?
   // For disk-based storage
-  std::string ifile = spinBlock_->get_op_array(DES_CRE_DES).get_filename();
-  ifs_.open(ifile.c_str(), ios::binary);
-  // Put ifs_.close in destructor???
+  if ( ! dmrginp.do_npdm_in_core() ) {
+    std::string ifile = spinBlock_->get_op_array(DES_CRE_DES).get_filename();
+    ifs_.open(ifile.c_str(), ios::binary);
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 bool Npdm_op_wrapper_DCD::set_local_ops( int idx )
 {
-cout << "getting DCD operator...\n";
+//cout << "getting DCD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
 
-//assert(false);
-//FIXME READ OPERATORS FROM DISK HERE
-  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
-  opReps_tmp = spinBlock_->get_op_array(DES_CRE_DES).get_local_element(idx);
-  assert( opReps_tmp.at(0)->get_built_on_disk() );
-  opReps_.clear();
-  // Read in full spin-set from disk
-  for (int i = 0; i < opReps_tmp.size(); i++) {
-     boost::archive::binary_iarchive load_op(ifs_);
-     boost::shared_ptr<SparseMatrix> op (new Cre);
-     load_op >> *op;
-     opReps_.push_back(op);
+  // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() )
+    opReps_ = spinBlock_->get_op_array(DES_CRE_DES).get_local_element(idx);
+  else {
+    std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+    opReps_tmp = spinBlock_->get_op_array(DES_CRE_DES).get_local_element(idx);
+    assert( opReps_tmp.at(0)->get_built_on_disk() );
+    opReps_.clear();
+    // Read in full spin-set from disk
+    for (int i = 0; i < opReps_tmp.size(); i++) {
+       boost::archive::binary_iarchive load_op(ifs_);
+       boost::shared_ptr<SparseMatrix> op (new Cre);
+       load_op >> *op;
+       opReps_.push_back(op);
+    }
   }
-
-//  opReps_ = spinBlock_->get_op_array(DES_CRE_DES).get_local_element(idx);
-
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   indices_.push_back( ix );
   indices_.push_back( jx );
@@ -881,45 +874,44 @@ Npdm_op_wrapper_DDC::Npdm_op_wrapper_DDC( SpinBlock * spinBlock )
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
-//FIXME
-//Only init this if we know we want to use disk-based?  Test built_on_disk?
   // For disk-based storage
-  std::string ifile = spinBlock_->get_op_array(DES_DES_CRE).get_filename();
-  ifs_.open(ifile.c_str(), ios::binary);
-  // Put ifs_.close in destructor???
+  if ( ! dmrginp.do_npdm_in_core() ) {
+    std::string ifile = spinBlock_->get_op_array(DES_DES_CRE).get_filename();
+    ifs_.open(ifile.c_str(), ios::binary);
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
 {
-cout << "getting DDC operator...\n";
+//cout << "getting DDC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
 
-//assert(false);
-//FIXME READ OPERATORS FROM DISK HERE
-  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
-  opReps_tmp = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
-  assert( opReps_tmp.at(0)->get_built_on_disk() );
-  opReps_.clear();
-  // Read in full spin-set from disk
-  for (int i = 0; i < opReps_tmp.size(); i++) {
-     boost::archive::binary_iarchive load_op(ifs_);
-     boost::shared_ptr<SparseMatrix> op (new Cre);
-     load_op >> *op;
-     opReps_.push_back(op);
+  // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() )
+    opReps_ = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
+  else {
+    std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+    opReps_tmp = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
+    assert( opReps_tmp.at(0)->get_built_on_disk() );
+    opReps_.clear();
+    // Read in full spin-set from disk
+    for (int i = 0; i < opReps_tmp.size(); i++) {
+       boost::archive::binary_iarchive load_op(ifs_);
+       boost::shared_ptr<SparseMatrix> op (new Cre);
+       load_op >> *op;
+       opReps_.push_back(op);
+    }
   }
-
-//  opReps_ = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
-
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   indices_.push_back( ix );
   indices_.push_back( jx );
@@ -946,41 +938,38 @@ Npdm_op_wrapper_DCC::Npdm_op_wrapper_DCC( SpinBlock * spinBlock )
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
-//FIXME
-//Only init this if we know we want to use disk-based?  Test built_on_disk?
   // For disk-based storage
-//FIXME TEST IF FILE IS ALREADY BEING READ???
-  std::string ifile = spinBlock_->get_op_array(DES_DES_CRE).get_filename();
-  ifs_.open(ifile.c_str(), ios::binary);
-  // Put ifs_.close in destructor???
+  if ( ! dmrginp.do_npdm_in_core() ) {
+    std::string ifile = spinBlock_->get_op_array(DES_DES_CRE).get_filename();
+    ifs_.open(ifile.c_str(), ios::binary);
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
 {
-cout << "getting DCC operator...\n";
+//cout << "getting DCC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
 
-//assert(false);
-//FIXME READ OPERATORS FROM DISK HERE
-  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
-  opReps_tmp = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
-  assert( opReps_tmp.at(0)->get_built_on_disk() );
-  opReps_.clear();
-  // Read in full spin-set from disk
-  for (int i = 0; i < opReps_tmp.size(); i++) {
-     boost::archive::binary_iarchive load_op(ifs_);
-     boost::shared_ptr<SparseMatrix> op (new Cre);
-     load_op >> *op;
-     opReps_.push_back(op);
+  // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() )
+    opReps_ = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
+  else {
+    std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+    opReps_tmp = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
+    assert( opReps_tmp.at(0)->get_built_on_disk() );
+    opReps_.clear();
+    // Read in full spin-set from disk
+    for (int i = 0; i < opReps_tmp.size(); i++) {
+       boost::archive::binary_iarchive load_op(ifs_);
+       boost::shared_ptr<SparseMatrix> op (new Cre);
+       load_op >> *op;
+       opReps_.push_back(op);
+    }
   }
-
-//  opReps_ = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
-
-
 
   std::string tmp = opReps_.at(0)->get_build_pattern();
   if ( tmp == "((DD)C)" ) build_pattern_ = "(D(CC))";
@@ -990,7 +979,7 @@ cout << "getting DCC operator...\n";
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   // Note use of transpose means we store this as (k,j,i) not (i,j,k)
   indices_.push_back( kx );
@@ -1018,41 +1007,38 @@ Npdm_op_wrapper_DDD::Npdm_op_wrapper_DDD( SpinBlock * spinBlock )
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
-//FIXME
-//Only init this if we know we want to use disk-based?  Test built_on_disk?
   // For disk-based storage
-//FIXME TEST IF FILE IS ALREADY BEING READ???
-  std::string ifile = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
-  ifs_.open(ifile.c_str(), ios::binary);
-  // Put ifs_.close in destructor???
+  if ( ! dmrginp.do_npdm_in_core() ) {
+    std::string ifile = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
+    ifs_.open(ifile.c_str(), ios::binary);
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 bool Npdm_op_wrapper_DDD::set_local_ops( int idx )
 {
-cout << "getting DDD operator...\n";
+//cout << "getting DDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
 
-//assert(false);
-//FIXME READ OPERATORS FROM DISK HERE
-  std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
-  opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
-  assert( opReps_tmp.at(0)->get_built_on_disk() );
-  opReps_.clear();
-  // Read in full spin-set from disk
-  for (int i = 0; i < opReps_tmp.size(); i++) {
-     boost::archive::binary_iarchive load_op(ifs_);
-     boost::shared_ptr<SparseMatrix> op (new Cre);
-     load_op >> *op;
-     opReps_.push_back(op);
+  // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() )
+    opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+  else {
+    std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+    opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+    assert( opReps_tmp.at(0)->get_built_on_disk() );
+    opReps_.clear();
+    // Read in full spin-set from disk
+    for (int i = 0; i < opReps_tmp.size(); i++) {
+       boost::archive::binary_iarchive load_op(ifs_);
+       boost::shared_ptr<SparseMatrix> op (new Cre);
+       load_op >> *op;
+       opReps_.push_back(op);
+    }
   }
-
-//  opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
-
-
 
   std::string tmp = opReps_.at(0)->get_build_pattern();
   if ( tmp == "((CC)C)" ) build_pattern_ = "(D(DD))";
@@ -1062,7 +1048,7 @@ cout << "getting DDD operator...\n";
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   // Note use of transpose means we store this as (k,j,i) not (i,j,k)
   indices_.push_back( kx );
@@ -1081,7 +1067,7 @@ Npdm_op_wrapper_CC::Npdm_op_wrapper_CC( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
-if (size_ == 0) cout << "CC zero size; rank = " << mpigetrank() << std::endl;
+if (size_ == 0) cout << "WARNING: CC zero size; rank = " << mpigetrank() << std::endl;
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "(CC)";
@@ -1093,21 +1079,15 @@ if (size_ == 0) cout << "CC zero size; rank = " << mpigetrank() << std::endl;
 
 bool Npdm_op_wrapper_CC::set_local_ops( int idx )
 {
-cout << "getting CC operator...\n";
+//cout << "getting CC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx;
 
   opReps_ = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
-if (opReps_.size() == 0) cout << "CC opReps_ zero size; rank = " << mpigetrank() << std::endl;
+if (opReps_.size() == 0) cout << "WARNING: CC opReps_ zero size; rank = " << mpigetrank() << std::endl;
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
-cout << "indices  " << ix << " " << jx << std::endl;
-//cout << "singlet CC operator elements:\n";
-//cout << *(opReps_[0]);
-//cout << "triplet CC operator elements:\n";
-//cout << *(opReps_[1]);
-
   indices_.push_back( ix );
   indices_.push_back( jx );
   return false;
@@ -1131,7 +1111,6 @@ Npdm_op_wrapper_CD::Npdm_op_wrapper_CD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CD::set_local_ops( int idx )
 {
-cout << "getting CD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx;
@@ -1139,12 +1118,6 @@ cout << "getting CD operator...\n";
   opReps_ = spinBlock_->get_op_array(CRE_DES).get_local_element(idx);
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
-cout << "indices  " << ix << " " << jx << std::endl;
-//cout << "singlet CD operator elements:\n";
-//cout << *(opReps_[0]);
-//cout << "triplet CD operator elements:\n";
-//cout << *(opReps_[1]);
-
   transpose_ = false;
   indices_.push_back( ix );
   indices_.push_back( jx );
@@ -1171,7 +1144,7 @@ Npdm_op_wrapper_DC::Npdm_op_wrapper_DC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_DC::set_local_ops( int idx )
 {
-cout << "getting DC operator...\n";
+//cout << "getting DC operator...\n";
 
   // Spatial orbital indices
   indices_.clear();
@@ -1187,7 +1160,7 @@ cout << "getting DC operator...\n";
 
   indices_.push_back( ix );
   indices_.push_back( jx );
-cout << "indices  " << ix << " " << jx << std::endl;
+//cout << "indices  " << ix << " " << jx << std::endl;
 if ( ix == jx ) {
   //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
   cout << "WARNING: skipping this operator\n";
@@ -1262,7 +1235,6 @@ Npdm_op_wrapper_DD::Npdm_op_wrapper_DD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_DD::set_local_ops( int idx )
 {
-cout << "getting DD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx;
@@ -1274,7 +1246,6 @@ cout << "getting DD operator...\n";
   // Note use of transpose means we store this as (j,i) not (i,j)
   indices_.push_back( jx );
   indices_.push_back( ix );
-cout << "indices  " << ix << " " << jx << std::endl;
   return false;
 }
 
@@ -1299,7 +1270,6 @@ Npdm_op_wrapper_C::Npdm_op_wrapper_C( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_C::set_local_ops( int idx )
 {
-cout << "getting C operator...\n";
   indices_.clear();
   opReps_ = spinBlock_->get_op_array(CRE).get_local_element(idx);
   int ix = opReps_.at(0)->get_orbs(0);
@@ -1326,14 +1296,10 @@ Npdm_op_wrapper_D::Npdm_op_wrapper_D( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_D::set_local_ops( int idx )
 {
-cout << "getting D operator...\n";
   indices_.clear();
   opReps_ = spinBlock_->get_op_array(CRE).get_local_element(idx);
   int ix = opReps_.at(0)->get_orbs(0);
   indices_.push_back(ix);
-cout << "indices  " << ix << std::endl;
-//cout << "D operator elements:\n";
-//cout << *(opReps_[0]);
   return false;
 }
 
