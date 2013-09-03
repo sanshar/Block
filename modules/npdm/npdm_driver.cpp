@@ -60,6 +60,7 @@ std::vector<NpdmSpinOps_base> Npdm_driver::get_all_mpi_ops( const bool local_ski
   std::vector< NpdmSpinOps_base > all_ops;
   reqs.clear();
 
+cout << "get_all_mpi_ops ; rank = " << mpigetrank() <<  std::endl;
   // First element is local set of spin operators
   NpdmSpinOps_base local_base(local_ops);
   if ( ! local_skip ) all_ops.push_back( local_base );
@@ -71,14 +72,19 @@ std::vector<NpdmSpinOps_base> Npdm_driver::get_all_mpi_ops( const bool local_ski
   for (int rank = 0; rank < world.size(); ++rank) {
     if ( rank != mpigetrank() ) {
 
+cout << "sending to rank = " << rank <<  std::endl;
+cout.flush();
       // Send to non-local rank
       unsigned int tag = get_mpi_tag(mpigetrank(), rank, world.size());
       assert( tag%100 == 0 );
       world.send(rank, tag, local_skip);
       int local_size = local_base.opReps_.size();
       world.send(rank, tag+1, local_size);
-      if ( ! local_skip ) local_base.send_mpi_obj(rank, tag+2, tag+50);
+//      if ( ! local_skip ) local_base.send_mpi_obj(rank, tag+2, tag+50);
+      local_base.send_mpi_obj(rank, tag+2, tag+50);
 
+cout << "recving from rank = " << rank <<  std::endl;
+cout.flush();
       // Recv from non-local rank
       bool nonlocal_skip;
       NpdmSpinOps_base nonlocal_base;
@@ -86,12 +92,14 @@ std::vector<NpdmSpinOps_base> Npdm_driver::get_all_mpi_ops( const bool local_ski
       world.recv(rank, tag, nonlocal_skip);
       int nonlocal_size;
       world.recv(rank, tag+1, nonlocal_size);
-      if ( ! nonlocal_skip ) nonlocal_base.recv_mpi_obj(rank, tag+2, tag+50, nonlocal_size);
+//      if ( ! nonlocal_skip ) nonlocal_base.recv_mpi_obj(rank, tag+2, tag+50, nonlocal_size);
+      nonlocal_base.recv_mpi_obj(rank, tag+2, tag+50, nonlocal_size);
 
       // Store non-local data
       if ( ! nonlocal_skip ) all_ops.push_back( nonlocal_base );
     }
   }
+//assert(false);
 
   return all_ops;
 }
@@ -141,9 +149,13 @@ void Npdm_driver::npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm
 
   boost::mpi::communicator world;
 //cout << "-------------------------------------------------------------------------------------------\n";
-//cout << "lhsOps.size() = " << lhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
-//cout << "dotOps.size() = " << dotOps.size() << "; rank = " << mpigetrank() <<  std::endl;
-//cout << "rhsOps.size() = " << rhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
+cout << "lhsOps.size() = " << lhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
+cout << "dotOps.size() = " << dotOps.size() << "; rank = " << mpigetrank() <<  std::endl;
+cout << "rhsOps.size() = " << rhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
+cout << "at mpi barrier! rank = " << mpigetrank() <<  std::endl;
+cout.flush();
+std::cout.flush();
+world.barrier();
 
   // MPI threads must be synchronised here so they all work on same operator pattern simultaneously
   std::cout.flush();
@@ -154,10 +166,12 @@ void Npdm_driver::npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm
   assert( dotOps.size() == 1 );
   bool skip = dotOps.set_local_ops( 0 );
 //FIXME is this skip OK in parallel?
-  if (skip) return;
+//  if (skip) return;
 
   // Many spatial combinations on left block
   for ( int ilhs = 0; ilhs < lhs_maxsize; ++ilhs ) {
+cout << "ilhs = " << ilhs << "; rank = " << mpigetrank() <<  std::endl;
+cout.flush();
     // Set local operators as dummy if load-balancing isn't perfect
     if ( ilhs < lhsOps.size() )
       skip = lhsOps.set_local_ops( ilhs );
@@ -173,6 +187,8 @@ void Npdm_driver::npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm
       do_npdm_inner_loop( npdm_expectations, *lhs_mpi_ops, rhsOps, dotOps ); 
 
     // Synchronize all MPI ranks here
+cout << "at mpi barrier! rank = " << mpigetrank() <<  std::endl;
+cout.flush();
     std::cout.flush();
     world.barrier();
   }

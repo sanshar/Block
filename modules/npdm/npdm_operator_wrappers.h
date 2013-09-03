@@ -64,14 +64,20 @@ class NpdmSpinOps_base {
     {
       boost::mpi::communicator world;
       int k = tag_lo;
+cout << "opReps_.size() = " << opReps_.size() << "; rank = " << mpigetrank() << endl;
+std::cout.flush();
       for ( int i = 0; i < opReps_.size(); ++i) {
-        world.send(rank, k++, *(opReps_.at(i)) );
+cout << "sending op to rank = " << rank << "; tag = " << k << std::endl;
+std::cout.flush();
+        world.send(rank, k, *(opReps_.at(i)) ); k++;
       }
-      world.send(rank, k++, mults_);
-      world.send(rank, k++, build_pattern_);
-      world.send(rank, k++, transpose_);
-      world.send(rank, k++, factor_);
-      world.send(rank, k++, indices_);
+cout << "done sending op to rank = " << rank << "; tag = " << k << std::endl;
+std::cout.flush();
+      world.send(rank, k, mults_); k++;
+      world.send(rank, k, build_pattern_); k++;
+      world.send(rank, k, transpose_); k++;
+      world.send(rank, k, factor_); k++;
+      world.send(rank, k, indices_); k++;
       assert( k < tag_hi );
     }
       
@@ -80,16 +86,22 @@ class NpdmSpinOps_base {
       boost::mpi::communicator world;
       assert( opReps_.size() == 0 );
       int k = tag_lo;
+cout << "opReps_.size() = " << opReps_.size() << "; size = " << size << "; rank = " << mpigetrank() << endl;
+std::cout.flush();
       for ( int i = 0; i < size; ++i) {
+cout << "recving op from rank = " << rank << "; tag = " << k << std::endl;
+std::cout.flush();
         boost::shared_ptr<SparseMatrix> op (new Cre);
-        world.recv(rank, k++, *op );
+        world.recv(rank, k, *op ); k++;
         opReps_.push_back(op);
       }
-      world.recv(rank, k++, mults_);
-      world.recv(rank, k++, build_pattern_);
-      world.recv(rank, k++, transpose_);
-      world.recv(rank, k++, factor_);
-      world.recv(rank, k++, indices_);
+cout << "done recving op from rank = " << rank << "; tag = " << k << std::endl;
+std::cout.flush();
+      world.recv(rank, k, mults_); k++;
+      world.recv(rank, k, build_pattern_); k++;
+      world.recv(rank, k, transpose_); k++;
+      world.recv(rank, k, factor_); k++;
+      world.recv(rank, k, indices_); k++;
       assert( k < tag_hi );
     }
 
