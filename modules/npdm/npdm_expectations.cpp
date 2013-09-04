@@ -40,10 +40,9 @@ std::string Npdm_expectations::get_op_string( NpdmSpinOps_base & lhsOps, NpdmSpi
   indices.insert( indices.end(), lhsOps.indices_.begin(), lhsOps.indices_.end() );
   indices.insert( indices.end(), dotOps.indices_.begin(), dotOps.indices_.end() );
   indices.insert( indices.end(), rhsOps.indices_.begin(), rhsOps.indices_.end() );
-//FIXME tests
   assert( (indices.size() == 4) || (indices.size() == 6) || (indices.size() == 8) );
-  cout << "dot indices = "; for (auto it = dotOps.indices_.begin(); it != dotOps.indices_.end(); ++it) { cout << *it << " "; } cout << std::endl;
-  cout << "spatial indices = "; for (auto it = indices.begin(); it != indices.end(); ++it) { cout << *it << " "; } cout << std::endl;
+//  cout << "dot indices = "; for (auto it = dotOps.indices_.begin(); it != dotOps.indices_.end(); ++it) { cout << *it << " "; } cout << std::endl;
+//  cout << "spatial indices = "; for (auto it = indices.begin(); it != indices.end(); ++it) { cout << *it << " "; } cout << std::endl;
 
   // Set up how tensor operator is constructed from (compound) block operators
   std::string build_pattern = "(";
