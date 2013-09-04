@@ -9,6 +9,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef NPDM_OP_WRAPPERS_H
 #define NPDM_OP_WRAPPERS_H
 
+#include <boost/mpi.hpp>
 #include "operatorfunctions.h"
 #include "npdm_patterns.h"
 //FIXME serialize bullshit
@@ -60,49 +61,41 @@ class NpdmSpinOps_base {
 
 //FIXME put in implementation file
 //FIXME  Do like this since serialization of whole object broken!!
-    void send_mpi_obj( int rank, unsigned int tag_lo, unsigned int tag_hi )
+    std::vector< boost::mpi::request > isend_mpi_obj( int rank, unsigned int tag_lo, unsigned int tag_hi )
     {
       boost::mpi::communicator world;
+      std::vector< boost::mpi::request > reqs;
       int k = tag_lo;
-cout << "opReps_.size() = " << opReps_.size() << "; rank = " << mpigetrank() << endl;
-std::cout.flush();
       for ( int i = 0; i < opReps_.size(); ++i) {
-cout << "sending op to rank = " << rank << "; tag = " << k << std::endl;
-std::cout.flush();
-        world.send(rank, k, *(opReps_.at(i)) ); k++;
+        reqs.push_back( world.isend(rank, k++, *(opReps_.at(i))) );
       }
-cout << "done sending op to rank = " << rank << "; tag = " << k << std::endl;
-std::cout.flush();
-      world.send(rank, k, mults_); k++;
-      world.send(rank, k, build_pattern_); k++;
-      world.send(rank, k, transpose_); k++;
-      world.send(rank, k, factor_); k++;
-      world.send(rank, k, indices_); k++;
+      reqs.push_back( world.isend(rank, k++, mults_) );
+      reqs.push_back( world.isend(rank, k++, build_pattern_) );
+      reqs.push_back( world.isend(rank, k++, transpose_) );
+      reqs.push_back( world.isend(rank, k++, factor_) );
+      reqs.push_back( world.isend(rank, k++, indices_) );
       assert( k < tag_hi );
+      return reqs;
     }
       
-    void recv_mpi_obj( int rank, unsigned int tag_lo, unsigned int tag_hi, int size )
+    std::vector< boost::mpi::request > irecv_mpi_obj( int rank, unsigned int tag_lo, unsigned int tag_hi, int size )
     {
       boost::mpi::communicator world;
+      std::vector< boost::mpi::request > reqs;
       assert( opReps_.size() == 0 );
       int k = tag_lo;
-cout << "opReps_.size() = " << opReps_.size() << "; size = " << size << "; rank = " << mpigetrank() << endl;
-std::cout.flush();
       for ( int i = 0; i < size; ++i) {
-cout << "recving op from rank = " << rank << "; tag = " << k << std::endl;
-std::cout.flush();
         boost::shared_ptr<SparseMatrix> op (new Cre);
-        world.recv(rank, k, *op ); k++;
+        reqs.push_back( world.irecv(rank, k++, *op ) );
         opReps_.push_back(op);
       }
-cout << "done recving op from rank = " << rank << "; tag = " << k << std::endl;
-std::cout.flush();
-      world.recv(rank, k, mults_); k++;
-      world.recv(rank, k, build_pattern_); k++;
-      world.recv(rank, k, transpose_); k++;
-      world.recv(rank, k, factor_); k++;
-      world.recv(rank, k, indices_); k++;
+      reqs.push_back( world.irecv(rank, k++, mults_) );
+      reqs.push_back( world.irecv(rank, k++, build_pattern_) );
+      reqs.push_back( world.irecv(rank, k++, transpose_) );
+      reqs.push_back( world.irecv(rank, k++, factor_) );
+      reqs.push_back( world.irecv(rank, k++, indices_) );
       assert( k < tag_hi );
+      return reqs;
     }
 
 //  private:
