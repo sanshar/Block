@@ -53,62 +53,61 @@ unsigned int get_mpi_tag( int rank0, int rank1, int lda )
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-std::vector<NpdmSpinOps_base> Npdm_driver::get_all_mpi_ops( const bool local_skip, NpdmSpinOps& local_ops, std::vector< boost::mpi::request >& reqs )
-{
-  boost::mpi::communicator world;
-  std::vector< NpdmSpinOps_base > all_ops;
-  reqs.clear();
-
-  // First element is local set of spin operators
-  NpdmSpinOps_base local_base(local_ops);
-  if ( ! local_skip ) all_ops.push_back( local_base );
-
-  // Serial calculation
-  if (world.size() == 1) return all_ops;
-
-  // Communicate array sizes etc
-  std::vector< int > nonlocal_size( world.size() );
-  std::vector< int > nonlocal_skip( world.size() );
-  int local_skip_i = local_skip; // apparently boost::mpi::all_gather fails with bools...??
-  boost::mpi::all_gather(world, local_skip_i, nonlocal_skip);
-  int local_size = local_base.opReps_.size();
-  boost::mpi::all_gather(world, local_size, nonlocal_size);
-
-  // Communicate operator reps
-  std::vector< NpdmSpinOps_base > nonlocal_base( world.size() );
-  for (int rank = 0; rank < world.size(); ++rank) {
-    if ( rank != mpigetrank() ) {
-
-      // Get unique tag for send-recv pair (asymmetric)
-      unsigned int send_tag = get_mpi_tag(mpigetrank(), rank, world.size()); assert( send_tag%100 == 0 );
-      unsigned int recv_tag = get_mpi_tag(rank, mpigetrank(), world.size()); assert( send_tag%100 == 0 );
-
-      if ( ! local_skip ) {
-        std::vector< boost::mpi::request > new_reqs = local_base.isend_mpi_obj(rank, send_tag+2, send_tag+50);
-        reqs.insert( reqs.end(), new_reqs.begin(), new_reqs.end() );
-      }
-      if ( ! nonlocal_skip.at(rank) ) {
-        std::vector< boost::mpi::request > new_reqs = nonlocal_base.at(rank).irecv_mpi_obj(rank, recv_tag+2, recv_tag+50, nonlocal_size.at(rank));
-//        new_reqs = nonlocal_base.at(rank).irecv_mpi_obj(rank, recv_tag+2, recv_tag+50, nonlocal_size.at(rank));
-        reqs.insert( reqs.end(), new_reqs.begin(), new_reqs.end() );
-      }
-
-    }
-  }
-
-//FIXME can we let local lhs op loop over RHS while waiting for all non-local to be communicated?
-boost::mpi::wait_all( reqs.begin(), reqs.end() );
- 
-  // Store non-local data
-  for (int rank = 0; rank < world.size(); ++rank) {
-    if ( rank != mpigetrank() ) {
-      if ( ! nonlocal_skip.at(rank) ) all_ops.push_back( nonlocal_base.at(rank) );
-    }
-  }
-
-  return all_ops;
-}
+//
+//std::vector<NpdmSpinOps_base> Npdm_driver::get_all_mpi_ops( const bool local_skip, NpdmSpinOps& local_ops, std::vector< boost::mpi::request >& reqs )
+//{
+//  boost::mpi::communicator world;
+//  std::vector< NpdmSpinOps_base > all_ops;
+//  reqs.clear();
+//
+//  // First element is local set of spin operators
+//  NpdmSpinOps_base local_base(local_ops);
+//  if ( ! local_skip ) all_ops.push_back( local_base );
+//
+//  // Serial calculation
+//  if (world.size() == 1) return all_ops;
+//
+//  // Communicate array sizes etc
+//  std::vector< int > nonlocal_size( world.size() );
+//  std::vector< int > nonlocal_skip( world.size() );
+//  int local_skip_i = local_skip; // apparently boost::mpi::all_gather fails with bools...??
+//  boost::mpi::all_gather(world, local_skip_i, nonlocal_skip);
+//  int local_size = local_base.opReps_.size();
+//  boost::mpi::all_gather(world, local_size, nonlocal_size);
+//
+//  // Communicate operator reps
+//  std::vector< NpdmSpinOps_base > nonlocal_base( world.size() );
+//  for (int rank = 0; rank < world.size(); ++rank) {
+//    if ( rank != mpigetrank() ) {
+//
+//      // Get unique tag for send-recv pair (asymmetric)
+//      unsigned int send_tag = get_mpi_tag(mpigetrank(), rank, world.size()); assert( send_tag%100 == 0 );
+//      unsigned int recv_tag = get_mpi_tag(rank, mpigetrank(), world.size()); assert( send_tag%100 == 0 );
+//
+//      if ( ! local_skip ) {
+//        std::vector< boost::mpi::request > new_reqs = local_base.isend_mpi_obj(rank, send_tag+2, send_tag+50);
+//        reqs.insert( reqs.end(), new_reqs.begin(), new_reqs.end() );
+//      }
+//      if ( ! nonlocal_skip.at(rank) ) {
+//        std::vector< boost::mpi::request > new_reqs = nonlocal_base.at(rank).irecv_mpi_obj(rank, recv_tag+2, recv_tag+50, nonlocal_size.at(rank));
+//        reqs.insert( reqs.end(), new_reqs.begin(), new_reqs.end() );
+//      }
+//
+//    }
+//  }
+//
+////FIXME can we let local lhs op loop over RHS while waiting for all non-local to be communicated?
+//boost::mpi::wait_all( reqs.begin(), reqs.end() );
+// 
+//  // Store non-local data
+//  for (int rank = 0; rank < world.size(); ++rank) {
+//    if ( rank != mpigetrank() ) {
+//      if ( ! nonlocal_skip.at(rank) ) all_ops.push_back( nonlocal_base.at(rank) );
+//    }
+//  }
+//
+//  return all_ops;
+//}
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -159,9 +158,6 @@ void Npdm_driver::npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm
 //cout << "dotOps.size() = " << dotOps.size() << "; rank = " << mpigetrank() <<  std::endl;
 //cout << "rhsOps.size() = " << rhsOps.size() << "; rank = " << mpigetrank() <<  std::endl;
 
-  // MPI threads must be synchronised here so they all work on same operator pattern simultaneously
-  std::cout.flush();
-  world.barrier();
   int lhs_maxsize = get_mpi_max_lhs_size( lhsOps.size() );
 
   // Only one spatial combination on the dot block (including NULL)
@@ -177,17 +173,55 @@ void Npdm_driver::npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm
     else
       skip = true;
 
-    // Collect LHS ops across all MPI ranks
-    std::vector< boost::mpi::request > reqs;
-    std::vector< NpdmSpinOps_base > all_lhsOps = get_all_mpi_ops( skip, lhsOps, reqs ); 
+    if (world.size() == 1) {
+      // Serial calculation
+      if ( !skip ) do_npdm_inner_loop( npdm_expectations, lhsOps, rhsOps, dotOps ); 
+    }
+    else {
+      // Parallelize by broadcasting LHS ops
+      NpdmSpinOps_base local_base(lhsOps);
+      std::vector< boost::mpi::request > reqs;
+      std::vector< NpdmSpinOps_base > nonlocal_base( world.size() );
 
-    // Contract all LHS ops with local RHS ops
-    for ( auto lhs_mpi_ops = all_lhsOps.begin(); lhs_mpi_ops != all_lhsOps.end(); ++lhs_mpi_ops ) 
-      do_npdm_inner_loop( npdm_expectations, *lhs_mpi_ops, rhsOps, dotOps ); 
+      // Communicate array sizes etc
+      std::vector< int > nonlocal_size( world.size() );
+      std::vector< int > nonlocal_skip( world.size() );
+      int local_skip = skip; // apparently boost::mpi::all_gather fails with bools...??
+      boost::mpi::all_gather(world, local_skip, nonlocal_skip);
+      int local_size = local_base.opReps_.size();
+      boost::mpi::all_gather(world, local_size, nonlocal_size);
+    
+      // Communicate operator reps
+      for (int rank = 0; rank < world.size(); ++rank) {
+        if ( rank != mpigetrank() ) {
+          // Get unique tag for send-recv pair (asymmetric)
+          unsigned int send_tag = get_mpi_tag(mpigetrank(), rank, world.size()); assert( send_tag%100 == 0 );
+          unsigned int recv_tag = get_mpi_tag(rank, mpigetrank(), world.size()); assert( send_tag%100 == 0 );
+          if ( ! local_skip ) {
+            std::vector< boost::mpi::request > new_reqs = local_base.isend_mpi_obj(rank, send_tag+2, send_tag+50);
+            reqs.insert( reqs.end(), new_reqs.begin(), new_reqs.end() );
+          }
+          if ( ! nonlocal_skip.at(rank) ) {
+            std::vector< boost::mpi::request > new_reqs = nonlocal_base.at(rank).irecv_mpi_obj(rank, recv_tag+2, recv_tag+50, nonlocal_size.at(rank));
+            reqs.insert( reqs.end(), new_reqs.begin(), new_reqs.end() );
+          }
+        }
+      }
+      
+      // Do loop over RHS with local LHS operator while waiting for all non-local to be communicated (FIXME can extend this idea?)
+      if ( !local_skip ) do_npdm_inner_loop( npdm_expectations, local_base, rhsOps, dotOps ); 
+      // Contract all nonlocal LHS ops with local RHS ops; must wait for communication to be finished
+      boost::mpi::wait_all( reqs.begin(), reqs.end() );
+      for (int rank = 0; rank < world.size(); ++rank) {
+        if ( rank != mpigetrank() ) {
+          if ( !nonlocal_skip.at(rank) ) do_npdm_inner_loop( npdm_expectations, nonlocal_base.at(rank), rhsOps, dotOps ); 
+        }
+      }
 
-    // Synchronize all MPI ranks here
-    std::cout.flush();
-    world.barrier();
+      // Synchronize all MPI ranks here
+      std::cout.flush();
+      world.barrier();
+    }
   }
 
   // Close file if needed (put in wrapper destructor??)
@@ -248,6 +282,10 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
 //if ( lhs_cd_type.size() == 2  &&
 //     dot_cd_type.size() == 2  &&
 //     rhs_cd_type.size() == 2 )
+
+    // MPI threads must be synchronised here so they all work on same operator pattern simultaneously
+    std::cout.flush();
+    world.barrier();
     // Compute all irreducible PDM elements generated by this block operator pattern at this sweep position
     npdm_loop_over_block_operators( npdm_expectations, *lhsOps, *rhsOps, *dotOps );
   }
