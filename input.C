@@ -1225,8 +1225,9 @@ void SpinAdapted::Input::performSanityTest()
        if (firstSched==0){
           if (m_startM == m_maxM){
              //cout << sweepCount << " " << m_startM << " " << defTol[i] << " " << defNoise[i] << endl;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(5E-5);  m_sweep_noise_schedule.push_back(5E-6);
+             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(1E-5);  m_sweep_noise_schedule.push_back(1E-4);
              sweepCount += 8;
+             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(5E-6);  m_sweep_noise_schedule.push_back(5E-5);
              break;
           }
 
@@ -1242,7 +1243,7 @@ void SpinAdapted::Input::performSanityTest()
              m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(defTol[i-1]);  m_sweep_noise_schedule.push_back(defNoise[i-1]);
              sweepCount += defIter[i-1];
 
-             cout << sweepCount << " " << defM[i] << " " << defTol[i] << " " << defNoise[i] << endl;
+             //cout << sweepCount << " " << defM[i] << " " << defTol[i] << " " << defNoise[i] << endl;
              m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(defTol[i]);  m_sweep_noise_schedule.push_back(defNoise[i]);
              sweepCount += defIter[i];
           }
