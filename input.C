@@ -289,6 +289,28 @@ SpinAdapted::Input::Input(const string& config_name)
 	  abort();
 	}
 	
+   if (m_fiedler == true){
+      char fiedlerFile[5000];
+      std::ofstream fiedlerFILE;
+      sprintf(fiedlerFile, "%s%s", save_prefix().c_str(), "/fiedler_reorder.dat");
+      boost::filesystem::path p(fiedlerFile);
+      if (boost::filesystem::exists(p)) {
+         m_reorder = true;
+         m_fiedler = false;
+         m_reorderfile = fiedlerFile;
+#ifndef MOLPRO
+           pout << "----------------"<<endl;
+           pout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
+           pout << "Using the reorder file " << fiedlerFile << endl;
+           pout << "----------------"<<endl;
+#else
+           xout << "----------------"<<endl;
+           xout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
+           xout << "Using the reorder file " << fiedlerFile << endl;
+           xout << "----------------"<<endl;
+#endif
+      }
+   }
 	msg.resize(0);
 	ReadMeaningfulLine(input, msg, msgsize);
 	vector<string> schd_tok;
@@ -716,8 +738,24 @@ SpinAdapted::Input::Input(const string& config_name)
 
      //Fiedler
   if (m_fiedler) {
-     if (mpigetrank() == 0) 
-     m_fiedlerorder=get_fiedler(orbitalfile, orbitalFile);
+     if (mpigetrank() == 0){
+        m_fiedlerorder=get_fiedler(orbitalfile, orbitalFile);
+        std::ofstream fiedlerFILE;
+        char fiedlerFile[5000];
+        sprintf(fiedlerFile, "%s%s", save_prefix().c_str(), "/fiedler_reorder.dat");
+        boost::filesystem::path p(fiedlerFile);
+        fiedlerFILE.open(fiedlerFile);
+
+        int n = m_fiedlerorder.size() - 1;
+        for(int i = 0; i < n; ++i) {
+         fiedlerFILE << m_fiedlerorder[i]+1 << ",";
+        }
+        fiedlerFILE << m_fiedlerorder[n]+1 << endl;
+        fiedlerFILE.close();
+     }
+#ifndef SERIAL
+  mpi::broadcast(world,m_fiedlerorder,0);
+#endif
   }
 
   if (m_gaopt) {
