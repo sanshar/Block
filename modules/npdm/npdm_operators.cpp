@@ -1630,11 +1630,14 @@ double SpinAdapted::CreCreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, con
 
 boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreCre::getworkingrepresentation(const SpinBlock* block)
 {
+//pout << "CreCreCre::getworkingrepresentation\n";
   assert(this->get_initialised());
   if (this->get_built()) {
+//pout << "get CCC from memory\n";
     return boost::shared_ptr<CreCreCre>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
   }
   else {
+//pout << "build CCC\n";
     boost::shared_ptr<SparseMatrix> rep(new CreCreCre);
     *rep = *this;
     rep->build(*block);

@@ -549,12 +549,12 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCre::getworkingrepr
   assert(this->get_initialised());
   if (this->get_built())
     {
-//pout << "get directly\n";
+//pout << "get CC from memory\n";
       return boost::shared_ptr<CreCre>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
     }
   else
     {
-//pout << "build first\n";
+//pout << "build CC\n";
       boost::shared_ptr<SparseMatrix> rep(new CreCre);
       *rep = *this;
       rep->build(*block);

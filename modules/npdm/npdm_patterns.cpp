@@ -95,11 +95,11 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
   else assert(false);
 
   // Print out
-  pout << "=================================================================\n";
-  pout << "Possible block partitions:\n";
-  for ( auto it = lhs_dot_rhs_types_.begin(); it != lhs_dot_rhs_types_.end(); ++it ) {
-    pout << std::get<0>(*it) << "," << std::get<1>(*it) << "," << std::get<2>(*it) << std::endl;
-  }
+  //pout << "=================================================================\n";
+  //pout << "Possible block partitions:\n";
+  //for ( auto it = lhs_dot_rhs_types_.begin(); it != lhs_dot_rhs_types_.end(); ++it ) {
+  //  pout << std::get<0>(*it) << "," << std::get<1>(*it) << "," << std::get<2>(*it) << std::endl;
+  //}
   if ( sweep_pos == 0 )
     pout << "Added extra partitions for initial sweep position\n";
   else if ( sweep_pos == end_pos )
@@ -152,11 +152,11 @@ void Npdm_patterns::build_cre_des_types()
   add_operator( pdm_order_-1, pdm_order_, cd_type );
 
   // Print out
-  pout << "=================================================================\n";
-  pout << "Creation/destruction patterns:\n";
-  for (auto iter = cre_des_types_.begin(); iter != cre_des_types_.end(); iter++) {
-    print_cd_string(*iter); pout << std::endl;
-  }
+  //pout << "=================================================================\n";
+  //pout << "Creation/destruction patterns:\n";
+  //for (auto iter = cre_des_types_.begin(); iter != cre_des_types_.end(); iter++) {
+  //  print_cd_string(*iter); pout << std::endl;
+  //}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -250,15 +250,15 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
 {
 
   ldr_cd_types_.clear();
-  pout << "=================================================================\n";
-  pout << "Spin-1/2 fermionic operator patterns for DMRG blocks:\n";
+  //pout << "=================================================================\n";
+  //pout << "Spin-1/2 fermionic operator patterns for DMRG blocks:\n";
 
   // Loop over LHS, Dot, RHS patterns
   for (auto ldr_iter = lhs_dot_rhs_types_.begin(); ldr_iter != lhs_dot_rhs_types_.end(); ldr_iter++) {
     int ilhs = std::get<0>(*ldr_iter);
     int idot = std::get<1>(*ldr_iter);
     int irhs = std::get<2>(*ldr_iter);
-    pout << ilhs << "," << idot << "," << irhs << "\n";
+    //pout << ilhs << "," << idot << "," << irhs << "\n";
 
     // Loop over creation-destruction patterns
     for (auto cd_iter = cre_des_types_.begin(); cd_iter != cre_des_types_.end(); cd_iter++) {
@@ -283,9 +283,9 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
 
       // Only allow if it's a valid full pattern
       if ( not is_valid_ldr_type( cd_pattern ) ) continue;
-      print_cd_string( lhs_cd );
-      print_cd_string( dot_cd );
-      print_cd_string( rhs_cd ); pout << "\n";
+      //print_cd_string( lhs_cd );
+      //print_cd_string( dot_cd );
+      //print_cd_string( rhs_cd ); pout << "\n";
 
       ldr_cd_types_.insert( cd_pattern );
       if ( lhs_cd.size() != 0 ) lhs_cd_types_.insert( lhs_cd );

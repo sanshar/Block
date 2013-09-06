@@ -66,6 +66,9 @@ boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::ve
 
 void Npdm_driver::save_full_array(int i, int j) 
 {
+//FIXME
+boost::mpi::communicator world;
+world.barrier();
   Timer timer;
   // Combine NPDM elements from all mpi ranks and dump to file
   accumulate_npdm();
@@ -73,7 +76,7 @@ void Npdm_driver::save_full_array(int i, int j)
 //FIXME  save_npdm_binary(i, j);
 //FIXME  save_npdm_text(i, j);
 //FIXME  save_spatial_npdm_binary(i, j);
-
+world.barrier();
   pout << "NPDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 }
 
@@ -81,6 +84,7 @@ void Npdm_driver::save_full_array(int i, int j)
 
 void Npdm_driver::save_sparse_array(int i, int j) 
 {
+//FIXME
 boost::mpi::communicator world;
 world.barrier();
   Timer timer;
@@ -161,6 +165,67 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // Originally wrote this routine for LHS and RHS operators, but also works interchanging "lhs" and "rhs" everywhere when called in reverse
 
+void Npdm_driver::do_parallel_lhs_loop( const char inner, Npdm::Npdm_expectations & npdm_expectations,
+                                        NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps, bool skip )
+{
+  boost::mpi::communicator world;
+
+  // Parallelize by broadcasting LHS ops
+  NpdmSpinOps_base local_base(lhsOps);
+  std::vector< boost::mpi::request > reqs;
+  std::vector< NpdmSpinOps_base > nonlocal_base( world.size() );
+
+  Timer timer;
+  // Communicate array sizes etc (note blocking until comm is complete)
+  std::vector< int > nonlocal_size( world.size() );
+  std::vector< int > nonlocal_skip( world.size() );
+  int local_skip = skip; // apparently boost::mpi::all_gather fails with bools...??
+  boost::mpi::all_gather(world, local_skip, nonlocal_skip);
+  int local_size = local_base.opReps_.size();
+  boost::mpi::all_gather(world, local_size, nonlocal_size);
+  DEBUG_COMM_TIME[mpigetrank()] += timer.elapsedwalltime();
+
+  // Communicate operator reps
+  for (int rank = 0; rank < world.size(); ++rank) {
+    if ( rank != mpigetrank() ) {
+      // Get unique tag for send-recv pair (asymmetric)
+      unsigned int send_tag = get_mpi_tag(mpigetrank(), rank, world.size()); assert( send_tag%100 == 0 );
+      unsigned int recv_tag = get_mpi_tag(rank, mpigetrank(), world.size()); assert( send_tag%100 == 0 );
+      if ( ! local_skip ) {
+        std::vector< boost::mpi::request > new_reqs = local_base.isend_mpi_obj(rank, send_tag+2, send_tag+50);
+        reqs.insert( reqs.end(), new_reqs.begin(), new_reqs.end() );
+      }
+      if ( ! nonlocal_skip.at(rank) ) {
+        std::vector< boost::mpi::request > new_reqs = nonlocal_base.at(rank).irecv_mpi_obj(rank, recv_tag+2, recv_tag+50, nonlocal_size.at(rank));
+        reqs.insert( reqs.end(), new_reqs.begin(), new_reqs.end() );
+      }
+    }
+  }
+  
+  // Do loop over RHS with local LHS operator while waiting for all non-local to be communicated (FIXME can we extend this idea?)
+  if ( ! local_skip ) do_inner_loop( inner, npdm_expectations, local_base, rhsOps, dotOps ); 
+
+  // Contract all nonlocal LHS ops with local RHS ops; must wait for communication to be finished first
+  Timer timer2;
+  boost::mpi::wait_all( reqs.begin(), reqs.end() );
+  DEBUG_COMM_TIME[mpigetrank()] += timer2.elapsedwalltime();
+  for (int rank = 0; rank < world.size(); ++rank) {
+    if ( rank != mpigetrank() ) {
+      if ( ! nonlocal_skip.at(rank) ) do_inner_loop( inner, npdm_expectations, nonlocal_base.at(rank), rhsOps, dotOps ); 
+    }
+  }
+
+  // Synchronize all MPI ranks here
+  Timer timer3;
+  std::cout.flush();
+  world.barrier();
+  DEBUG_COMM_TIME[mpigetrank()] += timer3.elapsedwalltime();
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// Originally wrote this routine for LHS and RHS operators, but also works interchanging "lhs" and "rhs" everywhere when called in reverse
+
 void Npdm_driver::loop_over_block_operators( const char inner, Npdm::Npdm_expectations & npdm_expectations,
                                              NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps, bool lhsdot ) 
 {
@@ -180,63 +245,15 @@ void Npdm_driver::loop_over_block_operators( const char inner, Npdm::Npdm_expect
                     lhsdot );
 
     if ( serial ) {
-      if ( !skip ) do_inner_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps ); 
+      if ( !skip ) do_inner_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps );
     }
     else {
       // Parallelize by broadcasting LHS ops
-      NpdmSpinOps_base local_base(lhsOps);
-      std::vector< boost::mpi::request > reqs;
-      std::vector< NpdmSpinOps_base > nonlocal_base( world.size() );
-
-      Timer timer;
-      // Communicate array sizes etc (note blocking until comm is complete)
-      std::vector< int > nonlocal_size( world.size() );
-      std::vector< int > nonlocal_skip( world.size() );
-      int local_skip = skip; // apparently boost::mpi::all_gather fails with bools...??
-      boost::mpi::all_gather(world, local_skip, nonlocal_skip);
-      int local_size = local_base.opReps_.size();
-      boost::mpi::all_gather(world, local_size, nonlocal_size);
-      DEBUG_COMM_TIME[mpigetrank()] += timer.elapsedwalltime();
-    
-      // Communicate operator reps
-      for (int rank = 0; rank < world.size(); ++rank) {
-        if ( rank != mpigetrank() ) {
-          // Get unique tag for send-recv pair (asymmetric)
-          unsigned int send_tag = get_mpi_tag(mpigetrank(), rank, world.size()); assert( send_tag%100 == 0 );
-          unsigned int recv_tag = get_mpi_tag(rank, mpigetrank(), world.size()); assert( send_tag%100 == 0 );
-          if ( ! local_skip ) {
-            std::vector< boost::mpi::request > new_reqs = local_base.isend_mpi_obj(rank, send_tag+2, send_tag+50);
-            reqs.insert( reqs.end(), new_reqs.begin(), new_reqs.end() );
-          }
-          if ( ! nonlocal_skip.at(rank) ) {
-            std::vector< boost::mpi::request > new_reqs = nonlocal_base.at(rank).irecv_mpi_obj(rank, recv_tag+2, recv_tag+50, nonlocal_size.at(rank));
-            reqs.insert( reqs.end(), new_reqs.begin(), new_reqs.end() );
-          }
-        }
-      }
-      
-      // Do loop over RHS with local LHS operator while waiting for all non-local to be communicated (FIXME can we extend this idea?)
-      if ( ! local_skip ) do_inner_loop( inner, npdm_expectations, local_base, rhsOps, dotOps ); 
-
-      // Contract all nonlocal LHS ops with local RHS ops; must wait for communication to be finished first
-      Timer timer2;
-      boost::mpi::wait_all( reqs.begin(), reqs.end() );
-      DEBUG_COMM_TIME[mpigetrank()] += timer2.elapsedwalltime();
-      for (int rank = 0; rank < world.size(); ++rank) {
-        if ( rank != mpigetrank() ) {
-          if ( ! nonlocal_skip.at(rank) ) do_inner_loop( inner, npdm_expectations, nonlocal_base.at(rank), rhsOps, dotOps ); 
-        }
-      }
-
-      // Synchronize all MPI ranks here
-      Timer timer3;
-      std::cout.flush();
-      world.barrier();
-      DEBUG_COMM_TIME[mpigetrank()] += timer3.elapsedwalltime();
+      do_parallel_lhs_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps, skip );
     }
   }
 
-  // Close file if needed (put in wrapper destructor??)
+  //FIXME Close file if needed (put in wrapper destructor??)
   if ( lhsOps.ifs_.is_open() ) lhsOps.ifs_.close();
 
 }
@@ -275,7 +292,7 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
     DEBUG_COMM_TIME[mpigetrank()] += timer3.elapsedwalltime();
 
     //pout << "-------------------------------------------------------------------------------------------\n";
-    //pout << "Doing pattern:  ";
+    pout << "Doing pattern:  ";
     npdm_patterns.print_cd_string( pattern->at('l') );
     npdm_patterns.print_cd_string( pattern->at('d') );
     npdm_patterns.print_cd_string( pattern->at('r') );
@@ -305,20 +322,21 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
     }
   }
   if (world.rank() == 0) {
-    double sum;
-    reduce(world, DEBUG_COMM_TIME[mpigetrank()], sum, std::plus<double>(), 0);
-    pout << "NPDM mpi communications time " << sum << endl;
-  } else {
-    reduce(world, DEBUG_COMM_TIME[mpigetrank()], std::plus<double>(), 0);
-  }
-  if (world.rank() == 0) {
     int sum;
     reduce(world, DEBUG_CALL_GET_EXPECT[mpigetrank()], sum, std::plus<int>(), 0);
     pout << "NPDM calls to expectation engine " << sum << endl;
   } else {
     reduce(world, DEBUG_CALL_GET_EXPECT[mpigetrank()], std::plus<int>(), 0);
   }
+  if (world.rank() == 0) {
+    double sum;
+    reduce(world, DEBUG_COMM_TIME[mpigetrank()], sum, std::plus<double>(), 0);
+    pout << "NPDM mpi communications time " << sum << endl;
+  } else {
+    reduce(world, DEBUG_COMM_TIME[mpigetrank()], std::plus<double>(), 0);
+  }
   pout << "NPDM compute elements time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+  pout << "===========================================================================================\n";
   
 }
 

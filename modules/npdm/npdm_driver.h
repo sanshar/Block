@@ -47,6 +47,9 @@ class Npdm_driver {
     void do_inner_loop( const char inner, Npdm::Npdm_expectations & npdm_expectations, 
                         NpdmSpinOps_base & outerOps, NpdmSpinOps & innerOps, NpdmSpinOps & dotOps );
 
+    void do_parallel_lhs_loop( const char inner, Npdm::Npdm_expectations & npdm_expectations,
+                                        NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps, bool skip );
+
     void loop_over_block_operators( const char inner, Npdm::Npdm_expectations & npdm_expectations, 
                                     NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps, bool lhsdot );
 
