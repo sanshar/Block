@@ -541,12 +541,7 @@ Npdm_op_wrapper_CCC::Npdm_op_wrapper_CCC( SpinBlock * spinBlock )
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
   // For disk-based storage
-//FIXME  // Put ifs_.close in destructor???
-//FIXME TEST IF FILE IS ALREADY BEING READ???
-  if ( ! dmrginp.do_npdm_in_core() ) {
-    std::string ifile = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
-    ifs_.open(ifile.c_str(), ios::binary);
-  }
+  ifile_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -562,6 +557,7 @@ bool Npdm_op_wrapper_CCC::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
   else {
+    assert( check_file_open( idx ) );
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -573,6 +569,7 @@ bool Npdm_op_wrapper_CCC::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
+    assert( check_file_close( idx ) );
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -614,10 +611,7 @@ Npdm_op_wrapper_CCD::Npdm_op_wrapper_CCD( SpinBlock * spinBlock )
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
   // For disk-based storage
-  if ( ! dmrginp.do_npdm_in_core() ) {
-    std::string ifile = spinBlock_->get_op_array(CRE_CRE_DES).get_filename();
-    ifs_.open(ifile.c_str(), ios::binary);
-  }
+  ifile_ = spinBlock_->get_op_array(CRE_CRE_DES).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -633,6 +627,7 @@ bool Npdm_op_wrapper_CCD::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
   else {
+    assert( check_file_open( idx ) );
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -644,6 +639,7 @@ bool Npdm_op_wrapper_CCD::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
+    assert( check_file_close( idx ) );
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -680,10 +676,7 @@ Npdm_op_wrapper_CDD::Npdm_op_wrapper_CDD( SpinBlock * spinBlock )
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
   // For disk-based storage
-  if ( ! dmrginp.do_npdm_in_core() ) {
-    std::string ifile = spinBlock_->get_op_array(CRE_DES_DES).get_filename();
-    ifs_.open(ifile.c_str(), ios::binary);
-  }
+  ifile_ = spinBlock_->get_op_array(CRE_DES_DES).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -699,6 +692,7 @@ bool Npdm_op_wrapper_CDD::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(CRE_DES_DES).get_local_element(idx);
   else {
+    assert( check_file_open( idx ) );
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(CRE_DES_DES).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -710,6 +704,7 @@ bool Npdm_op_wrapper_CDD::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
+    assert( check_file_close( idx ) );
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -755,10 +750,7 @@ Npdm_op_wrapper_CDC::Npdm_op_wrapper_CDC( SpinBlock * spinBlock )
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
   // For disk-based storage
-  if ( ! dmrginp.do_npdm_in_core() ) {
-    std::string ifile = spinBlock_->get_op_array(CRE_DES_CRE).get_filename();
-    ifs_.open(ifile.c_str(), ios::binary);
-  }
+  ifile_ = spinBlock_->get_op_array(CRE_DES_CRE).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -774,6 +766,7 @@ bool Npdm_op_wrapper_CDC::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(CRE_DES_CRE).get_local_element(idx);
   else {
+    assert( check_file_open( idx ) );
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(CRE_DES_CRE).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -785,6 +778,7 @@ bool Npdm_op_wrapper_CDC::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
+    assert( check_file_close( idx ) );
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -818,10 +812,7 @@ Npdm_op_wrapper_DCD::Npdm_op_wrapper_DCD( SpinBlock * spinBlock )
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
   // For disk-based storage
-  if ( ! dmrginp.do_npdm_in_core() ) {
-    std::string ifile = spinBlock_->get_op_array(DES_CRE_DES).get_filename();
-    ifs_.open(ifile.c_str(), ios::binary);
-  }
+  ifile_ = spinBlock_->get_op_array(DES_CRE_DES).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -837,6 +828,7 @@ bool Npdm_op_wrapper_DCD::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(DES_CRE_DES).get_local_element(idx);
   else {
+    assert( check_file_open( idx ) );
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(DES_CRE_DES).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -848,6 +840,7 @@ bool Npdm_op_wrapper_DCD::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
+    assert( check_file_close( idx ) );
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -881,10 +874,7 @@ Npdm_op_wrapper_DDC::Npdm_op_wrapper_DDC( SpinBlock * spinBlock )
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
   // For disk-based storage
-  if ( ! dmrginp.do_npdm_in_core() ) {
-    std::string ifile = spinBlock_->get_op_array(DES_DES_CRE).get_filename();
-    ifs_.open(ifile.c_str(), ios::binary);
-  }
+  ifile_ = spinBlock_->get_op_array(DES_DES_CRE).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -900,6 +890,7 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
   else {
+    assert( check_file_open( idx ) );
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -911,6 +902,7 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
+    assert( check_file_close( idx ) );
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -945,10 +937,7 @@ Npdm_op_wrapper_DCC::Npdm_op_wrapper_DCC( SpinBlock * spinBlock )
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
   // For disk-based storage
-  if ( ! dmrginp.do_npdm_in_core() ) {
-    std::string ifile = spinBlock_->get_op_array(DES_DES_CRE).get_filename();
-    ifs_.open(ifile.c_str(), ios::binary);
-  }
+  ifile_ = spinBlock_->get_op_array(DES_DES_CRE).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -964,6 +953,7 @@ bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
   else {
+    assert( check_file_open( idx ) );
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -975,6 +965,7 @@ bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
+    assert( check_file_close( idx ) );
   }
 
   std::string tmp = opReps_.at(0)->get_build_pattern();
@@ -1014,10 +1005,7 @@ Npdm_op_wrapper_DDD::Npdm_op_wrapper_DDD( SpinBlock * spinBlock )
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
   // For disk-based storage
-  if ( ! dmrginp.do_npdm_in_core() ) {
-    std::string ifile = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
-    ifs_.open(ifile.c_str(), ios::binary);
-  }
+  ifile_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1033,6 +1021,7 @@ bool Npdm_op_wrapper_DDD::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
   else {
+    assert( check_file_open( idx ) );
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -1044,6 +1033,7 @@ bool Npdm_op_wrapper_DDD::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
+    assert( check_file_close( idx ) );
   }
 
   std::string tmp = opReps_.at(0)->get_build_pattern();

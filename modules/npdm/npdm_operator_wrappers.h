@@ -143,6 +143,7 @@ class NpdmSpinOps : public NpdmSpinOps_base {
 
     // Input file stream for disk-based operators used to build NPDM
     std::ifstream ifs_;
+    std::string ifile_;
     // Number of spatial orbital combinations
     int size_;
 
@@ -156,6 +157,24 @@ class NpdmSpinOps : public NpdmSpinOps_base {
                                                              int ispin, std::vector<int> indices, bool transpose );
 
     SpinBlock* spinBlock_;
+
+    bool check_file_open( int idx ) 
+    { 
+      if ( idx == 0 ) {
+        assert( ! ifs_.is_open() );
+        ifs_.open(ifile_.c_str(), ios::binary); 
+      }
+      return ifs_.good();
+    }
+    bool check_file_close( int idx ) 
+    { 
+      if ( idx == (size_-1) ) {
+        assert( ifs_.is_open() );
+        ifs_.close(); 
+      }
+      return true;
+    }
+
 };
 
 ////===========================================================================================================================================================
