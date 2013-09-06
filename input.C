@@ -682,7 +682,7 @@ SpinAdapted::Input::Input(const string& config_name)
   //read the orbitals
   v_1.rhf= true; 
   v_2.rhf=true;
-  if (sym != "dinfh" && sym != "lzsym" && sym != "dinfh_abelian" && sym!= "c3v" && sym!="c5v") {
+  if (sym != "dinfh" && sym != "lzsym" && sym != "dinfh_abelian" && sym!= "c3v" && sym!="c5v" && sym!="d5h") {
     v_2.permSymm = true;
   }
   else
@@ -1120,7 +1120,7 @@ void SpinAdapted::Input::performSanityTest()
     pout << "total number of orbitals has to be a positive number"<<endl;
     abort();
   }
-  if (m_norbs/2 < 4) {
+  if (m_norbs/2 < 4 && m_calc_type == DMRG) {
     pout << "DMRG cannot be run with fewer than 4 orbitals"<<endl;
     abort();
   }

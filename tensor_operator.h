@@ -104,7 +104,59 @@ class TensorOp {
     return *this;
   }
 
-    
+  static double getTransposeFactorCD(int I, int J, int pspin, int pirrep)
+  {
+    //i.e. is CD_ij^dag =? CD_ji
+
+    double spinfactor = 1.0, spatfactor = 1.0;;
+    if (pspin == 2) spinfactor = -1.0;
+
+      int airrep = SymmetryOfSpatialOrb(I).getirrep();
+      int birrep = SymmetryOfSpatialOrb(J).getirrep();
+      int asize = Symmetry::sizeofIrrep(airrep);
+      int bsize = Symmetry::sizeofIrrep(birrep);
+      int psize = Symmetry::sizeofIrrep(pirrep);
+      for (int al = 0; al<Symmetry::sizeofIrrep(airrep); al++)
+      for (int bl = 0; bl<Symmetry::sizeofIrrep(birrep); bl++)
+      {
+	double clebspatial = Symmetry::spatial_cg(airrep, birrep, pirrep, al, bl, 0);
+	if(fabs(clebspatial) <= 1.0e-14)
+	  continue;
+	else 
+	  spatfactor = clebspatial/Symmetry::spatial_cg(birrep, airrep, pirrep, bl==0?bsize-1:0, al==0?asize-1:0, psize-1);
+      }
+
+    return spinfactor*spatfactor; 
+  }
+
+
+  static double getTransposeFactorDD(int I, int J, int pspin, int pirrep)
+  {
+    //i.e. is CC_ij^dag =? DD_ji
+
+    double spinfactor = 1.0, spatfactor = 1.0;;
+    if (pspin == 0) spinfactor = -1.0;
+
+
+    int airrep = SymmetryOfSpatialOrb(I).getirrep();
+    int birrep = SymmetryOfSpatialOrb(J).getirrep();
+    int asize = Symmetry::sizeofIrrep(airrep);
+    int bsize = Symmetry::sizeofIrrep(birrep);
+    int psize = Symmetry::sizeofIrrep(pirrep);
+    for (int al = 0; al<Symmetry::sizeofIrrep(airrep); al++)
+    for (int bl = 0; bl<Symmetry::sizeofIrrep(birrep); bl++)
+    {
+      double clebspatial = Symmetry::spatial_cg(airrep, birrep, pirrep, al, bl, 0);
+      if(fabs(clebspatial) <= 1.0e-14)
+	continue;
+      else 
+	spatfactor = clebspatial/Symmetry::spatial_cg(birrep, airrep, pirrep, bl==0?bsize-1:0, al==0?asize-1:0, psize-1);
+    }
+
+    return spinfactor*spatfactor; 
+  }
+
+
   TensorOp& product(TensorOp& op1, int pspin, int pirrep, bool identical=false) {
 
     identical=false;

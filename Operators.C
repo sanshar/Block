@@ -726,13 +726,13 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
 	Functor f = boost::bind(&opxop::cxcdcomp, otherBlock, _1, &b, k, this, 1.0); 
 	for_all_singlethread(loopBlock->get_op_array(CRE), f);
 	
-	f = boost::bind(&opxop::dxcccomp, otherBlock, _1, &b, k, this, -2.0);
+	f = boost::bind(&opxop::dxcccomp, otherBlock, _1, &b, k, this, 2.0);
 	for_all_singlethread(loopBlock->get_op_array(CRE), f);
         
 	f = boost::bind(&opxop::cxcdcomp, loopBlock, _1, &b, k, this, 1.0); 
 	for_all_singlethread(otherBlock->get_op_array(CRE), f);
-	
-	f = boost::bind(&opxop::dxcccomp, loopBlock, _1, &b, k, this, -2.0);
+
+	f = boost::bind(&opxop::dxcccomp, loopBlock, _1, &b, k, this, 2.0);
 	for_all_singlethread(otherBlock->get_op_array(CRE), f);
 	
       }

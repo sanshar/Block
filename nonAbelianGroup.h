@@ -155,6 +155,124 @@ namespace SpinAdapted {
     }
   };
 
+
+  class D5h: public nonAbelianGroup {
+  public:
+    D5h() 
+    {
+      numIrreps = 8;
+      irrepNames.push_back("A1'"); irrepNames.push_back("A2'"); irrepNames.push_back("E1'"), irrepNames.push_back("E2'");
+      irrepNames.push_back("A1\""); irrepNames.push_back("A2\""); irrepNames.push_back("E1\""), irrepNames.push_back("E2\"");
+      irrepSizes.push_back(1); irrepSizes.push_back(1); irrepSizes.push_back(2); irrepSizes.push_back(2);
+      irrepSizes.push_back(1); irrepSizes.push_back(1); irrepSizes.push_back(2); irrepSizes.push_back(2);
+
+      int multarray1[] = {0,1,2};//{2,1,0};
+      int multarray2[] = {0,1,3};//{3,1,0};
+      int multarray3[] = {2,3};
+      int multarray1b[] = {4,5,6};//{2,1,0};
+      int multarray2b[] = {4,5,7};//{3,1,0};
+      int multarray3b[] = {6,7};
+
+      //read_multiplication Table
+      multiplicationTable.ReSize(8,8);
+      multiplicationTable(0,0) = vector<int>(1,0);
+      multiplicationTable(1,0) = vector<int>(1,1); 
+      multiplicationTable(2,0) = vector<int>(1,2); 
+      multiplicationTable(3,0) = vector<int>(1,3); 
+      multiplicationTable(4,0) = vector<int>(1,4); 
+      multiplicationTable(5,0) = vector<int>(1,5); 
+      multiplicationTable(6,0) = vector<int>(1,6); 
+      multiplicationTable(7,0) = vector<int>(1,7); 
+
+      multiplicationTable(0,1) = vector<int>(1,1);
+      multiplicationTable(1,1) = vector<int>(1,0); 
+      multiplicationTable(2,1) = vector<int>(1,2); 
+      multiplicationTable(3,1) = vector<int>(1,3); 
+      multiplicationTable(4,1) = vector<int>(1,5); 
+      multiplicationTable(5,1) = vector<int>(1,4); 
+      multiplicationTable(6,1) = vector<int>(1,6); 
+      multiplicationTable(7,1) = vector<int>(1,7); 
+
+      multiplicationTable(0,2) = vector<int>(1,2);
+      multiplicationTable(1,2) = vector<int>(1,2); 
+      multiplicationTable(2,2) = vector<int>(multarray2, multarray2 + sizeof(multarray2)/sizeof(int));
+      multiplicationTable(3,2) = vector<int>(multarray3, multarray3 + sizeof(multarray3)/sizeof(int));
+      multiplicationTable(4,2) = vector<int>(1,6);
+      multiplicationTable(5,2) = vector<int>(1,6); 
+      multiplicationTable(6,2) = vector<int>(multarray2b, multarray2b + sizeof(multarray2b)/sizeof(int));
+      multiplicationTable(7,2) = vector<int>(multarray3b, multarray3b + sizeof(multarray3b)/sizeof(int));
+
+      multiplicationTable(0,3) = vector<int>(1,3);
+      multiplicationTable(1,3) = vector<int>(1,3); 
+      multiplicationTable(2,3) = vector<int>(multarray3, multarray3 + sizeof(multarray3)/sizeof(int));
+      multiplicationTable(3,3) = vector<int>(multarray1, multarray1 + sizeof(multarray1)/sizeof(int));
+      multiplicationTable(4,3) = vector<int>(1,7);
+      multiplicationTable(5,3) = vector<int>(1,7); 
+      multiplicationTable(6,3) = vector<int>(multarray3b, multarray3b + sizeof(multarray3b)/sizeof(int));
+      multiplicationTable(7,3) = vector<int>(multarray1b, multarray1b + sizeof(multarray1b)/sizeof(int));
+
+      multiplicationTable(0,4) = vector<int>(1,4);
+      multiplicationTable(1,4) = vector<int>(1,5); 
+      multiplicationTable(2,4) = vector<int>(1,6); 
+      multiplicationTable(3,4) = vector<int>(1,7); 
+      multiplicationTable(4,4) = vector<int>(1,0); 
+      multiplicationTable(5,4) = vector<int>(1,1); 
+      multiplicationTable(6,4) = vector<int>(1,2); 
+      multiplicationTable(7,4) = vector<int>(1,3); 
+
+      multiplicationTable(0,5) = vector<int>(1,5);
+      multiplicationTable(1,5) = vector<int>(1,4); 
+      multiplicationTable(2,5) = vector<int>(1,6); 
+      multiplicationTable(3,5) = vector<int>(1,7); 
+      multiplicationTable(4,5) = vector<int>(1,1); 
+      multiplicationTable(5,5) = vector<int>(1,0); 
+      multiplicationTable(6,5) = vector<int>(1,2); 
+      multiplicationTable(7,5) = vector<int>(1,3); 
+
+      multiplicationTable(0,6) = vector<int>(1,6);
+      multiplicationTable(1,6) = vector<int>(1,6); 
+      multiplicationTable(2,6) = vector<int>(multarray2b, multarray2b + sizeof(multarray2b)/sizeof(int));
+      multiplicationTable(3,6) = vector<int>(multarray3b, multarray3b + sizeof(multarray3b)/sizeof(int));
+      multiplicationTable(4,6) = vector<int>(1,2);
+      multiplicationTable(5,6) = vector<int>(1,2); 
+      multiplicationTable(6,6) = vector<int>(multarray2, multarray2 + sizeof(multarray2)/sizeof(int));
+      multiplicationTable(7,6) = vector<int>(multarray3, multarray3 + sizeof(multarray3)/sizeof(int));
+
+      multiplicationTable(0,7) = vector<int>(1,7);
+      multiplicationTable(1,7) = vector<int>(1,7); 
+      multiplicationTable(2,7) = vector<int>(multarray3b, multarray3b + sizeof(multarray3b)/sizeof(int));
+      multiplicationTable(3,7) = vector<int>(multarray1b, multarray1b + sizeof(multarray1b)/sizeof(int));
+      multiplicationTable(4,7) = vector<int>(1,3);
+      multiplicationTable(5,7) = vector<int>(1,3); 
+      multiplicationTable(6,7) = vector<int>(multarray3, multarray3 + sizeof(multarray3)/sizeof(int));
+      multiplicationTable(7,7) = vector<int>(multarray1, multarray1 + sizeof(multarray1)/sizeof(int));
+
+      readCGfromDisk();
+
+    }
+
+    string getGroupName() {return "D5h";}
+
+    void readCGfromDisk() {
+      int largestIrrep = numIrreps-1;
+      int largestRow = irrepSizes[largestIrrep]-1;
+      int loopOver = getCombinedIndex(largestIrrep, largestRow) + 1;
+      
+      CGcoeffs.ReSize(loopOver, loopOver, loopOver);
+      std::ifstream instream("d5h.cgcoeffs", std::ifstream::in);
+
+      int sizeofCG = 0;
+      for (int i=0; i<loopOver; i++)
+	for (int j=0; j<loopOver; j++)
+	  for (int k=0; k<loopOver; k++) {
+	    instream >> CGcoeffs(i,j,k);
+	    //cout << i<<"  "<<j<<"  "<<k<<"  "<<CGcoeffs(i,j,k)<<endl;
+	  }
+
+
+    }
+  };
+
 }
 
 #endif

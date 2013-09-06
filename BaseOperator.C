@@ -50,7 +50,7 @@ double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
 
 double Transposeview::get_scaling(SpinQuantum leftq, SpinQuantum rightq) const 
 {
-  //if (conjugacy() == 'n') {return 1.0;}
+  if (conjugacy() == 'n') {return 1.0;}
 
   int lspin = leftq.get_s(), lirrep = leftq.get_symm().getirrep();
   int rspin = rightq.get_s(), rirrep = rightq.get_symm().getirrep();
@@ -61,20 +61,20 @@ double Transposeview::get_scaling(SpinQuantum leftq, SpinQuantum rightq) const
   for (int ll = 0; ll<Symmetry::sizeofIrrep(lirrep); ll++)
   for (int rl = 0; rl<Symmetry::sizeofIrrep(rirrep); rl++)
   {
-    double cleb = clebsch(lspin, lsz, cspin, cspin, rspin, rsz);
+    double cleb = clebsch(lspin, lsz, cspin, -cspin, rspin, rsz);
     double clebspatial = Symmetry::spatial_cg(lirrep, cirrep, rirrep, ll, 0, rl);
     if (fabs(cleb) <= 1.0e-14 || fabs(clebspatial) <= 1.0e-14)
       continue;
     else {
       ///CHANGE THE SPATIAL_CG cirrep,1 to cirrep,0 depending on how the transpose works out!!!
-      double spinscale =  cleb/clebsch(rspin, rsz, cspin, -cspin, lspin, lsz);
+      double spinscale = pow(-1.0,cspin) * cleb/clebsch(rspin, rsz, cspin, cspin, lspin, lsz);
       double spatscale =  clebspatial/Symmetry::spatial_cg(rirrep, cirrep, lirrep, rl, Symmetry::sizeofIrrep(cirrep)-1, ll);  
 
-      
       return spinscale*spatscale;
     }
   }
   cout << "Major trouble, inappropriate arguments to get_scaling!!!"<<endl;
+  cout << leftq<<"  "<<get_deltaQuantum()<<"  "<<rightq<<endl;
   exit(0);
   return 1.0;
 }

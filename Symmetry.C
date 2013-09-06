@@ -132,6 +132,9 @@ void Symmetry::InitialiseTable(string psym)
   else if (sym == "c5v") {
     nonAbelianGrp = C5v();
   }
+  else if (sym == "d5h") {
+    nonAbelianGrp = D5h();
+  }
 
   else if (sym == "trans") {
     //do nothing;
@@ -192,7 +195,7 @@ bool Symmetry::irrepAllowed(int irrep)
     pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
-  if ( (sym == "c3v"||sym=="c5v") && (irrep < 0 || irrep >= nonAbelianGrp.getNumIrreps())) {
+  if ( (sym == "c3v"||sym=="c5v"||sym=="d5h") && (irrep < 0 || irrep >= nonAbelianGrp.getNumIrreps())) {
     pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
@@ -323,6 +326,9 @@ string Symmetry::stringOfIrrep(int irrep)
   else if (sym == "c5v") {
     return nonAbelianGrp.getIrrepName(irrep);
   }
+  else if (sym == "d5h") {
+    return nonAbelianGrp.getIrrepName(irrep);
+  }
   else if(sym == "trans") {
     std::vector<int> irreps = decompress(irrep);
     string output = "";
@@ -354,7 +360,7 @@ int Symmetry::sizeofIrrep(int irrep)
 {
   if (sym == "dinfh")
     return irrep > 3 ? 2 : 1;
-  else if (sym == "c3v"|| sym=="c5v")
+  else if (sym == "c3v"|| sym=="c5v" || sym=="d5h")
     return nonAbelianGrp.getIrrepSize(irrep);
   else
     return 1;
@@ -386,7 +392,7 @@ int Symmetry::negativeof(int irrep)
 
 std::vector<int> Symmetry::add(int irrepl, int irrepr)
 {
-  if (sym == "c3v" || sym == "c5v") {
+  if (sym == "c3v" || sym == "c5v"|| sym == "d5h") {
     return nonAbelianGrp.getProduct(irrepl, irrepr);
   }
   else if (sym == "dinfh") {
@@ -503,7 +509,7 @@ std::vector<int> Symmetry::add(int irrepl, int irrepr)
 
 
 double Symmetry::spatial_sixj(int j1, int j2, int j3, int j5, int j4, int j7) {
-  if (! (sym == "dinfh"|| sym == "c3v" || sym =="c5v") ) {
+  if (! (sym == "dinfh"|| sym == "c3v" || sym =="c5v" || sym =="d5h") ) {
     if (j3 != add(j1,j2)[0]) return 0.0;
     if (j7 != add(j2,j5)[0]) return 0.0;
     if (j4 != add(j3,j5)[0]) return 0.0;
@@ -518,7 +524,7 @@ double Symmetry::spatial_sixj(int j1, int j2, int j3, int j5, int j4, int j7) {
 
 double Symmetry::spatial_ninej(int j1, int j2, int j12, int j3, int j4, int j34, int j13, int j24, int j) {
   
-  if (!(sym == "dinfh" || sym == "c3v" || sym == "c5v")) {
+  if (!(sym == "dinfh" || sym == "c3v" || sym == "c5v" || sym == "d5h")) {
     return 1.0;
   }
 
@@ -564,7 +570,7 @@ double Symmetry::spatial_ninej(int j1, int j2, int j12, int j3, int j4, int j34,
 }
 
 double Symmetry::spatial_cg(int a, int b, int c, int rowa, int rowb, int rowc) {
-  if (sym == "c3v" || sym == "c5v") 
+  if (sym == "c3v" || sym == "c5v" || sym == "d5h") 
     return nonAbelianGrp.getCG(a, b, c, rowa, rowb, rowc);
 
   else if (sym == "dinfh") {

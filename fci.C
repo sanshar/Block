@@ -27,7 +27,6 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
 {
   SweepParams sweepParams;
   sweepParams.set_sweep_parameters();
-  //SpinBlock sysdotmp(0,1);
 
   SpinBlock system;
   InitBlocks::InitStartingBlock(system, true, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
@@ -70,11 +69,15 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
     cout <<oparray2.get_local_element(i)[0]->get_orbs(0)<<endl<< *(oparray2.get_local_element(i)[0]->getworkingrepresentation(&sysdotmp))<<endl;
   */
 
-
+  //system.clear();
   pout <<"\t\t\t System Block :: "<< system;
   pout <<"\t\t\t Environment Block :: "<< environment;
   SpinBlock big;
   InitBlocks::InitBigBlock(system, environment, big); 
+
+  //SpinBlock systemp(0,1), envtmp(2,3);
+  //InitBlocks::InitBigBlock(systemp, envtmp, big); 
+
   int nroots = dmrginp.nroots(0);
   std::vector<Wavefunction> solution(nroots);
   std::vector<double> energies(nroots);
