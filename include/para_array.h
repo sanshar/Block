@@ -118,6 +118,7 @@ public:
   const T& operator()(int i=-1, int j=-1, int k=-1) const { return store(0); }
   bool has_local_index(int i, int j=-1, int k=-1) const { return store.has_local_index(i); }
   const std::vector<T>& get_store() const { return store.get_store(); }
+  const std::vector<int>& get_local_indices() const { assert(false); }
   void set_indices() 
   { 
     std::vector<int> i(1); i[0] = 0;
@@ -445,8 +446,7 @@ public:
   bool is_local() const { return stored_local; }
 
   const std::vector<int>& get_indices() const { return global_indices; }
-
-  std::vector<int>& get_local_indices() { return local_indices; }
+  const std::vector<int>& get_local_indices() const { return local_indices; }
 
 
   /// number of non-null elements in local storage

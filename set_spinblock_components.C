@@ -32,22 +32,21 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_DESCOMP).set_local() = true;
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = true;
-//FIXME MAW 3PDM
-    if (has(DES_CRE))
-      set_op_array(DES_CRE).set_local() = true;
-    if (has(CRE_CRE_CRE))
-      set_op_array(CRE_CRE_CRE).set_local() = true;
-    if (has(CRE_CRE_DES))
-      set_op_array(CRE_CRE_DES).set_local() = true;
-    if (has(CRE_DES_DES))
-      set_op_array(CRE_DES_DES).set_local() = true;
-    if (has(CRE_DES_CRE))
-      set_op_array(CRE_DES_CRE).set_local() = true;
-//FIXME MAW 4PDM
-    if (has(DES_CRE_DES))
-      set_op_array(DES_CRE_DES).set_local() = true;
-    if (has(DES_DES_CRE))
-      set_op_array(DES_DES_CRE).set_local() = true;
+//FIXME high-index operators should never be replicated on all procs
+//    if (has(DES_CRE))
+//      set_op_array(DES_CRE).set_local() = true;
+//    if (has(CRE_CRE_CRE))
+//      set_op_array(CRE_CRE_CRE).set_local() = true;
+//    if (has(CRE_CRE_DES))
+//      set_op_array(CRE_CRE_DES).set_local() = true;
+//    if (has(CRE_DES_DES))
+//      set_op_array(CRE_DES_DES).set_local() = true;
+//    if (has(CRE_DES_CRE))
+//      set_op_array(CRE_DES_CRE).set_local() = true;
+//    if (has(DES_CRE_DES))
+//      set_op_array(DES_CRE_DES).set_local() = true;
+//    if (has(DES_DES_CRE))
+//      set_op_array(DES_DES_CRE).set_local() = true;
 
   }
   else if (st == DISTRIBUTED_STORAGE)
@@ -66,6 +65,7 @@ void SpinBlock::setstoragetype(Storagetype st)
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = false;
 //FIXME MAW 3PDM
+//pout << "Setting distributed storage 3-index ops\n";
     if (has(DES_CRE))
       set_op_array(DES_CRE).set_local() = false;
     if (has(CRE_CRE_CRE))
@@ -169,6 +169,7 @@ void SpinBlock::default_op_components(bool complementary_)
     if ( dmrginp.do_npdm_ops() ) {
       if ( (dmrginp.calc_type() == THREEPDM) ||
            (dmrginp.calc_type() == FOURPDM) ) {
+//pout << "Setting store-in-core 3-index ops\n";
         ops[DES_CRE] = make_new_op(DES_CRE, true);
         ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
         ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
@@ -196,7 +197,6 @@ void SpinBlock::set_big_components()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-//this is used for the dot block ??
 //MAW used by SpinAdapted::InitBlocks::InitNewSystemBlock when extending system with a dot??
 void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops)
 {
@@ -251,7 +251,6 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
   }
   else
   {
-    // op_components for a single dot block ??
     ops[CRE] = make_new_op(CRE, false); //this should definitely be false, we not have copies of CRE is all the procs
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
     ops[HAM] = make_new_op(HAM, true);
@@ -263,6 +262,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
         if ( dmrginp.do_npdm_ops() ) {
           if ( (dmrginp.calc_type() == THREEPDM) ||
                (dmrginp.calc_type() == FOURPDM) ) {
+//pout << "Setting build-on-fly 3-index ops\n";
             ops[DES_CRE] = make_new_op(DES_CRE, false);
             ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
             ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);

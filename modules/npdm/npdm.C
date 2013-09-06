@@ -21,6 +21,7 @@ namespace Npdm {
 void npdm_block_and_decimate( Npdm_driver& npdm_driver, SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
                               const bool &useSlater, const bool& dot_with_sys, const int state)
 {
+  Timer timer;
   //mcheck("at the start of block and decimate");
   // figure out if we are going forward or backwards
   dmrginp.guessgenT -> start();
@@ -101,7 +102,9 @@ void npdm_block_and_decimate( Npdm_driver& npdm_driver, SweepParams &sweepParams
   //for(int i=0;i<dmrginp.nroots();++i)
   solution[0].SaveWavefunctionInfo (big.get_stateInfo(), big.get_leftBlock()->get_sites(), state);
 
+  //FIXME Do we need to do this step for NPDM on the last sweep site? (It's not negligible cost...?)
   newSystem.transform_operators(rotateMatrix);
+  pout << "NPDM block and decimate and compute elements " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 
 }
 
@@ -145,6 +148,7 @@ assert(i==0);
 
     // Loop over all block sites
     for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) {
+      Timer timer;
 
       pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
@@ -189,6 +193,7 @@ assert(i==0);
       ++sweepParams.set_block_iter();
       sweepParams.savestate(forward, system.get_sites().size());
 
+      pout << "NPDM do one site time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
     }
   }
 
@@ -252,11 +257,13 @@ void npdm( int npdm_order )
   dmrginp.do_npdm_ops() = true;
 
   // Prepare NPDM operators
+  Timer timer;
   sweep_copy.restorestate(direction_copy, restartsize_copy);
   dmrginp.set_fullrestart() = true;
   sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
   SweepGenblock::do_one(sweepParams, false, !direction, false, 0, 0);
   dmrginp.set_fullrestart() = false;
+  pout << "NPDM SweepGenblock time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 
   switch (npdm_order) {
   case (1):

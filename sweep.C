@@ -219,10 +219,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
-//MAW
-pout << "do InitStartingBlock!\n";
   InitBlocks::InitStartingBlock (system,forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
-pout << "InitStartingBlock done!\n";
   if(!restart)
     sweepParams.set_block_iter() = 0;
 
@@ -281,15 +278,11 @@ pout << "InitStartingBlock done!\n";
       //Need to substitute by:
       if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian")) {
       //if (warmUp)// && (sym=="dinfh"||sym=="trans"))
-//MAW
-pout << "maw calling Startup\n";
          Startup(sweepParams, system, newSystem);
       }
       else {
          if (sweepParams.set_sweep_iter() == 1 && sweepParams.get_block_iter() == 0)
            sweepParams.set_guesstype() = BASIC;
-//MAW
-pout << "maw calling BlockAndDecimate\n";
          BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys);
       }
       

@@ -173,6 +173,8 @@ string Op_component<CreCreCre>::get_op_string() const {
 template<> 
 void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
 {
+//FIXME don't build CCC operators where all indices are the same!! (May screw up load-balancing, but not much...)
+//
   // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
   if (b.get_sites().size () == 0) return; 
 

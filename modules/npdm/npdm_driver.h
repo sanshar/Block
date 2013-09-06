@@ -44,10 +44,14 @@ class Npdm_driver {
     // We only store the nonredundant npdm matrix elements in this container
     Npdm_sparse_array sparse_array_;
 
-    int get_mpi_max_lhs_size( int my_size );
-    void do_npdm_inner_loop( Npdm::Npdm_expectations & npdm_expectations, NpdmSpinOps_base & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps );
-    void npdm_loop_over_block_operators( Npdm::Npdm_expectations & npdm_expectations, NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps );
+    void do_inner_loop( const char inner, Npdm::Npdm_expectations & npdm_expectations, 
+                        NpdmSpinOps_base & outerOps, NpdmSpinOps & innerOps, NpdmSpinOps & dotOps );
 
+    void loop_over_block_operators( const char inner, Npdm::Npdm_expectations & npdm_expectations, 
+                                    NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps, bool lhsdot );
+
+    int get_mpi_max_size( int my_size );
+    bool broadcast_lhs( int lhs_size, int rhs_size );
     virtual void assign_npdm_elements( std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements) = 0;
     virtual void save_npdm_text(const int &i, const int &j) = 0;
     virtual void save_npdm_binary(const int &i, const int &j) = 0;

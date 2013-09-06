@@ -109,6 +109,7 @@ class Op_component_base
   virtual void clear() =0;
   virtual std::vector<boost::shared_ptr<SparseMatrix> > get_local_element(int i) =0;
   virtual std::vector<boost::shared_ptr<SparseMatrix> > get_global_element(int i)=0;
+  virtual const std::vector< int >& get_local_indices() =0;
   const bool &is_core() const {return m_core;}
   const bool &is_deriv() const {return m_deriv;}
   void set_core(bool is_core) {m_core = is_core;}
@@ -167,6 +168,7 @@ template <class Op> class Op_component : public Op_component_base
   virtual void add_local_indices(int i, int j=-1, int k=-1){};
   void clear(){m_op.clear();}
   void build_iterators(SpinBlock& b);
+  const std::vector< int >& get_local_indices() { return m_op.get_local_indices(); }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //MAW use for unique filename for disk-based operator storage -- note we need optype prefix!

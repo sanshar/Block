@@ -62,7 +62,7 @@ std::string Npdm_expectations::get_op_string( NpdmSpinOps_base & lhsOps, NpdmSpi
       indices.erase( indices.begin() );  
     }
   }
-  cout << op_string << std::endl;
+  //cout << op_string << std::endl;
 
   return op_string;
 }
@@ -80,10 +80,6 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
   if ( lhsOps.opReps_.size() > 0 ) lhsOp = lhsOps.opReps_.at(ilhs);
   if ( dotOps.opReps_.size() > 0 ) dotOp = dotOps.opReps_.at(idot);
   if ( rhsOps.opReps_.size() > 0 ) rhsOp = rhsOps.opReps_.at(irhs);
-
-//if ( lhsOps.opReps_.size() > 0 ) pout << "lhsOp:\n" << *lhsOp;
-//if ( dotOps.opReps_.size() > 0 ) pout << "dotOp:\n" << *dotOp;
-//if ( rhsOps.opReps_.size() > 0 ) pout << "rhsOp:\n" << *rhsOp;
 
   // We need to distinguish cases where one or more blocks has an empty operator string
   // X_X_X
@@ -154,15 +150,10 @@ bool Npdm_expectations::test_for_singlet( int lhs_mult, int dot_mult, int rhs_mu
   int lhs2S = lhs_mult -1;
   int dot2S = dot_mult -1;
   int rhs2S = rhs_mult -1;
-//pout << "2S(lhs,dot,rhs) =   " << lhs2S << " " << dot2S << " " << rhs2S << std::endl;
-
-//if ( (lhs2S == 0) && (dot2S == 0) && (rhs2S == 0) ) return true;
-//else return false;
 
   // Couple LHS and Dot spin angular momenta and see if any equal RHS  
   for (int twoS = std::abs(lhs2S - dot2S); twoS <= ( lhs2S + dot2S ); twoS += 2 ) {
     if ( twoS == rhs2S ) {
-//      pout << "\nsinglet found!\n";
       return true;
     }
   }
@@ -237,20 +228,6 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
   // Parse operator string and set up linear equations
   std::string op_string = get_op_string( lhsOps, rhsOps, dotOps );
   npdm_set_up_linear_equations(op_string, expectations_, A, b, so_indices );
-
-//pout << "A matrix:\n";
-//for (int i=1; i<(dim+1); ++i) { 
-//  pout << i << "\t\t";
-//  for (int j=1; j<(dim+1); ++j) {
-//    pout << "  " << A(i,j);
-//  }
-//  pout << std::endl;
-//}
-
-//pout << "b vector:\n";
-//for (int i=1; i<(dim+1); ++i) { 
-//    pout << i << "\t\t" << b(i) << std::endl;
-//}
 
   // Solve A.x = b to get non-spin-adapted expectations in x
   xsolve_AxeqB(A, b, x);

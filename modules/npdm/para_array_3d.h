@@ -33,7 +33,7 @@ template<class T> class para_array_3d;
 template<class T> class para_array_3d : public para_sparse_vector<T>
 {
 public:
-  para_array_3d() : stored_local_(true) {}
+  para_array_3d() : stored_local_(false) {}
 
   // This is designed for 3-index operators
   const int num_indices() { return 3; }
@@ -102,7 +102,7 @@ public:
   bool has_local_index(int i) const { return (local_indices_map_.at(i) != -1); }
 
   const std::vector<int>& get_indices() const { return global_indices_; }
-  std::vector<int>& get_local_indices_() { return local_indices_; }
+  const std::vector<int>& get_local_indices() const { return local_indices_; }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
   /// returns elements at orbs
@@ -206,13 +206,13 @@ public:
       global_indices_.push_back( idx );
       global_index_tuple_.push_back( tuple );
       // Local indices
-      if ( rank == mpigetrank() ) {
+      if ( stored_local_ || rank == mpigetrank() ) {
         // Assign to requested rank
         local_indices_.push_back( idx );
         local_index_tuple_.push_back( tuple );
       }
       else if ( rank == -1 ) {
-        // Load balance equally over ranks
+        // Load balance equally over ranks using global rule
         if ( processorindex( idx ) == mpigetrank() ) {
           local_indices_.push_back( idx );
           local_index_tuple_.push_back( tuple );

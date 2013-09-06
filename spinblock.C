@@ -207,13 +207,11 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
         // Output file for operators written to disk
         std::string ofile = it->second->get_filename();
         // Build operators from CSFs
+if (ot == CRE_CRE_CRE) cout << "Building CCC CSF operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
         it->second->build_csf_operators(*this, ot, ofile, dets, ladders);
       }
     }
-//DEBUG print out numbers of operators on each MPI process
-if (has(CRE)) cout << "Number of C CSF operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
-if (has(CRE_CRE)) cout << "Number of CC CSF operators on p" << mpigetrank() << " = " << ops[CRE_CRE]->get_size() << " local, " << ops[CRE_CRE]->size() << " global\n";
-if (has(CRE_CRE_CRE)) cout << "Number of CCC CSF operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
+//if (has(CRE_CRE_CRE)) cout << "Building CCC CSF operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -232,13 +230,10 @@ void SpinBlock::build_virtual_operators()
         // Input file for operators written to disk on dotblock
         std::string dotfile = get_rightBlock()->ops[ot]->get_filename();
         // Build operators
+if (ot == CRE_CRE_CRE) cout << "Building CCC virtual operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
         it->second->build_operators(*this, ot, ofile, sysfile, dotfile);
       }
     }
-//DEBUG print out numbers of operators on each MPI process
-if (has(CRE)) cout << "Number of C (virt?) operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
-if (has(CRE_CRE)) cout << "Number of CC (virt?) operators on p" << mpigetrank() << " = " << ops[CRE_CRE]->get_size() << " local, " << ops[CRE_CRE]->size() << " global\n";
-if (has(CRE_CRE_CRE)) cout << "Number of CCC (virt?) operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -256,13 +251,10 @@ void SpinBlock::build_operators()
         // Input file for operators written to disk on dotblock
         std::string dotfile = get_rightBlock()->ops[ot]->get_filename();
         // Build operators
+if (ot == CRE_CRE_CRE) cout << "Building CCC core operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
         it->second->build_operators(*this, ot, ofile, sysfile, dotfile);
       }
     }
-//DEBUG print out numbers of operators on each MPI process
-if (has(CRE)) cout << "Number of C operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
-if (has(CRE_CRE)) cout << "Number of CC operators on p" << mpigetrank() << " = " << ops[CRE_CRE]->get_size() << " local, " << ops[CRE_CRE]->size() << " global\n";
-if (has(CRE_CRE_CRE)) cout << "Number of CCC operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -412,7 +412,7 @@ bool Npdm_op_wrapper_compound_CDC::set_local_ops( int idx )
 
   if ( jx == kx ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    cout << "WARNING: skipping this operator\n";
+    //cout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -423,6 +423,7 @@ bool Npdm_op_wrapper_compound_CDC::set_local_ops( int idx )
 Npdm_op_wrapper_compound_CCC::Npdm_op_wrapper_compound_CCC( SpinBlock * spinBlock )
 {
   // Assume single site block
+assert(false); // << this operator should always be zero on one site!
   assert( spinBlock->size() == 1 );
   opReps_.clear();
   indices_.clear();
@@ -517,7 +518,7 @@ bool Npdm_op_wrapper_compound_DCD::set_local_ops( int idx )
 
   if ( ix == jx ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    cout << "WARNING: skipping this operator\n";
+    //cout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -591,6 +592,11 @@ bool Npdm_op_wrapper_CCC::set_local_ops( int idx )
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
+  if ( (ix == jx) && (jx == kx) ) {
+    //FIXME This operator should not be built; it's zero as we cannot create 3 spin-1/2 particles with different spins
+    //cout << "WARNING: skipping this operator\n";
+    return true;
+  }
   return false;
 }
 
@@ -792,7 +798,7 @@ bool Npdm_op_wrapper_CDC::set_local_ops( int idx )
   indices_.push_back( kx );
   if ( jx == kx ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    cout << "WARNING: skipping this operator\n";
+    //cout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -855,7 +861,7 @@ bool Npdm_op_wrapper_DCD::set_local_ops( int idx )
   indices_.push_back( kx );
   if ( ix == jx ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    cout << "WARNING: skipping this operator\n";
+    //cout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -918,7 +924,7 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
   indices_.push_back( kx );
   if ( (jx == kx) || (ix == kx) ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    cout << "WARNING: skipping this operator\n";
+    //cout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -987,7 +993,7 @@ bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
   indices_.push_back( ix );
   if ( (jx == kx) || (ix == kx) ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    cout << "WARNING: skipping this operator\n";
+    //cout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -1054,6 +1060,10 @@ bool Npdm_op_wrapper_DDD::set_local_ops( int idx )
   indices_.push_back( kx );
   indices_.push_back( jx );
   indices_.push_back( ix );
+  if ( (ix == jx) && (jx == kx) ) {
+    //FIXME This operator should not be built; it's zero as we cannot destroy 3 spin-1/2 particles with different spins
+    return true;
+  }
   return false;
 }
 
@@ -1163,7 +1173,7 @@ bool Npdm_op_wrapper_DC::set_local_ops( int idx )
 //cout << "indices  " << ix << " " << jx << std::endl;
 if ( ix == jx ) {
   //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-  cout << "WARNING: skipping this operator\n";
+  //cout << "WARNING: skipping this operator\n";
   return true;
 }
   return false;
