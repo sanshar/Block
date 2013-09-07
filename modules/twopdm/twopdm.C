@@ -477,7 +477,7 @@ void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       spinExpectation(wave1, wave2, *leftop, *dotop, rop0, big, expectations, false);
       spinExpectation(wave1, wave2, *leftop, *dotop, rop2, big, expectations, false);
       vector<int> indices(4,0);
-      indices[0] = ix; indices[1] = jx; indices[2] = lx; indices[3] = kx;
+      indices[0] = ix; indices[1] = jx; indices[2] = kx; indices[3] = lx;
       expectations[0]*=-1; expectations[1]*=-1;
       spin_to_nonspin(indices, expectations, twopdm, CC_DD, true);
     }
@@ -516,7 +516,7 @@ void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       indices[0] = ix; indices[1] = kx; indices[2] = jx; indices[3] = lx;
       spin_to_nonspin(indices, expect1, twopdm, CD_CD, true);
 
-      expect2[0] = expectations[1]; expect2[1] = expectations[3];
+      expect2[0] = expectations[1]; expect2[1] = -expectations[3];
       indices[0] = jx; indices[1] = kx; indices[2] = ix; indices[3] = lx;
       spin_to_nonspin(indices, expect2, twopdm, CD_CD, true);
     }
