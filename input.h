@@ -33,7 +33,7 @@ enum noiseTypes {RANDOM, EXCITEDSTATE};
 enum calcType {DMRG, ONEPDM, TWOPDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 
-enum keywords{ORBS, MAXM, REORDER, FIEDLER, GAORDER, SCHEDULE, SYM, NELECS, SPIN, IRREP,
+enum keywords{ORBS, STARTM, MAXM, REORDER, FIEDLER, GAORDER, SCHEDULE, SYM, NELECS, SPIN, IRREP,
 	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, 
 	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NUMKEYWORDS};
 
@@ -61,6 +61,7 @@ class Input {
   std::vector<double> m_sweep_noise_schedule;
   std::vector<double> m_sweep_additional_noise_schedule;
   bool m_schedule_type_default;
+  int m_startM;
   int m_maxM;
   int m_integral_disk_storage_thresh;
 
