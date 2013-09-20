@@ -31,6 +31,7 @@ using namespace std;
 
 namespace SpinAdapted {
 string sym;
+bool NonabelianSym;
 }
 void CheckFileExistence(string filename, string filetype);
 void CheckFileInexistence(string filename, string filetype);
@@ -146,6 +147,7 @@ SpinAdapted::Input::Input(const string& config_name)
   int n_elec = -1;
   int n_spin = -1;
   sym = "c1";
+  NonabelianSym = false;
   string orbitalfile;
   string gaconffile;
   if(mpigetrank() == 0)
@@ -725,7 +727,7 @@ SpinAdapted::Input::Input(const string& config_name)
   //read the orbitals
   v_1.rhf= true; 
   v_2.rhf=true;
-  if (sym != "dinfh" && sym != "lzsym" && sym != "dinfh_abelian" && sym!= "c3v" && sym!="c5v" && sym!="d5h") {
+  if (sym != "lzsym" && sym != "dinfh_abelian" && !NonabelianSym) {
     v_2.permSymm = true;
   }
   else

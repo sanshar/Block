@@ -272,7 +272,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       SpinBlock newSystem;
 
       //Need to substitute by:
-      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian" || sym == "c3v" || sym == "c5v" || sym == "d5h"))
+      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian" || NonabelianSym))
          Startup(sweepParams, system, newSystem);
       else {
          if (sweepParams.set_sweep_iter() == 1 && sweepParams.get_block_iter() == 0)
@@ -281,7 +281,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       }
       
       //Need to substitute by?
-      if (!(warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian" || sym == "c3v" || sym == "c5v" || sym == "d5h"))){
+      if (!(warmUp && (sym=="trans" || sym == "dinfh_abelian" || NonabelianSym))){
       for(int j=0;j<nroots;++j)
       {
 #ifndef MOLPRO
