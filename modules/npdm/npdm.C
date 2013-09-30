@@ -7,6 +7,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include "npdm.h"
+#include "sweeptwopdm.h"  // For old version of 2pdm
 
 void dmrg(double sweep_tol);
 void restart(double sweep_tol, bool reset_iter);
@@ -281,7 +282,14 @@ void npdm( int npdm_order )
     for (int state=0; state<dmrginp.nroots(); state++) {
       Twopdm_driver twopdm_driver;
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-      npdm_do_one_sweep(twopdm_driver, sweepParams, false, direction, false, 0, state);
+      if (false) {
+        // Compute twopdm with the original code
+        SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
+      } 
+      else {
+        // Compute twopdm with general npdm code
+        npdm_do_one_sweep(twopdm_driver, sweepParams, false, direction, false, 0, state);
+      }
     }
     break;
   case (3):
