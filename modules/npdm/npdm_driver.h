@@ -27,8 +27,8 @@ class Npdm_driver {
 
   public:
     // FIXME flag to use full npdm array is hard-coded here; make input keyword
-    Npdm_driver() : npdm_order_(-1), use_full_array_(true) {};
-    Npdm_driver(int order) : npdm_order_(order), use_full_array_(true) {};
+    Npdm_driver() : npdm_order_(-1), use_full_array_(false) {};
+    Npdm_driver(int order) : npdm_order_(order), use_full_array_(false) {};
 
     void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos );
     void save_full_array(int i, int j);
@@ -55,6 +55,9 @@ class Npdm_driver {
 
     int get_mpi_max_size( int my_size );
     bool broadcast_lhs( int lhs_size, int rhs_size );
+    bool skip_this_mpi_rank( NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps );
+    bool skip_parallel( NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, bool lhsrhsdot );
+
     virtual void assign_npdm_elements( std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements) = 0;
     virtual void save_npdm_text(const int &i, const int &j) = 0;
     virtual void save_npdm_binary(const int &i, const int &j) = 0;

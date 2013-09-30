@@ -129,6 +129,33 @@ bool Npdm_driver::broadcast_lhs( int lhs_size, int rhs_size )
   if (rhs_maxsize < lhs_maxsize) do_lhs = false;
   return do_lhs;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+bool Npdm_driver::skip_this_mpi_rank( NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps )
+{
+  boost::mpi::communicator world;
+  bool skip = ( mpigetrank() > 0    && 
+                lhsOps.is_local_    && 
+                rhsOps.is_local_ );
+  return skip;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+bool Npdm_driver::skip_parallel( NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, bool lhsrhsdot )
+{
+  boost::mpi::communicator world;
+  // Don't want to parallelize if any of these conditions hold (either makes no sense or creates duplicated work)
+  // Assumes 1-index ops are duplicated on all mpi ranks //FIXME check this?
+  // (There might be some overlap in these criteria)
+  bool skip = ( world.size() == 1               ||
+                lhsOps.is_local_                ||
+                rhsOps.is_local_                ||
+                lhsrhsdot );
+  return skip;
+}
+
   
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -147,7 +174,7 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
     // Get non-spin-adapated 3PDM elements after building spin-adapted elements
     std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements;
     DEBUG_CALL_GET_EXPECT[mpigetrank()] += 1;
-    // This always works out as calling in order (lhs,rhs,dot); or at least it should!
+    // This should always works out as calling in order (lhs,rhs,dot)
     if ( inner == 'r' )
       new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( outerOps, innerOps, dotOps );
     else if ( inner == 'l' )
@@ -177,7 +204,7 @@ void Npdm_driver::do_parallel_lhs_loop( const char inner, Npdm::Npdm_expectation
   std::vector< NpdmSpinOps_base > nonlocal_base( world.size() );
 
   Timer timer;
-  // Communicate array sizes etc (note blocking until comm is complete)
+  // Communicate basic op info
   std::vector< int > nonlocal_size( world.size() );
   std::vector< int > nonlocal_skip( world.size() );
   int local_skip = skip; // apparently boost::mpi::all_gather fails with bools...??
@@ -203,7 +230,8 @@ void Npdm_driver::do_parallel_lhs_loop( const char inner, Npdm::Npdm_expectation
     }
   }
   
-  // Do loop over RHS with local LHS operator while waiting for all non-local to be communicated (FIXME can we extend this idea?)
+  // Do loop over RHS with local LHS operator while waiting for all non-local to be communicated 
+  // FIXME Can we extend this idea to do batches while other batches are communicating
   if ( ! local_skip ) do_inner_loop( inner, npdm_expectations, local_base, rhsOps, dotOps ); 
 
   // Contract all nonlocal LHS ops with local RHS ops; must wait for communication to be finished first
@@ -217,10 +245,8 @@ void Npdm_driver::do_parallel_lhs_loop( const char inner, Npdm::Npdm_expectation
   }
 
   // Synchronize all MPI ranks here
-  Timer timer3;
   std::cout.flush();
   world.barrier();
-  DEBUG_COMM_TIME[mpigetrank()] += timer3.elapsedwalltime();
 
 }
 
@@ -230,27 +256,23 @@ void Npdm_driver::do_parallel_lhs_loop( const char inner, Npdm::Npdm_expectation
 void Npdm_driver::loop_over_block_operators( const char inner, Npdm::Npdm_expectations & npdm_expectations,
                                              NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps, bool lhsrhsdot ) 
 {
-  boost::mpi::communicator world;
   int lhs_maxsize = get_mpi_max_size( lhsOps.size() );
+
+  // Skip parallelization completely if it generates duplicates
+  if ( skip_this_mpi_rank( lhsOps, rhsOps ) ) return;
 
   // Many spatial combinations on left block
   for ( int ilhs = 0; ilhs < lhs_maxsize; ++ilhs ) {
     // Set local operators as dummy if load-balancing isn't perfect
-    bool skip = true;
-    if ( ilhs < lhsOps.size() ) skip = lhsOps.set_local_ops( ilhs );
+    bool skip_op = true;
+    if ( ilhs < lhsOps.size() ) skip_op = lhsOps.set_local_ops( ilhs );
 
-    // Don't want to parallelize if any of these conditions hold (either makes no sense or creates duplicated work)
-    bool serial = ( world.size() == 1            ||
-                    lhsOps.build_pattern_ == ""  ||
-                    rhsOps.build_pattern_ == ""  ||
-                    lhsrhsdot );
-
-    if ( serial ) {
-      if ( !skip ) do_inner_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps );
+    if ( skip_parallel( lhsOps, rhsOps, lhsrhsdot ) ) {
+      if ( ! skip_op ) do_inner_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps );
     }
     else {
       // Parallelize by broadcasting LHS ops
-      do_parallel_lhs_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps, skip );
+      do_parallel_lhs_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps, skip_op );
     }
   }
 
@@ -284,12 +306,11 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
   Npdm::Npdm_patterns npdm_patterns( npdm_order_, sweepPos, endPos );
 
   for (auto pattern = npdm_patterns.ldr_cd_begin(); pattern != npdm_patterns.ldr_cd_end(); ++pattern) {
+    DEBUG_CALL_GET_EXPECT[mpigetrank()] = 0;
 
     // MPI threads must be synchronised here so they all work on same operator pattern simultaneously
-    Timer timer3;
     std::cout.flush();
     world.barrier();
-    DEBUG_COMM_TIME[mpigetrank()] += timer3.elapsedwalltime();
 
     //pout << "-------------------------------------------------------------------------------------------\n";
     pout << "Doing pattern:  ";
@@ -305,8 +326,6 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
     boost::shared_ptr<NpdmSpinOps> lhsOps = select_op_wrapper( lhsBlock, lhs_cd_type );
     boost::shared_ptr<NpdmSpinOps> rhsOps = select_op_wrapper( rhsBlock, rhs_cd_type );
     boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );
-    //cout << "lhsOps.size() = " << lhsOps->size() << "; rank = " << mpigetrank() <<  std::endl;
-    //cout << "rhsOps.size() = " << rhsOps->size() << "; rank = " << mpigetrank() <<  std::endl;
 
     // Only one spatial combination on the dot block (including NULL)
     assert( dotOps->size() == 1 );
@@ -321,7 +340,10 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
         loop_over_block_operators( 'l', npdm_expectations, *rhsOps, *lhsOps, *dotOps, lhs_or_rhs_dot );
       }
     }
+
   }
+
+  // Print outs
   if (world.rank() == 0) {
     int sum;
     reduce(world, DEBUG_CALL_GET_EXPECT[mpigetrank()], sum, std::plus<int>(), 0);

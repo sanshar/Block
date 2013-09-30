@@ -263,7 +263,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Cre::getworkingreprese
     }
   else
     {
-//pout << "build first\n";
+//pout << "build C on fly\n";
       boost::shared_ptr<SparseMatrix> rep(new Cre);
       *rep = *this;
       rep->build(*block);
@@ -554,7 +554,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCre::getworkingrepr
     }
   else
     {
-//pout << "build CC\n";
+//pout << "build CC on fly\n";
       boost::shared_ptr<SparseMatrix> rep(new CreCre);
       *rep = *this;
       rep->build(*block);

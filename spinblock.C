@@ -207,7 +207,10 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
         // Output file for operators written to disk
         std::string ofile = it->second->get_filename();
         // Build operators from CSFs
-if (ot == CRE_CRE_CRE) cout << "Building CCC CSF operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
+//if (ot == CRE) cout << "Is CRE local? " << ops[CRE]->is_local() << "; rank = " << mpigetrank() << endl;
+//if (ot == CRE) cout << "Building C CSF operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
+//if (ot == CRE_CRE) cout << "Building CC CSF operators on p" << mpigetrank() << " = " << ops[CRE_CRE]->get_size() << " local, " << ops[CRE_CRE]->size() << " global\n";
+//if (ot == CRE_CRE_CRE) cout << "Building CCC CSF operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
         it->second->build_csf_operators(*this, ot, ofile, dets, ladders);
       }
     }
@@ -221,7 +224,6 @@ void SpinBlock::build_virtual_operators()
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       opTypes ot = it->first;
-//MAW note ! here
       if(! it->second->is_core()) {
         // Output file for operators written to disk
         std::string ofile = it->second->get_filename();
@@ -230,7 +232,10 @@ void SpinBlock::build_virtual_operators()
         // Input file for operators written to disk on dotblock
         std::string dotfile = get_rightBlock()->ops[ot]->get_filename();
         // Build operators
-if (ot == CRE_CRE_CRE) cout << "Building CCC virtual operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
+//if (ot == CRE) cout << "Is CRE local? " << ops[CRE]->is_local() << "; rank = " << mpigetrank() << endl;
+//if (ot == CRE) cout << "Building C virtual operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
+//if (ot == CRE_CRE) cout << "Building CC virtual operators on p" << mpigetrank() << " = " << ops[CRE_CRE]->get_size() << " local, " << ops[CRE_CRE]->size() << " global\n";
+//if (ot == CRE_CRE_CRE) cout << "Building CCC virtual operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
         it->second->build_operators(*this, ot, ofile, sysfile, dotfile);
       }
     }
@@ -251,7 +256,10 @@ void SpinBlock::build_operators()
         // Input file for operators written to disk on dotblock
         std::string dotfile = get_rightBlock()->ops[ot]->get_filename();
         // Build operators
-if (ot == CRE_CRE_CRE) cout << "Building CCC core operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
+//if (ot == CRE) cout << "Is CRE local? " << ops[CRE]->is_local() << "; rank = " << mpigetrank() << endl;
+//if (ot == CRE) cout << "Building C core operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
+//if (ot == CRE_CRE) cout << "Building CC core operators on p" << mpigetrank() << " = " << ops[CRE_CRE]->get_size() << " local, " << ops[CRE_CRE]->size() << " global\n";
+//if (ot == CRE_CRE_CRE) cout << "Building CCC core operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
         it->second->build_operators(*this, ot, ofile, sysfile, dotfile);
       }
     }
@@ -264,6 +272,9 @@ void SpinBlock::renormalise_transform(const std::vector<Matrix>& rotateMatrix, c
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core()) {
+//opTypes ot = it->first;
+//if (ot == CRE) cout << "Is CRE local? " << ops[CRE]->is_local() << "; rank = " << mpigetrank() << endl;
+//if (ot == CRE) cout << "Renormalize C operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
         it->second->renormalise_transform(it->first, rotateMatrix, stateinfo);
       }
     }

@@ -47,7 +47,6 @@ void SpinBlock::setstoragetype(Storagetype st)
 //      set_op_array(DES_CRE_DES).set_local() = true;
 //    if (has(DES_DES_CRE))
 //      set_op_array(DES_DES_CRE).set_local() = true;
-
   }
   else if (st == DISTRIBUTED_STORAGE)
   {
@@ -65,7 +64,7 @@ void SpinBlock::setstoragetype(Storagetype st)
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = false;
 //FIXME MAW 3PDM
-//pout << "Setting distributed storage 3-index ops\n";
+    //pout << "Setting distributed storage 3-index ops\n";
     if (has(DES_CRE))
       set_op_array(DES_CRE).set_local() = false;
     if (has(CRE_CRE_CRE))
@@ -162,6 +161,7 @@ void SpinBlock::default_op_components(bool complementary_)
   ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
   ops[HAM] = make_new_op(HAM, true);
   if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
+    //pout << "Setting store-in-core 2-index ops\n";
     ops[CRE_DES] = make_new_op(CRE_DES, true);
     ops[CRE_CRE] = make_new_op(CRE_CRE, true);
     ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
@@ -169,7 +169,7 @@ void SpinBlock::default_op_components(bool complementary_)
     if ( dmrginp.do_npdm_ops() ) {
       if ( (dmrginp.calc_type() == THREEPDM) ||
            (dmrginp.calc_type() == FOURPDM) ) {
-//pout << "Setting store-in-core 3-index ops\n";
+        //pout << "Setting store-in-core 3-index ops\n";
         ops[DES_CRE] = make_new_op(DES_CRE, true);
         ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
         ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
@@ -221,7 +221,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
 
     if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
       if (haveNormops) {
-        assert(false); // << if (haveNormops || dmrginp.do_npdm_ops()) not tested
+assert(false); //FIXME << if (haveNormops || dmrginp.do_npdm_ops()) not tested
         ops[CRE_DES] = make_new_op(CRE_DES, true);
         ops[CRE_CRE] = make_new_op(CRE_CRE, true);
 //        if ( dmrginp.do_npdm_ops() ) {
@@ -257,12 +257,13 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
 
     if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
       if (haveNormops || dmrginp.do_npdm_ops()) {
+        //pout << "Setting build-on-fly 2-index ops\n";
         ops[CRE_DES] = make_new_op(CRE_DES, false);
         ops[CRE_CRE] = make_new_op(CRE_CRE, false);
         if ( dmrginp.do_npdm_ops() ) {
           if ( (dmrginp.calc_type() == THREEPDM) ||
                (dmrginp.calc_type() == FOURPDM) ) {
-//pout << "Setting build-on-fly 3-index ops\n";
+            //pout << "Setting build-on-fly 3-index ops\n";
             ops[DES_CRE] = make_new_op(DES_CRE, false);
             ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
             ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);

@@ -65,6 +65,9 @@ void npdm_block_and_decimate( Npdm_driver& npdm_driver, SweepParams &sweepParams
   newSystem.set_loopblock(true);
   system.set_loopblock(false);
   newEnvironment.set_loopblock(false);
+//cout << "newSystem: LHS CRE size on p" << mpigetrank() << " = " << newSystem.get_leftBlock()->get_op_array(CRE).get_size() << " local ops" << endl;
+//cout << "newSystem: RHS CRE size on p" << mpigetrank() << " = " << newSystem.get_rightBlock()->get_op_array(CRE).get_size() << " local ops" << endl;
+//cout << "newEnvironment: CRE size on p" << mpigetrank() << " = " << newEnvironment.get_op_array(CRE).get_size() << " local ops" << endl;
   InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
 
   const int nroots = dmrginp.nroots();
@@ -94,6 +97,9 @@ void npdm_block_and_decimate( Npdm_driver& npdm_driver, SweepParams &sweepParams
 //MAW
   int sweepPos = sweepParams.get_block_iter();
   int endPos = sweepParams.get_n_iters()-1;
+//cout << "big: LHS CRE size on p" << mpigetrank() << " = " << big.get_leftBlock()->get_leftBlock()->get_op_array(CRE).get_size() << " local ops" << endl;
+//cout << "big: DOT CRE size on p" << mpigetrank() << " = " << big.get_leftBlock()->get_rightBlock()->get_op_array(CRE).get_size() << " local ops" << endl;
+//cout << "big: RHS CRE size on p" << mpigetrank() << " = " << big.get_rightBlock()->get_op_array(CRE).get_size() << " local ops" << endl;
   npdm_driver.compute_npdm_elements(solution, big, sweepPos, endPos);
 //MAW
 
@@ -125,13 +131,12 @@ double npdm_do_one_sweep(Npdm_driver& npdm_driver, SweepParams &sweepParams, con
   pout << ((forward) ? "\t\t\t Starting renormalisation sweep in forwards direction" : "\t\t\t Starting renormalisation sweep in backwards direction") << endl;
   pout << "\t\t\t ============================================================================ " << endl;
   
-  InitBlocks::InitStartingBlock (system,forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
-  if(!restart)
-    sweepParams.set_block_iter() = 0;
- 
+  InitBlocks::InitStartingBlock( system, forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
   pout << "\t\t\t Starting block is :: " << endl << system << endl;
-  if (!restart) 
-    SpinBlock::store (forward, system.get_sites(), system); // if restart, just restoring an existing block --
+
+  if (!restart) sweepParams.set_block_iter() = 0;
+  if (!restart) SpinBlock::store (forward, system.get_sites(), system); // if restart, just restoring an existing block --
+
   sweepParams.savestate(forward, system.get_sites().size());
   bool dot_with_sys = true;
 

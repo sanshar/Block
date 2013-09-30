@@ -76,45 +76,42 @@ std::map< std::tuple<int,int,int>, int > get_local_3index_tuples(SpinBlock& b)
 
   // 3 on dot (the -1 means there's no constraint on which MPI process the tuple is assigned to)
   tuples[ std::make_tuple(dot, dot, dot) ] = -1;
-
   // 2 on dot
   for (auto i = sysBlock->get_sites().begin(); i != sysBlock->get_sites().end(); ++i) {
-     if ( forward )
-       tuples[ std::make_tuple(dot, dot, *i) ] = -1;
-     else
-       tuples[ std::make_tuple(*i, dot, dot) ] = -1;
+    if ( forward )
+      tuples[ std::make_tuple(dot, dot, *i) ] = -1;
+    else
+      tuples[ std::make_tuple(*i, dot, dot) ] = -1;
   }
-
   // 1 on dot
 //FIXME we assume CRE_CRE is representative of all 2-index ops (pass opType in general???)
   std::vector< std::vector<int> > ij_array = sysBlock->get_op_array(CRE_CRE).get_array();
   for (auto ij = ij_array.begin(); ij != ij_array.end(); ++ij) {
-     int i = (*ij)[0];
-     int j = (*ij)[1];
-     assert( i >= j );
-     if ( forward ) {
-       if ( sysBlock->get_op_array(CRE_CRE).is_local() )
+    int i = (*ij)[0];
+    int j = (*ij)[1];
+    assert( i >= j );
+    if ( forward ) {
+      if ( sysBlock->get_op_array(CRE_CRE).is_local() )
 //FIXME not convinced this reliably removes duplicate 3-index ops
-         // When 2-index is duplicated on all ranks we don't want 3-index being duplicated too
-         tuples[ std::make_tuple( dot, i, j) ] = -1; 
-       else
-         tuples[ std::make_tuple( dot, i, j) ] = mpigetrank();
-     } 
-     else {
-       if ( sysBlock->get_op_array(CRE_CRE).is_local() )
-         // When 2-index is duplicated on all ranks we don't want 3-index being duplicated too
-         tuples[ std::make_tuple( i, j, dot) ] = -1;
-       else
-         tuples[ std::make_tuple( i, j, dot) ] = mpigetrank();
-     }
+        // When 2-index is duplicated on all ranks we don't want 3-index being duplicated too
+        tuples[ std::make_tuple( dot, i, j) ] = -1; 
+      else
+        tuples[ std::make_tuple( dot, i, j) ] = mpigetrank();
+    } 
+    else {
+      if ( sysBlock->get_op_array(CRE_CRE).is_local() )
+        // When 2-index is duplicated on all ranks we don't want 3-index being duplicated too
+        tuples[ std::make_tuple( i, j, dot) ] = -1;
+      else
+        tuples[ std::make_tuple( i, j, dot) ] = mpigetrank();
+    }
   }
-
   // 0 on dot
   std::vector< std::vector<int> > ijk_array = sysBlock->get_op_array(CRE_CRE_CRE).get_array();
   for (auto ijk = ijk_array.begin(); ijk != ijk_array.end(); ++ijk) {
-     assert( (*ijk)[0] >= (*ijk)[1] );
-     assert( (*ijk)[1] >= (*ijk)[2] );
-     tuples[ std::make_tuple((*ijk)[0], (*ijk)[1], (*ijk)[2]) ] = mpigetrank();
+    assert( (*ijk)[0] >= (*ijk)[1] );
+    assert( (*ijk)[1] >= (*ijk)[2] );
+    tuples[ std::make_tuple((*ijk)[0], (*ijk)[1], (*ijk)[2]) ] = mpigetrank();
   }
 
   return tuples;

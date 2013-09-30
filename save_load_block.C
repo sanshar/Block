@@ -132,12 +132,13 @@ void SpinBlock::addAdditionalCompOps()
   int length = dmrginp.last_site();
   int dotopindex = (sites[0] == 0) ? complementary_sites[0] : complementary_sites[complementary_sites.size()-1];
 
-  if (!ops[CRE]->is_local()) {
-    for(int i=0; i<get_sites().size(); i++) {
+  if ( !ops[CRE]->is_local() ) {
+    for (int i=0; i<get_sites().size(); i++) {
       if (ops[CRE]->has(sites[i])) {
-	if (processorindex(sites[i]) != mpigetrank()) 
-	  ops[CRE]->add_local_indices(sites[i]);
-	mpi::broadcast(world, *(ops[CRE]->get_element(sites[i])[0]), processorindex(sites[i]));
+        if (processorindex(sites[i]) != mpigetrank()) ops[CRE]->add_local_indices(sites[i]);
+        mpi::broadcast(world, *(ops[CRE]->get_element(sites[i])[0]), processorindex(sites[i]));
+        //FIXME MAW this line seemed to be missing, but correct
+        ops[CRE]->set_local() = true;
       }
     }
   }
@@ -155,30 +156,28 @@ void SpinBlock::addAdditionalCompOps()
       world.recv(processorindex(trimap_2d(I, J, length)), 0, other_proc_has_ops);
       //this will potentially receive some ops
       if (other_proc_has_ops) {
-	ops[CRE_DESCOMP]->add_local_indices(I, J);
-	recvcompOps(*ops[CRE_DESCOMP], I, J, CRE_DESCOMP);
-	ops[DES_DESCOMP]->add_local_indices(I, J);
-	recvcompOps(*ops[DES_DESCOMP], I, J, DES_DESCOMP);
+        ops[CRE_DESCOMP]->add_local_indices(I, J);
+        recvcompOps(*ops[CRE_DESCOMP], I, J, CRE_DESCOMP);
+        ops[DES_DESCOMP]->add_local_indices(I, J);
+        recvcompOps(*ops[DES_DESCOMP], I, J, DES_DESCOMP);
       }
     }
     else
     {
-      
       //this will potentially send some ops
       if (processorindex(trimap_2d(I, J, length)) == mpigetrank()) {
-	bool this_proc_has_ops = ops[CRE_DESCOMP]->has_local_index(I, J);
-	world.send(processorindex(compsite), 0, this_proc_has_ops);
-	if (this_proc_has_ops) {
-	  sendcompOps(*ops[CRE_DESCOMP], I, J, CRE_DESCOMP, compsite);
-	  sendcompOps(*ops[DES_DESCOMP], I, J, DES_DESCOMP, compsite);
-	}
+        bool this_proc_has_ops = ops[CRE_DESCOMP]->has_local_index(I, J);
+        world.send(processorindex(compsite), 0, this_proc_has_ops);
+        if (this_proc_has_ops) {
+          sendcompOps(*ops[CRE_DESCOMP], I, J, CRE_DESCOMP, compsite);
+          sendcompOps(*ops[DES_DESCOMP], I, J, DES_DESCOMP, compsite);
+        }
       }
       else 
-	continue;
+        continue;
     }
     //dmrginp.datatransfer.stop();
     //dmrginp.datatransfer -> stop(); //ROA
-      
   }
 #endif
 }

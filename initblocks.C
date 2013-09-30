@@ -65,6 +65,8 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//FIXME  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, true, true);
+
 void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &systemDot, SpinBlock &newSystem, const int &sys_add, const bool &direct, const Storagetype &storage, bool haveNormops, bool haveCompops)
 {
 

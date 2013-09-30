@@ -24,6 +24,7 @@ Npdm_op_wrapper_compound_CCDD::Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBl
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = 1;
+  is_local_ = true;
 //FIXME why do we need -1 here -- similar to (C(DD)) case ? (use of transpose?)
   factor_ = -1.0;
   transpose_ = false;
@@ -80,6 +81,7 @@ Npdm_op_wrapper_CCDD::Npdm_op_wrapper_CCDD( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE_DES_DES).get_size();
+  is_local_ = spinBlock_->get_op_array(CRE_CRE_DES_DES).is_local();
 //FIXME why do we need -1 here -- similar to (C(DD)) case ? (use of transpose?)
   factor_ = -1.0;
   transpose_ = false;
@@ -124,6 +126,7 @@ Npdm_op_wrapper_compound_CCD::Npdm_op_wrapper_compound_CCD( SpinBlock * spinBloc
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = 1;
+  is_local_ = true;
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "((CC)D)";
@@ -174,6 +177,7 @@ Npdm_op_wrapper_compound_CDD::Npdm_op_wrapper_compound_CDD( SpinBlock * spinBloc
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = 1;
+  is_local_ = true;
   factor_ = 1.0;
   transpose_ = false;
 //  build_pattern_ = "((CD)D)";
@@ -264,6 +268,7 @@ Npdm_op_wrapper_compound_CDC::Npdm_op_wrapper_compound_CDC( SpinBlock * spinBloc
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = 1;
+  is_local_ = true;
   factor_ = 1.0;
   transpose_ = false;
 //  build_pattern_ = "((CD)C)";
@@ -429,6 +434,7 @@ assert(false); // << this operator should always be zero on one site!
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = 1;
+  is_local_ = true;
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "((CC)C)";
@@ -479,6 +485,7 @@ Npdm_op_wrapper_compound_DCD::Npdm_op_wrapper_compound_DCD( SpinBlock * spinBloc
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = 1;
+  is_local_ = true;
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "((DC)D)";
@@ -535,6 +542,7 @@ Npdm_op_wrapper_CCC::Npdm_op_wrapper_CCC( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_size();
+  is_local_ = spinBlock_->get_op_array(CRE_CRE_CRE).is_local();
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
@@ -605,6 +613,7 @@ Npdm_op_wrapper_CCD::Npdm_op_wrapper_CCD( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE_DES).get_size();
+  is_local_ = spinBlock_->get_op_array(CRE_CRE_DES).is_local();
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
@@ -670,6 +679,7 @@ Npdm_op_wrapper_CDD::Npdm_op_wrapper_CDD( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_DES_DES).get_size();
+  is_local_ = spinBlock_->get_op_array(CRE_DES_DES).is_local();
   factor_ = 0.0;
   transpose_ = false;
   build_pattern_ = "0";
@@ -744,6 +754,7 @@ Npdm_op_wrapper_CDC::Npdm_op_wrapper_CDC( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_DES_CRE).get_size();
+  is_local_ = spinBlock_->get_op_array(CRE_DES_CRE).is_local();
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
@@ -806,6 +817,7 @@ Npdm_op_wrapper_DCD::Npdm_op_wrapper_DCD( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(DES_CRE_DES).get_size();
+  is_local_ = spinBlock_->get_op_array(DES_CRE_DES).is_local();
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
@@ -868,6 +880,7 @@ Npdm_op_wrapper_DDC::Npdm_op_wrapper_DDC( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(DES_DES_CRE).get_size();
+  is_local_ = spinBlock_->get_op_array(DES_DES_CRE).is_local();
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
@@ -930,6 +943,7 @@ Npdm_op_wrapper_DCC::Npdm_op_wrapper_DCC( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(DES_DES_CRE).get_size();
+  is_local_ = spinBlock_->get_op_array(DES_DES_CRE).is_local();
 //FIXME minus sign?
   factor_ = 1.0;
   transpose_ = true;
@@ -998,6 +1012,7 @@ Npdm_op_wrapper_DDD::Npdm_op_wrapper_DDD( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_size();
+  is_local_ = spinBlock_->get_op_array(CRE_CRE_CRE).is_local();
 //FIXME minus sign?
   factor_ = 1.0;
   transpose_ = true;
@@ -1068,6 +1083,7 @@ Npdm_op_wrapper_CC::Npdm_op_wrapper_CC( SpinBlock * spinBlock )
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
 if (size_ == 0) cout << "WARNING: CC zero size; rank = " << mpigetrank() << std::endl;
+  is_local_ = spinBlock_->get_op_array(CRE_CRE).is_local();
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "(CC)";
@@ -1101,6 +1117,7 @@ Npdm_op_wrapper_CD::Npdm_op_wrapper_CD( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_DES).get_size();
+  is_local_ = spinBlock_->get_op_array(CRE_DES).is_local();
   factor_ = 1.0;
   build_pattern_ = "(CD)";
   // S={0,1}
@@ -1133,6 +1150,7 @@ Npdm_op_wrapper_DC::Npdm_op_wrapper_DC( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(DES_CRE).get_size();
+  is_local_ = spinBlock_->get_op_array(DES_CRE).is_local();
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "(DC)";
@@ -1223,6 +1241,7 @@ Npdm_op_wrapper_DD::Npdm_op_wrapper_DD( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
+  is_local_ = spinBlock_->get_op_array(CRE_CRE).is_local();
 //FIXME why do we need -1 here ??
   factor_ = -1.0;
   transpose_ = true;
@@ -1259,6 +1278,7 @@ Npdm_op_wrapper_C::Npdm_op_wrapper_C( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE).get_size();
+  is_local_ = spinBlock_->get_op_array(CRE).is_local();
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "(C)";
@@ -1285,6 +1305,7 @@ Npdm_op_wrapper_D::Npdm_op_wrapper_D( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE).get_size();
+  is_local_ = spinBlock_->get_op_array(CRE).is_local();
   factor_ = 1.0;
   transpose_ = true;
   build_pattern_ = "(D)";
@@ -1311,6 +1332,7 @@ Npdm_op_wrapper_NULL::Npdm_op_wrapper_NULL()
   opReps_.clear();
   indices_.clear();
   size_ = 1; // For compatibility with rest of code
+  is_local_ = true;
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "";
