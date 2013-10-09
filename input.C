@@ -31,6 +31,7 @@ using namespace std;
 
 namespace SpinAdapted {
 string sym;
+bool NonabelianSym;
 }
 void CheckFileExistence(string filename, string filetype);
 void CheckFileInexistence(string filename, string filetype);
@@ -146,6 +147,7 @@ SpinAdapted::Input::Input(const string& config_name)
   int n_elec = -1;
   int n_spin = -1;
   sym = "c1";
+  NonabelianSym = false;
   string orbitalfile;
   string gaconffile;
 
@@ -745,11 +747,13 @@ SpinAdapted::Input::Input(const string& config_name)
   //read the orbitals
   v_1.rhf= true; 
   v_2.rhf=true;
-  if (sym != "dinfh" && sym != "lzsym" && sym != "dinfh_abelian") {
+  if (sym != "lzsym" && sym != "dinfh_abelian" && !NonabelianSym) {
     v_2.permSymm = true;
   }
   else
     v_2.permSymm = false;
+
+  //v_2.permSymm = false;
 
   // Kij-based ordering by GA opt.
 #ifndef SERIAL
@@ -939,6 +943,7 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   ReadMeaningfulLine(dumpFile, msg, msgsize);
   boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
   
+  int readLine = 1, numRead = 1;
   while (!(boost::iequals(tok[0], "ISYM") || boost::iequals(tok[0], "&END"))) {
     for (int i=0; i<tok.size(); i++) {
       if (boost::iequals(tok[i], "ORBSYM") || tok[i].size() == 0) continue;
@@ -953,25 +958,23 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
 
       if (sym == "trans") ir += 1; //for translational symmetry the lowest irrep is 0
       if (sym == "lzsym") ir = atoi(tok[i].c_str());
+
+      
       m_spin_orbs_symmetry[2*reorderOrbInd] = ir;
       m_spin_orbs_symmetry[2*reorderOrbInd+1] = ir;
-
-      if (sym == "dinfh") {
-	if (ir < -1 || ir == 0 || ir == 1) {
-	  m_num_spatial_orbs ++;
-	  m_spatial_to_spin.push_back(orbindex);
-	}
-	m_spin_to_spatial[orbindex] = m_num_spatial_orbs-1;
-	m_spin_to_spatial[orbindex+1] = m_num_spatial_orbs-1;
-      }
-      else {
+      
+      if (readLine == numRead) {
 	m_num_spatial_orbs++;
 	m_spatial_to_spin.push_back(orbindex);
-	
-	m_spin_to_spatial[orbindex] = m_num_spatial_orbs-1;
-	m_spin_to_spatial[orbindex+1] = m_num_spatial_orbs-1;
+	numRead = Symmetry::sizeofIrrep(ir);
+	readLine = 0;
       }
-      orbindex += 2;
+      m_spin_to_spatial[orbindex] = m_num_spatial_orbs-1;
+      m_spin_to_spatial[orbindex+1] = m_num_spatial_orbs-1;
+      orbindex +=2;
+      readLine++;
+      
+
     }
     msg.resize(0);
     ReadMeaningfulLine(dumpFile, msg, msgsize);
@@ -1206,7 +1209,7 @@ void SpinAdapted::Input::performSanityTest()
     pout << "total number of orbitals has to be a positive number"<<endl;
     abort();
   }
-  if (m_norbs/2 < 4) {
+  if (m_norbs/2 < 4 && m_calc_type == DMRG) {
     pout << "DMRG cannot be run with fewer than 4 orbitals"<<endl;
     abort();
   }

@@ -272,8 +272,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       SpinBlock newSystem;
 
       //Need to substitute by:
-      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian"))
-      //if (warmUp)// && (sym=="dinfh"||sym=="trans"))
+      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian" || NonabelianSym))
          Startup(sweepParams, system, newSystem);
       else {
          if (sweepParams.set_sweep_iter() == 1 && sweepParams.get_block_iter() == 0)
@@ -282,35 +281,33 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       }
       
       //Need to substitute by?
-      if (!warmUp || !(sym == "dinfh"||sym=="trans" || sym=="dinfh_abelian") ){
-      //if (!warmUp){// || !(sym == "dinfh"||sym=="trans") ){
-	
-	for(int j=0;j<nroots;++j)
-   {
+      if (!(warmUp && (sym=="trans" || sym == "dinfh_abelian" || NonabelianSym))){
+      for(int j=0;j<nroots;++j)
+      {
 #ifndef MOLPRO
-	  pout << "\t\t\t Total block energy for State [ " << j << 
-	    " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+	pout << "\t\t\t Total block energy for State [ " << j << 
+	  " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
 #else 
-     //We might want to relax the output restrictions here, so it prints out with outputlevel=0
-     if (dmrginp.outputlevel() < 0) {
-        pout << "\t\t\t Total block energy for State [ " << j << 
-          " ] with " << sweepParams.get_keep_states()<<" States :: " << fixed << setprecision(10) << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
-      }
+	//We might want to relax the output restrictions here, so it prints out with outputlevel=0
+	if (dmrginp.outputlevel() < 0) {
+	  pout << "\t\t\t Total block energy for State [ " << j << 
+	    " ] with " << sweepParams.get_keep_states()<<" States :: " << fixed << setprecision(10) << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+	}
 #endif
-   }
-	
-	finalEnergy_spins = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy_spins() : finalEnergy_spins);
-	finalEnergy = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy() : finalEnergy);
-	finalError = max(sweepParams.get_lowest_error(),finalError);
-	pout << endl;
+      }
+      
+      finalEnergy_spins = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy_spins() : finalEnergy_spins);
+      finalEnergy = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy() : finalEnergy);
+      finalError = max(sweepParams.get_lowest_error(),finalError);
+      pout << endl;
       }
       
       system = newSystem;
       if (dmrginp.outputlevel() > 0){
-         pout << system<<endl;
-         system.printOperatorSummary();
+	pout << system<<endl;
+	system.printOperatorSummary();
       }
-
+      
       //system size is going to be less than environment size
       if (forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)
 	dot_with_sys = false;

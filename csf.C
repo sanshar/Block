@@ -112,7 +112,7 @@ void SpinAdapted::Csf::applySminus(Csf& output)
 
 void SpinAdapted::Csf::applyRowminus(Csf& output, int irrep)
 {
-  if (sym != "dinfh" || irrep <= 3) return;
+
   map<Slater, double>::iterator itout, it = det_rep.begin();
   map<Slater, double> detsout;
   for ( ; it!= det_rep.end(); it++)
@@ -189,119 +189,219 @@ vector<SpinAdapted::Csf> SpinAdapted::Csf::spinLadder(int k)
   return ladder;
 }
 
-void SpinAdapted::CSFUTIL::TensorProduct(Csf& lhs, Csf& rhs, vector< Csf >& output)
+void SpinAdapted::CSFUTIL::TensorProduct(Csf& lhs, vector<Csf>& lhs_csfs, Csf& rhs, vector<Csf>& rhs_csfs, vector< Csf >& output, vector< vector<Csf> >& outputladder)
 {
-  vector< Csf> lhs_csfs = lhs.spinLadder(lhs.S);
-  vector< Csf> rhs_csfs = rhs.spinLadder(rhs.S);
+  //vector< Csf> lhs_csfs = lhs.spinLadder(lhs.S);
+  //vector< Csf> rhs_csfs = rhs.spinLadder(rhs.S);
 
   int lirrep = lhs.sym_is().getirrep();
   int rirrep = rhs.sym_is().getirrep(); 
   vector<IrrepSpace> symvec = lhs.sym_is()+rhs.sym_is();
+
   //now generate all the output vectors |J,J> with J = |j1-j2|,...,|j1+j2|
   //the angular momentum is m = m1+m2, |m1-m2|
   for (int l = 0; l<symvec.size(); l++)
+  for (int J = abs(lhs.S-rhs.S); J<= lhs.S+rhs.S; J+=2)
   {
+    vector<Csf> thisladder;
     int irrep = symvec[l].getirrep();
-    int row = Symmetry::sizeofIrrep(irrep)-1;//***rows go from 0 to 1
-
-    for (int J = abs(lhs.S-rhs.S); J<= lhs.S+rhs.S; J+=2)
+    for (int row=0; row<Symmetry::sizeofIrrep(irrep); row++)
+    for (int M=-J; M<=J; M+=2)
     {
+      //generating |J1 J2 J M>x|lirrep rirrep irrep row> vector
 
-      //generating |J1 J2 J J> vector
       map<Slater, double> dets;
-      for (int j1m1 = 0; j1m1<lhs_csfs.size(); j1m1++)
-	for (int j2m2 = 0; j2m2<rhs_csfs.size(); j2m2++)
-	{
-	  int J1 = lhs.S, M1 = lhs_csfs[j1m1].Sz, J2 = rhs.S, M2 = rhs_csfs[j2m2].Sz;
-	
-	  double clebsg = cg(J1, J2, J, M1, M2, J);
-	  double clebspatial = Symmetry::spatial_cg(lirrep, rirrep, irrep, lhs_csfs[j1m1].irrep.getrow(), rhs_csfs[j2m2].irrep.getrow(), row);
-	  if( abs(clebsg) < 1.0e-12 || abs(clebspatial) < 1.00e-14)
-	    continue;
-	  lhs_csfs[j1m1].outerProd(rhs_csfs[j2m2], clebsg*clebspatial, dets); 
-	}
+      for (int j1m1 = 0; j1m1<lhs_csfs.size(); j1m1++) //loops over rows of J1 lirrep
+      for (int j2m2 = 0; j2m2<rhs_csfs.size(); j2m2++) //loops over rows of J2 rirrep
+      {
+	int J1 = lhs.S, M1 = lhs_csfs[j1m1].Sz, J2 = rhs.S, M2 = rhs_csfs[j2m2].Sz;
+	int rowl = lhs_csfs[j1m1].irrep.getrow(), rowr = rhs_csfs[j2m2].irrep.getrow();
+
+	double clebsg = cg(J1, J2, J, M1, M2, M);
+	double clebspatial = Symmetry::spatial_cg(lirrep, rirrep, irrep, rowl, rowr, row);
+	if( abs(clebsg) < 1.0e-12 || abs(clebspatial) < 1.00e-14)
+	  continue;
+	lhs_csfs[j1m1].outerProd(rhs_csfs[j2m2], clebsg*clebspatial, dets); 
+      }
       
       if (dets.size() == 0)
 	continue;
-      Csf c(dets, rhs.n+lhs.n, J, J, IrrepVector(symvec[l].getirrep(), 0)); c.normalize();
-      output.push_back(c);
+      Csf c(dets, rhs.n+lhs.n, J, M, IrrepVector(symvec[l].getirrep(), row)); c.normalize();
+      if (M == J && row == 0)
+	output.push_back(c);
+      thisladder.push_back(c);
     }
+    outputladder.push_back(thisladder);
   }
 }
 
-std::vector<SpinAdapted::Csf > SpinAdapted::CSFUTIL::spinfockstrings(const std::vector<int>& orbs)
+Csf SpinAdapted::CSFUTIL::applyTensorOp(const TensorOp& newop, int spinL)
+{
+  //for (int k=0; k<newop.Szops[newop.Szops.size()-1-newop.Spin].size(); k++) {
+  map<Slater, double> m;
+  SpinQuantum sq(newop.optypes.size(), newop.Spin, IrrepSpace(newop.irrep)); 
+  for (int k=0; k<newop.Szops[spinL].size(); k++) {
+    if (fabs(newop.Szops[spinL][k]) > 1e-10) {
+      std::vector<bool> occ_rep(Slater().size(), 0);
+      Slater s(occ_rep,1);
+      for (int k2=newop.opindices[k].size()-1; k2>=0; k2--) {
+	s.c(newop.opindices[k][k2]);
+      }
+      if (s.isempty()) {
+	continue;
+      }
+      map<Slater, double>::iterator itout = m.find(s);
+
+      if (itout == m.end()) {
+	int sign = s.alpha.getSign();
+	s.setSign(1);
+	m[s] = sign*newop.Szops[spinL][k];
+      }	
+      else
+	m[s] += s.alpha.getSign()*newop.Szops[spinL][k];
+    }
+  }
+  int irreprow = spinL/(newop.Spin+1); 
+  int sz = -2*(spinL%(newop.Spin+1)) + newop.Spin;
+
+  
+
+  Csf csf = Csf(m,sq.particleNumber, sq.totalSpin, sz, IrrepVector(sq.get_symm().getirrep(),irreprow)) ; 
+  if (!csf.isempty() && fabs(csf.norm()) > 1e-14)
+    csf.normalize();
+  
+  return csf;
+}
+
+template<class T> class sorter {
+  const std::vector<T> &values;
+public:
+  sorter(const std::vector<T> &v) : values(v) {}
+  bool operator()(int a, int b) { return values[a] < values[b]; }
+};
+
+std::vector<SpinAdapted::Csf > SpinAdapted::CSFUTIL::spinfockstrings(const std::vector<int>& orbs, std::vector< std::vector<Csf> >& ladders)
 {
 
-  int I = orbs[0];  //assuming there is only one orbital
-  std::vector<TensorOp>  tensorops(1, TensorOp(I, 1));
-  IrrepSpace Irrep = SymmetryOfSpatialOrb(orbs[0]); 
-  SpinQuantum sQ(1, 1, Irrep);
-
-  int irrepsize = Symmetry::sizeofIrrep(Irrep.getirrep());
-
   std::vector<Csf > singleSiteCsf;
-
-
-  std::vector<bool> occ_rep1(Slater().size(),0), occ_rep2(Slater().size(),0);
-  occ_rep2[dmrginp.spatial_to_spin()[I]+2*irrepsize-2] = 1;
-  Slater s1(occ_rep1, 1), s2(occ_rep2, 1); map<Slater, double > m1, m2;
-  m1[s1]= 1.0; m2[s2] = 1.0;
-  singleSiteCsf.push_back( Csf(m1, 0, 0, 0, IrrepVector(0,0))); //0,0,0
-  singleSiteCsf.push_back( Csf(m2, 1, 1, 1, IrrepVector(Irrep.getirrep(), irrepsize-1))); //1,1,L
+  std::vector<int> numcsfs;
+  std::vector< std::vector<Csf> > singleSiteLadder;
+  int numCsfSoFar = 0;
   
-  for (int nele = 2; nele < 2*irrepsize+1; nele++) {
-
-    std::vector<SpinQuantum> quanta;
-    std::vector<TensorOp> newtensorops;
-    for (int i=0; i<tensorops.size(); i++) {
-      quanta = SpinQuantum(nele-1, tensorops[i].Spin, IrrepSpace(tensorops[i].irrep)) + sQ;
-
-      for (int j=0; j<quanta.size(); j++) {
-	TensorOp newop = TensorOp(I,1).product(tensorops[i], quanta[j].totalSpin, quanta[j].get_symm().getirrep());
-	//cout <<"******"<<endl<< quanta[j]<<"  "<<SpinQuantum(nele-1, tensorops[i].Spin, IrrepSpace(tensorops[i].irrep))<<endl;
-	//cout << newop<<endl;
-	map<Slater, double> m;
-	for (int k=0; k<newop.Szops[newop.Szops.size()-1-newop.Spin].size(); k++) {
-	  if (newop.Szops[newop.Szops.size()-1-newop.Spin][k] != 0.0) {
-	    std::vector<bool> occ_rep(Slater().size(), 0);
-	    Slater s(occ_rep,1);
-	    for (int k2=newop.opindices[k].size()-1; k2>=0; k2--) {
-	      s.c(newop.opindices[k][k2]);
-	    }
-	    if (s.isempty()) {
-	      continue;
-	    }
-	    map<Slater, double>::iterator itout = m.find(s);
-	    if (itout == m.end())
-	      m[s] = s.alpha.getSign()*newop.Szops[newop.Szops.size()-1-newop.Spin][k];
-	    else
-	      m[s] += s.alpha.getSign()*newop.Szops[newop.Szops.size()-1-newop.Spin][k];
-	  }
-	}
-
-	Csf csf = Csf(m, nele, quanta[j].totalSpin, quanta[j].totalSpin, IrrepVector(quanta[j].get_symm().getirrep(),Symmetry::sizeofIrrep(quanta[j].get_symm().getirrep())-1)) ; 
+  for (int i=0; i<orbs.size(); i++) {
+    std::vector< Csf> thisSiteCsf;
+    int I = orbs[i];  
+    std::vector<TensorOp>  tensorops(1, TensorOp(I, 1));
+    IrrepSpace Irrep = SymmetryOfSpatialOrb(orbs[i]); 
+    SpinQuantum sQ(1, 1, Irrep);
+    
+    int irrepsize = Symmetry::sizeofIrrep(Irrep.getirrep());
+    
+    std::vector<Csf> ladderentry;
+    std::map<Csf, std::vector<Csf> > laddermap;
+    
+    std::vector<bool> occ_rep1(Slater().size(),0), occ_rep2(Slater().size(),0);
+    occ_rep2[dmrginp.spatial_to_spin()[I]+2*irrepsize-2] = 1;
+    Slater s1(occ_rep1, 1), s2(occ_rep2, 1); map<Slater, double > m1, m2;
+    m1[s1]= 1.0; m2[s2] = 1.0;
+    thisSiteCsf.push_back( Csf(m1, 0, 0, 0, IrrepVector(0,0))); //0,0,0
+    thisSiteCsf.push_back( Csf(m2, 1, 1, 1, IrrepVector(Irrep.getirrep(), irrepsize-1))); //1,1,L
+    
+    ladderentry.push_back(Csf(m1, 0, 0, 0, IrrepVector(0,0))); singleSiteLadder.push_back(ladderentry);
+    ladderentry.clear();
+    
+    for (int i=tensorops[0].Szops.size(); i> 0; i--)
+      ladderentry.push_back(applyTensorOp(tensorops[0], i-1));
+    singleSiteLadder.push_back(ladderentry);
+    //laddermap[singleSiteCsf.back()] = ladderentry;
+    
+    for (int nele = 2; nele < 2*irrepsize+1; nele++) {
+      
+      std::vector<SpinQuantum> quanta;
+      std::vector<TensorOp> newtensorops;
+      for (int i=0; i<tensorops.size(); i++) {
+	quanta = SpinQuantum(nele-1, tensorops[i].Spin, IrrepSpace(tensorops[i].irrep)) + sQ;
 	
-	if (!csf.isempty() && csf.norm() >1e-10) {
-	  csf.normalize();
-	  if (find(singleSiteCsf.begin(), singleSiteCsf.end(), csf) == singleSiteCsf.end()) {
-	    singleSiteCsf.push_back( csf);
-	    newtensorops.push_back(newop);
+	for (int j=0; j<quanta.size(); j++) {
+	  TensorOp newop = TensorOp(I,1).product(tensorops[i], quanta[j].totalSpin, quanta[j].get_symm().getirrep());
+	  
+	  Csf csf = applyTensorOp(newop, newop.Szops.size()-1-newop.Spin);
+	  
+	  if (!csf.isempty() && csf.norm() >1e-10) {
+	    csf.normalize();
+
+	    if (find(thisSiteCsf.begin(), thisSiteCsf.end(), csf) == thisSiteCsf.end()) {
+	      thisSiteCsf.push_back( csf);
+	      newtensorops.push_back(newop);
+	      
+	      std::vector<Csf> ladderentry;
+	      for (int k=newop.Szops.size(); k>0 ; k--) 
+		ladderentry.push_back(applyTensorOp(newop, k-1));
+	      
+	      singleSiteLadder.push_back(ladderentry);
+	      //laddermap[csf] = ladderentry;
+	    }
 	  }
 	}
       }
+      
+      tensorops = newtensorops;
     }
+    
+    numcsfs.push_back(thisSiteCsf.size());
 
-    tensorops = newtensorops;
+    
+    for (int i=0; i<thisSiteCsf.size(); i++)
+      singleSiteCsf.push_back( thisSiteCsf[i]);
+    
+  }
+  
+  std::vector<Csf> prevoutput, output;
+  std::vector< std::vector<Csf> > prevladder, ladder;
+
+  for (int i=0; i<numcsfs[0]; i++) {
+    output.push_back(singleSiteCsf[i]);
+    ladder.push_back(singleSiteLadder[i]);
+  }
+  int csfindex = numcsfs[0];
+
+  for (int i2=1; i2<orbs.size(); i2++) {
+
+
+    for (int i=0; i<output.size(); i++) {
+      prevoutput.push_back(output[i]);
+      prevladder.push_back(ladder[i]);
+    }
+    output.clear();
+    ladder.clear();
+
+    for (int j=0; j<prevoutput.size(); j++) {
+      for (int k=0; k<numcsfs[i2]; k++) {
+	CSFUTIL::TensorProduct(prevoutput[j], prevladder[j], singleSiteCsf[csfindex+k], singleSiteLadder[csfindex+k], output, ladder);
+      }
+    }    
+    
+
+    prevoutput.clear();
+    prevladder.clear();
+    csfindex += numcsfs[i2];
   }
 
-  //for (int i=0; i<singleSiteCsf.size(); i++)
-  //cout << singleSiteCsf[i]<<endl;
+  std::vector<int> sortvec(output.size());
+  for (int i=0; i<output.size(); i++)
+    sortvec[i] = i;
 
-  sort(singleSiteCsf.begin(), singleSiteCsf.end());
+  std::sort(sortvec.begin(), sortvec.end(), sorter<Csf>(output));
+  std::sort(output.begin(), output.end());
 
-  return singleSiteCsf;
+  for (int i=0; i<output.size(); i++)
+    ladders.push_back(ladder[sortvec[i]]);
 
+  return output;
+   
 }
+
+
 
 std::vector< SpinAdapted::Csf > SpinAdapted::Csf::distribute (const int n, const int sp, const IrrepVector &sym, const int left, const int right, const int edge)
 {

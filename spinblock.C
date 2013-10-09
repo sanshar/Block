@@ -154,15 +154,24 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
   name = get_name();
 
   sites = new_sites;
-  std::vector< Csf > dets = CSFUTIL::spinfockstrings(new_sites);
+  std::vector< std::vector<Csf> > ladders;
+  std::vector< Csf > dets = CSFUTIL::spinfockstrings(new_sites, ladders);
 
   stateInfo = StateInfo(dets);
   setstoragetype(LOCAL_STORAGE);
   complementary_sites = make_complement(sites);
   build_iterators();
-  std::vector< std::vector<Csf> > ladders; ladders.resize(dets.size());
-  for (int i=0; i< dets.size(); i++)
-    ladders[i] = dets[i].spinLadder(min(2,dets[i].S));
+
+  /*
+  for (int i=0; i<dets.size(); i++) {
+    cout << "******* "<<endl;
+    cout << dets[i]<<endl;
+    for (int j=0; j<ladders[i].size(); j++)
+      cout << ladders[i][j]<<endl;
+  }
+  //exit(0);
+  */
+
   build_operators(dets, ladders);
 
 }
@@ -340,7 +349,7 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
     v_add =  otherBlock->get_op_array(CRE_DESCOMP).is_local() ? v_array : v_distributed;
     f = boost::bind(&opxop::cdxcdcomp, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
     for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
-
+    
     v_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? v_array : v_distributed;
     f = boost::bind(&opxop::ddxcccomp, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
     for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);

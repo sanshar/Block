@@ -60,6 +60,7 @@ extern bool FULLRESTART;
 extern bool reset_iter;
 extern bool restartwarm;
 extern string sym;
+extern bool NonabelianSym;
 extern std::vector<int> NPROP;
 extern int PROPBITLEN;
 //extern ifstream* coutbuf;

@@ -17,6 +17,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/functional/hash.hpp>
 #include <boost/shared_ptr.hpp>
 #include "IrrepVector.h"
+#include "tensor_operator.h"
 
 namespace SpinAdapted{
 struct Csf
@@ -134,7 +135,7 @@ public:
   bool operator< (const Csf& s) const;
   friend ostream& operator<< (ostream& os, const Csf& s)
   {
-    os <<"n: "<<s.n<<" S: "<<s.S<<" Sz: "<<s.Sz<<"  Irrep: "<<s.irrep<<endl;
+    os <<"n: "<<s.n<<" S: "<<s.S<<" Sz: "<<s.Sz<<"  Irrep: "<<s.irrep<<","<<s.row()<<endl;
     map<Slater, double>::const_iterator it = s.det_rep.begin();    
     for (; it!= s.det_rep.end(); it++)
       os<<(*it).second<<" "<<(*it).first;
@@ -147,8 +148,9 @@ public:
 
 
 namespace CSFUTIL {
-  std::vector< Csf > spinfockstrings(const std::vector<int>& orbs);  
-  void TensorProduct(Csf& rhs, Csf& lhs, vector< Csf >& output);  
+  std::vector< Csf > spinfockstrings(const std::vector<int>& orbs, std::vector<std::vector<Csf> >& ladders);  
+  void TensorProduct(Csf& lhs, vector<Csf>& lhs_csfs, Csf& rhs, vector<Csf>& rhs_csfs, vector< Csf >& output, vector< vector<Csf> >& outputladder);
+  Csf applyTensorOp(const TensorOp& newop, int spinL);
   vector< vector<int> > generate_partitions(int k);
 }
 
