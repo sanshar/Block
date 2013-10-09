@@ -761,6 +761,9 @@ SpinAdapted::Input::Input(const string& config_name)
 #endif
 
      //Fiedler
+#ifndef SERIAL
+     mpi::broadcast(world,m_fiedler,0);
+#endif
   if (m_fiedler) {
      if (mpigetrank() == 0){
         m_fiedlerorder=get_fiedler(orbitalfile, orbitalFile);
