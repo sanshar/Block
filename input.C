@@ -148,6 +148,7 @@ SpinAdapted::Input::Input(const string& config_name)
   sym = "c1";
   string orbitalfile;
   string gaconffile;
+
   if(mpigetrank() == 0)
   {
     pout << "Reading input file"<<endl;
@@ -210,7 +211,7 @@ SpinAdapted::Input::Input(const string& config_name)
 	m_startM = atoi(tok[1].c_str());
 
 	if (m_startM < 50) {
-	  pout << "maxM cannot be less than 50"<<endl;
+	  pout << "startM cannot be less than 50"<<endl;
 	  pout << "error found in the following line "<<endl;
 	  pout << msg<<endl;
 	  abort();
@@ -269,7 +270,27 @@ SpinAdapted::Input::Input(const string& config_name)
       }
       else if (boost::iequals(keyword, "fiedler")){
         m_fiedler = true;
-      }
+       char fiedlerFile[5000];
+       std::ofstream fiedlerFILE;
+       sprintf(fiedlerFile, "%s%s", save_prefix().c_str(), "/fiedler_reorder.dat");
+       boost::filesystem::path p(fiedlerFile);
+       if (boost::filesystem::exists(p)) {
+          m_reorder = true;
+          m_fiedler = false;
+          m_reorderfile = fiedlerFile;
+#ifndef MOLPRO
+            pout << "----------------"<<endl;
+            pout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
+            pout << "Using the reorder file " << fiedlerFile << endl;
+            pout << "----------------"<<endl;
+#else
+            xout << "----------------"<<endl;
+            xout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
+            xout << "Using the reorder file " << fiedlerFile << endl;
+            xout << "----------------"<<endl;
+#endif
+       }
+    }
       else if (boost::iequals(keyword, "noreorder") || boost::iequals(keyword, "nofiedler")) {
         m_fiedler = false;
         m_gaopt = false;
@@ -709,7 +730,6 @@ SpinAdapted::Input::Input(const string& config_name)
 
   }
 
-
 #ifndef SERIAL
   boost::mpi::communicator world;
   mpi::broadcast(world, sym, 0);
@@ -748,7 +768,7 @@ SpinAdapted::Input::Input(const string& config_name)
 
         int n = m_fiedlerorder.size() - 1;
         for(int i = 0; i < n; ++i) {
-         fiedlerFILE << m_fiedlerorder[i]+1 << ",";
+         fiedlerFILE << m_fiedlerorder[i]+1 << " ";
         }
         fiedlerFILE << m_fiedlerorder[n]+1 << endl;
         fiedlerFILE.close();
@@ -805,6 +825,7 @@ void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& p
   string msg; int msgsize = 5000;
   ReadMeaningfulLine(dumpFile, msg, msgsize);
   vector<string> tok;
+  std::vector<int> diff;
   boost::split(tok, msg, is_any_of(", \t"), token_compress_on);
   while(msg.size() != 0) {
     for (int i=0; i<tok.size(); i++)
@@ -839,6 +860,12 @@ void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& p
       abort();
     }
     preorder.at(oldtonew[i]) = i;
+    //HERE HERE HERE HERE
+    int j;
+    j = (i) - oldtonew[i];
+    diff.push_back(j);
+    //pout << "ROA ROA i oldtonew[i] diff " <<  i << " " << oldtonew[i] << " " << (j  ) << " " << endl;
+    //pout << "ROA ROA i oldtonew[i] diff " <<  i << " " << oldtonew[i] << " " << (diff  ) << " " << endl;
   }
 }
 
@@ -1038,6 +1065,7 @@ std::vector<int> SpinAdapted::Input::get_fiedler(string& dumpname, ifstream& dum
      genetic::ReadIntegral(dumpFile, fiedler);
      dumpFile.close();
      SymmetricMatrix fiedler_sym;
+     pout << fiedler;
      fiedler_sym << fiedler;
      std::vector<int> findices = fiedler_reorder(fiedler_sym);
      return findices;
@@ -1066,8 +1094,8 @@ void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile, st
 
     int n = m_gaorder.size() - 1;
     for(int i = 0; i < n; ++i) {
-       cout << m_gaorder[i]+1 << ",";
-       gaFILE << m_gaorder[i]+1 << ",";
+       cout << m_gaorder[i]+1 << " ";
+       gaFILE << m_gaorder[i]+1 << " ";
     }
     cout << m_gaorder[n]+1 << endl;
     gaFILE << m_gaorder[n]+1 << endl;
