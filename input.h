@@ -33,7 +33,7 @@ enum noiseTypes {RANDOM, EXCITEDSTATE};
 enum calcType {DMRG, ONEPDM, TWOPDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 
-enum keywords{ORBS, STARTM, MAXM, REORDER, FIEDLER, GAORDER, SCHEDULE, SYM, NELECS, SPIN, IRREP,
+enum keywords{ORBS, STARTM, MAXM, REORDER, FIEDLER, GAORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
 	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, 
 	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NUMKEYWORDS};
 
@@ -52,6 +52,7 @@ class Input {
   int m_guess_permutations;
 
   std::vector<int> m_hf_occupancy;
+  bool m_hf_occ_user;
   std::vector<double> m_weights;
 
   std::vector<int> m_sweep_iter_schedule;
@@ -134,7 +135,7 @@ class Input {
   {
     ar & m_thrds_per_node;
     ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz;
-    ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occupancy;
+    ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occ_user & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule;
     ar & m_molecule_quantum & m_total_symmetry_number & m_total_spin & m_orbenergies & m_add_noninteracting_orbs;
     ar & m_save_prefix & m_load_prefix & m_direct & m_max_lanczos_dimension;

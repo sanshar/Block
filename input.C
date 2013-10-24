@@ -78,6 +78,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_norbs = 0;
   m_alpha = 0;
   m_beta = 0;
+  m_hf_occ_user = false;
 
   m_outputlevel = 0;
   m_nquanta = 2;
@@ -509,6 +510,23 @@ SpinAdapted::Input::Input(const string& config_name)
 	m_save_prefix = m_load_prefix;
       }
 
+     // user-defined initial HF wave function occupancies, in spin orbital
+      else if(boost::iequals(keyword, "hf_occ"))
+      {
+        if( usedkey[HF_OCC] == 0 ) usedkey_error( keyword, msg );
+        usedkey[HF_OCC] = 0;
+
+        // the occupancies start from the second element of the tok string
+        // ++it;
+        vector<string> :: iterator it = ++tok.begin(); 
+        // the occupancies start from the second element of the tok string
+        for( ; it != tok.end(); ++it ){
+         int occ_i = atoi( (*it).c_str() );
+         m_hf_occupancy.push_back( occ_i );
+        }
+        m_hf_occ_user = true;
+
+      }
 
       else if(boost::iequals(keyword,  "nroots"))
       {
@@ -867,7 +885,6 @@ void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& p
       abort();
     }
     preorder.at(oldtonew[i]) = i;
-    //HERE HERE HERE HERE
     int j;
     j = (i) - oldtonew[i];
     diff.push_back(j);
@@ -902,6 +919,7 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     ifstream reorderFile(m_reorderfile.c_str());
     CheckFileExistence(m_reorderfile, "Reorder file ");
     readreorderfile(reorderFile, reorder, oldtonew);
+    m_gaorder = oldtonew;
     //for (int i=0; i<m_norbs/2; i++) {
     //  cout << oldtonew[i] << " ";
     //}
@@ -1071,7 +1089,6 @@ std::vector<int> SpinAdapted::Input::get_fiedler(string& dumpname, ifstream& dum
      genetic::ReadIntegral(dumpFile, fiedler);
      dumpFile.close();
      SymmetricMatrix fiedler_sym;
-     pout << fiedler;
      fiedler_sym << fiedler;
      std::vector<int> findices = fiedler_reorder(fiedler_sym);
      return findices;
@@ -1388,13 +1405,90 @@ void SpinAdapted::Input::performSanityTest()
   m_spin_vector.resize(m_norbs);
   for (int i = 0; i < m_norbs; ++i)
     m_spin_vector[i] = (i & 1) ? -1 : 1;
-  m_hf_occupancy.resize(m_norbs);
+
+
+
+  bool auto_guess = true;
+  // check the length of the user-defined hf_occ
+  if( m_hf_occ_user ){
+  // the user-defined guess is wrong
+    if( m_hf_occupancy.size() != m_norbs ){
+     pout << "warning: the length of user-defined HF occupancies does not match the number of spin orbitals " << endl;
+     pout << "Block will use an automatic HF occupancy guess instead" << endl;
+     auto_guess = true;
+    }
+    else{
+     pout << "using user-defined HF occupancy guess " << endl;
+    }
+  }
+  // no user-defined guess, will do automatic guess
+  else{
+     pout << "Block will use an automatic HF occupancy guess" << endl;
+     auto_guess = true;
+  }
+
+  if( auto_guess ){
+    m_hf_occupancy.resize(m_norbs); for( int i = 0; i < m_norbs; i++ ){ m_hf_occupancy.at(i) = 0; }
+
+    // Guess 1: label the occupied orbitals according to the orbital reorder sequence
+    if( m_gaopt || m_reorder ){
+
+      for( int i = 0; i < m_gaorder.size(); ++i ){
+        int orig_orb_ind = m_gaorder.at(i);
+        if( orig_orb_ind < m_alpha ){ m_hf_occupancy[ 2 * i ] = 1;  }
+        if( orig_orb_ind < m_beta ){ m_hf_occupancy[ 2 * i + 1 ] = 1;}
+      }
+    }
+    else if( m_fiedler ){
+
+      for( int i = 0; i < m_fiedlerorder.size(); ++i ){
+        int orig_orb_ind = m_fiedlerorder.at(i);
+        if( orig_orb_ind < m_alpha ){ m_hf_occupancy[ 2 * i ] = 1;  }
+        if( orig_orb_ind < m_beta ){ m_hf_occupancy[ 2 * i + 1 ] = 1;}
+      }
+    }
+    else{
+     /*
+      // Guess 2: find the orbital indices with the lowest hopping matrix diagonal elements
+      vector<double> v1_diagonal_elements;
+      for( int i = 0; i < m_norbs; ++i ){ v1_diagonal_elements.push_back( v_1(i,i) ); }
+      multimap<double, int> ele_map;
+      for( int i = 0; i < m_norbs; ++i ){ ele_map.insert( pair<double, int>( v1_diagonal_elements.at(i), i ) ); }
+      multimap<double, int> :: iterator it = ele_map.begin();
+
+      multimap<double, int> :: iterator it_alpha = ele_map.begin();
+      for( int i = 0; i < m_alpha; ++i ){
+        int ia = it_alpha->second;
+        m_hf_occupancy.at( ia ) = 1;
+        ++it_alpha; ++it_alpha;
+      }
+
+      multimap<double, int> :: iterator it_beta = ++ele_map.begin();
+      for( int i = 0; i < m_beta; ++i ){
+        int ib = it_beta->second;
+        m_hf_occupancy.at( ib ) = 1;
+        ++it_beta; ++it_beta;
+      }
+     */
+    }
+
+  }
+
+  pout << "Initial HF occupancy guess: "  << endl;
+  for( int i = 0; i < m_hf_occupancy.size(); ++i ){
+   pout << m_hf_occupancy.at(i) << " " ;
+  }
+  pout << endl;
+
+/*
   for (int i = 0; i < m_alpha; ++i)
     m_hf_occupancy[2*i] = 1;
   for (int i = 0; i < m_beta; ++i)
     m_hf_occupancy[2*i+1] = 1;
+*/
 
 }
+
 
 
 
