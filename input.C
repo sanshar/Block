@@ -1427,22 +1427,23 @@ void SpinAdapted::Input::performSanityTest()
      auto_guess = true;
   }
 
+  pout << "ROA ROA " << m_fiedler;
   if( auto_guess ){
     m_hf_occupancy.resize(m_norbs); for( int i = 0; i < m_norbs; i++ ){ m_hf_occupancy.at(i) = 0; }
 
     // Guess 1: label the occupied orbitals according to the orbital reorder sequence
-    if( m_gaopt || m_reorder ){
+    if( m_fiedler ){
 
-      for( int i = 0; i < m_gaorder.size(); ++i ){
-        int orig_orb_ind = m_gaorder.at(i);
+      for( int i = 0; i < m_fiedlerorder.size(); ++i ){
+        int orig_orb_ind = m_fiedlerorder.at(i);
         if( orig_orb_ind < m_alpha ){ m_hf_occupancy[ 2 * i ] = 1;  }
         if( orig_orb_ind < m_beta ){ m_hf_occupancy[ 2 * i + 1 ] = 1;}
       }
     }
-    else if( m_fiedler ){
+    else if( m_gaopt || m_reorder ){
 
-      for( int i = 0; i < m_fiedlerorder.size(); ++i ){
-        int orig_orb_ind = m_fiedlerorder.at(i);
+      for( int i = 0; i < m_gaorder.size(); ++i ){
+        int orig_orb_ind = m_gaorder.at(i);
         if( orig_orb_ind < m_alpha ){ m_hf_occupancy[ 2 * i ] = 1;  }
         if( orig_orb_ind < m_beta ){ m_hf_occupancy[ 2 * i + 1 ] = 1;}
       }
