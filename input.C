@@ -1427,7 +1427,6 @@ void SpinAdapted::Input::performSanityTest()
      auto_guess = true;
   }
 
-  pout << "ROA ROA " << m_fiedler;
   if( auto_guess ){
     m_hf_occupancy.resize(m_norbs); for( int i = 0; i < m_norbs; i++ ){ m_hf_occupancy.at(i) = 0; }
 
@@ -1447,6 +1446,11 @@ void SpinAdapted::Input::performSanityTest()
         if( orig_orb_ind < m_alpha ){ m_hf_occupancy[ 2 * i ] = 1;  }
         if( orig_orb_ind < m_beta ){ m_hf_occupancy[ 2 * i + 1 ] = 1;}
       }
+    }
+    else if( m_gaopt == false && m_fiedler == false && m_reorder == false ){
+       for (int i = 0; i < m_alpha; ++i)
+          m_hf_occupancy[2*i] = 1;
+          for (int i = 0; i < m_beta; ++i) m_hf_occupancy[2*i+1] = 1;
     }
     else{
      /*
