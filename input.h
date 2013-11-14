@@ -52,6 +52,7 @@ class Input {
   int m_guess_permutations;
 
   std::vector<int> m_hf_occupancy;
+  std::vector<int> m_hf_occupancy_tmp;
   bool m_hf_occ_user;
   std::vector<double> m_weights;
 

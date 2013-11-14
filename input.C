@@ -522,7 +522,7 @@ SpinAdapted::Input::Input(const string& config_name)
         // the occupancies start from the second element of the tok string
         for( ; it != tok.end(); ++it ){
          int occ_i = atoi( (*it).c_str() );
-         m_hf_occupancy.push_back( occ_i );
+         m_hf_occupancy_tmp.push_back( occ_i );
         }
         m_hf_occ_user = true;
 
@@ -1406,19 +1406,44 @@ void SpinAdapted::Input::performSanityTest()
   for (int i = 0; i < m_norbs; ++i)
     m_spin_vector[i] = (i & 1) ? -1 : 1;
 
+  //TODO: Add keyword specifying type of algorithm
+  //If it has more than 4 elements, then it is manual
+  //if it says HF, the it assumes that all orbitals are rotated
+  //if it says one_electron, then it takes the elements from the one-electron integrals
 
 
-  bool auto_guess = true;
+  bool auto_guess = false;
   // check the length of the user-defined hf_occ
   if( m_hf_occ_user ){
   // the user-defined guess is wrong
-    if( m_hf_occupancy.size() != m_norbs ){
-     pout << "warning: the length of user-defined HF occupancies does not match the number of spin orbitals " << endl;
-     pout << "Block will use an automatic HF occupancy guess instead" << endl;
-     auto_guess = true;
+    if( m_hf_occupancy_tmp.size() != m_norbs/2 ){
+     pout << "ERROR: The length of user-defined HF occupancies does not match the number of orbitals " << endl;
+     pout << "Length of occupancies is: " << m_hf_occupancy_tmp.size() << ", and the number of orbitals is: " << m_norbs/2 << endl;
+     abort();
     }
     else{
+       // TODO: Rotate according to Fiedler, genetic and so on. You should 
+       //       do that change directly here
      pout << "using user-defined HF occupancy guess " << endl;
+     pout << m_hf_occupancy_tmp.size() << endl;
+     for (int i = 0; i < m_hf_occupancy_tmp.size(); ++i){
+        if (m_hf_occupancy_tmp[i]==0){
+           m_hf_occupancy.push_back(0);
+           m_hf_occupancy.push_back(0);
+        }
+        else if (m_hf_occupancy_tmp[i]==1){
+           m_hf_occupancy.push_back(1);
+           m_hf_occupancy.push_back(0);
+        }
+        else if (m_hf_occupancy_tmp[i]==2){
+           m_hf_occupancy.push_back(1);
+           m_hf_occupancy.push_back(1);
+        }
+        else{
+           pout << "We should not be here" << endl;
+           abort();
+        }
+        }
     }
   }
   // no user-defined guess, will do automatic guess
@@ -1428,37 +1453,52 @@ void SpinAdapted::Input::performSanityTest()
   }
 
   if( auto_guess ){
-    m_hf_occupancy.resize(m_norbs); for( int i = 0; i < m_norbs; i++ ){ m_hf_occupancy.at(i) = 0; }
+    m_hf_occupancy.resize(m_norbs); 
+    for( int i = 0; i < m_norbs; i++ ) { 
+       m_hf_occupancy.at(i) = 0; 
+    }
 
     // Guess 1: label the occupied orbitals according to the orbital reorder sequence
     if( m_fiedler ){
 
       for( int i = 0; i < m_fiedlerorder.size(); ++i ){
         int orig_orb_ind = m_fiedlerorder.at(i);
-        if( orig_orb_ind < m_alpha ){ m_hf_occupancy[ 2 * i ] = 1;  }
-        if( orig_orb_ind < m_beta ){ m_hf_occupancy[ 2 * i + 1 ] = 1;}
+        if( orig_orb_ind < m_alpha ){ 
+           m_hf_occupancy[ 2 * i ] = 1;  
+        }
+        if( orig_orb_ind < m_beta ){ 
+           m_hf_occupancy[ 2 * i + 1 ] = 1;
+        }
       }
     }
     else if( m_gaopt || m_reorder ){
 
       for( int i = 0; i < m_gaorder.size(); ++i ){
         int orig_orb_ind = m_gaorder.at(i);
-        if( orig_orb_ind < m_alpha ){ m_hf_occupancy[ 2 * i ] = 1;  }
-        if( orig_orb_ind < m_beta ){ m_hf_occupancy[ 2 * i + 1 ] = 1;}
+        if( orig_orb_ind < m_alpha ){ 
+           m_hf_occupancy[ 2 * i ] = 1;  
+        }
+        if( orig_orb_ind < m_beta ){ 
+           m_hf_occupancy[ 2 * i + 1 ] = 1;
+        }
       }
     }
     else if( m_gaopt == false && m_fiedler == false && m_reorder == false ){
        for (int i = 0; i < m_alpha; ++i)
           m_hf_occupancy[2*i] = 1;
-          for (int i = 0; i < m_beta; ++i) m_hf_occupancy[2*i+1] = 1;
+          for (int i = 0; i < m_beta; ++i) 
+             m_hf_occupancy[2*i+1] = 1;
     }
     else{
-     /*
       // Guess 2: find the orbital indices with the lowest hopping matrix diagonal elements
       vector<double> v1_diagonal_elements;
-      for( int i = 0; i < m_norbs; ++i ){ v1_diagonal_elements.push_back( v_1(i,i) ); }
+      for( int i = 0; i < m_norbs; ++i ){ 
+         v1_diagonal_elements.push_back( v_1(i,i) ); 
+      }
       multimap<double, int> ele_map;
-      for( int i = 0; i < m_norbs; ++i ){ ele_map.insert( pair<double, int>( v1_diagonal_elements.at(i), i ) ); }
+      for( int i = 0; i < m_norbs; ++i ){ 
+         ele_map.insert( pair<double, int>( v1_diagonal_elements.at(i), i ) ); 
+      }
       multimap<double, int> :: iterator it = ele_map.begin();
 
       multimap<double, int> :: iterator it_alpha = ele_map.begin();
@@ -1474,7 +1514,6 @@ void SpinAdapted::Input::performSanityTest()
         m_hf_occupancy.at( ib ) = 1;
         ++it_beta; ++it_beta;
       }
-     */
     }
 
   }
