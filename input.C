@@ -1422,25 +1422,33 @@ void SpinAdapted::Input::performSanityTest()
      abort();
     }
     else{
-       // TODO: Rotate according to Fiedler, genetic and so on. You should 
-       //       do that change directly here
      pout << "using user-defined HF occupancy guess " << endl;
-     pout << m_hf_occupancy_tmp.size() << endl;
+     int index;
+
      for (int i = 0; i < m_hf_occupancy_tmp.size(); ++i){
-        if (m_hf_occupancy_tmp[i]==0){
+        if (m_fiedler)
+           index = m_fiedlerorder.at(i);
+        else if (m_gaopt || m_reorder){
+           index = m_gaorder.at(i);
+        }
+        else if( m_gaopt == false && m_fiedler == false && m_reorder == false )
+           index = i;
+
+        if (m_hf_occupancy_tmp[index]==0){
            m_hf_occupancy.push_back(0);
            m_hf_occupancy.push_back(0);
         }
-        else if (m_hf_occupancy_tmp[i]==1){
+        else if (m_hf_occupancy_tmp[index]==1){
            m_hf_occupancy.push_back(1);
            m_hf_occupancy.push_back(0);
         }
-        else if (m_hf_occupancy_tmp[i]==2){
+        else if (m_hf_occupancy_tmp[index]==2){
            m_hf_occupancy.push_back(1);
            m_hf_occupancy.push_back(1);
         }
         else{
-           pout << "We should not be here" << endl;
+           pout << "Provided an occupation larger than 2 in orbital " << i << endl;
+           pout << "Exiting." << endl;
            abort();
         }
         }
@@ -1523,6 +1531,7 @@ void SpinAdapted::Input::performSanityTest()
    pout << m_hf_occupancy.at(i) << " " ;
   }
   pout << endl;
+  abort();
 
 /*
   for (int i = 0; i < m_alpha; ++i)
