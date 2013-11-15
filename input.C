@@ -78,7 +78,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_norbs = 0;
   m_alpha = 0;
   m_beta = 0;
-  m_hf_occ_user = false;
+  m_hf_occ_user = "";
 
   m_outputlevel = 0;
   m_nquanta = 2;
@@ -513,18 +513,25 @@ SpinAdapted::Input::Input(const string& config_name)
      // user-defined initial HF wave function occupancies, in spin orbital
       else if(boost::iequals(keyword, "hf_occ"))
       {
-        if( usedkey[HF_OCC] == 0 ) usedkey_error( keyword, msg );
+        if( usedkey[HF_OCC] == 0 ) 
+           usedkey_error( keyword, msg );
         usedkey[HF_OCC] = 0;
 
         // the occupancies start from the second element of the tok string
         // ++it;
         vector<string> :: iterator it = ++tok.begin(); 
         // the occupancies start from the second element of the tok string
-        for( ; it != tok.end(); ++it ){
-         int occ_i = atoi( (*it).c_str() );
-         m_hf_occupancy_tmp.push_back( occ_i );
+        if (tok.size() == 2 ) {
+           m_hf_occ_user = (*it).c_str();
         }
-        m_hf_occ_user = true;
+        else{
+           m_hf_occ_user = "manual";
+           for( ; it != tok.end(); ++it ){
+            int occ_i = atoi( (*it).c_str() );
+            m_hf_occupancy_tmp.push_back( occ_i );
+           }
+        }
+        pout << "m_hf_occ_user " << m_hf_occ_user << endl;
 
       }
 
@@ -731,6 +738,11 @@ SpinAdapted::Input::Input(const string& config_name)
       msg.resize(0);
       ReadMeaningfulLine(input, msg, msgsize);
       
+    }
+
+    if (m_hf_occ_user==""){
+      pout << "need to specify hf_occ. The recommended default setting is: hf_occ integral" << endl;
+      abort();
     }
 
     if (n_elec == -1) {
@@ -1414,7 +1426,7 @@ void SpinAdapted::Input::performSanityTest()
 
   bool auto_guess = false;
   // check the length of the user-defined hf_occ
-  if( m_hf_occ_user ){
+  if( m_hf_occ_user=="manual" ){
   // the user-defined guess is wrong
     if( m_hf_occupancy_tmp.size() != m_norbs/2 ){
      pout << "ERROR: The length of user-defined HF occupancies does not match the number of orbitals " << endl;
@@ -1451,16 +1463,17 @@ void SpinAdapted::Input::performSanityTest()
            pout << "Exiting." << endl;
            abort();
         }
-        }
+     }
     }
   }
   // no user-defined guess, will do automatic guess
-  else{
-     pout << "Block will use an automatic HF occupancy guess" << endl;
-     auto_guess = true;
-  }
+  //else{
+  //   pout << "Block will use an automatic HF occupancy guess" << endl;
+  //   auto_guess = true;
+  //}
 
-  if( auto_guess ){
+  //if( auto_guess ){
+  else if( m_hf_occ_user=="canonical" ){
     m_hf_occupancy.resize(m_norbs); 
     for( int i = 0; i < m_norbs; i++ ) { 
        m_hf_occupancy.at(i) = 0; 
@@ -1497,7 +1510,12 @@ void SpinAdapted::Input::performSanityTest()
           for (int i = 0; i < m_beta; ++i) 
              m_hf_occupancy[2*i+1] = 1;
     }
-    else{
+  }
+  else if( m_hf_occ_user=="integral" ){
+      m_hf_occupancy.resize(m_norbs); 
+      for( int i = 0; i < m_norbs; i++ ){ 
+         m_hf_occupancy.at(i) = 0; 
+      }
       // Guess 2: find the orbital indices with the lowest hopping matrix diagonal elements
       vector<double> v1_diagonal_elements;
       for( int i = 0; i < m_norbs; ++i ){ 
@@ -1507,7 +1525,6 @@ void SpinAdapted::Input::performSanityTest()
       for( int i = 0; i < m_norbs; ++i ){ 
          ele_map.insert( pair<double, int>( v1_diagonal_elements.at(i), i ) ); 
       }
-      multimap<double, int> :: iterator it = ele_map.begin();
 
       multimap<double, int> :: iterator it_alpha = ele_map.begin();
       for( int i = 0; i < m_alpha; ++i ){
@@ -1524,14 +1541,12 @@ void SpinAdapted::Input::performSanityTest()
       }
     }
 
-  }
 
   pout << "Initial HF occupancy guess: "  << endl;
   for( int i = 0; i < m_hf_occupancy.size(); ++i ){
    pout << m_hf_occupancy.at(i) << " " ;
   }
   pout << endl;
-  abort();
 
 /*
   for (int i = 0; i < m_alpha; ++i)
