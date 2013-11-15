@@ -53,7 +53,7 @@ class Input {
 
   std::vector<int> m_hf_occupancy;
   std::vector<int> m_hf_occupancy_tmp;
-  bool m_hf_occ_user;
+  std::string m_hf_occ_user;
   std::vector<double> m_weights;
 
   std::vector<int> m_sweep_iter_schedule;
