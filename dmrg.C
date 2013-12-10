@@ -73,6 +73,7 @@ namespace SpinAdapted{
   int MAX_THRD = 1;
   bool FULLRESTART;
   bool RESTART;
+  bool BACKWARD;
   bool reset_iter;
   std::vector<int> NPROP;
   int PROPBITLEN=1;
@@ -120,6 +121,14 @@ int calldmrg(char* input, char* output)
       sweepParams.calc_niter();
       sweepParams.savestate(direction, restartsize);
       restart(sweep_tol, reset_iter);
+    }
+    else if (BACKWARD) {
+       fullrestartGenblock();
+       reset_iter = true;
+       sweepParams.restorestate(direction, restartsize);
+       sweepParams.calc_niter();
+       sweepParams.savestate(direction, restartsize);
+       restart(sweep_tol, reset_iter);
     }
     else {
       dmrg(sweep_tol);

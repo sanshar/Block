@@ -33,7 +33,7 @@ enum noiseTypes {RANDOM, EXCITEDSTATE};
 enum calcType {DMRG, ONEPDM, TWOPDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 
-enum keywords{ORBS, STARTM, MAXM, REORDER, FIEDLER, GAORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
+enum keywords{ORBS, LASTM, STARTM, MAXM, REORDER, FIEDLER, GAORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
 	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, 
 	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NUMKEYWORDS};
 
@@ -63,6 +63,8 @@ class Input {
   std::vector<double> m_sweep_noise_schedule;
   std::vector<double> m_sweep_additional_noise_schedule;
   bool m_schedule_type_default;
+  bool m_schedule_type_backward;
+  int m_lastM;
   int m_startM;
   int m_maxM;
   int m_integral_disk_storage_thresh;
@@ -108,6 +110,7 @@ class Input {
 
   double m_sweep_tol;
   bool m_restart;
+  bool m_backward;
   bool m_fullrestart;
   bool m_restart_warm;
   bool m_reset_iterations;
@@ -145,9 +148,9 @@ class Input {
     ar & m_fiedler & m_fiedlerorder;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_cd;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_screen_tol & m_quantaToKeep & m_noise_type;
-    ar & m_sweep_tol & m_restart & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;
+    ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
-    ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_default & m_core_energy &m_integral_disk_storage_thresh;
+    ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_backward & m_schedule_type_default & m_core_energy &m_integral_disk_storage_thresh;
   }
 
 
@@ -246,6 +249,7 @@ class Input {
   bool& set_fullrestart() {return m_fullrestart;}
   const double& get_coreenergy() const {return m_core_energy;}
   const bool& get_fullrestart() const {return m_fullrestart;}
+  const bool& get_backward() const {return m_backward;}
   const double& get_sweep_tol() const {return m_sweep_tol;}
   const bool& get_restart() const {return m_restart;}
   const bool& get_restart_warm() const {return m_restart_warm;}

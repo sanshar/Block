@@ -96,6 +96,7 @@ void ReadInput(char* conf)
 
   RESTART = dmrginp.get_restart();
   FULLRESTART = dmrginp.get_fullrestart();
+  BACKWARD = dmrginp.get_backward();
   restartwarm = dmrginp.get_restart_warm();
   reset_iter = dmrginp.get_reset_iterations();
 

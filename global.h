@@ -57,6 +57,7 @@ extern bool SHOW_MORE;
 extern bool DEBUG_MEMORY;
 extern bool RESTART;
 extern bool FULLRESTART;
+extern bool BACKWARD;
 extern bool reset_iter;
 extern bool restartwarm;
 extern string sym;

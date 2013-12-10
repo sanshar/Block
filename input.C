@@ -114,6 +114,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_restart = false;
   m_fullrestart = false;
   m_restart_warm = false;
+  m_backward = false;
   m_reset_iterations = false;
 
   m_do_diis = false;
@@ -123,7 +124,9 @@ void SpinAdapted::Input::initialize_defaults()
   m_diis_error_tol = 1e-8;
   m_num_spatial_orbs = 0;
   m_schedule_type_default = false;
+  m_schedule_type_backward = false;
   m_maxM = 0;
+  m_lastM = 500;
   m_startM = 500;
   m_core_energy = 0.0;
   m_reorder = false;
@@ -221,6 +224,18 @@ SpinAdapted::Input::Input(const string& config_name)
 	}	
 	  
       }
+      else if (boost::iequals(keyword, "lastM")) {
+	if(usedkey[LASTM] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[LASTM] = 0;
+	if (tok.size() != 2) {
+	  pout << "keyword lastM should be followed by a single number and then an end line"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
+	  abort();
+      }	
+      m_lastM = atoi(tok[1].c_str());
+   }
       else if (boost::iequals(keyword,  "reorder")) {
       if(usedkey[REORDER] == 0) 
          usedkey_error(keyword, msg);
@@ -313,6 +328,7 @@ SpinAdapted::Input::Input(const string& config_name)
 	  abort();
 	}
 	
+//ROA: Why is this inside the schedule????
    if (m_fiedler == true){
       char fiedlerFile[5000];
       std::ofstream fiedlerFILE;
@@ -715,12 +731,17 @@ SpinAdapted::Input::Input(const string& config_name)
 
 
       else if (boost::iequals(keyword,  "restart")) {
-	m_restart = true;
+         m_restart = true;
       }
 
 
       else if (boost::iequals(keyword,  "fullrestart")) {
-	m_fullrestart = true;	  
+         m_fullrestart = true;	  
+      }
+      else if (boost::iequals(keyword,  "backward")) {
+         m_backward = true;	  
+         m_schedule_type_backward = true;
+         m_algorithm_type = TWODOT;
       }
 
 
@@ -1379,6 +1400,81 @@ void SpinAdapted::Input::performSanityTest()
       m_maxiter = lastiter+6;
     }
   }
+  else if (m_schedule_type_backward) {
+
+    int nentry = 0;
+    m_sweep_iter_schedule.resize(nentry);
+    m_sweep_state_schedule.resize(nentry);
+    m_sweep_qstate_schedule.resize(nentry,0);
+    m_sweep_tol_schedule.resize(nentry);
+    m_sweep_noise_schedule.resize(nentry);
+    m_sweep_additional_noise_schedule.resize(nentry,0);
+
+    double sweeptol = m_sweep_tol;
+    int lastiter = 0;
+    int firstSched = 0;
+    int sweepCount = 0;
+    int nSched=17;
+    int lastM=0; //To be changed to a variable
+    lastM = m_lastM;
+    if (lastM==0) lastM=50;
+    if (lastM > m_startM) {
+       pout << "lastM is larger than startM" << endl;
+       pout << "Make sure you specify a lastM larger than " << lastM << endl;
+       pout << "or specify a larger startM " << endl;
+       abort();
+    }
+    double bNoise = 0.0;
+    double bTol = 5e-6;
+
+    int defIter [] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
+    int defM [] = {10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000, 2000, 1000, 500, 250, 100, 50, 25, 10, 1};
+
+    for (int i=0; i<nSched;++i){
+       if (firstSched==0){
+          if (lastM == m_startM){
+             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
+             sweepCount += 3;
+             break;
+          }
+          else if(m_startM==defM[i]){ 
+             firstSched = 1;
+             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
+             sweepCount += defIter[i];
+       }
+          else if ((m_startM > defM[i])){
+             firstSched = 1;
+             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
+             sweepCount += defIter[i-1];
+             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
+             sweepCount += defIter[i];
+          }
+       }
+       else{//After first iteration
+          if (defM[i]<=lastM){
+             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(lastM); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
+             sweepCount += defIter[i];
+             break;
+          }
+          else{
+             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
+             sweepCount += defIter[i];
+          }
+
+        }
+    }
+       lastiter = m_sweep_iter_schedule.back();
+       m_maxiter = lastiter+3;
+       pout << "maxiter " << m_maxiter << endl;
+  }
+
+
+
+
+
+
+
+
   else {
     if (m_maxM != 0) {
       pout << "With detailed schedule a non-zero maxM should not be specified"<<endl;
