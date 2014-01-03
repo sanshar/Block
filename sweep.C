@@ -180,14 +180,14 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     mcheck("after rotation and transformation of block");
 
   if (dmrginp.outputlevel() > 0){
-    pout << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
-    pout << dmrginp.makeopsT<<" makeops "<<endl;
-    pout << dmrginp.datatransfer<<" datatransfer "<<endl;
+    pout << *dmrginp.guessgenT<<" "<<*dmrginp.multiplierT<<" "<<*dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+    pout << *dmrginp.makeopsT<<" makeops "<<endl;
+    pout << *dmrginp.datatransfer<<" datatransfer "<<endl;
     pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
-    pout << dmrginp.oneelecT<<" "<<dmrginp.twoelecT<<" "<<dmrginp.hmultiply<<" "<<dmrginp.couplingcoeff<<" hmult"<<endl;
-    pout << dmrginp.buildsumblock<<" "<<dmrginp.buildblockops<<" build block"<<endl;
+    pout << *dmrginp.oneelecT<<" "<<*dmrginp.twoelecT<<" "<<*dmrginp.hmultiply<<" "<<*dmrginp.couplingcoeff<<" hmult"<<endl;
+    pout << *dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<" build block"<<endl;
     pout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
-    pout << dmrginp.addnoise<<" "<<dmrginp.s0time<<" "<<dmrginp.s1time<<" "<<dmrginp.s2time<<endl;
+    pout << *dmrginp.addnoise<<" "<<*dmrginp.s0time<<" "<<*dmrginp.s1time<<" "<<*dmrginp.s2time<<endl;
   }
 
 }
