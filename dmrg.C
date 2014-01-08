@@ -67,6 +67,7 @@ namespace SpinAdapted{
   bool DEBUGWAIT = false;
   bool DEBUG_MEMORY = false;
   bool restartwarm = false;
+  double NUMERICAL_ZERO = 1e-15;
   OneElectronArray v_1;
   TwoElectronArray v_2(TwoElectronArray::restrictedNonPermSymm);
   Input dmrginp;
@@ -89,7 +90,6 @@ int calldmrg(char* input, char* output)
     file.open(output);
     cout.rdbuf(file.rdbuf());
   }
-
   ReadInput(input);
   MAX_THRD = dmrginp.thrds_per_node()[mpigetrank()];
 #ifdef _OPENMP
@@ -162,7 +162,7 @@ int calldmrg(char* input, char* output)
       dmrg(sweep_tol);
     }
 
-    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
+    dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
     dmrginp.Sz() = dmrginp.total_spin_number();
     sweep_copy.restorestate(direction_copy, restartsize_copy);
 
@@ -205,10 +205,12 @@ int calldmrg(char* input, char* output)
     }
 
 
-    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
+    dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
+    dmrginp.twoindex_screen_tol() = 0.0; //need to turn screening off for two index ops
+
     dmrginp.Sz() = dmrginp.total_spin_number();
     dmrginp.do_cd() = true;
-    dmrginp.screen_tol() = 0.0;
+
     sweep_copy.restorestate(direction_copy, restartsize_copy);
 
     dmrginp.set_fullrestart() = true;
@@ -236,7 +238,7 @@ int calldmrg(char* input, char* output)
     }
 
 
-    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
+    dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
     dmrginp.Sz() = dmrginp.total_spin_number();
     sweep_copy.restorestate(direction_copy, restartsize_copy);
 
@@ -268,10 +270,12 @@ int calldmrg(char* input, char* output)
       abort();
     }
 
-    dmrginp.screen_tol() = 0.0; //need to turn screening off for onepdm
+    dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
+    dmrginp.twoindex_screen_tol() = 0.0; //need to turn screening off for two index ops
+
     dmrginp.Sz() = dmrginp.total_spin_number();
     dmrginp.do_cd() = true;
-    dmrginp.screen_tol() = 0.0;    
+
     sweep_copy.restorestate(direction_copy, restartsize_copy);
 
     dmrginp.set_fullrestart() = true;

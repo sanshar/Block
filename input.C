@@ -101,7 +101,8 @@ void SpinAdapted::Input::initialize_defaults()
   m_do_fci = false;
   m_do_cd = false;
   m_maxiter = 10;
-  m_screen_tol = 1.00e-20;
+  m_oneindex_screen_tol = NUMERICAL_ZERO;
+  m_twoindex_screen_tol = NUMERICAL_ZERO;
 
   m_load_prefix = ".";
   m_save_prefix = ".";
@@ -654,7 +655,8 @@ SpinAdapted::Input::Input(const string& config_name)
 	  pout << msg<<endl;
 	  abort();
 	}
-        m_screen_tol = atof(tok[1].c_str());
+        m_oneindex_screen_tol = atof(tok[1].c_str());
+        m_twoindex_screen_tol = atof(tok[1].c_str());
       }
 
 
@@ -705,9 +707,9 @@ SpinAdapted::Input::Input(const string& config_name)
 	  m_sweep_tol = 1.0e-9;
 	else
 	  m_sweep_tol = atof(tok[1].c_str());
-	if (m_sweep_tol <= 1.0e-10) {
-	  pout << "Sweep tolerance of less than equal to 1.0e-10 may cause convergence problems. Changing it to from "<<m_sweep_tol<<" to 1.0e-9 instead."<<endl;
-	  m_sweep_tol = 1.0e-9;
+	if (m_sweep_tol < 1.0e-12) {
+	  pout << "Sweep tolerance of less than 1.0e-12 may cause convergence problems. Changing it to from "<<m_sweep_tol<<" to 1.0e-12 instead."<<endl;
+	  m_sweep_tol = 1.0e-12;
 	}
       }
 

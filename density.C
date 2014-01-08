@@ -36,7 +36,7 @@ void DensityMatrix::makedensitymatrix(const std::vector<Wavefunction>& wave_solu
   boost::mpi::broadcast(world, *this, 0);
 #endif
 
-  if(noise > 1.0e-14)
+  if(noise > NUMERICAL_ZERO)
     this->add_onedot_noise(wave_solutions, big, noise);
 
 }
@@ -91,7 +91,7 @@ void DensityMatrix::add_twodot_noise(const SpinBlock &big, const double noise)
     noiseMatrix.initialise(toadd[q], &big, false);
     noiseMatrix.Randomise();
     double norm = DotProduct(noiseMatrix, noiseMatrix);
-    if (abs(norm) > 1.e-20)
+    if (abs(norm) > NUMERICAL_ZERO)
     {
       Scale(1./sqrt(norm), noiseMatrix);
       MultiplyProduct(noiseMatrix, Transpose(noiseMatrix), noisedm, noise/toadd.size());
@@ -175,7 +175,7 @@ public:
 	  const boost::shared_ptr<SparseMatrix> fullop = op.getworkingrepresentation(big.get_leftBlock());
 	  TensorMultiply(big.get_leftBlock(), *fullop, &big, const_cast<Wavefunction&> (wavefunction), opxwave, dmrginp.molecule_quantum(), 1.0);
 	  double norm = DotProduct(opxwave, opxwave);
-	  if (abs(norm) > 1e-14) {
+	  if (abs(norm) > NUMERICAL_ZERO) {
 	    Scale(1./sqrt(norm), opxwave);
 	    MultiplyProduct(opxwave, Transpose(opxwave), dm[omp_get_thread_num()], scale);
 	  }
@@ -185,7 +185,7 @@ public:
 	  opxwave2.Clear();
 	  TensorMultiply(big.get_leftBlock(),Transpose(*fullop),&big, const_cast<Wavefunction&> (wavefunction), opxwave2, dmrginp.molecule_quantum(), 1.0);
 	  norm = DotProduct(opxwave2, opxwave2);
-	  if (abs(norm) >1e-14) {
+	  if (abs(norm) >NUMERICAL_ZERO) {
 	    Scale(1./sqrt(norm), opxwave2);
 	    MultiplyProduct(opxwave2, Transpose(opxwave2), dm[omp_get_thread_num()], scale);
 	  }

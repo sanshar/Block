@@ -85,7 +85,8 @@ class Input {
   bool m_do_cd;
   bool m_set_Sz;
   int m_maxiter;
-  double m_screen_tol;
+  double m_oneindex_screen_tol;
+  double m_twoindex_screen_tol;
   bool m_no_transform;
   bool m_add_noninteracting_orbs;
 
@@ -147,7 +148,7 @@ class Input {
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat & m_reorder & m_gaopt & m_gaorder;
     ar & m_fiedler & m_fiedlerorder;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_cd;
-    ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_screen_tol & m_quantaToKeep & m_noise_type;
+    ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_oneindex_screen_tol & m_twoindex_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
     ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_backward & m_schedule_type_default & m_core_energy &m_integral_disk_storage_thresh;
@@ -297,8 +298,10 @@ class Input {
   const int &env_add() const { return m_env_add; }
   const bool &do_fci() const { return m_do_fci; }
   const int &max_iter() const { return m_maxiter; }
-  const double &screen_tol() const { return m_screen_tol; }
-  double &screen_tol() { return m_screen_tol; }
+  const double &oneindex_screen_tol() const { return m_oneindex_screen_tol; }
+  double &oneindex_screen_tol() { return m_oneindex_screen_tol; }
+  const double &twoindex_screen_tol() const { return m_twoindex_screen_tol; }
+  double &twoindex_screen_tol() { return m_twoindex_screen_tol; }
   const int &total_spin() const {return m_total_spin;}
   const std::vector<int> &spin_vector() const { return m_spin_vector; }
   const std::string &save_prefix() const { return m_save_prefix; }

@@ -64,6 +64,7 @@ extern string sym;
 extern bool NonabelianSym;
 extern std::vector<int> NPROP;
 extern int PROPBITLEN;
+extern double NUMERICAL_ZERO;
 //extern ifstream* coutbuf;
 }
 #endif

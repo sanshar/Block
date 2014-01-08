@@ -478,7 +478,7 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
 	  boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(k), k);
 	  Transposeview top2 = Transposeview(rightBlock->get_op_rep(CRE, getSpinQuantum(l), l));
 
-	  if (fabs(scaleV) > dmrginp.screen_tol())
+	  if (fabs(scaleV) > dmrginp.twoindex_screen_tol())
 	    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV);
 	}
       }
@@ -494,7 +494,7 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
 	  Transposeview top2 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(k), k));
 	  
 	  double parity = getCommuteParity(op1->get_deltaQuantum(), top2.get_deltaQuantum(), get_deltaQuantum());
-	  if (fabs(scaleV) > dmrginp.screen_tol())
+	  if (fabs(scaleV) > dmrginp.twoindex_screen_tol())
 	    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV*parity);
 	}
       }
@@ -618,7 +618,7 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
 	double parity = getCommuteParity(top1.get_deltaQuantum(), top2.get_deltaQuantum(), get_deltaQuantum());      
 	scaleV += parity*scaleV2;
 	
-	if (fabs(scaleV) > dmrginp.screen_tol())
+	if (fabs(scaleV) > dmrginp.twoindex_screen_tol())
 	  SpinAdapted::operatorfunctions::TensorProduct(leftBlock, top1, top2, &b, &(b.get_stateInfo()), *this, scaleV);
       }
     }
@@ -743,7 +743,7 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
 	for_all_singlethread(otherBlock->get_op_array(CRE), f);
 	
       }
-    else
+    else if (otherBlock->has(CRE_DESCOMP))
       {
 	cout << "I should not be here"<<endl;exit(0);
       }
