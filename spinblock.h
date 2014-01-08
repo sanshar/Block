@@ -17,7 +17,7 @@ namespace SpinAdapted{
 class Wavefunction;
 class DensityMatrix;
 
-enum Storagetype {LOCAL_STORAGE, DISTRIBUTED_STORAGE};
+enum Storagetype {LOCAL_STORAGE, DISTRIBUTED_STORAGE, DISTRIBUTED_STORAGE_FOR_ONEPDM};
 
 class SpinBlock
 {

@@ -7,11 +7,13 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 
+#include "density.h"
 #include "sweeponepdm.h"
 #include "pario.h"
+#include "onepdm.h"
 
 namespace SpinAdapted{
-void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys)
+void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys, int state)
 {
   //mcheck("at the start of block and decimate");
   // figure out if we are going forward or backwards
@@ -41,13 +43,12 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   int environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
 
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
-
-  system.addAdditionalCompOps();
-  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), LOCAL_STORAGE, true, true);
+  
+  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE_FOR_ONEPDM, true, false);
   
   InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
 				      sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-				      sweepParams.get_onedot(), nexact, useSlater, true, true, true);
+				      sweepParams.get_onedot(), nexact, useSlater, true, false, true);
   SpinBlock big;
   newSystem.set_loopblock(true);
   system.set_loopblock(false);
@@ -55,18 +56,28 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
 
   const int nroots = dmrginp.nroots();
-  std::vector<Wavefunction> solutions(nroots);
+  std::vector<Wavefunction> solution(1);
 
   DiagonalMatrix e;
-  GuessWave::guess_wavefunctions(solutions, e, big, sweepParams.get_guesstype(), true, true, 0.0); 
+  GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, true, 0.0); 
 
 #ifndef SERIAL
   mpi::communicator world;
-  mpi::broadcast(world, solutions, 0);
+  mpi::broadcast(world, solution, 0);
 #endif
 
+  std::vector<Matrix> rotateMatrix;
+  DensityMatrix tracedMatrix;
+  tracedMatrix.allocate(newSystem.get_stateInfo());
+  tracedMatrix.makedensitymatrix(solution, big, std::vector<double>(1,1.0), 0.0, 0.0, false);
+  rotateMatrix.clear();
+  if (!mpigetrank())
+    double error = newSystem.makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
+  
 
-
+#ifndef SERIAL
+  mpi::broadcast(world,rotateMatrix,0);
+#endif
 #ifdef SERIAL
   const int numprocs = 1;
 #endif
@@ -74,12 +85,33 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   const int numprocs = world.size();
 #endif
 
+  Matrix onepdm;
+  load_onepdm_binary(onepdm, state ,state);
 
-  compute_onepdm(solutions, system, systemDot, newSystem, newEnvironment, big, numprocs);
+  if (sweepParams.get_block_iter() == 0) {
+    //this is inface a combination of  2_0_0, 1_1_0 and 0_2_0
+    compute_one_pdm_2_0_0(solution[0], solution[0], big, onepdm);
+    compute_one_pdm_1_1_0(solution[0], solution[0], big, onepdm);
+  }
+
+  compute_one_pdm_0_2_0(solution[0], solution[0], big, onepdm);
+  compute_one_pdm_1_1(solution[0], solution[0], big, onepdm);
+
+  if (sweepParams.get_block_iter()  == sweepParams.get_n_iters() - 1)
+    compute_one_pdm_0_2(solution[0], solution[0], big, onepdm);
+
+  accumulate_onepdm(onepdm);
+  save_onepdm_binary(onepdm, state, state);
+
+  SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
+
+  solution[0].SaveWavefunctionInfo (big.get_stateInfo(), big.get_leftBlock()->get_sites(), state);
+
+  newSystem.transform_operators(rotateMatrix);
 
 }
 
-double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize)
+double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state)
 {
 
   SpinBlock system;
@@ -90,8 +122,7 @@ double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
   Matrix onepdm(2*dmrginp.last_site(), 2*dmrginp.last_site());onepdm=0.0;
   for (int i=0; i<nroots; i++)
-    for (int j=0; j<=i; j++)      
-      save_onepdm_binary(onepdm, i ,j);
+    save_onepdm_binary(onepdm, i ,i);
 
   sweepParams.set_sweep_parameters();
   // a new renormalisation sweep routine
@@ -109,21 +140,46 @@ double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   bool dot_with_sys = true;
 
   sweepParams.set_guesstype() = TRANSPOSE;
-	  
-  SpinBlock newSystem;
-  BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys);
-  pout.precision(12);
-  pout << "\t\t\t The lowest sweep energy : "<< sweepParams.get_lowest_energy()[0]+dmrginp.get_coreenergy()<<endl;
+  for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
+    {
+      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+      pout << "\t\t\t ----------------------------" << endl;
+      if (forward)
+	pout << "\t\t\t Current direction is :: Forwards " << endl;
+      else
+	pout << "\t\t\t Current direction is :: Backwards " << endl;
+
+      if (sweepParams.get_block_iter() == 0)
+	sweepParams.set_guesstype() = TRANSPOSE;
+      else
+	sweepParams.set_guesstype() = TRANSFORM;
+
+      pout << "\t\t\t Blocking and Decimating " << endl;
+
+      SpinBlock newSystem;
+      BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys, state);
+      pout.precision(12);
+
+      system = newSystem;
+
+      pout << system<<endl;
+      
+      SpinBlock::store (forward, system.get_sites(), system);	 	
+
+      pout << "\t\t\t saving state " << system.get_sites().size() << endl;
+      ++sweepParams.set_block_iter();
+      sweepParams.savestate(forward, system.get_sites().size());
+    }
+  pout << "\t\t\t The lowest sweep energy :  ----"<<endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
-  for (int i=0; i<nroots; i++)
-    for (int j=0; j<=i; j++) {
-      load_onepdm_binary(onepdm, i ,j);
-      accumulate_onepdm(onepdm);
-      save_onepdm_spatial_text(onepdm, i ,j);
-      save_onepdm_text(onepdm, i ,j);
-      save_onepdm_spatial_binary(onepdm, i ,j);
-    }
+  for (int i=0; i<nroots; i++) {
+    load_onepdm_binary(onepdm, i ,i);
+    accumulate_onepdm(onepdm);
+    save_onepdm_spatial_text(onepdm, i ,i);
+    save_onepdm_text(onepdm, i ,i);
+    save_onepdm_spatial_binary(onepdm, i ,i);
+  }
   return sweepParams.get_lowest_energy()[0];
 }
 }

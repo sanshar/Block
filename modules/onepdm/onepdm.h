@@ -19,7 +19,9 @@ namespace SpinAdapted{
 void compute_onepdm(std::vector<Wavefunction>& solutions, const SpinBlock& system, const SpinBlock& systemDot, const SpinBlock& newSystem, const SpinBlock& newEnvironment, const SpinBlock& big, const int numprocs);
 
 void compute_one_pdm_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm);
-void compute_one_pdm_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm);
+void compute_one_pdm_2_0_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm);
+void compute_one_pdm_0_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm);
+void compute_one_pdm_1_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm);
 void compute_one_pdm_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm);
 
 void save_onepdm_spatial_text(const Matrix& onepdm, const int &i, const int &j);
