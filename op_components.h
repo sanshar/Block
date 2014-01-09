@@ -23,9 +23,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "operatorloops.h"
 #include <string>
 //MAW
-#include "npdm_operators.h"
-#include "npdm_para_array_3d.h"
-#include "npdm_para_array_4d.h"
+#include "threepdm_operators.h"
+#include "threepdm_para_array.h"
+#include "fourpdm_operators.h"
+#include "fourpdm_para_array.h"
 
 namespace SpinAdapted{
 

@@ -12,7 +12,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 //FIXME use forward declaration for spinExpectation
 #include "npdm_expectations_engine.h"
 #include "npdm_expectations.h"
-#include "npdm_operators.h"
+//#include "npdm_operators.h"
 #include "npdm_patterns.h"
 
 namespace SpinAdapted{
