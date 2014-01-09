@@ -6,8 +6,8 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#ifndef PARA_ARRAY_4D_H
-#define PARA_ARRAY_4D_H
+#ifndef FOURPDM_PARA_ARRAY_H
+#define FOURPDM_PARA_ARRAY_H
 
 #include <tuple>
 #include <vector>

@@ -6,8 +6,8 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#ifndef PARA_ARRAY_3D_H
-#define PARA_ARRAY_3D_H
+#ifndef THREEPDM_PARA_ARRAY_H
+#define THREEPDM_PARA_ARRAY_H
 
 #include <tuple>
 #include <vector>
