@@ -14,8 +14,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/functional.hpp>
 #include <boost/format.hpp>
 #include <para_array.h>
-//MAW
-#include <para_array_3d.h>
 #include <boost/shared_ptr.hpp>
 #include <list>
 #include <boost/serialization/base_object.hpp>
@@ -26,6 +24,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <string>
 //MAW
 #include "npdm_operators.h"
+#include "npdm_para_array_3d.h"
+#include "npdm_para_array_4d.h"
 
 namespace SpinAdapted{
 
@@ -82,6 +82,9 @@ template <> struct ChooseArray<DesCreDes> {
 template <> struct ChooseArray<DesDesCre> {
   typedef para_array_3d<std::vector<boost::shared_ptr<DesDesCre> > > ArrayType;
 };
+template <> struct ChooseArray<CreCreDesDes> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreCreDesDes> > > ArrayType;
+};
 //MAW NPDM <<<<<
 
 //===========================================================================================================================================================
@@ -113,20 +116,19 @@ class Op_component_base
   const bool &is_core() const {return m_core;}
   const bool &is_deriv() const {return m_deriv;}
   void set_core(bool is_core) {m_core = is_core;}
-  virtual void add_local_indices(int i, int j=-1, int k=-1) {};
+  virtual void add_local_indices(int i, int j=-1) {};
   virtual bool is_local() const = 0;
   virtual bool& set_local() = 0; 
-  //virtual std::vector<SparseMatrix*> get_element(int i, int j=-1, int k=-1) = 0;
-  virtual const std::vector<boost::shared_ptr<SparseMatrix> > get_element(int i, int j=-1, int k=-1) const = 0;
-  virtual std::vector<boost::shared_ptr<SparseMatrix> > get_element(int i, int j=-1, int k=-1) = 0;
-  virtual bool has(int i, int j = -1, int k = -1) const = 0;
-  virtual bool has_local_index(int i, int j=-1, int k=-1) const = 0;
   virtual std::vector< std::vector<int> > get_array() const =0;
-  virtual boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1) = 0;
-  virtual const boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1) const = 0;
+  virtual const std::vector<boost::shared_ptr<SparseMatrix> > get_element(int i, int j=-1, int k=-1, int l=-1) const = 0;
+  virtual std::vector<boost::shared_ptr<SparseMatrix> > get_element(int i, int j=-1, int k=-1, int l=-1) = 0;
+  virtual bool has(int i, int j=-1, int k=-1, int l=-1) const = 0;
+  virtual bool has_local_index(int i, int j=-1, int k=-1, int l=-1) const = 0;
+  virtual boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1, int l=-1) = 0;
+  virtual const boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1, int l=-1) const = 0;
 //MAW
-  virtual boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1) = 0;
-  virtual const boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1) const = 0;
+  virtual boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1, int l=-1) = 0;
+  virtual const boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1, int l=-1) const = 0;
   virtual std::string get_op_string() const = 0;
   virtual std::string get_filename() const = 0;
   virtual ~Op_component_base() {}  
@@ -166,9 +168,9 @@ template <class Op> class Op_component : public Op_component_base
   int get_size() const {return m_op.local_nnz();}
   int size() const  {return m_op.global_nnz();}
   //FIXME <<<<<<<<<<<<<<<<<<<<<
-  bool has(int i, int j=-1, int k=-1) const {return m_op.has(i, j, k);}
-  bool has_local_index(int i, int j=-1, int k=-1) const {return m_op.has_local_index(i, j, k);}
-  virtual void add_local_indices(int i, int j=-1, int k=-1){};
+  bool has(int i, int j=-1, int k=-1, int l=-1) const {return m_op.has(i, j, k, l);}
+  bool has_local_index(int i, int j=-1, int k=-1, int l=-1) const {return m_op.has_local_index(i, j, k, l);}
+  virtual void add_local_indices(int i, int j=-1){};
   void clear(){m_op.clear();}
   void build_iterators(SpinBlock& b);
   const std::vector< int >& get_local_indices() { return m_op.get_local_indices(); }
@@ -298,33 +300,34 @@ template <class Op> class Op_component : public Op_component_base
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  const std::vector<boost::shared_ptr<SparseMatrix> >  get_element(int i, int j=-1, int k=-1) const 
+  const std::vector<boost::shared_ptr<SparseMatrix> >  get_element(int i, int j=-1, int k=-1, int l=-1) const 
   {
-    std::vector<boost::shared_ptr<SparseMatrix> > vec(m_op(i,j,k).size());
-    for (int l=0; l<vec.size(); l++)
-      vec[l] = m_op(i,j,k)[l]; 
+    std::vector<boost::shared_ptr<SparseMatrix> > vec(m_op(i,j,k,l).size());
+    for (int p=0; p<vec.size(); p++)
+      vec[p] = m_op(i,j,k,l)[p]; 
     return vec;
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  std::vector<boost::shared_ptr<SparseMatrix> >  get_element(int i, int j=-1, int k=-1)
+  std::vector<boost::shared_ptr<SparseMatrix> >  get_element(int i, int j=-1, int k=-1, int l=-1)
   {
-    std::vector<boost::shared_ptr<SparseMatrix> > vec(m_op(i,j,k).size());
-    for (int l=0; l<vec.size(); l++)
-      vec[l] = m_op(i,j,k)[l]; 
+    std::vector<boost::shared_ptr<SparseMatrix> > vec(m_op(i,j,k,l).size());
+    for (int p=0; p<vec.size(); p++)
+      vec[p] = m_op(i,j,k,l)[p]; 
     return vec;
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1)
+  boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1, int l=-1)
   {
     assert( k ==-1 );
+    assert( l ==-1 );
     Op* o = 0;
-    std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
-    for (int l=0; l<vec.size(); l++) {
-      if ( s == vec[l]->get_deltaQuantum() ) return m_op(i,j,k)[l];
+    std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k,l);
+    for (int p=0; p<vec.size(); p++) {
+      if ( s == vec[p]->get_deltaQuantum() ) return m_op(i,j,k,l)[p];
     }
     assert (false);
     return boost::shared_ptr<Op>(o);
@@ -332,13 +335,14 @@ template <class Op> class Op_component : public Op_component_base
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  const boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1) const
+  const boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1, int l=-1) const
   {
     assert( k ==-1 );
+    assert( l ==-1 );
     Op* o = 0;
-    const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
-    for (int l=0; l<vec.size(); l++) {
-      if ( s == vec[l]->get_deltaQuantum() ) return m_op(i,j,k)[l];
+    const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k,l);
+    for (int p=0; p<vec.size(); p++) {
+      if ( s == vec[p]->get_deltaQuantum() ) return m_op(i,j,k,l)[p];
     }
     assert (false);
     return boost::shared_ptr<Op>(o);
@@ -346,14 +350,14 @@ template <class Op> class Op_component : public Op_component_base
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // MAW FIXME for more than 2-index operators:
-  boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1)
+  boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1, int l=-1)
   {
     assert( k !=-1 );
     Op* o = 0;
-    std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
+    std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k,l);
     std::string build_pattern = vec[0]->get_build_pattern();
-    for (int l=0; l<vec.size(); l++) {
-      if ( s == vec[l]->get_quantum_ladder().at(build_pattern) ) return m_op(i,j,k)[l];
+    for (int p=0; p<vec.size(); p++) {
+      if ( s == vec[p]->get_quantum_ladder().at(build_pattern) ) return m_op(i,j,k,l)[p];
     }
     assert (false);
     return boost::shared_ptr<Op>(o);
@@ -361,14 +365,14 @@ template <class Op> class Op_component : public Op_component_base
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // MAW FIXME for more than 2-index operators:
-  const boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1) const
+  const boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1, int l=-1) const
   {
     assert( k !=-1 );
     Op* o = 0;
-    const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
+    const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k,l);
     std::string build_pattern = vec[0]->get_build_pattern();
-    for (int l=0; l<vec.size(); l++) {
-      if ( s == vec[l]->get_quantum_ladder().at(build_pattern) ) return m_op(i,j,k)[l];
+    for (int p=0; p<vec.size(); p++) {
+      if ( s == vec[p]->get_quantum_ladder().at(build_pattern) ) return m_op(i,j,k,l)[p];
     }
     assert (false);
     return boost::shared_ptr<Op>(o);

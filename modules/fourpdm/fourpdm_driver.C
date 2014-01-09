@@ -30,6 +30,7 @@ void Fourpdm_driver::save_npdm_text(const int &i, const int &j)
     ofstream ofs(file);
     ofs << fourpdm.dim1() << endl;
 
+    double trace = 0.0;
     for(int i=0; i<fourpdm.dim1(); ++i)
       for(int j=0; j<fourpdm.dim2(); ++j)
         for(int k=0; k<fourpdm.dim3(); ++k)
@@ -37,10 +38,14 @@ void Fourpdm_driver::save_npdm_text(const int &i, const int &j)
             for(int m=0; m<fourpdm.dim5(); ++m)
               for(int n=0; n<fourpdm.dim6(); ++n)
                 for(int p=0; p<fourpdm.dim7(); ++p)
-                  for(int q=0; q<fourpdm.dim8(); ++q)
-                    if ( abs(fourpdm(i,j,k,l,m,n,p,q)) > 1e-14 )
+                  for(int q=0; q<fourpdm.dim8(); ++q) {
+                    if ( abs(fourpdm(i,j,k,l,m,n,p,q)) > 1e-14 ) {
                       ofs << boost::format("%d %d %d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % p % q % fourpdm(i,j,k,l,m,n,p,q);
+                      if ( (i==q) && (j==p) && (k==n) && (l==m) ) trace += fourpdm(i,j,k,l,m,n,p,q);
+                    }
+                  }
     ofs.close();
+    std::cout << "Spin-orbital 4PDM trace = " << trace << "\n";
   }
 }
 
@@ -53,7 +58,7 @@ std::cout << "Building spatial 4pdm\n";
   if( mpigetrank() == 0)
   {
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.", i, j,".txt");
     ofstream ofs(file);
     ofs << fourpdm.dim1()/2 << endl;
 
@@ -94,7 +99,7 @@ void Fourpdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
 //  if(!mpigetrank())
 //  {
 //    char file[5000];
-//    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_binary_fourpdm.", i, j);
+//    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.", i, j,".bin");
 //    FILE* f = fopen(file, "wb");
 //
 //    int nrows = fourpdm.dim1()/2;
@@ -128,7 +133,7 @@ void Fourpdm_driver::save_npdm_binary(const int &i, const int &j)
   if( mpigetrank() == 0)
   {
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/fourpdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/fourpdm.", i, j,".bin");
     std::ofstream ofs(file, std::ios::binary);
     boost::archive::binary_oarchive save(ofs);
     save << fourpdm;
@@ -146,7 +151,7 @@ assert(false);
   if( mpigetrank() == 0)
   {
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/fourpdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/fourpdm.", i, j,".bin");
     std::ifstream ifs(file, std::ios::binary);
     boost::archive::binary_iarchive load(ifs);
     load >> fourpdm;
@@ -256,7 +261,7 @@ void Fourpdm_driver::assign_npdm_antisymmetric(const int i, const int j, const i
     cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<" "<<p<<" "<<q<<endl;
     //backtrace_symbols_fd(array, size, 2);
     cout << "earlier value: " << fourpdm(i,j,k,l,m,n,p,q) << endl << "new value:     " <<val<<endl;
-    assert( false );
+//FIXME    assert( false );
     return;
   }
 

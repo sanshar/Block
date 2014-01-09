@@ -148,7 +148,7 @@ double npdm_do_one_sweep(Npdm_driver& npdm_driver, SweepParams &sweepParams, con
   }
 
   for (int i=0; i<nroots; i++) {
-//FIXME only allows for one root at present (actually, should be trivial to change...)
+//FIXME only allows for one root at present (actually, should be trivial to change...?)
 assert(i==0);
 //MAW    save_npdm_binary(i, i); 
 
@@ -306,7 +306,7 @@ void npdm( int npdm_order )
       Fourpdm_driver fourpdm_driver;
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
       // Not all 4-index ops are implemented yet!!
-      assert(false);
+//      assert(false);
       npdm_do_one_sweep(fourpdm_driver, sweepParams, false, direction, false, 0, state);
     }
     break;

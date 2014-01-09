@@ -143,9 +143,9 @@ void Npdm_patterns::build_cre_des_types()
   // Empty vector
   std::vector<CD> cd_type;
 
-  // Populate the operators we have to work with
-  std::vector<CD> cre_tank(pdm_order_, CREATION);
-  std::vector<CD> des_tank(pdm_order_, DESTRUCTION);
+//  // Populate the operators we have to work with
+//  std::vector<CD> cre_tank(pdm_order_, CREATION);
+//  std::vector<CD> des_tank(pdm_order_, DESTRUCTION);
 
   // Build up tree of valid creation-destruction strings by recursion
   cd_type.push_back( CREATION );

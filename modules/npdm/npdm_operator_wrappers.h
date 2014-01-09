@@ -206,6 +206,7 @@ class Npdm_op_wrapper_CCDD : public NpdmSpinOps {
     Npdm_op_wrapper_CCDD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
     const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(CRE_CRE_DES_DES).get_local_indices(); }
+    std::vector< std::vector<int> > get_indices() { return spinBlock_->get_op_array(CRE_CRE_DES_DES).get_array(); }
 };
 
 //===========================================================================================================================================================

@@ -77,7 +77,7 @@ public:
 
   virtual bool has(int i) const {};
   virtual bool has(int i, int j) const {};
-  virtual bool has(int i=-1, int j=-1, int k=-1) const {};
+  virtual bool has(int i=-1, int j=-1, int k=-1, int l=-1) const {};
   virtual bool has(const std::vector<int>& orbs) const {};
   virtual const std::vector<T>& get_store() const {};
   virtual const std::vector<int>& get_indices() const {};
@@ -114,9 +114,9 @@ public:
   T& get_global_element(int i) { return store.get_global_element(i); }
   T& operator()(const std::vector<int>& orbs) { return store.get_local_element(orbs[0]); }
   const T& operator()(const std::vector<int>& orbs) const { return store.get_local_element(orbs[0]); }
-  T& operator()(int i=-1, int j=-1, int k=-1) { return store(0); }
-  const T& operator()(int i=-1, int j=-1, int k=-1) const { return store(0); }
-  bool has_local_index(int i, int j=-1, int k=-1) const { return store.has_local_index(i); }
+  T& operator()(int i=-1, int j=-1, int k=-1, int l=-1) { return store(0); }
+  const T& operator()(int i=-1, int j=-1, int k=-1, int l=-1) const { return store(0); }
+  bool has_local_index(int i, int j=-1, int k=-1, int l=-1) const { return store.has_local_index(i); }
   const std::vector<T>& get_store() const { return store.get_store(); }
   const std::vector<int>& get_local_indices() const { assert(false); }
   void set_indices() 
@@ -185,11 +185,11 @@ public:
   const std::vector<int>& get_local_indices() const { return local_indices; }
 
   /// query whether elements are non-null, locally and globally
-  bool has(int i, int j=-1, int k=-1) const
+  bool has(int i, int j=-1, int k=-1, int l=-1) const
   {
     return has_global_index(i); 
   }
-  bool has_local_index(int i, int j=-1, int k=-1) const 
+  bool has_local_index(int i, int j=-1, int k=-1, int l=-1) const 
   { 
     return local_indices_map[i] != -1; 
   }
@@ -266,7 +266,7 @@ public:
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   /// returns value at index i
-  const T& operator()(int i, int j=-1, int k=-1) const
+  const T& operator()(int i, int j=-1, int k=-1, int l=-1) const
   {
     assert(has_global_index(i));
     if (is_distributed())		/**< if storage is distributed, make sure index is available on current processor */
@@ -277,7 +277,7 @@ public:
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   /// returns value at index i
-  T& operator()(int i, int j=-1, int k=-1)
+  T& operator()(int i, int j=-1, int k=-1, int l=-1)
   {
     assert(has_global_index(i));
     if (is_distributed())
@@ -494,7 +494,7 @@ public:
     return (*this)(i, j);
   }
   /// returns elements at i, j
-  T& operator()(int i, int j, int k=-1)
+  T& operator()(int i, int j, int k=-1, int l=-1)
   {
     assert (i >= j);
     assert(has(i, j));
@@ -502,7 +502,7 @@ public:
       assert(has_local_index(trimap_2d(i, j)));
     return store[trimap_2d(i, j)];
   }
-  const T& operator()(int i, int j, int k=-1) const
+  const T& operator()(int i, int j, int k=-1, int l=-1) const
   {
     assert (i >= j);
     assert(has(i, j));
@@ -512,17 +512,17 @@ public:
   }
 
   /// query whether elements are non-null
-  bool has(int i, int j, int k=-1) const { return has_global_index(trimap_2d(i, j)); }
+  bool has(int i, int j, int k=-1, int l=-1) const { return has_global_index(trimap_2d(i, j)); }
   bool has(const std::vector<int>& orbs) const
   {
     assert(orbs.size() == 2);
     return has(orbs[0], orbs[1]);
   }
-  bool has_global_index(int i, int j, int k=-1) const
+  bool has_global_index(int i, int j, int k=-1, int l=-1) const
   {
     return has_global_index(trimap_2d(i, j));
   }
-  bool has_local_index(int i, int j, int k=-1) const
+  bool has_local_index(int i, int j, int k=-1, int l=-1) const
   {
     return has_local_index(trimap_2d(i, j));
   }

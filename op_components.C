@@ -29,7 +29,7 @@ namespace SpinAdapted {
   
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  template<> void Op_component<Cre>::add_local_indices(int i, int j , int k)
+  template<> void Op_component<Cre>::add_local_indices(int i, int j)
     {
       m_op.add_local_index(i);
       
@@ -233,7 +233,7 @@ assert( vec.size() == 0);
 	}
     }
   
-  template<> void Op_component<CreDesComp>::add_local_indices(int i, int j , int k)
+  template<> void Op_component<CreDesComp>::add_local_indices(int i, int j)
     {
       m_op.add_local_indices(i,j);
       
@@ -287,7 +287,7 @@ assert( vec.size() == 0);
       
     }
   
-  template<> void Op_component<DesDesComp>::add_local_indices(int i, int j , int k)
+  template<> void Op_component<DesDesComp>::add_local_indices(int i, int j)
     {
       m_op.add_local_indices(i,j);
       

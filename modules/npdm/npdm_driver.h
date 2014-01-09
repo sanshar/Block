@@ -27,8 +27,8 @@ class Npdm_driver {
 
   public:
     // FIXME flag to use full npdm array is hard-coded here; make input keyword
-    Npdm_driver() : npdm_order_(-1), use_full_array_(false) {};
-    Npdm_driver(int order) : npdm_order_(order), use_full_array_(false) {};
+    Npdm_driver() : npdm_order_(-1), use_full_array_(true) {};
+    Npdm_driver(int order) : npdm_order_(order), use_full_array_(true) {};
 
     void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos );
     void save_full_array(int i, int j);
@@ -48,7 +48,7 @@ class Npdm_driver {
                         NpdmSpinOps_base & outerOps, NpdmSpinOps & innerOps, NpdmSpinOps & dotOps );
 
     void do_parallel_lhs_loop( const char inner, Npdm::Npdm_expectations & npdm_expectations,
-                                        NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps, bool skip );
+                               NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps, bool skip );
 
     void loop_over_block_operators( const char inner, Npdm::Npdm_expectations & npdm_expectations, 
                                     NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps, bool lhsdot );

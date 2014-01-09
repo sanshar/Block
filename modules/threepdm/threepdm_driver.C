@@ -28,15 +28,20 @@ void Threepdm_driver::save_npdm_text(const int &i, const int &j)
     ofstream ofs(file);
     ofs << threepdm.dim1() << endl;
 
+    double trace = 0.0;
     for(int i=0; i<threepdm.dim1(); ++i)
       for(int j=0; j<threepdm.dim2(); ++j)
         for(int k=0; k<threepdm.dim3(); ++k)
           for(int l=0; l<threepdm.dim4(); ++l)
             for(int m=0; m<threepdm.dim5(); ++m)
-              for(int n=0; n<threepdm.dim6(); ++n)
-                if ( abs(threepdm(i,j,k,l,m,n)) > 1e-14 )
+              for(int n=0; n<threepdm.dim6(); ++n) {
+                if ( abs(threepdm(i,j,k,l,m,n)) > 1e-14 ) {
                   ofs << boost::format("%d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % threepdm(i,j,k,l,m,n);
+                  if ( (i==n) && (j==m) && (k==l) ) trace += threepdm(i,j,k,l,m,n);
+                }
+              }
     ofs.close();
+    std::cout << "Spin-orbital 3PDM trace = " << trace << "\n";
   }
 }
 
@@ -49,7 +54,7 @@ void Threepdm_driver::save_spatial_npdm_text(const int &i, const int &j)
   if( mpigetrank() == 0)
   {
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j,".txt");
     ofstream ofs(file);
     ofs << threepdm.dim1()/2 << endl;
 
@@ -81,7 +86,7 @@ void Threepdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
   if( mpigetrank() == 0)
   {
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_binary_threepdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j,".bin");
     FILE* f = fopen(file, "wb");
 
     int nrows = threepdm.dim1()/2;
@@ -115,7 +120,7 @@ void Threepdm_driver::save_npdm_binary(const int &i, const int &j)
   if( mpigetrank() == 0)
   {
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/threepdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/threepdm.", i, j,".bin");
     std::ofstream ofs(file, std::ios::binary);
     boost::archive::binary_oarchive save(ofs);
     save << threepdm;
@@ -133,7 +138,7 @@ assert(false); // <<<< CAN WE RETHINK USE OF DISK FOR NPDM?
   if( mpigetrank() == 0)
   {
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/threepdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/threepdm.", i, j,".bin");
     std::ifstream ifs(file, std::ios::binary);
     boost::archive::binary_iarchive load(ifs);
 cout << "loading... load_threepdm_binary\n";

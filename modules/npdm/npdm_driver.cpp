@@ -73,8 +73,8 @@ world.barrier();
   // Combine NPDM elements from all mpi ranks and dump to file
   accumulate_npdm();
   save_spatial_npdm_text(i, j);
+  save_npdm_text(i, j);
 //FIXME  save_npdm_binary(i, j);
-//FIXME  save_npdm_text(i, j);
 //FIXME  save_spatial_npdm_binary(i, j);
 world.barrier();
   pout << "NPDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
@@ -171,7 +171,7 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
     if (skip) continue;
     if ( innerOps.opReps_.size() > 0 ) assert( innerOps.mults_.size() == innerOps.opReps_.size() );
 
-    // Get non-spin-adapated 3PDM elements after building spin-adapted elements
+    // Get non-spin-adapated spin-orbital 3PDM elements after building spin-adapted elements
     std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements;
     DEBUG_CALL_GET_EXPECT[mpigetrank()] += 1;
     // This should always works out as calling in order (lhs,rhs,dot)
@@ -271,6 +271,7 @@ void Npdm_driver::loop_over_block_operators( const char inner, Npdm::Npdm_expect
       if ( ! skip_op ) do_inner_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps );
     }
     else {
+assert(false);  //4PDM debug
       // Parallelize by broadcasting LHS ops
       do_parallel_lhs_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps, skip_op );
     }
@@ -323,6 +324,7 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
     std::vector<Npdm::CD> rhs_cd_type = pattern->at('r');
 
     // Choice of read from disk or not done inside the wrapper
+if ( (sweepPos==1) && (lhs_cd_type.size() ==4) ) continue;
     boost::shared_ptr<NpdmSpinOps> lhsOps = select_op_wrapper( lhsBlock, lhs_cd_type );
     boost::shared_ptr<NpdmSpinOps> rhsOps = select_op_wrapper( rhsBlock, rhs_cd_type );
     boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );
