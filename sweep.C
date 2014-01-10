@@ -352,13 +352,9 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   ++sweepParams.set_sweep_iter();
   if (!mpigetrank())
   {
-#ifndef MOLPRO
-    FILE* f = fopen("dmrg.e", "wb");
-#else
     std::string efile;
     efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
     FILE* f = fopen(efile.c_str(), "wb");
-#endif
     
     for(int j=0;j<nroots;++j) {
       double e = finalEnergy[j]+dmrginp.get_coreenergy(); 

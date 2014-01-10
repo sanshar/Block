@@ -160,7 +160,21 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
   stateInfo = StateInfo(dets);
   setstoragetype(LOCAL_STORAGE);
   complementary_sites = make_complement(sites);
+
+  //this is where we are building blocks from sites
+  //currently only used for building single site blocks
+  //temporarily disable screening for single site blocks
+  double twoindex_ScreenTol = dmrginp.twoindex_screen_tol();
+  double oneindex_ScreenTol = dmrginp.oneindex_screen_tol();
+  if (new_sites.size() == 1) {
+    dmrginp.twoindex_screen_tol() = 0.0;
+    dmrginp.oneindex_screen_tol() = 0.0;
+  }
   build_iterators();
+  if (new_sites.size() == 1) {
+    dmrginp.twoindex_screen_tol() = twoindex_ScreenTol;
+    dmrginp.oneindex_screen_tol() = oneindex_ScreenTol;
+  }
 
   /*
   for (int i=0; i<dets.size(); i++) {

@@ -87,7 +87,6 @@ void compute_one_pdm_2_0_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ, 1.0);
     double sum = sqrt(2.0)*DotProduct(wave1, opw2);
 
-
     onepdm(2*ix+1, 2*jx+1) = (sum)/2.0;
     onepdm(2*ix+2, 2*jx+2) = (sum)/2.0;
     onepdm(2*jx+1, 2*ix+1) = (sum)/2.0;
@@ -156,7 +155,6 @@ void compute_one_pdm_1_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     leftop1.set_initialised() = true;
     leftop1.set_fermion() = false;
     leftop1.set_deltaQuantum() = (op1->get_deltaQuantum()-op2->get_deltaQuantum())[0];
-    cout << leftop1.set_deltaQuantum()<<endl;
     leftop1.allocate(big.get_leftBlock()->get_stateInfo());
     operatorfunctions::TensorProduct(leftBlock, *op1, Transposeview(op2), big.get_leftBlock(), &(big.get_leftBlock()->get_stateInfo()), leftop1, 1.0);
 
