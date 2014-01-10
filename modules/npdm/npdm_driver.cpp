@@ -324,7 +324,7 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
     std::vector<Npdm::CD> rhs_cd_type = pattern->at('r');
 
     // Choice of read from disk or not done inside the wrapper
-if ( (sweepPos==1) && (lhs_cd_type.size() ==4) ) continue;
+//if ( (sweepPos==1) && (lhs_cd_type.size() ==4) ) continue;
     boost::shared_ptr<NpdmSpinOps> lhsOps = select_op_wrapper( lhsBlock, lhs_cd_type );
     boost::shared_ptr<NpdmSpinOps> rhsOps = select_op_wrapper( rhsBlock, rhs_cd_type );
     boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );

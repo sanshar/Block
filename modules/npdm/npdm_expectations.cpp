@@ -62,7 +62,7 @@ std::string Npdm_expectations::get_op_string( NpdmSpinOps_base & lhsOps, NpdmSpi
       indices.erase( indices.begin() );  
     }
   }
-  //cout << op_string << std::endl;
+  cout << op_string << std::endl;
 
   return op_string;
 }
