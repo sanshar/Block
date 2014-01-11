@@ -58,7 +58,7 @@ ifeq ($(MOLPRO), yes)
    MOLPROINCLUDE=$(HOME)/../
    MOLPRO_BLOCK= -DMOLPRO
 endif
-FLAGS =  -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(EIGENINCLUDE) -I$(HOME)/modules/npdm/ -I$(HOME)/modules/fourpdm/ -I$(HOME)/modules/threepdm/ -I$(HOME)/modules/twopdm/ -I$(HOME)/modules/twopdm_old/ -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(MOLPROINCLUDE)
+FLAGS =  -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(EIGENINCLUDE) -I$(HOME)/modules/npdm/ -I$(HOME)/modules/two_index_ops/ -I$(HOME)/modules/three_index_ops/ -I$(HOME)/modules/four_index_ops/ -I$(HOME)/modules/twopdm_old/ -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(MOLPROINCLUDE)
 LIBS =  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp
 MPI_OPT = -DSERIAL
 
@@ -98,7 +98,7 @@ endif
 
 SRC_genetic = genetic/CrossOver.C genetic/Evaluate.C genetic/GAInput.C genetic/GAOptimize.C genetic/Generation.C genetic/Mutation.C genetic/RandomGenerator.C genetic/ReadIntegral.C
 
-SRC_npdm = modules/npdm/npdm.C modules/npdm/npdm_driver.cpp modules/npdm/npdm_patterns.cpp modules/npdm/npdm_expectations.cpp modules/npdm/npdm_wrapper_selector.cpp modules/npdm/npdm_spin_adaptation.cpp modules/npdm/npdm_expectations_engine.cpp modules/npdm/npdm_sparse_array.cpp modules/npdm/npdm_spin_ops.cpp modules/twopdm/twopdm_driver.C modules/twopdm/twopdm_operator_wrappers.cpp modules/threepdm/threepdm_driver.C modules/threepdm/threepdm_op_components.cpp modules/threepdm/threepdm_operators.cpp modules/threepdm/threepdm_operator_wrappers.cpp modules/threepdm/threepdm_compound_operators.cpp modules/fourpdm/fourpdm_driver.C modules/fourpdm/fourpdm_op_components.cpp modules/fourpdm/fourpdm_operators.cpp modules/fourpdm/fourpdm_operator_wrappers.cpp modules/fourpdm/fourpdm_compound_operators.cpp  
+SRC_npdm = modules/npdm/npdm.cpp modules/npdm/npdm_driver.cpp modules/npdm/twopdm_driver.cpp modules/npdm/threepdm_driver.cpp modules/npdm/fourpdm_driver.cpp modules/npdm/npdm_patterns.cpp modules/npdm/npdm_expectations.cpp modules/npdm/npdm_wrapper_selector.cpp modules/npdm/npdm_spin_adaptation.cpp modules/npdm/npdm_expectations_engine.cpp modules/npdm/npdm_sparse_array.cpp modules/npdm/npdm_spin_ops.cpp  modules/two_index_ops/two_index_op_components.cpp modules/two_index_ops/two_index_ops.cpp modules/two_index_ops/two_index_op_wrappers.cpp  modules/three_index_ops/three_index_op_components.cpp modules/three_index_ops/three_index_compound_ops.cpp modules/three_index_ops/three_index_ops.cpp modules/three_index_ops/three_index_op_wrappers.cpp  modules/four_index_ops/four_index_op_components.cpp modules/four_index_ops/four_index_compound_ops.cpp modules/four_index_ops/four_index_ops.cpp modules/four_index_ops/four_index_op_wrappers.cpp
 
 SRC_spin_adapted =  dmrg.C least_squares.C set_spinblock_components.C linear.C main.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C anglib.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm_old/sweep.C modules/twopdm_old/twopdm_old.C modules/twopdm_old/twopdm_2.C $(SRC_genetic) $(SRC_npdm)
 
@@ -128,6 +128,6 @@ $(NEWMATLIB)/libnewmat.a :
 	cd $(NEWMATLIB) && $(MAKE) -f makefile libnewmat.a
 
 clean:
-	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o modules/twopdm_old/*.o modules/threepdm/*.o modules/fourpdm/*.o modules/npdm/*.o $(NEWMATLIB)*.o libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a genetic/gaopt genetic/*.o
+	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm_old/*.o modules/two_index_ops/*.o modules/three_index_ops/*.o modules/four_index_ops/*.o modules/npdm/*.o $(NEWMATLIB)*.o libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a genetic/gaopt genetic/*.o
 
 # DO NOT DELETE

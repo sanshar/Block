@@ -250,8 +250,8 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
 {
 
   ldr_cd_types_.clear();
-  //pout << "=================================================================\n";
-  //pout << "Spin-1/2 fermionic operator patterns for DMRG blocks:\n";
+  pout << "=================================================================\n";
+  pout << "Spin-1/2 fermionic operator patterns for DMRG blocks:\n";
 
   // Loop over LHS, Dot, RHS patterns
   for (auto ldr_iter = lhs_dot_rhs_types_.begin(); ldr_iter != lhs_dot_rhs_types_.end(); ldr_iter++) {
@@ -283,9 +283,9 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
 
       // Only allow if it's a valid full pattern
       if ( not is_valid_ldr_type( cd_pattern ) ) continue;
-      //print_cd_string( lhs_cd );
-      //print_cd_string( dot_cd );
-      //print_cd_string( rhs_cd ); pout << "\n";
+      print_cd_string( lhs_cd );
+      print_cd_string( dot_cd );
+      print_cd_string( rhs_cd ); pout << "\n";
 
       ldr_cd_types_.insert( cd_pattern );
       if ( lhs_cd.size() != 0 ) lhs_cd_types_.insert( lhs_cd );

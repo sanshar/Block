@@ -32,9 +32,14 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_DESCOMP).set_local() = true;
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = true;
+//FIXME MAW NPDM
 //FIXME high-index operators should never be replicated on all procs
 //    if (has(DES_DES_CRE))
 //      set_op_array(DES_DES_CRE).set_local() = true;
+    if (has(RI_3INDEX))
+      set_op_array(RI_3INDEX).set_local() = true;
+    if (has(RI_4INDEX))
+      set_op_array(RI_4INDEX).set_local() = true;
   }
   else if (st == DISTRIBUTED_STORAGE)
   {
@@ -51,12 +56,15 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_DESCOMP).set_local() = false;
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = false;
+//FIXME MAW NPDM
+    if (has(RI_3INDEX))
+      set_op_array(RI_3INDEX).set_local() = false;
+    if (has(RI_4INDEX))
+      set_op_array(RI_4INDEX).set_local() = false;
 //FIXME MAW 3PDM
     //pout << "Setting distributed storage 3-index ops\n";
     if (has(DES_CRE))
       set_op_array(DES_CRE).set_local() = false;
-    if (has(RI_3INDEX))
-      set_op_array(RI_3INDEX).set_local() = false;
     if (has(CRE_CRE_CRE))
       set_op_array(CRE_CRE_CRE).set_local() = false;
     if (has(CRE_CRE_DES))
@@ -66,8 +74,6 @@ void SpinBlock::setstoragetype(Storagetype st)
     if (has(CRE_DES_CRE))
       set_op_array(CRE_DES_CRE).set_local() = false;
 //FIXME MAW 4PDM
-    if (has(RI_4INDEX))
-      set_op_array(RI_4INDEX).set_local() = false;
     if (has(DES_CRE_DES))
       set_op_array(DES_CRE_DES).set_local() = false;
     if (has(DES_DES_CRE))
@@ -107,12 +113,17 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
     case HAM:
       ret = boost::shared_ptr<Op_component<Ham> >(new Op_component<Ham>(is_core));
       break;
+//FIXME MAW NPDM
+    case RI_3INDEX:
+cout << "make_new_op RI3index\n";
+      ret = boost::shared_ptr<Op_component<RI3index> >(new Op_component<RI3index>(is_core));
+      break;
+    case RI_4INDEX:
+      ret = boost::shared_ptr<Op_component<RI4index> >(new Op_component<RI4index>(is_core));
+      break;
 //FIXME MAW 3PDM
     case DES_CRE:
       ret = boost::shared_ptr<Op_component<DesCre> >(new Op_component<DesCre>(is_core));
-      break;
-    case RI_3INDEX:
-      ret = boost::shared_ptr<Op_component<RI3index> >(new Op_component<RI3index>(is_core));
       break;
     case CRE_CRE_CRE:
       ret = boost::shared_ptr<Op_component<CreCreCre> >(new Op_component<CreCreCre>(is_core));
@@ -127,9 +138,6 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
       ret = boost::shared_ptr<Op_component<CreDesCre> >(new Op_component<CreDesCre>(is_core));
       break;
 //FIXME MAW 4PDM
-    case RI_4INDEX:
-      ret = boost::shared_ptr<Op_component<RI4index> >(new Op_component<RI4index>(is_core));
-      break;
     case DES_CRE_DES:
       ret = boost::shared_ptr<Op_component<DesCreDes> >(new Op_component<DesCreDes>(is_core));
       break;
@@ -170,17 +178,16 @@ void SpinBlock::default_op_components(bool complementary_)
     ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
     ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
     if ( dmrginp.do_npdm_ops() ) {
+      ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
+      ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
       if ( (dmrginp.calc_type() == THREEPDM) ||
            (dmrginp.calc_type() == FOURPDM) ) {
-        //pout << "Setting store-in-core 3-index ops\n";
         ops[DES_CRE] = make_new_op(DES_CRE, true);
-        ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
         ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
         ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
         ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
         ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
         if ( dmrginp.calc_type() == FOURPDM ) {
-          ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
           ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
           ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
 //          ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, true);
@@ -230,22 +237,23 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
 assert(false); //FIXME << if (haveNormops || dmrginp.do_npdm_ops()) not tested
         ops[CRE_DES] = make_new_op(CRE_DES, true);
         ops[CRE_CRE] = make_new_op(CRE_CRE, true);
-//        if ( dmrginp.do_npdm_ops() ) {
+        if ( dmrginp.do_npdm_ops() ) {
+          ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
+          ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
           if ( (dmrginp.calc_type() == THREEPDM) ||
                (dmrginp.calc_type() == FOURPDM) ) {
             ops[DES_CRE] = make_new_op(DES_CRE, true);
-            ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
             ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
             ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
             ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
             ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
             if ( dmrginp.calc_type() == FOURPDM ) {
-              ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
               ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
               ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
 //              ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, true);
             }
           }
+        }
       }
       if (haveCompops) {
         ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
@@ -270,17 +278,16 @@ assert(false); //FIXME << if (haveNormops || dmrginp.do_npdm_ops()) not tested
         ops[CRE_DES] = make_new_op(CRE_DES, false);
         ops[CRE_CRE] = make_new_op(CRE_CRE, false);
         if ( dmrginp.do_npdm_ops() ) {
+          ops[RI_3INDEX] = make_new_op(RI_3INDEX, false);
+          ops[RI_4INDEX] = make_new_op(RI_4INDEX, false);
           if ( (dmrginp.calc_type() == THREEPDM) ||
                (dmrginp.calc_type() == FOURPDM) ) {
-            //pout << "Setting build-on-fly 3-index ops\n";
             ops[DES_CRE] = make_new_op(DES_CRE, false);
-            ops[RI_3INDEX] = make_new_op(RI_3INDEX, false);
             ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
             ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);
             ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, false);
             ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, false);
             if ( dmrginp.calc_type() == FOURPDM ) {
-              ops[RI_4INDEX] = make_new_op(RI_4INDEX, false);
               ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, false);
               ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
 //              ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, false);

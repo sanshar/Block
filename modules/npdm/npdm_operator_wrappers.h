@@ -17,7 +17,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
-//  4-INDEX compound Ops (build using RI approximation, exact on dot block)
+//  4-INDEX compound Ops (built using RI approximation, exact on dot block)
 //===========================================================================================================================================================
 
 class Npdm_op_wrapper_compound_CCDD : public NpdmSpinOps {
@@ -41,7 +41,7 @@ class Npdm_op_wrapper_CCDD : public NpdmSpinOps {
 };
 
 //===========================================================================================================================================================
-//  3-INDEX compound Ops (build using RI approximation, exact on dot block)
+//  3-INDEX compound Ops (built using RI approximation, exact on dot block)
 //===========================================================================================================================================================
 
 class Npdm_op_wrapper_compound_CCD : public NpdmSpinOps {
@@ -83,6 +83,15 @@ class Npdm_op_wrapper_compound_CCC : public NpdmSpinOps {
 class Npdm_op_wrapper_compound_DCD : public NpdmSpinOps {
   public:
     Npdm_op_wrapper_compound_DCD( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+    const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(CRE_DES).get_local_indices(); }
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_compound_DDC : public NpdmSpinOps {
+  public:
+    Npdm_op_wrapper_compound_DDC( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
     const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(CRE_DES).get_local_indices(); }
 };

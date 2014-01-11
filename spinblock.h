@@ -12,7 +12,6 @@
 #include "multiarray.h"
 #include "boost/variant.hpp"
 
-
 namespace SpinAdapted{
 class Wavefunction;
 class DensityMatrix;
@@ -36,16 +35,17 @@ class SpinBlock
       ar.register_type(static_cast<Op_component<DesDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<CreCreDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<Ham> *>(NULL));
+//MAW NPDM
+      ar.register_type(static_cast<Op_component<RI3index> *>(NULL));
+      ar.register_type(static_cast<Op_component<RI4index> *>(NULL));
 //MAW 3PDM
       ar.register_type(static_cast<Op_component<DesCre> *>(NULL));
 //FIXME do we need to store these too if using separate disk-based 3-index operator storage?
-      ar.register_type(static_cast<Op_component<RI3index> *>(NULL));
       ar.register_type(static_cast<Op_component<CreCreDes> *>(NULL));
       ar.register_type(static_cast<Op_component<CreDesDes> *>(NULL));
       ar.register_type(static_cast<Op_component<CreDesCre> *>(NULL));
       ar.register_type(static_cast<Op_component<CreCreCre> *>(NULL));
 //MAW 4PDM
-      ar.register_type(static_cast<Op_component<RI4index> *>(NULL));
       ar.register_type(static_cast<Op_component<DesCreDes> *>(NULL));
       ar.register_type(static_cast<Op_component<DesDesCre> *>(NULL));
       ar.register_type(static_cast<Op_component<CreCreDesDes> *>(NULL));
@@ -120,8 +120,8 @@ class SpinBlock
   //void makeCCD_comp_ops();
   
   Op_component_base& set_op_array(opTypes optype){assert(has(optype));return *(ops.find(optype)->second);}
-  Op_component_base& get_op_array(opTypes optype){assert(has(optype));return *(ops.find(optype)->second);}
-  const Op_component_base& get_op_array(opTypes optype) const {assert(has(optype));return *(ops.find(optype)->second);}
+  Op_component_base& get_op_array(opTypes optype){cout<<optype<<endl;assert(has(optype));return *(ops.find(optype)->second);}
+  const Op_component_base& get_op_array(opTypes optype) const {cout<<optype<<endl;assert(has(optype));return *(ops.find(optype)->second);}
   
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
   boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const SpinQuantum& s, int i=-1, int j=-1, int k=-1) {

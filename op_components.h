@@ -23,10 +23,11 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "operatorloops.h"
 #include <string>
 //MAW
-#include "threepdm_operators.h"
-#include "threepdm_para_array.h"
-#include "fourpdm_operators.h"
-#include "fourpdm_para_array.h"
+#include "two_index_ops.h"
+#include "three_index_ops.h"
+#include "four_index_ops.h"
+#include "para_array_3d.h"
+#include "para_array_4d.h"
 
 namespace SpinAdapted{
 
@@ -60,12 +61,16 @@ template <> struct ChooseArray<CreCreDesComp> {
 template <> struct ChooseArray<Ham> {
   typedef para_array_0d<std::vector<boost::shared_ptr<Ham> > > ArrayType;
 };
+//MAW NPDM >>>>>
+template <> struct ChooseArray<RI3index> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<RI3index> > > ArrayType;
+};
+template <> struct ChooseArray<RI4index> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<RI4index> > > ArrayType;
+};
 //MAW 3PDM >>>>>
 template <> struct ChooseArray<DesCre> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<DesCre> > > ArrayType;
-};
-template <> struct ChooseArray<RI3index> {
-  typedef para_array_3d<std::vector<boost::shared_ptr<RI3index> > > ArrayType;
 };
 template <> struct ChooseArray<CreCreDes> {
   typedef para_array_3d<std::vector<boost::shared_ptr<CreCreDes> > > ArrayType;
@@ -80,9 +85,6 @@ template <> struct ChooseArray<CreCreCre> {
   typedef para_array_3d<std::vector<boost::shared_ptr<CreCreCre> > > ArrayType;
 };
 //MAW 4PDM >>>>>
-template <> struct ChooseArray<RI4index> {
-  typedef para_array_4d<std::vector<boost::shared_ptr<RI4index> > > ArrayType;
-};
 template <> struct ChooseArray<DesCreDes> {
   typedef para_array_3d<std::vector<boost::shared_ptr<DesCreDes> > > ArrayType;
 };

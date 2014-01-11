@@ -282,6 +282,30 @@ assert(false);  //4PDM debug
 }
   
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// For DEBUG only
+bool skip_this_pattern( std::vector<Npdm::CD>& lhs, std::vector<Npdm::CD>& dot, std::vector<Npdm::CD>& rhs ) {
+
+  bool skip = false;
+return skip;
+
+  //if ( (sweepPos==1) && (lhs_cd_type.size() ==4) ) continue;
+  if ( lhs.size() == 4 ) skip = true;
+  if ( dot.size() == 4 ) skip = true;
+  if ( rhs.size() == 4 ) skip = true;
+
+  std::vector<Npdm::CD> op;
+  op = { Npdm::DESTRUCTION, Npdm::CREATION, Npdm::DESTRUCTION };
+  if ( lhs == op || dot == op || rhs == op ) skip = true;
+  op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::CREATION };
+  if ( lhs == op || dot == op || rhs == op ) skip = true;
+  op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
+  if ( lhs == op || dot == op || rhs == op ) skip = true;
+
+  if ( skip ) cout << "Skipping this operator pattern!\n";
+  return skip;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos)
 {
@@ -319,12 +343,13 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
     npdm_patterns.print_cd_string( pattern->at('d') );
     npdm_patterns.print_cd_string( pattern->at('r') );
     pout << std::endl;
+
+    // Choice of read from disk or not done inside the wrapper
     std::vector<Npdm::CD> lhs_cd_type = pattern->at('l');
     std::vector<Npdm::CD> dot_cd_type = pattern->at('d');
     std::vector<Npdm::CD> rhs_cd_type = pattern->at('r');
+    if ( skip_this_pattern( lhs_cd_type, dot_cd_type, rhs_cd_type ) ) continue;
 
-    // Choice of read from disk or not done inside the wrapper
-//if ( (sweepPos==1) && (lhs_cd_type.size() ==4) ) continue;
     boost::shared_ptr<NpdmSpinOps> lhsOps = select_op_wrapper( lhsBlock, lhs_cd_type );
     boost::shared_ptr<NpdmSpinOps> rhsOps = select_op_wrapper( rhsBlock, rhs_cd_type );
     boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );
@@ -342,7 +367,6 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
         loop_over_block_operators( 'l', npdm_expectations, *rhsOps, *lhsOps, *dotOps, lhs_or_rhs_dot );
       }
     }
-
   }
 
   // Print outs
