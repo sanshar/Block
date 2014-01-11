@@ -204,7 +204,7 @@ public:
     length_ = len;
 
     for (auto it = occupied.begin(); it != occupied.end(); ++it) {
-      std::vector<int> tuple = { std::get<0>(it->first), std::get<1>(it->first), std::get<2>(it->first) };
+      std::vector<int> tuple = { std::get<0>(it->first), std::get<1>(it->first), std::get<2>(it->first), std::get<3>(it->first) };
       int rank = it->second; 
       // Global indices
       int idx = trimap_4d( tuple[0], tuple[1], tuple[2], tuple[3] );
