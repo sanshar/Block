@@ -286,7 +286,7 @@ assert(false);  //4PDM debug
 bool skip_this_pattern( std::vector<Npdm::CD>& lhs, std::vector<Npdm::CD>& dot, std::vector<Npdm::CD>& rhs ) {
 
   bool skip = false;
-return skip;
+//return skip;
 
   //if ( (sweepPos==1) && (lhs_cd_type.size() ==4) ) continue;
   if ( lhs.size() == 4 ) skip = true;
@@ -294,12 +294,12 @@ return skip;
   if ( rhs.size() == 4 ) skip = true;
 
   std::vector<Npdm::CD> op;
-  op = { Npdm::DESTRUCTION, Npdm::CREATION, Npdm::DESTRUCTION };
-  if ( lhs == op || dot == op || rhs == op ) skip = true;
-  op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::CREATION };
-  if ( lhs == op || dot == op || rhs == op ) skip = true;
-  op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
-  if ( lhs == op || dot == op || rhs == op ) skip = true;
+//  op = { Npdm::DESTRUCTION, Npdm::CREATION, Npdm::DESTRUCTION };
+//  if ( lhs == op || dot == op || rhs == op ) skip = true;
+//  op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::CREATION };
+//  if ( lhs == op || dot == op || rhs == op ) skip = true;
+//  op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
+//  if ( lhs == op || dot == op || rhs == op ) skip = true;
 
   if ( skip ) cout << "Skipping this operator pattern!\n";
   return skip;

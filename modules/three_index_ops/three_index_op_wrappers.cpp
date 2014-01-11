@@ -197,6 +197,7 @@ bool Npdm_op_wrapper_CDD::set_local_ops( int idx )
     assert( check_file_close( idx ) );
   }
 
+//FIXME this sign probably should have been corrected when operator is actually built!
   build_pattern_ = opReps_.at(0)->get_build_pattern();
   if ( build_pattern_ == "(C(DD))" ) factor_ = -1.0;
   else if ( build_pattern_ == "((CD)D)" ) factor_ = 1.0;
@@ -363,7 +364,7 @@ Npdm_op_wrapper_DDC::Npdm_op_wrapper_DDC( SpinBlock * spinBlock )
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(DES_DES_CRE).get_size();
   is_local_ = spinBlock_->get_op_array(DES_DES_CRE).is_local();
-  factor_ = 1.0;
+  factor_ = 0.0;
   transpose_ = false;
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
@@ -400,7 +401,11 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
     assert( check_file_close( idx ) );
   }
 
+//FIXME this sign probably should have been corrected when operator is actually built!
   build_pattern_ = opReps_.at(0)->get_build_pattern();
+  if ( build_pattern_ == "(D(DC))" ) factor_ = 1.0;
+  else if ( build_pattern_ == "((DD)C)" ) factor_ = -1.0;
+  else assert (false);
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
@@ -421,14 +426,13 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
 
 Npdm_op_wrapper_DDD::Npdm_op_wrapper_DDD( SpinBlock * spinBlock )
 {
-assert(false);
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_size();
   is_local_ = spinBlock_->get_op_array(CRE_CRE_CRE).is_local();
-//FIXME minus sign?
-  factor_ = 1.0;
+//FIXME minus sign here because of a (DD) seems consistent with other operator constructors...?
+  factor_ = -1.0;
   transpose_ = true;
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
@@ -491,7 +495,6 @@ assert(false);
 
 Npdm_op_wrapper_DCC::Npdm_op_wrapper_DCC( SpinBlock * spinBlock )
 {
-assert(false);
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;

@@ -9,8 +9,7 @@ namespace SpinAdapted{
 class RI4index: public SpinAdapted::SparseMatrix
 {
   public:
-    RI4index() { assert(false); orbs.resize(4); fermion = true; build_pattern = "((XX)(XX))";} // default build_pattern
-//    void build_in_csf_space(const SpinBlock& b) { assert(false); };
+    RI4index() { assert(false); } // FIXME should never be instantiated
     void build(const SpinBlock& b) { assert(false); };
     void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); };
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) { assert(false); };

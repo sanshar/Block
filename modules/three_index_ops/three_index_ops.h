@@ -77,7 +77,7 @@ class CreCreCre: public SpinAdapted::SparseMatrix
 class DesCreDes: public SpinAdapted::SparseMatrix
 {
   public:
-    DesCreDes() { assert(false); orbs.resize(3); fermion = true; build_pattern = "((DC)D)";} // default build_pattern
+    DesCreDes() { orbs.resize(3); fermion = true; build_pattern = "((DC)D)";} // default build_pattern
     void build(const SpinBlock& b) ;
     void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs);
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
@@ -89,7 +89,7 @@ class DesCreDes: public SpinAdapted::SparseMatrix
 class DesDesCre: public SpinAdapted::SparseMatrix
 {
   public:
-    DesDesCre() { assert(false); orbs.resize(3); fermion = true; build_pattern = "((DD)C)";} // default build_pattern
+    DesDesCre() { orbs.resize(3); fermion = true; build_pattern = "((DD)C)";} // default build_pattern
     void build(const SpinBlock& b) ;
     void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs);
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);

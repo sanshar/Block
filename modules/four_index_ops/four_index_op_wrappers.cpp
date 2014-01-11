@@ -16,7 +16,7 @@ namespace SpinAdapted{
 
 Npdm_op_wrapper_CCDD::Npdm_op_wrapper_CCDD( SpinBlock * spinBlock )
 {
-  assert(false);
+assert(false);
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;

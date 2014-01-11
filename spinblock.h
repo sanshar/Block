@@ -120,8 +120,8 @@ class SpinBlock
   //void makeCCD_comp_ops();
   
   Op_component_base& set_op_array(opTypes optype){assert(has(optype));return *(ops.find(optype)->second);}
-  Op_component_base& get_op_array(opTypes optype){cout<<optype<<endl;assert(has(optype));return *(ops.find(optype)->second);}
-  const Op_component_base& get_op_array(opTypes optype) const {cout<<optype<<endl;assert(has(optype));return *(ops.find(optype)->second);}
+  Op_component_base& get_op_array(opTypes optype){assert(has(optype));return *(ops.find(optype)->second);}
+  const Op_component_base& get_op_array(opTypes optype) const {assert(has(optype));return *(ops.find(optype)->second);}
   
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
   boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const SpinQuantum& s, int i=-1, int j=-1, int k=-1) {

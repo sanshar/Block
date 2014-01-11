@@ -115,7 +115,6 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
       break;
 //FIXME MAW NPDM
     case RI_3INDEX:
-cout << "make_new_op RI3index\n";
       ret = boost::shared_ptr<Op_component<RI3index> >(new Op_component<RI3index>(is_core));
       break;
     case RI_4INDEX:
