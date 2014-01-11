@@ -29,6 +29,8 @@ std::map< std::tuple<int,int,int>, int > get_3index_tuples(SpinBlock& b);
 //===========================================================================================================================================================
 // 4PDM operators
 //===========================================================================================================================================================
+
+//===========================================================================================================================================================
 // (Des,Cre,Des)
 //-------------------
 
@@ -117,7 +119,6 @@ void Op_component<DesCreDes>::build_iterators(SpinBlock& b)
     assert( m_op.get_local_element(i).size() == 3);
   }
 }
-
 
 //===========================================================================================================================================================
 // (Des,Des,Cre)
@@ -242,6 +243,34 @@ std::map< std::tuple<int,int,int,int>, int > get_4index_tuples(SpinBlock& b)
       }
 
   return tuples;
+}
+
+//===========================================================================================================================================================
+// RI_4_INDEX skeleton class
+//----------------------------
+
+template<>
+string Op_component<RI4index>::get_op_string() const {
+  return "RI_4_INDEX";
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+
+template<>
+void Op_component<RI4index>::build_iterators(SpinBlock& b)
+{
+  // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
+  if (b.get_sites().size () == 0) return;
+
+  // Set up 4-index (i,j,k,l) spatial operator indices for this SpinBlock
+  std::map< std::tuple<int,int,int,int>, int > tuples = get_4index_tuples(b);
+  m_op.set_tuple_indices( tuples, dmrginp.last_site() );
+
+//  // Allocate new set of operators for each set of spatial orbitals
+//  std::vector<int> orbs(4);
+//  for (int i = 0; i < m_op.local_nnz(); ++i) {
+//    orbs = m_op.unmap_local_index(i);
+//  }
 }
 
 //===========================================================================================================================================================

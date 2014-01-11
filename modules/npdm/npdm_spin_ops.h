@@ -130,6 +130,7 @@ class NpdmSpinOps_base {
 ////MAW 3PDM
 //      ar.register_type(static_cast<DesCre *>(NULL));
 //      ar.register_type(static_cast<RI3index *>(NULL));
+//      ar.register_type(static_cast<RI4index *>(NULL));
 //      ar.register_type(static_cast<CreCreDes *>(NULL));
 //      ar.register_type(static_cast<CreDesDes *>(NULL));
 //      ar.register_type(static_cast<CreDesCre *>(NULL));

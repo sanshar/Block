@@ -80,6 +80,9 @@ template <> struct ChooseArray<CreCreCre> {
   typedef para_array_3d<std::vector<boost::shared_ptr<CreCreCre> > > ArrayType;
 };
 //MAW 4PDM >>>>>
+template <> struct ChooseArray<RI4index> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<RI4index> > > ArrayType;
+};
 template <> struct ChooseArray<DesCreDes> {
   typedef para_array_3d<std::vector<boost::shared_ptr<DesCreDes> > > ArrayType;
 };

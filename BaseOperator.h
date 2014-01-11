@@ -29,11 +29,13 @@ namespace SpinAdapted{
 class SpinBlock;
 
 enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP, 
+              //MAW Resolution-of-identity 3PDM
+              RI_3INDEX,
               //MAW 3PDM
               DES_CRE, 
               CRE_CRE_CRE, CRE_CRE_DES, CRE_DES_DES, CRE_DES_CRE, 
               //MAW Resolution-of-identity 3PDM
-              RI_3INDEX,
+              RI_4INDEX,
               //MAW 4PDM
               DES_CRE_DES, DES_DES_CRE, CRE_CRE_DES_DES };
 
