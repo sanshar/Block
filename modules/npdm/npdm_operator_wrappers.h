@@ -13,12 +13,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "BaseOperator.h"
 #include "operatorfunctions.h"
 #include "npdm_spin_ops.h"
-//FIXME serialize bullshit
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/base_object.hpp>
-#include <boost/serialization/export.hpp>
-#include <boost/serialization/vector.hpp>
-#include <boost/serialization/string.hpp>
 
 namespace SpinAdapted{
 
@@ -250,31 +244,6 @@ class Npdm_op_wrapper_NULL : public NpdmSpinOps {
 };
 
 //===========================================================================================================================================================
-
-//BOOST_CLASS_EXPORT( NpdmSpinOps );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_compound_CCDD );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_CCDD );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_compound_CCD );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_compound_CDD );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_compound_CDC );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_compound_CCC );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_compound_DCD );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_CCC );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_CCD );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_CDD );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_CDC );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_DCD );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_DDC );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_DCC );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_DDD );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_CC );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_CD );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_DC );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_DD );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_C );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_D );
-//BOOST_CLASS_EXPORT( Npdm_op_wrapper_NULL );
-//
 
 }
 

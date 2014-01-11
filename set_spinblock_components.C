@@ -55,6 +55,8 @@ void SpinBlock::setstoragetype(Storagetype st)
     //pout << "Setting distributed storage 3-index ops\n";
     if (has(DES_CRE))
       set_op_array(DES_CRE).set_local() = false;
+    if (has(RI_3INDEX))
+      set_op_array(RI_3INDEX).set_local() = false;
     if (has(CRE_CRE_CRE))
       set_op_array(CRE_CRE_CRE).set_local() = false;
     if (has(CRE_CRE_DES))
@@ -106,6 +108,9 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
 //FIXME MAW 3PDM
     case DES_CRE:
       ret = boost::shared_ptr<Op_component<DesCre> >(new Op_component<DesCre>(is_core));
+      break;
+    case RI_3INDEX:
+      ret = boost::shared_ptr<Op_component<RI3index> >(new Op_component<RI3index>(is_core));
       break;
     case CRE_CRE_CRE:
       ret = boost::shared_ptr<Op_component<CreCreCre> >(new Op_component<CreCreCre>(is_core));
@@ -164,6 +169,7 @@ void SpinBlock::default_op_components(bool complementary_)
            (dmrginp.calc_type() == FOURPDM) ) {
         //pout << "Setting store-in-core 3-index ops\n";
         ops[DES_CRE] = make_new_op(DES_CRE, true);
+        ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
         ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
         ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
         ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
@@ -222,6 +228,7 @@ assert(false); //FIXME << if (haveNormops || dmrginp.do_npdm_ops()) not tested
           if ( (dmrginp.calc_type() == THREEPDM) ||
                (dmrginp.calc_type() == FOURPDM) ) {
             ops[DES_CRE] = make_new_op(DES_CRE, true);
+            ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
             ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
             ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
             ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
@@ -260,6 +267,7 @@ assert(false); //FIXME << if (haveNormops || dmrginp.do_npdm_ops()) not tested
                (dmrginp.calc_type() == FOURPDM) ) {
             //pout << "Setting build-on-fly 3-index ops\n";
             ops[DES_CRE] = make_new_op(DES_CRE, false);
+            ops[RI_3INDEX] = make_new_op(RI_3INDEX, false);
             ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
             ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);
             ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, false);

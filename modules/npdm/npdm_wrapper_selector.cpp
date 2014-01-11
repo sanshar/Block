@@ -82,6 +82,8 @@ boost::shared_ptr<NpdmSpinOps> init_3_index_operators( SpinBlock * spinBlock, st
   op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION };
   if ( cd_type == op ) {
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CCD( spinBlock ) );
+//std::cout << "setting compound CCD" << std::endl;
+//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCD( spinBlock ) );
     return ret;
   } 
   op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
@@ -190,7 +192,7 @@ boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::ve
   if (spinBlock->size() == 1) {
     // Many-body basis is complete, so exploit RI to build many-index operators on fly (e.g. dot block)
 //    if      ( cd_type.size() == 3 ) ret = init_3_index_operators( spinBlock, cd_type );
-    if      ( cd_type.size() == 3 ) ret = init_RI_3_index_operators( spinBlock, cd_type );
+    if      ( cd_type.size() == 3 ) ret = init_RI_3_index_operators( spinBlock, cd_type ); //FIXME redundant if exact ops available
     else if ( cd_type.size() == 4 ) ret = init_RI_4_index_operators( spinBlock, cd_type );
     else assert(false);
   }
