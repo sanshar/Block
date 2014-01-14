@@ -261,7 +261,8 @@ if ( abs(val) > 1e-8 ) {
     cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<" "<<p<<" "<<q<<endl;
     //backtrace_symbols_fd(array, size, 2);
     cout << "earlier value: " << fourpdm(i,j,k,l,m,n,p,q) << endl << "new value:     " <<val<<endl;
-//FIXME    assert( false );
+    cout.flush();
+    assert( false );
     return;
   }
 
@@ -270,10 +271,10 @@ if ( abs(val) > 1e-8 ) {
   // If indices are not all unique, then all elements should be zero (and next_even_permutation fails)
   std::vector<int> v = {i,j,k,l};
   std::sort( v.begin(), v.end() );
-  if ( (v[0]==v[1]) || (v[1]==v[2]) || (v[2]==v[3]) ) { if (abs(val) > 1e-15) assert(false); return; }
+  if ( (v[0]==v[1]) || (v[1]==v[2]) || (v[2]==v[3]) ) { if (abs(val) > 1e-15) { std::cout << abs(val) << std::endl; assert(false); } }
   std::vector<int> w = {m,n,p,q};
   std::sort( w.begin(), w.end() );
-  if ( (w[0]==w[1]) || (w[1]==w[2]) || (w[2]==w[3]) ) { if (abs(val) > 1e-15) assert(false); return; }
+  if ( (w[0]==w[1]) || (w[1]==w[2]) || (w[2]==w[3]) ) { if (abs(val) > 1e-15) { std::cout << abs(val) << std::endl; assert(false); } }
 
   // Get all even and odd permutations
   const std::vector<int> ijkl = {i,j,k,l};

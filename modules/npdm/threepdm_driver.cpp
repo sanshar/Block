@@ -209,11 +209,11 @@ void Threepdm_driver::accumulate_npdm()
 
 void Threepdm_driver::assign_npdm_antisymmetric(const int i, const int j, const int k, const int l, const int m, const int n, const double val)
 {
-//if ( abs(val) > 1e-8 ) {
-//  cout << "so-threepdm val: i,j,k,l,m,n = " 
-//       << i << "," << j << "," << k << "," << l << "," << m << "," << n
-//       << "\t\t" << val << endl;
-//}
+if ( abs(val) > 1e-8 ) {
+  cout << "so-threepdm val: i,j,k,l,m,n = " 
+       << i << "," << j << "," << k << "," << l << "," << m << "," << n
+       << "\t\t" << val << endl;
+}
 
   // Test for duplicates
   if ( threepdm(i,j,k,l,m,n) != 0.0 && abs(threepdm(i,j,k,l,m,n)-val) > 1e-6) {
@@ -223,19 +223,19 @@ void Threepdm_driver::assign_npdm_antisymmetric(const int i, const int j, const 
     cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<endl;
     //backtrace_symbols_fd(array, size, 2);
     cout << "earlier value: " << threepdm(i,j,k,l,m,n) << endl << "new value:     " <<val<<endl;
-//    assert( false );
+    assert( false );
     return;
   }
 
   if ( abs(val) < 1e-14 ) return;
 
-  // If indices are not all unique, then all elements should be zero (and next_even_permutation fails)
+  // If indices are not all unique, then all elements should be zero
   std::vector<int> v = {i,j,k};
   std::sort( v.begin(), v.end() );
-//  if ( (v[0]==v[1]) || (v[1]==v[2]) ) { if (abs(val) > 1e-15) std::cout << abs(val) << std::endl; assert(false); return; }
+  if ( (v[0]==v[1]) || (v[1]==v[2]) ) { if (abs(val) > 1e-15) { std::cout << abs(val) << std::endl; assert(false); } }
   std::vector<int> w = {l,m,n};
   std::sort( w.begin(), w.end() );
-//  if ( (w[0]==w[1]) || (w[1]==w[2]) ) { if (abs(val) > 1e-15) std::cout << abs(val) << std::endl; assert(false); return; }
+  if ( (w[0]==w[1]) || (w[1]==w[2]) ) { if (abs(val) > 1e-15) { std::cout << abs(val) << std::endl; assert(false); } }
 
 
   // The number of possible combinations is (3!)**2  (For 4pdm and higher we use a general implementation)

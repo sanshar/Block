@@ -286,7 +286,7 @@ assert(false);  //4PDM debug
 bool skip_this_pattern( std::vector<Npdm::CD>& lhs, std::vector<Npdm::CD>& dot, std::vector<Npdm::CD>& rhs ) {
 
   bool skip = false;
-//return skip;
+return skip;
 
   //if ( (sweepPos==1) && (lhs_cd_type.size() ==4) ) continue;
   if ( lhs.size() == 4 ) skip = true;
@@ -300,6 +300,9 @@ bool skip_this_pattern( std::vector<Npdm::CD>& lhs, std::vector<Npdm::CD>& dot, 
 //  if ( lhs == op || dot == op || rhs == op ) skip = true;
 //  op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
 //  if ( lhs == op || dot == op || rhs == op ) skip = true;
+
+  op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
+  if ( lhs == op || dot == op || rhs == op ) skip = false;
 
   if ( skip ) cout << "Skipping this operator pattern!\n";
   return skip;
@@ -316,7 +319,7 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
   DEBUG_CALL_GET_EXPECT[mpigetrank()] = 0;
   Timer timer;
   pout << "===========================================================================================\n";
-  pout << "NPDM sweep position = "<< sweepPos << " (" << endPos << ")\n";
+  pout << "Current NPDM sweep = "<< sweepPos+1 << " of " << endPos+1 << "\n";
 
   // Initialize class that computes expectation values when sent LHS, Dot and RHS operator spin-sets from this spin-block
   Npdm::Npdm_expectations npdm_expectations( npdm_order_, wavefunctions.at(0), big );

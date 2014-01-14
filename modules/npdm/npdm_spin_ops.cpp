@@ -26,7 +26,7 @@ boost::shared_ptr<SparseMatrix> NpdmSpinOps::build_compound_operator( bool is_fe
   newOp->set_initialised() = true;
   newOp->set_fermion() = is_fermion;
   if (sign == 1) newOp->set_deltaQuantum() = ( lhsOp->get_deltaQuantum() + rhsOp->get_deltaQuantum() ).at(ispin);
-  else newOp->set_deltaQuantum() = ( lhsOp->get_deltaQuantum() - rhsOp->get_deltaQuantum() ).at(ispin);
+  else           newOp->set_deltaQuantum() = ( lhsOp->get_deltaQuantum() - rhsOp->get_deltaQuantum() ).at(ispin);
 //cout << "Building compound operator.......................................................\n";
 //cout << "2*lhs spin = " << lhsOp->get_deltaQuantum().get_s() << std::endl;
 //cout << "2*rhs spin = " << rhsOp->get_deltaQuantum().get_s() << std::endl;

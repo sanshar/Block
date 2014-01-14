@@ -87,19 +87,25 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
   else if (pdm_order_ == 4) {
     if ( sweep_pos == 0 ) {
       pout << "WARNING: 4PDM edge cases NYI!\n";
+//      lhs_dot_rhs_types_.insert( std::make_tuple(4,0,4) );
     }
     else if ( sweep_pos == end_pos ) {
       pout << "WARNING: 4PDM edge cases NYI!\n";
+      lhs_dot_rhs_types_.insert( std::make_tuple(0,4,4) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(4,0,4) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(1,3,4) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(3,1,4) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(2,2,4) );
     }
   }
   else assert(false);
 
   // Print out
-  //pout << "=================================================================\n";
-  //pout << "Possible block partitions:\n";
-  //for ( auto it = lhs_dot_rhs_types_.begin(); it != lhs_dot_rhs_types_.end(); ++it ) {
-  //  pout << std::get<0>(*it) << "," << std::get<1>(*it) << "," << std::get<2>(*it) << std::endl;
-  //}
+  pout << "=================================================================\n";
+  pout << "Possible block partitions:\n";
+  for ( auto it = lhs_dot_rhs_types_.begin(); it != lhs_dot_rhs_types_.end(); ++it ) {
+    pout << std::get<0>(*it) << "," << std::get<1>(*it) << "," << std::get<2>(*it) << std::endl;
+  }
   if ( sweep_pos == 0 )
     pout << "Added extra partitions for initial sweep position\n";
   else if ( sweep_pos == end_pos )
@@ -294,6 +300,13 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
 
     }
   }
+// DEBUG add extra patterns
+//std::map< char, std::vector<CD> > cd_pattern;
+//cd_pattern['l'] = { CREATION, DESTRUCTION, DESTRUCTION, DESTRUCTION };
+//cd_pattern['d'] = { };
+//cd_pattern['r'] = { CREATION, CREATION };
+////cd_pattern['r'] = { };
+//ldr_cd_types_.insert( cd_pattern );
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
