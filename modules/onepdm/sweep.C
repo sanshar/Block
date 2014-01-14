@@ -90,15 +90,21 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 
   if (sweepParams.get_block_iter() == 0) {
     //this is inface a combination of  2_0_0, 1_1_0 and 0_2_0
+    pout << "compute 2_0_0"<<endl;
     compute_one_pdm_2_0_0(solution[0], solution[0], big, onepdm);
+    pout << "compute 1_1_0"<<endl;
     compute_one_pdm_1_1_0(solution[0], solution[0], big, onepdm);
   }
 
+  pout << "compute 0_2_0"<<endl;
   compute_one_pdm_0_2_0(solution[0], solution[0], big, onepdm);
+  pout << "compute 1_1"<<endl;
   compute_one_pdm_1_1(solution[0], solution[0], big, onepdm);
 
-  if (sweepParams.get_block_iter()  == sweepParams.get_n_iters() - 1)
+  if (sweepParams.get_block_iter()  == sweepParams.get_n_iters() - 1) {
+    pout << "compute 0_2"<<endl;
     compute_one_pdm_0_2(solution[0], solution[0], big, onepdm);
+  }
 
   accumulate_onepdm(onepdm);
   save_onepdm_binary(onepdm, state, state);
@@ -121,8 +127,8 @@ double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   double finalError = 0.;
 
   Matrix onepdm(2*dmrginp.last_site(), 2*dmrginp.last_site());onepdm=0.0;
-  for (int i=0; i<nroots; i++)
-    save_onepdm_binary(onepdm, i ,i);
+
+  save_onepdm_binary(onepdm, state ,state);
 
   sweepParams.set_sweep_parameters();
   // a new renormalisation sweep routine
@@ -168,18 +174,18 @@ double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
       pout << "\t\t\t saving state " << system.get_sites().size() << endl;
       ++sweepParams.set_block_iter();
-      sweepParams.savestate(forward, system.get_sites().size());
+      //sweepParams.savestate(forward, system.get_sites().size());
     }
   pout << "\t\t\t The lowest sweep energy :  ----"<<endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
-  for (int i=0; i<nroots; i++) {
-    load_onepdm_binary(onepdm, i ,i);
-    accumulate_onepdm(onepdm);
-    save_onepdm_spatial_text(onepdm, i ,i);
-    save_onepdm_text(onepdm, i ,i);
-    save_onepdm_spatial_binary(onepdm, i ,i);
-  }
+
+  load_onepdm_binary(onepdm, state ,state);
+  accumulate_onepdm(onepdm);
+  save_onepdm_spatial_text(onepdm, state, state);
+  save_onepdm_text(onepdm, state, state);
+  save_onepdm_spatial_binary(onepdm, state, state);
+
   return sweepParams.get_lowest_energy()[0];
 }
 }

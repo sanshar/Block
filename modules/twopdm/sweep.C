@@ -237,7 +237,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
       pout << "\t\t\t saving state " << system.get_sites().size() << endl;
       ++sweepParams.set_block_iter();
-      sweepParams.savestate(forward, system.get_sites().size());
+      //sweepParams.savestate(forward, system.get_sites().size());
     }
   //for(int j=0;j<nroots;++j)
   {int j = state;
