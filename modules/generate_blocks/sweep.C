@@ -53,40 +53,14 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
   std::vector<Matrix> rotateMatrix;
 
 
-  if (!dmrginp.get_fullrestart()) {
-    //this should be done when we actually have wavefunctions stored, otherwise not!!
-    SpinBlock environment, environmentDot, newEnvironment;
-    int environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
-    InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
-					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-					sweepParams.get_onedot(), nexact, useSlater, true, true, true);
-    SpinBlock big;
-    InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
-    DiagonalMatrix e;
-    std::vector<Wavefunction> solution(1);
-    
-    GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, true, 0.0); 
-    solution[0].SaveWavefunctionInfo (big.get_stateInfo(), big.get_leftBlock()->get_sites(), state);
-
-
-    DensityMatrix tracedMatrix;
-    tracedMatrix.allocate(newSystem.get_stateInfo());
-    tracedMatrix.makedensitymatrix(solution, big, std::vector<double>(1, 1.0), 0.0, 0.0, false);
-    rotateMatrix.clear();
-    if (!mpigetrank())
-      double error = newSystem.makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
-    
-  }
-  else
-    LoadRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
+  LoadRotationMatrix (newSystem.get_sites(), rotateMatrix);
 
 #ifndef SERIAL
   mpi::communicator world;
   broadcast(world, rotateMatrix, 0);
 #endif
 
-  if (!dmrginp.get_fullrestart())
-    SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
+  SaveRotationMatrix (newSystem.get_sites(), rotateMatrix);
 
   pout <<"\t\t\t Performing Renormalization "<<endl<<endl;
   newSystem.transform_operators(rotateMatrix);

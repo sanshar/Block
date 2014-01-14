@@ -180,14 +180,14 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     mcheck("after rotation and transformation of block");
 
   if (dmrginp.outputlevel() > 0){
-    pout << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
-    pout << dmrginp.makeopsT<<" makeops "<<endl;
-    pout << dmrginp.datatransfer<<" datatransfer "<<endl;
+    pout << *dmrginp.guessgenT<<" "<<*dmrginp.multiplierT<<" "<<*dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+    pout << *dmrginp.makeopsT<<" makeops "<<endl;
+    pout << *dmrginp.datatransfer<<" datatransfer "<<endl;
     pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
-    pout << dmrginp.oneelecT<<" "<<dmrginp.twoelecT<<" "<<dmrginp.hmultiply<<" "<<dmrginp.couplingcoeff<<" hmult"<<endl;
-    pout << dmrginp.buildsumblock<<" "<<dmrginp.buildblockops<<" build block"<<endl;
+    pout << *dmrginp.oneelecT<<" "<<*dmrginp.twoelecT<<" "<<*dmrginp.hmultiply<<" "<<*dmrginp.couplingcoeff<<" hmult"<<endl;
+    pout << *dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<" build block"<<endl;
     pout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
-    pout << dmrginp.addnoise<<" "<<dmrginp.s0time<<" "<<dmrginp.s1time<<" "<<dmrginp.s2time<<endl;
+    pout << *dmrginp.addnoise<<" "<<*dmrginp.s0time<<" "<<*dmrginp.s1time<<" "<<*dmrginp.s2time<<endl;
   }
 
 }
@@ -352,17 +352,13 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   ++sweepParams.set_sweep_iter();
   if (!mpigetrank())
   {
-#ifndef MOLPRO
-    FILE* f = fopen("dmrg.e", "wb");
-#else
     std::string efile;
     efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
     FILE* f = fopen(efile.c_str(), "wb");
-#endif
     
     for(int j=0;j<nroots;++j) {
-      double e = finalEnergy[j]+dmrginp.get_coreenergy(); 
-      //pout << "ROA ROA get_lowest_energy()[" << j << "]" <<  sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() << " " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
+      //double e = finalEnergy[j]+dmrginp.get_coreenergy(); 
+      double e = sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy(); //instead of the lowest energy of the sweep, we record the last energy of the sweep
       fwrite( &e, 1, sizeof(double), f);
     }
     fclose(f);
@@ -450,6 +446,7 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
 
   dmrginp.operrotT -> start();
   newSystem.transform_operators(rotateMatrix);
+  SaveRotationMatrix (newSystem.get_sites(), rotateMatrix);
   for (int i=0; i<dmrginp.nroots(); i++)
     SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, i);
   dmrginp.operrotT -> stop();

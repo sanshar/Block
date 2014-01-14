@@ -1,18 +1,11 @@
-cd c2_d2h
-rm Spin*
-rm Rotation*
-rm state*
-rm wave*
-rm dmrg.e
-rm spatial*
-rm twopdm.0.0
-rm twopdm.1.1
-rm *.out
-
-cd ../h2o_nosym
-rm Spin*
-rm Rotation*
-rm state*
-rm wave*
-rm dmrg.e
-rm *.out
+find . -name "Spin*" |xargs rm >/dev/null 2>&1
+find . -name "wave*" |xargs rm >/dev/null 2>&1
+find . -name "dmrg.e" |xargs rm >/dev/null 2>&1
+find . -name "spatial*" |xargs rm >/dev/null 2>&1
+find . -name "Rotation*" |xargs rm >/dev/null 2>&1
+find . -name "statefile*"|xargs rm >/dev/null 2>&1
+find . -name "onepdm.*" |xargs rm >/dev/null 2>&1
+find . -name "twopdm.*" |xargs rm >/dev/null 2>&1
+find . -name "Restart*" |xargs rm >/dev/null 2>&1
+find . -name "onepdm_fromtpdm" |xargs rm >/dev/null 2>&1
+find . -name "dmrg.out" |xargs rm >/dev/null 2>&1

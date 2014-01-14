@@ -30,8 +30,8 @@ int main(int argc, char* argv [])
   //This needs to be added
   //SpinAdapted::dmrginp.initCumulTimer();
 
-  if (argc == 1) {
-    pout << "No command line argument found, expects an input file"<<endl;
+  if (argc == 1 && mpigetrank() == 0) {
+    cout << "No command line argument found, expects an input file"<<endl;
     abort();
   }
   char* output = 0;

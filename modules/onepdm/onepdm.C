@@ -41,7 +41,9 @@ void compute_onepdm(std::vector<Wavefunction>& wavefunctions, const SpinBlock& s
 
 	//if (big.get_leftBlock()->size() == 2) {
 	pout << "compute 2_0 "<<mpigetrank()<<endl;
-	compute_one_pdm_2_0(wavefunction1, wavefunction2, big, onepdm);
+	compute_one_pdm_2_0_0(wavefunction1, wavefunction2, big, onepdm);
+	compute_one_pdm_0_2_0(wavefunction1, wavefunction2, big, onepdm);
+	compute_one_pdm_1_1_0(wavefunction1, wavefunction2, big, onepdm);
 	//}
 	
 	//if (big.get_rightBlock()->size() == 1) {
@@ -56,51 +58,127 @@ void compute_onepdm(std::vector<Wavefunction>& wavefunctions, const SpinBlock& s
       }
 }
 
-void compute_one_pdm_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm)
+void compute_one_pdm_2_0_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm)
 {
-  SpinBlock* leftBlock = big.get_leftBlock();
+  SpinBlock* leftBlock = big.get_leftBlock()->get_leftBlock();
   SpinBlock* rightBlock = big.get_rightBlock();
+  SpinBlock* dotBlock = big.get_leftBlock()->get_rightBlock();
 
+  //this is function 2_0_0
   for (int ij = 0; ij < leftBlock->get_op_array(CRE_DES).get_size(); ++ij)
   {
     boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(CRE_DES).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);//spin 0
     int ix = op->get_orbs(0);
     int jx = op->get_orbs(1);
 
+    //now for a leftop that sits on the system block, this is done by tensortrace function
+    Cre leftop1;
+    leftop1.set_orbs() = op->get_orbs(); 
+    leftop1.set_initialised() = true;
+    leftop1.set_fermion() = false;
+    leftop1.set_deltaQuantum() = op->get_deltaQuantum();
+    leftop1.allocate(big.get_leftBlock()->get_stateInfo());
+    operatorfunctions::TensorTrace(leftBlock, *op, big.get_leftBlock(), &(big.get_leftBlock()->get_stateInfo()), leftop1);
+
+
     Wavefunction opw2;
     SpinQuantum dQ = wave1.get_deltaQuantum();
     opw2.initialise(dQ, &big, true);
-    operatorfunctions::TensorMultiply(leftBlock, *op, &big, wave2, opw2, dQ, 1.0);
+    operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ, 1.0);
     double sum = sqrt(2.0)*DotProduct(wave1, opw2);
 
-    opw2.Clear();
-    op = leftBlock->get_op_array(CRE_DES).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);//spin 2
-    operatorfunctions::TensorMultiply(leftBlock, *op, &big, wave2, opw2, dQ, 1.0);
-    double difference = sqrt(2.0)*DotProduct(wave1, opw2)*cg(dQ.get_s(), dmrginp.Sz(), 2, 0, dQ.get_s(), dmrginp.Sz());
-
-    onepdm(2*ix+1, 2*jx+1) = (sum+difference)/2.0;
-    onepdm(2*ix+2, 2*jx+2) = (sum-difference)/2.0;
-
-    if (ix != jx) {
-      opw2.Clear();
-      op = leftBlock->get_op_array(CRE_DES).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);
-      operatorfunctions::TensorMultiply(leftBlock, Transposeview(*op), &big, wave2, opw2, dQ, 1.0);
-      sum = sqrt(2.0)*DotProduct(wave1, opw2);
-
-      opw2.Clear();
-      op = leftBlock->get_op_array(CRE_DES).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
-      operatorfunctions::TensorMultiply(leftBlock, Transposeview(*op), &big, wave2, opw2, dQ, 1.0);
-      difference = sqrt(2.0)*DotProduct(wave1, opw2)*cg(dQ.get_s(), dmrginp.Sz(), 2, 0, dQ.get_s(), dmrginp.Sz());
-      
-      onepdm(2*jx+1, 2*ix+1) = (sum+difference)/2.0;
-      onepdm(2*jx+2, 2*ix+2) = (sum-difference)/2.0;
-    }
-
+    onepdm(2*ix+1, 2*jx+1) = (sum)/2.0;
+    onepdm(2*ix+2, 2*jx+2) = (sum)/2.0;
+    onepdm(2*jx+1, 2*ix+1) = (sum)/2.0;
+    onepdm(2*jx+2, 2*ix+2) = (sum)/2.0;
   }      
 }
 
+void compute_one_pdm_0_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm)
+{
+  SpinBlock* leftBlock = big.get_leftBlock()->get_leftBlock();
+  SpinBlock* rightBlock = big.get_rightBlock();
+  SpinBlock* dotBlock = big.get_leftBlock()->get_rightBlock();
+
+
+  for (int ij = 0; ij < dotBlock->get_op_array(CRE_DES).get_size(); ++ij)
+  {
+    boost::shared_ptr<SparseMatrix> op = dotBlock->get_op_array(CRE_DES).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);//spin 0
+    int ix = op->get_orbs(0);
+    int jx = op->get_orbs(1);
+
+    //now for a leftop that sits on the system block, this is done by tensortrace function
+    Cre leftop1;
+    leftop1.set_orbs() = op->get_orbs(); 
+    leftop1.set_initialised() = true;
+    leftop1.set_fermion() = false;
+    leftop1.set_deltaQuantum() = op->get_deltaQuantum();
+    leftop1.allocate(big.get_leftBlock()->get_stateInfo());
+    operatorfunctions::TensorTrace(dotBlock, *op, big.get_leftBlock(), &(big.get_leftBlock()->get_stateInfo()), leftop1);
+
+
+    Wavefunction opw2;
+    SpinQuantum dQ = wave1.get_deltaQuantum();
+    opw2.initialise(dQ, &big, true);
+    operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ, 1.0);
+    double sum = sqrt(2.0)*DotProduct(wave1, opw2);
+
+    double difference = 0.0;
+
+    onepdm(2*ix+1, 2*jx+1) = (sum+difference)/2.0;
+    onepdm(2*ix+2, 2*jx+2) = (sum-difference)/2.0;
+    onepdm(2*jx+1, 2*ix+1) = (sum+difference)/2.0;
+    onepdm(2*jx+2, 2*ix+2) = (sum-difference)/2.0;
+  }      
+
+
+}
+
+void compute_one_pdm_1_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm)
+{
+  SpinBlock* leftBlock = big.get_leftBlock()->get_leftBlock();
+  SpinBlock* rightBlock = big.get_rightBlock();
+  SpinBlock* dotBlock = big.get_leftBlock()->get_rightBlock();
+
+
+  for (int i = 0; i < leftBlock->get_op_array(CRE).get_size(); ++i)
+  for (int j = 0; j < dotBlock->get_op_array(CRE).get_size(); ++j)
+  {
+    boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_array(CRE).get_local_element(i)[0]->getworkingrepresentation(leftBlock);//spin 0
+    boost::shared_ptr<SparseMatrix> op2 = dotBlock->get_op_array(CRE).get_local_element(j)[0]->getworkingrepresentation(dotBlock);//spin 0
+    int ix = op1->get_orbs(0);
+    int jx = op2->get_orbs(0);
+
+    //now for a leftop that sits on the system block, this is done by tensortrace function
+    Cre leftop1;
+    leftop1.set_orbs() = op1->get_orbs(); leftop1.set_orbs().push_back(op2->get_orbs(0));
+    leftop1.set_initialised() = true;
+    leftop1.set_fermion() = false;
+    leftop1.set_deltaQuantum() = (op1->get_deltaQuantum()-op2->get_deltaQuantum())[0];
+    leftop1.allocate(big.get_leftBlock()->get_stateInfo());
+    operatorfunctions::TensorProduct(leftBlock, *op1, Transposeview(op2), big.get_leftBlock(), &(big.get_leftBlock()->get_stateInfo()), leftop1, 1.0);
+
+
+    Wavefunction opw2;
+    SpinQuantum dQ = wave1.get_deltaQuantum();
+    opw2.initialise(dQ, &big, true);
+    operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ, 1.0);
+    double sum = sqrt(2.0)*DotProduct(wave1, opw2);
+
+
+    onepdm(2*ix+1, 2*jx+1) = (sum)/2.0;
+    onepdm(2*ix+2, 2*jx+2) = (sum)/2.0;
+    onepdm(2*jx+1, 2*ix+1) = (sum)/2.0;
+    onepdm(2*jx+2, 2*ix+2) = (sum)/2.0;
+  }      
+
+
+}
+
+
 void compute_one_pdm_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm)
 {
+  if(mpigetrank() == 0) {
   SpinBlock* leftBlock = big.get_leftBlock();
   SpinBlock* rightBlock = big.get_rightBlock();
 
@@ -115,30 +193,17 @@ void compute_one_pdm_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
     opw2.initialise(dQ, &big, true);
     operatorfunctions::TensorMultiply(rightBlock, *op, &big, wave2, opw2, dQ, 1.0);
     double sum = sqrt(2.0)*DotProduct(wave1, opw2);
-    opw2.Clear();
-    op = rightBlock->get_op_array(CRE_DES).get_local_element(ij)[1]->getworkingrepresentation(rightBlock);
-    operatorfunctions::TensorMultiply(rightBlock, *op, &big, wave2, opw2, dQ, 1.0);
-    double difference = sqrt(2.0)*DotProduct(wave1, opw2)*cg(dQ.get_s(), dmrginp.Sz(), 2, 0, dQ.get_s(), dmrginp.Sz());
+
+    double difference = 0.0;
     
     onepdm(2*ix+1, 2*jx+1) = (sum+difference)/2.0;
-    onepdm(2*ix+2, 2*jx+2) = (sum-difference)/2.0;
-
-    if (ix != jx) {
-      opw2.Clear();
-      op = rightBlock->get_op_array(CRE_DES).get_local_element(ij)[0]->getworkingrepresentation(rightBlock);
-      operatorfunctions::TensorMultiply(rightBlock, Transposeview(*op), &big, wave2, opw2, dQ, 1.0);
-      sum = sqrt(2.0)*DotProduct(wave1, opw2);
-
-      opw2.Clear();
-      op = rightBlock->get_op_array(CRE_DES).get_local_element(ij)[1]->getworkingrepresentation(rightBlock);
-      operatorfunctions::TensorMultiply(rightBlock, Transposeview(*op), &big, wave2, opw2, dQ, 1.0);
-      double difference = sqrt(2.0)*DotProduct(wave1, opw2)*cg(dQ.get_s(), dmrginp.Sz(), 2, 0, dQ.get_s(), dmrginp.Sz());
+    onepdm(2*ix+2, 2*jx+2) = (sum-difference)/2.0;    
+    onepdm(2*jx+1, 2*ix+1) = (sum+difference)/2.0;
+    onepdm(2*jx+2, 2*ix+2) = (sum-difference)/2.0;
     
-      onepdm(2*jx+1, 2*ix+1) = (sum+difference)/2.0;
-      onepdm(2*jx+2, 2*ix+2) = (sum-difference)/2.0;
-    }
 
   }      
+  }
 }
 
 void compute_one_pdm_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm)
@@ -162,21 +227,11 @@ void compute_one_pdm_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
       operatorfunctions::TensorMultiply(leftBlock, *op1, Transposeview(*op2), &big, wave2, opw2, opQ[0], 1.0);
       double sum = sqrt(2.0)*DotProduct(wave1, opw2);
 
-      opw2.Clear();
-      operatorfunctions::TensorMultiply(leftBlock, *op1, Transposeview(*op2), &big, wave2, opw2, opQ[1], 1.0);
-      double difference = sqrt(2.0)*DotProduct(wave1, opw2)*cg(dQ.get_s(), dmrginp.Sz(), 2, 0, dQ.get_s(), dmrginp.Sz());
+      double difference = 0.0;
 
       onepdm(2*ix+1, 2*jx+1) = (sum+difference)/2.0;
       onepdm(2*ix+2, 2*jx+2) = (sum-difference)/2.0;
 
-      opw2.Clear();
-      operatorfunctions::TensorMultiply(leftBlock, Transposeview(*op1), *op2, &big, wave2, opw2, opQ[0], 1.0);
-      sum = sqrt(2.0)*DotProduct(wave1, opw2);
-      opw2.Clear();
-      operatorfunctions::TensorMultiply(leftBlock, Transposeview(*op1), *op2, &big, wave2, opw2, opQ[1], 1.0);
-      difference = sqrt(2.0)*DotProduct(wave1, opw2)*cg(dQ.get_s(), dmrginp.Sz(), 2, 0, dQ.get_s(), dmrginp.Sz());
-    
-      
       onepdm(2*jx+1, 2*ix+1) = (sum+difference)/2.0;
       onepdm(2*jx+2, 2*ix+2) = (sum-difference)/2.0;
     }
@@ -221,8 +276,9 @@ void save_onepdm_text(const Matrix& onepdm, const int &i, const int &j)
     ofstream ofs(file);
     ofs << onepdm.Nrows() << endl;
     for(int k=0;k<onepdm.Nrows();++k)
-      for(int l=0;l<onepdm.Ncols();++l)
+      for(int l=0;l<onepdm.Ncols();++l) {
 	ofs << boost::format("%d %d %20.14e\n") % k % l % onepdm(k+1, l+1);
+      }
 
     ofs.close();
   }
@@ -233,13 +289,20 @@ void save_onepdm_spatial_text(const Matrix& onepdm, const int &i, const int &j)
   //the spatial has a factor of 1/2 in front of it 
   if(!mpigetrank())
   {
+    std::vector<int> reorder;
+    reorder.resize(onepdm.Nrows()/2);
+    for (int k=0; k<onepdm.Nrows()/2; k++) {
+      reorder.at(dmrginp.reorder_vector()[k]) = k;
+    }
+
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_onepdm.", i, j);
     ofstream ofs(file);
     ofs << onepdm.Nrows()/2 << endl;
     for(int k=0;k<onepdm.Nrows()/2;++k)
       for(int l=0;l<onepdm.Ncols()/2;++l) {
-	double opdm = (onepdm(2*k+1, 2*l+1)+onepdm(2*k+2, 2*l+2));
+	int K = reorder.at(k), L = reorder.at(l);
+	double opdm = (onepdm(2*K+1, 2*L+1)+onepdm(2*K+2, 2*L+2));
 	ofs << boost::format("%d %d %20.14e\n") % k % l % opdm;
       }
 

@@ -20,7 +20,7 @@ namespace SpinAdapted {
   template<> void Op_component<Cre>::build_iterators(SpinBlock& b)
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
-      const double screen_tol = dmrginp.screen_tol();
+      const double screen_tol = dmrginp.oneindex_screen_tol();
       std::vector<int> screened_c_ix = screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1, *b.get_twoInt(), screen_tol); 
       m_op.set_indices(screened_c_ix, dmrginp.last_site());  
       std::vector<int> orbs(1);
@@ -73,7 +73,7 @@ namespace SpinAdapted {
   template<> void Op_component<CreDes>::build_iterators(SpinBlock& b)
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
-      const double screen_tol = dmrginp.screen_tol();
+      const double screen_tol = dmrginp.twoindex_screen_tol();
       vector< pair<int, int> > screened_cd_ix = screened_cd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
       m_op.set_pair_indices(screened_cd_ix, dmrginp.last_site());      
       std::vector<int> orbs(2);
@@ -106,7 +106,7 @@ namespace SpinAdapted {
   template<> void Op_component<CreCre>::build_iterators(SpinBlock& b)
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
-      const double screen_tol = dmrginp.screen_tol();
+      const double screen_tol = dmrginp.twoindex_screen_tol();
       
       vector< pair<int, int> > screened_dd_ix = screened_dd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
       m_op.set_pair_indices(screened_dd_ix, dmrginp.last_site());      
@@ -139,7 +139,7 @@ namespace SpinAdapted {
   template<> void Op_component<CreDesComp>::build_iterators(SpinBlock& b)
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
-      const double screen_tol = dmrginp.screen_tol();
+      const double screen_tol = dmrginp.twoindex_screen_tol();
       vector< pair<int, int> > screened_cd_ix = screened_cd_indices( b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), screen_tol);
       m_op.set_pair_indices(screened_cd_ix, dmrginp.last_site());      
       
@@ -188,7 +188,7 @@ namespace SpinAdapted {
   template<> void Op_component<DesDesComp>::build_iterators(SpinBlock& b)
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
-      const double screen_tol = dmrginp.screen_tol();
+      const double screen_tol = dmrginp.twoindex_screen_tol();
       vector< pair<int, int> > screened_dd_ix = screened_dd_indices(b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), screen_tol);
       m_op.set_pair_indices(screened_dd_ix, dmrginp.last_site());      
       
@@ -237,7 +237,7 @@ namespace SpinAdapted {
   template<> void Op_component<CreCreDesComp>::build_iterators(SpinBlock& b)
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
-      const double screen_tol = dmrginp.screen_tol();
+      const double screen_tol = dmrginp.oneindex_screen_tol();
       vector< int > screened_cdd_ix = screened_cddcomp_indices(b.get_complementary_sites(), b.get_sites(), v_1, *b.get_twoInt(), screen_tol);
       m_op.set_indices(screened_cdd_ix, dmrginp.last_site());      
       std::vector<int> orbs(1);

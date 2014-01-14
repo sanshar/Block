@@ -68,7 +68,11 @@ class cumulTimer
 
   friend ostream& operator<<(ostream& os, const cumulTimer& t)
   {
+#ifndef SERIAL
     os << t.cumulativeSum;
+#else
+    os << ((float)t.cumulativeSum)/CLOCKS_PER_SEC;
+#endif
     return os;
   }
 

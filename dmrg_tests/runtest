@@ -1,3 +1,5 @@
+#this is just a simple test, calculate energy of two lowest states and see if the twopdms are calculated
+# appropriately, here we are using fiedler restart, so this will test if the twopdm is printed correctly
 echo "testing energy for c2_d2h..."
 cd c2_d2h
 ../../block.spin_adapted dmrg.conf >dmrg.out
@@ -8,10 +10,33 @@ python ../test_twopdm.py spatial_twopdm.1.1 spat_twopdm.1.1.bkp 1e-7
 cd ../
 
 
+#this just tests the lowest energy calculation. The run here uses no symmetry
 echo "performing energy test on h2o..."
 cd h2o_nosym
 ../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 1  1.0e-6 -76.11460447
 cd ../
+
+#test for hubbard model and also calculate the onepdm
+echo "performing reorder, 1-pdm test on hubbard..."
+cd hubbard
+mpirun -np 2 ../../block.spin_adapted dmrg.conf >dmrg.out
+python ../test_energy.py 1  1.0e-6 -6.56819216
+python ../test_onepdm.py spatial_onepdm.0.0 spat_onepdm.0.0 1e-7
+cd ../
+
+
+#this first calculated twopdm with a small M for two lowest states (so the energy is not converged)
+#checks if the twopdm traced with integrals matches the energies
+#then restarts the calculations to calculate the onepdm
+#checks if the partially traced twopdm matches the calculated onepdm
+echo "testing energy for c2_d2h_smallM..."
+cd c2_d2h_smallM
+mpirun -np 2 ../../block.spin_adapted dmrg.conf >dmrg.out
+python test_twopdm_withe.py 
+mpirun -np 2 ../../block.spin_adapted dmrg_fullrestart.conf >dmrg.out
+python test_onepdm_withtwopdm.py 
+cd ../
+
 
 ./clean

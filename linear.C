@@ -342,7 +342,10 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	    }
 	  for (int j = 0; j < b.size(); ++j)
 	    {
-	      Normalise(r);
+	      //Normalize
+	      double normalization = DotProduct(r, r);
+	      Scale(1./sqrt(normalization), r);
+
 	      double overlap = DotProduct(r, b[j]);
 	      ScaleAdd(-overlap, b[j], r);
 	    }

@@ -189,8 +189,8 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
   array_4d<double> twopdm(2*dmrginp.last_site(), 2*dmrginp.last_site(), 2*dmrginp.last_site(), 2*dmrginp.last_site());
   twopdm.Clear();
-  for (int i=0; i<nroots; i++)
-    save_twopdm_binary(twopdm, i, i); 
+
+  save_twopdm_binary(twopdm, state, state); 
 
 
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
@@ -237,7 +237,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
       pout << "\t\t\t saving state " << system.get_sites().size() << endl;
       ++sweepParams.set_block_iter();
-      sweepParams.savestate(forward, system.get_sites().size());
+      //sweepParams.savestate(forward, system.get_sites().size());
     }
   //for(int j=0;j<nroots;++j)
   {int j = state;

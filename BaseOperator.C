@@ -32,7 +32,7 @@ double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
     //double cleb = cleb_(aspin, asz, bspin, bsz, cspin, cspin);
     double cleb = clebsch(aspin, asz, bspin, bsz, cspin, cspin);
     double clebspatial = Symmetry::spatial_cg(airrep, birrep, cirrep, al, bl, 0);
-    if (fabs(cleb) <= 1.0e-14 || fabs(clebspatial) <= 1.0e-14)
+    if (fabs(cleb) <= NUMERICAL_ZERO || fabs(clebspatial) <= NUMERICAL_ZERO)
       continue;
     else {
       //return parity*cleb*clebdinfh/cleb_(bspin, bsz, aspin, asz, cspin, cspin)/Symmetry::spatial_cg(birrep, airrep, cirrep, bl, al, 0);
@@ -63,7 +63,7 @@ double Transposeview::get_scaling(SpinQuantum leftq, SpinQuantum rightq) const
   {
     double cleb = clebsch(lspin, lsz, cspin, -cspin, rspin, rsz);
     double clebspatial = Symmetry::spatial_cg(lirrep, cirrep, rirrep, ll, 0, rl);
-    if (fabs(cleb) <= 1.0e-14 || fabs(clebspatial) <= 1.0e-14)
+    if (fabs(cleb) <= NUMERICAL_ZERO || fabs(clebspatial) <= NUMERICAL_ZERO)
       continue;
     else {
       ///CHANGE THE SPATIAL_CG cirrep,1 to cirrep,0 depending on how the transpose works out!!!
@@ -223,7 +223,9 @@ void Normalise(SparseMatrix& a, int* success)
 void SparseMatrix::Normalise (int* success)
 {
   double normalisation = DotProduct(*this, *this);
-  if(normalisation > 1.e-12)
+
+  //if the norm is really small then dont normalize??
+  if(normalisation > NUMERICAL_ZERO)
     Scale(1./sqrt(normalisation), *this);
   else {
     pout << "\t\t\t Warning :: Didn't Normalise, because norm is too small" << endl;
