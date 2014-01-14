@@ -197,6 +197,11 @@ bool Npdm_op_wrapper_compound_CDC::set_local_ops( int idx )
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
+  if ( jx == kx ) {
+    //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
+    //cout << "WARNING: skipping this operator\n";
+    return true;
+  }
 //cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
 //----------
@@ -309,11 +314,6 @@ bool Npdm_op_wrapper_compound_CDC::set_local_ops( int idx )
 //cout << "4  CDC operator elements:\n";
 //cout << *(opReps_[2]);
 
-  if ( jx == kx ) {
-    //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    //cout << "WARNING: skipping this operator\n";
-    return true;
-  }
   return false;
 }
 
@@ -409,6 +409,11 @@ bool Npdm_op_wrapper_compound_DCD::set_local_ops( int idx )
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
+  if ( ix == jx ) {
+    //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
+    //cout << "WARNING: skipping this operator\n";
+    return true;
+  }
 
   opReps_.clear();
   // S=0 (+) S=1/2  =>  S=1/2
@@ -418,11 +423,6 @@ bool Npdm_op_wrapper_compound_DCD::set_local_ops( int idx )
   // S=1 (+) S=1/2  =>  S=3/2
   opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 1, indices_, true ) );
 
-  if ( ix == jx ) {
-    //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    //cout << "WARNING: skipping this operator\n";
-    return true;
-  }
   return false;
 
 }
@@ -468,6 +468,11 @@ assert(false);
 //  indices_.push_back( ix );
 //  indices_.push_back( jx );
 //  indices_.push_back( kx );
+//  if ( ix == jx ) {
+//    //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
+//    //cout << "WARNING: skipping this operator\n";
+//    return true;
+//  }
 //
 //  opReps_.clear();
 //  // S=0 (+) S=1/2  =>  S=1/2
@@ -477,11 +482,6 @@ assert(false);
 //  // S=1 (+) S=1/2  =>  S=3/2
 //  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 1, indices_, true ) );
 //
-//  if ( ix == jx ) {
-//    //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-//    //cout << "WARNING: skipping this operator\n";
-//    return true;
-//  }
 //  return false;
 //
 }

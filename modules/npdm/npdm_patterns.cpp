@@ -302,9 +302,9 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
   }
 // DEBUG add extra patterns
 //std::map< char, std::vector<CD> > cd_pattern;
-//cd_pattern['l'] = { CREATION, DESTRUCTION, DESTRUCTION, DESTRUCTION };
+//cd_pattern['l'] = { CREATION, CREATION, DESTRUCTION, CREATION };
 //cd_pattern['d'] = { };
-//cd_pattern['r'] = { CREATION, CREATION };
+//cd_pattern['r'] = { DESTRUCTION, DESTRUCTION };
 ////cd_pattern['r'] = { };
 //ldr_cd_types_.insert( cd_pattern );
 }
