@@ -40,88 +40,89 @@ cout << "getting RI CCDD operator...\n";
   int kx = indices_[2];
   int lx = indices_[3];
 
-////FIXME  This way seems broken!  But does seem to work if kx==lx ...??
-////------------------------------------------------------------------
-////  factor_ = -1.0;
-////  build_pattern_ = "((CC)(DD))";
-////  mults_ = { 1, 3, 3, 1, 3, 5 };
-////  // Get 2-index ops as RI building blocks
-////  std::vector< boost::shared_ptr<SparseMatrix> > ijOps = spinBlock_->get_op_array(CRE_CRE).get_element(ix,jx);
-////  // Need (lx,kx) after transpose, but not available, so introduce minus sign for commutation
-////  std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(CRE_CRE).get_element(kx,lx);
+  // (DD) seems to need a -1 factor
+  factor_ = -1.0;
+  build_pattern_ = "((CC)(DD))";
+  mults_ = { 1, 3, 3, 1, 3, 5 };
+  // Get 2-index ops as RI building blocks
+  std::vector< boost::shared_ptr<SparseMatrix> > ijOps = spinBlock_->get_op_array(CRE_CRE).get_element(ix,jx);
+  std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(CRE_CRE).get_element(kx,lx);
+  // Take into account transpose
+  indices_[2] = lx;
+  indices_[3] = kx;
+  
+  // Allocate and build operator representation on the fly as RI tensor product for each spin component
+  opReps_.clear();
+  // S=0 (+) S=0  =>  S=0
+  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(0), klOps.at(0), 0, indices_, true ) );
+  // S=1 (+) S=0  =>  S=1
+  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(0), 0, indices_, true ) );
+  // S=0 (+) S=1  =>  S=1
+  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(0), klOps.at(1), 0, indices_, true ) );
+
+  // S=1 (+) S=1  =>  S=0
+  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 0, indices_, true ) );
+  // S=1 (+) S=1  =>  S=1
+  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 1, indices_, true ) );
+  // S=1 (+) S=1  =>  S=2
+  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 2, indices_, true ) );
+
+  return false;
+
+////
+////  //-----------------------------
+////  // Use RI 3-index operator
+////  //-----------------------------
+////  std::vector< boost::shared_ptr<SparseMatrix> > ijkOps;
+////
+////  // Get 2-index and 1-index ops as RI building blocks
+////  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_element(ix,jx);
+////  std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_element(kx);
+////
+////  // Allocate and build operator representation on the fly as RI tensor product for each spin component
+////  std::string build_pattern_3 = "((CC)D)";
+////  std::vector<int> indices3 = { ix, jx, kx };
+////  ijkOps.clear();
+////  // S=0 (+) S=1/2  =>  S=1/2
+////  ijkOps.push_back( build_compound_operator( true, -1, twoOps.at(0), oneOp.at(0), 0, indices3, true ) );
+////  // S=1 (+) S=1/2  =>  S=1/2
+////  ijkOps.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 0, indices3, true ) );
+////  // S=1 (+) S=1/2  =>  S=3/2
+////  ijkOps.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 1, indices3, true ) );
+////
+////
+////  //-----------------------------
+////  // Use exact 3-index operator
+////  //-----------------------------
+//////  std::vector< boost::shared_ptr<SparseMatrix> > ijkOps = spinBlock_->get_op_array(CRE_CRE_DES).get_element(ix,jx,kx);
+//////  std::string build_pattern_3 = ijkOps.at(0)->get_build_pattern();
+////
+////  std::vector< boost::shared_ptr<SparseMatrix> > lOps = spinBlock_->get_op_array(CRE).get_element(lx);
+////
+////  if ( build_pattern_3 == "((CC)D)" ) build_pattern_ = "(((CC)D)(D))";
+////  else if ( build_pattern_3 == "(C(CD))" ) build_pattern_ = "(((C)(CD))(D))";
+////  else assert(false);
+////  factor_ = 1.0;
+////  mults_ = { 1, 3, 1, 3, 3, 5 };
 ////
 ////  // Allocate and build operator representation on the fly as RI tensor product for each spin component
 ////  opReps_.clear();
-////  // S=0 (+) S=0  =>  S=0
-////  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(0), klOps.at(0), 0, indices_, true ) );
-////  // S=1 (+) S=0  =>  S=1
-////  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(0), 0, indices_, true ) );
-////  // S=0 (+) S=1  =>  S=1
-////  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(0), klOps.at(1), 0, indices_, true ) );
+////  // S=1/2 (+) S=1/2  =>  S=0
+////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(0), lOps.at(0), 0, indices_, true ) );
+////  // S=1/2 (+) S=1/2  =>  S=1
+////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(0), lOps.at(0), 1, indices_, true ) );
 ////
-////  // S=1 (+) S=1  =>  S=0
-////  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 0, indices_, true ) );
-////  // S=1 (+) S=1  =>  S=1
-////  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 1, indices_, true ) );
-////  // S=1 (+) S=1  =>  S=2
-////  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 2, indices_, true ) );
-
-
-  //-----------------------------
-  // Use RI 3-index operator
-  //-----------------------------
-  //FIXME //should reuse 3-index code!!!
-  //  boost::shared_ptr<NpdmSpinOps> ijkOps( new Npdm_op_wrapper_compound_CCD( spinBlock_ ) );
-  std::vector< boost::shared_ptr<SparseMatrix> > ijkOps;
-
-  // Get 2-index and 1-index ops as RI building blocks
-  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_element(ix,jx);
-  std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_element(kx);
-
-  // Allocate and build operator representation on the fly as RI tensor product for each spin component
-  std::string build_pattern_3 = "((CC)D)";
-  std::vector<int> indices3 = { ix, jx, kx };
-  ijkOps.clear();
-  // S=0 (+) S=1/2  =>  S=1/2
-  ijkOps.push_back( build_compound_operator( true, -1, twoOps.at(0), oneOp.at(0), 0, indices3, true ) );
-  // S=1 (+) S=1/2  =>  S=1/2
-  ijkOps.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 0, indices3, true ) );
-  // S=1 (+) S=1/2  =>  S=3/2
-  ijkOps.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 1, indices3, true ) );
-
-
-  //-----------------------------
-  // Use exact 3-index operator
-  //-----------------------------
-//  std::vector< boost::shared_ptr<SparseMatrix> > ijkOps = spinBlock_->get_op_array(CRE_CRE_DES).get_element(ix,jx,kx);
-//  std::string build_pattern_3 = ijkOps.at(0)->get_build_pattern();
-
-  std::vector< boost::shared_ptr<SparseMatrix> > lOps = spinBlock_->get_op_array(CRE).get_element(lx);
-
-  if ( build_pattern_3 == "((CC)D)" ) build_pattern_ = "(((CC)D)(D))";
-  else if ( build_pattern_3 == "(C(CD))" ) build_pattern_ = "(((C)(CD))(D))";
-  else assert(false);
-  factor_ = 1.0;
-  mults_ = { 1, 3, 1, 3, 3, 5 };
-
-  // Allocate and build operator representation on the fly as RI tensor product for each spin component
-  opReps_.clear();
-  // S=1/2 (+) S=1/2  =>  S=0
-  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(0), lOps.at(0), 0, indices_, true ) );
-  // S=1/2 (+) S=1/2  =>  S=1
-  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(0), lOps.at(0), 1, indices_, true ) );
-
-  // S=1/2 (+) S=1/2  =>  S=0
-  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(1), lOps.at(0), 0, indices_, true ) );
-  // S=1/2 (+) S=1/2  =>  S=1
-  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(1), lOps.at(0), 1, indices_, true ) );
-
-  // S=3/2 (+) S=1/2  =>  S=1
-  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(2), lOps.at(0), 0, indices_, true ) );
-  // S=3/2 (+) S=1/2  =>  S=2
-  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(2), lOps.at(0), 1, indices_, true ) );
-
-  return false;
+////  // S=1/2 (+) S=1/2  =>  S=0
+////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(1), lOps.at(0), 0, indices_, true ) );
+////  // S=1/2 (+) S=1/2  =>  S=1
+////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(1), lOps.at(0), 1, indices_, true ) );
+////
+////  // S=3/2 (+) S=1/2  =>  S=1
+////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(2), lOps.at(0), 0, indices_, true ) );
+////  // S=3/2 (+) S=1/2  =>  S=2
+////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(2), lOps.at(0), 1, indices_, true ) );
+////
+////  return false;
 }
 
 //===========================================================================================================================================================
@@ -422,65 +423,66 @@ cout << "getting RI CDDD operator...\n";
   int kx = indices_[2];
   int lx = indices_[3];
 
-//----------------------------------
-//FIXME  THIS WAY IS BROKEN!!!!
-//----------------------------------
-////  factor_ = -1.0;
-////  transpose_ = false;
-////  build_pattern_ = "((CD)(DD))";
-////  mults_ = { 1, 3, 3, 1, 3, 5 };
-////  // Get 2-index ops as RI building blocks
-////  std::vector< boost::shared_ptr<SparseMatrix> > ijOps = spinBlock_->get_op_array(CRE_DES).get_element(ix,jx);
-////  // Need (lx,kx) after transpose, but not available, so introduce minus sign for commutation
-////  std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(CRE_CRE).get_element(kx,lx);
-////
-////  // Allocate and build operator representation on the fly as RI tensor product for each spin component
-////  opReps_.clear();
-////  // S=0 (+) S=0  =>  S=0
-////  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(0), klOps.at(0), 0, indices_, true ) );
-////  // S=1 (+) S=0  =>  S=1
-////  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(0), 0, indices_, true ) );
-////  // S=0 (+) S=1  =>  S=1
-////  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(0), klOps.at(1), 0, indices_, true ) );
-////
-////  // S=1 (+) S=1  =>  S=0
-////  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 0, indices_, true ) );
-////  // S=1 (+) S=1  =>  S=1
-////  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 1, indices_, true ) );
-////  // S=1 (+) S=1  =>  S=2
-////  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 2, indices_, true ) );
-
-  //----------------------------
-  // Use exact 3-index operator
-  //----------------------------
-
-  std::vector< boost::shared_ptr<SparseMatrix> > ijkOps = spinBlock_->get_op_array(CRE_DES_DES).get_element(ix,jx,kx);
-  std::vector< boost::shared_ptr<SparseMatrix> > lOps = spinBlock_->get_op_array(CRE).get_element(lx);
-  std::string build_pattern_3 = ijkOps.at(0)->get_build_pattern();
-  if ( build_pattern_3 == "((CD)D)" ) build_pattern_ = "(((CD)D)(D))";
-  else if ( build_pattern_3 == "(C(DD))" ) build_pattern_ = "(((C)(DD))(D))";
-  else assert(false);
-  factor_ = 1.0;
-  mults_ = { 1, 3, 1, 3, 3, 5 };
+  // (DD) seems to need a -1 factor
+  factor_ = -1.0;
+  build_pattern_ = "((CD)(DD))";
+  mults_ = { 1, 3, 3, 1, 3, 5 };
+  // Get 2-index ops as RI building blocks
+  std::vector< boost::shared_ptr<SparseMatrix> > ijOps = spinBlock_->get_op_array(CRE_DES).get_element(ix,jx);
+  std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(CRE_CRE).get_element(kx,lx);
+  // Take into account transpose
+  indices_[2] = lx;
+  indices_[3] = kx;
 
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
   opReps_.clear();
-  // S=1/2 (+) S=1/2  =>  S=0
-  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(0), lOps.at(0), 0, indices_, true ) );
-  // S=1/2 (+) S=1/2  =>  S=1
-  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(0), lOps.at(0), 1, indices_, true ) );
+  // S=0 (+) S=0  =>  S=0
+  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(0), klOps.at(0), 0, indices_, true ) );
+  // S=1 (+) S=0  =>  S=1
+  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(0), 0, indices_, true ) );
+  // S=0 (+) S=1  =>  S=1
+  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(0), klOps.at(1), 0, indices_, true ) );
 
-  // S=1/2 (+) S=1/2  =>  S=0
-  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(1), lOps.at(0), 0, indices_, true ) );
-  // S=1/2 (+) S=1/2  =>  S=1
-  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(1), lOps.at(0), 1, indices_, true ) );
-
-  // S=3/2 (+) S=1/2  =>  S=1
-  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(2), lOps.at(0), 0, indices_, true ) );
-  // S=3/2 (+) S=1/2  =>  S=2
-  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(2), lOps.at(0), 1, indices_, true ) );
+  // S=1 (+) S=1  =>  S=0
+  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 0, indices_, true ) );
+  // S=1 (+) S=1  =>  S=1
+  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 1, indices_, true ) );
+  // S=1 (+) S=1  =>  S=2
+  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 2, indices_, true ) );
 
   return false;
+
+////  //-----------------------
+////  // Use 3-index operator
+////  //-----------------------
+////
+////  std::vector< boost::shared_ptr<SparseMatrix> > ijkOps = spinBlock_->get_op_array(CRE_DES_DES).get_element(ix,jx,kx);
+////  std::vector< boost::shared_ptr<SparseMatrix> > lOps = spinBlock_->get_op_array(CRE).get_element(lx);
+////  std::string build_pattern_3 = ijkOps.at(0)->get_build_pattern();
+////  if ( build_pattern_3 == "((CD)D)" ) build_pattern_ = "(((CD)D)(D))";
+////  else if ( build_pattern_3 == "(C(DD))" ) build_pattern_ = "(((C)(DD))(D))";
+////  else assert(false);
+////  factor_ = 1.0;
+////  mults_ = { 1, 3, 1, 3, 3, 5 };
+////
+////  // Allocate and build operator representation on the fly as RI tensor product for each spin component
+////  opReps_.clear();
+////  // S=1/2 (+) S=1/2  =>  S=0
+////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(0), lOps.at(0), 0, indices_, true ) );
+////  // S=1/2 (+) S=1/2  =>  S=1
+////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(0), lOps.at(0), 1, indices_, true ) );
+////
+////  // S=1/2 (+) S=1/2  =>  S=0
+////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(1), lOps.at(0), 0, indices_, true ) );
+////  // S=1/2 (+) S=1/2  =>  S=1
+////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(1), lOps.at(0), 1, indices_, true ) );
+////
+////  // S=3/2 (+) S=1/2  =>  S=1
+////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(2), lOps.at(0), 0, indices_, true ) );
+////  // S=3/2 (+) S=1/2  =>  S=2
+////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(2), lOps.at(0), 1, indices_, true ) );
+////
+////  return false;
 }
 
 //===========================================================================================================================================================
