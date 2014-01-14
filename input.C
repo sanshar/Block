@@ -72,7 +72,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_solve_type = DAVIDSON;
 
   m_twodot_to_onedot_iter = 0;
-  m_integral_disk_storage_thresh = 100; //this is usually 100
+  m_integral_disk_storage_thresh = 1000; //this is usually 100
   m_max_lanczos_dimension = 5000;
 
   m_norbs = 0;
@@ -1191,7 +1191,6 @@ void SpinAdapted::Input::writeSummaryForMolpro()
        xout << endl;
      }
 
-  if (m_calc_type == DMRG) {
     xout << endl << "Schedule" << endl;
     xout << "--------" << endl;
    // Need to add proper spacing here, with setw( n);
@@ -1208,7 +1207,6 @@ void SpinAdapted::Input::writeSummaryForMolpro()
     if (m_algorithm_type == TWODOT_TO_ONEDOT) 
        xout << setw(50) << "Switching from twodot to onedot algorithm : " << m_twodot_to_onedot_iter << endl << endl;
     xout << setw(50) << "Maximum sweep iterations : " << m_maxiter << endl << endl;
-  }
 #ifndef SERIAL
   }
 #endif
