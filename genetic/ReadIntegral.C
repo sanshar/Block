@@ -40,16 +40,22 @@ void genetic::ReadIntegral(ifstream& fdump, Matrix& K)
   double v;
   while(fdump >> v >> i >> j >> k >> l)
   {
-    if(i == 0 || j == 0 || k == 0 || l == 0) continue;
+    if(i == 0 && j == 0 && k == 0 && l == 0) continue;
     //* Read by Mulliken Notation
     if(i == k && j == l)
     {
       i--; j--;
-      K.element(i, j) = fabs(v);
+      K.element(i, j) += fabs(v);
       K.element(j, i) = K.element(i, j);
     }
-  }
 
+    if(k == 0 && l == 0)
+    {
+      i--; j--;
+      K.element(i, j) += 1.0e-7 * fabs(v);
+      K.element(j, i)  = K.element(i, j);
+    }
+  }
   // set file pointer to original position
   fdump.clear();
   fdump.seekg(fp);

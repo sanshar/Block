@@ -220,6 +220,12 @@ void save_spatial_twopdm_text(const array_4d<double>& twopdm, const int &i, cons
   //the spatial has a factor of 1/2 in front of it 
   if(!mpigetrank())
   {
+    std::vector<int> reorder;
+    reorder.resize(twopdm.dim1()/2);
+    for (int k=0; k<twopdm.dim2()/2; k++) {
+      reorder.at(dmrginp.reorder_vector()[k]) = k;
+    }
+
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j);
     ofstream ofs(file);
@@ -231,7 +237,7 @@ void save_spatial_twopdm_text(const array_4d<double>& twopdm, const int &i, cons
 	    double pdm = 0.0;
 	    for (int s=0; s<2; s++)
 	      for (int t =0; t<2; t++)
-		pdm += twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s)*0.5;
+		pdm += twopdm(2*reorder.at(k)+s, 2*reorder.at(l)+t, 2*reorder.at(m)+t, 2*reorder.at(n)+s)*0.5;
 		
             ofs << boost::format("%d %d %d %d %20.14e\n") % k % l % m % n % pdm;
 	  }
@@ -244,6 +250,12 @@ void save_spatial_twopdm_binary(const array_4d<double>& twopdm, const int &i, co
   //the spatial has a factor of 1/2 in front of it 
   if(!mpigetrank())
   {
+    std::vector<int> reorder;
+    reorder.resize(twopdm.dim1()/2);
+    for (int k=0; k<twopdm.dim2()/2; k++) {
+      reorder.at(dmrginp.reorder_vector()[k]) = k;
+    }
+
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_binary_twopdm.", i, j);
     FILE* f = fopen(file, "wb");
@@ -257,7 +269,7 @@ void save_spatial_twopdm_binary(const array_4d<double>& twopdm, const int &i, co
 	    pdm(k, l, m, n) = 0.0;
 	    for (int s=0; s<2; s++)
 	      for (int t =0; t<2; t++)
-		pdm(k, l, m, n) += twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s)*0.5;
+		pdm(k,l,m,n) += twopdm(2*reorder.at(k)+s, 2*reorder.at(l)+t, 2*reorder.at(m)+t, 2*reorder.at(n)+s)*0.5;
 	  }
     int result = fwrite(&nrows,  1, sizeof(int), f);
     result = fwrite(&pdm(0,0,0,0), pdm.size(), sizeof(double), f);

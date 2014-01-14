@@ -15,8 +15,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 namespace SpinAdapted{
 
-void SaveRotationMatrix (const std::vector<int>& sites, const std::vector<Matrix>& m1, int state);
-void LoadRotationMatrix (const std::vector<int>& sites, std::vector<Matrix>& m1, int state);
+void SaveRotationMatrix (const std::vector<int>& sites, const std::vector<Matrix>& m1, int state =-1);
+void LoadRotationMatrix (const std::vector<int>& sites, std::vector<Matrix>& m1, int state=-1);
 void diagonalise_dm(SparseMatrix& tracedMatrix, SparseMatrix& transformMatrix, std::vector<DiagonalMatrix>& eigenMatrix);
 void sort_weights(std::vector<DiagonalMatrix>& eigenMatrix, vector<pair<int, int> >& inorderwts, vector<vector<int> >& weightsbyquanta);
 double assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::vector<DiagonalMatrix>& eigenmatrix, SparseMatrix& transformmatrix, vector<pair<int, int> >& inorderwts, vector<vector<int> >& wtsbyquanta, int totalstatesbydm, int totalstatesbyquanta, int left_block_size, int right_block_size);

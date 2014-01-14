@@ -276,8 +276,9 @@ void save_onepdm_text(const Matrix& onepdm, const int &i, const int &j)
     ofstream ofs(file);
     ofs << onepdm.Nrows() << endl;
     for(int k=0;k<onepdm.Nrows();++k)
-      for(int l=0;l<onepdm.Ncols();++l)
+      for(int l=0;l<onepdm.Ncols();++l) {
 	ofs << boost::format("%d %d %20.14e\n") % k % l % onepdm(k+1, l+1);
+      }
 
     ofs.close();
   }
@@ -288,13 +289,20 @@ void save_onepdm_spatial_text(const Matrix& onepdm, const int &i, const int &j)
   //the spatial has a factor of 1/2 in front of it 
   if(!mpigetrank())
   {
+    std::vector<int> reorder;
+    reorder.resize(onepdm.Nrows()/2);
+    for (int k=0; k<onepdm.Nrows()/2; k++) {
+      reorder.at(dmrginp.reorder_vector()[k]) = k;
+    }
+
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_onepdm.", i, j);
     ofstream ofs(file);
     ofs << onepdm.Nrows()/2 << endl;
     for(int k=0;k<onepdm.Nrows()/2;++k)
       for(int l=0;l<onepdm.Ncols()/2;++l) {
-	double opdm = (onepdm(2*k+1, 2*l+1)+onepdm(2*k+2, 2*l+2));
+	int K = reorder.at(k), L = reorder.at(l);
+	double opdm = (onepdm(2*K+1, 2*L+1)+onepdm(2*K+2, 2*L+2));
 	ofs << boost::format("%d %d %20.14e\n") % k % l % opdm;
       }
 

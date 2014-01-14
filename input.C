@@ -130,10 +130,11 @@ void SpinAdapted::Input::initialize_defaults()
   m_lastM = 500;
   m_startM = 500;
   m_core_energy = 0.0;
-  m_reorder = false;
+
+  //reorder options, by default it does fiedler
+  m_reorderType = FIEDLER;
   m_reorderfile = "";
-  m_gaopt = false;
-  m_fiedler = true;
+  m_gaconffile = "default";
 
   m_orbformat=MOLPROFORM;
 }
@@ -154,7 +155,6 @@ SpinAdapted::Input::Input(const string& config_name)
   sym = "c1";
   NonabelianSym = false;
   string orbitalfile;
-  string gaconffile;
 
   if(mpigetrank() == 0)
   {
@@ -234,86 +234,44 @@ SpinAdapted::Input::Input(const string& config_name)
 	  pout << "error found in the following line "<<endl;
 	  pout << msg<<endl;
 	  abort();
-      }	
-      m_lastM = atoi(tok[1].c_str());
-   }
+	}	
+	m_lastM = atoi(tok[1].c_str());
+      }
       else if (boost::iequals(keyword,  "reorder")) {
-      if(usedkey[REORDER] == 0) 
-         usedkey_error(keyword, msg);
-      usedkey[REORDER] = 0;
-      if (tok.size() != 2) {
-        pout << "keyword reorder should be followed by the filename and then an end line"<<endl;
-        pout << "error found in the following line "<<endl;
-        pout << msg<<endl;
-        abort();
-      }	
-      m_reorder = true;
-      m_fiedler = false;
-      m_reorderfile = tok[1];
+	if(usedkey[REORDER] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[REORDER] = 0;
+	if (tok.size() != 2) {
+	  pout << "keyword reorder should be followed by the filename and then an end line"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}	
+	m_reorderType = MANUAL;
+	m_reorderfile = tok[1];
       }
       else if (boost::iequals(keyword,  "gaopt"))
       {
-        m_fiedler = false;
-        if(usedkey[GAORDER] == 0) 
-          usedkey_error(keyword, msg);
-        usedkey[GAORDER] = 0;
         if (tok.size() != 2) {
           cerr << "keyword gaopt should be followed by the filename and then an end line"<<endl;
           cerr << "error found in the following line "<<endl;
           cerr << msg<<endl;
           abort();
         }       
-        char gaoptfile[5000];
-        std::ofstream gaFILE;
-        sprintf(gaoptfile, "%s%s", save_prefix().c_str(), "/genetic_reorder.dat");
-        boost::filesystem::path p(gaoptfile);
-        if (boost::filesystem::exists(p)) {
-           m_reorder = true;
-           m_reorderfile = gaoptfile;
-#ifndef MOLPRO
-           pout << "----------------"<<endl;
-           pout << "The GAOPT routine for finding the orbital ordering has already been run." << endl;
-           pout << "Using the reorder file " << gaoptfile << endl;
-           pout << "----------------"<<endl;
-#else
-           xout << "----------------"<<endl;
-           xout << "The GAOPT routine for finding the orbital ordering has already been run." << endl;
-           xout << "Using the reorder file " << gaoptfile << endl;
-           xout << "----------------"<<endl;
-#endif
-        }
-        else{
-           m_gaopt = true;
-           gaconffile = tok[1];
-        }
+	m_reorderType = GAOPT;
+	m_gaconffile = tok[1];
       }
       else if (boost::iequals(keyword, "fiedler")){
-        m_fiedler = true;
-       char fiedlerFile[5000];
-       std::ofstream fiedlerFILE;
-       sprintf(fiedlerFile, "%s%s", save_prefix().c_str(), "/fiedler_reorder.dat");
-       boost::filesystem::path p(fiedlerFile);
-       if (boost::filesystem::exists(p)) {
-          m_reorder = true;
-          m_fiedler = false;
-          m_reorderfile = fiedlerFile;
-#ifndef MOLPRO
-            pout << "----------------"<<endl;
-            pout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
-            pout << "Using the reorder file " << fiedlerFile << endl;
-            pout << "----------------"<<endl;
-#else
-            xout << "----------------"<<endl;
-            xout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
-            xout << "Using the reorder file " << fiedlerFile << endl;
-            xout << "----------------"<<endl;
-#endif
-       }
-    }
+        if (tok.size() != 1) {
+          cerr << "keyword fiedler should not be followed by anything"<<endl;
+          cerr << "error found in the following line "<<endl;
+          cerr << msg<<endl;
+          abort();
+        }       
+	m_reorderType = FIEDLER;
+      }
       else if (boost::iequals(keyword, "noreorder") || boost::iequals(keyword, "nofiedler")) {
-        m_fiedler = false;
-        m_gaopt = false;
-        m_reorder = false;
+	m_reorderType = NOREORDER;
       }
 
       else if (boost::iequals(keyword,  "schedule"))
@@ -329,40 +287,17 @@ SpinAdapted::Input::Input(const string& config_name)
 	  abort();
 	}
 	
-//ROA: Why is this inside the schedule????
-   if (m_fiedler == true){
-      char fiedlerFile[5000];
-      std::ofstream fiedlerFILE;
-      sprintf(fiedlerFile, "%s%s", save_prefix().c_str(), "/fiedler_reorder.dat");
-      boost::filesystem::path p(fiedlerFile);
-      if (boost::filesystem::exists(p)) {
-         m_reorder = true;
-         m_fiedler = false;
-         m_reorderfile = fiedlerFile;
-#ifndef MOLPRO
-           pout << "----------------"<<endl;
-           pout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
-           pout << "Using the reorder file " << fiedlerFile << endl;
-           pout << "----------------"<<endl;
-#else
-           xout << "----------------"<<endl;
-           xout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
-           xout << "Using the reorder file " << fiedlerFile << endl;
-           xout << "----------------"<<endl;
-#endif
-      }
-   }
 	msg.resize(0);
 	ReadMeaningfulLine(input, msg, msgsize);
 	vector<string> schd_tok;
 	boost::split(schd_tok, msg, is_any_of(" \t"), token_compress_on);
 	if (tok.size() != 1) {
-	if (boost::iequals(tok[1], "default")) { 
-	  m_schedule_type_default = true;
-	  continue;
+	  if (boost::iequals(tok[1], "default")) { 
+	    m_schedule_type_default = true;
+	    continue;
+	  }
 	}
-	}
-
+	
 	m_sweep_iter_schedule.resize(0);
 	m_sweep_state_schedule.resize(0);
 	m_sweep_qstate_schedule.resize(0);
@@ -545,7 +480,7 @@ SpinAdapted::Input::Input(const string& config_name)
            m_hf_occ_user = "manual";
            for( ; it != tok.end(); ++it ){
             int occ_i = atoi( (*it).c_str() );
-            m_hf_occupancy_tmp.push_back( occ_i );
+            m_hf_occupancy.push_back( occ_i );
            }
         }
         pout << "m_hf_occ_user " << m_hf_occ_user << endl;
@@ -722,13 +657,6 @@ SpinAdapted::Input::Input(const string& config_name)
 	  abort();
 	}
         m_outputlevel = atoi(tok[1].c_str());
-#ifndef MOLPRO
-   if (m_outputlevel < 0) {
-      pout << "outputlevel must be 0, or greater when not running through molpro" << endl;
-      pout << msg << endl;
-      abort();
-   }
-#endif
       }
 
 
@@ -793,7 +721,6 @@ SpinAdapted::Input::Input(const string& config_name)
   if (sym != "c1")
     Symmetry::InitialiseTable(sym);
 
-  ifstream orbitalFile;
   if (mpigetrank() == 0) 
      CheckFileExistence(orbitalfile, "Orbital file ");
 
@@ -810,53 +737,14 @@ SpinAdapted::Input::Input(const string& config_name)
 
   // Kij-based ordering by GA opt.
 #ifndef SERIAL
-  mpi::broadcast(world,m_gaopt,0);
+  mpi::broadcast(world,m_reorderType,0);
 #endif
 
-     //Fiedler
-#ifndef SERIAL
-     mpi::broadcast(world,m_fiedler,0);
-#endif
-  if (m_fiedler) {
-     if (mpigetrank() == 0){
-        m_fiedlerorder=get_fiedler(orbitalfile, orbitalFile);
-        std::ofstream fiedlerFILE;
-        char fiedlerFile[5000];
-        sprintf(fiedlerFile, "%s%s", save_prefix().c_str(), "/fiedler_reorder.dat");
-        boost::filesystem::path p(fiedlerFile);
-        fiedlerFILE.open(fiedlerFile);
 
-        int n = m_fiedlerorder.size() - 1;
-        for(int i = 0; i < n; ++i) {
-         fiedlerFILE << m_fiedlerorder[i]+1 << " ";
-        }
-        fiedlerFILE << m_fiedlerorder[n]+1 << endl;
-        fiedlerFILE.close();
-     }
-#ifndef SERIAL
-  mpi::broadcast(world,m_fiedlerorder,0);
-#endif
-  }
+  if (mpigetrank() == 0) {
+    readorbitalsfile(orbitalfile, v_1, v_2);
 
-  if (m_gaopt) {
-    ifstream gaconfFile;
-    if (mpigetrank() == 0) {
-       if(gaconffile != "default") 
-          gaconfFile.open(gaconffile.c_str(), ios::in);
-       //to provide as initial guess to gaopt
-       m_fiedlerorder=get_fiedler(orbitalfile, orbitalFile);
-       }
-    orbitalFile.open(orbitalfile.c_str(), ios::in);
-    getgaorder(gaconfFile, orbitalFile, m_fiedlerorder);
-    if (mpigetrank() == 0) 
-       orbitalFile.close();
-  }
-
-    if (mpigetrank() == 0) {
-    orbitalFile.open(orbitalfile.c_str(), ios::in);
-    readorbitalsfile(orbitalFile, v_1, v_2);
-    orbitalFile.close();
-
+    makeInitialHFGuess();
           
     pout << "Checking input for errors"<<endl;
     performSanityTest();
@@ -880,7 +768,7 @@ SpinAdapted::Input::Input(const string& config_name)
 
 }
 
-void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& preorder, std::vector<int>& oldtonew)
+void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& oldtonew)
 {
   string msg; int msgsize = 5000;
   ReadMeaningfulLine(dumpFile, msg, msgsize);
@@ -909,27 +797,16 @@ void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& p
 
   //p_reorder contains old to new mapping
   if (oldtonew.size() != m_norbs/2) {
-    pout << "Numbers or orbitals in reorder file should be equal to "<<m_norbs/2<<" instead "<<preorder.size()<<" found "<<endl;
+    pout << "Numbers or orbitals in reorder file should be equal to "<<m_norbs/2<<" instead "<<oldtonew.size()<<" found "<<endl;
     abort();
   }
 
-  preorder.resize(m_norbs/2);
-  for (int i=0; i<m_norbs/2; i++) {
-    if (oldtonew[i] >= m_norbs/2 || oldtonew[i] < 0) {
-      pout << "Orbital indices in reorder file should be in range 0 to "<<m_norbs/2<<endl;
-      abort();
-    }
-    preorder.at(oldtonew[i]) = i;
-    int j;
-    j = (i) - oldtonew[i];
-    diff.push_back(j);
-    //pout << "ROA ROA i oldtonew[i] diff " <<  i << " " << oldtonew[i] << " " << (j  ) << " " << endl;
-    //pout << "ROA ROA i oldtonew[i] diff " <<  i << " " << oldtonew[i] << " " << (diff  ) << " " << endl;
-  }
 }
 
-void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& v1, TwoElectronArray& v2)
+void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray& v1, TwoElectronArray& v2)
 {
+  ifstream dumpFile; dumpFile.open(orbitalfile.c_str(), ios::in);
+
   string msg; int msgsize = 5000;
   ReadMeaningfulLine(dumpFile, msg, msgsize);
   vector<string> tok;
@@ -948,51 +825,114 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   v2.ReSize(m_norbs);
   v1.ReSize(m_norbs);
 
-  std::vector<int> reorder, oldtonew;
-  // read the reorder file
-  if (m_reorder) {
-    ifstream reorderFile(m_reorderfile.c_str());
-    CheckFileExistence(m_reorderfile, "Reorder file ");
-    readreorderfile(reorderFile, reorder, oldtonew);
-    m_gaorder = oldtonew;
-    //for (int i=0; i<m_norbs/2; i++) {
-    //  cout << oldtonew[i] << " ";
-    //}
-    //cout << endl;
-  }
-  // use Fiedler-based ordering
-  // m_fiedler and m_gaopt can be consolidated 
-  else if ((m_fiedler) && !(m_gaopt)) {
-    m_reorder = true;
-    oldtonew = m_fiedlerorder;
-    if (oldtonew.size() != m_norbs/2) {
-      pout << "Size of gaorder "<<oldtonew.size()<<" is different from number of orbitals "<<m_norbs/2<<endl;
+  std::vector<int> reorder;
+
+  //this is the file to which the reordering is written
+  std::ofstream ReorderFileOutput;
+  std::ifstream ReorderFileInput;
+  char ReorderFileName[5000];
+  sprintf(ReorderFileName, "%s%s", save_prefix().c_str(), "/RestartReorder.dat");
+  boost::filesystem::path p(ReorderFileName);
+
+
+  //do the reordering only if it is not a restart calculation
+  //if it is then just read the reorder.dat from the scratch space
+  if(get_restart() || get_fullrestart()) {
+    ReorderFileInput.open(ReorderFileName);
+    
+    if(!boost::filesystem::exists(p)) {
+#ifndef MOLPRO
+      pout << "---------------"<<endl;
+      pout << "This is a restart job and the reorder file "<<ReorderFileName<<" should be present"<<endl;
       abort();
-    }
-    reorder.resize(m_norbs/2);
-    pout << "Fiedler-optimized orbital ordering: ";
-    for (int i=0; i<m_norbs/2; i++) {
-      reorder.at(oldtonew[i]) = i;
-      pout << oldtonew[i]+1 << " ";
-    }
-    pout << endl;
-    pout << endl;
-  }
-  // use Kij-based ordering
-  else if (m_gaopt) {
-    m_reorder = true;
-    oldtonew = m_gaorder;
-    if (oldtonew.size() != m_norbs/2) {
-      pout << "Size of gaorder "<<oldtonew.size()<<" is different from number of orbitals "<<m_norbs/2<<endl;
+#else
+      xout << "---------------"<<endl;
+      xout << "This is a restart job and the reorder file "<<ReorderFileName<<" should be present"<<endl;
       abort();
+#endif
     }
-    reorder.resize(m_norbs/2);
-    for (int i=0; i<m_norbs/2; i++) {
-      reorder.at(oldtonew[i]) = i;
-      //cout << oldtonew[i] << " ";
+    else {
+#ifndef MOLPRO
+      pout << "----------------"<<endl;
+      pout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
+      pout << "Using the reorder file " << ReorderFileName << endl;
+      pout << "----------------"<<endl;
+#else
+      xout << "----------------"<<endl;
+      xout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
+      xout << "Using the reorder file " << ReorderFileName << endl;
+      xout << "----------------"<<endl;
+#endif
+      m_reorder.resize(m_norbs/2);
+      for (int i=0; i<m_norbs/2; i++)
+	ReorderFileInput >> m_reorder[i];
+      ReorderFileInput.close();
     }
-    //cout << endl;
   }
+  else {
+    ReorderFileOutput.open(ReorderFileName);
+
+
+    // read the reorder file or calculate the reordering using one of the many options  
+    if (m_reorderType == FIEDLER) {
+      
+      if (mpigetrank() == 0)
+        m_reorder=get_fiedler(orbitalfile);
+      pout << "Fiedler-vector orbital ordering: ";     
+    }
+    else if (m_reorderType == GAOPT) {
+
+      if (tok.size() != 2) {
+	cerr << "keyword gaopt should be followed by the filename and then an end line"<<endl;
+	cerr << "error found in the following line "<<endl;
+	cerr << msg<<endl;
+	abort();
+      }
+
+      m_gaconffile = tok[1];
+      ifstream gaconfFile;
+      
+      if(m_gaconffile != "default") 
+	gaconfFile.open(m_gaconffile.c_str(), ios::in);
+      //to provide as initial guess to gaopt
+      m_reorder = get_fiedler(orbitalfile);      
+      m_reorder = getgaorder(gaconfFile, orbitalfile, m_reorder);      
+      pout << "Genetic algorithm orbital ordering: ";
+    }
+    else if (m_reorderType == MANUAL) {
+      ifstream reorderFile(m_reorderfile.c_str());
+      CheckFileExistence(m_reorderfile, "Reorder file ");
+      readreorderfile(reorderFile, m_reorder);
+      pout << "Manually provided orbital ordering: ";
+    }
+    else { //this is the no-reorder case 
+      m_reorder.resize(m_norbs/2);
+      for (int i=0; i<m_reorder.size(); i++)
+	m_reorder.at(i) = i;
+      pout << "No orbital reorder: ";
+    }
+
+    for (int i=0; i<m_reorder.size(); i++)
+      ReorderFileOutput << m_reorder[i]<<"  ";
+    ReorderFileOutput.close();    
+  }
+
+
+  //the name reorder is confusing because it clases the with the m_reorder member of the input class and these two are inverse of each other.
+  //the reorder here helps one to go from the unreordered matrices to the reordered matrices
+  //and the m_reorder member of input helps one to go in the opposite direction
+  //e.g. the user defined orbital order (m_reorder) could be
+  // 2 3 1 4   which implies that O_reorder(1,2) -> O_unreordered(2,3)  (the former is stored internally and the latter is what is given during input)
+  // but for this m_reorder the reorder vector below would be 3 1 2 4 and O_unreordered(1,2) -> O_reorder(3, 1)
+  reorder.resize(m_norbs/2);
+  for (int i=0; i<m_norbs/2; i++) {
+    reorder.at(m_reorder[i]) = i;
+    pout << m_reorder[i]+1 << " ";
+  }
+  pout << endl;
+  pout << endl;
+
+
 
   int orbindex = 0;
   msg.resize(0);
@@ -1004,7 +944,7 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     for (int i=0; i<tok.size(); i++) {
       if (boost::iequals(tok[i], "ORBSYM") || tok[i].size() == 0) continue;
 
-      int reorderOrbInd = m_reorder ? reorder.at(orbindex/2) : orbindex/2;
+      int reorderOrbInd =  reorder.at(orbindex/2);
 
       int ir;
       if (atoi(tok[i].c_str()) >= 0 ) 
@@ -1038,7 +978,7 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
   }
 
   
-  if(sym == "dinfh" && m_reorder) {
+  if(sym == "dinfh" ) {
     m_spatial_to_spin.clear();
     for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) {
       int ir = m_spin_orbs_symmetry[i];
@@ -1087,15 +1027,10 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
 
     if (i==-1 && j==-1 && k==-1 && l==-1) m_core_energy = value;
     else if (k==-1 && l==-1) { 
-      if(m_reorder){ v1(2*reorder.at(i),2*reorder.at(j)) = value;  v1(2*reorder.at(j),2*reorder.at(i)) = value;}
-      else {
-         v1(2*i,2*j) = value;
-         v1(2*j,2*i) = value;
-      }
+      v1(2*reorder.at(i),2*reorder.at(j)) = value;  v1(2*reorder.at(j),2*reorder.at(i)) = value;
     } 
     else {
-      int I=i, J=j, K=k, L=l;
-      if(m_reorder) {I = reorder.at(i);J = reorder.at(j);K = reorder.at(k);L = reorder.at(l);}
+      int I = reorder.at(i);int J = reorder.at(j);int K = reorder.at(k);int L = reorder.at(l);
       v2(2*I,2*K,2*J,2*L) = value;
     }
 
@@ -1116,10 +1051,13 @@ void SpinAdapted::Input::readorbitalsfile(ifstream& dumpFile, OneElectronArray& 
     }
     v2.ReSize(0);
   }
-  
+
+  dumpFile.close();  
 }
-std::vector<int> SpinAdapted::Input::get_fiedler(string& dumpname, ifstream& dumpFile){
+
+std::vector<int> SpinAdapted::Input::get_fiedler(string& dumpname){
      Matrix fiedler; 
+     ifstream dumpFile;
      dumpFile.open(dumpname.c_str(), ios::in);
      genetic::ReadIntegral(dumpFile, fiedler);
      dumpFile.close();
@@ -1129,41 +1067,10 @@ std::vector<int> SpinAdapted::Input::get_fiedler(string& dumpname, ifstream& dum
      return findices;
 }
 
-void SpinAdapted::Input::getgaorder(ifstream& gaconfFile, ifstream& dumpFile, std::vector<int> fiedlerorder)
+std::vector<int> SpinAdapted::Input::getgaorder(ifstream& gaconfFile, string& orbitalfile, std::vector<int>& fiedlerorder)
 {
-   std::ofstream gaFILE;
-#ifndef SERIAL
-   mpi::communicator world;
-#endif
-  if(mpigetrank() == 0) {
-   char gaoptfile[5000];
-   sprintf(gaoptfile, "%s%s", save_prefix().c_str(), "/genetic_reorder.dat");
-   boost::filesystem::path p(gaoptfile);
-   gaFILE.open(gaoptfile);
-
-   cout << "---------- Kij-based ordering by GA opt. ----------" << endl;
-  }
-
-   m_gaorder = genetic::gaordering(gaconfFile, dumpFile, fiedlerorder).Gen().Sequence();
-
-  if(mpigetrank() == 0) {
-   cout << "------ pick the best ordering up to reorder -------" << endl;
-   cout << setw(50) << "sites are reordered by: ";
-
-    int n = m_gaorder.size() - 1;
-    for(int i = 0; i < n; ++i) {
-       cout << m_gaorder[i]+1 << " ";
-       gaFILE << m_gaorder[i]+1 << " ";
-    }
-    cout << m_gaorder[n]+1 << endl;
-    gaFILE << m_gaorder[n]+1 << endl;
-  }
-#ifndef SERIAL
-  mpi::broadcast(world,m_gaorder,0);
-#endif
-  if(mpigetrank() == 0) {
-  gaFILE.close();
-  }
+  ifstream dumpFile; dumpFile.open(orbitalfile.c_str());
+   return genetic::gaordering(gaconfFile, dumpFile, fiedlerorder).Gen().Sequence();
 }
 
 #ifdef MOLPRO
@@ -1193,7 +1100,7 @@ void SpinAdapted::Input::writeSummaryForMolpro()
        xout << endl;
      }
 
-  if (m_calc_type == DMRG) {
+
     xout << endl << "Schedule" << endl;
     xout << "--------" << endl;
    // Need to add proper spacing here, with setw( n);
@@ -1210,7 +1117,7 @@ void SpinAdapted::Input::writeSummaryForMolpro()
     if (m_algorithm_type == TWODOT_TO_ONEDOT) 
        xout << setw(50) << "Switching from twodot to onedot algorithm : " << m_twodot_to_onedot_iter << endl << endl;
     xout << setw(50) << "Maximum sweep iterations : " << m_maxiter << endl << endl;
-  }
+
 #ifndef SERIAL
   }
 #endif
@@ -1239,7 +1146,7 @@ void SpinAdapted::Input::writeSummary()
     printf("\n");
   }
 
-  if (m_calc_type == DMRG) {
+
     printf("\nSchedule\n");
     printf("--------\n");
     printf("%-10s : %-20s  %-20s  %-20s\n", "Iter", "# States", "Davidson_tol",  "Random_noise");
@@ -1249,7 +1156,7 @@ void SpinAdapted::Input::writeSummary()
       printf("%-50s :   %-i\n", "Switching from twodot to onedot algorithm", m_twodot_to_onedot_iter);
     
     printf("%-50s :   %-i\n", "Maximum sweep iterations", m_maxiter);
-  }
+
 #ifndef SERIAL
   }
 #endif
@@ -1469,14 +1376,6 @@ void SpinAdapted::Input::performSanityTest()
        m_maxiter = lastiter+3;
        pout << "maxiter " << m_maxiter << endl;
   }
-
-
-
-
-
-
-
-
   else {
     if (m_maxM != 0) {
       pout << "With detailed schedule a non-zero maxM should not be specified"<<endl;
@@ -1511,134 +1410,78 @@ void SpinAdapted::Input::performSanityTest()
   if (m_norbs <= 6)
     m_calc_type = TINYCALC;
 
-  //make some initial hf guess
-  m_spin_vector.resize(m_norbs);
-  for (int i = 0; i < m_norbs; ++i)
-    m_spin_vector[i] = (i & 1) ? -1 : 1;
+}
 
-  //TODO: Add keyword specifying type of algorithm
-  //If it has more than 4 elements, then it is manual
-  //if it says HF, the it assumes that all orbitals are rotated
-  //if it says one_electron, then it takes the elements from the one-electron integrals
+void SpinAdapted::Input::makeInitialHFGuess() {
+
+  std::vector<int> hf_occupancy_tmp(m_norbs,0);
 
 
-  bool auto_guess = false;
-  // check the length of the user-defined hf_occ
-  if( m_hf_occ_user=="manual" ){
-  // the user-defined guess is wrong
-    if( m_hf_occupancy_tmp.size() != m_norbs/2 ){
-     pout << "ERROR: The length of user-defined HF occupancies does not match the number of orbitals " << endl;
-     pout << "Length of occupancies is: " << m_hf_occupancy_tmp.size() << ", and the number of orbitals is: " << m_norbs/2 << endl;
+  if (m_hf_occ_user == "manual") {
+    //check if n_orbs is correct and if n_elec is correct
+    if (m_hf_occupancy.size() != m_norbs/2 ) {
+      pout << "ERROR: The length of user-defined HF occupancies does not match the number of orbitals " << endl;
+      pout << "Length of occupancies is: " << m_hf_occupancy.size() << ", and the number of orbitals is: " << m_norbs/2 << endl;
      abort();
     }
-    else{
-     pout << "using user-defined HF occupancy guess " << endl;
-     int index;
+    int UserElectrons = 0;
+    for (int i=0; i<m_hf_occupancy.size(); i++) {
+      UserElectrons += m_hf_occupancy[i];
+      if (m_hf_occupancy[i] == 2) { hf_occupancy_tmp[2*i] = 1; hf_occupancy_tmp[2*i+1] = 1;}
+      else if (m_hf_occupancy[i] == 1) { hf_occupancy_tmp[2*i] = 1; hf_occupancy_tmp[2*i+1] = 0;}
+      else if (m_hf_occupancy[i] == 0) { hf_occupancy_tmp[2*i] = 0; hf_occupancy_tmp[2*i+1] = 0;}
+      else {pout << "the HF occupancy of orbital "<<i<<" should either be 2, 1, or 0. Instead "<<m_hf_occupancy[i]<<" is given."<<endl; abort();}
+    }	
 
-     for (int i = 0; i < m_hf_occupancy_tmp.size(); ++i){
-        if (m_fiedler)
-           index = m_fiedlerorder.at(i);
-        else if (m_gaopt || m_reorder){
-           index = m_gaorder.at(i);
-        }
-        else if( m_gaopt == false && m_fiedler == false && m_reorder == false )
-           index = i;
+    if (UserElectrons != m_alpha+m_beta ) {
+      pout << "ERROR: The total number of electrons in HF occupancy does not match the number given initially " << endl;
+      pout << "#electron in HF occupancy: " << UserElectrons << ", and the number of electrons given initially: " << m_alpha+m_beta << endl;
+     abort();
+    }
+    
+  }
+  else if (m_hf_occ_user == "canonical") {
+    for (int i=0; i<m_alpha; i++) {
+      hf_occupancy_tmp[2*i] = 1;
+      if (i<m_beta) hf_occupancy_tmp[2*i+1] = 1;
+    }
+  }  
+  else if (m_hf_occ_user == "integral") { 
 
-        if (m_hf_occupancy_tmp[index]==0){
-           m_hf_occupancy.push_back(0);
-           m_hf_occupancy.push_back(0);
-        }
-        else if (m_hf_occupancy_tmp[index]==1){
-           m_hf_occupancy.push_back(1);
-           m_hf_occupancy.push_back(0);
-        }
-        else if (m_hf_occupancy_tmp[index]==2){
-           m_hf_occupancy.push_back(1);
-           m_hf_occupancy.push_back(1);
-        }
-        else{
-           pout << "Provided an occupation larger than 2 in orbital " << i << endl;
-           pout << "Exiting." << endl;
-           abort();
-        }
-     }
+    //arrange t(i,i) in a multimap and it will rearrange the ts in ascending order with i
+    multimap<double, int> ele_map;
+    for( int i = 0; i < m_norbs/2; ++i ){
+      ele_map.insert( pair<double, int>( v_1(2*i, 2*i), i ) );
+    }
+
+    multimap<double, int> :: iterator it_alpha = ele_map.begin();
+    for( int i = 0; i < m_alpha; ++i ){
+      int ia = it_alpha->second;
+      hf_occupancy_tmp.at( 2*ia ) = 1;
+      if (i < m_beta)
+	hf_occupancy_tmp.at( 2*ia+1 ) = 1;
+      ++it_alpha;
     }
   }
-  // no user-defined guess, will do automatic guess
-  //else{
-  //   pout << "Block will use an automatic HF occupancy guess" << endl;
-  //   auto_guess = true;
-  //}
-
-  //if( auto_guess ){
-  else if( m_hf_occ_user=="canonical" ){
-    m_hf_occupancy.resize(m_norbs); 
-    for( int i = 0; i < m_norbs; i++ ) { 
-       m_hf_occupancy.at(i) = 0; 
-    }
-
-    // Guess 1: label the occupied orbitals according to the orbital reorder sequence
-    if( m_fiedler ){
-
-      for( int i = 0; i < m_fiedlerorder.size(); ++i ){
-        int orig_orb_ind = m_fiedlerorder.at(i);
-        if( orig_orb_ind < m_alpha ){ 
-           m_hf_occupancy[ 2 * i ] = 1;  
-        }
-        if( orig_orb_ind < m_beta ){ 
-           m_hf_occupancy[ 2 * i + 1 ] = 1;
-        }
-      }
-    }
-    else if( m_gaopt || m_reorder ){
-
-      for( int i = 0; i < m_gaorder.size(); ++i ){
-        int orig_orb_ind = m_gaorder.at(i);
-        if( orig_orb_ind < m_alpha ){ 
-           m_hf_occupancy[ 2 * i ] = 1;  
-        }
-        if( orig_orb_ind < m_beta ){ 
-           m_hf_occupancy[ 2 * i + 1 ] = 1;
-        }
-      }
-    }
-    else if( m_gaopt == false && m_fiedler == false && m_reorder == false ){
-       for (int i = 0; i < m_alpha; ++i)
-          m_hf_occupancy[2*i] = 1;
-          for (int i = 0; i < m_beta; ++i) 
-             m_hf_occupancy[2*i+1] = 1;
-    }
+  else {
+    pout << "currently other options besides manual, integral  and canonical are not implemented."<<endl;
+    abort();
   }
-  else if( m_hf_occ_user=="integral" ){
-      m_hf_occupancy.resize(m_norbs); 
-      for( int i = 0; i < m_norbs; i++ ){ 
-         m_hf_occupancy.at(i) = 0; 
-      }
-      // Guess 2: find the orbital indices with the lowest hopping matrix diagonal elements
-      vector<double> v1_diagonal_elements;
-      for( int i = 0; i < m_norbs; ++i ){ 
-         v1_diagonal_elements.push_back( v_1(i,i) ); 
-      }
-      multimap<double, int> ele_map;
-      for( int i = 0; i < m_norbs; ++i ){ 
-         ele_map.insert( pair<double, int>( v1_diagonal_elements.at(i), i ) ); 
-      }
 
-      multimap<double, int> :: iterator it_alpha = ele_map.begin();
-      for( int i = 0; i < m_alpha; ++i ){
-        int ia = it_alpha->second;
-        m_hf_occupancy.at( ia ) = 1;
-        ++it_alpha; ++it_alpha;
-      }
 
-      multimap<double, int> :: iterator it_beta = ++ele_map.begin();
-      for( int i = 0; i < m_beta; ++i ){
-        int ib = it_beta->second;
-        m_hf_occupancy.at( ib ) = 1;
-        ++it_beta; ++it_beta;
-      }
-    }
 
+
+  //now reorder the hf_occupancy, 
+  std::vector<int> reorder(m_norbs/2);
+  for (int i=0; i<m_norbs/2; i++) {
+    reorder.at(m_reorder[i]) = i;
+  }
+
+  m_hf_occupancy.resize(m_norbs,0);
+  for (int i=0; i<m_norbs/2; i++) {
+    m_hf_occupancy[2*reorder[i]] = hf_occupancy_tmp[2*i];
+    m_hf_occupancy[2*reorder[i]+1] = hf_occupancy_tmp[2*i+1];
+  }
 
   pout << "Initial HF occupancy guess: "  << endl;
   for( int i = 0; i < m_hf_occupancy.size(); ++i ){
@@ -1646,12 +1489,6 @@ void SpinAdapted::Input::performSanityTest()
   }
   pout << endl;
 
-/*
-  for (int i = 0; i < m_alpha; ++i)
-    m_hf_occupancy[2*i] = 1;
-  for (int i = 0; i < m_beta; ++i)
-    m_hf_occupancy[2*i+1] = 1;
-*/
 
 }
 

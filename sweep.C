@@ -357,8 +357,8 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     FILE* f = fopen(efile.c_str(), "wb");
     
     for(int j=0;j<nroots;++j) {
-      double e = finalEnergy[j]+dmrginp.get_coreenergy(); 
-      //pout << "ROA ROA get_lowest_energy()[" << j << "]" <<  sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() << " " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
+      //double e = finalEnergy[j]+dmrginp.get_coreenergy(); 
+      double e = sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy(); //instead of the lowest energy of the sweep, we record the last energy of the sweep
       fwrite( &e, 1, sizeof(double), f);
     }
     fclose(f);
@@ -446,6 +446,7 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
 
   dmrginp.operrotT -> start();
   newSystem.transform_operators(rotateMatrix);
+  SaveRotationMatrix (newSystem.get_sites(), rotateMatrix);
   for (int i=0; i<dmrginp.nroots(); i++)
     SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, i);
   dmrginp.operrotT -> stop();

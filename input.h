@@ -32,8 +32,8 @@ enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
 enum calcType {DMRG, ONEPDM, TWOPDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
-
-enum keywords{ORBS, LASTM, STARTM, MAXM, REORDER, FIEDLER, GAORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
+enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
+enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
 	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, 
 	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NUMKEYWORDS};
 
@@ -52,7 +52,6 @@ class Input {
   int m_guess_permutations;
 
   std::vector<int> m_hf_occupancy;
-  std::vector<int> m_hf_occupancy_tmp;
   std::string m_hf_occ_user;
   std::vector<double> m_weights;
 
@@ -125,14 +124,11 @@ class Input {
   int m_outputlevel;
   double m_core_energy;
   orbitalFormat m_orbformat;
-  bool m_reorder;
+
+  int m_reorderType;
   string m_reorderfile;
-
-  bool m_fiedler;
-  std::vector<int> m_fiedlerorder;
-
-  bool m_gaopt;
-  std::vector<int> m_gaorder;
+  std::vector<int> m_reorder;//this can be manual, fiedler, gaopt or noreorder
+  string m_gaconffile;
 
   friend class boost::serialization::access;
   template<class Archive>
@@ -145,8 +141,7 @@ class Input {
     ar & m_molecule_quantum & m_total_symmetry_number & m_total_spin & m_orbenergies & m_add_noninteracting_orbs;
     ar & m_save_prefix & m_load_prefix & m_direct & m_max_lanczos_dimension;
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
-    ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat & m_reorder & m_gaopt & m_gaorder;
-    ar & m_fiedler & m_fiedlerorder;
+    ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat ;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_cd;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_oneindex_screen_tol & m_twoindex_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;
@@ -198,12 +193,12 @@ class Input {
   void writeSummaryForMolpro();
 #endif
   void performSanityTest();
-  void readorbitalsfile(ifstream& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
-  void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder, std::vector<int>&);
-  void getgaorder(ifstream& gaconfFile, ifstream& dumpFile, std::vector<int> fiedlerorder);
-  std::vector<int> get_fiedler(string& dumpname, ifstream& dumpFile);
+  void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
+  void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
+  std::vector<int> getgaorder(ifstream& gaconfFile, string& orbitalfile, std::vector<int>& fiedlerorder);
+  std::vector<int> get_fiedler(string& dumpname);
   void usedkey_error(string& key, string& line);
-
+  void makeInitialHFGuess();
   static void ReadMeaningfulLine(ifstream&, string&, int);
 
   boost::shared_ptr<cumulTimer> guessgenT; 
@@ -312,6 +307,7 @@ class Input {
   const bool &do_cd() const {return m_do_cd;}
   bool &do_cd() {return m_do_cd;}
   int slater_size() const {return m_norbs;}
+  const std::vector<int> &reorder_vector() {return m_reorder;}
 };
 }
 #endif
