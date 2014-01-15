@@ -21,7 +21,8 @@ class RI4index: public SpinAdapted::SparseMatrix
 class CreCreDesDes: public SpinAdapted::SparseMatrix
 {
   public:
-    CreCreDesDes() { assert(false); orbs.resize(4); fermion = true; build_pattern = "((CC)(DD))";} // default build_pattern
+//    CreCreDesDes() { orbs.resize(4); fermion = false; build_pattern = "((CC)(DD))";} // default build_pattern
+    CreCreDesDes() { orbs.resize(4); fermion = false; build_pattern = "(((CC)D)(D))";} // default build_pattern
     void build(const SpinBlock& b) ;
     void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);

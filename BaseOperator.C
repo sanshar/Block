@@ -367,6 +367,9 @@ void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matri
 {
   // Cannot instantiate a SparseMatrix and so instantiating a Cre
   ObjectMatrix<Matrix> tmp = operatorMatrix; 
+//FIXME
+//cout << "operator_matrix:\n";
+//cout << this->operatorMatrix << endl;
 
   //FIXME
   // new allocations (actually reallocate?)

@@ -86,11 +86,9 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
   // 4PDM
   else if (pdm_order_ == 4) {
     if ( sweep_pos == 0 ) {
-      pout << "WARNING: 4PDM edge cases NYI!\n";
-//      lhs_dot_rhs_types_.insert( std::make_tuple(4,0,4) );
+      // Nothing extra needed
     }
     else if ( sweep_pos == end_pos ) {
-      pout << "WARNING: 4PDM edge cases NYI!\n";
       lhs_dot_rhs_types_.insert( std::make_tuple(0,4,4) );
       lhs_dot_rhs_types_.insert( std::make_tuple(4,0,4) );
       lhs_dot_rhs_types_.insert( std::make_tuple(1,3,4) );
@@ -98,6 +96,7 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
       lhs_dot_rhs_types_.insert( std::make_tuple(2,2,4) );
     }
   }
+  // I don't think higher PDM's have any edge cases since we have 4-index ops max on a 1-site block??
   else assert(false);
 
   // Print out

@@ -48,7 +48,6 @@ template<class A> void singlethread_build_using_csf(A& array, SpinBlock& b, std:
 //pout << "array.get_local_element(i)  " << i << std::endl;
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
 //pout << "size() = " << vec.size() << std::endl;
-    assert(vec.size()<4);
     for (int j=0; j<vec.size(); j++) {
       // MAW don't build if already built!
       assert ( ! vec[j]->get_built() ) ;
@@ -70,7 +69,6 @@ template<class A> void singlethread_build(A& array, SpinBlock& b)
     //typedef typename A::OpType Op;
     //std::vector<boost::shared_ptr<Op> >& vec = array.get_local_element(i);
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
-    assert(vec.size()<4);
     for (int j=0; j<vec.size(); j++) {
       // MAW don't build if already built!
       assert ( ! vec[j]->get_built() ) ;
@@ -122,7 +120,6 @@ template<typename T2, class A> void for_all_operators_multithread(A& array, cons
 #endif
     for (i = 0; i < array.get_size(); ++i) {
       std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
-      assert(vec.size()<4);
       for (int j=0; j<vec.size(); j++){
         func( *(vec.at(j)) );
       }
@@ -136,7 +133,6 @@ template<typename T2, class A> void for_all_operators_to_disk(A& array, const Sp
 {
   for (int i = 0; i < array.get_size(); ++i) {
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
-    assert(vec.size()<4);
     for (int j=0; j<vec.size(); j++){
       // MAW don't build if already built!
       assert( ! vec.at(j)->get_built() );
@@ -164,7 +160,6 @@ template<typename T2, class A> void for_all_operators_on_disk(A& array, const St
 {
   for (int i = 0; i < array.get_size(); ++i) {
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
-    assert(vec.size()<4);
     for (int j=0; j<vec.size(); j++){
       // Only use this if operators already on disk
       assert( vec.at(j)->get_built_on_disk() );

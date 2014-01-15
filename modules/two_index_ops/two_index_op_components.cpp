@@ -63,7 +63,6 @@ assert( vec.size() == 0);
        SparseMatrix& op = *vec[j];
        op.set_orbs() = orbs;
        op.set_initialised() = true;
-       op.set_fermion() = false;
        op.set_deltaQuantum() = spinvec[j];
 
        op.set_quantum_ladder()["(DC)"] = { op.get_deltaQuantum() };

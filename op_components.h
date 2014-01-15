@@ -245,6 +245,7 @@ template <class Op> class Op_component : public Op_component_base
 
   void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo* s) {
 
+//cout << "renormalize transform: opType = " << ot << endl;
     if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
       // Build on disk (load, renormalize, save)
       std::string ifile = get_filename();
@@ -361,11 +362,17 @@ template <class Op> class Op_component : public Op_component_base
 // MAW FIXME for more than 2-index operators:
   boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1, int l=-1)
   {
+//cout << "hello get_op_rep XXXXX\n";
     assert( k !=-1 );
     Op* o = 0;
+//cout << "hello get_op_rep 1\n";
+//cout << "i,j,k,l = " << i << j << k << l << endl;
     std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k,l);
+//cout << "hello get_op_rep 2\n";
     std::string build_pattern = vec[0]->get_build_pattern();
+//cout << "hello get_op_rep 3\n";
     for (int p=0; p<vec.size(); p++) {
+//cout << "hello get_op_rep 4\n";
       if ( s == vec[p]->get_quantum_ladder().at(build_pattern) ) return m_op(i,j,k,l)[p];
     }
     assert (false);
@@ -376,11 +383,16 @@ template <class Op> class Op_component : public Op_component_base
 // MAW FIXME for more than 2-index operators:
   const boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1, int l=-1) const
   {
+//cout << "hello get_op_rep YYYYY\n";
     assert( k !=-1 );
     Op* o = 0;
+//cout << "hello get_op_rep 1\n";
     const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k,l);
+//cout << "hello get_op_rep 2\n";
     std::string build_pattern = vec[0]->get_build_pattern();
+//cout << "hello get_op_rep 3\n";
     for (int p=0; p<vec.size(); p++) {
+//cout << "hello get_op_rep 4\n";
       if ( s == vec[p]->get_quantum_ladder().at(build_pattern) ) return m_op(i,j,k,l)[p];
     }
     assert (false);

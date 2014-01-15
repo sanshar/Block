@@ -23,79 +23,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  (Cre,Cre,Des,Des)
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//void SpinAdapted::CreCreDesDes::build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs)
-//{
-//assert(false);
-////cout << "building CreCreDesDes renormalized operator on disk...\n";
-////FIXME timer
-////  dmrginp.makeopsT -> start();
-//  built = true;
-////FIXME allocation/deallocation
-//  allocate(b.get_stateInfo());
-//  Sign = 1;
-//
-//  const int i = get_orbs()[0];
-//  const int j = get_orbs()[1];
-//  const int k = get_orbs()[2];
-////cout << "i,j,k = " << i << " " << j << " " << k << endl;
-//
-//  SpinBlock* sysBlock = b.get_leftBlock();
-//  SpinBlock* dotBlock = b.get_rightBlock();
-//
-//  // Sys has i,j,k
-//  if (sysBlock->get_op_array(DES_DES_CRE).has_local_index(i,j,k)) {
-////cout << "maw disk sys(i,j,k)\n";
-//    assert( sysBlock->get_op_array(DES_DES_CRE).get_element(i,j,k).at(0)->get_built_on_disk() );
-//    // Retrieve from disk 3-index operator on sys block
-//    boost::shared_ptr<SparseMatrix> op (new CreCreDesDes);
-//    boost::archive::binary_iarchive load_op(sysfs);
-//    load_op >> *op;
-//    // Assume this is the operator we want, and expand it to the big block
-//    assert( i == op->get_orbs()[0] );
-//    assert( j == op->get_orbs()[1] );
-//    assert( k == op->get_orbs()[2] );
-//    // Build according to previous build_pattern
-//    std::string build_pattern_old = op->get_build_pattern();
-//    build_pattern = build_pattern_old;
-//    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
-//    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
-//    SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
-//  }
-//  // Dot has i,j,k
-//  else if (dotBlock->get_op_array(DES_DES_CRE).has_local_index(i,j,k)) {
-////cout << "maw dot(i,j,k)\n";
-//    assert( dotBlock->get_op_array(DES_DES_CRE).get_element(i,j,k).at(0)->get_built_on_disk() );
-//    // Retrieve from disk 3-index operator on dot block
-//    boost::shared_ptr<SparseMatrix> op (new CreCreDesDes);
-//    boost::archive::binary_iarchive load_op(dotfs);
-//    load_op >> *op;
-//    // Assume this is the operator we want, and expand it to the big block
-//    assert( i == op->get_orbs()[0] );
-//    assert( j == op->get_orbs()[1] );
-//    assert( k == op->get_orbs()[2] );
-//    // Build according to previous build_pattern
-//    std::string build_pattern_old = op->get_build_pattern();
-//    build_pattern = build_pattern_old;
-//    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
-//    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
-//    SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
-//  }
-//  else {
-//    // Build from in-core 1 and 2-index operators
-//    build(b);
-//  }
-//
-////  dmrginp.makeopsT -> stop();
-//
-//}
-//
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinAdapted::CreCreDesDes::build(const SpinBlock& b)
 {
-assert(false);
-//cout << "building CreCreDesDes renormalized operator...\n";
+cout << "building CreCreDesDes renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
   allocate(b.get_stateInfo());
@@ -104,87 +35,142 @@ assert(false);
   const int i = get_orbs()[0];
   const int j = get_orbs()[1];
   const int k = get_orbs()[2];
+  const int l = get_orbs()[3];
+cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
 
   SpinBlock* sysBlock = b.get_leftBlock();
   SpinBlock* dotBlock = b.get_rightBlock();
 
-  // Sys has i,j,k
-  if (sysBlock->get_op_array(DES_DES_CRE).has_local_index(i,j,k)) {
-pout << "maw sys(i,j,k)\n";
-    std::string build_pattern_old = sysBlock->get_op_array(DES_DES_CRE).get_element(i,j,k).at(0)->get_build_pattern();
-    assert( build_pattern_old == sysBlock->get_op_array(DES_DES_CRE).get_element(i,j,k).at(1)->get_build_pattern() );
-    assert( build_pattern_old == sysBlock->get_op_array(DES_DES_CRE).get_element(i,j,k).at(2)->get_build_pattern() );
-    const boost::shared_ptr<SparseMatrix>& op = sysBlock->get_op_rep(DES_DES_CRE, quantum_ladder.at(build_pattern_old), i,j,k);
+  // Sys has i,j,k,l
+  if (sysBlock->get_op_array(CRE_CRE_DES_DES).has_local_index(i,j,k,l)) {
+pout << "maw sys(i,j,k,l)\n";
+    std::string build_pattern_old = sysBlock->get_op_array(CRE_CRE_DES_DES).get_element(i,j,k,l).at(0)->get_build_pattern();
+cout << "build pattern = " << build_pattern_old << endl;
+    const boost::shared_ptr<SparseMatrix>& op = sysBlock->get_op_rep(CRE_CRE_DES_DES, quantum_ladder.at(build_pattern_old), i,j,k,l);
     // Build according to previous build_pattern
     build_pattern = build_pattern_old;
-    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
-    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(2);
+//cout << "maw op before TensorTrace\n";
+//cout << *op;
     SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
+//cout << "maw op after TensorTrace\n";
+//cout << *this;
+  }
+  // Dot has i,j,k,l
+  else if (dotBlock->get_op_array(CRE_CRE_DES_DES).has_local_index(i,j,k,l)) {
+pout << "maw dot(i,j,k,l)\n";
+    assert( i == j );
+    assert( j == k );
+    assert( k == l );
+    std::string build_pattern_old = dotBlock->get_op_array(CRE_CRE_DES_DES).get_element(i,j,k,l).at(0)->get_build_pattern();
+cout << "build pattern = " << build_pattern_old << endl;
+    const boost::shared_ptr<SparseMatrix>& op = dotBlock->get_op_rep(CRE_CRE_DES_DES, quantum_ladder.at(build_pattern_old), i,j,k,l);
+    // Build according to previous build_pattern
+    build_pattern = build_pattern_old;
+    assert( get_quantum_ladder().at( build_pattern ).at(0) == op->get_quantum_ladder().at( build_pattern ).at(0) );
+    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
+    assert( get_quantum_ladder().at( build_pattern ).at(2) == op->get_quantum_ladder().at( build_pattern ).at(2) );
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(2);
+//cout << "maw op before TensorTrace\n";
+//cout << *op;
+    SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
+//cout << "maw op after TensorTrace\n";
+//cout << *this;
+//pout << "done dot(i,j,k,l)\n";
+  }
+  // Dot has j,k,l;
+  else if (dotBlock->get_op_array(CRE_DES_DES).has_local_index(j,k,l)) {
+pout << "maw dot(j,k,l)\n";
+    assert( j == k );
+    assert( k == l );
+    assert( sysBlock->get_op_array(CRE).has_local_index(i) );
+    // 3-index op
+    std::string build_234 = dotBlock->get_op_array(CRE_DES_DES).get_element(j,k,l).at(0)->get_build_pattern();
+    build_pattern = "((C)" + build_234 + ")";
+cout << "build pattern = " << build_pattern << endl;
+    std::vector<SpinQuantum> spin_234 = { quantum_ladder.at(build_pattern).at(0), quantum_ladder.at(build_pattern).at(1) };
+    const boost::shared_ptr<SparseMatrix>& op234 = dotBlock->get_op_rep(CRE_DES_DES, spin_234, j,k,l);
+    // 1-index op
+    const boost::shared_ptr<SparseMatrix>& op1 = sysBlock->get_op_rep(CRE, getSpinQuantum(i), i);
+    // 4-index op
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(2); //FIXME .at(2) brittle
+    SpinAdapted::operatorfunctions::TensorProduct(sysBlock, *op1, *op234, &b, &(b.get_stateInfo()), *this, 1.0);
+  }
+  // Sys has i,j,k
+  else if (sysBlock->get_op_array(CRE_CRE_DES).has_local_index(i,j,k)) {
+pout << "maw sys(i,j,k)\n";
+    assert( dotBlock->get_op_array(CRE).has_local_index(k) );
+    // 3-index op
+    std::string build_123 = sysBlock->get_op_array(CRE_CRE_DES).get_element(i,j,k).at(0)->get_build_pattern();
+    build_pattern = "(" + build_123 + "(D))";
+cout << "build pattern = " << build_pattern << endl;
+    std::vector<SpinQuantum> spin_123 = { quantum_ladder.at(build_pattern).at(0), quantum_ladder.at(build_pattern).at(1) };
+    const boost::shared_ptr<SparseMatrix>& op123 = sysBlock->get_op_rep(CRE_CRE_DES, spin_123, i,j,k);
+    // 1-index op
+    Transposeview op4 = Transposeview( dotBlock->get_op_rep(CRE, getSpinQuantum(k), k) );
+    // 4-index op
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(2);
+    SpinAdapted::operatorfunctions::TensorProduct(sysBlock, *op123, op4, &b, &(b.get_stateInfo()), *this, 1.0);
+  }
+  // Sys has j,k,l;
+  else if (sysBlock->get_op_array(CRE_DES_DES).has_local_index(j,k,l)) {
+pout << "maw sys(j,k,l)\n";
+    assert( dotBlock->get_op_array(CRE).has_local_index(i) );
+    // 3-index op
+    std::string build_234 = sysBlock->get_op_array(CRE_DES_DES).get_element(j,k,l).at(0)->get_build_pattern();
+    build_pattern = "((C)" + build_234 + ")";
+cout << "build pattern = " << build_pattern << endl;
+    std::vector<SpinQuantum> spin_234 = { quantum_ladder.at(build_pattern).at(0), quantum_ladder.at(build_pattern).at(1) };
+    const boost::shared_ptr<SparseMatrix>& op234 = sysBlock->get_op_rep(CRE_DES_DES, spin_234, j,k,l);
+    // 1-index op
+    const boost::shared_ptr<SparseMatrix>& op1 = dotBlock->get_op_rep(CRE, getSpinQuantum(i), i);
+    // 4-index op
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(2);
+    // Tensor product of dot*sys so need to take into account parity factors
+    double parity = getCommuteParity( op1->get_deltaQuantum(), op234->get_deltaQuantum(), get_deltaQuantum() );
+    SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *op1, *op234, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   // Dot has i,j,k
-  else if (dotBlock->get_op_array(DES_DES_CRE).has_local_index(i,j,k)) {
+  else if (dotBlock->get_op_array(CRE_CRE_DES).has_local_index(i,j,k)) {
 pout << "maw dot(i,j,k)\n";
     assert( i == j );
     assert( j == k );
-    std::string build_pattern_old = dotBlock->get_op_array(DES_DES_CRE).get_element(i,j,k).at(0)->get_build_pattern();
-    assert( build_pattern_old == dotBlock->get_op_array(DES_DES_CRE).get_element(i,j,k).at(1)->get_build_pattern() );
-    assert( build_pattern_old == dotBlock->get_op_array(DES_DES_CRE).get_element(i,j,k).at(2)->get_build_pattern() );
-    const boost::shared_ptr<SparseMatrix>& op = dotBlock->get_op_rep(DES_DES_CRE, quantum_ladder.at(build_pattern_old), i,j,k);
-    // Build according to previous build_pattern
-    build_pattern = build_pattern_old;
-    assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
-    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
-    SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
-  }
-  // Dot has j,k;
-  else if (dotBlock->get_op_array(DES_CRE).has_local_index(j,k)) {
-pout << "maw dot(j,k)\n";
-    assert( j == k );
-    assert( sysBlock->get_op_array(CRE).has_local_index(i) );
-    build_pattern = "(D(DC))";
-    Transposeview opD = Transposeview( sysBlock->get_op_rep(CRE, getSpinQuantum(i), i) );
-    const boost::shared_ptr<SparseMatrix>& opDC = dotBlock->get_op_rep(DES_CRE, quantum_ladder.at(build_pattern).at(0), j,k);
-    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
-    SpinAdapted::operatorfunctions::TensorProduct(sysBlock, opD, *opDC, &b, &(b.get_stateInfo()), *this, 1.0);
-  }
-  // Sys has i,j
-  else if (sysBlock->get_op_array(CRE_CRE).has_local_index(i,j)) {
-pout << "maw sys(i,j)\n";
-    assert( dotBlock->get_op_array(CRE).has_local_index(k) );
-    build_pattern = "((DD)C)";
-//FIXME transpose indices / commute ?? minus sign if i!=j ??  c.f. CDD case above?
-    Transposeview opDD = Transposeview( sysBlock->get_op_rep(CRE_CRE, quantum_ladder.at(build_pattern).at(0), i,j) );
-    const boost::shared_ptr<SparseMatrix>& opC  = dotBlock->get_op_rep(CRE, getSpinQuantum(k), k);
-    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
-    SpinAdapted::operatorfunctions::TensorProduct(sysBlock, opDD, *opC, &b, &(b.get_stateInfo()), *this, 1.0);
-  }
-  // Sys has j,k;
-  else if (sysBlock->get_op_array(DES_CRE).has_local_index(j,k)) {
-pout << "maw sys(j,k)\n";
-    assert( dotBlock->get_op_array(CRE).has_local_index(i) );
-    build_pattern = "(D(DC))";
-    Transposeview opD = Transposeview( dotBlock->get_op_rep(CRE, getSpinQuantum(i), i) );
-    const boost::shared_ptr<SparseMatrix>& opDC = sysBlock->get_op_rep(DES_CRE, quantum_ladder.at(build_pattern).at(0), j,k);
+    assert( sysBlock->get_op_array(CRE).has_local_index(l) );
+    // 3-index op
+    std::string build_123 = dotBlock->get_op_array(CRE_CRE_DES).get_element(i,j,k).at(0)->get_build_pattern();
+    build_pattern = "(" + build_123 + "(D))";
+cout << "build pattern = " << build_pattern << endl;
+    std::vector<SpinQuantum> spin_123 = { quantum_ladder.at(build_pattern).at(0), quantum_ladder.at(build_pattern).at(1) };
+    const boost::shared_ptr<SparseMatrix>& op123 = dotBlock->get_op_rep(CRE_CRE_DES, spin_123, i,j,k);
+    // 1-index op
+    Transposeview op4 = Transposeview( sysBlock->get_op_rep(CRE, getSpinQuantum(l), l) );
+    // 4-index op
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(2);
     // Tensor product of dot*sys so need to take into account parity factors
-    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
-//FIXME parity broken ??
-    double parity = getCommuteParity( opD.get_deltaQuantum(), opDC->get_deltaQuantum(), get_deltaQuantum() );
-    SpinAdapted::operatorfunctions::TensorProduct(dotBlock, opD, *opDC, &b, &(b.get_stateInfo()), *this, 1.0*parity);
+    double parity = getCommuteParity( op123->get_deltaQuantum(), op4.get_deltaQuantum(), get_deltaQuantum() );
+    SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *op123, op4, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
-  // Dot has i,j
-  else if (dotBlock->get_op_array(CRE_CRE).has_local_index(i,j)) {
-pout << "maw dot(i,j)\n";
-    assert( i == j );
-    assert( sysBlock->get_op_array(CRE).has_local_index(k) );
-    build_pattern = "((DD)C)";
-    Transposeview opDD = Transposeview( dotBlock->get_op_rep(CRE_CRE, quantum_ladder.at(build_pattern).at(0), i,j) );
-//FIXME transpose indices / commute ?? minus sign if i!=j ??  c.f. CDD case above?
-    const boost::shared_ptr<SparseMatrix>& opC  = sysBlock->get_op_rep(CRE, getSpinQuantum(k), k);
-    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+  // Sys has i,j Dot has k,l;  
+  else if (dotBlock->get_op_array(CRE_CRE).has_local_index(k,l)) {
+pout << "maw sys(i,j); dot(k,l)\n";
+    assert( sysBlock->get_op_array(CRE_CRE).has_local_index(i,j) );
+    build_pattern = "((CC)(DD))";
+    Transposeview op34 = Transposeview( dotBlock->get_op_rep(CRE_CRE, quantum_ladder.at(build_pattern).at(1), k,l) );
+    const boost::shared_ptr<SparseMatrix>& op12 = sysBlock->get_op_rep(CRE_CRE, quantum_ladder.at(build_pattern).at(0), i,j);
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(2);
+    SpinAdapted::operatorfunctions::TensorProduct(sysBlock, *op12, op34, &b, &(b.get_stateInfo()), *this, 1.0);
+  }
+  // Dot has i,j Sys has k,l;  
+  else if (sysBlock->get_op_array(CRE_CRE).has_local_index(k,l)) {
+pout << "maw dot(i,j); sys(k,l)\n";
+    assert( dotBlock->get_op_array(CRE_CRE).has_local_index(i,j) );
+    build_pattern = "((CC)(DD))";
+    Transposeview op34 = Transposeview( sysBlock->get_op_rep(CRE_CRE, quantum_ladder.at(build_pattern).at(1), k,l) );
+    const boost::shared_ptr<SparseMatrix>& op12 = dotBlock->get_op_rep(CRE_CRE, quantum_ladder.at(build_pattern).at(0), i,j);
+    set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(2);
     // Tensor product of dot*sys so need to take into account parity factors
-//FIXME parity broken ??
-    double parity = getCommuteParity( opDD.get_deltaQuantum(), opC->get_deltaQuantum(), get_deltaQuantum() );
-    SpinAdapted::operatorfunctions::TensorProduct(dotBlock, opDD, *opC, &b, &(b.get_stateInfo()), *this, 1.0*parity);
+    double parity = getCommuteParity( op12->get_deltaQuantum(), op34.get_deltaQuantum(), get_deltaQuantum() );
+    SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *op12, op34, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   else assert(false);
 
@@ -196,43 +182,88 @@ pout << "maw dot(i,j)\n";
 
 double SpinAdapted::CreCreDesDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
-assert(false);
-  assert( build_pattern == "((DD)C)" );
+////  assert( build_pattern == "((CC)(DD))" );
+////  double element = 0.0;
+////  int I = get_orbs()[0]; 
+////  int J = get_orbs()[1];
+////  int K = get_orbs()[2];
+////  int L = get_orbs()[3];
+////
+////  // Must take into account how the 4-index is built from a combination of the 2-index ops
+////  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("((CC)(DD))");
+////  assert( quantum_ladder.size() == 3 );
+////
+////  SpinQuantum deltaQuantum12 = quantum_ladder.at(0);
+////  SpinQuantum deltaQuantum34 = quantum_ladder.at(1);
+////  SpinQuantum deltaQuantum1234 = quantum_ladder.at(2);
+////  deltaQuantum = deltaQuantum1234;
+////
+////  // Spin quantum data for CC
+////  IrrepSpace sym12 = deltaQuantum12.get_symm();
+////  int irrep12 = deltaQuantum12.get_symm().getirrep();
+////  int spin12 = deltaQuantum12.get_s();
+////  // Spin quantum data for DD
+////  IrrepSpace sym34 = deltaQuantum34.get_symm();
+////  int irrep34 = deltaQuantum34.get_symm().getirrep();
+////  int spin34 = deltaQuantum34.get_s();
+////  // Spin quantum data for total operator
+////  IrrepSpace sym1234 = deltaQuantum1234.get_symm();
+////  int irrep1234 = deltaQuantum1234.get_symm().getirrep();
+////  int spin1234 = deltaQuantum1234.get_s();
+////
+////  TensorOp C1(I, 1); 
+////  TensorOp C2(J, 1); 
+////  TensorOp D3(K,-1); 
+////  TensorOp D4(L,-1); 
+////
+////  TensorOp CC = C1.product(C2, spin12, irrep12);   // I=J argument??
+////  TensorOp DD = D3.product(D4, spin34, irrep34);
+////  TensorOp CCDD = CC.product(DD, spin1234, irrep1234);
+
+
+  assert( build_pattern == "(((CC)D)(D))" );
   double element = 0.0;
   int I = get_orbs()[0]; 
   int J = get_orbs()[1];
   int K = get_orbs()[2];
+  int L = get_orbs()[3];
 
-  // Must take into account how the 3-index is built from a combination of 2-index and 1-index
-  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("((DD)C)");
-  assert( quantum_ladder.size() == 2 );
+  // Must take into account how the 4-index is built from a combination of the 2-index ops
+  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CC)D)(D))");
+  assert( quantum_ladder.size() == 3 );
+
   SpinQuantum deltaQuantum12 = quantum_ladder.at(0);
   SpinQuantum deltaQuantum123 = quantum_ladder.at(1);
-  deltaQuantum = deltaQuantum123;
+  SpinQuantum deltaQuantum1234 = quantum_ladder.at(2);
+  deltaQuantum = deltaQuantum1234;
 
-  // Spin quantum data for first pair of operators combined
+  // Spin quantum data for CC
   IrrepSpace sym12 = deltaQuantum12.get_symm();
   int irrep12 = deltaQuantum12.get_symm().getirrep();
   int spin12 = deltaQuantum12.get_s();
-  // Spin quantum data for total operator
+  // Spin quantum data for (CC)D
   IrrepSpace sym123 = deltaQuantum123.get_symm();
   int irrep123 = deltaQuantum123.get_symm().getirrep();
-  int spin123 = deltaQuantum123.get_s();
+  int spin123= deltaQuantum123.get_s();
+  // Spin quantum data for total operator
+  IrrepSpace sym1234 = deltaQuantum1234.get_symm();
+  int irrep1234 = deltaQuantum1234.get_symm().getirrep();
+  int spin1234 = deltaQuantum1234.get_s();
 
-  TensorOp D1(I,-1); 
-  TensorOp D2(J,-1); 
-  TensorOp C3(K, 1); 
+  TensorOp C1(I, 1); 
+  TensorOp C2(J, 1); 
+  TensorOp D3(K,-1); 
+  TensorOp D4(L,-1); 
 
-  // Combine first two operators
-  TensorOp DD = D1.product(D2, spin12, irrep12);
-  // Combine with third operator
-  TensorOp DDC = DD.product(C3, spin123, irrep123);
+  TensorOp CC = C1.product(C2, spin12, irrep12);
+  TensorOp CCD = CC.product(D3, spin123, irrep123);
+  TensorOp CCDD = CCD.product(D4, spin1234, irrep1234);
 
   for (int i=0; i<ladder.size(); i++)
   {
     int index = 0; double cleb=0.0;
     if (nonZeroTensorComponent(c1, deltaQuantum, ladder[i], index, cleb)) {
-      std::vector<double> MatElements = calcMatrixElements(c1, DDC, ladder[i]) ;
+      std::vector<double> MatElements = calcMatrixElements(c1, CCDD, ladder[i]) ;
       element = MatElements[index]/cleb;
       break;
     }
@@ -246,7 +277,6 @@ assert(false);
 
 boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreDesDes::getworkingrepresentation(const SpinBlock* block)
 {
-assert(false);
   assert(this->get_initialised());
   if (this->get_built()) {
     return boost::shared_ptr<CreCreDesDes>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op

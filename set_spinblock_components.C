@@ -179,19 +179,19 @@ void SpinBlock::default_op_components(bool complementary_)
     if ( dmrginp.do_npdm_ops() ) {
       ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
       ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
-      if ( (dmrginp.calc_type() == THREEPDM) ||
-           (dmrginp.calc_type() == FOURPDM) ) {
+//      if ( (dmrginp.calc_type() == THREEPDM) ||
+//           (dmrginp.calc_type() == FOURPDM) ) {
         ops[DES_CRE] = make_new_op(DES_CRE, true);
         ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
         ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
         ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
         ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
-        if ( dmrginp.calc_type() == FOURPDM ) {
+//        if ( dmrginp.calc_type() == FOURPDM ) {
           ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
           ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
-//          ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, true);
-        }
-      }
+          ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, true);
+//        }
+//      }
     }
   }
 
@@ -237,21 +237,7 @@ assert(false); //FIXME << if (haveNormops || dmrginp.do_npdm_ops()) not tested
         ops[CRE_DES] = make_new_op(CRE_DES, true);
         ops[CRE_CRE] = make_new_op(CRE_CRE, true);
         if ( dmrginp.do_npdm_ops() ) {
-          ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
-          ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
-          if ( (dmrginp.calc_type() == THREEPDM) ||
-               (dmrginp.calc_type() == FOURPDM) ) {
-            ops[DES_CRE] = make_new_op(DES_CRE, true);
-            ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
-            ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
-            ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
-            ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
-            if ( dmrginp.calc_type() == FOURPDM ) {
-              ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
-              ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
-//              ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, true);
-            }
-          }
+          assert(false);
         }
       }
       if (haveCompops) {
@@ -279,19 +265,19 @@ assert(false); //FIXME << if (haveNormops || dmrginp.do_npdm_ops()) not tested
         if ( dmrginp.do_npdm_ops() ) {
           ops[RI_3INDEX] = make_new_op(RI_3INDEX, false);
           ops[RI_4INDEX] = make_new_op(RI_4INDEX, false);
-          if ( (dmrginp.calc_type() == THREEPDM) ||
-               (dmrginp.calc_type() == FOURPDM) ) {
+//          if ( (dmrginp.calc_type() == THREEPDM) ||
+//               (dmrginp.calc_type() == FOURPDM) ) {
             ops[DES_CRE] = make_new_op(DES_CRE, false);
             ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
             ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);
             ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, false);
             ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, false);
-            if ( dmrginp.calc_type() == FOURPDM ) {
+//            if ( dmrginp.calc_type() == FOURPDM ) {
               ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, false);
               ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
-//              ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, false);
-            }
-          }
+              ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, false);
+//            }
+//          }
         }
       }
       if (haveCompops) {

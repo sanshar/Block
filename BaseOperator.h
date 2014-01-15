@@ -125,6 +125,7 @@ class SparseMatrix : public Baseoperator<Matrix>
 //MAW >>>>
   std::map< std::string, std::vector<SpinQuantum> >  get_quantum_ladder() const { return quantum_ladder; }
   std::map< std::string, std::vector<SpinQuantum> > &  set_quantum_ladder() { return quantum_ladder; }
+//FIXME build_pattern should be same for all spin components so move this higher in the class
   std::string  get_build_pattern() const { return build_pattern; }
   std::string& set_build_pattern() { return build_pattern; }
 //MAW <<<<<

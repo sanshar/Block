@@ -279,8 +279,6 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
       boost::shared_ptr<CreCreCre> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      // 3-index ops are fermionic 
-      op->set_fermion() = true;
       op->set_quantum_ladder()["((CC)C)"] = cc_c_quantum_ladder.at(q);
       op->set_quantum_ladder()["(C(CC))"] = c_cc_quantum_ladder.at(q);
 //FIXME  This should be updated when the build_pattern changes
@@ -370,8 +368,6 @@ void Op_component<CreCreDes>::build_iterators(SpinBlock& b)
       boost::shared_ptr<CreCreDes> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      // 3-index ops are fermionic 
-      op->set_fermion() = true;
       op->set_quantum_ladder()["((CC)D)"] = cc_d_quantum_ladder.at(q);
       op->set_quantum_ladder()["(C(CD))"] = c_cd_quantum_ladder.at(q);
 //FIXME  This should be updated when the build_pattern changes
@@ -463,8 +459,6 @@ void Op_component<CreDesDes>::build_iterators(SpinBlock& b)
       boost::shared_ptr<CreDesDes> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      // 3-index ops are fermionic 
-      op->set_fermion() = true;
       op->set_quantum_ladder()["((CD)D)"] = cd_d_quantum_ladder.at(q);
       op->set_quantum_ladder()["(C(DD))"] = c_dd_quantum_ladder.at(q);
 //FIXME  This should be updated when the build_pattern changes
@@ -557,8 +551,6 @@ void Op_component<CreDesCre>::build_iterators(SpinBlock& b)
       boost::shared_ptr<CreDesCre> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      // 3-index ops are fermionic 
-      op->set_fermion() = true;
       op->set_quantum_ladder()["((CD)C)"] = cd_c_quantum_ladder.at(q);
       op->set_quantum_ladder()["(C(DC))"] = c_dc_quantum_ladder.at(q);
 //FIXME  This should be updated when the build_pattern changes
@@ -651,8 +643,6 @@ void Op_component<DesCreDes>::build_iterators(SpinBlock& b)
       boost::shared_ptr<DesCreDes> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      // 3-index ops are fermionic 
-      op->set_fermion() = true;
       op->set_quantum_ladder()["((DC)D)"] = dc_d_quantum_ladder.at(q);
       op->set_quantum_ladder()["(D(CD))"] = d_cd_quantum_ladder.at(q);
 //FIXME  This should be updated when the build_pattern changes
@@ -741,8 +731,6 @@ void Op_component<DesDesCre>::build_iterators(SpinBlock& b)
       boost::shared_ptr<DesDesCre> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      // 3-index ops are fermionic 
-      op->set_fermion() = true;
       op->set_quantum_ladder()["((DD)C)"] = dd_c_quantum_ladder.at(q);
       op->set_quantum_ladder()["(D(DC))"] = d_dc_quantum_ladder.at(q);
 //FIXME  This should be updated when the build_pattern changes

@@ -1504,6 +1504,7 @@ double SpinAdapted::CreCreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, con
   TensorOp C3(K,1); 
 
   // Combine first two operators
+//FIXME I=J argument
   TensorOp CC = C1.product(C2, spin12, irrep12);
   // Combine with third operator
   TensorOp CCC = CC.product(C3, spin123, irrep123);
@@ -1975,6 +1976,7 @@ double SpinAdapted::DesDesCre::redMatrixElement(Csf c1, vector<Csf>& ladder, con
   TensorOp C3(K, 1); 
 
   // Combine first two operators
+//FIXME I=J argument??
   TensorOp DD = D1.product(D2, spin12, irrep12);
   // Combine with third operator
   TensorOp DDC = DD.product(C3, spin123, irrep123);

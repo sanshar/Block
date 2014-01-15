@@ -172,14 +172,14 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_bas
   // IMPORTANT: generate spin-components in the same order as RHS of linear equation solver in npdm_set_up_linear_equations routine
   // i.e. in accordance with the operator string build_pattern
   for (int irhs = 0; irhs < rhsOps.mults_.size(); ++irhs) {
+//if (rhsOps.opReps_.size() > 0) { pout << "rhs: " << rhsOps.mults_.at(irhs) << std::endl; }
     for (int idot = 0; idot < dotOps.mults_.size(); ++idot) {
+//if (dotOps.opReps_.size() > 0) { pout << "dot: " << dotOps.mults_.at(idot) << std::endl; }
       for (int ilhs = 0; ilhs < lhsOps.mults_.size(); ++ilhs) {
+//if (lhsOps.opReps_.size() > 0) { pout << "lhs: " << lhsOps.mults_.at(ilhs) << std::endl; }
 //pout << "spin comp: ilhs, idot, irhs = " << ilhs << idot << irhs << std::endl;
 
         // Check that the spin multiplicities of the actual operators we've got are what we think they are!
-//if ( lhsOps.opReps_.size() > 0 ) {
-//pout << lhsOps.mults_.at(ilhs) -1 << "          " << lhsOps.opReps_.at(ilhs)->get_deltaQuantum().totalSpin << std::endl;
-//}
         if ( lhsOps.opReps_.size() > 0 ) assert( lhsOps.mults_.at(ilhs) -1 == lhsOps.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );
         if ( dotOps.opReps_.size() > 0 ) assert( dotOps.mults_.at(idot) -1 == dotOps.opReps_.at(idot)->get_deltaQuantum().totalSpin );
         if ( rhsOps.opReps_.size() > 0 ) assert( rhsOps.mults_.at(irhs) -1 == rhsOps.opReps_.at(irhs)->get_deltaQuantum().totalSpin );
