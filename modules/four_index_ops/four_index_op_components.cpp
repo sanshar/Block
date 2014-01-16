@@ -142,9 +142,9 @@ pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[
         for (int t=0; t < spinvec1234.size(); t++) {
           // Store (CC) first, then (DD), then 4-index spin quantums
           std::vector<SpinQuantum> tmp = { spinvec12[q], spinvec34[p], spinvec1234[t] };
-cout << "p, spin12[q]   = " << q << ",  " << 0.5*spinvec12[q].get_s() << endl;
-cout << "q, spin34[p]   = " << p << ",  " << 0.5*spinvec34[p].get_s() << endl;
-cout << "t, spin1234[t] = " << t << ",  " << 0.5*spinvec1234[t].get_s() << endl;
+//cout << "p, spin12[q]   = " << q << ",  " << 0.5*spinvec12[q].get_s() << endl;
+//cout << "q, spin34[p]   = " << p << ",  " << 0.5*spinvec34[p].get_s() << endl;
+//cout << "t, spin1234[t] = " << t << ",  " << 0.5*spinvec1234[t].get_s() << endl;
           cc_dd_quantum_ladder.push_back( tmp );
           assert( spinvec1234[t].particleNumber == 0 );
         }

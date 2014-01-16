@@ -12,7 +12,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
-// Initialize 4-index operators built using RI approximation (exact on dot block)
+// Initialize 4-index operators built using RI approximation (exact on 1-site block)
 boost::shared_ptr<NpdmSpinOps> init_RI_4_index_operators( SpinBlock * spinBlock, std::vector<Npdm::CD> & cd_type ) {
 
   std::vector<Npdm::CD> op;
@@ -57,21 +57,6 @@ boost::shared_ptr<NpdmSpinOps> init_RI_4_index_operators( SpinBlock * spinBlock,
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCCC( spinBlock ) );
     return ret;
   } 
-//  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION, Npdm::CREATION };
-//  if ( cd_type == op ) {
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCCC( spinBlock ) );
-//    return ret;
-//  } 
-//  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION, Npdm::CREATION };
-//  if ( cd_type == op ) {
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCCC( spinBlock ) );
-//    return ret;
-//  } 
-//  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION, Npdm::CREATION };
-//  if ( cd_type == op ) {
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCCC( spinBlock ) );
-//    return ret;
-//  } 
   assert(false);
 }
 
@@ -86,11 +71,53 @@ boost::shared_ptr<NpdmSpinOps> init_4_index_operators( SpinBlock * spinBlock, st
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CCDD( spinBlock ) );
     return ret;
   } 
+  op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION, Npdm::DESTRUCTION };
+  if ( cd_type == op ) {
+//FIXME compound
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDCD( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::CREATION };
+  if ( cd_type == op ) {
+//FIXME compound
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDDC( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
+  if ( cd_type == op ) {
+//FIXME compound
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDDD( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION };
+  if ( cd_type == op ) {
+//FIXME compound
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCCD( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION };
+  if ( cd_type == op ) {
+//FIXME compound
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCDC( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION, Npdm::CREATION };
+  if ( cd_type == op ) {
+//FIXME compound
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDCC( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION, Npdm::CREATION };
+  if ( cd_type == op ) {
+//FIXME compound
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCCC( spinBlock ) );
+    return ret;
+  } 
   assert(false);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// Initialize 3-index operators built using RI approximation (exact on dot block)
+// Initialize 3-index operators built using RI approximation (exact on 1-site block)
 boost::shared_ptr<NpdmSpinOps> init_RI_3_index_operators( SpinBlock * spinBlock, std::vector<Npdm::CD> & cd_type ) {
 
   std::vector<Npdm::CD> op;
@@ -125,6 +152,12 @@ boost::shared_ptr<NpdmSpinOps> init_RI_3_index_operators( SpinBlock * spinBlock,
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_DDC( spinBlock ) );
     return ret;
   } 
+  op = { Npdm::DESTRUCTION, Npdm::CREATION, Npdm::CREATION };
+  if ( cd_type == op ) {
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_DCC( spinBlock ) );
+    return ret;
+  } 
+  assert(false);
   assert(false);
 }
 
@@ -137,8 +170,6 @@ boost::shared_ptr<NpdmSpinOps> init_3_index_operators( SpinBlock * spinBlock, st
   op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION };
   if ( cd_type == op ) {
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CCD( spinBlock ) );
-//std::cout << "setting compound CCD" << std::endl;
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCD( spinBlock ) );
     return ret;
   } 
   op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };

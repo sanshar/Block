@@ -143,6 +143,9 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
     case DES_DES_CRE:
       ret = boost::shared_ptr<Op_component<DesDesCre> >(new Op_component<DesDesCre>(is_core));
       break;
+    case DES_CRE_CRE:
+      ret = boost::shared_ptr<Op_component<DesCreCre> >(new Op_component<DesCreCre>(is_core));
+      break;
     case CRE_CRE_DES_DES:
       ret = boost::shared_ptr<Op_component<CreCreDesDes> >(new Op_component<CreCreDesDes>(is_core));
       break;
@@ -189,6 +192,7 @@ void SpinBlock::default_op_components(bool complementary_)
 //        if ( dmrginp.calc_type() == FOURPDM ) {
           ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
           ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
+          ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, true);
           ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, true);
 //        }
 //      }
@@ -275,6 +279,7 @@ assert(false); //FIXME << if (haveNormops || dmrginp.do_npdm_ops()) not tested
 //            if ( dmrginp.calc_type() == FOURPDM ) {
               ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, false);
               ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
+              ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, false);
               ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, false);
 //            }
 //          }

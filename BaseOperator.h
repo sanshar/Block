@@ -33,9 +33,10 @@ enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESC
               RI_3INDEX, RI_4INDEX,
               //MAW 3PDM
               DES_CRE, 
-              CRE_CRE_CRE, CRE_CRE_DES, CRE_DES_DES, CRE_DES_CRE, 
+              CRE_CRE_CRE, CRE_CRE_DES, CRE_DES_DES, CRE_DES_CRE,
               //MAW 4PDM
-              DES_CRE_DES, DES_DES_CRE, CRE_CRE_DES_DES };
+              DES_CRE_DES, DES_DES_CRE, DES_CRE_CRE,
+              CRE_CRE_DES_DES };
 
 enum CompType{CD, DD, CCD, C};
 

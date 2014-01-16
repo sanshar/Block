@@ -187,6 +187,15 @@ class Npdm_op_wrapper_compound_DDC : public NpdmSpinOps {
     const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(RI_3INDEX).get_local_indices(); }
 };
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_compound_DCC : public NpdmSpinOps {
+  public:
+    Npdm_op_wrapper_compound_DCC( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+    const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(RI_3INDEX).get_local_indices(); }
+};
+
 //===========================================================================================================================================================
 //  3-INDEX Ops
 //===========================================================================================================================================================

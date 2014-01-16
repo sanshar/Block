@@ -91,6 +91,9 @@ template <> struct ChooseArray<DesCreDes> {
 template <> struct ChooseArray<DesDesCre> {
   typedef para_array_3d<std::vector<boost::shared_ptr<DesDesCre> > > ArrayType;
 };
+template <> struct ChooseArray<DesCreCre> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<DesCreCre> > > ArrayType;
+};
 template <> struct ChooseArray<CreCreDesDes> {
   typedef para_array_4d<std::vector<boost::shared_ptr<CreCreDesDes> > > ArrayType;
 };
@@ -245,7 +248,8 @@ template <class Op> class Op_component : public Op_component_base
 
   void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo* s) {
 
-cout << "renormalize transform: opType = " << ot << endl;
+//FIXME
+//cout << "renormalize transform: opType = " << ot << endl;
     if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
       // Build on disk (load, renormalize, save)
       std::string ifile = get_filename();
@@ -266,7 +270,8 @@ cout << "renormalize transform: opType = " << ot << endl;
     }
     else {
       // Build in core
-cout << "in core renormalize\n";
+//FIXME
+//cout << "in core renormalize\n";
       for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );
     }
   }

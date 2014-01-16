@@ -177,15 +177,15 @@ cout << "build pattern = " << build_pattern << endl;
     Transposeview op34 = Transposeview( sysBlock->get_op_rep(CRE_CRE, quantum_ladder.at(build_pattern).at(1), k,l) );
     const boost::shared_ptr<SparseMatrix>& op12 = dotBlock->get_op_rep(CRE_CRE, quantum_ladder.at(build_pattern).at(0), i,j);
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(2);
-cout << "Spin12 = " << get_quantum_ladder().at( build_pattern ).at(0).get_s() << endl;
-cout << "Spin34 = " << get_quantum_ladder().at( build_pattern ).at(1).get_s() << endl;
-cout << "totalSpin = " << get_deltaQuantum().get_s() << endl;
+//cout << "Spin12 = " << get_quantum_ladder().at( build_pattern ).at(0).get_s() << endl;
+//cout << "Spin34 = " << get_quantum_ladder().at( build_pattern ).at(1).get_s() << endl;
+//cout << "totalSpin = " << get_deltaQuantum().get_s() << endl;
     // Tensor product of dot*sys so need to take into account parity factors
     double parity = getCommuteParity( op12->get_deltaQuantum(), op34.get_deltaQuantum(), get_deltaQuantum() );
     allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *op12, op34, &b, &(b.get_stateInfo()), *this, 1.0*parity);
-cout << "maw op after TensorProduct\n";
-cout << *this;
+//cout << "maw op after TensorProduct\n";
+//cout << *this;
   }
   else assert(false);
 

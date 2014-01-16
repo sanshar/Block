@@ -98,6 +98,18 @@ class DesDesCre: public SpinAdapted::SparseMatrix
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+class DesCreCre: public SpinAdapted::SparseMatrix
+{
+  public:
+    DesCreCre() { orbs.resize(3); fermion = true; build_pattern = "(D(CC))";} // default build_pattern
+    void build(const SpinBlock& b) ;
+    void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs);
+    boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+    double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 }
 
 #endif

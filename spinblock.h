@@ -48,6 +48,7 @@ class SpinBlock
 //MAW 4PDM
       ar.register_type(static_cast<Op_component<DesCreDes> *>(NULL));
       ar.register_type(static_cast<Op_component<DesDesCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<DesCreCre> *>(NULL));
       ar.register_type(static_cast<Op_component<CreCreDesDes> *>(NULL));
       ar & ops;
     }

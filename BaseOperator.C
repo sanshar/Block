@@ -394,7 +394,6 @@ void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matri
       ++newQ;
     }
   }
-cout << "done renormalise_transform\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
