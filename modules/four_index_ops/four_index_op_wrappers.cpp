@@ -21,7 +21,6 @@ Npdm_op_wrapper_CCDD::Npdm_op_wrapper_CCDD( SpinBlock * spinBlock )
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(CRE_CRE_DES_DES).get_size();
   is_local_ = spinBlock_->get_op_array(CRE_CRE_DES_DES).is_local();
-//FIXME why do we need -1 here -- similar to (C(DD)) case ? (use of transpose?)
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
@@ -39,7 +38,6 @@ cout << "getting CCDD operator...\n";
 
   opReps_ = spinBlock_->get_op_array(CRE_CRE_DES_DES).get_local_element(idx);
   build_pattern_ = opReps_.at(0)->get_build_pattern();
-  assert( build_pattern_ == "(((CC)D)(D))" );
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);

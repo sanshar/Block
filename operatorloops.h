@@ -121,6 +121,10 @@ template<typename T2, class A> void for_all_operators_multithread(A& array, cons
     for (i = 0; i < array.get_size(); ++i) {
       std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
       for (int j=0; j<vec.size(); j++){
+std::vector<int> orbs = vec.at(j)->get_orbs();
+cout << "indices: ";
+for (int idx=0; idx<orbs.size(); ++idx) { cout << orbs[idx] << ", "; }
+cout << "\n";
         func( *(vec.at(j)) );
       }
     }

@@ -547,7 +547,13 @@ void SpinAdapted::MatrixRotate (const Matrix& a, const Matrix& b, const Matrix& 
 #ifdef BLAS
       Matrix work (b.Nrows (), c.Ncols ());
       Clear (work);
+//cout << "b.Ncols = " << b.Ncols() << endl;
+//cout << "c.Nrows = " << c.Nrows() << endl;
+assert ( b.Ncols() == c.Nrows() );
       MatrixMultiply (b, 'n', c, 'n', work, 1.);
+//cout << "a.Nrows = " << a.Nrows() << endl;
+//cout << "d.Nrows = " << d.Nrows() << endl;
+assert ( a.Ncols() == d.Nrows() );
       MatrixMultiply (a, 't', work, 'n', d, 1.);
 #else
       d = a.t () * b * c;

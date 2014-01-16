@@ -304,7 +304,7 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
 //cd_pattern['l'] = { CREATION, CREATION, DESTRUCTION, DESTRUCTION };
 //cd_pattern['d'] = { };
 //cd_pattern['r'] = { DESTRUCTION, DESTRUCTION };
-//cd_pattern['r'] = { };
+////cd_pattern['r'] = { };
 //ldr_cd_types_.insert( cd_pattern );
 }
 

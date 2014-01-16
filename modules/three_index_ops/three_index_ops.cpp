@@ -30,12 +30,11 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 void SpinAdapted::CreCreDes::build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs)
 {
+  // Note that we should only allocate after deltaQuantum is finally determined
 //cout << "building CreCreDes renormalized operator on disk...\n";
 //FIXME timer
 //  dmrginp.makeopsT -> start();
   built = true;
-//FIXME allocation/deallocation
-  allocate(b.get_stateInfo());
   Sign = 1;
 
   const int i = get_orbs()[0];
@@ -63,6 +62,7 @@ void SpinAdapted::CreCreDes::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has i,j,k
@@ -82,6 +82,7 @@ void SpinAdapted::CreCreDes::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   else {
@@ -102,7 +103,6 @@ void SpinAdapted::CreCreDes::build(const SpinBlock& b)
 
   dmrginp.makeopsT -> start();
   built = true;
-  allocate(b.get_stateInfo());
   Sign = 1;
 
   const int i = get_orbs()[0];
@@ -131,6 +131,7 @@ void SpinAdapted::CreCreDes::build(const SpinBlock& b)
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has i,j,k
@@ -146,6 +147,7 @@ void SpinAdapted::CreCreDes::build(const SpinBlock& b)
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has j,k;
@@ -157,6 +159,7 @@ void SpinAdapted::CreCreDes::build(const SpinBlock& b)
     const boost::shared_ptr<SparseMatrix>& opCD = dotBlock->get_op_rep(CRE_DES, quantum_ladder.at(build_pattern).at(0), j,k);
     const boost::shared_ptr<SparseMatrix>& opC = sysBlock->get_op_rep(CRE, getSpinQuantum(i), i);
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(sysBlock, *opC, *opCD, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Sys has i,j
@@ -167,6 +170,7 @@ void SpinAdapted::CreCreDes::build(const SpinBlock& b)
     const boost::shared_ptr<SparseMatrix>& opCC = sysBlock->get_op_rep(CRE_CRE, quantum_ladder.at(build_pattern).at(0), i,j);
     Transposeview opD = Transposeview( dotBlock->get_op_rep(CRE, getSpinQuantum(k), k) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(sysBlock, *opCC, opD, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Sys has j,k;
@@ -179,6 +183,7 @@ void SpinAdapted::CreCreDes::build(const SpinBlock& b)
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
     // Tensor product of dot*sys so need to take into account parity factors
     double parity = getCommuteParity( opC->get_deltaQuantum(), opCD->get_deltaQuantum(), get_deltaQuantum() );
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *opC, *opCD, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   // Dot has i,j
@@ -192,6 +197,7 @@ void SpinAdapted::CreCreDes::build(const SpinBlock& b)
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
     // Tensor product of dot*sys so need to take into account parity factors
     double parity = getCommuteParity( opCC->get_deltaQuantum(), opD.get_deltaQuantum(), get_deltaQuantum() );
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *opCC, opD, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   else assert(false);
@@ -747,8 +753,6 @@ void SpinAdapted::CreDesDes::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
 //FIXME timer
 //  dmrginp.makeopsT -> start();
   built = true;
-//FIXME allocation/deallocation
-  allocate(b.get_stateInfo());
   Sign = 1;
 
   const int i = get_orbs()[0];
@@ -776,6 +780,7 @@ void SpinAdapted::CreDesDes::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has i,j,k
@@ -795,6 +800,7 @@ void SpinAdapted::CreDesDes::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   else {
@@ -813,7 +819,6 @@ void SpinAdapted::CreDesDes::build(const SpinBlock& b)
 //cout << "building CreDesDes renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
-  allocate(b.get_stateInfo());
   Sign = 1;
 
   const int i = get_orbs()[0];
@@ -839,6 +844,7 @@ void SpinAdapted::CreDesDes::build(const SpinBlock& b)
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has i,j,k
@@ -854,6 +860,7 @@ void SpinAdapted::CreDesDes::build(const SpinBlock& b)
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has j,k;
@@ -866,6 +873,7 @@ void SpinAdapted::CreDesDes::build(const SpinBlock& b)
     Transposeview opDD = Transposeview( dotBlock->get_op_rep(CRE_CRE, quantum_ladder.at(build_pattern).at(0), j,k) );
     // Indices OK after transpose since j=k
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(sysBlock, *opC, opDD, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Sys has i,j
@@ -876,6 +884,7 @@ void SpinAdapted::CreDesDes::build(const SpinBlock& b)
     const boost::shared_ptr<SparseMatrix>& opCD = sysBlock->get_op_rep(CRE_DES, quantum_ladder.at(build_pattern).at(0), i,j);
     Transposeview opD = Transposeview( dotBlock->get_op_rep(CRE, getSpinQuantum(k), k) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(sysBlock, *opCD, opD, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Sys has j,k;
@@ -892,6 +901,7 @@ void SpinAdapted::CreDesDes::build(const SpinBlock& b)
 //FIXME parity broken with opDD as we saw with CDC operator???  (c.f. minus signs in operator_wrappers...) ??
     double parity = getCommuteParity( opC->get_deltaQuantum(), opDD.get_deltaQuantum(), get_deltaQuantum() );
 //    SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *opC, opDD, &b, &(b.get_stateInfo()), *this, 1.0*parity);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *opC, opDD, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Dot has i,j
@@ -905,6 +915,7 @@ void SpinAdapted::CreDesDes::build(const SpinBlock& b)
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
     // Tensor product of dot*sys so need to take into account parity factors
     double parity = getCommuteParity( opCD->get_deltaQuantum(), opD.get_deltaQuantum(), get_deltaQuantum() );
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *opCD, opD, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   else assert(false);
@@ -997,8 +1008,6 @@ void SpinAdapted::CreDesCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
 //FIXME timer
 //  dmrginp.makeopsT -> start();
   built = true;
-//FIXME allocation/deallocation
-  allocate(b.get_stateInfo());
   Sign = 1;
 
   const int i = get_orbs()[0];
@@ -1026,6 +1035,7 @@ void SpinAdapted::CreDesCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has i,j,k
@@ -1045,6 +1055,7 @@ void SpinAdapted::CreDesCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   else {
@@ -1063,7 +1074,6 @@ void SpinAdapted::CreDesCre::build(const SpinBlock& b)
 //cout << "building CreDesCre renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
-  allocate(b.get_stateInfo());
   Sign = 1;
 
   const int i = get_orbs()[0];
@@ -1091,6 +1101,7 @@ void SpinAdapted::CreDesCre::build(const SpinBlock& b)
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has i,j,k
@@ -1106,6 +1117,7 @@ void SpinAdapted::CreDesCre::build(const SpinBlock& b)
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has j,k;
@@ -1116,6 +1128,7 @@ void SpinAdapted::CreDesCre::build(const SpinBlock& b)
     build_pattern = "(C(DC))";
     const boost::shared_ptr<SparseMatrix>& opC = sysBlock->get_op_rep(CRE, getSpinQuantum(i), i);
     const boost::shared_ptr<SparseMatrix>& opDC = dotBlock->get_op_rep(DES_CRE, quantum_ladder.at(build_pattern).at(0), j,k);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(sysBlock, *opC, *opDC, &b, &(b.get_stateInfo()), *this, 1.0);
 
 //CANT USE TRANSPOSE!!!
@@ -1133,6 +1146,7 @@ void SpinAdapted::CreDesCre::build(const SpinBlock& b)
     const boost::shared_ptr<SparseMatrix>& opCD = sysBlock->get_op_rep(CRE_DES, quantum_ladder.at(build_pattern).at(0), i,j);
     const boost::shared_ptr<SparseMatrix>& opC = dotBlock->get_op_rep(CRE, getSpinQuantum(k), k);
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(sysBlock, *opCD, *opC, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Sys has j,k;
@@ -1145,6 +1159,7 @@ void SpinAdapted::CreDesCre::build(const SpinBlock& b)
     const boost::shared_ptr<SparseMatrix>& opDC = sysBlock->get_op_rep(DES_CRE, quantum_ladder.at(build_pattern).at(0), j,k);
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
     double parity = getCommuteParity( opC->get_deltaQuantum(), opDC->get_deltaQuantum(), get_deltaQuantum() );
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *opC, *opDC, &b, &(b.get_stateInfo()), *this, 1.0*parity);
 
 //CANT USE TRANSPOSE!!!
@@ -1170,6 +1185,7 @@ void SpinAdapted::CreDesCre::build(const SpinBlock& b)
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
     // Tensor product of dot*sys so need to take into account parity factors
     double parity = getCommuteParity( opCD->get_deltaQuantum(), opC->get_deltaQuantum(), get_deltaQuantum() );
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *opCD, *opC, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   else assert(false);
@@ -1308,8 +1324,6 @@ void SpinAdapted::CreCreCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
 //FIXME timer
 //  dmrginp.makeopsT -> start();
   built = true;
-//FIXME allocation/deallocation
-  allocate(b.get_stateInfo());
   Sign = 1;
 
   const int i = get_orbs()[0];
@@ -1337,6 +1351,7 @@ void SpinAdapted::CreCreCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has i,j,k
@@ -1356,6 +1371,7 @@ void SpinAdapted::CreCreCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   else {
@@ -1374,7 +1390,6 @@ void SpinAdapted::CreCreCre::build(const SpinBlock& b)
 //cout << "building CreCreCre renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
-  allocate(b.get_stateInfo());
   Sign = 1;
 
   const int i = get_orbs()[0];
@@ -1396,6 +1411,7 @@ void SpinAdapted::CreCreCre::build(const SpinBlock& b)
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has i,j,k
@@ -1411,6 +1427,7 @@ void SpinAdapted::CreCreCre::build(const SpinBlock& b)
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has j,k;
@@ -1422,6 +1439,7 @@ void SpinAdapted::CreCreCre::build(const SpinBlock& b)
     const boost::shared_ptr<SparseMatrix>& opC  = sysBlock->get_op_rep(CRE, getSpinQuantum(i), i);
     const boost::shared_ptr<SparseMatrix>& opCC = dotBlock->get_op_rep(CRE_CRE, quantum_ladder.at(build_pattern).at(0), j,k);
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(sysBlock, *opC, *opCC, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Sys has i,j
@@ -1432,6 +1450,7 @@ void SpinAdapted::CreCreCre::build(const SpinBlock& b)
     const boost::shared_ptr<SparseMatrix>& opCC = sysBlock->get_op_rep(CRE_CRE, quantum_ladder.at(build_pattern).at(0), i,j);
     const boost::shared_ptr<SparseMatrix>& opC  = dotBlock->get_op_rep(CRE, getSpinQuantum(k), k);
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(sysBlock, *opCC, *opC, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Sys has j,k;
@@ -1445,6 +1464,7 @@ void SpinAdapted::CreCreCre::build(const SpinBlock& b)
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
 //FIXME parity broken ??
     double parity = getCommuteParity( opC->get_deltaQuantum(), opCC->get_deltaQuantum(), get_deltaQuantum() );
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *opC, *opCC, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   // Dot has i,j
@@ -1459,6 +1479,7 @@ void SpinAdapted::CreCreCre::build(const SpinBlock& b)
     // Tensor product of dot*sys so need to take into account parity factors
 //FIXME parity broken ??
     double parity = getCommuteParity( opCC->get_deltaQuantum(), opC->get_deltaQuantum(), get_deltaQuantum() );
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *opCC, *opC, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   else assert(false);
@@ -1557,8 +1578,6 @@ void SpinAdapted::DesCreDes::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
 //FIXME timer
 //  dmrginp.makeopsT -> start();
   built = true;
-//FIXME allocation/deallocation
-  allocate(b.get_stateInfo());
   Sign = 1;
 
   const int i = get_orbs()[0];
@@ -1586,6 +1605,7 @@ void SpinAdapted::DesCreDes::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has i,j,k
@@ -1605,6 +1625,7 @@ void SpinAdapted::DesCreDes::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   else {
@@ -1623,7 +1644,6 @@ void SpinAdapted::DesCreDes::build(const SpinBlock& b)
 //cout << "building DesCreDes renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
-  allocate(b.get_stateInfo());
   Sign = 1;
 
   const int i = get_orbs()[0];
@@ -1643,6 +1663,7 @@ void SpinAdapted::DesCreDes::build(const SpinBlock& b)
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has i,j,k
@@ -1657,6 +1678,7 @@ void SpinAdapted::DesCreDes::build(const SpinBlock& b)
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has j,k;
@@ -1667,6 +1689,7 @@ void SpinAdapted::DesCreDes::build(const SpinBlock& b)
     Transposeview opD = Transposeview( sysBlock->get_op_rep(CRE, getSpinQuantum(i), i) );
     const boost::shared_ptr<SparseMatrix>& opCD = dotBlock->get_op_rep(CRE_DES, quantum_ladder.at(build_pattern).at(0), j,k);
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(sysBlock, opD, *opCD, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Sys has i,j
@@ -1676,6 +1699,7 @@ void SpinAdapted::DesCreDes::build(const SpinBlock& b)
     const boost::shared_ptr<SparseMatrix>& opDC = sysBlock->get_op_rep(DES_CRE, quantum_ladder.at(build_pattern).at(0), i,j);
     Transposeview opD = Transposeview( dotBlock->get_op_rep(CRE, getSpinQuantum(k), k) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(sysBlock, *opDC, opD, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Sys has j,k;
@@ -1688,6 +1712,7 @@ void SpinAdapted::DesCreDes::build(const SpinBlock& b)
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
 //FIXME parity broken ??
     double parity = getCommuteParity( opD.get_deltaQuantum(), opCD->get_deltaQuantum(), get_deltaQuantum() );
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, opD, *opCD, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   // Dot has i,j
@@ -1701,6 +1726,7 @@ void SpinAdapted::DesCreDes::build(const SpinBlock& b)
     // Tensor product of dot*sys so need to take into account parity factors
 //FIXME parity broken ??
     double parity = getCommuteParity( opDC->get_deltaQuantum(), opD.get_deltaQuantum(), get_deltaQuantum() );
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, *opDC, opD, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   else assert(false);
@@ -1785,8 +1811,6 @@ void SpinAdapted::DesDesCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
 //FIXME timer
 //  dmrginp.makeopsT -> start();
   built = true;
-//FIXME allocation/deallocation
-  allocate(b.get_stateInfo());
   Sign = 1;
 
   const int i = get_orbs()[0];
@@ -1814,6 +1838,7 @@ void SpinAdapted::DesDesCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has i,j,k
@@ -1833,6 +1858,7 @@ void SpinAdapted::DesDesCre::build_from_disk(SpinBlock& b, std::ifstream& sysfs,
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   else {
@@ -1851,7 +1877,6 @@ void SpinAdapted::DesDesCre::build(const SpinBlock& b)
 //cout << "building DesDesCre renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;
-  allocate(b.get_stateInfo());
   Sign = 1;
 
   const int i = get_orbs()[0];
@@ -1872,6 +1897,7 @@ void SpinAdapted::DesDesCre::build(const SpinBlock& b)
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(sysBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has i,j,k
@@ -1887,6 +1913,7 @@ void SpinAdapted::DesDesCre::build(const SpinBlock& b)
     build_pattern = build_pattern_old;
     assert( get_quantum_ladder().at( build_pattern ).at(1) == op->get_quantum_ladder().at( build_pattern ).at(1) );
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has j,k;
@@ -1898,6 +1925,7 @@ void SpinAdapted::DesDesCre::build(const SpinBlock& b)
     Transposeview opD = Transposeview( sysBlock->get_op_rep(CRE, getSpinQuantum(i), i) );
     const boost::shared_ptr<SparseMatrix>& opDC = dotBlock->get_op_rep(DES_CRE, quantum_ladder.at(build_pattern).at(0), j,k);
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(sysBlock, opD, *opDC, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Sys has i,j
@@ -1909,6 +1937,7 @@ void SpinAdapted::DesDesCre::build(const SpinBlock& b)
     Transposeview opDD = Transposeview( sysBlock->get_op_rep(CRE_CRE, quantum_ladder.at(build_pattern).at(0), i,j) );
     const boost::shared_ptr<SparseMatrix>& opC  = dotBlock->get_op_rep(CRE, getSpinQuantum(k), k);
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(sysBlock, opDD, *opC, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Sys has j,k;
@@ -1922,6 +1951,7 @@ void SpinAdapted::DesDesCre::build(const SpinBlock& b)
     set_deltaQuantum() = get_quantum_ladder().at( build_pattern ).at(1);
 //FIXME parity broken ??
     double parity = getCommuteParity( opD.get_deltaQuantum(), opDC->get_deltaQuantum(), get_deltaQuantum() );
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, opD, *opDC, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   // Dot has i,j
@@ -1937,6 +1967,7 @@ void SpinAdapted::DesDesCre::build(const SpinBlock& b)
     // Tensor product of dot*sys so need to take into account parity factors
 //FIXME parity broken ??
     double parity = getCommuteParity( opDD.get_deltaQuantum(), opC->get_deltaQuantum(), get_deltaQuantum() );
+    allocate(b.get_stateInfo());
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, opDD, *opC, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   else assert(false);

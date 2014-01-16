@@ -38,12 +38,21 @@ std::map< std::tuple<int,int,int,int>, int > get_4index_tuples(SpinBlock& b)
 //  }
 
 //FIXME DEBUG ONLY
-  // (l == k == j == i)
+//  // (l == k == j == i)
+//  std::vector<int> sites = b.get_sites();
+//  for (int i = 0; i < sites.size(); ++i)
+//    for (int j = i; j <= i; ++j)
+//      for (int k = i; k <= i; ++k)
+//        for (int l = i; l <= i; ++l)
+//          tuples[ std::make_tuple(sites[i], sites[j], sites[k], sites[l]) ] = -1;
+
+
+  // Generate all tuples such that (l <= k <= j <= i) and let para_array assign them to local processes as necessary
   std::vector<int> sites = b.get_sites();
   for (int i = 0; i < sites.size(); ++i)
-    for (int j = i; j <= i; ++j)
-      for (int k = i; k <= i; ++k) {
-        for (int l = i; l <= i; ++l) {
+    for (int j = 0; j <= i; ++j)
+      for (int k = 0; k <= j; ++k) {
+        for (int l = 0; l <= k; ++l) {
 //          if ( b.get_leftBlock() != NULL ) {
 //            // The -2 here means that this should be assigned to global_indices only (i.e. shouldn't be on this MPI thread)
 //            if ( tuples.find(std::make_tuple(sites[i], sites[j], sites[k], sites[l])) == tuples.end() )
@@ -53,22 +62,6 @@ std::map< std::tuple<int,int,int,int>, int > get_4index_tuples(SpinBlock& b)
           tuples[ std::make_tuple(sites[i], sites[j], sites[k], sites[l]) ] = -1;
         }
       }
-
-//  // Generate all tuples such that (l <= k <= j <= i) and let para_array assign them to local processes as necessary
-//  std::vector<int> sites = b.get_sites();
-//  for (int i = 0; i < sites.size(); ++i)
-//    for (int j = 0; j <= i; ++j)
-//      for (int k = 0; k <= j; ++k) {
-//        for (int l = 0; l <= k; ++l) {
-////          if ( b.get_leftBlock() != NULL ) {
-////            // The -2 here means that this should be assigned to global_indices only (i.e. shouldn't be on this MPI thread)
-////            if ( tuples.find(std::make_tuple(sites[i], sites[j], sites[k], sites[l])) == tuples.end() )
-////              tuples[ std::make_tuple(sites[i], sites[j], sites[k], sites[l]) ] = -2;
-////          }
-//          // The -1 here means there's no constraint on which MPI process (i.e. let para_array choose if it should belong to this one)
-//          tuples[ std::make_tuple(sites[i], sites[j], sites[k], sites[l]) ] = -1;
-//        }
-//      }
 
   return tuples;
 }
@@ -149,6 +142,9 @@ pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[
         for (int t=0; t < spinvec1234.size(); t++) {
           // Store (CC) first, then (DD), then 4-index spin quantums
           std::vector<SpinQuantum> tmp = { spinvec12[q], spinvec34[p], spinvec1234[t] };
+cout << "p, spin12[q]   = " << q << ",  " << 0.5*spinvec12[q].get_s() << endl;
+cout << "q, spin34[p]   = " << p << ",  " << 0.5*spinvec34[p].get_s() << endl;
+cout << "t, spin1234[t] = " << t << ",  " << 0.5*spinvec1234[t].get_s() << endl;
           cc_dd_quantum_ladder.push_back( tmp );
           assert( spinvec1234[t].particleNumber == 0 );
         }

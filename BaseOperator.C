@@ -368,8 +368,8 @@ void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matri
   // Cannot instantiate a SparseMatrix and so instantiating a Cre
   ObjectMatrix<Matrix> tmp = operatorMatrix; 
 //FIXME
-//cout << "operator_matrix:\n";
-//cout << this->operatorMatrix << endl;
+//cout << "tmp operator_matrix:\n";
+//cout << tmp << endl;
 
   //FIXME
   // new allocations (actually reallocate?)
@@ -381,14 +381,20 @@ void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matri
       int newQPrime = 0;
       for (int QPrime = 0; QPrime < rotate_matrix.size (); ++QPrime) {
         if (rotate_matrix[QPrime].Ncols () != 0) {
-          if (this->allowedQuantaMatrix (newQ, newQPrime))
+          if (this->allowedQuantaMatrix (newQ, newQPrime)) {
+//FIXME
+//cout << "tmp(Q,QPrime).Ncols = " << tmp(Q,QPrime).Ncols() << endl;
+//cout << "rotate_matrix[QPrime].Nrows = " << rotate_matrix[QPrime].Nrows() << endl;
+//cout << "this->operatorMatrix(newQ, newQPrime).Nrows = " << this->operatorMatrix (newQ, newQPrime).Nrows() << endl;
             MatrixRotate (rotate_matrix[Q], tmp(Q, QPrime), rotate_matrix[QPrime],this->operatorMatrix (newQ, newQPrime) );
+          }
           ++newQPrime;
         }
       }
       ++newQ;
     }
   }
+cout << "done renormalise_transform\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
