@@ -176,6 +176,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 
 void SpinAdapted::Cre::build(const SpinBlock& b)
 {
+//FIXME couts
 //pout << "building Cre renormalized operator...\n";
   dmrginp.makeopsT -> start();
   built = true;

@@ -131,6 +131,76 @@ class Npdm_op_wrapper_CCDD : public NpdmSpinOps {
     std::vector< std::vector<int> > get_indices() { return spinBlock_->get_op_array(CRE_CRE_DES_DES).get_array(); }
 };
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_CDCD : public NpdmSpinOps {
+  public:
+    Npdm_op_wrapper_CDCD( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+    const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(CRE_DES_CRE_DES).get_local_indices(); }
+    std::vector< std::vector<int> > get_indices() { return spinBlock_->get_op_array(CRE_DES_CRE_DES).get_array(); }
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_CDDC : public NpdmSpinOps {
+  public:
+    Npdm_op_wrapper_CDDC( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+    const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(CRE_DES_DES_CRE).get_local_indices(); }
+    std::vector< std::vector<int> > get_indices() { return spinBlock_->get_op_array(CRE_DES_DES_CRE).get_array(); }
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_CDDD : public NpdmSpinOps {
+  public:
+    Npdm_op_wrapper_CDDD( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+    const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(CRE_DES_DES_DES).get_local_indices(); }
+    std::vector< std::vector<int> > get_indices() { return spinBlock_->get_op_array(CRE_DES_DES_DES).get_array(); }
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_CCCD : public NpdmSpinOps {
+  public:
+    Npdm_op_wrapper_CCCD( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+    const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(CRE_CRE_CRE_DES).get_local_indices(); }
+    std::vector< std::vector<int> > get_indices() { return spinBlock_->get_op_array(CRE_CRE_CRE_DES).get_array(); }
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_CCDC : public NpdmSpinOps {
+  public:
+    Npdm_op_wrapper_CCDC( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+    const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(CRE_CRE_DES_CRE).get_local_indices(); }
+    std::vector< std::vector<int> > get_indices() { return spinBlock_->get_op_array(CRE_CRE_DES_CRE).get_array(); }
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_CDCC : public NpdmSpinOps {
+  public:
+    Npdm_op_wrapper_CDCC( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+    const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(CRE_DES_CRE_CRE).get_local_indices(); }
+    std::vector< std::vector<int> > get_indices() { return spinBlock_->get_op_array(CRE_DES_CRE_CRE).get_array(); }
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class Npdm_op_wrapper_CCCC : public NpdmSpinOps {
+  public:
+    Npdm_op_wrapper_CCCC( SpinBlock * spinBlock );
+    bool set_local_ops( int idx );
+    const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(CRE_CRE_CRE_CRE).get_local_indices(); }
+    std::vector< std::vector<int> > get_indices() { return spinBlock_->get_op_array(CRE_CRE_CRE_CRE).get_array(); }
+};
+
 //===========================================================================================================================================================
 //  3-INDEX compound Ops (built using RI approximation, exact on dot block)
 //===========================================================================================================================================================
@@ -316,8 +386,8 @@ class Npdm_op_wrapper_DD : public NpdmSpinOps {
   public:
     Npdm_op_wrapper_DD( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
-    const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(CRE_CRE).get_local_indices(); }
-    std::vector< std::vector<int> > get_indices() { return spinBlock_->get_op_array(CRE_CRE).get_array(); }
+    const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(DES_DES).get_local_indices(); }
+    std::vector< std::vector<int> > get_indices() { return spinBlock_->get_op_array(DES_DES).get_array(); }
 };
 
 //===========================================================================================================================================================

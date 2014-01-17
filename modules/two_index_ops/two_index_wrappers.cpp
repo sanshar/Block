@@ -175,17 +175,52 @@ bool Npdm_op_wrapper_CD::set_local_ops( int idx )
 }
 
 //===========================================================================================================================================================
+// Build DD as transpose(CC)
+//
+//Npdm_op_wrapper_DD::Npdm_op_wrapper_DD( SpinBlock * spinBlock )
+//{
+//  opReps_.clear();
+//  indices_.clear();
+//  spinBlock_ = spinBlock;
+//  size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
+//  is_local_ = spinBlock_->get_op_array(CRE_CRE).is_local();
+////FIXME why do we need -1 here ??
+//  factor_ = -1.0;
+//  transpose_ = true;
+//  build_pattern_ = "(DD)";
+//  // S={0,1}
+//  mults_ = { 1, 3 };
+//}
+//
+////-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//bool Npdm_op_wrapper_DD::set_local_ops( int idx )
+//{
+//  // Spatial orbital indices
+//  indices_.clear();
+//  int ix, jx;
+//
+//  opReps_ = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
+//  ix = opReps_.at(0)->get_orbs(0);
+//  jx = opReps_.at(0)->get_orbs(1);
+//
+//  // Note use of transpose means we store this as (j,i) not (i,j)
+//  indices_.push_back( jx );
+//  indices_.push_back( ix );
+//  return false;
+//}
+//
+//===========================================================================================================================================================
 
 Npdm_op_wrapper_DD::Npdm_op_wrapper_DD( SpinBlock * spinBlock )
 {
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;
-  size_ = spinBlock_->get_op_array(CRE_CRE).get_size();
-  is_local_ = spinBlock_->get_op_array(CRE_CRE).is_local();
-//FIXME why do we need -1 here ??
-  factor_ = -1.0;
-  transpose_ = true;
+  size_ = spinBlock_->get_op_array(DES_DES).get_size();
+  is_local_ = spinBlock_->get_op_array(DES_DES).is_local();
+  factor_ = 1.0;
+  transpose_ = false;
   build_pattern_ = "(DD)";
   // S={0,1}
   mults_ = { 1, 3 };
@@ -199,13 +234,12 @@ bool Npdm_op_wrapper_DD::set_local_ops( int idx )
   indices_.clear();
   int ix, jx;
 
-  opReps_ = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
+  opReps_ = spinBlock_->get_op_array(DES_DES).get_local_element(idx);
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
-
-  // Note use of transpose means we store this as (j,i) not (i,j)
-  indices_.push_back( jx );
   indices_.push_back( ix );
+  indices_.push_back( jx );
+
   return false;
 }
 

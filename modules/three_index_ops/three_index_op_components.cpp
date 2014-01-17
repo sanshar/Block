@@ -232,19 +232,17 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
     SpinQuantum spin3 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[2]));
 
     // Quantum ladder components give spin of each sub-contraction
-    // e.g. cc_c_quantum_ladder[0] is spin of cc 2-index op
-    //      cc_c_quantum_ladder[1] is spin of full 3-index op ???? FIXME
+    // e.g. cc_c_quantum_ladder[0] is spin of 2-index op
+    //      cc_c_quantum_ladder[1] is spin of 3-index op 
     std::vector< std::vector<SpinQuantum> > cc_c_quantum_ladder;
     std::vector< std::vector<SpinQuantum> > c_cc_quantum_ladder;
 
     // Create (CC)C structure
     //----------------------------------------
-    // Cre_Cre => plus sign
+    // (C1C2)
     std::vector<SpinQuantum> spinvec12 = spin1 + spin2;
     for (int p=0; p < spinvec12.size(); p++) {
-      assert( spinvec12[p].get_s() == 2*p );
-      assert( spinvec12[p].particleNumber == 2 );
-      // X_Cre => plus sign
+      // (C1C2)C3
       std::vector<SpinQuantum> spinvec123 = spinvec12[p] + spin3;
       for (int q=0; q < spinvec123.size(); q++) {
         std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q] };
@@ -256,12 +254,10 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
 
     // Create C(CC) structure
     //----------------------------------------
-    // Cre_Cre => plus sign
+    // (C2C3)
     std::vector<SpinQuantum> spinvec23 = spin2 + spin3;
     for (int p=0; p < spinvec23.size(); p++) {
-      assert( spinvec23[p].get_s() == 2*p );
-      assert( spinvec23[p].particleNumber == 2 );
-      // X_(CC) => plus sign
+      // C1(C2C3)
       std::vector<SpinQuantum> spinvec123 = spin1 + spinvec23[p];
       for (int q=0; q < spinvec123.size(); q++) {
         std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q] };
@@ -281,8 +277,7 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
       op->set_initialised() = true;
       op->set_quantum_ladder()["((CC)C)"] = cc_c_quantum_ladder.at(q);
       op->set_quantum_ladder()["(C(CC))"] = c_cc_quantum_ladder.at(q);
-//FIXME  This should be updated when the build_pattern changes
-//FIXME  Set default
+      // This is updated when the build_pattern changes
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
 
@@ -328,12 +323,10 @@ void Op_component<CreCreDes>::build_iterators(SpinBlock& b)
 
     // Create (CC)D structure
     //----------------------------------------
-    // Cre_Cre => plus sign
+    // (CC)
     std::vector<SpinQuantum> spinvec12 = spin1 + spin2;
     for (int p=0; p < spinvec12.size(); p++) {
-      assert( spinvec12[p].get_s() == 2*p );
-      assert( spinvec12[p].particleNumber == 2 );
-      // X_Des => minus sign
+      // (CC)D
       std::vector<SpinQuantum> spinvec123 = spinvec12[p] - spin3;
       for (int q=0; q < spinvec123.size(); q++) {
         std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q] };
@@ -345,12 +338,10 @@ void Op_component<CreCreDes>::build_iterators(SpinBlock& b)
 
     // Create C(CD) structure
     //----------------------------------------
-    // Cre_Des => minus sign
+    // (CD)
     std::vector<SpinQuantum> spinvec23 = spin2 - spin3;
     for (int p=0; p < spinvec23.size(); p++) {
-      assert( spinvec23[p].get_s() == 2*p );
-      assert( spinvec23[p].particleNumber == 0 );
-      //FIXME minus or plus sign???
+      // C(CD)
       std::vector<SpinQuantum> spinvec123 = spin1 + spinvec23[p];
       for (int q=0; q < spinvec123.size(); q++) {
         std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q] };
@@ -370,8 +361,6 @@ void Op_component<CreCreDes>::build_iterators(SpinBlock& b)
       op->set_initialised() = true;
       op->set_quantum_ladder()["((CC)D)"] = cc_d_quantum_ladder.at(q);
       op->set_quantum_ladder()["(C(CD))"] = c_cd_quantum_ladder.at(q);
-//FIXME  This should be updated when the build_pattern changes
-//FIXME  Set default
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
 
@@ -418,12 +407,10 @@ void Op_component<CreDesDes>::build_iterators(SpinBlock& b)
 
     // Create (CD)D structure
     //----------------------------------------
-    // Cre_Des => minus sign
+    // (CD)
     std::vector<SpinQuantum> spinvec12 = spin1 - spin2;
     for (int p=0; p < spinvec12.size(); p++) {
-      assert( spinvec12[p].get_s() == 2*p );
-      assert( spinvec12[p].particleNumber == 0 );
-      // X_Des => minus sign
+      // (CD)D
       std::vector<SpinQuantum> spinvec123 = spinvec12[p] - spin3;
       for (int q=0; q < spinvec123.size(); q++) {
         std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q] };
@@ -435,14 +422,11 @@ void Op_component<CreDesDes>::build_iterators(SpinBlock& b)
 
     // Create C(DD) structure
     //----------------------------------------
-    // Des_Des => Cre_Cre => plus sign and transpose and commute (factor -1??)
-    std::vector<SpinQuantum> spinvec23 = spin2 + spin3;
+    // (DD)
+    std::vector<SpinQuantum> spinvec23 = -spin2 - spin3;
     for (int p=0; p < spinvec23.size(); p++) {
-      assert( spinvec23[p].get_s() == 2*p );
-//FIXME
-      assert( spinvec23[p].particleNumber == 2 );
-//FIXME minus or plus sign???  FACTOR -1 ??
-      std::vector<SpinQuantum> spinvec123 = spin1 - spinvec23[p];
+      // C(DD)
+      std::vector<SpinQuantum> spinvec123 = spin1 + spinvec23[p];
       for (int q=0; q < spinvec123.size(); q++) {
         std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q] };
         c_dd_quantum_ladder.push_back( tmp );
@@ -461,8 +445,6 @@ void Op_component<CreDesDes>::build_iterators(SpinBlock& b)
       op->set_initialised() = true;
       op->set_quantum_ladder()["((CD)D)"] = cd_d_quantum_ladder.at(q);
       op->set_quantum_ladder()["(C(DD))"] = c_dd_quantum_ladder.at(q);
-//FIXME  This should be updated when the build_pattern changes
-//FIXME  Set default
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
 
@@ -509,12 +491,10 @@ void Op_component<CreDesCre>::build_iterators(SpinBlock& b)
 
     // Create (CD)C structure
     //----------------------------------------
-    // Cre_Des => minus sign
+    // (CD)
     std::vector<SpinQuantum> spinvec12 = spin1 - spin2;
     for (int p=0; p < spinvec12.size(); p++) {
-      assert( spinvec12[p].get_s() == 2*p );
-      assert( spinvec12[p].particleNumber == 0 );
-      // X_Cre => plus sign
+      // (CD)C
       std::vector<SpinQuantum> spinvec123 = spinvec12[p] + spin3;
       for (int q=0; q < spinvec123.size(); q++) {
         std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q] };
@@ -526,15 +506,11 @@ void Op_component<CreDesCre>::build_iterators(SpinBlock& b)
 
     // Create C(DC) structure
     //----------------------------------------
-    // Des_Cre => Cre_Des => minus sign and transpose and commute (factor -1??)
-//FIXME how to do DC??
+    // (DC)
     std::vector<SpinQuantum> spinvec23 = -spin2 + spin3;
     for (int p=0; p < spinvec23.size(); p++) {
-      assert( spinvec23[p].get_s() == 2*p );
-//FIXME
-      assert( spinvec23[p].particleNumber == 0 );
-//FIXME minus or plus sign???  FACTOR -1 ??
-      std::vector<SpinQuantum> spinvec123 = spin1 - spinvec23[p];
+      // C(DC)
+      std::vector<SpinQuantum> spinvec123 = spin1 + spinvec23[p];
       for (int q=0; q < spinvec123.size(); q++) {
         std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q] };
         c_dc_quantum_ladder.push_back( tmp );
@@ -553,8 +529,6 @@ void Op_component<CreDesCre>::build_iterators(SpinBlock& b)
       op->set_initialised() = true;
       op->set_quantum_ladder()["((CD)C)"] = cd_c_quantum_ladder.at(q);
       op->set_quantum_ladder()["(C(DC))"] = c_dc_quantum_ladder.at(q);
-//FIXME  This should be updated when the build_pattern changes
-//FIXME  Set default
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
 
@@ -603,12 +577,10 @@ void Op_component<DesCreDes>::build_iterators(SpinBlock& b)
 
     // Create (DC)D structure
     //----------------------------------------
-    // Des_Cre => minus, plus
+    // (DC)
     std::vector<SpinQuantum> spinvec12 = -spin1 + spin2;
     for (int p=0; p < spinvec12.size(); p++) {
-      assert( spinvec12[p].get_s() == 2*p );
-      assert( spinvec12[p].particleNumber == 0 );
-      // X_Des => minus sign
+      // (DC)D
       std::vector<SpinQuantum> spinvec123 = spinvec12[p] - spin3;
       for (int q=0; q < spinvec123.size(); q++) {
         std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q] };
@@ -620,12 +592,10 @@ void Op_component<DesCreDes>::build_iterators(SpinBlock& b)
 
     // Create D(CD) structure
     //----------------------------------------
-    // Cre_Des => plus sign
+    // (CD)
     std::vector<SpinQuantum> spinvec23 = spin2 - spin3;
     for (int p=0; p < spinvec23.size(); p++) {
-      assert( spinvec23[p].get_s() == 2*p );
-      assert( spinvec23[p].particleNumber == 0 );
-      // D_(CD) => minus, plus sign //FIXME ???
+      // D(CD)
       std::vector<SpinQuantum> spinvec123 = - spin1 + spinvec23[p];
       for (int q=0; q < spinvec123.size(); q++) {
         std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q] };
@@ -645,8 +615,6 @@ void Op_component<DesCreDes>::build_iterators(SpinBlock& b)
       op->set_initialised() = true;
       op->set_quantum_ladder()["((DC)D)"] = dc_d_quantum_ladder.at(q);
       op->set_quantum_ladder()["(D(CD))"] = d_cd_quantum_ladder.at(q);
-//FIXME  This should be updated when the build_pattern changes
-//FIXME  Set default
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
 
@@ -691,13 +659,11 @@ void Op_component<DesDesCre>::build_iterators(SpinBlock& b)
 
     // Create (DD)C structure
     //----------------------------------------
-    // DD => CC => minus sign and transpose and commute (factor -1??)
-    std::vector<SpinQuantum> spinvec12 = spin1 + spin2;
+    // (DD)
+    std::vector<SpinQuantum> spinvec12 = -spin1 - spin2;
     for (int p=0; p < spinvec12.size(); p++) {
-      assert( spinvec12[p].get_s() == 2*p );
-      assert( spinvec12[p].particleNumber == 2 );
-      // DD_Cre => minus, plus sign ?? FIXME
-      std::vector<SpinQuantum> spinvec123 = -spinvec12[p] + spin3;
+      // (DD)C
+      std::vector<SpinQuantum> spinvec123 = spinvec12[p] + spin3;
       for (int q=0; q < spinvec123.size(); q++) {
         std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q] };
         dd_c_quantum_ladder.push_back( tmp );
@@ -708,13 +674,11 @@ void Op_component<DesDesCre>::build_iterators(SpinBlock& b)
 
     // Create D(DC) structure
     //----------------------------------------
-    // DC => minus, plus sign
+    // (DC)
     std::vector<SpinQuantum> spinvec23 = -spin2 + spin3;
     for (int p=0; p < spinvec23.size(); p++) {
-      assert( spinvec23[p].get_s() == 2*p );
-      assert( spinvec23[p].particleNumber == 0 );
-      // D_(DC) => minus, minus sign ?? //FIXME
-      std::vector<SpinQuantum> spinvec123 = -spin1 - spinvec23[p];
+      // D(DC)
+      std::vector<SpinQuantum> spinvec123 = -spin1 + spinvec23[p];
       for (int q=0; q < spinvec123.size(); q++) {
         std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q] };
         d_dc_quantum_ladder.push_back( tmp );
@@ -733,8 +697,6 @@ void Op_component<DesDesCre>::build_iterators(SpinBlock& b)
       op->set_initialised() = true;
       op->set_quantum_ladder()["((DD)C)"] = dd_c_quantum_ladder.at(q);
       op->set_quantum_ladder()["(D(DC))"] = d_dc_quantum_ladder.at(q);
-//FIXME  This should be updated when the build_pattern changes
-//FIXME  Set default
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
 
@@ -779,8 +741,10 @@ void Op_component<DesCreCre>::build_iterators(SpinBlock& b)
 
     // Create (DC)C structure
     //----------------------------------------
+    // (DC)
     std::vector<SpinQuantum> spinvec12 = -spin1 + spin2;
     for (int p=0; p < spinvec12.size(); p++) {
+      // (DC)C
       std::vector<SpinQuantum> spinvec123 = spinvec12[p] + spin3;
       for (int q=0; q < spinvec123.size(); q++) {
         std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q] };
@@ -792,8 +756,10 @@ void Op_component<DesCreCre>::build_iterators(SpinBlock& b)
 
     // Create D(CC) structure
     //----------------------------------------
+    // (CC)
     std::vector<SpinQuantum> spinvec23 = spin2 + spin3;
     for (int p=0; p < spinvec23.size(); p++) {
+      // D(CC)
       std::vector<SpinQuantum> spinvec123 = -spin1 + spinvec23[p];
       for (int q=0; q < spinvec123.size(); q++) {
         std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q] };
@@ -813,8 +779,6 @@ void Op_component<DesCreCre>::build_iterators(SpinBlock& b)
       op->set_initialised() = true;
       op->set_quantum_ladder()["((DC)C)"] = dc_c_quantum_ladder.at(q);
       op->set_quantum_ladder()["(D(CC))"] = d_cc_quantum_ladder.at(q);
-//FIXME  This should be updated when the build_pattern changes
-//FIXME  Set default
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
 

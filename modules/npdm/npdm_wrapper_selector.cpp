@@ -74,7 +74,8 @@ boost::shared_ptr<NpdmSpinOps> init_4_index_operators( SpinBlock * spinBlock, st
   op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION, Npdm::DESTRUCTION };
   if ( cd_type == op ) {
 //FIXME compound
-    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDCD( spinBlock ) );
+//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDCD( spinBlock ) );
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CDCD( spinBlock ) );
     return ret;
   } 
   op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::CREATION };
@@ -89,30 +90,31 @@ boost::shared_ptr<NpdmSpinOps> init_4_index_operators( SpinBlock * spinBlock, st
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDDD( spinBlock ) );
     return ret;
   } 
-  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION };
-  if ( cd_type == op ) {
-//FIXME compound
-    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCCD( spinBlock ) );
-    return ret;
-  } 
-  op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION };
-  if ( cd_type == op ) {
-//FIXME compound
-    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCDC( spinBlock ) );
-    return ret;
-  } 
-  op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION, Npdm::CREATION };
-  if ( cd_type == op ) {
-//FIXME compound
-    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDCC( spinBlock ) );
-    return ret;
-  } 
-  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION, Npdm::CREATION };
-  if ( cd_type == op ) {
-//FIXME compound
-    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCCC( spinBlock ) );
-    return ret;
-  } 
+//FIXME do I need all these below?
+//  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION };
+//  if ( cd_type == op ) {
+////FIXME compound
+//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCCD( spinBlock ) );
+//    return ret;
+//  } 
+//  op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION };
+//  if ( cd_type == op ) {
+////FIXME compound
+//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCDC( spinBlock ) );
+//    return ret;
+//  } 
+//  op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION, Npdm::CREATION };
+//  if ( cd_type == op ) {
+////FIXME compound
+//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDCC( spinBlock ) );
+//    return ret;
+//  } 
+//  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION, Npdm::CREATION };
+//  if ( cd_type == op ) {
+////FIXME compound
+//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCCC( spinBlock ) );
+//    return ret;
+//  } 
   assert(false);
 }
 
@@ -157,7 +159,6 @@ boost::shared_ptr<NpdmSpinOps> init_RI_3_index_operators( SpinBlock * spinBlock,
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_DCC( spinBlock ) );
     return ret;
   } 
-  assert(false);
   assert(false);
 }
 
@@ -205,6 +206,8 @@ boost::shared_ptr<NpdmSpinOps> init_3_index_operators( SpinBlock * spinBlock, st
   op = { Npdm::DESTRUCTION, Npdm::CREATION, Npdm::CREATION };
   if ( cd_type == op ) {
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_DCC( spinBlock ) );
+//FIXME
+//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_DCC( spinBlock ) );
     return ret;
   } 
   assert(false);
@@ -275,21 +278,18 @@ boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::ve
   if ( cd_type.size() == 1 ) { ret = init_1_index_operators( spinBlock, cd_type ); return ret; }
   if ( cd_type.size() == 2 ) { ret = init_2_index_operators( spinBlock, cd_type ); return ret; }
 
-  if      ( cd_type.size() == 3 ) ret = init_3_index_operators( spinBlock, cd_type );
-  else if ( cd_type.size() == 4 ) ret = init_4_index_operators( spinBlock, cd_type );
-
-//  if (spinBlock->size() == 1) {
-//    // Many-body basis is complete, so exploit RI to build many-index operators on fly (e.g. dot block)
-//    if      ( cd_type.size() == 3 ) ret = init_RI_3_index_operators( spinBlock, cd_type );
-//    else if ( cd_type.size() == 4 ) ret = init_RI_4_index_operators( spinBlock, cd_type );
-//    else assert(false);
-//  }
-//  else {
+  if (spinBlock->size() == 1) {
+    // Many-body basis is complete, so exploit RI to build many-index operators on fly (e.g. dot block)
+    if      ( cd_type.size() == 3 ) ret = init_RI_3_index_operators( spinBlock, cd_type );
+    else if ( cd_type.size() == 4 ) ret = init_RI_4_index_operators( spinBlock, cd_type );
+    else assert(false);
+  }
+  else {
     // Many-body basis is incomplete, so cannot exploit RI exactly
-//    if      ( cd_type.size() == 3 ) ret = init_3_index_operators( spinBlock, cd_type );
-//    else if ( cd_type.size() == 4 ) ret = init_4_index_operators( spinBlock, cd_type );
-//    else assert(false);
-//  }
+    if      ( cd_type.size() == 3 ) ret = init_3_index_operators( spinBlock, cd_type );
+    else if ( cd_type.size() == 4 ) ret = init_4_index_operators( spinBlock, cd_type );
+    else assert(false);
+  }
 
   return ret;
 }

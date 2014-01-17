@@ -38,6 +38,7 @@ class SpinBlock
 //MAW NPDM
       ar.register_type(static_cast<Op_component<RI3index> *>(NULL));
       ar.register_type(static_cast<Op_component<RI4index> *>(NULL));
+      ar.register_type(static_cast<Op_component<DesDes> *>(NULL));
 //MAW 3PDM
       ar.register_type(static_cast<Op_component<DesCre> *>(NULL));
 //FIXME do we need to store these too if using separate disk-based 3-index operator storage?
@@ -50,6 +51,13 @@ class SpinBlock
       ar.register_type(static_cast<Op_component<DesDesCre> *>(NULL));
       ar.register_type(static_cast<Op_component<DesCreCre> *>(NULL));
       ar.register_type(static_cast<Op_component<CreCreDesDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesCreDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesDesCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesDesDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreCreDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreDesCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesCreCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreCreCre> *>(NULL));
       ar & ops;
     }
 

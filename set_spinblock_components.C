@@ -40,6 +40,8 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(RI_3INDEX).set_local() = true;
     if (has(RI_4INDEX))
       set_op_array(RI_4INDEX).set_local() = true;
+    if (has(DES_DES))
+      set_op_array(DES_DES).set_local() = true;
   }
   else if (st == DISTRIBUTED_STORAGE)
   {
@@ -61,6 +63,8 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(RI_3INDEX).set_local() = false;
     if (has(RI_4INDEX))
       set_op_array(RI_4INDEX).set_local() = false;
+    if (has(DES_DES))
+      set_op_array(DES_DES).set_local() = false;
 //FIXME MAW 3PDM
     //pout << "Setting distributed storage 3-index ops\n";
     if (has(DES_CRE))
@@ -80,6 +84,20 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(DES_DES_CRE).set_local() = false;
     if (has(CRE_CRE_DES_DES))
       set_op_array(CRE_CRE_DES_DES).set_local() = false;
+    if (has(CRE_DES_CRE_DES))
+      set_op_array(CRE_DES_CRE_DES).set_local() = false;
+    if (has(CRE_DES_DES_CRE))
+      set_op_array(CRE_DES_DES_CRE).set_local() = false;
+    if (has(CRE_DES_DES_DES))
+      set_op_array(CRE_DES_DES_DES).set_local() = false;
+    if (has(CRE_CRE_CRE_DES))
+      set_op_array(CRE_CRE_CRE_DES).set_local() = false;
+    if (has(CRE_CRE_DES_CRE))
+      set_op_array(CRE_CRE_DES_CRE).set_local() = false;
+    if (has(CRE_DES_CRE_CRE))
+      set_op_array(CRE_DES_CRE_CRE).set_local() = false;
+    if (has(CRE_CRE_CRE_CRE))
+      set_op_array(CRE_CRE_CRE_CRE).set_local() = false;
   }
   else assert(false);
 
@@ -120,6 +138,9 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
     case RI_4INDEX:
       ret = boost::shared_ptr<Op_component<RI4index> >(new Op_component<RI4index>(is_core));
       break;
+    case DES_DES:
+      ret = boost::shared_ptr<Op_component<DesDes> >(new Op_component<DesDes>(is_core));
+      break;
 //FIXME MAW 3PDM
     case DES_CRE:
       ret = boost::shared_ptr<Op_component<DesCre> >(new Op_component<DesCre>(is_core));
@@ -148,6 +169,27 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
       break;
     case CRE_CRE_DES_DES:
       ret = boost::shared_ptr<Op_component<CreCreDesDes> >(new Op_component<CreCreDesDes>(is_core));
+      break;
+    case CRE_DES_CRE_DES:
+      ret = boost::shared_ptr<Op_component<CreDesCreDes> >(new Op_component<CreDesCreDes>(is_core));
+      break;
+    case CRE_DES_DES_CRE:
+      ret = boost::shared_ptr<Op_component<CreDesDesCre> >(new Op_component<CreDesDesCre>(is_core));
+      break;
+    case CRE_DES_DES_DES:
+      ret = boost::shared_ptr<Op_component<CreDesDesDes> >(new Op_component<CreDesDesDes>(is_core));
+      break;
+    case CRE_CRE_CRE_DES:
+      ret = boost::shared_ptr<Op_component<CreCreCreDes> >(new Op_component<CreCreCreDes>(is_core));
+      break;
+    case CRE_CRE_DES_CRE:
+      ret = boost::shared_ptr<Op_component<CreCreDesCre> >(new Op_component<CreCreDesCre>(is_core));
+      break;
+    case CRE_DES_CRE_CRE:
+      ret = boost::shared_ptr<Op_component<CreDesCreCre> >(new Op_component<CreDesCreCre>(is_core));
+      break;
+    case CRE_CRE_CRE_CRE:
+      ret = boost::shared_ptr<Op_component<CreCreCreCre> >(new Op_component<CreCreCreCre>(is_core));
       break;
   }
   return ret;
@@ -185,6 +227,7 @@ void SpinBlock::default_op_components(bool complementary_)
 //      if ( (dmrginp.calc_type() == THREEPDM) ||
 //           (dmrginp.calc_type() == FOURPDM) ) {
         ops[DES_CRE] = make_new_op(DES_CRE, true);
+        ops[DES_DES] = make_new_op(DES_DES, true);
         ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
         ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
         ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
@@ -194,6 +237,13 @@ void SpinBlock::default_op_components(bool complementary_)
           ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
           ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, true);
           ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, true);
+//          ops[CRE_DES_CRE_DES] = make_new_op(CRE_DES_CRE_DES, true);
+//          ops[CRE_DES_DES_CRE] = make_new_op(CRE_DES_DES_CRE, true);
+//          ops[CRE_DES_DES_DES] = make_new_op(CRE_DES_DES_DES, true);
+//          ops[CRE_CRE_CRE_DES] = make_new_op(CRE_CRE_CRE_DES, true);
+//          ops[CRE_CRE_DES_CRE] = make_new_op(CRE_CRE_DES_CRE, true);
+//          ops[CRE_DES_CRE_CRE] = make_new_op(CRE_DES_CRE_CRE, true);
+//          ops[CRE_CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE_CRE, true);
 //        }
 //      }
     }
@@ -272,6 +322,7 @@ assert(false); //FIXME << if (haveNormops || dmrginp.do_npdm_ops()) not tested
 //          if ( (dmrginp.calc_type() == THREEPDM) ||
 //               (dmrginp.calc_type() == FOURPDM) ) {
             ops[DES_CRE] = make_new_op(DES_CRE, false);
+            ops[DES_DES] = make_new_op(DES_DES, false);
             ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
             ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);
             ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, false);
@@ -281,6 +332,13 @@ assert(false); //FIXME << if (haveNormops || dmrginp.do_npdm_ops()) not tested
               ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
               ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, false);
               ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, false);
+//              ops[CRE_DES_CRE_DES] = make_new_op(CRE_DES_CRE_DES, false);
+//              ops[CRE_DES_DES_CRE] = make_new_op(CRE_DES_DES_CRE, false);
+//              ops[CRE_DES_DES_DES] = make_new_op(CRE_DES_DES_DES, false);
+//              ops[CRE_CRE_CRE_DES] = make_new_op(CRE_CRE_CRE_DES, false);
+//              ops[CRE_CRE_DES_CRE] = make_new_op(CRE_CRE_DES_CRE, false);
+//              ops[CRE_DES_CRE_CRE] = make_new_op(CRE_DES_CRE_CRE, false);
+//              ops[CRE_CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE_CRE, false);
 //            }
 //          }
         }

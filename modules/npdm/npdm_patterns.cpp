@@ -37,6 +37,8 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
   for (lhs = pdm_order_; lhs >= 0; lhs--) {
     dotmax = 2*pdm_order_ - lhs;
     for (dot = dotmax; dot >= 1; dot--) {
+      // Can have no more than 4 on the dot block
+      if (dot > 4) continue;
       rhs = 2*pdm_order_ - dot - lhs;
       if ( rhs < pdm_order_ ) {
         lhs_dot_rhs_types_.insert( std::make_tuple(lhs,dot,rhs) );
@@ -157,15 +159,14 @@ void Npdm_patterns::build_cre_des_types()
   add_operator( pdm_order_-1, pdm_order_, cd_type );
 
   // Print out
-  //pout << "=================================================================\n";
-  //pout << "Creation/destruction patterns:\n";
-  //for (auto iter = cre_des_types_.begin(); iter != cre_des_types_.end(); iter++) {
-  //  print_cd_string(*iter); pout << std::endl;
-  //}
+  pout << "=================================================================\n";
+  pout << "Creation/destruction patterns:\n";
+  for (auto iter = cre_des_types_.begin(); iter != cre_des_types_.end(); iter++) {
+    print_cd_string(*iter); pout << std::endl;
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//FIXME "dot" is also the case for LHS and RHS when at first or last position in sweep...
 //FIXME explain why (1) holds below???
 // Ensure following properties of creation-destruction string on dot
 // (1) All creation should be to left of destruction
@@ -301,9 +302,9 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
   }
 // DEBUG add extra patterns
 //std::map< char, std::vector<CD> > cd_pattern;
-//cd_pattern['l'] = { CREATION, CREATION, DESTRUCTION, DESTRUCTION };
+//cd_pattern['l'] = { CREATION, DESTRUCTION, DESTRUCTION, DESTRUCTION };
 //cd_pattern['d'] = { };
-//cd_pattern['r'] = { DESTRUCTION, DESTRUCTION };
+//cd_pattern['r'] = { CREATION, CREATION };
 ////cd_pattern['r'] = { };
 //ldr_cd_types_.insert( cd_pattern );
 }

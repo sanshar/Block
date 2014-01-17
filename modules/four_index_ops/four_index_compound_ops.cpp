@@ -21,7 +21,7 @@ Npdm_op_wrapper_compound_CCDD::Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBl
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(RI_4INDEX).get_size();
   is_local_ = true;
-  factor_ = 0.0;
+  factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "";
   mults_ = { };
@@ -40,32 +40,31 @@ cout << "getting RI CCDD operator...\n";
   int kx = indices_[2];
   int lx = indices_[3];
 
-  // (DD) seems to need a -1 factor
-  factor_ = -1.0;
   build_pattern_ = "((CC)(DD))";
   mults_ = { 1, 3, 3, 1, 3, 5 };
   // Get 2-index ops as RI building blocks
   std::vector< boost::shared_ptr<SparseMatrix> > ijOps = spinBlock_->get_op_array(CRE_CRE).get_element(ix,jx);
-  std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(CRE_CRE).get_element(kx,lx);
-  // Take into account transpose
-  indices_[2] = lx;
-  indices_[3] = kx;
+  std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(DES_DES).get_element(kx,lx);
+//  std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(CRE_CRE).get_element(kx,lx);
+//  // Take into account transpose
+//  indices_[2] = lx;
+//  indices_[3] = kx;
   
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
   opReps_.clear();
   // S=0 (+) S=0  =>  S=0
-  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(0), klOps.at(0), 0, indices_, true ) );
+  opReps_.push_back( build_compound_operator( false, 1, ijOps.at(0), klOps.at(0), 0, indices_, false ) );
   // S=1 (+) S=0  =>  S=1
-  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(0), 0, indices_, true ) );
+  opReps_.push_back( build_compound_operator( false, 1, ijOps.at(1), klOps.at(0), 0, indices_, false ) );
   // S=0 (+) S=1  =>  S=1
-  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(0), klOps.at(1), 0, indices_, true ) );
+  opReps_.push_back( build_compound_operator( false, 1, ijOps.at(0), klOps.at(1), 0, indices_, false ) );
 
   // S=1 (+) S=1  =>  S=0
-  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 0, indices_, true ) );
+  opReps_.push_back( build_compound_operator( false, 1, ijOps.at(1), klOps.at(1), 0, indices_, false ) );
   // S=1 (+) S=1  =>  S=1
-  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 1, indices_, true ) );
+  opReps_.push_back( build_compound_operator( false, 1, ijOps.at(1), klOps.at(1), 1, indices_, false ) );
   // S=1 (+) S=1  =>  S=2
-  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 2, indices_, true ) );
+  opReps_.push_back( build_compound_operator( false, 1, ijOps.at(1), klOps.at(1), 2, indices_, false ) );
 
   return false;
 
@@ -185,7 +184,6 @@ Npdm_op_wrapper_compound_CCDC::Npdm_op_wrapper_compound_CCDC( SpinBlock * spinBl
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(RI_4INDEX).get_size();
   is_local_ = true;
-//FIXME sign?
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "((CC)(DC))";
@@ -240,7 +238,6 @@ Npdm_op_wrapper_compound_CDCC::Npdm_op_wrapper_compound_CDCC( SpinBlock * spinBl
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(RI_4INDEX).get_size();
   is_local_ = true;
-//FIXME sign?
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "((CD)(CC))";
@@ -295,7 +292,6 @@ Npdm_op_wrapper_compound_CDCD::Npdm_op_wrapper_compound_CDCD( SpinBlock * spinBl
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(RI_4INDEX).get_size();
   is_local_ = true;
-//FIXME sign?
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "((CD)(CD))";
@@ -404,10 +400,10 @@ Npdm_op_wrapper_compound_CDDD::Npdm_op_wrapper_compound_CDDD( SpinBlock * spinBl
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(RI_4INDEX).get_size();
   is_local_ = true;
-  factor_ = 0.0;
+  factor_ = 1.0;
   transpose_ = false;
-  build_pattern_ = "";
-  mults_ = { };
+  build_pattern_ = "((CD)(DD))";
+  mults_ = { 1, 3, 3, 1, 3, 5 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -423,66 +419,27 @@ cout << "getting RI CDDD operator...\n";
   int kx = indices_[2];
   int lx = indices_[3];
 
-  // (DD) seems to need a -1 factor
-  factor_ = -1.0;
-  build_pattern_ = "((CD)(DD))";
-  mults_ = { 1, 3, 3, 1, 3, 5 };
   // Get 2-index ops as RI building blocks
   std::vector< boost::shared_ptr<SparseMatrix> > ijOps = spinBlock_->get_op_array(CRE_DES).get_element(ix,jx);
-  std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(CRE_CRE).get_element(kx,lx);
-  // Take into account transpose
-  indices_[2] = lx;
-  indices_[3] = kx;
+  std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(DES_DES).get_element(kx,lx);
 
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
   opReps_.clear();
   // S=0 (+) S=0  =>  S=0
-  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(0), klOps.at(0), 0, indices_, true ) );
+  opReps_.push_back( build_compound_operator( false, 1, ijOps.at(0), klOps.at(0), 0, indices_, false ) );
   // S=1 (+) S=0  =>  S=1
-  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(0), 0, indices_, true ) );
+  opReps_.push_back( build_compound_operator( false, 1, ijOps.at(1), klOps.at(0), 0, indices_, false ) );
   // S=0 (+) S=1  =>  S=1
-  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(0), klOps.at(1), 0, indices_, true ) );
+  opReps_.push_back( build_compound_operator( false, 1, ijOps.at(0), klOps.at(1), 0, indices_, false ) );
 
   // S=1 (+) S=1  =>  S=0
-  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 0, indices_, true ) );
+  opReps_.push_back( build_compound_operator( false, 1, ijOps.at(1), klOps.at(1), 0, indices_, false ) );
   // S=1 (+) S=1  =>  S=1
-  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 1, indices_, true ) );
+  opReps_.push_back( build_compound_operator( false, 1, ijOps.at(1), klOps.at(1), 1, indices_, false ) );
   // S=1 (+) S=1  =>  S=2
-  opReps_.push_back( build_compound_operator( false, -1, ijOps.at(1), klOps.at(1), 2, indices_, true ) );
+  opReps_.push_back( build_compound_operator( false, 1, ijOps.at(1), klOps.at(1), 2, indices_, false ) );
 
   return false;
-
-////  //-----------------------
-////  // Use 3-index operator
-////  //-----------------------
-////
-////  std::vector< boost::shared_ptr<SparseMatrix> > ijkOps = spinBlock_->get_op_array(CRE_DES_DES).get_element(ix,jx,kx);
-////  std::vector< boost::shared_ptr<SparseMatrix> > lOps = spinBlock_->get_op_array(CRE).get_element(lx);
-////  std::string build_pattern_3 = ijkOps.at(0)->get_build_pattern();
-////  if ( build_pattern_3 == "((CD)D)" ) build_pattern_ = "(((CD)D)(D))";
-////  else if ( build_pattern_3 == "(C(DD))" ) build_pattern_ = "(((C)(DD))(D))";
-////  else assert(false);
-////  factor_ = 1.0;
-////  mults_ = { 1, 3, 1, 3, 3, 5 };
-////
-////  // Allocate and build operator representation on the fly as RI tensor product for each spin component
-////  opReps_.clear();
-////  // S=1/2 (+) S=1/2  =>  S=0
-////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(0), lOps.at(0), 0, indices_, true ) );
-////  // S=1/2 (+) S=1/2  =>  S=1
-////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(0), lOps.at(0), 1, indices_, true ) );
-////
-////  // S=1/2 (+) S=1/2  =>  S=0
-////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(1), lOps.at(0), 0, indices_, true ) );
-////  // S=1/2 (+) S=1/2  =>  S=1
-////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(1), lOps.at(0), 1, indices_, true ) );
-////
-////  // S=3/2 (+) S=1/2  =>  S=1
-////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(2), lOps.at(0), 0, indices_, true ) );
-////  // S=3/2 (+) S=1/2  =>  S=2
-////  opReps_.push_back( build_compound_operator( false, -1, ijkOps.at(2), lOps.at(0), 1, indices_, true ) );
-////
-////  return false;
 }
 
 //===========================================================================================================================================================
@@ -494,7 +451,6 @@ Npdm_op_wrapper_compound_CCCC::Npdm_op_wrapper_compound_CCCC( SpinBlock * spinBl
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(RI_4INDEX).get_size();
   is_local_ = true;
-//FIXME sign?
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "((CC)(CC))";

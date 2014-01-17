@@ -61,12 +61,16 @@ template <> struct ChooseArray<CreCreDesComp> {
 template <> struct ChooseArray<Ham> {
   typedef para_array_0d<std::vector<boost::shared_ptr<Ham> > > ArrayType;
 };
+//FIXME move these into a different header file?
 //MAW NPDM >>>>>
 template <> struct ChooseArray<RI3index> {
   typedef para_array_3d<std::vector<boost::shared_ptr<RI3index> > > ArrayType;
 };
 template <> struct ChooseArray<RI4index> {
   typedef para_array_4d<std::vector<boost::shared_ptr<RI4index> > > ArrayType;
+};
+template <> struct ChooseArray<DesDes> {
+  typedef para_array_triang_2d<std::vector<boost::shared_ptr<DesDes> > > ArrayType;
 };
 //MAW 3PDM >>>>>
 template <> struct ChooseArray<DesCre> {
@@ -96,6 +100,27 @@ template <> struct ChooseArray<DesCreCre> {
 };
 template <> struct ChooseArray<CreCreDesDes> {
   typedef para_array_4d<std::vector<boost::shared_ptr<CreCreDesDes> > > ArrayType;
+};
+template <> struct ChooseArray<CreDesCreDes> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreDesCreDes> > > ArrayType;
+};
+template <> struct ChooseArray<CreDesDesCre> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreDesDesCre> > > ArrayType;
+};
+template <> struct ChooseArray<CreDesDesDes> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreDesDesDes> > > ArrayType;
+};
+template <> struct ChooseArray<CreCreCreDes> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreCreCreDes> > > ArrayType;
+};
+template <> struct ChooseArray<CreCreDesCre> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreCreDesCre> > > ArrayType;
+};
+template <> struct ChooseArray<CreDesCreCre> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreDesCreCre> > > ArrayType;
+};
+template <> struct ChooseArray<CreCreCreCre> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreCreCreCre> > > ArrayType;
 };
 //MAW NPDM <<<<<
 
@@ -247,7 +272,6 @@ template <class Op> class Op_component : public Op_component_base
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo* s) {
-
 //FIXME
 //cout << "renormalize transform: opType = " << ot << endl;
     if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {

@@ -405,8 +405,8 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
 }
 
 //===========================================================================================================================================================
-// FIXME This DCC operator wrapper using tranpose of DDC seems broken...
-//
+////// FIXME This DCC operator wrapper using tranpose of DDC seems to need extra minus sign 
+//////
 ////Npdm_op_wrapper_DCC::Npdm_op_wrapper_DCC( SpinBlock * spinBlock )
 ////{
 ////  opReps_.clear();
@@ -427,7 +427,7 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
 ////
 ////bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
 ////{
-//////cout << "getting DCC operator...\n";
+////cout << "getting DCC operator...\n";
 ////  // Spatial orbital indices
 ////  indices_.clear();
 ////  int ix, jx, kx;
@@ -452,7 +452,7 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
 ////  }
 ////
 ////  std::string tmp = opReps_.at(0)->get_build_pattern();
-////  if ( tmp == "((DD)C)" ) build_pattern_ = "(D(CC))";
+////  if ( tmp == "((DD)C)" ) build_pattern_ = "(D(CC))"; //  <--------- seem to need minus sign here, don't know why
 ////  else if ( tmp == "(D(DC))" ) build_pattern_ = "((DC)C)";
 ////  else assert( false );
 ////
@@ -498,6 +498,9 @@ cout << "getting DCC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
+
+//FIXME SKIP THEM WHEN SOME INDICES ARE EQUAL ?
+//return true;
 
   // Read in operator representations from disk or memory
   if ( dmrginp.do_npdm_in_core() )

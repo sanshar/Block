@@ -5,6 +5,20 @@
 namespace SpinAdapted{
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+// Auxiliary op as an alternative to transpose(CC) for debugging
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+class DesDes: public SpinAdapted::SparseMatrix
+{
+  public:
+    DesDes() { orbs.resize(2); fermion = false; build_pattern = "(DD)";} // default build_pattern
+    void build(const SpinBlock& b) ;
+    void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
+    boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+    double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // 3PDM operators
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
