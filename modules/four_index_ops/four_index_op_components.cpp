@@ -19,6 +19,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "op_components.h"
 //#include "screen.h"
 
+//FIXME There is a lot of similarity between these routines that should be possible to abstract out in a general way
+
 namespace SpinAdapted {
   
 //===========================================================================================================================================================
@@ -118,8 +120,8 @@ void Op_component<CreCreDesDes>::build_iterators(SpinBlock& b)
   std::vector<int> orbs(4);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
-pout << "New set of CCDD operators:  " << i << std::endl;
-pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
+//pout << "New set of CCDD operators:  " << i << std::endl;
+//pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
     std::vector<boost::shared_ptr<CreCreDesDes> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
@@ -278,8 +280,8 @@ void Op_component<CreDesCreDes>::build_iterators(SpinBlock& b)
   std::vector<int> orbs(4);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
-pout << "New set of CDCD operators:  " << i << std::endl;
-pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
+//pout << "New set of CDCD operators:  " << i << std::endl;
+//pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
     std::vector<boost::shared_ptr<CreDesCreDes> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
@@ -422,7 +424,6 @@ string Op_component<CreDesDesCre>::get_op_string() const {
 template<> 
 void Op_component<CreDesDesCre>::build_iterators(SpinBlock& b)
 {
-  assert(false);
   // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
   if (b.get_sites().size () == 0) return; 
 
@@ -434,8 +435,8 @@ void Op_component<CreDesDesCre>::build_iterators(SpinBlock& b)
   std::vector<int> orbs(4);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
-pout << "New set of CDDC operators:  " << i << std::endl;
-pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
+//pout << "New set of CDDC operators:  " << i << std::endl;
+//pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
     std::vector<boost::shared_ptr<CreDesDesCre> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
@@ -579,7 +580,6 @@ string Op_component<CreDesDesDes>::get_op_string() const {
 template<> 
 void Op_component<CreDesDesDes>::build_iterators(SpinBlock& b)
 {
-  assert(false);
   // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
   if (b.get_sites().size () == 0) return; 
 
@@ -591,8 +591,8 @@ void Op_component<CreDesDesDes>::build_iterators(SpinBlock& b)
   std::vector<int> orbs(4);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
-pout << "New set of CDDD operators:  " << i << std::endl;
-pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
+//pout << "New set of CDDD operators:  " << i << std::endl;
+//pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
     std::vector<boost::shared_ptr<CreDesDesDes> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
@@ -615,7 +615,7 @@ pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[
           // Store (CD) first, then (DD), then 4-index spin quantums
           std::vector<SpinQuantum> tmp = { spinvec12[q], spinvec34[p], spinvec1234[t] };
           cd_dd_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == -2 );
         }
       }
     }
@@ -635,7 +635,7 @@ pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[
         for (int t=0; t < spinvec1234.size(); t++) {
           std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q], spinvec1234[t] };
           cd_d__d_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == -2 );
         }
       }
     }
@@ -656,7 +656,7 @@ pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[
         for (int t=0; t < spinvec1234.size(); t++) {
           std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q], spinvec1234[t] };
           c_dd__d_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == -2 );
         }
       }
     }
@@ -675,7 +675,7 @@ pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[
         for (int t=0; t < spinvec1234.size(); t++) {
           std::vector<SpinQuantum> tmp = { spinvec34[p], spinvec234[q], spinvec1234[t] };
           c__d_dd_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == -2 );
         }
       }
     }
@@ -694,7 +694,7 @@ pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[
         for (int t=0; t < spinvec1234.size(); t++) {
           std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec234[q], spinvec1234[t] };
           c__dd_d_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == -2 );
         }
       }
     }
@@ -736,7 +736,6 @@ string Op_component<CreCreCreDes>::get_op_string() const {
 template<> 
 void Op_component<CreCreCreDes>::build_iterators(SpinBlock& b)
 {
-  assert(false);
   // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
   if (b.get_sites().size () == 0) return; 
 
@@ -748,8 +747,8 @@ void Op_component<CreCreCreDes>::build_iterators(SpinBlock& b)
   std::vector<int> orbs(4);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
-pout << "New set of CCCD operators:  " << i << std::endl;
-pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
+//pout << "New set of CCCD operators:  " << i << std::endl;
+//pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
     std::vector<boost::shared_ptr<CreCreCreDes> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
@@ -771,7 +770,7 @@ pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[
           // Store (CC) first, then (CD), then 4-index spin quantums
           std::vector<SpinQuantum> tmp = { spinvec12[q], spinvec34[p], spinvec1234[t] };
           cc_cd_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == 2 );
         }
       }
     }
@@ -791,7 +790,7 @@ pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[
         for (int t=0; t < spinvec1234.size(); t++) {
           std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q], spinvec1234[t] };
           cc_c__d_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == 2 );
         }
       }
     }
@@ -812,7 +811,7 @@ pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[
         for (int t=0; t < spinvec1234.size(); t++) {
           std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q], spinvec1234[t] };
           c_cc__d_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == 2 );
         }
       }
     }
@@ -831,7 +830,7 @@ pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[
         for (int t=0; t < spinvec1234.size(); t++) {
           std::vector<SpinQuantum> tmp = { spinvec34[p], spinvec234[q], spinvec1234[t] };
           c__c_cd_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == 2 );
         }
       }
     }
@@ -850,7 +849,7 @@ pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[
         for (int t=0; t < spinvec1234.size(); t++) {
           std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec234[q], spinvec1234[t] };
           c__cc_d_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == 2 );
         }
       }
     }
@@ -892,7 +891,6 @@ string Op_component<CreCreDesCre>::get_op_string() const {
 template<> 
 void Op_component<CreCreDesCre>::build_iterators(SpinBlock& b)
 {
-  assert(false);
   // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
   if (b.get_sites().size () == 0) return; 
 
@@ -904,8 +902,8 @@ void Op_component<CreCreDesCre>::build_iterators(SpinBlock& b)
   std::vector<int> orbs(4);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
-pout << "New set of CCDC operators:  " << i << std::endl;
-pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
+//pout << "New set of CCDC operators:  " << i << std::endl;
+//pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
     std::vector<boost::shared_ptr<CreCreDesCre> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
@@ -913,100 +911,100 @@ pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[
     SpinQuantum spin3 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[2]));
     SpinQuantum spin4 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[3]));
 
-    // Create (CC)(CD) structure
+    // Create (CC)(DC) structure
     //----------------------------------------
     std::vector< std::vector<SpinQuantum> > cc_dc_quantum_ladder;
-    // (CD)
-    std::vector<SpinQuantum> spinvec34 = spin3 - spin4;
+    // (DC)
+    std::vector<SpinQuantum> spinvec34 = -spin3 + spin4;
     for (int p=0; p < spinvec34.size(); p++) {
       // (CC)
       std::vector<SpinQuantum> spinvec12 = spin1 + spin2;
       for (int q=0; q < spinvec12.size(); q++) {
         std::vector<SpinQuantum> spinvec1234 = spinvec12[q] + spinvec34[p];
         for (int t=0; t < spinvec1234.size(); t++) {
-          // Store (CC) first, then (CD), then 4-index spin quantums
+          // Store (CC) first, then (DC), then 4-index spin quantums
           std::vector<SpinQuantum> tmp = { spinvec12[q], spinvec34[p], spinvec1234[t] };
           cc_dc_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == 2 );
         }
       }
     }
     assert( cc_dc_quantum_ladder.size() == 6 );
 
-    // Create ((CC)C)(D) structure
+    // Create ((CC)D)(C) structure
     //----------------------------------------
     std::vector< std::vector<SpinQuantum> > cc_d__c_quantum_ladder;
     // (CC)
     std::vector<SpinQuantum> spinvec12 = spin1 + spin2;
     for (int p=0; p < spinvec12.size(); p++) {
-      // (CC)C
-      std::vector<SpinQuantum> spinvec123 = spinvec12[p] + spin3;
+      // (CC)D
+      std::vector<SpinQuantum> spinvec123 = spinvec12[p] - spin3;
       for (int q=0; q < spinvec123.size(); q++) {
-        std::vector<SpinQuantum> spinvec1234 = spinvec123[q] - spin4;
-        // Store (CC) first, then (CC)C, then 4-index spin quantums
+        std::vector<SpinQuantum> spinvec1234 = spinvec123[q] + spin4;
+        // Store (CC) first, then (CC)D, then 4-index spin quantums
         for (int t=0; t < spinvec1234.size(); t++) {
           std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q], spinvec1234[t] };
           cc_d__c_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == 2 );
         }
       }
     }
     assert( cc_d__c_quantum_ladder.size() == 6 );
 
 
-    // Create (C(CC))(D) structure
+    // Create (C(CD))(C) structure
     //----------------------------------------
     std::vector< std::vector<SpinQuantum> > c_cd__c_quantum_ladder;
-    // (CC)
-    std::vector<SpinQuantum> spinvec23 = spin2 + spin3;
+    // (CD)
+    std::vector<SpinQuantum> spinvec23 = spin2 - spin3;
     for (int p=0; p < spinvec23.size(); p++) {
-      // C(CC)
+      // C(CD)
       std::vector<SpinQuantum> spinvec123 = spin1 + spinvec23[p];
       for (int q=0; q < spinvec123.size(); q++) {
-        std::vector<SpinQuantum> spinvec1234 = spinvec123[q] - spin4;
-        // Store (CC) first, then C(CC), then 4-index spin quantums
+        std::vector<SpinQuantum> spinvec1234 = spinvec123[q] + spin4;
+        // Store (CC) first, then C(CD), then 4-index spin quantums
         for (int t=0; t < spinvec1234.size(); t++) {
           std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q], spinvec1234[t] };
           c_cd__c_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == 2 );
         }
       }
     }
     assert( c_cd__c_quantum_ladder.size() == 6 );
 
-    // Create (C)(C(CD)) structure
+    // Create (C)(C(DC)) structure
     //----------------------------------------
     std::vector< std::vector<SpinQuantum> > c__c_dc_quantum_ladder;
-    // (CD)
+    // (DC)
     for (int p=0; p < spinvec34.size(); p++) {
-      // C(CD)
+      // C(DC)
       std::vector<SpinQuantum> spinvec234 = spin2 + spinvec34[p];
       for (int q=0; q < spinvec234.size(); q++) {
         std::vector<SpinQuantum> spinvec1234 = spin1 + spinvec234[q];
-        // Store (DD) first, then C(DD), then 4-index spin quantums
+        // Store (CD) first, then C(CD), then 4-index spin quantums
         for (int t=0; t < spinvec1234.size(); t++) {
           std::vector<SpinQuantum> tmp = { spinvec34[p], spinvec234[q], spinvec1234[t] };
           c__c_dc_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == 2 );
         }
       }
     }
     assert( c__c_dc_quantum_ladder.size() == 6 );
 
-    // Create (C)((CC)D) structure
+    // Create (C)((CD)C) structure
     //----------------------------------------
     std::vector< std::vector<SpinQuantum> > c__cd_c_quantum_ladder;
-    // (CC)
+    // (CD)
     for (int p=0; p < spinvec23.size(); p++) {
-      // (CC)D
-      std::vector<SpinQuantum> spinvec234 = spinvec23[p] - spin4;
+      // (CD)C
+      std::vector<SpinQuantum> spinvec234 = spinvec23[p] + spin4;
       for (int q=0; q < spinvec234.size(); q++) {
         std::vector<SpinQuantum> spinvec1234 = spin1 + spinvec234[q];
         // Store (CC) first, then (CC)D, then 4-index spin quantums
         for (int t=0; t < spinvec1234.size(); t++) {
           std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec234[q], spinvec1234[t] };
           c__cd_c_quantum_ladder.push_back( tmp );
-          assert( spinvec1234[t].particleNumber == 0 );
+          assert( spinvec1234[t].particleNumber == 2 );
         }
       }
     }
@@ -1021,19 +1019,17 @@ pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[
       boost::shared_ptr<CreCreDesCre> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      op->set_quantum_ladder()["((CC)(CD))"] = cc_dc_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)((CC)D))"] = c__cd_c_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)(C(CD)))"] = c__c_dc_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(((CC)C)(D))"] = cc_d__c_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C(CC))(D))"] = c_cd__c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((CC)(DC))"] = cc_dc_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((CD)C))"] = c__cd_c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)(C(DC)))"] = c__c_dc_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((CC)D)(C))"] = cc_d__c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C(CD))(C))"] = c_cd__c_quantum_ladder.at(q);
       // Set default value, which is changed according to current build_pattern // FIXME .at(2) is brittle here!  
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(2);
     }
 
     assert( m_op.get_local_element(i).size() == 6);
   }
-}
-
 }
 
 
@@ -1050,7 +1046,145 @@ string Op_component<CreDesCreCre>::get_op_string() const {
 template<> 
 void Op_component<CreDesCreCre>::build_iterators(SpinBlock& b)
 {
-  assert(false);
+  // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
+  if (b.get_sites().size () == 0) return; 
+
+  // Set up 4-index (i,j,k,l) spatial operator indices for this SpinBlock
+  std::map< std::tuple<int,int,int,int>, int > tuples = get_4index_tuples(b);
+  m_op.set_tuple_indices( tuples, dmrginp.last_site() );
+
+  // Allocate new set of operators for each set of spatial orbitals
+  std::vector<int> orbs(4);
+  for (int i = 0; i < m_op.local_nnz(); ++i) {
+    orbs = m_op.unmap_local_index(i);
+//pout << "New set of CDCC operators:  " << i << std::endl;
+//pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
+    std::vector<boost::shared_ptr<CreDesCreCre> >& spin_ops = m_op.get_local_element(i);
+
+    SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
+    SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
+    SpinQuantum spin3 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[2]));
+    SpinQuantum spin4 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[3]));
+
+    // Create (CD)(CC) structure
+    //----------------------------------------
+    std::vector< std::vector<SpinQuantum> > cd_cc_quantum_ladder;
+    // (CC)
+    std::vector<SpinQuantum> spinvec34 = spin3 + spin4;
+    for (int p=0; p < spinvec34.size(); p++) {
+      // (CD)
+      std::vector<SpinQuantum> spinvec12 = spin1 - spin2;
+      for (int q=0; q < spinvec12.size(); q++) {
+        std::vector<SpinQuantum> spinvec1234 = spinvec12[q] + spinvec34[p];
+        for (int t=0; t < spinvec1234.size(); t++) {
+          // Store (CD) first, then (CC), then 4-index spin quantums
+          std::vector<SpinQuantum> tmp = { spinvec12[q], spinvec34[p], spinvec1234[t] };
+          cd_cc_quantum_ladder.push_back( tmp );
+          assert( spinvec1234[t].particleNumber == 2 );
+        }
+      }
+    }
+    assert( cd_cc_quantum_ladder.size() == 6 );
+
+    // Create ((CD)C)(C) structure
+    //----------------------------------------
+    std::vector< std::vector<SpinQuantum> > cd_d__c_quantum_ladder;
+    // (CD)
+    std::vector<SpinQuantum> spinvec12 = spin1 - spin2;
+    for (int p=0; p < spinvec12.size(); p++) {
+      // (CD)C
+      std::vector<SpinQuantum> spinvec123 = spinvec12[p] + spin3;
+      for (int q=0; q < spinvec123.size(); q++) {
+        std::vector<SpinQuantum> spinvec1234 = spinvec123[q] + spin4;
+        // Store (CD) first, then (CD)C, then 4-index spin quantums
+        for (int t=0; t < spinvec1234.size(); t++) {
+          std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q], spinvec1234[t] };
+          cd_d__c_quantum_ladder.push_back( tmp );
+          assert( spinvec1234[t].particleNumber == 2 );
+        }
+      }
+    }
+    assert( cd_d__c_quantum_ladder.size() == 6 );
+
+
+    // Create (C(DC))(C) structure
+    //----------------------------------------
+    std::vector< std::vector<SpinQuantum> > c_dc__c_quantum_ladder;
+    // (DC)
+    std::vector<SpinQuantum> spinvec23 = -spin2 + spin3;
+    for (int p=0; p < spinvec23.size(); p++) {
+      // C(DC)
+      std::vector<SpinQuantum> spinvec123 = spin1 + spinvec23[p];
+      for (int q=0; q < spinvec123.size(); q++) {
+        std::vector<SpinQuantum> spinvec1234 = spinvec123[q] + spin4;
+        // Store (DC) first, then C(DC), then 4-index spin quantums
+        for (int t=0; t < spinvec1234.size(); t++) {
+          std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q], spinvec1234[t] };
+          c_dc__c_quantum_ladder.push_back( tmp );
+          assert( spinvec1234[t].particleNumber == 2 );
+        }
+      }
+    }
+    assert( c_dc__c_quantum_ladder.size() == 6 );
+
+    // Create (C)(D(CC)) structure
+    //----------------------------------------
+    std::vector< std::vector<SpinQuantum> > c__d_cc_quantum_ladder;
+    // (CC)
+    for (int p=0; p < spinvec34.size(); p++) {
+      // D(CC)
+      std::vector<SpinQuantum> spinvec234 = -spin2 + spinvec34[p];
+      for (int q=0; q < spinvec234.size(); q++) {
+        std::vector<SpinQuantum> spinvec1234 = spin1 + spinvec234[q];
+        // Store (CC) first, then D(CC), then 4-index spin quantums
+        for (int t=0; t < spinvec1234.size(); t++) {
+          std::vector<SpinQuantum> tmp = { spinvec34[p], spinvec234[q], spinvec1234[t] };
+          c__d_cc_quantum_ladder.push_back( tmp );
+          assert( spinvec1234[t].particleNumber == 2 );
+        }
+      }
+    }
+    assert( c__d_cc_quantum_ladder.size() == 6 );
+
+    // Create (C)((DC)C) structure
+    //----------------------------------------
+    std::vector< std::vector<SpinQuantum> > c__dc_c_quantum_ladder;
+    // (DC)
+    for (int p=0; p < spinvec23.size(); p++) {
+      // (DC)C
+      std::vector<SpinQuantum> spinvec234 = spinvec23[p] + spin4;
+      for (int q=0; q < spinvec234.size(); q++) {
+        std::vector<SpinQuantum> spinvec1234 = spin1 + spinvec234[q];
+        // Store (DC) first, then (DC)C, then 4-index spin quantums
+        for (int t=0; t < spinvec1234.size(); t++) {
+          std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec234[q], spinvec1234[t] };
+          c__dc_c_quantum_ladder.push_back( tmp );
+          assert( spinvec1234[t].particleNumber == 2 );
+        }
+      }
+    }
+    assert( c__dc_c_quantum_ladder.size() == 6 );
+
+
+    // Allocate new operator for each spin component
+    //------------------------------------------------
+    spin_ops.clear();
+    for (int q=0; q < cd_cc_quantum_ladder.size(); q++) {
+      spin_ops.push_back( boost::shared_ptr<CreDesCreCre>(new CreDesCreCre) );
+      boost::shared_ptr<CreDesCreCre> op = spin_ops.back();
+      op->set_orbs() = orbs;
+      op->set_initialised() = true;
+      op->set_quantum_ladder()["((CD)(CC))"] = cd_cc_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((DC)C))"] = c__dc_c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)(D(CC)))"] = c__d_cc_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((CD)C)(C))"] = cd_d__c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C(DC))(C))"] = c_dc__c_quantum_ladder.at(q);
+      // Set default value, which is changed according to current build_pattern // FIXME .at(2) is brittle here!  
+      op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(2);
+    }
+
+    assert( m_op.get_local_element(i).size() == 6);
+  }
 }
 
 
@@ -1067,7 +1201,145 @@ string Op_component<CreCreCreCre>::get_op_string() const {
 template<> 
 void Op_component<CreCreCreCre>::build_iterators(SpinBlock& b)
 {
-  assert(false);
+  // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
+  if (b.get_sites().size () == 0) return; 
+
+  // Set up 4-index (i,j,k,l) spatial operator indices for this SpinBlock
+  std::map< std::tuple<int,int,int,int>, int > tuples = get_4index_tuples(b);
+  m_op.set_tuple_indices( tuples, dmrginp.last_site() );
+
+  // Allocate new set of operators for each set of spatial orbitals
+  std::vector<int> orbs(4);
+  for (int i = 0; i < m_op.local_nnz(); ++i) {
+    orbs = m_op.unmap_local_index(i);
+//pout << "New set of CCCC operators:  " << i << std::endl;
+//pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
+    std::vector<boost::shared_ptr<CreCreCreCre> >& spin_ops = m_op.get_local_element(i);
+
+    SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
+    SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
+    SpinQuantum spin3 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[2]));
+    SpinQuantum spin4 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[3]));
+
+    // Create (CC)(CC) structure
+    //----------------------------------------
+    std::vector< std::vector<SpinQuantum> > cc_cc_quantum_ladder;
+    // (CC)
+    std::vector<SpinQuantum> spinvec34 = spin3 + spin4;
+    for (int p=0; p < spinvec34.size(); p++) {
+      // (CC)
+      std::vector<SpinQuantum> spinvec12 = spin1 + spin2;
+      for (int q=0; q < spinvec12.size(); q++) {
+        std::vector<SpinQuantum> spinvec1234 = spinvec12[q] + spinvec34[p];
+        for (int t=0; t < spinvec1234.size(); t++) {
+          // Store (CC) first, then (CC), then 4-index spin quantums
+          std::vector<SpinQuantum> tmp = { spinvec12[q], spinvec34[p], spinvec1234[t] };
+          cc_cc_quantum_ladder.push_back( tmp );
+          assert( spinvec1234[t].particleNumber == 4 );
+        }
+      }
+    }
+    assert( cc_cc_quantum_ladder.size() == 6 );
+
+    // Create ((CC)C)(C) structure
+    //----------------------------------------
+    std::vector< std::vector<SpinQuantum> > cc_c__c_quantum_ladder;
+    // (CC)
+    std::vector<SpinQuantum> spinvec12 = spin1 + spin2;
+    for (int p=0; p < spinvec12.size(); p++) {
+      // (CC)C
+      std::vector<SpinQuantum> spinvec123 = spinvec12[p] + spin3;
+      for (int q=0; q < spinvec123.size(); q++) {
+        std::vector<SpinQuantum> spinvec1234 = spinvec123[q] + spin4;
+        // Store (CC) first, then (CC)C, then 4-index spin quantums
+        for (int t=0; t < spinvec1234.size(); t++) {
+          std::vector<SpinQuantum> tmp = { spinvec12[p], spinvec123[q], spinvec1234[t] };
+          cc_c__c_quantum_ladder.push_back( tmp );
+          assert( spinvec1234[t].particleNumber == 4 );
+        }
+      }
+    }
+    assert( cc_c__c_quantum_ladder.size() == 6 );
+
+
+    // Create (C(CC))(C) structure
+    //----------------------------------------
+    std::vector< std::vector<SpinQuantum> > c_cc__c_quantum_ladder;
+    // (CC)
+    std::vector<SpinQuantum> spinvec23 = spin2 + spin3;
+    for (int p=0; p < spinvec23.size(); p++) {
+      // C(CC)
+      std::vector<SpinQuantum> spinvec123 = spin1 + spinvec23[p];
+      for (int q=0; q < spinvec123.size(); q++) {
+        std::vector<SpinQuantum> spinvec1234 = spinvec123[q] + spin4;
+        // Store (CC) first, then C(CC), then 4-index spin quantums
+        for (int t=0; t < spinvec1234.size(); t++) {
+          std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec123[q], spinvec1234[t] };
+          c_cc__c_quantum_ladder.push_back( tmp );
+          assert( spinvec1234[t].particleNumber == 4 );
+        }
+      }
+    }
+    assert( c_cc__c_quantum_ladder.size() == 6 );
+
+    // Create (C)(C(CC)) structure
+    //----------------------------------------
+    std::vector< std::vector<SpinQuantum> > c__c_cc_quantum_ladder;
+    // (CC)
+    for (int p=0; p < spinvec34.size(); p++) {
+      // C(CC)
+      std::vector<SpinQuantum> spinvec234 = spin2 + spinvec34[p];
+      for (int q=0; q < spinvec234.size(); q++) {
+        std::vector<SpinQuantum> spinvec1234 = spin1 + spinvec234[q];
+        // Store (CC) first, then C(CC), then 4-index spin quantums
+        for (int t=0; t < spinvec1234.size(); t++) {
+          std::vector<SpinQuantum> tmp = { spinvec34[p], spinvec234[q], spinvec1234[t] };
+          c__c_cc_quantum_ladder.push_back( tmp );
+          assert( spinvec1234[t].particleNumber == 4 );
+        }
+      }
+    }
+    assert( c__c_cc_quantum_ladder.size() == 6 );
+
+    // Create (C)((CC)C) structure
+    //----------------------------------------
+    std::vector< std::vector<SpinQuantum> > c__cc_c_quantum_ladder;
+    // (CC)
+    for (int p=0; p < spinvec23.size(); p++) {
+      // (CC)C
+      std::vector<SpinQuantum> spinvec234 = spinvec23[p] + spin4;
+      for (int q=0; q < spinvec234.size(); q++) {
+        std::vector<SpinQuantum> spinvec1234 = spin1 + spinvec234[q];
+        // Store (DC) first, then (DC)C, then 4-index spin quantums
+        for (int t=0; t < spinvec1234.size(); t++) {
+          std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec234[q], spinvec1234[t] };
+          c__cc_c_quantum_ladder.push_back( tmp );
+          assert( spinvec1234[t].particleNumber == 4 );
+        }
+      }
+    }
+    assert( c__cc_c_quantum_ladder.size() == 6 );
+
+
+    // Allocate new operator for each spin component
+    //------------------------------------------------
+    spin_ops.clear();
+    for (int q=0; q < cc_cc_quantum_ladder.size(); q++) {
+      spin_ops.push_back( boost::shared_ptr<CreCreCreCre>(new CreCreCreCre) );
+      boost::shared_ptr<CreCreCreCre> op = spin_ops.back();
+      op->set_orbs() = orbs;
+      op->set_initialised() = true;
+      op->set_quantum_ladder()["((CC)(CC))"] = cc_cc_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((CC)C))"] = c__cc_c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)(C(CC)))"] = c__c_cc_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((CC)C)(C))"] = cc_c__c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C(CC))(C))"] = c_cc__c_quantum_ladder.at(q);
+      // Set default value, which is changed according to current build_pattern // FIXME .at(2) is brittle here!  
+      op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(2);
+    }
+
+    assert( m_op.get_local_element(i).size() == 6);
+  }
 }
 
 //===========================================================================================================================================================

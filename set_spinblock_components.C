@@ -40,8 +40,6 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(RI_3INDEX).set_local() = true;
     if (has(RI_4INDEX))
       set_op_array(RI_4INDEX).set_local() = true;
-    if (has(DES_DES))
-      set_op_array(DES_DES).set_local() = true;
   }
   else if (st == DISTRIBUTED_STORAGE)
   {
@@ -237,13 +235,13 @@ void SpinBlock::default_op_components(bool complementary_)
           ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
           ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, true);
           ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, true);
-//          ops[CRE_DES_CRE_DES] = make_new_op(CRE_DES_CRE_DES, true);
-//          ops[CRE_DES_DES_CRE] = make_new_op(CRE_DES_DES_CRE, true);
+          ops[CRE_DES_CRE_DES] = make_new_op(CRE_DES_CRE_DES, true);
+          ops[CRE_DES_DES_CRE] = make_new_op(CRE_DES_DES_CRE, true);
 //          ops[CRE_DES_DES_DES] = make_new_op(CRE_DES_DES_DES, true);
-//          ops[CRE_CRE_CRE_DES] = make_new_op(CRE_CRE_CRE_DES, true);
-//          ops[CRE_CRE_DES_CRE] = make_new_op(CRE_CRE_DES_CRE, true);
-//          ops[CRE_DES_CRE_CRE] = make_new_op(CRE_DES_CRE_CRE, true);
-//          ops[CRE_CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE_CRE, true);
+          ops[CRE_CRE_CRE_DES] = make_new_op(CRE_CRE_CRE_DES, true);
+          ops[CRE_CRE_DES_CRE] = make_new_op(CRE_CRE_DES_CRE, true);
+          ops[CRE_DES_CRE_CRE] = make_new_op(CRE_DES_CRE_CRE, true);
+          ops[CRE_CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE_CRE, true);
 //        }
 //      }
     }
@@ -332,13 +330,13 @@ assert(false); //FIXME << if (haveNormops || dmrginp.do_npdm_ops()) not tested
               ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
               ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, false);
               ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, false);
-//              ops[CRE_DES_CRE_DES] = make_new_op(CRE_DES_CRE_DES, false);
-//              ops[CRE_DES_DES_CRE] = make_new_op(CRE_DES_DES_CRE, false);
+              ops[CRE_DES_CRE_DES] = make_new_op(CRE_DES_CRE_DES, false);
+              ops[CRE_DES_DES_CRE] = make_new_op(CRE_DES_DES_CRE, false);
 //              ops[CRE_DES_DES_DES] = make_new_op(CRE_DES_DES_DES, false);
-//              ops[CRE_CRE_CRE_DES] = make_new_op(CRE_CRE_CRE_DES, false);
-//              ops[CRE_CRE_DES_CRE] = make_new_op(CRE_CRE_DES_CRE, false);
-//              ops[CRE_DES_CRE_CRE] = make_new_op(CRE_DES_CRE_CRE, false);
-//              ops[CRE_CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE_CRE, false);
+              ops[CRE_CRE_CRE_DES] = make_new_op(CRE_CRE_CRE_DES, false);
+              ops[CRE_CRE_DES_CRE] = make_new_op(CRE_CRE_DES_CRE, false);
+              ops[CRE_DES_CRE_CRE] = make_new_op(CRE_DES_CRE_CRE, false);
+              ops[CRE_CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE_CRE, false);
 //            }
 //          }
         }

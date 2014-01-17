@@ -73,48 +73,40 @@ boost::shared_ptr<NpdmSpinOps> init_4_index_operators( SpinBlock * spinBlock, st
   } 
   op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION, Npdm::DESTRUCTION };
   if ( cd_type == op ) {
-//FIXME compound
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDCD( spinBlock ) );
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CDCD( spinBlock ) );
     return ret;
   } 
   op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::CREATION };
   if ( cd_type == op ) {
-//FIXME compound
-    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDDC( spinBlock ) );
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CDDC( spinBlock ) );
     return ret;
   } 
   op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
   if ( cd_type == op ) {
-//FIXME compound
+//FIXME compound -- need DDD operator
     boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDDD( spinBlock ) );
     return ret;
   } 
-//FIXME do I need all these below?
-//  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION };
-//  if ( cd_type == op ) {
-////FIXME compound
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCCD( spinBlock ) );
-//    return ret;
-//  } 
-//  op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION };
-//  if ( cd_type == op ) {
-////FIXME compound
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCDC( spinBlock ) );
-//    return ret;
-//  } 
-//  op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION, Npdm::CREATION };
-//  if ( cd_type == op ) {
-////FIXME compound
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDCC( spinBlock ) );
-//    return ret;
-//  } 
-//  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION, Npdm::CREATION };
-//  if ( cd_type == op ) {
-////FIXME compound
-//    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CCCC( spinBlock ) );
-//    return ret;
-//  } 
+  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION };
+  if ( cd_type == op ) {
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CCCD( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION };
+  if ( cd_type == op ) {
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CCDC( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::CREATION, Npdm::CREATION };
+  if ( cd_type == op ) {
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CDCC( spinBlock ) );
+    return ret;
+  } 
+  op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION, Npdm::CREATION };
+  if ( cd_type == op ) {
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CCCC( spinBlock ) );
+    return ret;
+  } 
   assert(false);
 }
 

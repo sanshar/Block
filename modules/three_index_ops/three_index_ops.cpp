@@ -866,7 +866,7 @@ void SpinAdapted::CreDesDes::build(const SpinBlock& b)
     SpinAdapted::operatorfunctions::TensorTrace(dotBlock, *op, &b, &(b.get_stateInfo()), *this);
   }
   // Dot has j,k;
-  else if (dotBlock->get_op_array(CRE_CRE).has_local_index(j,k)) {
+  else if (dotBlock->get_op_array(DES_DES).has_local_index(j,k)) {
 //pout << "maw dot(j,k)\n";
     assert( j == k );
     assert( sysBlock->get_op_array(CRE).has_local_index(i) );
@@ -889,7 +889,7 @@ void SpinAdapted::CreDesDes::build(const SpinBlock& b)
     SpinAdapted::operatorfunctions::TensorProduct(sysBlock, *opCD, opD, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Sys has j,k;
-  else if (sysBlock->get_op_array(CRE_CRE).has_local_index(j,k)) {
+  else if (sysBlock->get_op_array(DES_DES).has_local_index(j,k)) {
 //pout << "maw sys(j,k)\n";
     assert( dotBlock->get_op_array(CRE).has_local_index(i) );
     build_pattern = "(C(DD))";
@@ -1909,7 +1909,7 @@ void SpinAdapted::DesDesCre::build(const SpinBlock& b)
     SpinAdapted::operatorfunctions::TensorProduct(sysBlock, opD, *opDC, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   // Sys has i,j
-  else if (sysBlock->get_op_array(CRE_CRE).has_local_index(i,j)) {
+  else if (sysBlock->get_op_array(DES_DES).has_local_index(i,j)) {
 //pout << "maw sys(i,j)\n";
     assert( dotBlock->get_op_array(CRE).has_local_index(k) );
     build_pattern = "((DD)C)";
@@ -1933,7 +1933,7 @@ void SpinAdapted::DesDesCre::build(const SpinBlock& b)
     SpinAdapted::operatorfunctions::TensorProduct(dotBlock, opD, *opDC, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   // Dot has i,j
-  else if (dotBlock->get_op_array(CRE_CRE).has_local_index(i,j)) {
+  else if (dotBlock->get_op_array(DES_DES).has_local_index(i,j)) {
 //pout << "maw dot(i,j)\n";
     assert( i == j );
     assert( sysBlock->get_op_array(CRE).has_local_index(k) );
