@@ -72,7 +72,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_solve_type = DAVIDSON;
 
   m_twodot_to_onedot_iter = 0;
-  m_integral_disk_storage_thresh = 100; //this is usually 100
+  m_integral_disk_storage_thresh = 1000;
   m_max_lanczos_dimension = 5000;
 
   m_norbs = 0;
@@ -271,7 +271,7 @@ SpinAdapted::Input::Input(const string& config_name)
 	m_reorderType = FIEDLER;
       }
       else if (boost::iequals(keyword, "noreorder") || boost::iequals(keyword, "nofiedler")) {
-	m_reorderType = NOREORDER;
+	m_reorderType = NOREORDER; 
       }
 
       else if (boost::iequals(keyword,  "schedule"))
@@ -882,18 +882,10 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     }
     else if (m_reorderType == GAOPT) {
 
-      if (tok.size() != 2) {
-	cerr << "keyword gaopt should be followed by the filename and then an end line"<<endl;
-	cerr << "error found in the following line "<<endl;
-	cerr << msg<<endl;
-	abort();
-      }
-
-      m_gaconffile = tok[1];
       ifstream gaconfFile;
       
       if(m_gaconffile != "default") 
-	gaconfFile.open(m_gaconffile.c_str(), ios::in);
+         gaconfFile.open(m_gaconffile.c_str(), ios::in);
       //to provide as initial guess to gaopt
       m_reorder = get_fiedler(orbitalfile);      
       m_reorder = getgaorder(gaconfFile, orbitalfile, m_reorder);      
@@ -1226,7 +1218,7 @@ void SpinAdapted::Input::performSanityTest()
     if (m_maxM < m_startM) {
        pout << "maxM is smaller than startM" << endl;
        pout << "Make sure you specify a maxM larger than " << m_startM << endl;
-       pout << "or specify a smaller startM " << endl;
+       pout << "or specify a startM smaller than " << m_maxM << endl;
        abort();
     }
 
@@ -1467,8 +1459,6 @@ void SpinAdapted::Input::makeInitialHFGuess() {
     pout << "currently other options besides manual, integral  and canonical are not implemented."<<endl;
     abort();
   }
-
-
 
 
   //now reorder the hf_occupancy, 
