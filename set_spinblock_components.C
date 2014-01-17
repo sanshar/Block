@@ -56,13 +56,15 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_DESCOMP).set_local() = false;
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = false;
-//FIXME MAW NPDM
+//FIXME MAW NPDM auxiliary
     if (has(RI_3INDEX))
       set_op_array(RI_3INDEX).set_local() = false;
     if (has(RI_4INDEX))
       set_op_array(RI_4INDEX).set_local() = false;
     if (has(DES_DES))
       set_op_array(DES_DES).set_local() = false;
+    if (has(DES_DES_DES))
+      set_op_array(DES_DES_DES).set_local() = false;
 //FIXME MAW 3PDM
     //pout << "Setting distributed storage 3-index ops\n";
     if (has(DES_CRE))
@@ -129,7 +131,7 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
     case HAM:
       ret = boost::shared_ptr<Op_component<Ham> >(new Op_component<Ham>(is_core));
       break;
-//FIXME MAW NPDM
+//FIXME MAW NPDM auxiliary
     case RI_3INDEX:
       ret = boost::shared_ptr<Op_component<RI3index> >(new Op_component<RI3index>(is_core));
       break;
@@ -138,6 +140,9 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
       break;
     case DES_DES:
       ret = boost::shared_ptr<Op_component<DesDes> >(new Op_component<DesDes>(is_core));
+      break;
+    case DES_DES_DES:
+      ret = boost::shared_ptr<Op_component<DesDesDes> >(new Op_component<DesDesDes>(is_core));
       break;
 //FIXME MAW 3PDM
     case DES_CRE:
@@ -222,28 +227,29 @@ void SpinBlock::default_op_components(bool complementary_)
     if ( dmrginp.do_npdm_ops() ) {
       ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
       ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
-//      if ( (dmrginp.calc_type() == THREEPDM) ||
-//           (dmrginp.calc_type() == FOURPDM) ) {
+      ops[DES_DES] = make_new_op(DES_DES, true);
+      if ( (dmrginp.calc_type() == THREEPDM) ||
+           (dmrginp.calc_type() == FOURPDM) ) {
         ops[DES_CRE] = make_new_op(DES_CRE, true);
-        ops[DES_DES] = make_new_op(DES_DES, true);
         ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
         ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
         ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
         ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
-//        if ( dmrginp.calc_type() == FOURPDM ) {
+        if ( dmrginp.calc_type() == FOURPDM ) {
           ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
           ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
           ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, true);
+          ops[DES_DES_DES] = make_new_op(DES_DES_DES, true);
           ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, true);
           ops[CRE_DES_CRE_DES] = make_new_op(CRE_DES_CRE_DES, true);
           ops[CRE_DES_DES_CRE] = make_new_op(CRE_DES_DES_CRE, true);
-//          ops[CRE_DES_DES_DES] = make_new_op(CRE_DES_DES_DES, true);
+          ops[CRE_DES_DES_DES] = make_new_op(CRE_DES_DES_DES, true);
           ops[CRE_CRE_CRE_DES] = make_new_op(CRE_CRE_CRE_DES, true);
           ops[CRE_CRE_DES_CRE] = make_new_op(CRE_CRE_DES_CRE, true);
           ops[CRE_DES_CRE_CRE] = make_new_op(CRE_DES_CRE_CRE, true);
           ops[CRE_CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE_CRE, true);
-//        }
-//      }
+        }
+      }
     }
   }
 
@@ -317,28 +323,29 @@ assert(false); //FIXME << if (haveNormops || dmrginp.do_npdm_ops()) not tested
         if ( dmrginp.do_npdm_ops() ) {
           ops[RI_3INDEX] = make_new_op(RI_3INDEX, false);
           ops[RI_4INDEX] = make_new_op(RI_4INDEX, false);
-//          if ( (dmrginp.calc_type() == THREEPDM) ||
-//               (dmrginp.calc_type() == FOURPDM) ) {
+          ops[DES_DES] = make_new_op(DES_DES, false);
+          if ( (dmrginp.calc_type() == THREEPDM) ||
+               (dmrginp.calc_type() == FOURPDM) ) {
             ops[DES_CRE] = make_new_op(DES_CRE, false);
-            ops[DES_DES] = make_new_op(DES_DES, false);
             ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
             ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);
             ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, false);
             ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, false);
-//            if ( dmrginp.calc_type() == FOURPDM ) {
+            if ( dmrginp.calc_type() == FOURPDM ) {
               ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, false);
               ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
               ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, false);
+              ops[DES_DES_DES] = make_new_op(DES_DES_DES, false);
               ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, false);
               ops[CRE_DES_CRE_DES] = make_new_op(CRE_DES_CRE_DES, false);
               ops[CRE_DES_DES_CRE] = make_new_op(CRE_DES_DES_CRE, false);
-//              ops[CRE_DES_DES_DES] = make_new_op(CRE_DES_DES_DES, false);
+              ops[CRE_DES_DES_DES] = make_new_op(CRE_DES_DES_DES, false);
               ops[CRE_CRE_CRE_DES] = make_new_op(CRE_CRE_CRE_DES, false);
               ops[CRE_CRE_DES_CRE] = make_new_op(CRE_CRE_DES_CRE, false);
               ops[CRE_DES_CRE_CRE] = make_new_op(CRE_DES_CRE_CRE, false);
               ops[CRE_CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE_CRE, false);
-//            }
-//          }
+            }
+          }
         }
       }
       if (haveCompops) {

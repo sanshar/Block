@@ -18,6 +18,20 @@ class RI3index: public SpinAdapted::SparseMatrix
 };
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+// This can be avoided with transposes
+
+class DesDesDes: public SpinAdapted::SparseMatrix
+{
+  public:
+    DesDesDes() { orbs.resize(3); fermion = true; build_pattern = "((DD)D)";} // default build_pattern
+    void build_in_csf_space(const SpinBlock& b) { assert(false); }
+    void build(const SpinBlock& b);
+    void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs);
+    boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+    double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
 // 3PDM operators
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 

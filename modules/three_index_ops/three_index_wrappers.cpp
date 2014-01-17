@@ -405,8 +405,8 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
 }
 
 //===========================================================================================================================================================
-////// FIXME This DCC operator wrapper using tranpose of DDC seems to need extra minus sign 
-//////
+// FIXME This DCC operator wrapper using tranpose of DDC seems to need extra minus sign 
+//
 ////Npdm_op_wrapper_DCC::Npdm_op_wrapper_DCC( SpinBlock * spinBlock )
 ////{
 ////  opReps_.clear();
@@ -539,23 +539,90 @@ cout << "getting DCC operator...\n";
 }
 
 //===========================================================================================================================================================
-// FIXME check the rationale for this operator wrapper
+// Build using Transpose(CCC) -- check rationale of minus signs!
+////
+////Npdm_op_wrapper_DDD::Npdm_op_wrapper_DDD( SpinBlock * spinBlock )
+////{
+////  opReps_.clear();
+////  indices_.clear();
+////  spinBlock_ = spinBlock;
+////  size_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_size();
+////  is_local_ = spinBlock_->get_op_array(CRE_CRE_CRE).is_local();
+////  //FIXME Minus sign here because of a (DD) transpose ??
+////  factor_ = -1.0;
+////  transpose_ = true;
+////  build_pattern_ = "0";
+////  // S={1/2,1/2,3/2}
+////  mults_ = { 2, 2, 4 };
+////  // For disk-based storage
+////  ifile_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
+////}
+////
+//////-----------------------------------------------------------------------------------------------------------------------------------------------------------
+////
+////bool Npdm_op_wrapper_DDD::set_local_ops( int idx )
+////{
+//////cout << "getting DDD operator...\n";
+////  // Spatial orbital indices
+////  indices_.clear();
+////  int ix, jx, kx;
+////
+////  // Read in operator representations from disk or memory
+////  if ( dmrginp.do_npdm_in_core() )
+////    opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+////  else {
+////assert(false);
+////    assert( check_file_open( idx ) );
+////    std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
+////    opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+////    assert( opReps_tmp.at(0)->get_built_on_disk() );
+////    opReps_.clear();
+////    // Read in full spin-set from disk
+////    for (int i = 0; i < opReps_tmp.size(); i++) {
+////       boost::archive::binary_iarchive load_op(ifs_);
+////       boost::shared_ptr<SparseMatrix> op (new Cre);
+////       load_op >> *op;
+////       opReps_.push_back(op);
+////    }
+////    assert( check_file_close( idx ) );
+////  }
+////
+////  std::string tmp = opReps_.at(0)->get_build_pattern();
+////  if ( tmp == "((CC)C)" ) build_pattern_ = "(D(DD))";
+////  else if ( tmp == "(C(CC))" ) build_pattern_ = "((DD)D)";
+////  else assert( false );
+////
+////  ix = opReps_.at(0)->get_orbs(0);
+////  jx = opReps_.at(0)->get_orbs(1);
+////  kx = opReps_.at(0)->get_orbs(2);
+////
+////  // Note use of transpose means we store this as (k,j,i) not (i,j,k)
+////  indices_.push_back( kx );
+////  indices_.push_back( jx );
+////  indices_.push_back( ix );
+////  if ( (ix == jx) && (jx == kx) ) {
+////    //FIXME This operator should not be built; it's zero as we cannot destroy 3 spin-1/2 particles with different spins
+////    return true;
+////  }
+////  return false;
+////}
+////
+//===========================================================================================================================================================
 
 Npdm_op_wrapper_DDD::Npdm_op_wrapper_DDD( SpinBlock * spinBlock )
 {
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;
-  size_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_size();
-  is_local_ = spinBlock_->get_op_array(CRE_CRE_CRE).is_local();
-  //FIXME Minus sign here because of a (DD) transpose ??
-  factor_ = -1.0;
-  transpose_ = true;
+  size_ = spinBlock_->get_op_array(DES_DES_DES).get_size();
+  is_local_ = spinBlock_->get_op_array(DES_DES_DES).is_local();
+  factor_ = 1.0;
+  transpose_ = false;
   build_pattern_ = "0";
   // S={1/2,1/2,3/2}
   mults_ = { 2, 2, 4 };
   // For disk-based storage
-  ifile_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
+  ifile_ = spinBlock_->get_op_array(DES_DES_DES).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -569,12 +636,11 @@ bool Npdm_op_wrapper_DDD::set_local_ops( int idx )
 
   // Read in operator representations from disk or memory
   if ( dmrginp.do_npdm_in_core() )
-    opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+    opReps_ = spinBlock_->get_op_array(DES_DES_DES).get_local_element(idx);
   else {
-assert(false);
     assert( check_file_open( idx ) );
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
-    opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
+    opReps_tmp = spinBlock_->get_op_array(DES_DES_DES).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
     opReps_.clear();
     // Read in full spin-set from disk
@@ -587,23 +653,16 @@ assert(false);
     assert( check_file_close( idx ) );
   }
 
-  std::string tmp = opReps_.at(0)->get_build_pattern();
-  if ( tmp == "((CC)C)" ) build_pattern_ = "(D(DD))";
-  else if ( tmp == "(C(CC))" ) build_pattern_ = "((DD)D)";
-  else assert( false );
+  build_pattern_ = opReps_.at(0)->get_build_pattern();
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
 
-  // Note use of transpose means we store this as (k,j,i) not (i,j,k)
-  indices_.push_back( kx );
-  indices_.push_back( jx );
   indices_.push_back( ix );
-  if ( (ix == jx) && (jx == kx) ) {
-    //FIXME This operator should not be built; it's zero as we cannot destroy 3 spin-1/2 particles with different spins
-    return true;
-  }
+  indices_.push_back( jx );
+  indices_.push_back( kx );
+
   return false;
 }
 

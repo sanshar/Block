@@ -72,6 +72,9 @@ template <> struct ChooseArray<RI4index> {
 template <> struct ChooseArray<DesDes> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<DesDes> > > ArrayType;
 };
+template <> struct ChooseArray<DesDesDes> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<DesDesDes> > > ArrayType;
+};
 //MAW 3PDM >>>>>
 template <> struct ChooseArray<DesCre> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<DesCre> > > ArrayType;

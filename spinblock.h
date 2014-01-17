@@ -39,6 +39,7 @@ class SpinBlock
       ar.register_type(static_cast<Op_component<RI3index> *>(NULL));
       ar.register_type(static_cast<Op_component<RI4index> *>(NULL));
       ar.register_type(static_cast<Op_component<DesDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<DesDesDes> *>(NULL));
 //MAW 3PDM
       ar.register_type(static_cast<Op_component<DesCre> *>(NULL));
 //FIXME do we need to store these too if using separate disk-based 3-index operator storage?

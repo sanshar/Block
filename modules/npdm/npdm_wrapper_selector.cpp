@@ -83,8 +83,7 @@ boost::shared_ptr<NpdmSpinOps> init_4_index_operators( SpinBlock * spinBlock, st
   } 
   op = { Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
   if ( cd_type == op ) {
-//FIXME compound -- need DDD operator
-    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_compound_CDDD( spinBlock ) );
+    boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_CDDD( spinBlock ) );
     return ret;
   } 
   op = { Npdm::CREATION, Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION };
