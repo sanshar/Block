@@ -9,6 +9,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #ifndef SPIN_OPERATORFUNCTIONS_HEADER_H
 #define SPIN_OPERATORFUNCTIONS_HEADER_H
+#include "wavefunction.h"
 #include "Operators.h"
 #include "timer.h"
 #include "spinblock.h"

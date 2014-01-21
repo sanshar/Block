@@ -345,6 +345,7 @@ void SparseMatrix::renormalise_transform_on_disk(const std::vector<Matrix>& rota
     load_op >> *this;
   } 
   else {
+//FIXME MEMORY?? why two allocations here???
     // DEBUG option
     boost::shared_ptr<SparseMatrix> op (new Cre);
     boost::archive::binary_iarchive load_op(ifs);

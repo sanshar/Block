@@ -45,7 +45,7 @@ void Twopdm_driver::save_npdm_text(const int &i, const int &j)
 
 void Twopdm_driver::save_spatial_npdm_text(const int &i, const int &j)
 {
-  //the spatial has a factor of 1/2 in front of it 
+  //Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
   if( mpigetrank() == 0)
   {
     char file[5000];
@@ -63,7 +63,7 @@ void Twopdm_driver::save_spatial_npdm_text(const int &i, const int &j)
 //                 if ( (k==0) && (l==0) && (m==1) && (n==2) ) 
 //                 if ( (k==0) && (l==0) && (m==2) && (n==1) ) 
 //                     std::cout << 2*k+s<<","<< 2*l+t<<","<< 2*m+t<<","<< 2*n+s<<"\t\t"<<pdm<<"\t"<<twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s)*0.5 <<std::endl;
-                 pdm += twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s)*0.5;
+                 pdm += 0.5 * twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s);
                }
              if ( (k==n) && (l==m) ) trace += pdm;
              ofs << boost::format("%d %d %d %d %20.14e\n") % k % l % m % n % pdm;
@@ -77,7 +77,7 @@ void Twopdm_driver::save_spatial_npdm_text(const int &i, const int &j)
 
 void Twopdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
 {
-  //the spatial has a factor of 1/2 in front of it 
+  //Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
   if( mpigetrank() == 0)
   {
     char file[5000];
@@ -93,7 +93,7 @@ void Twopdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
             pdm(k, l, m, n) = 0.0;
             for (int s=0; s<2; s++)
             for (int t =0; t<2; t++)
-            pdm(k, l, m, n) += twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s)*0.5;
+            pdm(k, l, m, n) += 0.5 * twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s);
           }
     int result = fwrite(&nrows,  1, sizeof(int), f);
     result = fwrite(&pdm(0,0,0,0), pdm.size(), sizeof(double), f);

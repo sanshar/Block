@@ -32,7 +32,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 
 //FIXME why do we need this declaration?
-class SpinBlock;
+//class SpinBlock;
 
 //===========================================================================================================================================================
 // Choose the type of array for different types of Operators
@@ -249,7 +249,13 @@ template <class Op> class Op_component : public Op_component_base
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   void build_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::string& sysfile, std::string& dotfile) { 
-
+cout << "building operators:  opType = " << ot << endl;
+//FIXME
+//    if ( m_op.num_indices() > 3) {
+//      // New driver to build n-index operators (n>3)
+//      assert(false);
+//    }
+//    else if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
     if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
       // Build on disk (reading from disk, as necessary)
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
@@ -276,7 +282,7 @@ template <class Op> class Op_component : public Op_component_base
 
   void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo* s) {
 //FIXME
-//cout << "renormalize transform: opType = " << ot << endl;
+cout << "renormalize transform: opType = " << ot << endl;
     if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
       // Build on disk (load, renormalize, save)
       std::string ifile = get_filename();
@@ -298,7 +304,7 @@ template <class Op> class Op_component : public Op_component_base
     else {
       // Build in core
 //FIXME
-//cout << "in core renormalize\n";
+cout << "in core renormalize\n";
       for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );
     }
   }
@@ -395,17 +401,12 @@ template <class Op> class Op_component : public Op_component_base
 // MAW FIXME for more than 2-index operators:
   boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1, int l=-1)
   {
-//cout << "hello get_op_rep XXXXX\n";
     assert( k !=-1 );
     Op* o = 0;
-//cout << "hello get_op_rep 1\n";
-//cout << "i,j,k,l = " << i << j << k << l << endl;
     std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k,l);
-//cout << "hello get_op_rep 2\n";
+    assert( vec[0]->get_built() );
     std::string build_pattern = vec[0]->get_build_pattern();
-//cout << "hello get_op_rep 3\n";
     for (int p=0; p<vec.size(); p++) {
-//cout << "hello get_op_rep 4\n";
       if ( s == vec[p]->get_quantum_ladder().at(build_pattern) ) return m_op(i,j,k,l)[p];
     }
     assert (false);
@@ -416,16 +417,11 @@ template <class Op> class Op_component : public Op_component_base
 // MAW FIXME for more than 2-index operators:
   const boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1, int l=-1) const
   {
-//cout << "hello get_op_rep YYYYY\n";
     assert( k !=-1 );
     Op* o = 0;
-//cout << "hello get_op_rep 1\n";
     const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k,l);
-//cout << "hello get_op_rep 2\n";
     std::string build_pattern = vec[0]->get_build_pattern();
-//cout << "hello get_op_rep 3\n";
     for (int p=0; p<vec.size(); p++) {
-//cout << "hello get_op_rep 4\n";
       if ( s == vec[p]->get_quantum_ladder().at(build_pattern) ) return m_op(i,j,k,l)[p];
     }
     assert (false);

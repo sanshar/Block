@@ -27,7 +27,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 void SpinAdapted::CreCreDesDes::build(const SpinBlock& b)
 {
-//cout << "building CreCreDesDes renormalized operator...\n";
+cout << "building CreCreDesDes renormalized operator...\n";
+assert(false);
   dmrginp.makeopsT -> start();
   built = true;
   Sign = 1;

@@ -19,6 +19,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/mpi.hpp>
 #endif
 #include "pario.h"
+//FIXME
+#include "build_4index_ops.h"
 
 namespace SpinAdapted{
 using namespace operatorfunctions;
@@ -207,15 +209,9 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
         // Output file for operators written to disk
         std::string ofile = it->second->get_filename();
         // Build operators from CSFs
-//FIXME
-//if (ot == CRE) cout << "Is CRE local? " << ops[CRE]->is_local() << "; rank = " << mpigetrank() << endl;
-//if (ot == CRE) cout << "Building C CSF operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
-//if (ot == CRE_CRE) cout << "Building CC CSF operators on p" << mpigetrank() << " = " << ops[CRE_CRE]->get_size() << " local, " << ops[CRE_CRE]->size() << " global\n";
-//if (ot == CRE_CRE_CRE) cout << "Building CCC CSF operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
         it->second->build_csf_operators(*this, ot, ofile, dets, ladders);
       }
     }
-//if (has(CRE_CRE_CRE)) cout << "Building CCC CSF operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -234,11 +230,12 @@ void SpinBlock::build_virtual_operators()
         std::string dotfile = get_rightBlock()->ops[ot]->get_filename();
         // Build operators
 //FIXME
-//if (ot == CRE) cout << "Is CRE local? " << ops[CRE]->is_local() << "; rank = " << mpigetrank() << endl;
-//if (ot == CRE) cout << "Building C virtual operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
-//if (ot == CRE_CRE) cout << "Building CC virtual operators on p" << mpigetrank() << " = " << ops[CRE_CRE]->get_size() << " local, " << ops[CRE_CRE]->size() << " global\n";
-//if (ot == CRE_CRE_CRE) cout << "Building CCC virtual operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
-        it->second->build_operators(*this, ot, ofile, sysfile, dotfile);
+        if ( ot == CRE_CRE_DES_DES ) {
+          build_4index_ops( ot, *this );
+        }
+        else {
+          it->second->build_operators(*this, ot, ofile, sysfile, dotfile);
+        }
       }
     }
 }
@@ -263,7 +260,14 @@ void SpinBlock::build_operators()
 //if (ot == CRE) cout << "Building C core operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
 //if (ot == CRE_CRE) cout << "Building CC core operators on p" << mpigetrank() << " = " << ops[CRE_CRE]->get_size() << " local, " << ops[CRE_CRE]->size() << " global\n";
 //if (ot == CRE_CRE_CRE) cout << "Building CCC core operators on p" << mpigetrank() << " = " << ops[CRE_CRE_CRE]->get_size() << " local, " << ops[CRE_CRE_CRE]->size() << " global\n";
-        it->second->build_operators(*this, ot, ofile, sysfile, dotfile);
+
+//FIXME
+        if ( ot == CRE_CRE_DES_DES ) {
+          build_4index_ops( ot, *this );
+        }
+        else {
+          it->second->build_operators(*this, ot, ofile, sysfile, dotfile);
+        }
       }
     }
 }

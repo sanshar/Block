@@ -47,6 +47,7 @@ using namespace boost;
 using namespace std;
 
 namespace SpinAdapted{
+//FIXME Npdm namespace
 namespace Npdm{
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

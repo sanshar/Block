@@ -441,6 +441,8 @@ void SpinAdapted::CreCreDes::build(const SpinBlock& b)
   }
   else assert(false);
 
+//cout << "CCD build pattern = " << build_pattern << endl;
+
   dmrginp.makeopsT -> stop();
 //pout << "CCD op\n";
 //pout << *this;
