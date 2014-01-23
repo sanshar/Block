@@ -30,11 +30,10 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
 
   SpinBlock system;
   InitBlocks::InitStartingBlock(system, true, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
-
-  int numsites = dmrginp.last_site();
+  int numsites = dmrginp.spinAdapted() ? dmrginp.last_site() : dmrginp.last_site()/2;
   int forwardsites = numsites/2+numsites%2;
   int backwardsites = numsites - forwardsites;
-  SpinQuantum hq(0,0,IrrepSpace(0));
+  SpinQuantum hq(0,SpinSpace(0),IrrepSpace(0));
 
   for (int i=0; i<forwardsites-1; i++) {
     SpinBlock sysdot(i+1, i+1);
@@ -45,9 +44,13 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
     newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, sysdot);
     system = newSystem;
   }
+  cout << system<<endl;
+
+
 
   SpinBlock environment;
   InitBlocks::InitStartingBlock(environment, false, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
+  cout << environment<<endl;
   for (int i=0;i <backwardsites-1; i++) {
     SpinBlock envdot(numsites-2-i, numsites-2-i);
     SpinBlock newEnvironment;
@@ -58,18 +61,6 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
     environment = newEnvironment;
   }
 
-  /*
-  Op_component_base& oparray = system.get_op_array(CRE_CRE_DESCOMP);
-  for (int i=0; i<oparray.get_size(); i++)
-    cout <<oparray.get_local_element(i)[0]->get_orbs(0)<<endl<< *(oparray.get_local_element(i)[0]->getworkingrepresentation(&system))<<endl;
-
-  
-  Op_component_base& oparray2 = sysdotmp.get_op_array(CRE_CRE_DESCOMP);
-  for (int i=0; i<oparray2.get_size(); i++)
-    cout <<oparray2.get_local_element(i)[0]->get_orbs(0)<<endl<< *(oparray2.get_local_element(i)[0]->getworkingrepresentation(&sysdotmp))<<endl;
-  */
-
-  //system.clear();
   pout <<"\t\t\t System Block :: "<< system;
   pout <<"\t\t\t Environment Block :: "<< environment;
   SpinBlock big;
@@ -118,7 +109,7 @@ void SpinAdapted::Sweep::tiny(double sweep_tol)
   sweepParams.set_sweep_parameters();
   SpinBlock system(0,dmrginp.last_site()-1);
   const StateInfo& sinfo = system.get_stateInfo();
-  SpinQuantum hq(0,0,IrrepSpace(0));
+  SpinQuantum hq(0,SpinSpace(0),IrrepSpace(0));
   for (int i=0; i<sinfo.totalStates; i++) {
     if (sinfo.quanta[i] == dmrginp.molecule_quantum()) {
       Matrix& h = system.get_op_rep(HAM, hq)->operator_element(i,i);

@@ -118,8 +118,7 @@ void TensorProduct (StateInfo& a, StateInfo& b, const SpinQuantum q, const int c
 	vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
 	for (int vq=0; vq< v.size(); vq++) {
 	  if ( (v[vq].get_n() > q.get_n()) || (v[vq].get_n()==q.get_n() && v[vq].get_s() != q.get_s())
-	       || ( (v[vq].get_s() + (q.get_n()-v[vq].get_n()) < q.get_s() )) 
-	       || ( (v[vq].get_s() - (q.get_n()-v[vq].get_n()) > q.get_s() )) 
+	       || ( abs(v[vq].get_s().getirrep()-q.get_s().getirrep()) > (q.get_n()-v[vq].get_n())  )
 	       || (v[vq].get_n() == q.get_n() && v[vq].get_symm() != q.get_symm()) )
 	       continue;
 	  bool include = false;

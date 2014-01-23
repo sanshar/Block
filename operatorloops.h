@@ -44,8 +44,10 @@ template<class A> void singlethread_build(A& array, SpinBlock& b, std::vector< C
   for (int i = 0; i < array.get_size(); ++i) {
     //typedef typename A::OpType Op;
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
-    for (int j=0; j<vec.size(); j++)
+    for (int j=0; j<vec.size(); j++) {
       vec[j]->buildUsingCsf(b, ladders, s);
+      //cout << *vec[j]<<endl;
+    }
   }
 }
 
@@ -59,8 +61,10 @@ template<class A> void singlethread_build(A& array, SpinBlock& b)
     //typedef typename A::OpType Op;
     //std::vector<boost::shared_ptr<Op> >& vec = array.get_local_element(i);
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
-    for (int j=0; j<vec.size(); j++)
+    for (int j=0; j<vec.size(); j++) {
       vec[j]->build(b);
+      //cout << *vec[j]<<endl;
+    }
   }
 }
 //*****************************************************************************

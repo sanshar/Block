@@ -35,7 +35,7 @@ enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
 	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, 
-	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NUMKEYWORDS};
+	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, NUMKEYWORDS};
 
 class Input {
 
@@ -45,7 +45,8 @@ class Input {
   int m_alpha;
   int m_beta;
   int m_Sz;
-  
+  bool m_spinAdapted;
+
   IrrepSpace m_total_symmetry_number;
   SpinQuantum m_molecule_quantum;
   int m_total_spin;
@@ -279,8 +280,14 @@ class Input {
   int nroots() const {return m_nroots;}
   int real_particle_number() const { return (m_alpha + m_beta);}
   int total_particle_number() const { if(!m_add_noninteracting_orbs) return (m_alpha + m_beta); else return (2*m_alpha); }
-  int total_spin_number() const { if (!m_add_noninteracting_orbs) return (m_alpha - m_beta); else return 0; }
-  const int &last_site() const { return m_num_spatial_orbs; }
+  const SpinSpace total_spin_number() const { if (!m_add_noninteracting_orbs) return SpinSpace(m_alpha - m_beta); else return SpinSpace(0); }
+  int last_site() const 
+  { 
+    if(m_spinAdapted) 
+      return m_num_spatial_orbs; 
+    else 
+      return 2*m_num_spatial_orbs; 
+  }
   const bool &no_transform() const { return m_no_transform; }
   const int &deflation_min_size() const { return m_deflation_min_size; }
   const bool &direct() const { return m_direct; }
@@ -301,13 +308,14 @@ class Input {
   const std::vector<int> &spin_vector() const { return m_spin_vector; }
   const std::string &save_prefix() const { return m_save_prefix; }
   const std::string &load_prefix() const { return m_load_prefix; }
-  SpinQuantum effective_molecule_quantum() {if (!m_add_noninteracting_orbs) return m_molecule_quantum; else return SpinQuantum(total_particle_number() + total_spin_number(), 0, total_symmetry_number());}  
+  SpinQuantum effective_molecule_quantum() {if (!m_add_noninteracting_orbs) return m_molecule_quantum; else return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), total_symmetry_number());}  
   std::vector<double>& get_orbenergies() {return m_orbenergies;}
   int getHFQuanta(const SpinBlock& b) const;
   const bool &do_cd() const {return m_do_cd;}
   bool &do_cd() {return m_do_cd;}
   int slater_size() const {return m_norbs;}
   const std::vector<int> &reorder_vector() {return m_reorder;}
+  bool spinAdapted() {return m_spinAdapted;}
 };
 }
 #endif

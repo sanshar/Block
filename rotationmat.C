@@ -63,7 +63,7 @@ bool SpinAdapted::can_connect(int n, int spin, int right_block_size)
   for(int alpha=0;alpha<=min(right_block_size/2,dmrginp.total_particle_number()-n);++alpha)
   {
     int beta = dmrginp.total_particle_number() - n - alpha;
-    if(dmrginp.total_spin_number() - (alpha - beta) == spin && beta <= right_block_size/2)
+    if(dmrginp.total_spin_number().getirrep() - (alpha - beta) == spin && beta <= right_block_size/2)
       return true;
   }
   return false;

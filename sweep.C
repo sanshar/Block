@@ -42,12 +42,12 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   int systemDotSize = sweepParams.get_sys_add() - 1;
   if (forward)
   {
-    systemDotStart = *system.get_sites().rbegin () + 1;
+    systemDotStart = dmrginp.spinAdapted() ? *system.get_sites().rbegin () + 1 : (*system.get_sites().rbegin ())/2 + 1 ;
     systemDotEnd = systemDotStart + systemDotSize;
   }
   else
   {
-    systemDotStart = system.get_sites() [0] - 1;
+    systemDotStart = dmrginp.spinAdapted() ? system.get_sites()[0] - 1 : (system.get_sites()[0])/2 - 1 ;
     systemDotEnd = systemDotStart - systemDotSize;
   }
   vector<int> spindotsites(2); 
@@ -75,7 +75,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 
   if (!sweepParams.get_onedot())
     environmentDot = SpinBlock(environmentDotStart, environmentDotEnd);
-  
+
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
   //before halfway put the sysdot with system otherwise with environment
@@ -405,7 +405,7 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   std::vector<Matrix> rotateMatrix(nquanta);
   DensityMatrix transformmatrix; 
   transformmatrix.allocate(newSystem.get_stateInfo());
-  SpinQuantum q(0,0,IrrepSpace(0));
+  SpinQuantum q(0,SpinSpace(0),IrrepSpace(0));
 
   if (mpigetrank() == 0) {
     double minval = 1e12;

@@ -32,6 +32,7 @@ void GuessWave::TransformLeftBlock(Wavefunction& oldwavefunction, const StateInf
 
 void GuessWave::TransformRightBlock(const Wavefunction& tempnewWave, const StateInfo& oldStateInfo, const std::vector<Matrix>& RotationMatrix, Wavefunction& trial)
 {
+
   for (int a=0; a<tempnewWave.nrows(); a++)
     for (int b=0; b<tempnewWave.ncols(); b++)
     {      
@@ -177,11 +178,11 @@ void GuessWave::onedot_threeindex_to_twoindex_wavefunction(const StateInfo& twos
 
 	    if (!twowavefunction.allowed(ab,c)) continue;
 	    int A, B, AB, C, J, CB;
-	    A = twostateinfo.leftStateInfo->leftStateInfo->quanta[a].get_s(); 
-	    B = twostateinfo.leftStateInfo->rightStateInfo->quanta[b].get_s();
-	    AB = uncollectedstateinfo.quanta[ab].get_s();
-	    C =  twostateinfo.rightStateInfo->quanta[c].get_s(); 
-	    J = twowavefunction.get_deltaQuantum().get_s(); 
+	    A = twostateinfo.leftStateInfo->leftStateInfo->quanta[a].get_s().getirrep(); 
+	    B = twostateinfo.leftStateInfo->rightStateInfo->quanta[b].get_s().getirrep();
+	    AB = uncollectedstateinfo.quanta[ab].get_s().getirrep();
+	    C =  twostateinfo.rightStateInfo->quanta[c].get_s().getirrep(); 
+	    J = twowavefunction.get_deltaQuantum().get_s().getirrep(); 
 
 	    int Al, Bl, ABl, Cl, Jl, CBl;
 	    Al = twostateinfo.leftStateInfo->leftStateInfo->quanta[a].get_symm().getirrep(); 
@@ -192,11 +193,14 @@ void GuessWave::onedot_threeindex_to_twoindex_wavefunction(const StateInfo& twos
 
 	    for (int j=0; j<prevUnCollectedSI.quantaMap(c, b).size(); j++) {
 	      int cb = prevUnCollectedSI.quantaMap(c,b)[j];
-	      CB = prevUnCollectedSI.quanta[cb].get_s();
+	      CB = prevUnCollectedSI.quanta[cb].get_s().getirrep();
 	      CBl = prevUnCollectedSI.quanta[cb].get_symm().getirrep();
 	      int insertionNum = prevUnCollectedSI.quanta[cb].insertionNum(twostateinfo.leftStateInfo->rightStateInfo->quanta[b], twostateinfo.rightStateInfo->quanta[c]);
-	      double scale = sixj(A, B, AB, C, J, CB);
-	      scale *= pow((1.0*AB+1.0)*(1.0*CB+1.0), 0.5)* pow(-1.0, static_cast<int>((A +B +J +C)/2)); 
+	      double scale = 1.0;
+	      if(dmrginp.spinAdapted()) {
+		scale = sixj(A, B, AB, C, J, CB);
+		scale *= pow((1.0*AB+1.0)*(1.0*CB+1.0), 0.5)* pow(-1.0, static_cast<int>((A +B +J +C)/2)); 
+	      }
 	      scale *= Symmetry::spatial_sixj(Al, Bl, ABl, Cl, Jl, CBl);
 
 	      if (threewavefunction(a, b, c)[insertionNum].Nrows() != 0) 
@@ -251,7 +255,7 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
       transpose_previous_wavefunction(solution, big, state, onedot, transpose_guess_wave);
       break;
     }
-    
+
     double norm = DotProduct(solution, solution);
     /*
     if (additional_noise >1e-14) {
@@ -325,9 +329,9 @@ void GuessWave::onedot_twoindex_to_threeindex_wavefunction(const StateInfo& stat
 	{
 	  int a = uncollectedstateinfo.leftUnMapQuanta[ab];
 	  int b = uncollectedstateinfo.rightUnMapQuanta[ab];
-	  int AB = uncollectedstateinfo.quanta[ab].get_s();
-	  int A = stateinfo.leftStateInfo->leftStateInfo->quanta[a].get_s();
-	  int B = stateinfo.leftStateInfo->rightStateInfo->quanta[b].get_s();
+	  int AB = uncollectedstateinfo.quanta[ab].get_s().getirrep();
+	  int A = stateinfo.leftStateInfo->leftStateInfo->quanta[a].get_s().getirrep();
+	  int B = stateinfo.leftStateInfo->rightStateInfo->quanta[b].get_s().getirrep();
 	  int insertionNum = uncollectedstateinfo.quanta[ab].insertionNum(stateinfo.leftStateInfo->leftStateInfo->quanta[a],  stateinfo.leftStateInfo->rightStateInfo->quanta[b]);
 	  vector<SpinQuantum> spq = stateinfo.leftStateInfo->leftStateInfo->quanta[a]+  stateinfo.leftStateInfo->rightStateInfo->quanta[b];
 	  if (threewavefunction(a, b, c).size() != spq.size())
@@ -369,9 +373,9 @@ void GuessWave::onedot_twoindex_to_threeindex_shufflesysdot(const StateInfo& sta
           bool bodd = IsFermion(stateinfo.rightStateInfo->rightStateInfo->quanta[b]);
           bool codd = IsFermion(stateinfo.rightStateInfo->leftStateInfo->quanta[c]);
 	  //int parity = (bodd&codd) ? -1 : 1;
-	  int j1 = stateinfo.rightStateInfo->leftStateInfo->quanta[c].get_s();
-	  int j2 = stateinfo.rightStateInfo->rightStateInfo->quanta[b].get_s();
-	  int J = uncollectedstateinfo.quanta[bc].get_s();
+	  int j1 = stateinfo.rightStateInfo->leftStateInfo->quanta[c].get_s().getirrep();
+	  int j2 = stateinfo.rightStateInfo->rightStateInfo->quanta[b].get_s().getirrep();
+	  int J = uncollectedstateinfo.quanta[bc].get_s().getirrep();
 	  
 	  int parity = getCommuteParity(stateinfo.rightStateInfo->leftStateInfo->quanta[c],
 				    stateinfo.rightStateInfo->rightStateInfo->quanta[b],
@@ -386,6 +390,7 @@ void GuessWave::onedot_twoindex_to_threeindex_shufflesysdot(const StateInfo& sta
           copy(uncollectedwf(a, bc), threewavefunction(a, b, c)[insertionNum]);
           if (parity == -1)
 	    threewavefunction(a,b,c)[insertionNum] *= -1.0;
+
         }
 }
 
@@ -394,6 +399,7 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinB
 {
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Transforming previous wavefunction " << endl;
+  
   ObjectMatrix3D< vector<Matrix> > oldTrialWavefunction;
   ObjectMatrix3D< vector<Matrix> > newTrialWavefunction;
   StateInfo oldStateInfo;
@@ -452,7 +458,6 @@ it's not necessary to take the pseudo inverse of right rotation matrix.
     tempoldWave.AllowQuantaFor(*big.get_stateInfo().leftStateInfo->leftStateInfo, *oldStateInfo.rightStateInfo, oldWave.get_deltaQuantum()); 
     TransformLeftBlock(oldWave, big.get_stateInfo(), leftRotationMatrix, tempoldWave);
 
-
     StateInfo tempoldStateInfo;
     TensorProduct (*(big.get_stateInfo().leftStateInfo->leftStateInfo), *oldStateInfo.rightStateInfo, tempoldStateInfo,
 		   PARTICLE_SPIN_NUMBER_CONSTRAINT);
@@ -468,8 +473,9 @@ it's not necessary to take the pseudo inverse of right rotation matrix.
     
     tempnewStateInfo.CollectQuanta();
     onedot_shufflesysdot(tempoldStateInfo, tempnewStateInfo, tempoldWave, tempnewWave);
-    
+
     LoadRotationMatrix (big.get_rightBlock()->get_sites(), rightRotationMatrix, state);
+
     trial.AllowQuantaFor(*big.get_stateInfo().leftStateInfo, *big.get_stateInfo().rightStateInfo, oldWave.get_deltaQuantum()); 
     TransformRightBlock(tempnewWave, oldStateInfo, rightRotationMatrix, trial);
     // from tensor product form |a>|b> group together blocks with same quantum numbers

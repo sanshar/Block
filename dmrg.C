@@ -163,7 +163,7 @@ int calldmrg(char* input, char* output)
     }
 
     dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
-    dmrginp.Sz() = dmrginp.total_spin_number();
+    dmrginp.Sz() = dmrginp.total_spin_number().getirrep();
     sweep_copy.restorestate(direction_copy, restartsize_copy);
 
     dmrginp.set_fullrestart() = true;
@@ -208,7 +208,7 @@ int calldmrg(char* input, char* output)
     dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
     dmrginp.twoindex_screen_tol() = 0.0; //need to turn screening off for two index ops
 
-    dmrginp.Sz() = dmrginp.total_spin_number();
+    dmrginp.Sz() = dmrginp.total_spin_number().getirrep();
     dmrginp.do_cd() = true;
 
     sweep_copy.restorestate(direction_copy, restartsize_copy);
@@ -239,7 +239,7 @@ int calldmrg(char* input, char* output)
 
 
     dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
-    dmrginp.Sz() = dmrginp.total_spin_number();
+    dmrginp.Sz() = dmrginp.total_spin_number().getirrep();
     sweep_copy.restorestate(direction_copy, restartsize_copy);
 
     dmrginp.set_fullrestart() = true;
@@ -273,7 +273,7 @@ int calldmrg(char* input, char* output)
     dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
     dmrginp.twoindex_screen_tol() = 0.0; //need to turn screening off for two index ops
 
-    dmrginp.Sz() = dmrginp.total_spin_number();
+    dmrginp.Sz() = dmrginp.total_spin_number().getirrep();
     dmrginp.do_cd() = true;
 
     sweep_copy.restorestate(direction_copy, restartsize_copy);

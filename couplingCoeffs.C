@@ -26,6 +26,7 @@ void ninejCoeffs::init(int maxj_)
   }
   else
     return;
+
 }
 
 void ninejCoeffs::buildArray()
@@ -53,7 +54,7 @@ ninejCoeffs::ninejCoeffs(int maxj_): maxj(maxj_)
 
 double ninejCoeffs::operator() (int ja, int jb, int jc, int jd, int je, int jf, int jg, int jh, int ji) const
 {
-
+  if (!dmrginp.spinAdapted()) return 1.0;
   int a = jd, b=je, c=jf;
   int index = arrayindex(a, b, c);
   if (index == -1)

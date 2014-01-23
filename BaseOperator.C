@@ -18,12 +18,15 @@ namespace SpinAdapted{
 
 double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
 {
-  int aspin = a.get_s(), airrep = a.get_symm().getirrep();
-  int bspin = b.get_s(), birrep = b.get_symm().getirrep();
-  int cspin = c.get_s(), cirrep = c.get_symm().getirrep();
+  int aspin = a.get_s().getirrep(), airrep = a.get_symm().getirrep();
+  int bspin = b.get_s().getirrep(), birrep = b.get_symm().getirrep();
+  int cspin = c.get_s().getirrep(), cirrep = c.get_symm().getirrep();
 
   int an = a.get_n(), bn = b.get_n();
   int parity = IsFermion(a) && IsFermion(b) ? -1 : 1;
+
+  if (!dmrginp.spinAdapted()) return parity;
+
   for (int asz = -aspin; asz<aspin+1; asz+=2)
   for (int bsz = -bspin; bsz<bspin+1; bsz+=2)
   for (int al = 0; al<Symmetry::sizeofIrrep(airrep); al++)
@@ -50,11 +53,12 @@ double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
 
 double Transposeview::get_scaling(SpinQuantum leftq, SpinQuantum rightq) const 
 {
+  if(!dmrginp.spinAdapted()) return 1.0;
   if (conjugacy() == 'n') {return 1.0;}
 
-  int lspin = leftq.get_s(), lirrep = leftq.get_symm().getirrep();
-  int rspin = rightq.get_s(), rirrep = rightq.get_symm().getirrep();
-  int cspin = opdata->get_deltaQuantum().get_s(), cirrep = opdata->get_deltaQuantum().get_symm().getirrep();
+  int lspin = leftq.get_s().getirrep(), lirrep = leftq.get_symm().getirrep();
+  int rspin = rightq.get_s().getirrep(), rirrep = rightq.get_symm().getirrep();
+  int cspin = opdata->get_deltaQuantum().get_s().getirrep(), cirrep = opdata->get_deltaQuantum().get_symm().getirrep();
 
   for (int lsz = -lspin; lsz<lspin+1; lsz+=2)
   for (int rsz = -rspin; rsz<rspin+1; rsz+=2)
@@ -124,7 +128,7 @@ void SparseMatrix::CleanUp ()
   built = false;
   initialised = false;
   fermion = 0;
-  deltaQuantum = SpinQuantum (0, 0, IrrepSpace(0));
+  deltaQuantum = SpinQuantum (0, SpinSpace(0), IrrepSpace(0));
   orbs.resize(0);
   allowedQuantaMatrix.ReSize (0,0);
   operatorMatrix.ReSize (0,0);
@@ -135,6 +139,11 @@ const Transposeview Transpose(SparseMatrix& op) { return Transposeview(op); };
 ostream& operator<< (ostream& os, const SparseMatrix& a)
 {
   assert (a.initialised);
+  os<<"indices : ";
+  for(int i=0; i<a.orbs.size(); i++)
+    os<<a.orbs[i]<<"  ";
+  os <<endl;
+  os<<a.get_deltaQuantum()<<endl;
 	for (int i = 0; i < a.allowedQuantaMatrix.Nrows (); ++i)
 	for (int j = 0; j < a.allowedQuantaMatrix.Ncols (); ++j)
 	{

@@ -64,25 +64,25 @@ void DensityMatrix::add_twodot_noise(const SpinBlock &big, const double noise)
 
   {
     const int particlenumber = dmrginp.total_particle_number();
-    const int spinnumber = dmrginp.total_spin_number();
+    const int spinnumber = dmrginp.total_spin_number().getirrep();
     const IrrepSpace& symmetrynumber = dmrginp.total_symmetry_number();
-    toadd.push_back(SpinQuantum(particlenumber + 1, spinnumber + 1, symmetrynumber));
-    toadd.push_back(SpinQuantum(particlenumber - 1, spinnumber + 1, symmetrynumber));
+    toadd.push_back(SpinQuantum(particlenumber + 1, SpinSpace(spinnumber + 1), symmetrynumber));
+    toadd.push_back(SpinQuantum(particlenumber - 1, SpinSpace(spinnumber + 1), symmetrynumber));
     if (spinnumber >= 1) {
-      toadd.push_back(SpinQuantum(particlenumber + 1, spinnumber - 1, symmetrynumber));
-      toadd.push_back(SpinQuantum(particlenumber - 1, spinnumber - 1, symmetrynumber));
+      toadd.push_back(SpinQuantum(particlenumber + 1, SpinSpace(spinnumber - 1), symmetrynumber));
+      toadd.push_back(SpinQuantum(particlenumber - 1, SpinSpace(spinnumber - 1), symmetrynumber));
     }
-    toadd.push_back(SpinQuantum(particlenumber + 2, spinnumber + 2, symmetrynumber));
-    toadd.push_back(SpinQuantum(particlenumber, spinnumber + 2, symmetrynumber));
-    toadd.push_back(SpinQuantum(particlenumber - 2, spinnumber + 2, symmetrynumber));
+    toadd.push_back(SpinQuantum(particlenumber + 2, SpinSpace(spinnumber + 2), symmetrynumber));
+    toadd.push_back(SpinQuantum(particlenumber, SpinSpace(spinnumber + 2), symmetrynumber));
+    toadd.push_back(SpinQuantum(particlenumber - 2, SpinSpace(spinnumber + 2), symmetrynumber));
 
-    toadd.push_back(SpinQuantum(particlenumber + 2, spinnumber, symmetrynumber));
-    toadd.push_back(SpinQuantum(particlenumber - 2, spinnumber, symmetrynumber));
+    toadd.push_back(SpinQuantum(particlenumber + 2, SpinSpace(spinnumber), symmetrynumber));
+    toadd.push_back(SpinQuantum(particlenumber - 2, SpinSpace(spinnumber), symmetrynumber));
 
     if (spinnumber >= 2) {
-      toadd.push_back(SpinQuantum(particlenumber + 2, spinnumber - 2, symmetrynumber));
-      toadd.push_back(SpinQuantum(particlenumber, spinnumber - 2, symmetrynumber));
-      toadd.push_back(SpinQuantum(particlenumber - 2, spinnumber - 2, symmetrynumber));
+      toadd.push_back(SpinQuantum(particlenumber + 2, SpinSpace(spinnumber - 2), symmetrynumber));
+      toadd.push_back(SpinQuantum(particlenumber, SpinSpace(spinnumber - 2), symmetrynumber));
+      toadd.push_back(SpinQuantum(particlenumber - 2, SpinSpace(spinnumber - 2), symmetrynumber));
     }
   }
 
@@ -165,10 +165,11 @@ public:
 	SpinQuantum wQ = wavefunction.get_deltaQuantum();
 	SpinQuantum oQ = op.get_deltaQuantum();
 	vector<IrrepSpace> vec = wQ.get_symm() + oQ.get_symm();
+	vector<SpinSpace> spinvec = wQ.get_s()+oQ.get_s();
 	for (int j=0; j<vec.size(); j++)
-	for (int i=abs(wQ.get_s()-oQ.get_s()); i<= wQ.get_s()+oQ.get_s(); i+=2)
+	for (int i=0; i<spinvec.size(); i++)
 	{
-	  SpinQuantum q = SpinQuantum(wQ.get_n()+oQ.get_n(), i, vec[j]);
+	  SpinQuantum q = SpinQuantum(wQ.get_n()+oQ.get_n(), spinvec[i], vec[j]);
 
 	  Wavefunction opxwave = Wavefunction(q, &big, wavefunction.get_onedot());
 	  opxwave.Clear();
@@ -179,7 +180,7 @@ public:
 	    Scale(1./sqrt(norm), opxwave);
 	    MultiplyProduct(opxwave, Transpose(opxwave), dm[omp_get_thread_num()], scale);
 	  }
-	  q = SpinQuantum(wQ.get_n()-oQ.get_n(), i, vec[j]);
+	  q = SpinQuantum(wQ.get_n()-oQ.get_n(), spinvec[i], vec[j]);
 
 	  Wavefunction opxwave2 = Wavefunction(q, &big, wavefunction.get_onedot());
 	  opxwave2.Clear();

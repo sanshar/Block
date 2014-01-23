@@ -71,6 +71,10 @@ void SpinAdapted::Input::initialize_defaults()
   m_calc_type = DMRG;
   m_solve_type = DAVIDSON;
 
+  m_spinAdapted = true;
+  m_sys_add = 1;
+  m_env_add = 1;
+
   m_twodot_to_onedot_iter = 0;
   m_integral_disk_storage_thresh = 100; //this is usually 100
   m_max_lanczos_dimension = 5000;
@@ -82,8 +86,6 @@ void SpinAdapted::Input::initialize_defaults()
 
   m_outputlevel = 0;
   m_nquanta = 2;
-  m_sys_add = 1;
-  m_env_add = 1;
   m_total_symmetry_number = IrrepSpace( 0 );
   m_total_spin = 0;
   m_guess_permutations = 10;
@@ -204,6 +206,18 @@ SpinAdapted::Input::Input(const string& config_name)
 	  abort();
 	}	
 	  
+      }
+      else if (boost::iequals(keyword, "nonspinadapted")) {
+	if(usedkey[NONSPINADAPTED] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[NONSPINADAPTED] = 0;
+	if (tok.size() !=  1) {
+	  pout << "keyword nonspinadated is a stand alone keyword"<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}
+	m_add_noninteracting_orbs = false;
+        m_spinAdapted = false;
       }
       else if (boost::iequals(keyword, "startM")) {
 	if(usedkey[STARTM] == 0) 
@@ -578,7 +592,6 @@ SpinAdapted::Input::Input(const string& config_name)
         m_maxiter = atoi(tok[1].c_str());
       }
 
-
       else if(boost::iequals(keyword,  "screen_tol") || boost::iequals(keyword,  "screen_tolerance") || boost::iequals(keyword,  "screening_tol") || boost::iequals(keyword,  "screening_tolerance"))
       {
 	if(usedkey[SCREEN_TOL] == 0) 
@@ -708,7 +721,7 @@ SpinAdapted::Input::Input(const string& config_name)
     m_beta = (n_elec - n_spin)/2;
     if (sym == "trans" || sym == "lzsym") 
       m_total_symmetry_number = IrrepSpace(m_total_symmetry_number.getirrep()+1); //in translational symmetry lowest irrep is 0 and not 1
-    m_molecule_quantum = SpinQuantum(m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number);
+    m_molecule_quantum = SpinQuantum(m_alpha + m_beta, SpinSpace(m_alpha - m_beta), m_total_symmetry_number);
 
 
   }
@@ -733,7 +746,6 @@ SpinAdapted::Input::Input(const string& config_name)
   else
     v_2.permSymm = false;
 
-  //v_2.permSymm = false;
 
   // Kij-based ordering by GA opt.
 #ifndef SERIAL
@@ -822,8 +834,6 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
   m_spin_orbs_symmetry.resize(m_norbs);
   m_spin_to_spatial.resize(m_norbs);
 
-  v2.ReSize(m_norbs);
-  v1.ReSize(m_norbs);
 
   std::vector<int> reorder;
 
@@ -940,6 +950,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
   boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
   
   int readLine = 1, numRead = 1;
+  bool RHF = true;
   while (!(boost::iequals(tok[0], "ISYM") || boost::iequals(tok[0], "&END"))) {
     for (int i=0; i<tok.size(); i++) {
       if (boost::iequals(tok[i], "ORBSYM") || tok[i].size() == 0) continue;
@@ -975,6 +986,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     msg.resize(0);
     ReadMeaningfulLine(dumpFile, msg, msgsize);
     boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
+    if(boost::iequals(tok[0], "IUHF")) RHF=false;
   }
 
   
@@ -1007,7 +1019,17 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     msg.resize(0);
     ReadMeaningfulLine(dumpFile, msg, msgsize);
     boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
+    if(boost::iequals(tok[0], "IUHF")) RHF=false;
   }
+
+  int AOrbOffset = 0, BOrbOffset = 0;
+  if(!RHF) {
+    v_1.rhf = false;
+    v_2.rhf = false;    
+  }
+  v2.ReSize(m_norbs);
+  v1.ReSize(m_norbs);
+
 
   msg.resize(0);
   ReadMeaningfulLine(dumpFile, msg, msgsize); //this if the first line with integrals
@@ -1025,15 +1047,24 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     value = atof(tok[0].c_str());
     i = atoi(tok[1].c_str())-offset;j = atoi(tok[2].c_str())-offset;k = atoi(tok[3].c_str())-offset;l = atoi(tok[4].c_str())-offset;
 
-    if (i==-1 && j==-1 && k==-1 && l==-1) m_core_energy = value;
+    if (i==-1 && j==-1 && k==-1 && l==-1) {
+      m_core_energy += value;
+      if (AOrbOffset == 0 && BOrbOffset == 0) //AA
+	{AOrbOffset = 1; BOrbOffset = 1;} //got to BB}
+      else if (AOrbOffset == 1 && BOrbOffset == 1) //BB
+	{AOrbOffset = 1; BOrbOffset = 0;} //got to AB}
+      else if (AOrbOffset == 1 && BOrbOffset == 0) //AB
+	{AOrbOffset = 0; BOrbOffset = 0;} //got to AA}
+    }
+	
     else if (k==-1 && l==-1) { 
-      v1(2*reorder.at(i),2*reorder.at(j)) = value;  v1(2*reorder.at(j),2*reorder.at(i)) = value;
+      v1(2*reorder.at(i)+AOrbOffset,2*reorder.at(j)+AOrbOffset) = value;  v1(2*reorder.at(j)+AOrbOffset,2*reorder.at(i)+AOrbOffset) = value;
     } 
     else {
       int I = reorder.at(i);int J = reorder.at(j);int K = reorder.at(k);int L = reorder.at(l);
-      v2(2*I,2*K,2*J,2*L) = value;
+      //v2(2*I+AOrbOffset,2*K+BOrbOffset,2*J+AOrbOffset,2*L+BOrbOffset) = value;
+      v2(2*I+BOrbOffset,2*K+AOrbOffset,2*J+BOrbOffset,2*L+AOrbOffset) = value;
     }
-
     msg.resize(0);
     ReadMeaningfulLine(dumpFile, msg, msgsize); //this if the first line with integrals
   }
@@ -1555,7 +1586,7 @@ int SpinAdapted::Input::getHFQuanta(const SpinBlock& b) const
 
   const StateInfo& sI = b.get_stateInfo();
   for(int i=0; i<sI.quanta.size(); i++)
-    if (sI.quanta[i].get_n() == n && sI.quanta[i].get_s() == abs(s))
+    if (sI.quanta[i].get_n() == n && sI.quanta[i].get_s() == SpinSpace(s))
       return i;
   return 0;
 }

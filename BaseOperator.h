@@ -49,7 +49,7 @@ template<class T> class Baseoperator
   virtual SpinQuantum get_deltaQuantum() const = 0;
   virtual char conjugacy() const = 0;
   virtual ~Baseoperator() {};
-  virtual int get_spin() const = 0;
+  virtual SpinSpace get_spin() const = 0;
   virtual IrrepSpace get_symm() const = 0;
   virtual double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const = 0;
   Baseoperator() {};
@@ -97,7 +97,7 @@ class SparseMatrix : public Baseoperator<Matrix>
   const char& allowed(int i, int j) const { return allowedQuantaMatrix(i, j); }
   char& allowed(int i, int j) { return allowedQuantaMatrix(i, j); }
   SpinQuantum &set_deltaQuantum() { return deltaQuantum; }
-  int get_spin()const  { return deltaQuantum.get_s();}
+  SpinSpace get_spin()const  { return deltaQuantum.get_s();}
   IrrepSpace get_symm()const  { return deltaQuantum.get_symm();}
   SpinQuantum get_deltaQuantum() const { return deltaQuantum; }
   int get_orbs(int i) const 
@@ -170,7 +170,7 @@ public:
   char &allowed(int i, int j) { return opdata->allowed(j, i); }
   const Matrix& operator_element(int i, int j) const { return opdata->operator_element(j, i); }
   Matrix& operator_element(int i, int j) { return opdata->operator_element(j, i); }
-  int get_spin()const  { return opdata->get_deltaQuantum().get_s();}
+  SpinSpace get_spin()const  { return opdata->get_deltaQuantum().get_s();}
   IrrepSpace get_symm()const  { return -opdata->get_deltaQuantum().get_symm();}
   int get_orbs(int i) const {return opdata->get_orbs(i);}
   const std::vector<int>& get_orbs() const { return opdata->get_orbs(); }

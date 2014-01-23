@@ -33,18 +33,32 @@ inline IrrepSpace SymmetryOfSpatialOrb(const int i)
   return IrrepSpace(symm);
 }
 
+inline IrrepSpace SymmetryOfOrb(const int i)
+{
+  if(dmrginp.spinAdapted()) return SymmetryOfSpatialOrb(i);
+
+  int symm = dmrginp.spin_orbs_symmetry()[i];
+  if (sym == "dinfh")
+    symm = abs(symm);
+
+  return IrrepSpace(symm);
+}
+
 inline int SpinOf (const int i)
 {
-  return dmrginp.spin_vector()[i];
+  return i%2==0?1:-1;
 }
 inline int SzOf(const int i)
 {
   return i%2==0? 1 : -1;
 }
+
 inline SpinQuantum getSpinQuantum(const int i)
 {
-  return SpinQuantum(1, 1, SymmetryOfSpatialOrb(i));
-  //return SpinQuantum(1, SpinOf(i), SymmetryOf(i));
+  if(dmrginp.spinAdapted())
+    return SpinQuantum(1, SpinSpace(1), SymmetryOfSpatialOrb(i));
+  else
+    return SpinQuantum(1, SpinSpace(SpinOf(i)), IrrepSpace(abs(dmrginp.spin_orbs_symmetry()[i])));
 }
 
 void ConvertList (std::vector<int>& a, const std::vector<int>& b);

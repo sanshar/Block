@@ -25,13 +25,13 @@ struct Csf
   map<Slater, double> det_rep;
   
   int n;
-  int S;
+  SpinSpace S;
   int Sz;
   IrrepVector irrep;
 
 public:
   inline Csf () {}
-  Csf( const map<Slater, double>& p_dets, const int p_n, const int p_S, const int p_Sz, const IrrepVector pirrep);
+  Csf( const map<Slater, double>& p_dets, const int p_n, const SpinSpace p_S, const int p_Sz, const IrrepVector pirrep);
 
   Csf (const Csf& s) : det_rep(s.det_rep), n(s.n), S(s.S), Sz(s.Sz), irrep(s.irrep){} 
   //void operator= (const Csf& s) { if (this != &s) {det_rep =s.det_rep; n = s.n; S = s.S; Sz = s.Sz; sym=s.sym;}}
@@ -39,14 +39,14 @@ public:
   // accessors
   inline int size () const { return det_rep.size (); }
   inline int n_is () const { return n; }
-  inline int S_is () const { return S; }
+  inline SpinSpace S_is () const { return S; }
   inline int Sz_is () const { return Sz; }
   inline int row() const {return irrep.getrow();}
   inline IrrepSpace sym_is() const {
     return IrrepSpace(irrep.getirrep());
   }
   
-  void set_det_rep(map<Slater, double> p_det, int pS, IrrepVector pirrep){  
+  void set_det_rep(map<Slater, double> p_det, SpinSpace pS, IrrepVector pirrep){  
     det_rep = p_det;
     S = pS;
     map<Slater, double>::iterator it = det_rep.begin();
@@ -56,7 +56,7 @@ public:
   }
 
   void set_n(int p_n){n = p_n;}
-  void set_S(int p_S){S = p_S;}
+  void set_S(SpinSpace p_S){S = p_S;}
   void set_Sz(int p_Sz){Sz = p_Sz;}
   void set_irrep(IrrepVector p_irrep) {irrep = p_irrep;}
 
@@ -143,13 +143,16 @@ public:
   }
 
   static std::vector< Csf > distribute (const int n, const int s, const IrrepVector &sym, const int left, const int right, const int edge);
+  static std::vector<Csf> distributeNonSpinAdapted (const int n, const int sp, const IrrepVector &sym, const int left, const int right, const int edge);
     
 };
 
 
 namespace CSFUTIL {
   std::vector< Csf > spinfockstrings(const std::vector<int>& orbs, std::vector<std::vector<Csf> >& ladders);  
+  std::vector< Csf > spinfockstrings(const std::vector<int>& orbs);  
   void TensorProduct(Csf& lhs, vector<Csf>& lhs_csfs, Csf& rhs, vector<Csf>& rhs_csfs, vector< Csf >& output, vector< vector<Csf> >& outputladder);
+  void TensorProduct(Csf& lhs, Csf& rhs, vector< Csf >& output);
   Csf applyTensorOp(const TensorOp& newop, int spinL);
   vector< vector<int> > generate_partitions(int k);
 }

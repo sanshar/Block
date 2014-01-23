@@ -15,6 +15,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "IrrepSpace.h"
 #include <vector>
 #include <boost/serialization/serialization.hpp>
+#include "SpinSpace.h"
 #ifndef DEC
 using namespace std;
 #endif
@@ -31,13 +32,14 @@ class SpinQuantum
   
  public:
   int particleNumber;
-  int totalSpin;
+  SpinSpace totalSpin;
   IrrepSpace orbitalSymmetry;
 
   SpinQuantum ();
-  SpinQuantum (const int p, const int s, const SpinAdapted::IrrepSpace orbS);
+  SpinQuantum (const int p, const SpinSpace s, const SpinAdapted::IrrepSpace orbS);
   SpinQuantum operator-() const;
-  //SpinQuantum operator- (const SpinQuantum q) const;
+
+  vector<SpinQuantum> spinToNonSpin() const;
   int insertionNum(const SpinQuantum& ql, const SpinQuantum& qr) const;
   vector<SpinQuantum> operator+ (const SpinQuantum q) const;
   vector<SpinQuantum> operator- (const SpinQuantum q) const;
@@ -48,13 +50,12 @@ class SpinQuantum
   friend ostream& operator<< (ostream& os, const SpinQuantum q);
   void Save (std::ofstream &ofs);
   void Load (std::ifstream &ifs);
-  int get_s() const {return totalSpin;}
+  SpinAdapted::SpinSpace get_s() const {return totalSpin;}
   int get_n() const {return particleNumber;}
   SpinAdapted::IrrepSpace get_symm() const {return orbitalSymmetry;}
   bool allow(const SpinQuantum s1, const SpinQuantum s2) const;
 
   static bool can_complement (SpinQuantum q);
-  void complementize ();
   vector<SpinQuantum> get_complement() const;
 };
 }  

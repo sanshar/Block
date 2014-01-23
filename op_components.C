@@ -34,7 +34,7 @@ namespace SpinAdapted {
 	  op.set_orbs() = orbs;
 	  op.set_initialised() = true;
 	  op.set_fermion() = true;
-	  op.set_deltaQuantum() = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));      
+	  op.set_deltaQuantum() = getSpinQuantum(orbs[0]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));      
 	  //op.set_deltaQuantum() = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOf(orbs[0]));      
 	}
       
@@ -82,8 +82,8 @@ namespace SpinAdapted {
 	  pair<int, int> opair = m_op.unmap_local_index(i);
 	  orbs[0] = opair.first; orbs[1] = opair.second;
 	  std::vector<boost::shared_ptr<CreDes> >& vec = m_op.get_local_element(i);
-	  SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
-	  SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
+	  SpinQuantum spin1 = getSpinQuantum(orbs[0]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
+	  SpinQuantum spin2 = getSpinQuantum(orbs[1]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
 	  std::vector<SpinQuantum> spinvec = spin1-spin2;
 	  vec.resize(spinvec.size());
 	  for (int j=0; j<spinvec.size(); j++) {
@@ -116,8 +116,8 @@ namespace SpinAdapted {
 	  pair<int, int> opair = m_op.unmap_local_index(i);
 	  orbs[0] = opair.first; orbs[1] = opair.second;
 	  std::vector<boost::shared_ptr<CreCre> >& vec = m_op.get_local_element(i);
-	  SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
-	  SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
+	  SpinQuantum spin1 = getSpinQuantum(orbs[0]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
+	  SpinQuantum spin2 = getSpinQuantum(orbs[1]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
 	  std::vector<SpinQuantum> spinvec = spin1+spin2;
 	  vec.resize(spinvec.size());
 	  for (int j=0; j<spinvec.size(); j++) {
@@ -149,10 +149,8 @@ namespace SpinAdapted {
 	  pair<int, int> opair = m_op.unmap_local_index(i);
 	  orbs[0] = opair.first; orbs[1] = opair.second;
 	  std::vector<boost::shared_ptr<CreDesComp> >& vec = m_op.get_local_element(i);
-	  //SpinQuantum spin1 = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOfSpatialOrb(orbs[0]));
-	  //SpinQuantum spin2 = SpinQuantum(1, SpinOf(orbs[1]), SymmetryOfSpatialOrb(orbs[1]));
-	  SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
-	  SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
+	  SpinQuantum spin1 = getSpinQuantum(orbs[0]);
+	  SpinQuantum spin2 = getSpinQuantum(orbs[1]);
 	  std::vector<SpinQuantum> spinvec = spin2-spin1;
 	  vec.resize(spinvec.size());
 	  for (int j=0; j<spinvec.size(); j++) {
@@ -171,8 +169,8 @@ namespace SpinAdapted {
       m_op.add_local_indices(i,j);
       
       std::vector<boost::shared_ptr<CreDesComp> >& vec = m_op(i,j);
-      SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(i));
-      SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(j));
+      SpinQuantum spin1 = getSpinQuantum(i);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(i));
+      SpinQuantum spin2 = getSpinQuantum(j);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(j));
       std::vector<SpinQuantum> spinvec = spin2-spin1;
       vec.resize(spinvec.size());
       for (int j=0; j<spinvec.size(); j++) 
@@ -198,10 +196,8 @@ namespace SpinAdapted {
 	  pair<int, int> opair = m_op.unmap_local_index(i);
 	  orbs[0] = opair.first; orbs[1] = opair.second;
 	  std::vector<boost::shared_ptr<DesDesComp> >& vec = m_op.get_local_element(i);
-	  //SpinQuantum spin1 = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOfSpatialOrb(orbs[0]));
-	  //SpinQuantum spin2 = SpinQuantum(1, SpinOf(orbs[1]), SymmetryOfSpatialOrb(orbs[1]));
-	  SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
-	  SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
+	  SpinQuantum spin1 = getSpinQuantum(orbs[0]);
+	  SpinQuantum spin2 = getSpinQuantum(orbs[1]);
 	  std::vector<SpinQuantum> spinvec = spin1+spin2;
 	  vec.resize(spinvec.size());
 	  for (int j=0; j<spinvec.size(); j++) {
@@ -221,8 +217,8 @@ namespace SpinAdapted {
       m_op.add_local_indices(i,j);
       
       std::vector<boost::shared_ptr<DesDesComp> >& vec = m_op(i,j);
-      SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(i));
-      SpinQuantum spin2 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(j));
+      SpinQuantum spin1 = getSpinQuantum(i);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(i));
+      SpinQuantum spin2 = getSpinQuantum(j);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(j));
       std::vector<SpinQuantum> spinvec = spin1+spin2;
       vec.resize(spinvec.size());
       for (int j=0; j<spinvec.size(); j++) 
@@ -251,7 +247,7 @@ namespace SpinAdapted {
 	  op.set_initialised() = true;
 	  op.set_fermion() = true;
 	  //op.set_deltaQuantum() = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOfSpatialOrb(orbs[0]) );      
-	  op.set_deltaQuantum() = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]) );      
+	  op.set_deltaQuantum() = getSpinQuantum(orbs[0]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]) );      
 	}
     }
   
@@ -280,7 +276,7 @@ namespace SpinAdapted {
       m_op(0)[0]->set_orbs() = std::vector<int>();
       m_op(0)[0]->set_initialised() = true;
       m_op(0)[0]->set_fermion() = false;
-      m_op(0)[0]->set_deltaQuantum() = SpinQuantum(0, 0, IrrepSpace(0) );      
+      m_op(0)[0]->set_deltaQuantum() = SpinQuantum(0, SpinSpace(0), IrrepSpace(0) );      
     }
   
   template<> std::vector<std::vector<int> > Op_component<Ham>::get_array() const 

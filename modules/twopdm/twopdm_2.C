@@ -42,7 +42,7 @@ void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& lef
   SpinBlock* rightBlock = big.get_rightBlock();
 
   Cre AOp; //This is just an example class
-  int totalspin = (&rightOp) ? rightOp.get_spin() : 0;
+  int totalspin = (&rightOp) ? rightOp.get_spin().getirrep() : 0;
 
   if (Aindices != 0)
     FormLeftOp(leftBlock, leftOp, dotOp, AOp, totalspin);
@@ -109,7 +109,7 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
       vector<SpinQuantum> spins = (dotOp.get_deltaQuantum() + leftOp.get_deltaQuantum());
       SpinQuantum dQ;
       for (int i=0; i< spins.size(); i++) {
-	if (spins[i].get_s() == totalspin) { dQ = spins[i]; break; }
+	if (spins[i].get_s().getirrep() == totalspin) { dQ = spins[i]; break; }
       }
       Aop.set_deltaQuantum() = dQ;
       Aop.allocate(leftBlock->get_stateInfo());

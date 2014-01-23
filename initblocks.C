@@ -35,10 +35,10 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
   {
     startingBlock = SpinBlock(0, forward_starting_size - 1, true);
     
-    if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s() != 0)
+    if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0 && dmrginp.spinAdapted())
     {
       SpinQuantum s = dmrginp.molecule_quantum();
-      s = SpinQuantum(s.get_s(), s.get_s(), IrrepSpace(0));
+      s = SpinQuantum(s.get_s().getirrep(), s.get_s(), IrrepSpace(0));
       int qs = 1, ns = 1;
       StateInfo addstate(ns, &s, &qs); 
       SpinBlock dummyblock(addstate);
@@ -53,8 +53,14 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
   else
   {
     std::vector<int> backwardSites;
-    for (int i = 0; i < backward_starting_size; ++i) 
-	    backwardSites.push_back (dmrginp.last_site() - i - 1);
+    if(dmrginp.spinAdapted()) {
+      for (int i = 0; i < backward_starting_size; ++i) 
+	backwardSites.push_back (dmrginp.last_site() - i - 1);
+    }
+    else {
+      for (int i = 0; i < backward_starting_size; ++i) 
+	backwardSites.push_back (dmrginp.last_site()/2 - i - 1);
+    }
     sort (backwardSites.begin (), backwardSites.end ());
 	  startingBlock.default_op_components(false);
     startingBlock.BuildTensorProductBlock (backwardSites);
@@ -85,16 +91,16 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
   int environmentDotSize = env_add - 1;
   if (forward)
   {
-    systemDotStart = *system.get_sites().rbegin () + 1;
+    systemDotStart = dmrginp.spinAdapted() ? *system.get_sites().rbegin () + 1 : (*system.get_sites().rbegin ())/2 + 1 ;
     systemDotEnd = systemDotStart + systemDotSize;
     environmentDotStart = systemDotEnd + 1;
     environmentDotEnd = environmentDotStart + environmentDotSize;
     environmentStart = environmentDotEnd + 1;
-    environmentEnd = dmrginp.last_site() - 1;
+    environmentEnd = dmrginp.spinAdapted() ? dmrginp.last_site() - 1 : dmrginp.last_site()/2 - 1;
   }
   else
   {
-    systemDotStart = system.get_sites() [0] - 1;
+    systemDotStart = dmrginp.spinAdapted() ? system.get_sites()[0] - 1 : (system.get_sites()[0])/2 - 1 ;
     systemDotEnd = systemDotStart - systemDotSize;
     environmentDotStart = systemDotEnd - 1;
     environmentDotEnd = environmentDotStart - environmentDotSize;
@@ -202,7 +208,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
   {
     if (dmrginp.outputlevel() > 0)
       pout << "\t\t\t Restoring block of size " << environmentSites.size () << " from previous iteration" << endl;
-    if(dot_with_sys && onedot)
+    if(dot_with_sys && onedot) 
       SpinBlock::restore (!forward, environmentSites, newEnvironment);
     else
       SpinBlock::restore (!forward, environmentSites, environment);

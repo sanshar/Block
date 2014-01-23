@@ -153,11 +153,26 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
 
   name = get_name();
 
-  sites = new_sites;
+
   std::vector< std::vector<Csf> > ladders;
-  std::vector< Csf > dets = CSFUTIL::spinfockstrings(new_sites, ladders);
+  std::vector< Csf > dets; 
+
+  if (dmrginp.spinAdapted()) {
+    sites = new_sites;
+    dets = CSFUTIL::spinfockstrings(new_sites, ladders);
+  }
+  else {
+    for (int i=0; i<new_sites.size(); i++) {
+      sites.push_back( dmrginp.spatial_to_spin()[new_sites[i]]   );
+      sites.push_back( dmrginp.spatial_to_spin()[new_sites[i]]+1 );
+    }
+    dets = CSFUTIL::spinfockstrings(new_sites);
+    for (int j=0; j<dets.size(); j++)
+      ladders.push_back(std::vector<Csf>(1,dets[j]));
+  }
 
   stateInfo = StateInfo(dets);
+
   setstoragetype(LOCAL_STORAGE);
   complementary_sites = make_complement(sites);
 
@@ -176,15 +191,6 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
     dmrginp.oneindex_screen_tol() = oneindex_ScreenTol;
   }
 
-  /*
-  for (int i=0; i<dets.size(); i++) {
-    cout << "******* "<<endl;
-    cout << dets[i]<<endl;
-    for (int j=0; j<ladders[i].size(); j++)
-      cout << ladders[i][j]<<endl;
-  }
-  //exit(0);
-  */
 
   build_operators(dets, ladders);
 
@@ -196,7 +202,7 @@ std::vector<int> SpinBlock::make_complement(const std::vector<int>& sites)
   for (int i=0; i<dmrginp.last_site(); ++i)
     if (find(sites.begin(), sites.end(), i) == sites.end())
       complementary_sites.push_back(i);
-
+  
   return complementary_sites;
   
 }
@@ -213,8 +219,10 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
-      if(it->second->is_core())
+      if(it->second->is_core()) {
+	//cout << it->second->get_op_string()<<endl;
         it->second->build_csf_operators(dets, ladders, *this);      
+      }
     }
 }
 
@@ -330,6 +338,7 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
   dmrginp.oneelecT -> start();
   dmrginp.s0time -> start();
+
   boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0];
   TensorMultiply(leftBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);
 
@@ -401,13 +410,13 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
   e_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? e_array : e_distributed;
   indices = rightBlock->get_op_array(CRE).get_array();
   Functor f = boost::bind(&opxop::cxcddcomp_d, leftBlock, _1, this, e_add); 
-  //for_all_multithread(rightBlock->get_op_array(CRE), f); //not needed in diagonal
+  for_all_multithread(rightBlock->get_op_array(CRE), f); //not needed in diagonal
 
 
   e_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? e_array : e_distributed;
   indices = leftBlock->get_op_array(CRE).get_array();
   f = boost::bind(&opxop::cxcddcomp_d, rightBlock, _1, this, e_add); 
-  //for_all_multithread(leftBlock->get_op_array(CRE), f);  //not needed in diagonal
+  for_all_multithread(leftBlock->get_op_array(CRE), f);  //not needed in diagonal
 
 
 
@@ -422,7 +431,7 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
     e_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? e_array : e_distributed;
     indices = loopBlock->get_op_array(CRE_CRE).get_array();
     f = boost::bind(&opxop::ddxcccomp_d, otherBlock, _1, this, e_add);
-    //for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);  //not needed in diagonal 
+    for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);  //not needed in diagonal 
 
   }
 
@@ -435,7 +444,16 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
 {
   name = get_name();
 
-  sites = sts;
+  if (dmrginp.spinAdapted()) {
+    sites = sts;
+  }
+  else {
+    for (int i=0; i<sts.size(); i++) {
+      sites.push_back( dmrginp.spatial_to_spin()[sts[i]]   );
+      sites.push_back( dmrginp.spatial_to_spin()[sts[i]]+1 );
+    }
+  }
+
   complementary_sites = make_complement(sites);
 
   assert (sites.size () > 0);
@@ -453,8 +471,13 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   for (int i = 0; i < qnumbers.size (); ++i)
     {
       if (distribution [i] == 0 || (qnumbers [i].get_n() > 2*sites.size ())) continue;
-      det_ex = Csf::distribute (qnumbers [i].get_n(), qnumbers [i].get_s(), IrrepVector(qnumbers [i].get_symm().getirrep(), 0) , sites [0],
-                                   sites [0] + sites.size (), dmrginp.last_site());
+
+      if(dmrginp.spinAdapted()) 
+	det_ex = Csf::distribute (qnumbers [i].get_n(), qnumbers [i].get_s().getirrep(), IrrepVector(qnumbers [i].get_symm().getirrep(), 0) , sites [0],
+				  sites [0] + sites.size (), dmrginp.last_site());
+      else
+	det_ex = Csf::distributeNonSpinAdapted (qnumbers [i].get_n(), qnumbers [i].get_s().getirrep(), IrrepVector(qnumbers [i].get_symm().getirrep(), 0) , sites [0],
+						sites [0] + sites.size (), dmrginp.last_site());
 
       multimap <double, Csf > slater_emap;
 
@@ -495,7 +518,7 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
 
   std::vector< std::vector<Csf> > ladders; ladders.resize(dets.size());
   for (int i=0; i< dets.size(); i++)
-    ladders[i] = dets[i].spinLadder(min(2, dets[i].S));
+    ladders[i] = dets[i].spinLadder(min(2, dets[i].S.getirrep()));
 
 
   build_operators(dets, ladders);
