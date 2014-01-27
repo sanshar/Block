@@ -93,7 +93,6 @@ class OneElectronArray
             j=j/2;
           }
         return rep(i + 1, j + 1);
-        return rep(i + 1, j + 1);
       }
 
     void ReSize(int n)
@@ -714,7 +713,456 @@ class PartialTwoElectronArray : public TwoElectronArray // 2e integral, notation
 
   };
 
+// ****************************************************
+// class PairArray
+// ****************************************************
+/*!
+@brief Class for electron-pairing quantities such as pairing potential and pairing matrix in particle number nonconserving calculations. Only singlet pairing is included
 
-}
+- pairing part in Hamiltonian is given by \Delta_{ij}a_{ia}^\dagger a_{jb}^\dagger+c.c.
+
+- pairing potential \Delta can be symmetric or nonsymmetric, depends on spin-restricted or unrestricted calculation
+
+- default is unrestricted
+
+*/
+
+
+class PairArray {
+  private:
+    friend class boost::serialization::access;
+    template<class Archive> void serialize(Archive &ar, const unsigned int version) {
+      ar & rep;
+      ar & srep;
+      ar & dim;
+    }
+    Matrix rep;
+    SymmetricMatrix srep;
+    int dim;
+    double dummyZero;
+  public:
+    bool rhf;
+    bool bin;
+
+  public:
+    PairArray(): dim(0), rhf(false), bin(false), dummyZero(0.0) {}
+    PairArray(int n, bool rhf_=false, bool bin_=false): rhf(rhf_), bin(bin_), dummyZero(0.0) {
+      ReSize(n);
+    }
+
+    double& operator() (int i, int j) {
+      assert(i >= 0 && i < dim && j >= 0 && j < dim);
+      bool is_odd_i = (i & 1);
+      bool is_odd_j = (j & 1);
+      bool zero = (!is_odd_i) || is_odd_j;
+      if (zero)
+        return dummyZero;
+      i=i/2;
+      j=j/2;
+      if (rhf) {
+        return srep(i+1, j+1);
+      } else {
+        return rep(i+1, j+1);
+      }
+    }
+
+    double operator() (int i, int j) const {
+      assert(i >= 0 && i < dim && j >= 0 && j < dim);
+      bool is_odd_i = (i & 1);
+      bool is_odd_j = (j & 1);
+      bool zero = (!is_odd_i) || is_odd_j;
+      if (zero)
+        return 0.0;
+      i=i/2;
+      j=j/2;
+      if (rhf) {
+        return srep(i+1, j+1);
+      } else {
+        return rep(i+1, j+1);
+      }
+    }
+    
+    void ReSize(int n) {
+      dim = n;
+      if (rhf) {
+        srep.ReSize(n/2);
+        srep = 0.;
+      } else {
+        rep.ReSize(n/2, n/2);
+        rep = 0.;
+      }
+    }
+
+    int NOrbs() const {
+      return dim;
+    }
+
+    Matrix& GetRepresentation() {
+      cerr << "PairArray::GetRepresentation not implemented yet!";
+      abort();
+    }
+
+    void ReadFromDumpFile(ifstream& dumpFile, int norbs) {
+      cerr << "PairArray::ReadFromDumpFile not implemented yet!";
+      abort();
+    }
+    
+    void DumpToFile(ofstream& dumpFile) const {
+      cerr << "PairArray::DumpToFile not implemented yet!";
+      abort();
+    }
+
+    friend ostream& operator<<(ostream& os, const PairArray& integral)
+    {
+      if (integral.rhf) {
+        os << integral.srep;        
+      } else {
+        os << integral.rep;
+      }
+      return os;
+    }
+  };
+
+// ****************************************************
+// class CCCCArray
+// ****************************************************
+/*!
+@brief Class for CCCC type quantities
+
+- The Hamiltonian is given by
+    0.25*w_{ijkl}C_{ia}C_{ja}C_{kb}C_{lb} + c.c.
+  where C means creation operator
+
+- Antisymmetry is enforced:
+    w_{ijkl}=-w_{jikl}=-w_{ijlk}=w_{jilk}
+  therefore, the underlying storage has i>j, l>k, composed indice ij=i*(i-1)/2+j, lk=l*(l-1)/2+k, and the storage is a matrix with (ij, lk) as indice
+
+- Spin symmetry is controled by rhf option. if rhf = true, additionaly
+    w_{ijkl}=w_{lkji}
+  the underlying storage bocomes a symmetric matrix wrt ij and lk
+*/
+
+
+class CCCCArray {
+  private:
+    SymmetricMatrix srep;
+    Matrix rep;
+    int dim; // dim is number of spin orbitals, i.e. 2*norbs
+    array_2d<int> indexMap;
+    double dummyZero;
+
+    friend class boost::serialization::access;
+    template<class Archive> void serialize(Archive& ar, const unsigned int version)
+    {
+      ar & srep;
+      ar & rep;
+      ar & dim;
+      ar & indexMap;
+    }
+
+  public:
+    bool rhf;
+    bool bin;
+
+    // constructors
+    CCCCArray(): dim(0), rhf(false), bin(false), dummyZero(0.0) {}
+    CCCCArray(bool _rhf): dim(0), rhf(_rhf), bin(false), dummyZero(0.0) {}
+    explicit CCCCArray(int n, bool _rhf) {
+      *this = CCCCArray(_rhf);
+      ReSize(n);
+    }
+
+    int NOrbs() const { return dim;}
+    array_2d<int>& GetMap() {  return indexMap;}
+    Matrix& GetRepresentation() {
+      cerr << "CCCCArray::GetRepresentation not implemented yet!";
+      abort();
+    }
+
+    void ReSize(int n) {
+      dim = n;
+      int matDim;
+      indexMap.resize(n/2, n/2);
+      matDim = MapIndices(n/2);
+      if (rhf) {
+        srep.ReSize(matDim);
+        srep = 0.;
+      } else {
+        rep.ReSize(matDim, matDim);
+        rep = 0.;
+      }
+    }
+
+    int MapIndices(int n) {
+      int count = 0;
+      for (int i=0; i<n; ++i) {
+        indexMap(i, i) = 0;
+        for (int j=0; j<i; ++j) {
+          ++count;
+          indexMap(i, j) = count;
+          indexMap(j, i) = -count;
+        }
+      }
+      return count;
+    }
+    
+    virtual double& operator()(int i, int j, int k, int l) {
+      assert(i >= 0 && i < dim && j >= 0 && j < dim && k >= 0 && k < dim && l >= 0 && l < dim);
+      bool is_odd_i = (i & 1);
+      bool is_odd_j = (j & 1);
+      bool is_odd_k = (k & 1);
+      bool is_odd_l = (l & 1);
+      
+      bool zero = (!is_odd_i) || (!is_odd_j) || is_odd_k || is_odd_l;
+      if (zero) {
+        return dummyZero;
+      }
+
+      i=i/2;
+      j=j/2;
+      k=k/2;
+      l=l/2;
+
+      int n = indexMap(i, j);
+      int m = indexMap(l, k);
+      bool illegal = (n<=0) || (m<=0);
+      if (illegal) {
+        cerr << "Warning: CCCCArray assignment ignored!" << endl;
+        return dummyZero;
+      }
+      
+      if (rhf) {
+        return srep(n, m);
+      } else {
+        return rep(n, m);
+      }
+    }
+
+    virtual double operator() (int i, int j, int k, int l) const {
+      assert(i >= 0 && i < dim && j >= 0 && j < dim && k >= 0 && k < dim && l >= 0 && l < dim);
+      bool is_odd_i = (i & 1);
+      bool is_odd_j = (j & 1);
+      bool is_odd_k = (k & 1);
+      bool is_odd_l = (l & 1);
+      
+      bool zero = (!is_odd_i) || (!is_odd_j) || is_odd_k || is_odd_l;
+      if (zero) {
+        return 0.0;
+      }
+      i=i/2;
+      j=j/2;
+      k=k/2;
+      l=l/2;
+
+      int n = indexMap(i, j);
+      int m = indexMap(l, k);
+      if (n==0 || m==0) {
+       return 0.0;
+      }
+      
+      int sign = (n>0) == (m>0) ? 1:-1;
+      
+      if (rhf) {
+        return sign * srep(abs(n), abs(m));
+      } else {
+        return sign * rep(abs(n), abs(m));
+      }
+    }
+
+    void ReadFromDumpFile(ifstream& dumpFile, int norbs) {
+      cerr << "CCCCArray::ReadFromDumpFile not implemented yet!";
+      abort();
+    }
+    
+    void DumpToFile(ofstream& dumpFile) const {
+      cerr << "CCCCArray::DumpToFile not implemented yet!";
+      abort();
+    }
+    
+    friend ostream& operator<<(ostream& os, const CCCCArray& integral)
+    {
+      if (integral.rhf) {
+        os << integral.srep;
+      } else {
+        os << integral.rep;
+      }
+      return os;
+    }
+  };
+
+// ****************************************************
+// class CCCCArray
+// ****************************************************
+/*!
+@brief Class for CCCD type quantities
+
+- The Hamiltonian is given by
+    0.5*(w_{ijkl,a}C_{ia}C_{ja}C_{kb}D_{la} + w_{ijkl,b}C_{ib}C_{jb}C_{ka}D_{lb}) + c.c.
+  where C means creation operator and D means destruction operator
+
+- Antisymmetry is enforced:
+    w_{ijkl}=-w_{jikl}
+  therefore, the underlying storage has i>j, l, k, composed indice ij=i*(i-1)/2+j, kl=k*n+l and the storage is two matrices with (ij, kl) as indice
+
+- Spin symmetry is controled by rhf option. if rhf = true, additionaly
+    w_{ijkl,a}=-w_{ijkl,b}
+  the underlying storage bocomes only one matrix
+*/
+
+
+class CCCDArray {
+  private:
+    Matrix repA, repB;
+    int dim;
+    array_2d<int> indexMap;
+    double dummyZero;
+
+    friend class boost::serialization::access;
+    template<class Archive> void serialize(Archive& ar, const unsigned int version)
+    {
+      ar & repA;
+      ar & repB;
+      ar & dim;
+      ar & indexMap;
+    }
+  
+  public:
+    bool rhf;
+    bool bin;
+
+    // constructors
+    CCCDArray(): dim(0), rhf(false), bin(false), dummyZero(0.0) {}
+    CCCDArray(bool _rhf): dim(0), rhf(_rhf), bin(false), dummyZero(0.0) {}
+    explicit CCCDArray(int n, bool _rhf) {
+      *this = CCCDArray(_rhf);
+      ReSize(n);
+    }
+
+    int NOrbs() const { return dim;}
+    array_2d<int>& GetMap() {  return indexMap;}
+    Matrix& GetRepresentation() {
+      cerr << "CCCDArray::GetRepresentation not implemented yet!";
+      abort();
+    }
+
+    void ReSize(int n) {
+      dim = n;
+      int matDim;
+      indexMap.resize(n/2, n/2);
+      matDim = MapIndices(n/2);
+      repA.ReSize(matDim, dim*dim/4);
+      repA = 0;
+      if (!rhf) {
+        repB.ReSize(matDim, dim*dim/4);
+        repB = 0.;        
+      }
+    }
+
+    int MapIndices(int n) {
+      int count = 0;
+      for (int i=0; i<n; ++i) {
+        indexMap(i, i) = 0;
+        for (int j=0; j<i; ++j) {
+          ++count;
+          indexMap(i, j) = count;
+          indexMap(j, i) = -count;
+        }
+      }
+      return count;
+    }
+
+    virtual double& operator()(int i, int j, int k, int l) {
+      assert(i >= 0 && i < dim && j >= 0 && j < dim && k >= 0 && k < dim && l >= 0 && l < dim);
+      bool is_odd_i = (i & 1);
+      bool is_odd_j = (j & 1);
+      bool is_odd_k = (k & 1);
+      bool is_odd_l = (l & 1);
+
+      bool zero = !((is_odd_i == is_odd_j) && (is_odd_i == is_odd_l) &&(is_odd_i != is_odd_k));
+      if (zero) {
+        return dummyZero;
+      }
+
+      i=i/2;
+      j=j/2;
+      k=k/2;
+      l=l/2;
+
+      int n = indexMap(i, j);
+      int m = k*(dim/2)+l+1;
+      bool illegal = (n<=0) || (rhf && !is_odd_i); // legal when i>j and i is alpha
+      if (illegal) {
+        cerr << "Warning: CCCDArray assignment ignored!" << endl;
+        return dummyZero;
+      }
+
+      if (rhf) {
+        return repA(n, m);
+      } else {
+        if (is_odd_i) {
+          return repA(n, m);
+        } else {
+          return repB(n, m);
+        }
+      }
+    }
+
+    virtual double operator() (int i, int j, int k, int l) const {
+      assert(i >= 0 && i < dim && j >= 0 && j < dim && k >= 0 && k < dim && l >= 0 && l < dim);
+      bool is_odd_i = (i & 1);
+      bool is_odd_j = (j & 1);
+      bool is_odd_k = (k & 1);
+      bool is_odd_l = (l & 1);
+
+      bool zero = !((is_odd_i == is_odd_j) && (is_odd_i == is_odd_l) &&(is_odd_i != is_odd_k));
+      if (zero) {
+        return dummyZero;
+      }
+
+      i=i/2;
+      j=j/2;
+      k=k/2;
+      l=l/2;
+
+      int n = indexMap(i, j);
+      int m = k*(dim/2)+l+1;
+      if (n==0) {
+        return 0.0;
+      }
+
+      if (rhf) {
+        int sign = ((n>0) == is_odd_i) ? 1:-1;
+        return sign * repA(abs(n), m);
+      } else {
+        int sign = (n>0) ? 1:-1;
+        if (is_odd_i) {
+          return sign*repA(abs(n), m);
+        } else {
+          return sign*repB(abs(n), m);
+        }
+      }
+    }
+
+    void ReadFromDumpFile(ifstream& dumpFile, int norbs) {
+      cerr << "CCCDArray::ReadFromDumpFile not implemented yet!";
+      abort();
+    }
+    
+    void DumpToFile(ofstream& dumpFile) const {
+      cerr << "CCCDArray::DumpToFile not implemented yet!";
+      abort();
+    }
+    
+    friend ostream& operator<<(ostream& os, const CCCDArray& integral)
+    {
+      os << integral.repA;
+      if (!integral.rhf) {  
+        os << integral.repB;
+      }
+      return os;
+    }
+  };
+
+} // namespace
 
 #endif
