@@ -72,6 +72,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_solve_type = DAVIDSON;
 
   m_spinAdapted = true;
+  m_Bogoliubov = false;
   m_sys_add = 1;
   m_env_add = 1;
 
@@ -185,7 +186,7 @@ SpinAdapted::Input::Input(const string& config_name)
 	  pout << msg<<endl;
 	  abort();
 	}
-	orbitalfile = tok[1];
+	orbitalfile = tok[1];  // FIXME read orbitalfile
       }
       else if (boost::iequals(keyword, "maxM")) {
 	if(usedkey[MAXM] == 0) 
@@ -218,6 +219,17 @@ SpinAdapted::Input::Input(const string& config_name)
 	}
 	m_add_noninteracting_orbs = false;
         m_spinAdapted = false;
+      }
+      else if (boost::iequals(keyword, "bogoliubov")) {
+    if(usedkey[BOGOLIUBOV] == 0)
+      usedkey_error(keyword, msg);
+    usedkey[BOGOLIUBOV] = 0;
+	if (tok.size() !=  1) {
+	  pout << "keyword bogoliubov is a stand alone keyword"<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}
+    m_Bogoliubov = true;
       }
       else if (boost::iequals(keyword, "startM")) {
 	if(usedkey[STARTM] == 0) 
@@ -710,13 +722,19 @@ SpinAdapted::Input::Input(const string& config_name)
     }
 
     if (n_elec == -1) {
-      pout << "number of electrons has to be specified using the keyword nelec"<<endl;
-      abort();
+      if (!m_Bogoliubov) {
+        pout << "number of electrons has to be specified using the keyword nelec"<<endl;
+        abort();
+      } else {
+        n_elec = 0;
+      }
     }
+
     if (n_spin == -1) {
       pout << "spin of the wavefunction has to be specified using the keyword spin"<<endl;
       abort();
     }
+
     m_alpha = (n_elec + n_spin)/2;
     m_beta = (n_elec - n_spin)/2;
     if (sym == "trans" || sym == "lzsym") 

@@ -35,7 +35,7 @@ enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
 	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, 
-	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, NUMKEYWORDS};
+	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, BOGOLIUBOV, NUMKEYWORDS};
 
 class Input {
 
@@ -46,6 +46,7 @@ class Input {
   int m_beta;
   int m_Sz;
   bool m_spinAdapted;
+  bool m_Bogoliubov;
 
   IrrepSpace m_total_symmetry_number;
   SpinQuantum m_molecule_quantum;
