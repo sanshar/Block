@@ -74,9 +74,19 @@ void genetic::ReadIntegral_BCS(ifstream& fdump, Matrix& K)
 
   vector<string> fields;
   split(fields, entry, is_any_of("=, \t"), token_compress_on);
-  
-  int nOrbs = atoi(fields[1].c_str());
-  K.ReSize(nOrbs, nOrbs); K = 0.0;
+
+  int nOrbs = 0;
+  for(int i = 0; i < fields.size(); ++i)
+  {
+    if(fields[i] == "NORB")
+    {
+      nOrbs = atoi(fields[i+1].c_str());
+      break;
+    }
+  }
+
+  K.ReSize(nOrbs, nOrbs); K = 0.0;  
+  while(fdump >> entry) if((entry == "&END") || (entry == "/")) break;
 
   int i, j, k, l;
   double v;

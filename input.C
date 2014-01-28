@@ -1108,18 +1108,23 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
 
 void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray& v1, TwoElectronArray& v2, PairArray& v_cc, CCCCArray& v_cccc, CCCDArray& v_cccd) {
   ifstream dumpFile; dumpFile.open(orbitalfile.c_str(), ios::in);
-
+  
   string msg; int msgsize = 5000;
   ReadMeaningfulLine(dumpFile, msg, msgsize);
   vector<string> tok;
   boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
   
-  m_norbs = 2*atoi(tok[0].c_str()); // number of spin orbitals
+  int offset = m_orbformat == DMRGFORM ? 0 : 1;
+  if(offset != 0)
+    m_norbs = 2*atoi(tok[2].c_str());
+  else
+    m_norbs = 2*atoi(tok[1].c_str());
+  
   m_num_spatial_orbs = 0;
   m_spin_orbs_symmetry.resize(m_norbs);
   m_spin_to_spatial.resize(m_norbs);
-  
-  // read reorder file
+
+  // read/write reorder file
   // copied from the other original SpinAdapted::Input::readorbitalsfile() function
   std::vector<int> reorder;
   //this is the file to which the reordering is written
@@ -1201,6 +1206,60 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
   pout << endl;
   pout << endl;
   
+  // orbital symmetry
+  int orbindex = 0;
+  msg.resize(0);
+  ReadMeaningfulLine(dumpFile, msg, msgsize);
+  boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
+  
+  int readLine = 1, numRead = 1;
+  bool RHF = true;
+  while (!(boost::iequals(tok[0], "ISYM") || boost::iequals(tok[0], "&END"))) {
+    for (int i=0; i<tok.size(); i++) {
+      if (boost::iequals(tok[i], "ORBSYM") || tok[i].size() == 0) continue;
+
+      int reorderOrbInd =  reorder.at(orbindex/2);
+      int ir;
+      if (atoi(tok[i].c_str()) >= 0 ) 
+	    ir = atoi(tok[i].c_str()) - offset;
+      else if (atoi(tok[i].c_str()) < -1)
+	    ir = atoi(tok[i].c_str()) + offset;
+
+      if (sym == "trans") ir += 1; //for translational symmetry the lowest irrep is 0
+      if (sym == "lzsym") ir = atoi(tok[i].c_str());
+      
+      m_spin_orbs_symmetry[2*reorderOrbInd] = ir;
+      m_spin_orbs_symmetry[2*reorderOrbInd+1] = ir;
+      
+      if (readLine == numRead) {
+    	m_num_spatial_orbs++;
+    	m_spatial_to_spin.push_back(orbindex);
+    	numRead = Symmetry::sizeofIrrep(ir);
+    	readLine = 0;
+      }
+      m_spin_to_spatial[orbindex] = m_num_spatial_orbs-1;
+      m_spin_to_spatial[orbindex+1] = m_num_spatial_orbs-1;
+      orbindex +=2;
+      readLine++;
+    }
+    msg.resize(0);
+    ReadMeaningfulLine(dumpFile, msg, msgsize);
+    boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
+    if(boost::iequals(tok[0], "IUHF")) RHF=false;
+  }
+
+  if(sym == "dinfh" ) {
+    m_spatial_to_spin.clear();
+    for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) {
+      int ir = m_spin_orbs_symmetry[i];
+      if (ir < -1 || ir == 0 || ir == 1) 
+	m_spatial_to_spin.push_back(i);
+    }
+  }
+
+  m_spatial_to_spin.push_back(m_norbs);
+  m_spin_to_spatial.push_back(m_norbs);
+
   abort();
 }
 
