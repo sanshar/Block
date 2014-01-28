@@ -8,6 +8,7 @@ using namespace std;
 namespace genetic
 {
   void ReadIntegral(ifstream& fdump, Matrix& K);
+  void ReadIntegral_BCS(ifstream& fdump, Matrix& K);
 };
 
 #endif

@@ -756,7 +756,7 @@ SpinAdapted::Input::Input(const string& config_name)
      CheckFileExistence(orbitalfile, "Orbital file ");
 
   //read the orbitals
-  v_1.rhf= true; 
+  v_1.rhf= true;
   v_2.rhf=true;
   if (sym != "lzsym" && sym != "dinfh_abelian" && !NonabelianSym) {
     v_2.permSymm = true;
@@ -764,6 +764,12 @@ SpinAdapted::Input::Input(const string& config_name)
   else
     v_2.permSymm = false;
 
+  if (m_Bogoliubov) {
+    v_2.permSymm = false;
+    v_cc.rhf = true;
+    v_cccc.rhf = true;
+    v_cccd.rhf = true;
+  }
 
   // Kij-based ordering by GA opt.
 #ifndef SERIAL
@@ -772,7 +778,11 @@ SpinAdapted::Input::Input(const string& config_name)
 
 
   if (mpigetrank() == 0) {
-    readorbitalsfile(orbitalfile, v_1, v_2);
+    if (m_Bogoliubov) {
+      readorbitalsfile(orbitalfile, v_1, v_2, v_cc, v_cccc, v_cccd);
+    } else {
+      readorbitalsfile(orbitalfile, v_1, v_2);
+    }
 
     makeInitialHFGuess();
           
@@ -1096,6 +1106,104 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
   dumpFile.close();  
 }
 
+void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray& v1, TwoElectronArray& v2, PairArray& v_cc, CCCCArray& v_cccc, CCCDArray& v_cccd) {
+  ifstream dumpFile; dumpFile.open(orbitalfile.c_str(), ios::in);
+
+  string msg; int msgsize = 5000;
+  ReadMeaningfulLine(dumpFile, msg, msgsize);
+  vector<string> tok;
+  boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
+  
+  m_norbs = 2*atoi(tok[0].c_str()); // number of spin orbitals
+  m_num_spatial_orbs = 0;
+  m_spin_orbs_symmetry.resize(m_norbs);
+  m_spin_to_spatial.resize(m_norbs);
+  
+  // read reorder file
+  // copied from the other original SpinAdapted::Input::readorbitalsfile() function
+  std::vector<int> reorder;
+  //this is the file to which the reordering is written
+  std::ofstream ReorderFileOutput;
+  std::ifstream ReorderFileInput;
+  char ReorderFileName[5000];
+  sprintf(ReorderFileName, "%s%s", save_prefix().c_str(), "/RestartReorder.dat");
+  boost::filesystem::path p(ReorderFileName);
+
+  //do the reordering only if it is not a restart calculation
+  //if it is then just read the reorder.dat from the scratch space
+  if(get_restart() || get_fullrestart()) {
+    ReorderFileInput.open(ReorderFileName);
+    if(!boost::filesystem::exists(p)) {
+#ifndef MOLPRO
+      pout << "---------------"<<endl;
+      pout << "This is a restart job and the reorder file "<<ReorderFileName<<" should be present"<<endl;
+      abort();
+#else
+      xout << "---------------"<<endl;
+      xout << "This is a restart job and the reorder file "<<ReorderFileName<<" should be present"<<endl;
+      abort();
+#endif
+    } else {
+#ifndef MOLPRO
+      pout << "----------------"<<endl;
+      pout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
+      pout << "Using the reorder file " << ReorderFileName << endl;
+      pout << "----------------"<<endl;
+#else
+      xout << "----------------"<<endl;
+      xout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
+      xout << "Using the reorder file " << ReorderFileName << endl;
+      xout << "----------------"<<endl;
+#endif
+      m_reorder.resize(m_norbs/2);
+      for (int i=0; i<m_norbs/2; i++)
+	ReorderFileInput >> m_reorder[i];
+      ReorderFileInput.close();
+    }
+  } else {
+    ReorderFileOutput.open(ReorderFileName);
+    // read the reorder file or calculate the reordering using one of the many options  
+    if (m_reorderType == FIEDLER) {
+      if (mpigetrank() == 0)
+        m_reorder=get_fiedler_bcs(orbitalfile);
+      pout << "Fiedler-vector orbital ordering: ";     
+    } else if (m_reorderType == GAOPT) {
+      pout << "GAOPT orbital ordering for BCS calculation not implemented";
+      abort();      
+    } else if (m_reorderType == MANUAL) {
+      ifstream reorderFile(m_reorderfile.c_str());
+      CheckFileExistence(m_reorderfile, "Reorder file ");
+      readreorderfile(reorderFile, m_reorder);
+      pout << "Manually provided orbital ordering: ";
+    } else { //this is the no-reorder case 
+      m_reorder.resize(m_norbs/2);
+      for (int i=0; i<m_reorder.size(); i++)
+	    m_reorder.at(i) = i;
+      pout << "No orbital reorder: ";
+    }
+    // write the reorder file
+    for (int i=0; i<m_reorder.size(); i++)
+      ReorderFileOutput << m_reorder[i]<<"  ";
+    ReorderFileOutput.close();
+  }
+
+  //the name reorder is confusing because it clases the with the m_reorder member of the input class and these two are inverse of each other.
+  //the reorder here helps one to go from the unreordered matrices to the reordered matrices
+  //and the m_reorder member of input helps one to go in the opposite direction
+  //e.g. the user defined orbital order (m_reorder) could be
+  // 2 3 1 4   which implies that O_reorder(1,2) -> O_unreordered(2,3)  (the former is stored internally and the latter is what is given during input)
+  // but for this m_reorder the reorder vector below would be 3 1 2 4 and O_unreordered(1,2) -> O_reorder(3, 1)
+  reorder.resize(m_norbs/2);
+  for (int i=0; i<m_norbs/2; i++) {
+    reorder.at(m_reorder[i]) = i;
+    pout << m_reorder[i]+1 << " ";
+  }
+  pout << endl;
+  pout << endl;
+  
+  abort();
+}
+
 std::vector<int> SpinAdapted::Input::get_fiedler(string& dumpname){
      Matrix fiedler; 
      ifstream dumpFile;
@@ -1106,6 +1214,18 @@ std::vector<int> SpinAdapted::Input::get_fiedler(string& dumpname){
      fiedler_sym << fiedler;
      std::vector<int> findices = fiedler_reorder(fiedler_sym);
      return findices;
+}
+
+std::vector<int> SpinAdapted::Input::get_fiedler_bcs(string& dumpname) {
+  Matrix fiedler; 
+  ifstream dumpFile;
+  dumpFile.open(dumpname.c_str(), ios::in);
+  genetic::ReadIntegral_BCS(dumpFile, fiedler);
+  dumpFile.close();
+  SymmetricMatrix fiedler_sym;
+  fiedler_sym << fiedler;
+  std::vector<int> findices = fiedler_reorder(fiedler_sym);
+  return findices;
 }
 
 std::vector<int> SpinAdapted::Input::getgaorder(ifstream& gaconfFile, string& orbitalfile, std::vector<int>& fiedlerorder)

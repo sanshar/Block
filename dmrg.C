@@ -70,6 +70,9 @@ namespace SpinAdapted{
   double NUMERICAL_ZERO = 1e-15;
   OneElectronArray v_1;
   TwoElectronArray v_2(TwoElectronArray::restrictedNonPermSymm);
+  PairArray v_cc;
+  CCCCArray v_cccc;
+  CCCDArray v_cccd;
   Input dmrginp;
   int MAX_THRD = 1;
   bool FULLRESTART;
