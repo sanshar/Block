@@ -351,9 +351,10 @@ void SparseMatrix::renormalise_transform_on_disk(const std::vector<Matrix>& rota
     boost::archive::binary_iarchive load_op(ifs);
     load_op >> *op;
     // Assume this is the operator we want, and expand it to the big block
-    assert( this->get_orbs()[0] == op->get_orbs()[0] );
-    assert( this->get_orbs()[1] == op->get_orbs()[1] );
-    assert( this->get_orbs()[2] == op->get_orbs()[2] );
+//Care of order with 4-index driver??
+//FIXME    assert( this->get_orbs()[0] == op->get_orbs()[0] );
+//FIXME    assert( this->get_orbs()[1] == op->get_orbs()[1] );
+//FIXME    assert( this->get_orbs()[2] == op->get_orbs()[2] );
     *this = *op;
   }
 

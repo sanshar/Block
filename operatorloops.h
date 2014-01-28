@@ -122,9 +122,9 @@ template<typename T2, class A> void for_all_operators_multithread(A& array, cons
       std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
       for (int j=0; j<vec.size(); j++){
 //FIXME
-std::vector<int> orbs = vec.at(j)->get_orbs();
-cout << "indices: ";
-for (int idx=0; idx<orbs.size(); ++idx) { cout << orbs[idx] << ", "; }
+//std::vector<int> orbs = vec.at(j)->get_orbs();
+//cout << "indices: ";
+//for (int idx=0; idx<orbs.size(); ++idx) { cout << orbs[idx] << ", "; }
 //cout << "\n";
         func( *(vec.at(j)) );
       }
@@ -177,9 +177,9 @@ template<typename T2, class A> void for_all_operators_on_disk(A& array, const St
       boost::archive::binary_oarchive save_op(ofs);
       save_op << *(vec.at(j));
            
-      // Deallocate memory for operator representation
-      vec.at(j)->set_built() = false;
-      vec.at(j)->deallocate(stateinfo);
+//FIXME      // Deallocate memory for operator representation
+//FIXME      vec.at(j)->set_built() = false;
+//FIXME      vec.at(j)->deallocate(stateinfo);
     }
   }
 }

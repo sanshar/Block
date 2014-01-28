@@ -282,8 +282,10 @@ cout << "building operators:  opType = " << ot << endl;
 
   void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo* s) {
 //FIXME
-cout << "renormalize transform: opType = " << ot << endl;
-    if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
+//cout << "renormalize transform: opType = " << ot << endl;
+//    if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
+//FIXME
+    if ( ot == CRE_CRE_DES_DES ) {
       // Build on disk (load, renormalize, save)
       std::string ifile = get_filename();
       std::string ofile = get_filename() + ".renorm";
@@ -304,7 +306,7 @@ cout << "renormalize transform: opType = " << ot << endl;
     else {
       // Build in core
 //FIXME
-cout << "in core renormalize\n";
+//cout << "in core renormalize\n";
       for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );
     }
   }

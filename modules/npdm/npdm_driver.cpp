@@ -319,7 +319,7 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
   DEBUG_CALL_GET_EXPECT[mpigetrank()] = 0;
   Timer timer;
   pout << "===========================================================================================\n";
-  pout << "Current NPDM sweep = "<< sweepPos+1 << " of " << endPos+1 << "\n";
+  pout << "Current NPDM sweep position = "<< sweepPos+1 << " of " << endPos+1 << "\n";
 
   // Initialize class that computes expectation values when sent LHS, Dot and RHS operator spin-sets from this spin-block
   Npdm::Npdm_expectations npdm_expectations( npdm_order_, wavefunctions.at(0), big );

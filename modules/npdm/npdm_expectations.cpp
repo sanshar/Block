@@ -179,6 +179,7 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_bas
 //if (lhsOps.opReps_.size() > 0) { pout << "lhs: " << lhsOps.mults_.at(ilhs) << std::endl; }
 //pout << "spin comp: ilhs, idot, irhs = " << ilhs << idot << irhs << std::endl;
 
+//FIXME get rid of mults_; just use get_deltaQuantum directly
         // Check that the spin multiplicities of the actual operators we've got are what we think they are!
         if ( lhsOps.opReps_.size() > 0 ) assert( lhsOps.mults_.at(ilhs) -1 == lhsOps.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );
         if ( dotOps.opReps_.size() > 0 ) assert( dotOps.mults_.at(idot) -1 == dotOps.opReps_.at(idot)->get_deltaQuantum().totalSpin );
