@@ -754,7 +754,7 @@ class PairArray {
       assert(i >= 0 && i < dim && j >= 0 && j < dim);
       bool is_odd_i = (i & 1);
       bool is_odd_j = (j & 1);
-      bool zero = (!is_odd_i) || is_odd_j;
+      bool zero = is_odd_i || (!is_odd_j);
       if (zero)
         return dummyZero;
       i=i/2;
@@ -770,7 +770,7 @@ class PairArray {
       assert(i >= 0 && i < dim && j >= 0 && j < dim);
       bool is_odd_i = (i & 1);
       bool is_odd_j = (j & 1);
-      bool zero = (!is_odd_i) || is_odd_j;
+      bool zero = is_odd_i || (!is_odd_j);
       if (zero)
         return 0.0;
       i=i/2;
@@ -913,7 +913,7 @@ class CCCCArray {
       bool is_odd_k = (k & 1);
       bool is_odd_l = (l & 1);
       
-      bool zero = (!is_odd_i) || (!is_odd_j) || is_odd_k || is_odd_l;
+      bool zero = is_odd_i || is_odd_j || (!is_odd_k) || (!is_odd_l);
       if (zero) {
         return dummyZero;
       }
@@ -945,7 +945,7 @@ class CCCCArray {
       bool is_odd_k = (k & 1);
       bool is_odd_l = (l & 1);
       
-      bool zero = (!is_odd_i) || (!is_odd_j) || is_odd_k || is_odd_l;
+      bool zero = is_odd_i || is_odd_j || (!is_odd_k) || (!is_odd_l);
       if (zero) {
         return 0.0;
       }
@@ -1090,7 +1090,7 @@ class CCCDArray {
 
       int n = indexMap(i, j);
       int m = k*(dim/2)+l+1;
-      bool illegal = (n<=0) || (rhf && !is_odd_i); // legal when i>j and i is alpha
+      bool illegal = (n<=0) || (rhf && is_odd_i); // legal when i>j and i is alpha
       if (illegal) {
         cerr << "Warning: CCCDArray assignment ignored!" << endl;
         return dummyZero;
@@ -1114,7 +1114,7 @@ class CCCDArray {
       bool is_odd_k = (k & 1);
       bool is_odd_l = (l & 1);
 
-      bool zero = !((is_odd_i == is_odd_j) && (is_odd_i == is_odd_l) &&(is_odd_i != is_odd_k));
+      bool zero = !((is_odd_i == is_odd_j) && (is_odd_i == is_odd_l) && (is_odd_i != is_odd_k));
       if (zero) {
         return dummyZero;
       }
@@ -1131,14 +1131,14 @@ class CCCDArray {
       }
 
       if (rhf) {
-        int sign = ((n>0) == is_odd_i) ? 1:-1;
+        int sign = ((n>0) == is_odd_i) ? -1:1;
         return sign * repA(abs(n), m);
       } else {
         int sign = (n>0) ? 1:-1;
         if (is_odd_i) {
-          return sign*repA(abs(n), m);
-        } else {
           return sign*repB(abs(n), m);
+        } else {
+          return sign*repA(abs(n), m);
         }
       }
     }
