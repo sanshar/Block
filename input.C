@@ -788,7 +788,7 @@ SpinAdapted::Input::Input(const string& config_name)
     }
 
     makeInitialHFGuess();
-          
+
     pout << "Checking input for errors"<<endl;
     performSanityTest();
     pout << "Summary of input"<<endl;
@@ -1317,10 +1317,23 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     } else if (RHF) {
       // switch different sections for RHFB
       if (section == 0) { // ccdd
+        v2(2*reorder.at(i), 2*reorder.at(k), 2*reorder.at(j),2*reorder.at(l)) = value;
       } else if (section == 1) { // cccd
+        vcccd.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(k)+1, 2*reorder.at(l), value);
       } else if (section == 2) { // cccc
+        vcccc.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(l)+1, 2*reorder.at(k)+1, value);
       } else if (section == 3) { // cd
+        if (!(k==-1 && l==-1)) {
+          pout << "Orbital file error" << endl;
+          abort();
+        }
+        v1(2*reorder.at(i), 2*reorder.at(j)) = value;
       } else if (section == 4) { // cc
+        if (!(k==-1 && l==-1)) {
+          pout << "Orbital file error" << endl;
+          abort();
+        }
+        vcc(2*reorder.at(i), 2*reorder.at(j)+1) = value;
       } else {
         pout << "read orbital file error" << endl;
         abort();
@@ -1341,17 +1354,21 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
         vcccc.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(l)+1, 2*reorder.at(k)+1, value);
       } else if (section == 6) { // cd_a
         if (!(k==-1 && l==-1)) {
-          cerr << "Orbital file error" << endl;
+          pout << "Orbital file error" << endl;
           abort();
         }
         v1(2*reorder.at(i), 2*reorder.at(j)) = value;
       } else if (section == 7) { // cd_b
         if (!(k==-1 && l==-1)) {
-          cerr << "Orbital file error" << endl;
+          pout << "Orbital file error" << endl;
           abort();
         }
         v1(2*reorder.at(i)+1, 2*reorder.at(j)+1) = value;
       } else if (section == 8) { // cc
+        if (!(k==-1 && l==-1)) {
+          pout << "Orbital file error" << endl;
+          abort();
+        }
         vcc(2*reorder.at(i), 2*reorder.at(j)+1) = value;
       } else {
         pout << "read orbital file error" << endl;
@@ -1361,7 +1378,20 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     msg.resize(0);
     ReadMeaningfulLine(dumpFile, msg, msgsize); //this if the first line with integrals
   }
-  abort();
+  if (m_norbs/2 >= m_integral_disk_storage_thresh) //
+  {
+    for (int i=0; i<m_spatial_to_spin.size()-1; i++) {
+      std::vector<int> orb;
+      for (int j=m_spatial_to_spin[i]; j<m_spatial_to_spin[i+1]; j+=2) {
+	orb.push_back(j/2);
+      }
+      PartialTwoElectronArray vpart(orb);
+      vpart.populate(v2);
+      vpart.Save(m_save_prefix);
+    }
+    v2.ReSize(0);
+  }
+  dumpFile.close();
 }
 
 std::vector<int> SpinAdapted::Input::get_fiedler(string& dumpname){
@@ -1500,7 +1530,7 @@ void SpinAdapted::Input::performSanityTest()
     pout << "Number of orbitals cannot be greater than 130"<<endl;
     abort();
   }
-  if (m_alpha+m_beta <= 0) {
+  if (m_alpha+m_beta < 0 || (m_alpha+m_beta == 0 && !m_Bogoliubov)) {
     pout << "Total number of electrons cannot be negative"<<endl;
     abort();
   }
