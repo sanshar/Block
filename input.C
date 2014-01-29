@@ -756,7 +756,7 @@ SpinAdapted::Input::Input(const string& config_name)
      CheckFileExistence(orbitalfile, "Orbital file ");
 
   //read the orbitals
-  v_1.rhf= true;
+  v_1.rhf=true;
   v_2.rhf=true;
   if (sym != "lzsym" && sym != "dinfh_abelian" && !NonabelianSym) {
     v_2.permSymm = true;
@@ -779,6 +779,9 @@ SpinAdapted::Input::Input(const string& config_name)
 
   if (mpigetrank() == 0) {
     if (m_Bogoliubov) {
+      v_cc.rhf=true;
+      v_cccc.rhf=true;
+      v_cccd.rhf=true;
       readorbitalsfile(orbitalfile, v_1, v_2, v_cc, v_cccc, v_cccd);
     } else {
       readorbitalsfile(orbitalfile, v_1, v_2);
@@ -1044,11 +1047,11 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
 
   int AOrbOffset = 0, BOrbOffset = 0;
   if(!RHF) {
-    v_1.rhf = false;
-    v_2.rhf = false;    
+    v1.rhf = false;
+    v2.rhf = false;    
   }
+  v1.ReSize(m_norbs);  
   v2.ReSize(m_norbs);
-  v1.ReSize(m_norbs);
 
 
   msg.resize(0);
@@ -1106,7 +1109,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
   dumpFile.close();  
 }
 
-void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray& v1, TwoElectronArray& v2, PairArray& v_cc, CCCCArray& v_cccc, CCCDArray& v_cccd) {
+void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray& v1, TwoElectronArray& v2, PairArray& vcc, CCCCArray& vcccc, CCCDArray& vcccd) {
   ifstream dumpFile; dumpFile.open(orbitalfile.c_str(), ios::in);
   
   string msg; int msgsize = 5000;
@@ -1245,7 +1248,8 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     msg.resize(0);
     ReadMeaningfulLine(dumpFile, msg, msgsize);
     boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
-    if(boost::iequals(tok[0], "IUHF")) RHF=false;
+    if(boost::iequals(tok[0], "IUHF"))
+      RHF=false;
   }
 
   if(sym == "dinfh" ) {
@@ -1260,6 +1264,103 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
   m_spatial_to_spin.push_back(m_norbs);
   m_spin_to_spatial.push_back(m_norbs);
 
+  while (!((boost::iequals(tok[0], "&END")) || (boost::iequals(tok[0], "/")))) {
+    int temp;
+    if (boost::iequals(tok[0], "NPROP") ) {
+      NPROP.push_back( atoi(tok[1].c_str()));
+      NPROP.push_back( atoi(tok[2].c_str()));
+      NPROP.push_back( atoi(tok[3].c_str()));
+    } else if (boost::iequals(tok[0], "PROPBITLEN") ) {
+      temp = atoi(tok[1].c_str());
+      PROPBITLEN=1;
+      for (int i=0; i<temp; i++)
+        PROPBITLEN *= 2;
+    }
+    msg.resize(0);
+    ReadMeaningfulLine(dumpFile, msg, msgsize);
+    boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
+    if(boost::iequals(tok[0], "IUHF")) RHF=false;
+  }
+
+  int section = 0;
+  if(!RHF) {
+    v1.rhf = false;
+    v2.rhf = false; 
+    vcc.rhf=false;
+    vcccc.rhf=false;
+    vcccd.rhf=false;
+  }
+  v2.ReSize(m_norbs);
+  v1.ReSize(m_norbs);
+  vcc.ReSize(m_norbs);
+  vcccc.ReSize(m_norbs);
+  vcccd.ReSize(m_norbs);
+  
+  msg.resize(0);
+  ReadMeaningfulLine(dumpFile, msg, msgsize); //this if the first line with integrals
+  
+  int i, j, k, l;
+  double value;
+  while(msg.size() != 0) {
+    boost::split(tok, msg, is_any_of(" \t"), token_compress_on);
+    if (tok.size() != 5) {
+      pout << "error in reading orbital file"<<endl;
+      pout << "error encountered at line "<<endl;
+      pout << msg<<endl;
+      abort();
+    }
+    value = atof(tok[0].c_str());
+    i = atoi(tok[1].c_str())-offset;j = atoi(tok[2].c_str())-offset;k = atoi(tok[3].c_str())-offset;l = atoi(tok[4].c_str())-offset;
+    if (i==-1 && j==-1 && k==-1 && l==-1) {
+      m_core_energy += value;
+      section += 1;
+    } else if (RHF) {
+      // switch different sections for RHFB
+      if (section == 0) { // ccdd
+      } else if (section == 1) { // cccd
+      } else if (section == 2) { // cccc
+      } else if (section == 3) { // cd
+      } else if (section == 4) { // cc
+      } else {
+        pout << "read orbital file error" << endl;
+        abort();
+      }
+    } else {
+      // switch different sections for UHFB
+      if (section == 0) { // ccdd_aa
+        v2(2*reorder.at(i), 2*reorder.at(k), 2*reorder.at(j),2*reorder.at(l)) = value;
+      } else if (section == 1) { // ccdd_bb
+        v2(2*reorder.at(i)+1, 2*reorder.at(k)+1, 2*reorder.at(j)+1,2*reorder.at(l)+1) = value;
+      } else if (section == 2) { // ccdd_ab
+        v2(2*reorder.at(i), 2*reorder.at(k)+1, 2*reorder.at(j),2*reorder.at(l)+1) = value;
+      } else if (section == 3) { // cccd_a
+        vcccd.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(k)+1, 2*reorder.at(l), value);
+      } else if (section == 4) { // cccd_b
+        vcccd.set(2*reorder.at(i)+1, 2*reorder.at(j)+1, 2*reorder.at(k), 2*reorder.at(l)+1, value);
+      } else if (section == 5) { // cccc  w_{ijkl}C_ia C_ja C_kb C_lb
+        vcccc.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(l)+1, 2*reorder.at(k)+1, value);
+      } else if (section == 6) { // cd_a
+        if (!(k==-1 && l==-1)) {
+          cerr << "Orbital file error" << endl;
+          abort();
+        }
+        v1(2*reorder.at(i), 2*reorder.at(j)) = value;
+      } else if (section == 7) { // cd_b
+        if (!(k==-1 && l==-1)) {
+          cerr << "Orbital file error" << endl;
+          abort();
+        }
+        v1(2*reorder.at(i)+1, 2*reorder.at(j)+1) = value;
+      } else if (section == 8) { // cc
+        vcc(2*reorder.at(i), 2*reorder.at(j)+1) = value;
+      } else {
+        pout << "read orbital file error" << endl;
+        abort();
+      }
+    }
+    msg.resize(0);
+    ReadMeaningfulLine(dumpFile, msg, msgsize); //this if the first line with integrals
+  }
   abort();
 }
 

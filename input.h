@@ -199,7 +199,7 @@ class Input {
 #endif
   void performSanityTest();
   void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
-  void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, PairArray& v_cc, CCCCArray& v_cccc, CCCDArray& v_cccd);  
+  void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, PairArray& vcc, CCCCArray& vcccc, CCCDArray& vcccd);  
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
   std::vector<int> getgaorder(ifstream& gaconfFile, string& orbitalfile, std::vector<int>& fiedlerorder);
   std::vector<int> get_fiedler(string& dumpname);
