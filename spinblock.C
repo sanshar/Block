@@ -90,8 +90,6 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
   hasMemoryAllocated (false), 
   direct(false), leftBlock(0), rightBlock(0)
 {
-  complementary = is_complement;
-  normal = !is_complement;
   default_op_components(is_complement);
   std::vector<int> sites; 
   if (dmrginp.use_partial_two_integrals()) {

@@ -429,7 +429,7 @@ void dmrg(double sweep_tol)
   //initialize array of size m_maxiter or dmrginp.max_iter() for dw and energy
 
 
-  last_fe = Sweep::do_one(sweepParams, true, true, false, 0);
+  last_fe = Sweep::do_one(sweepParams, true, true, false, 0); // first sweep: warmup, forward
   while ((fabs(last_fe - old_fe) > sweep_tol) || (fabs(last_be - old_be) > sweep_tol) || 
 	 (dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter()+1 >= sweepParams.get_sweep_iter()) )
     {
@@ -437,7 +437,7 @@ void dmrg(double sweep_tol)
       old_be = last_be;
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
-      last_be = Sweep::do_one(sweepParams, false, false, false, 0);
+      last_be = Sweep::do_one(sweepParams, false, false, false, 0); // backward sweep
       if (dmrginp.outputlevel() > 0) 
          pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
 
@@ -460,7 +460,7 @@ void dmrg(double sweep_tol)
          }
       }
 
-      last_fe = Sweep::do_one(sweepParams, false, true, false, 0);
+      last_fe = Sweep::do_one(sweepParams, false, true, false, 0); // forward sweep again
 
       new_states=sweepParams.get_keep_states();
 

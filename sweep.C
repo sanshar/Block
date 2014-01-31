@@ -215,7 +215,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
-  InitBlocks::InitStartingBlock (system,forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+  InitBlocks::InitStartingBlock (system,forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp); // initialize the first block
   if(!restart)
     sweepParams.set_block_iter() = 0;
 
@@ -223,13 +223,11 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   if (dmrginp.outputlevel() > 0)
     pout << "\t\t\t Starting block is :: " << endl << system << endl;
 
-  SpinBlock::store (forward, system.get_sites(), system); // if restart, just restoring an existing block --
-  sweepParams.savestate(forward, system.get_sites().size());
+  SpinBlock::store(forward, system.get_sites(), system); // if restart, just restoring an existing block --
+  // just store the block in file for restart, no need to worry about it
+  sweepParams.savestate(forward, system.get_sites().size()); // save on disk
   bool dot_with_sys = true;
-  vector<int> syssites;
-  {
-    syssites = system.get_sites();
-  }
+  vector<int> syssites = system.get_sites();
 
   if (restart)
   {
@@ -239,19 +237,17 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       dot_with_sys = false;
   }
   if (dmrginp.outputlevel() > 0)
-    mcheck("at the very start of sweep");
+    mcheck("at the very start of sweep");  // just timer
 
-  for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
+  for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) // get_n_iters() returns the number of blocking iterations needed in one sweep
     {
-      
       pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
       if (dmrginp.outputlevel() > 0) {
-	
-	if (forward)
-	  pout << "\t\t\t Current direction is :: Forwards " << endl;
-	else
-	  pout << "\t\t\t Current direction is :: Backwards " << endl;
+	    if (forward)
+	      pout << "\t\t\t Current direction is :: Forwards " << endl;
+	    else
+	      pout << "\t\t\t Current direction is :: Backwards " << endl;
       }
 
       if (dmrginp.no_transform() || (sweepParams.get_sweep_iter()-sweepParams.get_restart_iter() == 0 && sweepParams.get_block_iter() == 0))
@@ -269,10 +265,10 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       if (dmrginp.outputlevel() > 0)
          pout << "\t\t\t Blocking and Decimating " << endl;
 	  
-      SpinBlock newSystem;
+      SpinBlock newSystem; // new system after blocking and decimating
 
       //Need to substitute by:
-      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian" || NonabelianSym))
+      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian" || NonabelianSym)) // only the first sweep, 
          Startup(sweepParams, system, newSystem);
       else {
          if (sweepParams.set_sweep_iter() == 1 && sweepParams.get_block_iter() == 0)
@@ -282,37 +278,37 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       
       //Need to substitute by?
       if (!(warmUp && (sym=="trans" || sym == "dinfh_abelian" || NonabelianSym))){
-      for(int j=0;j<nroots;++j)
-      {
+        for(int j=0;j<nroots;++j)
+        {
 #ifndef MOLPRO
-	pout << "\t\t\t Total block energy for State [ " << j << 
-	  " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+	      pout << "\t\t\t Total block energy for State [ " << j << 
+	      " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
 #else 
-	//We might want to relax the output restrictions here, so it prints out with outputlevel=0
-	if (dmrginp.outputlevel() < 0) {
-	  pout << "\t\t\t Total block energy for State [ " << j << 
-	    " ] with " << sweepParams.get_keep_states()<<" States :: " << fixed << setprecision(10) << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
-	}
+	      //We might want to relax the output restrictions here, so it prints out with outputlevel=0
+	      if (dmrginp.outputlevel() < 0) {
+	        pout << "\t\t\t Total block energy for State [ " << j << 
+	        " ] with " << sweepParams.get_keep_states()<<" States :: " << fixed << setprecision(10) << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+      	  }
 #endif
-      }
+        }
       
-      finalEnergy_spins = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy_spins() : finalEnergy_spins);
-      finalEnergy = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy() : finalEnergy);
-      finalError = max(sweepParams.get_lowest_error(),finalError);
-      pout << endl;
+        finalEnergy_spins = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy_spins() : finalEnergy_spins);
+        finalEnergy = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy() : finalEnergy);
+        finalError = max(sweepParams.get_lowest_error(),finalError);
+        pout << endl;
       }
       
       system = newSystem;
       if (dmrginp.outputlevel() > 0){
-	pout << system<<endl;
-	system.printOperatorSummary();
+	    pout << system<<endl;
+	    system.printOperatorSummary();
       }
       
       //system size is going to be less than environment size
       if (forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)
-	dot_with_sys = false;
+	    dot_with_sys = false;
       if (!forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
-	dot_with_sys = false;
+	    dot_with_sys = false;
 
       SpinBlock::store (forward, system.get_sites(), system);	 	
       syssites = system.get_sites();
@@ -371,9 +367,10 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem)
 {
   mcheck("at the start of block and decimate");
-  dmrginp.guessgenT -> start();
-  bool forward = (system.get_sites() [0] == 0);
+  dmrginp.guessgenT -> start();  // timer starts
+  bool forward = (system.get_sites() [0] == 0); // if first site is 0, then it's forward sweep
   SpinBlock systemDot;
+  // define the sites of "systemDot"
   int systemDotStart, systemDotEnd;
   int systemDotSize = sweepParams.get_sys_add() - 1;
   if (forward)
@@ -386,19 +383,19 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
     systemDotStart = system.get_sites() [0] - 1;
     systemDotEnd = systemDotStart - systemDotSize;
   }
+
   vector<int> spindotsites(2); 
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
-  systemDot = SpinBlock(systemDotStart, systemDotEnd);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd); // default is_complement=false
   
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
   dmrginp.datatransfer -> start();
-  system.addAdditionalCompOps();
+  system.addAdditionalCompOps(); // communicate between different processors, broadcast operators from system block
   dmrginp.datatransfer -> stop();
   InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), 
 				 DISTRIBUTED_STORAGE, true, true);
-
 
   int nquanta = newSystem.get_stateInfo().quanta.size();
   std::vector<DiagonalMatrix > energies(nquanta);

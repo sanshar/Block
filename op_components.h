@@ -30,7 +30,7 @@ template <class T> struct ChooseArray {
   typedef para_array_1d<std::vector<boost::shared_ptr<SparseMatrix> > > ArrayType;
 };
 template <> struct ChooseArray<Cre> {
-  typedef para_array_1d<std::vector<boost::shared_ptr<Cre> > > ArrayType;
+  typedef para_array_1d<std::vector<boost::shared_ptr<Cre> > > ArrayType; // Cre, CreDes, etc. are sparse matrices: <a|a_i^\dagger|b>
 };
 template <> struct ChooseArray<CreDes> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<CreDes> > > ArrayType;

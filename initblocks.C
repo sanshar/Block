@@ -34,7 +34,6 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
   else if (forward)
   {
     startingBlock = SpinBlock(0, forward_starting_size - 1, true);
-    
     if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0 && dmrginp.spinAdapted())
     {
       SpinQuantum s = dmrginp.molecule_quantum();
