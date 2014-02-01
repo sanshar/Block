@@ -25,7 +25,7 @@ public:
     orbs = std::vector<int>();
     initialised = true;
     fermion = false;
-    deltaQuantum = SpinQuantum(0, SpinSpace(0), IrrepSpace(0));
+    vector<SpinQuantum> deltaQuantum(1, SpinQuantum(0, SpinSpace(0), IrrepSpace(0)));
   }
   void makedensitymatrix(const std::vector<Wavefunction>& wave_solutions, SpinBlock &big, const std::vector<double> &wave_weights,
 			 const double noise, const double additional_noise, bool warmup);

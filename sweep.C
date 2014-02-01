@@ -148,7 +148,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     }
     pout << "\t\t\t Solving wavefunction "<<endl;
   }
-
+  // FXIME here is the renormalization part: diagonalize Hamiltonian in |l> |r> basis
   newSystem.RenormaliseFrom (sweepParams.set_lowest_energy(), sweepParams.set_lowest_energy_spins(), sweepParams.set_lowest_error(), 
                              rotatematrix, sweepParams.get_keep_states(), 
                              sweepParams.get_keep_qstates(), sweepParams.get_davidson_tol(), big, sweepParams.get_guesstype(), sweepParams.get_noise(), 

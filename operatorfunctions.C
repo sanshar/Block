@@ -265,9 +265,9 @@ void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, con
 		for (int rQ = 0; rQ < rightOpSz; ++rQ)
 		  if (c.allowed(lQPrime, rQ) && v.allowed(lQ, rQ))
 		    {
-		      scale *= dmrginp.get_ninej()(lS->quanta[lQPrime].get_s().getirrep(), rS->quanta[rQ].get_s().getirrep() , c.get_deltaQuantum().get_s().getirrep(), 
+		      scale *= dmrginp.get_ninej()(lS->quanta[lQPrime].get_s().getirrep(), rS->quanta[rQ].get_s().getirrep() , c.get_deltaQuantum()[0].get_s().getirrep(), 
 						   a.get_spin().getirrep(), 0, a.get_spin().getirrep(),
-						   lS->quanta[lQ].get_s().getirrep(), rS->quanta[rQ].get_s().getirrep() , v.get_deltaQuantum().get_s().getirrep());
+						   lS->quanta[lQ].get_s().getirrep(), rS->quanta[rQ].get_s().getirrep() , v.get_deltaQuantum()[0].get_s().getirrep());
 		      scale *= Symmetry::spatial_ninej(lS->quanta[lQPrime].get_symm().getirrep() , rS->quanta[rQ].get_symm().getirrep(), c.get_symm().getirrep(), 
 					   a.get_symm().getirrep(), 0, a.get_symm().getirrep(),
 					   lS->quanta[lQ].get_symm().getirrep() , rS->quanta[rQ].get_symm().getirrep(), v.get_symm().getirrep());
@@ -293,9 +293,9 @@ void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, con
 	      const Matrix& aop = a.operator_element(rQ, rQPrime);
 	      for (int lQ = 0; lQ < leftOpSz; ++lQ) 
 		if (v.allowed(lQ, rQ) && c.allowed(lQ, rQPrime)) {
-		  scale *= dmrginp.get_ninej()(lS->quanta[lQ].get_s().getirrep(), rS->quanta[rQPrime].get_s().getirrep() , c.get_deltaQuantum().get_s().getirrep(), 
+		  scale *= dmrginp.get_ninej()(lS->quanta[lQ].get_s().getirrep(), rS->quanta[rQPrime].get_s().getirrep() , c.get_deltaQuantum()[0].get_s().getirrep(), 
 					       0, a.get_spin().getirrep(), a.get_spin().getirrep(),
-					       lS->quanta[lQ].get_s().getirrep(), rS->quanta[rQ].get_s().getirrep() , v.get_deltaQuantum().get_s().getirrep());
+					       lS->quanta[lQ].get_s().getirrep(), rS->quanta[rQ].get_s().getirrep() , v.get_deltaQuantum()[0].get_s().getirrep());
 		  scale *= Symmetry::spatial_ninej(lS->quanta[lQ].get_symm().getirrep() , rS->quanta[rQPrime].get_symm().getirrep(), c.get_symm().getirrep(), 
 				      0, a.get_symm().getirrep(), a.get_symm().getirrep(),
 				      lS->quanta[lQ].get_symm().getirrep() , rS->quanta[rQ].get_symm().getirrep(), v.get_symm().getirrep());
@@ -364,9 +364,9 @@ void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, con
 		{
 		  int lindex = lQ*leftOpSz+lQPrime;
 		  double factor = scale;
-		  factor *= dmrginp.get_ninej()(lS->quanta[lQPrime].get_s().getirrep(), rS->quanta[rQPrime].get_s().getirrep() , c.get_deltaQuantum().get_s().getirrep(), 
+		  factor *= dmrginp.get_ninej()(lS->quanta[lQPrime].get_s().getirrep(), rS->quanta[rQPrime].get_s().getirrep() , c.get_deltaQuantum()[0].get_s().getirrep(), 
 						leftOp.get_spin().getirrep(), rightOp.get_spin().getirrep(), opQ.get_s().getirrep(),
-						lS->quanta[lQ].get_s().getirrep(), rS->quanta[rQ].get_s().getirrep() , v.get_deltaQuantum().get_s().getirrep());
+						lS->quanta[lQ].get_s().getirrep(), rS->quanta[rQ].get_s().getirrep() , v.get_deltaQuantum()[0].get_s().getirrep());
 		  factor *= Symmetry::spatial_ninej(lS->quanta[lQPrime].get_symm().getirrep() , rS->quanta[rQPrime].get_symm().getirrep(), c.get_symm().getirrep(), 
 				       leftOp.get_symm().getirrep(), rightOp.get_symm().getirrep(), opQ.get_symm().getirrep(),
 				       lS->quanta[lQ].get_symm().getirrep() , rS->quanta[rQ].get_symm().getirrep(), v.get_symm().getirrep());

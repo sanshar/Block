@@ -94,54 +94,59 @@ void TensorProduct (StateInfo& a, StateInfo& b, const SpinQuantum q, const int c
 
   for (int i = 0; i < a.quanta.size (); ++i)
     for (int j = 0; j < b.quanta.size (); ++j)
-      if (  constraint == LessThanQ && 
-	    (  a.quanta [i].get_n() + b.quanta [j].get_n() > q.get_n() ))
-
-	{	  
-	  continue;
-	}
-      else if (constraint == EqualQ && q.allow(a.quanta [i] , b.quanta [j]) )
-      {
-	c.quantaMap(i,j).resize(1);
-
-	c.quanta.push_back(q);
-	c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
-	c.totalStates += a.quantaStates[i]*b.quantaStates[j];
-	c.allowedQuanta(i,j) = true;
-	c.quantaMap(i,j)[0] = c.quanta.size() - 1;
-	c.leftUnMapQuanta.push_back(i);
-	c.rightUnMapQuanta.push_back(j);
-	
-      }
-      else if (constraint == LessThanQ)
-      {
-	vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
-	for (int vq=0; vq< v.size(); vq++) {
-	  if ( (v[vq].get_n() > q.get_n()) || (v[vq].get_n()==q.get_n() && v[vq].get_s() != q.get_s())
-	       || ( abs(v[vq].get_s().getirrep()-q.get_s().getirrep()) > (q.get_n()-v[vq].get_n())  )
-	       || (v[vq].get_n() == q.get_n() && v[vq].get_symm() != q.get_symm()) )
-	       continue;
-	  bool include = false;
-	  if (compState != 0) {
-	    for (int k=0; k<compState->quanta.size(); k++)
-	    {
-	      if (q.allow(v[vq], compState->quanta[k])){
-		include = true;
-		break;
-	      }
+      if (constraint == LessThanQ && 
+	      (a.quanta [i].get_n() + b.quanta [j].get_n() > q.get_n() )) {	  
+	    continue;
+	  } else if (constraint == EqualQ && q.allow(a.quanta [i] , b.quanta [j]) ) {
+	    c.quantaMap(i,j).resize(1);
+	    c.quanta.push_back(q);
+	    c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
+	    c.totalStates += a.quantaStates[i]*b.quantaStates[j];
+	    c.allowedQuanta(i,j) = true;
+	    c.quantaMap(i,j)[0] = c.quanta.size() - 1;
+	    c.leftUnMapQuanta.push_back(i);
+	    c.rightUnMapQuanta.push_back(j);
+      } else if (constraint == EqualS) {
+        vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
+        for (int vq=0; vq<v.size(); vq++) {
+          if (v[vq].get_n() > q.get_n() || v[vq].get_s() != q.get_s() || v[vq].get_s().getirrep() != q.get_s().getirrep() || v[vq].get_symm() != q.get_symm())
+            continue;
+          
+          c.quanta.push_back(v[vq]);
+	      c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
+	      c.totalStates += a.quantaStates[i]*b.quantaStates[j];
+	      c.allowedQuanta(i,j) = true;
+	      c.quantaMap(i,j).push_back(c.quanta.size() - 1);
+	      c.leftUnMapQuanta.push_back(i);
+	      c.rightUnMapQuanta.push_back(j);
+        }
+      } else if (constraint == LessThanQ) {
+	    vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
+	    for (int vq=0; vq< v.size(); vq++) {
+	      if ( (v[vq].get_n() > q.get_n()) || (v[vq].get_n()==q.get_n() && v[vq].get_s() != q.get_s())
+	        || ( abs(v[vq].get_s().getirrep()-q.get_s().getirrep()) > (q.get_n()-v[vq].get_n())  )
+	        || (v[vq].get_n() == q.get_n() && v[vq].get_symm() != q.get_symm()) )
+	        continue;
+	      bool include = false;
+	      if (compState != 0) {
+	        for (int k=0; k<compState->quanta.size(); k++) {
+	          if (q.allow(v[vq], compState->quanta[k])){
+		        include = true;
+		        break;
+	          }
+	        }
+	      } else
+	        include = true;
+	      if (!include)
+            continue;
+	      c.quanta.push_back(v[vq]);
+	      c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
+	      c.totalStates += a.quantaStates[i]*b.quantaStates[j];
+	      c.allowedQuanta(i,j) = true;
+	      c.quantaMap(i,j).push_back(c.quanta.size() - 1);
+	      c.leftUnMapQuanta.push_back(i);
+	      c.rightUnMapQuanta.push_back(j);
 	    }
-	  }
-	  else
-	    include = true;
-	  if (!include) continue;
-	  c.quanta.push_back(v[vq]);
-	  c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
-	  c.totalStates += a.quantaStates[i]*b.quantaStates[j];
-	  c.allowedQuanta(i,j) = true;
-	  c.quantaMap(i,j).push_back(c.quanta.size() - 1);
-	  c.leftUnMapQuanta.push_back(i);
-	  c.rightUnMapQuanta.push_back(j);
-	}
       }
   c.UnBlockIndex ();
 }
@@ -154,8 +159,11 @@ void TensorProduct (StateInfo& a, StateInfo& b, StateInfo& c, const int constrai
 
   if (constraint == NO_PARTICLE_SPIN_NUMBER_CONSTRAINT)
     TensorProduct (a, b, dmrginp.effective_molecule_quantum(), LessThanQ, c, compState);
-  else if (constraint == PARTICLE_SPIN_NUMBER_CONSTRAINT)
+  else if (constraint == PARTICLE_SPIN_NUMBER_CONSTRAINT) {
     TensorProduct (a, b, dmrginp.effective_molecule_quantum(), EqualQ, c);
+  } else if (constraint == SPIN_NUMBER_CONSTRAINT) {
+    TensorProduct (a, b, dmrginp.effective_molecule_quantum(), EqualS, c);
+  }
 }
 
 }

@@ -245,5 +245,9 @@ void SpinAdapted::InitBlocks::InitBigBlock(SpinBlock &leftBlock, SpinBlock &righ
   //set big block components
   big.set_big_components(); 
   // build the big block
-  big.BuildSumBlock(PARTICLE_SPIN_NUMBER_CONSTRAINT, leftBlock, rightBlock);
+  if (dmrginp.hamiltonian() == BCS) {
+    big.BuildSumBlock(SPIN_NUMBER_CONSTRAINT, leftBlock, rightBlock);
+  } else {
+    big.BuildSumBlock(PARTICLE_SPIN_NUMBER_CONSTRAINT, leftBlock, rightBlock);
+  }
 }

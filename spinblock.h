@@ -107,9 +107,28 @@ class SpinBlock
   Op_component_base& get_op_array(opTypes optype){assert(has(optype));return *(ops.find(optype)->second);}
   const Op_component_base& get_op_array(opTypes optype) const {assert(has(optype));return *(ops.find(optype)->second);}
   
-  boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const SpinQuantum& s, int i=-1, int j=-1, int k=-1) {assert(has(optypes)); Op_component_base& opbase = *ops.find(optypes)->second; 
-    return opbase.get_op_rep(s, i, j, k)->getworkingrepresentation(this);}
-  const boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const SpinQuantum& s, int i=-1, int j=-1, int k=-1) const {assert(has(optypes)); Op_component_base& opbase = *ops.find(optypes)->second; return opbase.get_op_rep(s, i, j, k)->getworkingrepresentation(this);}
+  boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const SpinQuantum& s, int i=-1, int j=-1, int k=-1) {
+    assert(has(optypes));
+    Op_component_base& opbase = *ops.find(optypes)->second;
+    vector<SpinQuantum> temp(1, s);
+    return opbase.get_op_rep(temp, i, j, k)->getworkingrepresentation(this);
+  }
+  const boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const SpinQuantum& s, int i=-1, int j=-1, int k=-1) const {
+    assert(has(optypes));
+    Op_component_base& opbase = *ops.find(optypes)->second;
+    vector<SpinQuantum> temp(1, s);    
+    return opbase.get_op_rep(temp, i, j, k)->getworkingrepresentation(this);
+  }
+  boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1) {
+    assert(has(optypes));
+    Op_component_base& opbase = *ops.find(optypes)->second; 
+    return opbase.get_op_rep(s, i, j, k)->getworkingrepresentation(this);
+  }
+  const boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1) const {
+    assert(has(optypes));
+    Op_component_base& opbase = *ops.find(optypes)->second;
+    return opbase.get_op_rep(s, i, j, k)->getworkingrepresentation(this);
+  }
 
   void operator= (const SpinBlock& b);
   void build_iterators();

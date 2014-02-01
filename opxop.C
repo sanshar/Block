@@ -34,13 +34,13 @@ void SpinAdapted::opxop::cdxcdcomp(const SpinBlock* otherblock, std::vector<boos
     boost::shared_ptr<SparseMatrix> op3 = otherblock->get_op_array(CRE_DESCOMP).get_element(i, j).at(opind)->getworkingrepresentation(otherblock);
     double factor = 1.0;
     if (otherblock == b->get_leftBlock())
-      factor = getCommuteParity(op1->get_deltaQuantum(), op3->get_deltaQuantum(), o->get_deltaQuantum());
+      factor = getCommuteParity(op1->get_deltaQuantum()[0], op3->get_deltaQuantum()[0], o->get_deltaQuantum());
 
     SpinAdapted::operatorfunctions::TensorProduct(otherblock, *op3, *op1, b, &(b->get_stateInfo()), o[ilock], factor, numthrds);
     if (i != j) {
       factor = 1.0;
       if (otherblock == b->get_rightBlock())
-	factor = getCommuteParity(-op1->get_deltaQuantum(), -op3->get_deltaQuantum(), o->get_deltaQuantum());
+	factor = getCommuteParity(-op1->get_deltaQuantum()[0], -op3->get_deltaQuantum()[0], o->get_deltaQuantum());
       SpinAdapted::operatorfunctions::TensorProduct(otherblock, Transposeview(*op3), Transposeview(*op1), b, &(b->get_stateInfo()), o[ilock], factor, numthrds);
     }
   }

@@ -230,6 +230,7 @@ SpinAdapted::Input::Input(const string& config_name)
 	  abort();
 	}
     m_Bogoliubov = true;
+    m_ham_type = BCS;
       }
       else if (boost::iequals(keyword, "startM")) {
 	if(usedkey[STARTM] == 0) 
@@ -739,9 +740,6 @@ SpinAdapted::Input::Input(const string& config_name)
     m_beta = (n_elec - n_spin)/2;
     if (sym == "trans" || sym == "lzsym") 
       m_total_symmetry_number = IrrepSpace(m_total_symmetry_number.getirrep()+1); //in translational symmetry lowest irrep is 0 and not 1
-    m_molecule_quantum = SpinQuantum(m_alpha + m_beta, SpinSpace(m_alpha - m_beta), m_total_symmetry_number);
-
-
   }
 
 #ifndef SERIAL
@@ -783,8 +781,10 @@ SpinAdapted::Input::Input(const string& config_name)
       v_cccc.rhf=true;
       v_cccd.rhf=true;
       readorbitalsfile(orbitalfile, v_1, v_2, v_cc, v_cccc, v_cccd);
+      m_molecule_quantum = SpinQuantum(m_norbs, SpinSpace(m_alpha - m_beta), m_total_symmetry_number);
     } else {
       readorbitalsfile(orbitalfile, v_1, v_2);
+      m_molecule_quantum = SpinQuantum(m_alpha + m_beta, SpinSpace(m_alpha - m_beta), m_total_symmetry_number);      
     }
 
     makeInitialHFGuess();
@@ -802,9 +802,12 @@ SpinAdapted::Input::Input(const string& config_name)
   }
 
 #ifndef SERIAL
-  mpi::broadcast(world,*this,0);
-  mpi::broadcast(world,v_1,0);
-  mpi::broadcast(world,v_2,0);
+  mpi::broadcast(world, *this,0);
+  mpi::broadcast(world, v_1,0);
+  mpi::broadcast(world, v_2,0);
+  mpi::broadcast(world, v_cc,0);
+  mpi::broadcast(world, v_cccc,0);
+  mpi::broadcast(world, v_cccd,0);
   mpi::broadcast(world, NPROP, 0);
   mpi::broadcast(world, PROPBITLEN, 0);
 #endif

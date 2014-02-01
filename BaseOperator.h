@@ -31,7 +31,7 @@ enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESC
 enum CompType{CD, DD, CCD, C};
 
 
-template<class T> class Baseoperator
+template<class T> class Baseoperator  // The abstract class of an operator
 {
  public:
   virtual bool get_fermion() const = 0;
@@ -46,17 +46,17 @@ template<class T> class Baseoperator
   virtual const T& operator_element(int i, int j) const = 0;
   virtual T& operator()(int i, int j) = 0;
   virtual const T& operator()(int i, int j) const = 0;
-  virtual SpinQuantum get_deltaQuantum() const = 0;
+  virtual std::vector<SpinQuantum> get_deltaQuantum() const = 0;
   virtual char conjugacy() const = 0;
   virtual ~Baseoperator() {};
-  virtual SpinSpace get_spin() const = 0;
-  virtual IrrepSpace get_symm() const = 0;
+  virtual SpinSpace get_spin(int i=0) const = 0;
+  virtual IrrepSpace get_symm(int i=0) const = 0;
   virtual double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const = 0;
   Baseoperator() {};
 };
 
 
-class SparseMatrix : public Baseoperator<Matrix>
+class SparseMatrix : public Baseoperator<Matrix>  // the sparse matrix representation of the operator
 {
  private:
   friend class boost::serialization::access;
@@ -75,14 +75,14 @@ class SparseMatrix : public Baseoperator<Matrix>
  protected:
   std::vector<int> orbs;
   bool fermion;
-  ObjectMatrix<char> allowedQuantaMatrix;
+  ObjectMatrix<char> allowedQuantaMatrix;  // some whether it is allowed?
   bool initialised;
   bool built;
-  ObjectMatrix<Matrix> operatorMatrix;
-  SpinQuantum deltaQuantum;
+  ObjectMatrix<Matrix> operatorMatrix;  // put the dense block in the place it should be
+  std::vector<SpinQuantum> deltaQuantum;    // allowed quantum
   int Sign;
  public:
- SparseMatrix() : orbs(2), initialised(false), built(false), Sign(1), fermion(false){};
+  SparseMatrix() : orbs(2), initialised(false), built(false), Sign(1), fermion(false){};
   virtual ~SparseMatrix(){};
   int nrows() const { return allowedQuantaMatrix.nrows(); }
   int ncols() const { return allowedQuantaMatrix.ncols(); }
@@ -96,10 +96,15 @@ class SparseMatrix : public Baseoperator<Matrix>
   bool &set_fermion() { return fermion; }
   const char& allowed(int i, int j) const { return allowedQuantaMatrix(i, j); }
   char& allowed(int i, int j) { return allowedQuantaMatrix(i, j); }
-  SpinQuantum &set_deltaQuantum() { return deltaQuantum; }
-  SpinSpace get_spin()const  { return deltaQuantum.get_s();}
-  IrrepSpace get_symm()const  { return deltaQuantum.get_symm();}
-  SpinQuantum get_deltaQuantum() const { return deltaQuantum; }
+  std::vector<SpinQuantum> &set_deltaQuantum() { return deltaQuantum; }
+  SpinQuantum &set_deltaQuantum(int i) { return deltaQuantum[i]; }
+  void resize_deltaQuantum(int i) { deltaQuantum.resize(i); }
+  void set_deltaQuantum(int i, const SpinQuantum s) { deltaQuantum.assign(i, s); }
+  int get_deltaQuantum_size() const { return deltaQuantum.size(); }
+  SpinSpace get_spin(int i=0) const  { return deltaQuantum[i].get_s();}
+  IrrepSpace get_symm(int i=0) const  { return deltaQuantum[i].get_symm();}
+  std::vector<SpinQuantum> get_deltaQuantum() const { return deltaQuantum; }
+  SpinQuantum get_deltaQuantum(int i) const { return deltaQuantum[i]; }
   int get_orbs(int i) const 
   { 
     if(i >= orbs.size())
@@ -161,7 +166,15 @@ private:
 public:
   Transposeview(const boost::shared_ptr<SparseMatrix>& opptr) : opdata(opptr) {}
   Transposeview(SparseMatrix& op) { opdata = boost::shared_ptr<SparseMatrix>(&op, boostutils::null_deleter());}
-  SpinQuantum get_deltaQuantum() const { return -opdata->get_deltaQuantum(); }  
+  std::vector<SpinQuantum> get_deltaQuantum() const {
+    std::vector<SpinQuantum> deltaQuanta = opdata->get_deltaQuantum();
+    for (int i = 0; i < deltaQuanta.size(); ++i) {
+      deltaQuanta[i] = -deltaQuanta[i];
+    }
+    return deltaQuanta;
+  }
+  int get_deltaQuantum_size() const { return opdata->get_deltaQuantum_size(); }  
+  SpinQuantum get_deltaQuantum(int i) const {return -(opdata->get_deltaQuantum(i));}
   bool get_fermion() const { return opdata->get_fermion(); }
   bool get_initialised() const { return opdata->get_initialised(); }
   int nrows() const { return opdata->ncols(); }
@@ -170,8 +183,8 @@ public:
   char &allowed(int i, int j) { return opdata->allowed(j, i); }
   const Matrix& operator_element(int i, int j) const { return opdata->operator_element(j, i); }
   Matrix& operator_element(int i, int j) { return opdata->operator_element(j, i); }
-  SpinSpace get_spin()const  { return opdata->get_deltaQuantum().get_s();}
-  IrrepSpace get_symm()const  { return -opdata->get_deltaQuantum().get_symm();}
+  SpinSpace get_spin(int i=0) const  { return opdata->get_deltaQuantum(i).get_s();}
+  IrrepSpace get_symm(int i=0) const  { return -opdata->get_deltaQuantum(i).get_symm();}
   int get_orbs(int i) const {return opdata->get_orbs(i);}
   const std::vector<int>& get_orbs() const { return opdata->get_orbs(); }
   const Matrix& operator()(int i, int j) const { return opdata->operator()(j, i); }

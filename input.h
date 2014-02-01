@@ -29,7 +29,7 @@ class PairArray;
 class CCCCArray;
 class CCCDArray;
 
-enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD};
+enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD, BCS};
 enum solveTypes {LANCZOS, DAVIDSON};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
@@ -314,7 +314,12 @@ class Input {
   const std::vector<int> &spin_vector() const { return m_spin_vector; }
   const std::string &save_prefix() const { return m_save_prefix; }
   const std::string &load_prefix() const { return m_load_prefix; }
-  SpinQuantum effective_molecule_quantum() {if (!m_add_noninteracting_orbs) return m_molecule_quantum; else return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), total_symmetry_number());}  
+  SpinQuantum effective_molecule_quantum() {
+    if (!m_add_noninteracting_orbs) 
+      return m_molecule_quantum;
+    else 
+      return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), total_symmetry_number());
+  }  
   std::vector<double>& get_orbenergies() {return m_orbenergies;}
   int getHFQuanta(const SpinBlock& b) const;
   const bool &do_cd() const {return m_do_cd;}
