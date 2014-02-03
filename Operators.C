@@ -824,16 +824,16 @@ double SpinAdapted::CreCreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
         }
       }
         }
-        for (int ki =0; ki<b->get_sites().size(); ki++) {
-      int _i = b->get_sites()[ki];
-      TensorOp CI(_i, 1);
-      std::vector<double> MatElements = calcMatrixElements(c1, CI, ladder[i]);
-      double factor = calcCompfactor(CI, D, C, *(b->get_twoInt()));
-      
-      if (fabs(factor) > dmrginp.oneindex_screen_tol())
-        element += factor*MatElements[index]/cleb;
-        }
-        break;
+      for (int ki =0; ki<b->get_sites().size(); ki++) {  // add C block to CCD block
+        int _i = b->get_sites()[ki];
+        TensorOp CI(_i, 1);
+        std::vector<double> MatElements = calcMatrixElements(c1, CI, ladder[i]);
+        double factor = calcCompfactor(CI, D, C, *(b->get_twoInt()));
+        
+        if (fabs(factor) > dmrginp.oneindex_screen_tol())
+          element += factor*MatElements[index]/cleb;
+      }
+      break;
       }
       else
         continue;

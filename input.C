@@ -812,7 +812,7 @@ SpinAdapted::Input::Input(const string& config_name)
   mpi::broadcast(world, NPROP, 0);
   mpi::broadcast(world, PROPBITLEN, 0);
 #endif
-
+  }
 }
 
 void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& oldtonew)

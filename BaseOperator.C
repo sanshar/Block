@@ -22,7 +22,7 @@ double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
   int bspin = b.get_s().getirrep(), birrep = b.get_symm().getirrep();
   int cspin = c.get_s().getirrep(), cirrep = c.get_symm().getirrep();
 
-  int an = a.get_n(), bn = b.get_n();
+  //int an = a.get_n(), bn = b.get_n();
   int parity = IsFermion(a) && IsFermion(b) ? -1 : 1;
 
   if (!dmrginp.spinAdapted()) return parity;
