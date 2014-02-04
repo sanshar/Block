@@ -15,7 +15,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/mpi.hpp>
 #endif
 
-#include "npdm.h"
 #include "sweepgenblock.h"
 #include "sweep_params.h"
 #include "sweeponepdm.h"
@@ -23,6 +22,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "twopdm_driver.h"
 #include "threepdm_driver.h"
 #include "fourpdm_driver.h"
+//FIXME
+//#include "nevpt2_pdm_driver.h"
 
 //FIXME
 #include <boost/mpi.hpp>

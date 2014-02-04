@@ -21,6 +21,16 @@ namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
+Fourpdm_driver::Fourpdm_driver( int sites ) : Npdm_driver(4) {
+  // Initialize full in-core spin-orbital matrix if required in addition to sparse disk-based storage
+  if ( use_full_array_ ) {
+    resize_npdm_array(2*sites);
+    clear_npdm_array();
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void Fourpdm_driver::save_npdm_text(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
@@ -53,15 +63,70 @@ void Fourpdm_driver::save_npdm_text(const int &i, const int &j)
 
 void Fourpdm_driver::save_spatial_npdm_text(const int &i, const int &j)
 {
-std::cout << "Building spatial 4pdm\n";
-  double factor = 1.0;
   if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.", i, j,".txt");
     ofstream ofs(file);
-    ofs << fourpdm.dim1()/2 << endl;
+    ofs << spatial_fourpdm.dim1() << endl;
 
+    double trace = 0.0;
+    for(int i=0; i<spatial_fourpdm.dim1(); ++i)
+      for(int j=0; j<spatial_fourpdm.dim2(); ++j)
+        for(int k=0; k<spatial_fourpdm.dim3(); ++k)
+          for(int l=0; l<spatial_fourpdm.dim4(); ++l)
+            for(int m=0; m<spatial_fourpdm.dim5(); ++m)
+              for(int n=0; n<spatial_fourpdm.dim6(); ++n)
+                for(int p=0; p<spatial_fourpdm.dim7(); ++p)
+                  for(int q=0; q<spatial_fourpdm.dim8(); ++q) {
+                    if ( abs(spatial_fourpdm(i,j,k,l,m,n,p,q)) > 1e-14 ) {
+                      ofs << boost::format("%d %d %d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % p % q % spatial_fourpdm(i,j,k,l,m,n,p,q);
+                      if ( (i==q) && (j==p) && (k==n) && (l==m) ) trace += spatial_fourpdm(i,j,k,l,m,n,p,q);
+                    }
+                  }
+    ofs.close();
+    std::cout << "Spatial      4PDM trace = " << trace << "\n";
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Fourpdm_driver::save_npdm_binary(const int &i, const int &j)
+{
+  if( mpigetrank() == 0)
+  {
+    char file[5000];
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/fourpdm.", i, j,".bin");
+    std::ofstream ofs(file, std::ios::binary);
+    boost::archive::binary_oarchive save(ofs);
+    save << fourpdm;
+    ofs.close();
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Fourpdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
+{
+  if( mpigetrank() == 0)
+  {
+    char file[5000];
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.", i, j,".bin");
+    std::ofstream ofs(file, std::ios::binary);
+    boost::archive::binary_oarchive save(ofs);
+    save << spatial_fourpdm;
+    ofs.close();
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Fourpdm_driver::build_spatial_npdm(const int &i, const int &j)
+{
+std::cout << "Building spatial 4pdm\n";
+  double factor = 1.0;
+  if( mpigetrank() == 0)
+  {
     for(int i=0; i<fourpdm.dim1()/2; ++i)
       for(int j=0; j<fourpdm.dim2()/2; ++j)
         for(int k=0; k<fourpdm.dim3()/2; ++k)
@@ -72,29 +137,66 @@ std::cout << "Building spatial 4pdm\n";
                   for(int q=0; q<fourpdm.dim8()/2; ++q) {
 
                     double pdm = 0.0;
-                    for (int s=0; s<2; s++)
-                      for (int t=0; t<2; t++)
-                        for (int u=0; u<2; u++)
+                    for (int s=0; s<2; s++) {
+                      for (int t=0; t<2; t++) {
+                        for (int u=0; u<2; u++) {
                           for (int v=0; v<2; v++) {
-                            pdm += factor * fourpdm(2*i+s, 2*j+t, 2*k+u, 2*l+v, 2*m+v, 2*n+u, 2*p+t, 2*q+s);
-                              //if ( (i==1)&& (j==1)&& (k==0)&& (l==0)&& (m==2)&& (n==2) &&(p==1) &&(q==1) ) {
-                              //if ( (i==1)&& (j==1)&& (k==0)&& (l==0)&& (m==1)&& (n==1) &&(p==2) &&(q==2) ) {
-                              //  std::cout <<2*i+s<<","<<2*j+t<<","<<2*k+u<<","<<2*l+v<<","<<2*m+v<<","<<2*n+u<<","<<2*p+t<<","<<2*q+s<<"\t\t";
-                              //  std::cout << pdm << "\t\t" <<  fourpdm(2*i+s, 2*j+t, 2*k+u, 2*l+v, 2*m+v, 2*n+u, 2*p+t, 2*q+s) << std::endl;
-                              //}
+                            pdm += fourpdm(2*i+s, 2*j+t, 2*k+u, 2*l+v, 2*m+v, 2*n+u, 2*p+t, 2*q+s);
                           }
-        
-                    if ( abs(pdm) > 1e-14 ) ofs << boost::format("%d %d %d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % p % q % pdm;
+                        }
+                      }
+                    }
+                    if ( abs(pdm) > 1e-14 ) spatial_fourpdm(i,j,k,l,m,n,p,q) = factor * pdm;
                   }
-    ofs.close();
   }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Fourpdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
-{
-  assert(false);
+//
+//void Fourpdm_driver::save_spatial_npdm_text(const int &i, const int &j)
+//{
+//std::cout << "Building spatial 4pdm\n";
+//  double factor = 1.0;
+//  if( mpigetrank() == 0)
+//  {
+//    char file[5000];
+//    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.", i, j,".txt");
+//    ofstream ofs(file);
+//    ofs << fourpdm.dim1()/2 << endl;
+//
+//    for(int i=0; i<fourpdm.dim1()/2; ++i)
+//      for(int j=0; j<fourpdm.dim2()/2; ++j)
+//        for(int k=0; k<fourpdm.dim3()/2; ++k)
+//          for(int l=0; l<fourpdm.dim4()/2; ++l)
+//            for(int m=0; m<fourpdm.dim5()/2; ++m)
+//              for(int n=0; n<fourpdm.dim6()/2; ++n)
+//                for(int p=0; p<fourpdm.dim7()/2; ++p)
+//                  for(int q=0; q<fourpdm.dim8()/2; ++q) {
+//
+//                    double pdm = 0.0;
+//                    for (int s=0; s<2; s++)
+//                      for (int t=0; t<2; t++)
+//                        for (int u=0; u<2; u++)
+//                          for (int v=0; v<2; v++) {
+//                            pdm += factor * fourpdm(2*i+s, 2*j+t, 2*k+u, 2*l+v, 2*m+v, 2*n+u, 2*p+t, 2*q+s);
+//                              //if ( (i==1)&& (j==1)&& (k==0)&& (l==0)&& (m==2)&& (n==2) &&(p==1) &&(q==1) ) {
+//                              //if ( (i==1)&& (j==1)&& (k==0)&& (l==0)&& (m==1)&& (n==1) &&(p==2) &&(q==2) ) {
+//                              //  std::cout <<2*i+s<<","<<2*j+t<<","<<2*k+u<<","<<2*l+v<<","<<2*m+v<<","<<2*n+u<<","<<2*p+t<<","<<2*q+s<<"\t\t";
+//                              //  std::cout << pdm << "\t\t" <<  fourpdm(2*i+s, 2*j+t, 2*k+u, 2*l+v, 2*m+v, 2*n+u, 2*p+t, 2*q+s) << std::endl;
+//                              //}
+//                          }
+//        
+//                    if ( abs(pdm) > 1e-14 ) ofs << boost::format("%d %d %d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % p % q % pdm;
+//                  }
+//    ofs.close();
+//  }
+//}
+//
+////-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//void Fourpdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
+//{
+//
 //  double factor = 1.0;
 //  if(!mpigetrank())
 //  {
@@ -124,23 +226,8 @@ void Fourpdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
 //    result = fwrite(&pdm(0,0,0,0,0,0), pdm.size(), sizeof(double), f);
 //    fclose(f);
 //  }
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Fourpdm_driver::save_npdm_binary(const int &i, const int &j)
-{
-  if( mpigetrank() == 0)
-  {
-    char file[5000];
-    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/fourpdm.", i, j,".bin");
-    std::ofstream ofs(file, std::ios::binary);
-    boost::archive::binary_oarchive save(ofs);
-    save << fourpdm;
-    ofs.close();
-  }
-}
-
+//}
+//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Fourpdm_driver::load_npdm_binary(const int &i, const int &j)
@@ -247,11 +334,11 @@ void Fourpdm_driver::get_even_and_odd_perms( const std::vector<int> mnpq,
 void Fourpdm_driver::assign_npdm_antisymmetric(const int i, const int j, const int k, const int l, 
                                                const int m, const int n, const int p, const int q, const double val)
 {
-if ( abs(val) > 1e-8 ) {
-  pout << "so-fourpdm val: i,j,k,l,m,n,p,q = " 
-       << i << "," << j << "," << k << "," << l << "," << m << "," << n << "," << p << "," << q
-       << "\t\t" << val << endl;
-}
+//if ( abs(val) > 1e-8 ) {
+//  pout << "so-fourpdm val: i,j,k,l,m,n,p,q = " 
+//       << i << "," << j << "," << k << "," << l << "," << m << "," << n << "," << p << "," << q
+//       << "\t\t" << val << endl;
+//}
 
   // Test for duplicates
   if ( fourpdm(i,j,k,l,m,n,p,q) != 0.0 && abs(fourpdm(i,j,k,l,m,n,p,q)-val) > 1e-6) {
@@ -308,7 +395,7 @@ if ( abs(val) > 1e-8 ) {
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Fourpdm_driver::assign_npdm_elements( std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements )
+void Fourpdm_driver::store_npdm_elements( std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements )
 {
   for (int i=0; i < new_spin_orbital_elements.size(); ++i) {
     assert( new_spin_orbital_elements[i].first.size() == 8 );

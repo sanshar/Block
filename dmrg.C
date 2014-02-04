@@ -147,6 +147,10 @@ std::cout << "mpi MAX_THRD = " << MAX_THRD << std::endl;
     Npdm::npdm(4);
     break;
 
+  case (NEVPT2PDM):
+    Npdm::npdm(0);
+    break;
+
   case (RESTART_ONEPDM):
     Npdm::npdm_restart(1);
     break;

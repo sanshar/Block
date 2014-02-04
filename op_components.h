@@ -249,7 +249,7 @@ template <class Op> class Op_component : public Op_component_base
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   void build_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::string& sysfile, std::string& dotfile) { 
-cout << "building operators:  opType = " << ot << endl;
+//cout << "building operators:  opType = " << ot << endl;
 //FIXME
 //    if ( m_op.num_indices() > 3) {
 //      // New driver to build n-index operators (n>3)

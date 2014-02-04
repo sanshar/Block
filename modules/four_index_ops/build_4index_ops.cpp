@@ -39,7 +39,7 @@ void do_4index_tensor_trace( opTypes& ot, SpinBlock& b, std::ofstream& ofs ) {
   std::ifstream sys_ifs(sysBlock->get_op_array(ot).get_filename().c_str(), std::ios::binary);
   std::ifstream dot_ifs(dotBlock->get_op_array(ot).get_filename().c_str(), std::ios::binary);
 
-cout << "doing CCDD tensor trace with dot block\n";
+//cout << "doing CCDD tensor trace with dot block\n";
   // Tensor trace with dot block
   Op_component_base& dot_array = dotBlock->get_op_array(CRE_CRE_DES_DES);
   // Loop over all operator indices
@@ -61,7 +61,7 @@ cout << "doing CCDD tensor trace with dot block\n";
         std::vector<SpinQuantum> s1 = dot_op->get_quantum_ladder().at(build_pattern);
         std::vector<SpinQuantum> s2 = op->get_quantum_ladder().at(build_pattern);
         if ( s1 == s2 ) {
-cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
+//cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
           assert( ! op->get_built() );
           op->set_built() = true;
           op->set_build_pattern() = build_pattern;
@@ -81,7 +81,7 @@ cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
     }
   }
 
-cout << "doing CCDD tensor trace with sys block\n";
+//cout << "doing CCDD tensor trace with sys block\n";
   // Tensor trace with sys block
   Op_component_base& sys_array = sysBlock->get_op_array(CRE_CRE_DES_DES);
   // Loop over all operator indices
@@ -100,7 +100,7 @@ cout << "doing CCDD tensor trace with sys block\n";
         std::vector<SpinQuantum> s1 = sys_op->get_quantum_ladder().at(build_pattern);
         std::vector<SpinQuantum> s2 = op->get_quantum_ladder().at(build_pattern);
         if ( s1 == s2 ) {
-cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
+//cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
           assert( ! op->get_built() );
           op->set_built() = true;
           op->set_build_pattern() = build_pattern;
@@ -119,7 +119,7 @@ cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
       }
     }
   }
-cout << "done all tensor trace ops\n";
+//cout << "done all tensor trace ops\n";
 
 }
 
@@ -135,7 +135,7 @@ void do_4index_3_1_tensor_products( opTypes& ot, SpinBlock& b, std::ofstream& of
   // For backwards sweep
   //-------------------------
   if ( ! forward ) {
-cout << "doing CCDD tensor product with (i) on sys; (j,k,l) on dot\n";
+//cout << "doing CCDD tensor product with (i) on sys; (j,k,l) on dot\n";
 //FIXME note order of these loops
 
     // Loop over all sys operator indices
@@ -173,7 +173,7 @@ cout << "doing CCDD tensor product with (i) on sys; (j,k,l) on dot\n";
               // Select relevant spin component
               std::vector<SpinQuantum> s = { op->get_quantum_ladder().at(build_pattern).at(0), op->get_quantum_ladder().at(build_pattern).at(1) };
               if ( s == spin_234 ) {
-  cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
+//  cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
                 assert( ! op->get_built() );
                 op->set_built() = true;
                 op->set_build_pattern() = build_pattern;
@@ -197,7 +197,7 @@ cout << "doing CCDD tensor product with (i) on sys; (j,k,l) on dot\n";
       }
     }
 
-cout << "doing CCDD tensor product with (i,j,k) on sys; (l) on dot\n";
+//cout << "doing CCDD tensor product with (i,j,k) on sys; (l) on dot\n";
     // Loop over all sys operator indices
     Op_component_base& sys_array2 = sysBlock->get_op_array(CRE_CRE_DES);
     for (int idx = 0; idx < sys_array2.get_size(); ++idx) {
@@ -232,7 +232,7 @@ cout << "doing CCDD tensor product with (i,j,k) on sys; (l) on dot\n";
               // Select relevant spin component
               std::vector<SpinQuantum> s = { op->get_quantum_ladder().at(build_pattern).at(0), op->get_quantum_ladder().at(build_pattern).at(1) };
               if ( s == spin_123 ) {
-cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
+//cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
                 assert( ! op->get_built() );
                 op->set_built() = true;
                 op->set_build_pattern() = build_pattern;
@@ -260,7 +260,7 @@ cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
   // For forwards sweep
   //-------------------------
   else {
-cout << "doing CCDD tensor product with (i,j,k) on dot; (l) on sys\n";
+//cout << "doing CCDD tensor product with (i,j,k) on dot; (l) on sys\n";
 
     // Loop over all dot operator indices
     Op_component_base& dot_array = dotBlock->get_op_array(CRE_CRE_DES);
@@ -296,7 +296,7 @@ cout << "doing CCDD tensor product with (i,j,k) on dot; (l) on sys\n";
               // Select relevant spin component
               std::vector<SpinQuantum> s = { op->get_quantum_ladder().at(build_pattern).at(0), op->get_quantum_ladder().at(build_pattern).at(1) };
               if ( s == spin_123 ) {
-cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
+//cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
                 assert( ! op->get_built() );
                 op->set_built() = true;
                 op->set_build_pattern() = build_pattern;
@@ -322,7 +322,7 @@ cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
         }
       }
     }
-cout << "doing CCDD tensor product with (i) on dot; (j,k,l) on sys\n";
+//cout << "doing CCDD tensor product with (i) on dot; (j,k,l) on sys\n";
 
     // Loop over all dot operator indices
     Op_component_base& dot_array2 = dotBlock->get_op_array(CRE);
@@ -358,7 +358,7 @@ cout << "doing CCDD tensor product with (i) on dot; (j,k,l) on sys\n";
               // Select relevant spin component
               std::vector<SpinQuantum> s = { op->get_quantum_ladder().at(build_pattern).at(0), op->get_quantum_ladder().at(build_pattern).at(1) };
               if ( s == spin_234 ) {
-cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
+//cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
                 assert( ! op->get_built() );
                 op->set_built() = true;
                 op->set_build_pattern() = build_pattern;
@@ -384,7 +384,7 @@ cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
       }
     }
   }
-cout << "done all 3,1 tensor product ops\n";
+//cout << "done all 3,1 tensor product ops\n";
 
 }
 
@@ -401,7 +401,7 @@ void do_4index_2_2_tensor_products( opTypes& ot, SpinBlock& b, std::ofstream& of
   // For backwards sweep
   //-------------------------
   if ( ! forward ) {
-cout << "doing CCDD tensor product with (i,j) on sys; (k,l) on dot\n";
+//cout << "doing CCDD tensor product with (i,j) on sys; (k,l) on dot\n";
 
     // Loop over all sys operator indices
     Op_component_base& sys_array = sysBlock->get_op_array(CRE_CRE);
@@ -434,7 +434,7 @@ cout << "doing CCDD tensor product with (i,j) on sys; (k,l) on dot\n";
               std::vector<SpinQuantum> s1 = { op->get_quantum_ladder().at(build_pattern).at(0), op->get_quantum_ladder().at(build_pattern).at(1) };
               std::vector<SpinQuantum> s2 = { spin_12, spin_34 };
               if ( s1 == s2 ) {
-  cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
+//  cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
                 assert( ! op->get_built() );
                 op->set_built() = true;
                 op->set_build_pattern() = build_pattern;
@@ -459,7 +459,7 @@ cout << "doing CCDD tensor product with (i,j) on sys; (k,l) on dot\n";
   // For forwards sweep
   //-------------------------
   else {
-cout << "doing CCDD tensor product with (i,j) on dot; (k,l) on sys\n";
+//cout << "doing CCDD tensor product with (i,j) on dot; (k,l) on sys\n";
 
     // Loop over all dot operator indices
     Op_component_base& dot_array = dotBlock->get_op_array(CRE_CRE);
@@ -491,7 +491,7 @@ cout << "doing CCDD tensor product with (i,j) on dot; (k,l) on sys\n";
               std::vector<SpinQuantum> s1 = { op->get_quantum_ladder().at(build_pattern).at(0), op->get_quantum_ladder().at(build_pattern).at(1) };
               std::vector<SpinQuantum> s2 = { spin_12, spin_34 };
               if ( s1 == s2 ) {
-  cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
+//  cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
                 assert( ! op->get_built() );
                 op->set_built() = true;
                 op->set_build_pattern() = build_pattern;
@@ -516,7 +516,7 @@ cout << "doing CCDD tensor product with (i,j) on dot; (k,l) on sys\n";
       }
     }
   }
-cout << "done all 2,2 tensor product ops\n";
+//cout << "done all 2,2 tensor product ops\n";
 
 }
 
@@ -572,7 +572,7 @@ void build_4index_ops( opTypes& ot, SpinBlock& b )
 
   ofs.close();
 
-cout << "CCDD all done!\n";
+//cout << "CCDD all done!\n";
 
 }
 

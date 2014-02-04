@@ -19,6 +19,16 @@ namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
+Twopdm_driver::Twopdm_driver( int sites ) : Npdm_driver(2) {
+  // Initialize full in-core spin-orbital matrix if required in addition to sparse disk-based storage
+  if ( use_full_array_ ) {
+    resize_npdm_array(2*sites);
+    clear_npdm_array();
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void Twopdm_driver::save_npdm_text(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
@@ -37,7 +47,6 @@ void Twopdm_driver::save_npdm_text(const int &i, const int &j)
           }
     ofs.close();
     std::cout << "Spin-orbital 2PDM trace = " << trace << "\n";
-
   }
 }
 
@@ -45,59 +54,22 @@ void Twopdm_driver::save_npdm_text(const int &i, const int &j)
 
 void Twopdm_driver::save_spatial_npdm_text(const int &i, const int &j)
 {
-  //Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
   if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j,".txt");
     ofstream ofs(file);
-    ofs << twopdm.dim1()/2 << endl;
+    ofs << spatial_twopdm.dim1() << endl;
     double trace = 0.0;
-    for(int k=0;k<twopdm.dim1()/2;++k)
-      for(int l=0;l<twopdm.dim2()/2;++l)
-        for(int m=0;m<twopdm.dim3()/2;++m)
-          for(int n=0;n<twopdm.dim4()/2;++n) {
-	          double pdm = 0.0;
-      	    for (int s=0; s<2; s++)
-      	      for (int t =0; t<2; t++) {
-//                 if ( (k==0) && (l==0) && (m==1) && (n==2) ) 
-//                 if ( (k==0) && (l==0) && (m==2) && (n==1) ) 
-//                     std::cout << 2*k+s<<","<< 2*l+t<<","<< 2*m+t<<","<< 2*n+s<<"\t\t"<<pdm<<"\t"<<twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s)*0.5 <<std::endl;
-                 pdm += 0.5 * twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s);
-               }
-             if ( (k==n) && (l==m) ) trace += pdm;
-             ofs << boost::format("%d %d %d %d %20.14e\n") % k % l % m % n % pdm;
-	  }
+    for(int k=0;k<spatial_twopdm.dim1();++k)
+      for(int l=0;l<spatial_twopdm.dim2();++l)
+        for(int m=0;m<spatial_twopdm.dim3();++m)
+          for(int n=0;n<spatial_twopdm.dim4();++n) {
+            ofs << boost::format("%d %d %d %d %20.14e\n") % k % l % m % n % spatial_twopdm(k,l,m,n);
+            if ( (k==n) && (l==m) ) trace += spatial_twopdm(k,l,m,n);
+          }
     ofs.close();
     std::cout << "Spatial      2PDM trace = " << trace << "\n";
-  }
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Twopdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
-{
-  //Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
-  if( mpigetrank() == 0)
-  {
-    char file[5000];
-    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j,".bin");
-    FILE* f = fopen(file, "wb");
-
-    int nrows = twopdm.dim1()/2;
-    array_4d<double> pdm; pdm.resize(nrows, nrows, nrows, nrows);
-    for(int k=0;k<twopdm.dim1()/2;++k)
-      for(int l=0;l<twopdm.dim2()/2;++l)
-        for(int m=0;m<twopdm.dim3()/2;++m)
-          for(int n=0;n<twopdm.dim4()/2;++n) {
-            pdm(k, l, m, n) = 0.0;
-            for (int s=0; s<2; s++)
-            for (int t =0; t<2; t++)
-            pdm(k, l, m, n) += 0.5 * twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s);
-          }
-    int result = fwrite(&nrows,  1, sizeof(int), f);
-    result = fwrite(&pdm(0,0,0,0), pdm.size(), sizeof(double), f);
-    fclose(f);
   }
 }
 
@@ -117,6 +89,110 @@ void Twopdm_driver::save_npdm_binary(const int &i, const int &j)
   }
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//FIXME these are easily moved to Npdm_driver methods
+
+void Twopdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
+{
+  if( mpigetrank() == 0)
+  {
+    char file[5000];
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j,".bin");
+    std::ofstream ofs(file, std::ios::binary);
+    boost::archive::binary_oarchive save(ofs);
+    save << spatial_twopdm;
+    ofs.close();
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Twopdm_driver::build_spatial_npdm(const int &i, const int &j)
+{
+  //Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
+  if( mpigetrank() == 0)
+  {
+    spatial_twopdm.Clear();
+    double factor = 0.5;
+    for(int k=0;k<twopdm.dim1()/2;++k) {
+      for(int l=0;l<twopdm.dim2()/2;++l) {
+        for(int m=0;m<twopdm.dim3()/2;++m) {
+          for(int n=0;n<twopdm.dim4()/2;++n) {
+
+            double pdm = 0.0;
+            for (int s=0; s<2; s++) {
+              for (int t =0; t<2; t++) {
+                pdm += twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s);
+	           }
+	         }
+            spatial_twopdm(k,l,m,n) = factor * pdm;
+	       }
+	     }
+	   }
+	 }
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//void Twopdm_driver::save_spatial_npdm_text(const int &i, const int &j)
+//{
+//  //Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
+//  if( mpigetrank() == 0)
+//  {
+//    char file[5000];
+//    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j,".txt");
+//    ofstream ofs(file);
+//    ofs << twopdm.dim1()/2 << endl;
+//    double trace = 0.0;
+//    for(int k=0;k<twopdm.dim1()/2;++k)
+//      for(int l=0;l<twopdm.dim2()/2;++l)
+//        for(int m=0;m<twopdm.dim3()/2;++m)
+//          for(int n=0;n<twopdm.dim4()/2;++n) {
+//	          double pdm = 0.0;
+//      	    for (int s=0; s<2; s++)
+//      	      for (int t =0; t<2; t++) {
+////                 if ( (k==0) && (l==0) && (m==1) && (n==2) ) 
+////                 if ( (k==0) && (l==0) && (m==2) && (n==1) ) 
+////                     std::cout << 2*k+s<<","<< 2*l+t<<","<< 2*m+t<<","<< 2*n+s<<"\t\t"<<pdm<<"\t"<<twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s)*0.5 <<std::endl;
+//                 pdm += 0.5 * twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s);
+//               }
+//             if ( (k==n) && (l==m) ) trace += pdm;
+//             ofs << boost::format("%d %d %d %d %20.14e\n") % k % l % m % n % pdm;
+//	  }
+//    ofs.close();
+//    std::cout << "Spatial      2PDM trace = " << trace << "\n";
+//  }
+//}
+//
+////-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//void Twopdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
+//{
+//  //Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
+//  if( mpigetrank() == 0)
+//  {
+//    char file[5000];
+//    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j,".bin");
+//    FILE* f = fopen(file, "wb");
+//
+//    int nrows = twopdm.dim1()/2;
+//    array_4d<double> pdm; pdm.resize(nrows, nrows, nrows, nrows);
+//    for(int k=0;k<twopdm.dim1()/2;++k)
+//      for(int l=0;l<twopdm.dim2()/2;++l)
+//        for(int m=0;m<twopdm.dim3()/2;++m)
+//          for(int n=0;n<twopdm.dim4()/2;++n) {
+//            pdm(k, l, m, n) = 0.0;
+//            for (int s=0; s<2; s++)
+//            for (int t =0; t<2; t++)
+//            pdm(k, l, m, n) += 0.5 * twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s);
+//          }
+//    int result = fwrite(&nrows,  1, sizeof(int), f);
+//    result = fwrite(&pdm(0,0,0,0), pdm.size(), sizeof(double), f);
+//    fclose(f);
+//  }
+//}
+//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Twopdm_driver::load_npdm_binary(const int &i, const int &j)
@@ -231,7 +307,7 @@ pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << 
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_driver::assign_npdm_elements( std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
+void Twopdm_driver::store_npdm_elements( std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
   for (int i=0; i < new_spin_orbital_elements.size(); ++i) {
     int ix = new_spin_orbital_elements[i].first[0];

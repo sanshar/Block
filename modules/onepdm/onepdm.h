@@ -24,9 +24,12 @@ void compute_one_pdm_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
 
 void save_onepdm_spatial_text(const Matrix& onepdm, const int &i, const int &j);
 void save_onepdm_spatial_binary(const Matrix& onepdm, const int &i, const int &j);
+void load_onepdm_spatial_binary(Matrix& onepdm, const int &i, const int &j);
+
+void save_onepdm_text(const Matrix& onepdm, const int &i, const int &j);
 void save_onepdm_binary(const Matrix& onepdm, const int &i, const int &j);
 void load_onepdm_binary(Matrix& onepdm, const int &i, const int &j);
-void save_onepdm_text(const Matrix& onepdm, const int &i, const int &j);
+
 void accumulate_onepdm(Matrix& onepdm);
 std::vector<int> distribute_procs(const int numprocs, const int numjobs);
 }

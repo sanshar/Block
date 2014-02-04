@@ -19,6 +19,16 @@ namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
+Threepdm_driver::Threepdm_driver( int sites ) : Npdm_driver(3) {
+  // Initialize full in-core spin-orbital matrix if required in addition to sparse disk-based storage
+  if ( use_full_array_ ) {
+    resize_npdm_array(2*sites);
+    clear_npdm_array();
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void Threepdm_driver::save_npdm_text(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
@@ -49,67 +59,27 @@ void Threepdm_driver::save_npdm_text(const int &i, const int &j)
 
 void Threepdm_driver::save_spatial_npdm_text(const int &i, const int &j)
 {
-//FIXME  2pdm spatial has a factor of 1/2 in front of it  ???
-  double factor = 1.0;
   if( mpigetrank() == 0)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j,".txt");
     ofstream ofs(file);
-    ofs << threepdm.dim1()/2 << endl;
+    ofs << spatial_threepdm.dim1() << endl;
 
-    for(int i=0; i<threepdm.dim1()/2; ++i)
-      for(int j=0; j<threepdm.dim2()/2; ++j)
-        for(int k=0; k<threepdm.dim3()/2; ++k)
-          for(int l=0; l<threepdm.dim4()/2; ++l)
-            for(int m=0; m<threepdm.dim5()/2; ++m)
-              for(int n=0; n<threepdm.dim6()/2; ++n) {
-
-                double pdm = 0.0;
-                for (int s=0; s<2; s++)
-                  for (int t=0; t<2; t++)
-                    for (int u=0; u<2; u++)
-                      pdm += factor * threepdm(2*i+s, 2*j+t, 2*k+u, 2*l+u, 2*m+t, 2*n+s);
-    
-                if ( abs(pdm) > 1e-14 ) ofs << boost::format("%d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % pdm;
+    double trace = 0.0;
+    for(int i=0; i<spatial_threepdm.dim1(); ++i)
+      for(int j=0; j<spatial_threepdm.dim2(); ++j)
+        for(int k=0; k<spatial_threepdm.dim3(); ++k)
+          for(int l=0; l<spatial_threepdm.dim4(); ++l)
+            for(int m=0; m<spatial_threepdm.dim5(); ++m)
+              for(int n=0; n<spatial_threepdm.dim6(); ++n) {
+                if ( abs(spatial_threepdm(i,j,k,l,m,n)) > 1e-14 ) {
+                  ofs << boost::format("%d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % spatial_threepdm(i,j,k,l,m,n);
+                  if ( (i==n) && (j==m) && (k==l) ) trace += spatial_threepdm(i,j,k,l,m,n);
+                }
               }
     ofs.close();
-  }
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Threepdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
-{
-//FIXME  2pdm spatial has a factor of 1/2 in front of it  ???
-  double factor = 1.0;
-  if( mpigetrank() == 0)
-  {
-    char file[5000];
-    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j,".bin");
-    FILE* f = fopen(file, "wb");
-
-    int nrows = threepdm.dim1()/2;
-    array_6d<double> pdm; 
-    pdm.resize(nrows, nrows, nrows, nrows, nrows, nrows);
-
-    for(int i=0; i<threepdm.dim1()/2; ++i)
-      for(int j=0; j<threepdm.dim2()/2; ++j)
-        for(int k=0; k<threepdm.dim3()/2; ++k)
-          for(int l=0; l<threepdm.dim4()/2; ++l)
-            for(int m=0; m<threepdm.dim5()/2; ++m)
-              for(int n=0; n<threepdm.dim6()/2; ++n) {
-
-                pdm(i, j, k, l, m, n) = 0.0;
-                for (int s=0; s<2; s++)
-                  for (int t =0; t<2; t++)
-                    for (int u =0; u<2; u++)
-                      pdm(i, j, k, l, m, n) += factor * threepdm(2*i+s, 2*j+t, 2*k+u, 2*l+u, 2*m+t, 2*n+s);
-              }
-
-    int result = fwrite(&nrows,  1, sizeof(int), f);
-    result = fwrite(&pdm(0,0,0,0,0,0), pdm.size(), sizeof(double), f);
-    fclose(f);
+    std::cout << "Spatial      3PDM trace = " << trace << "\n";
   }
 }
 
@@ -128,6 +98,116 @@ void Threepdm_driver::save_npdm_binary(const int &i, const int &j)
   }
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Threepdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
+{
+  if( mpigetrank() == 0)
+  {
+    char file[5000];
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j,".bin");
+    std::ofstream ofs(file, std::ios::binary);
+    boost::archive::binary_oarchive save(ofs);
+    save << spatial_threepdm;
+    ofs.close();
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Threepdm_driver::build_spatial_npdm(const int &i, const int &j)
+{
+//FIXME  2pdm spatial has a factor of 1/2 in front of it  ???
+  double factor = 1.0;
+  if( mpigetrank() == 0)
+  {
+    for(int i=0; i<threepdm.dim1()/2; ++i)
+      for(int j=0; j<threepdm.dim2()/2; ++j)
+        for(int k=0; k<threepdm.dim3()/2; ++k)
+          for(int l=0; l<threepdm.dim4()/2; ++l)
+            for(int m=0; m<threepdm.dim5()/2; ++m)
+              for(int n=0; n<threepdm.dim6()/2; ++n) {
+                double pdm = 0.0;
+                for (int s=0; s<2; s++) {
+                  for (int t=0; t<2; t++) {
+                    for (int u=0; u<2; u++) {
+                      pdm += threepdm(2*i+s, 2*j+t, 2*k+u, 2*l+u, 2*m+t, 2*n+s);
+                    }
+                  }
+                }
+                if ( abs(pdm) > 1e-14 ) spatial_threepdm(i,j,k,l,m,n) = factor * pdm;
+              }
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//void Threepdm_driver::save_spatial_npdm_text(const int &i, const int &j)
+//{
+////FIXME  2pdm spatial has a factor of 1/2 in front of it  ???
+//  double factor = 1.0;
+//  if( mpigetrank() == 0)
+//  {
+//    char file[5000];
+//    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j,".txt");
+//    ofstream ofs(file);
+//    ofs << threepdm.dim1()/2 << endl;
+//
+//    for(int i=0; i<threepdm.dim1()/2; ++i)
+//      for(int j=0; j<threepdm.dim2()/2; ++j)
+//        for(int k=0; k<threepdm.dim3()/2; ++k)
+//          for(int l=0; l<threepdm.dim4()/2; ++l)
+//            for(int m=0; m<threepdm.dim5()/2; ++m)
+//              for(int n=0; n<threepdm.dim6()/2; ++n) {
+//
+//                double pdm = 0.0;
+//                for (int s=0; s<2; s++)
+//                  for (int t=0; t<2; t++)
+//                    for (int u=0; u<2; u++)
+//                      pdm += factor * threepdm(2*i+s, 2*j+t, 2*k+u, 2*l+u, 2*m+t, 2*n+s);
+//    
+//                if ( abs(pdm) > 1e-14 ) ofs << boost::format("%d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % pdm;
+//              }
+//    ofs.close();
+//  }
+//}
+//
+////-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//void Threepdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
+//{
+////FIXME  2pdm spatial has a factor of 1/2 in front of it  ???
+//  double factor = 1.0;
+//  if( mpigetrank() == 0)
+//  {
+//    char file[5000];
+//    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j,".bin");
+//    FILE* f = fopen(file, "wb");
+//
+//    int nrows = threepdm.dim1()/2;
+//    array_6d<double> pdm; 
+//    pdm.resize(nrows, nrows, nrows, nrows, nrows, nrows);
+//
+//    for(int i=0; i<threepdm.dim1()/2; ++i)
+//      for(int j=0; j<threepdm.dim2()/2; ++j)
+//        for(int k=0; k<threepdm.dim3()/2; ++k)
+//          for(int l=0; l<threepdm.dim4()/2; ++l)
+//            for(int m=0; m<threepdm.dim5()/2; ++m)
+//              for(int n=0; n<threepdm.dim6()/2; ++n) {
+//
+//                pdm(i, j, k, l, m, n) = 0.0;
+//                for (int s=0; s<2; s++)
+//                  for (int t =0; t<2; t++)
+//                    for (int u =0; u<2; u++)
+//                      pdm(i, j, k, l, m, n) += factor * threepdm(2*i+s, 2*j+t, 2*k+u, 2*l+u, 2*m+t, 2*n+s);
+//              }
+//
+//    int result = fwrite(&nrows,  1, sizeof(int), f);
+//    result = fwrite(&pdm(0,0,0,0,0,0), pdm.size(), sizeof(double), f);
+//    fclose(f);
+//  }
+//}
+//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Threepdm_driver::load_npdm_binary(const int &i, const int &j)
@@ -209,11 +289,11 @@ void Threepdm_driver::accumulate_npdm()
 
 void Threepdm_driver::assign_npdm_antisymmetric(const int i, const int j, const int k, const int l, const int m, const int n, const double val)
 {
-if ( abs(val) > 1e-8 ) {
-  cout << "so-threepdm val: i,j,k,l,m,n = " 
-       << i << "," << j << "," << k << "," << l << "," << m << "," << n
-       << "\t\t" << val << endl;
-}
+//if ( abs(val) > 1e-8 ) {
+//  cout << "so-threepdm val: i,j,k,l,m,n = " 
+//       << i << "," << j << "," << k << "," << l << "," << m << "," << n
+//       << "\t\t" << val << endl;
+//}
 
   // Test for duplicates
   if ( threepdm(i,j,k,l,m,n) != 0.0 && abs(threepdm(i,j,k,l,m,n)-val) > 1e-6) {
@@ -285,7 +365,7 @@ if ( abs(val) > 1e-8 ) {
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_driver::assign_npdm_elements( std::vector< std::pair<std::vector<int>, double >>& new_spin_orbital_elements )
+void Threepdm_driver::store_npdm_elements( std::vector< std::pair<std::vector<int>, double >>& new_spin_orbital_elements )
 {
   for (int i=0; i < new_spin_orbital_elements.size(); ++i) {
     assert( new_spin_orbital_elements[i].first.size() == 6 );

@@ -251,23 +251,45 @@ void save_onepdm_spatial_text(const Matrix& onepdm, const int &i, const int &j)
   }
 }
 
+//void save_onepdm_spatial_binary(const Matrix& onepdm, const int &i, const int &j)
+//{
+//  //the spatial has a factor of 1/2 in front of it 
+//  if(!mpigetrank())
+//  {
+//    char file[5000];
+//    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_onepdm.", i, j,".bin");
+//    FILE* f = fopen(file, "wb");
+//
+//    int rows = onepdm.Nrows()/2;
+//    Matrix spatonepdm(rows, rows);
+//    for (int i=0; i<rows; i++)
+//      for (int j=0; j<rows; j++)
+//        spatonepdm(i+1,j+1) = onepdm(2*i+1, 2*j+1)+onepdm(2*i+2, 2*j+2);
+//
+//    int result = fwrite(&rows,  1, sizeof(int), f);
+//    result = fwrite(&rows,  1, sizeof(int), f);
+//    result = fwrite(spatonepdm.Store(), rows*rows, sizeof(double), f); 
+//    fclose(f);
+//  }
+//}
+
 void save_onepdm_spatial_binary(const Matrix& onepdm, const int &i, const int &j)
 {
   //the spatial has a factor of 1/2 in front of it 
   if(!mpigetrank())
   {
-    char file[5000];
-    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_onepdm.", i, j,".bin");
-    FILE* f = fopen(file, "wb");
     int rows = onepdm.Nrows()/2;
     Matrix spatonepdm(rows, rows);
     for (int i=0; i<rows; i++)
       for (int j=0; j<rows; j++)
-	spatonepdm(i+1,j+1) = onepdm(2*i+1, 2*j+1)+onepdm(2*i+2, 2*j+2);
-    int result = fwrite(&rows,  1, sizeof(int), f);
-    result = fwrite(&rows,  1, sizeof(int), f);
-    result = fwrite(spatonepdm.Store(), rows*rows, sizeof(double), f); 
-    fclose(f);
+        spatonepdm(i+1,j+1) = onepdm(2*i+1, 2*j+1)+onepdm(2*i+2, 2*j+2);
+
+    char file[5000];
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_onepdm.", i, j,".bin");
+    std::ofstream ofs(file, std::ios::binary);
+    boost::archive::binary_oarchive save(ofs);
+    save << spatonepdm;
+    ofs.close();
   }
 }
 
@@ -301,6 +323,20 @@ void load_onepdm_binary(Matrix& onepdm, const int &i, const int &j)
   if(mpigetrank())
     onepdm = 0;
 #endif
+
+}
+void load_onepdm_spatial_binary(Matrix& onepdm, const int &i, const int &j)
+{
+// Note only available on 0 proc
+  if(!mpigetrank())
+  {
+    char file[5000];
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(), "/spatial_onepdm.", i, j,".bin");
+    std::ifstream ifs(file, std::ios::binary);
+    boost::archive::binary_iarchive load(ifs);
+    load >> onepdm;
+    ifs.close();
+  }
 
 }
 }

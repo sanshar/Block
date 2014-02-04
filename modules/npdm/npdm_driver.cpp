@@ -64,6 +64,14 @@ boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::ve
 //}
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+void Npdm_driver::save_array(int i, int j) 
+{
+  save_sparse_array(i,j);
+  if ( use_full_array_ ) save_full_array(i,j);
+} 
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void Npdm_driver::save_full_array(int i, int j) 
 {
 //FIXME
@@ -72,10 +80,12 @@ world.barrier();
   Timer timer;
   // Combine NPDM elements from all mpi ranks and dump to file
   accumulate_npdm();
-  save_spatial_npdm_text(i, j);
   save_npdm_text(i, j);
-//FIXME  save_npdm_binary(i, j);
-//FIXME  save_spatial_npdm_binary(i, j);
+  save_npdm_binary(i, j);
+  // Build and save full spatial NPDM
+  build_spatial_npdm(i, j);
+  save_spatial_npdm_text(i, j);
+  save_spatial_npdm_binary(i, j);
 world.barrier();
   pout << "NPDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 }
@@ -183,8 +193,7 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
       assert(false);
 
     // Store new npdm elements
-    sparse_array_.insert( new_spin_orbital_elements );
-    if ( use_full_array_ ) assign_npdm_elements( new_spin_orbital_elements );
+    store_npdm_elements( new_spin_orbital_elements );
   }
 
   assert( ! innerOps.ifs_.is_open() );
