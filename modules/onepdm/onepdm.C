@@ -87,10 +87,16 @@ void compute_one_pdm_2_0_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ, 1.0);
     double sum = sqrt(2.0)*DotProduct(wave1, opw2);
 
-    onepdm(2*ix+1, 2*jx+1) = (sum)/2.0;
-    onepdm(2*ix+2, 2*jx+2) = (sum)/2.0;
-    onepdm(2*jx+1, 2*ix+1) = (sum)/2.0;
-    onepdm(2*jx+2, 2*ix+2) = (sum)/2.0;
+    if(dmrginp.spinAdapted()) {
+      onepdm(2*ix+1, 2*jx+1) = (sum)/2.0;
+      onepdm(2*ix+2, 2*jx+2) = (sum)/2.0;
+      onepdm(2*jx+1, 2*ix+1) = (sum)/2.0;
+      onepdm(2*jx+2, 2*ix+2) = (sum)/2.0;
+    }
+    else {
+      onepdm(ix+1, jx+1) = sum/sqrt(2.0);
+      onepdm(jx+1, ix+1) = sum/sqrt(2.0);
+    }
   }      
 }
 
@@ -125,10 +131,16 @@ void compute_one_pdm_0_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 
     double difference = 0.0;
 
-    onepdm(2*ix+1, 2*jx+1) = (sum+difference)/2.0;
-    onepdm(2*ix+2, 2*jx+2) = (sum-difference)/2.0;
-    onepdm(2*jx+1, 2*ix+1) = (sum+difference)/2.0;
-    onepdm(2*jx+2, 2*ix+2) = (sum-difference)/2.0;
+    if(dmrginp.spinAdapted()) {
+      onepdm(2*ix+1, 2*jx+1) = (sum+difference)/2.0;
+      onepdm(2*ix+2, 2*jx+2) = (sum-difference)/2.0;
+      onepdm(2*jx+1, 2*ix+1) = (sum+difference)/2.0;
+      onepdm(2*jx+2, 2*ix+2) = (sum-difference)/2.0;
+    }
+    else {
+      onepdm(ix+1, jx+1) = sum/sqrt(2.0);
+      onepdm(jx+1, ix+1) = sum/sqrt(2.0);
+    }
   }      
 
 
@@ -165,11 +177,17 @@ void compute_one_pdm_1_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ, 1.0);
     double sum = sqrt(2.0)*DotProduct(wave1, opw2);
 
-
-    onepdm(2*ix+1, 2*jx+1) = (sum)/2.0;
-    onepdm(2*ix+2, 2*jx+2) = (sum)/2.0;
-    onepdm(2*jx+1, 2*ix+1) = (sum)/2.0;
-    onepdm(2*jx+2, 2*ix+2) = (sum)/2.0;
+    double difference = 0.0;
+    if(dmrginp.spinAdapted()) {
+      onepdm(2*ix+1, 2*jx+1) = (sum+difference)/2.0;
+      onepdm(2*ix+2, 2*jx+2) = (sum-difference)/2.0;
+      onepdm(2*jx+1, 2*ix+1) = (sum+difference)/2.0;
+      onepdm(2*jx+2, 2*ix+2) = (sum-difference)/2.0;
+    }
+    else {
+      onepdm(ix+1, jx+1) = sum/sqrt(2.0);
+      onepdm(jx+1, ix+1) = sum/sqrt(2.0);
+    }
   }      
 
 
@@ -196,10 +214,16 @@ void compute_one_pdm_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
 
     double difference = 0.0;
     
-    onepdm(2*ix+1, 2*jx+1) = (sum+difference)/2.0;
-    onepdm(2*ix+2, 2*jx+2) = (sum-difference)/2.0;    
-    onepdm(2*jx+1, 2*ix+1) = (sum+difference)/2.0;
-    onepdm(2*jx+2, 2*ix+2) = (sum-difference)/2.0;
+    if(dmrginp.spinAdapted()) {
+      onepdm(2*ix+1, 2*jx+1) = (sum+difference)/2.0;
+      onepdm(2*ix+2, 2*jx+2) = (sum-difference)/2.0;
+      onepdm(2*jx+1, 2*ix+1) = (sum+difference)/2.0;
+      onepdm(2*jx+2, 2*ix+2) = (sum-difference)/2.0;
+    }
+    else {
+      onepdm(ix+1, jx+1) = sum/sqrt(2.0);
+      onepdm(jx+1, ix+1) = sum/sqrt(2.0);
+    }
     
 
   }      
@@ -229,11 +253,16 @@ void compute_one_pdm_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
 
       double difference = 0.0;
 
+    if(dmrginp.spinAdapted()) {
       onepdm(2*ix+1, 2*jx+1) = (sum+difference)/2.0;
       onepdm(2*ix+2, 2*jx+2) = (sum-difference)/2.0;
-
       onepdm(2*jx+1, 2*ix+1) = (sum+difference)/2.0;
       onepdm(2*jx+2, 2*ix+2) = (sum-difference)/2.0;
+    }
+    else {
+      onepdm(ix+1, jx+1) = sum/sqrt(2.0);
+      onepdm(jx+1, ix+1) = sum/sqrt(2.0);
+    }
     }
   }      
 }
@@ -271,13 +300,26 @@ void save_onepdm_text(const Matrix& onepdm, const int &i, const int &j)
   //the spatial has a factor of 1/2 in front of it 
   if(!mpigetrank())
   {
+    std::vector<int> reorder;
+    reorder.resize(onepdm.Nrows()/2);
+    for (int k=0; k<onepdm.Nrows()/2; k++) {
+      reorder.at(dmrginp.reorder_vector()[k]) = k;
+    }
+
+
     char file[5000];
     sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/onepdm.", i, j);
     ofstream ofs(file);
     ofs << onepdm.Nrows() << endl;
-    for(int k=0;k<onepdm.Nrows();++k)
-      for(int l=0;l<onepdm.Ncols();++l) {
-	ofs << boost::format("%d %d %20.14e\n") % k % l % onepdm(k+1, l+1);
+    for(int k=0;k<onepdm.Nrows()/2;++k)
+      for(int l=0;l<onepdm.Ncols()/2;++l) {
+	int K = reorder.at(k), L = reorder.at(l);
+
+	double opdm = onepdm(2*K+1, 2*L+1) ;
+	ofs << boost::format("%d %d %20.14e\n") % (2*k) % (2*l) % opdm;
+
+	opdm = onepdm(2*K+2, 2*L+2);
+	ofs << boost::format("%d %d %20.14e\n") % (2*k+1) % (2*l+1) % opdm;
       }
 
     ofs.close();

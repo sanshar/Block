@@ -23,14 +23,15 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   SpinBlock envDot;
   int systemDotStart, systemDotEnd;
   int systemDotSize = sweepParams.get_sys_add() - 1;
+
   if (forward)
   {
-    systemDotStart = *system.get_sites().rbegin () + 1;
+    systemDotStart = dmrginp.spinAdapted() ? *system.get_sites().rbegin () + 1 : (*system.get_sites().rbegin ())/2 + 1 ;
     systemDotEnd = systemDotStart + systemDotSize;
   }
   else
   {
-    systemDotStart = system.get_sites() [0] - 1;
+    systemDotStart = dmrginp.spinAdapted() ? system.get_sites()[0] - 1 : (system.get_sites()[0])/2 - 1 ;
     systemDotEnd = systemDotStart - systemDotSize;
   }
   vector<int> spindotsites(2); 
@@ -39,7 +40,6 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   systemDot = SpinBlock(systemDotStart, systemDotEnd);
 
   SpinBlock environment, environmentDot, newEnvironment;
-
   int environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
 
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
@@ -126,7 +126,8 @@ double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   std::vector<double> finalEnergy_spins(nroots,0.);
   double finalError = 0.;
 
-  Matrix onepdm(2*dmrginp.last_site(), 2*dmrginp.last_site());onepdm=0.0;
+  int pdmsize = dmrginp.spinAdapted() ? 2*dmrginp.last_site() : dmrginp.last_site();
+  Matrix onepdm(pdmsize, pdmsize);onepdm=0.0;
 
   save_onepdm_binary(onepdm, state ,state);
 

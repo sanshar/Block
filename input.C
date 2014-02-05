@@ -829,22 +829,20 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
   std::vector<int> reorder;
 
   if (mpigetrank() == 0) {
-  ReadMeaningfulLine(dumpFile, msg, msgsize);
-  boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
+    ReadMeaningfulLine(dumpFile, msg, msgsize);
+    boost::split(tok, msg, is_any_of("=, \t"), token_compress_on);
+    
+    if(offset != 0)
+      m_norbs = 2*atoi(tok[2].c_str());
+    else
+      m_norbs = 2*atoi(tok[1].c_str());
+    
+    m_num_spatial_orbs = 0;
+    m_spin_orbs_symmetry.resize(m_norbs);
+    m_spin_to_spatial.resize(m_norbs);    
 
-  if(offset != 0)
-    m_norbs = 2*atoi(tok[2].c_str());
-  else
-    m_norbs = 2*atoi(tok[1].c_str());
-
-  m_num_spatial_orbs = 0;
-  m_spin_orbs_symmetry.resize(m_norbs);
-  m_spin_to_spatial.resize(m_norbs);
-
-
-
-  //this is the file to which the reordering is written
-  sprintf(ReorderFileName, "%s%s", save_prefix().c_str(), "/RestartReorder.dat");
+    //this is the file to which the reordering is written
+    sprintf(ReorderFileName, "%s%s", save_prefix().c_str(), "/RestartReorder.dat");
   }
   boost::filesystem::path p(ReorderFileName);
 
@@ -859,8 +857,9 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
   if(get_restart() || get_fullrestart()) {
     if (mpigetrank() == 0) {
     ReorderFileInput.open(ReorderFileName);
+    boost::filesystem::path ReorderFilePath(ReorderFileName);
     
-    if(!boost::filesystem::exists(p)) {
+    if(!boost::filesystem::exists(ReorderFilePath)) {
 #ifndef MOLPRO
       pout << "---------------"<<endl;
       pout << "This is a restart job and the reorder file "<<ReorderFileName<<" should be present"<<endl;
