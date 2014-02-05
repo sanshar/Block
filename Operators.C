@@ -232,7 +232,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
   return factor;
 }
 
-double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, int op2index, const CCCDArray& vcccd) {
+double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, CompType comp, int op2index, const CCCDArray& vcccd) {
   if(!dmrginp.spinAdapted())
     return calcCompfactor(op1, op2, comp, vcccd);
   cout << "Sorry, SpinAdapted BCS calculation not implemented" << endl;
@@ -281,9 +281,9 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
   return factor;
 }
 
-double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, int op2index, const CCCCArray& vcccc) {
+double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, CompType comp, int op2index, const CCCCArray& vcccc) {
   if(!dmrginp.spinAdapted())
-    return calcCompfactor(op1, op2, comp, vcccd);
+    return calcCompfactor(op1, op2, comp, vcccc);
   cout << "Sorry, SpinAdapted BCS calculation not implemented" << endl;
   abort();
   return 0.;
@@ -796,7 +796,7 @@ double SpinAdapted::DesDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder, co
            
             if (dmrginp.hamiltonian() == BCS && dn == 2) {
               TensorOp CK(k,1), CL(l,1);
-              TensorOp CC2 = CK.product(CL, spin, symm.getirrep(), k==l);
+              TensorOp CC2 = CK.product(CL, spin, sym.getirrep(), k==l);
               if (!CC2.empty) {
                 std::vector<double> MatElements = calcMatrixElements(c1, CC2, ladder[i]);
                 double scale = calcCompfactor(CC1, CC2, DD, index, v_cccc);
@@ -804,7 +804,7 @@ double SpinAdapted::DesDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder, co
               }
             } else if (dmrginp.hamiltonian() == BCS && dn == 0) {
               TensorOp CK(k,1), DL(l,-1);
-              TensorOp CD2 = CK.product(DL, spin, symm.getirrep());
+              TensorOp CD2 = CK.product(DL, spin, sym.getirrep());
               if (!CD2.empty) {
                 std::vector<double> MatElements = calcMatrixElements(c1, CD2, ladder[i]);
                 double scale = calcCompfactor(CC1, CD2, DD, index, v_cccd);
@@ -931,7 +931,6 @@ double SpinAdapted::CreCreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
       for (int ki =0; ki<b->get_sites().size(); ki++) 
       for (int kj =0; kj<b->get_sites().size(); kj++) 
       for (int kl =0; kl<b->get_sites().size(); kl++) {
-
         int _i = b->get_sites()[ki];
         int _j = b->get_sites()[kj];
         int _l = b->get_sites()[kl];
@@ -941,8 +940,9 @@ double SpinAdapted::CreCreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
           for (int ij=0; ij<sij.size(); ++ij) {
             SpinQuantum symij = sij[ij];
             std::vector<SpinQuantum> sijl = symij+sl;
-            for (int ijl=0; ijl<size();++ijl) {
-              if (symijl != deltaQuantum[j]) continue;
+            for (int ijl=0; ijl<sijl.size();++ijl) {
+              if (sijl[ijl] != deltaQuantum[j]) continue;
+              SpinQuantum symijl = sijl[ijl];
               TensorOp CI(_i, 1), CJ(_j, 1), CL(_l, 1);
               TensorOp CCIJ = CI.product(CJ, symij.get_s().getirrep(), symij.get_symm().getirrep(), _i==_j);
               // FIXME maybe there takes specical care when j = l in spinadapted case
@@ -959,8 +959,9 @@ double SpinAdapted::CreCreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
           for (int ij=0; ij<sij.size(); ++ij) {
             SpinQuantum symij = sij[ij];
             std::vector<SpinQuantum> sijl = symij-sl;
-            for (int ijl=0; ijl<size();++ijl) {
-              if (symijl != deltaQuantum[j]) continue;
+            for (int ijl=0; ijl<sijl.size(); ++ijl) {
+              if (sijl[ijl] != deltaQuantum[j]) continue;
+              SpinQuantum symijl = sijl[ijl];
               TensorOp CI(_i, 1), DJ(_j, -1), DL(_l, -1);
               TensorOp CDIJ = CI.product(DJ, symij.get_s().getirrep(), symij.get_symm().getirrep());
               TensorOp CDDIJL = CDIJ.product(DL, symijl.get_s().getirrep(), symijl.get_symm().getirrep());
@@ -976,8 +977,9 @@ double SpinAdapted::CreCreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
           for (int ij=0; ij<sij.size(); ++ij) {
             SpinQuantum symij = sij[ij];
             std::vector<SpinQuantum> sijl = symij-sl;
-            for (int ijl=0; ijl<size();++ijl) {            
-              if (symijl != deltaQuantum[j]) continue;
+            for (int ijl=0; ijl<sijl.size(); ++ijl) {            
+              if (sijl[ijl] != deltaQuantum[j]) continue;
+              SpinQuantum symijl = sijl[ijl];
               TensorOp DI(_i, -1), DJ(_j, -1), DL(_l, -1);
               TensorOp DDIJ = DI.product(DJ, symij.get_s().getirrep(), symij.get_symm().getirrep(), _i==_j);
               TensorOp DDDIJL = DDIJ.product(DL, symijl.get_s().getirrep(), symijl.get_symm().getirrep());
@@ -993,11 +995,12 @@ double SpinAdapted::CreCreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
           for (int ij=0; ij<sij.size(); ++ij) {
             SpinQuantum symij = sij[ij];
             std::vector<SpinQuantum> sijl = symij-sl;
-            for (int ijl=0; ijl<size();++ijl) {
-              if (symijl != deltaQuantum[j]) continue;
+            for (int ijl=0; ijl<sijl.size(); ++ijl) {
+              if (sijl[ijl] != deltaQuantum[j]) continue;
+              SpinQuantum symijl = sijl[ijl];
               TensorOp CI(_i, 1), CJ(_j, 1), DL(_l, -1);
               TensorOp CCIJ = CI.product(CJ, symij.get_s().getirrep(), symij.get_symm().getirrep(), _i==_j);
-              TensorOp CCDIJL = CCIJ.product(DL, symijk.get_s().getirrep(), symijk.get_symm().getirrep());
+              TensorOp CCDIJL = CCIJ.product(DL, symijl.get_s().getirrep(), symijl.get_symm().getirrep());
               if (CCDIJL.empty) continue;
               std::vector<double> MatElements = calcMatrixElements(c1, CCDIJL, ladder[i]);
               double scale = calcCompfactor(CCDIJL, D, CCD, *(b->get_twoInt()));
@@ -1013,14 +1016,17 @@ double SpinAdapted::CreCreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
         if (dmrginp.hamiltonian() == BCS && dn == -1) { // D
           TensorOp DI(_i, -1);
           std::vector<double> MatElements = calcMatrixElements(c1, DI, ladder[i]);
-          double factor = calcCompfactor(DI, D, C, *(b->get_twoInt()));          
+          double factor = calcCompfactor(DI, D, C, *(b->get_twoInt()));
+          if (fabs(factor) > dmrginp.oneindex_screen_tol())
+            element += factor*MatElements[index]/cleb;
         } else {
           TensorOp CI(_i, 1);
           std::vector<double> MatElements = calcMatrixElements(c1, CI, ladder[i]);
-          double factor = calcCompfactor(CI, D, C, *(b->get_twoInt()));          
+          double factor = calcCompfactor(CI, D, C, *(b->get_twoInt()));
+          if (fabs(factor) > dmrginp.oneindex_screen_tol())
+            element += factor*MatElements[index]/cleb;
         }
-        if (fabs(factor) > dmrginp.oneindex_screen_tol())
-          element += factor*MatElements[index]/cleb;
+
       }
       break;
     } else
@@ -1231,7 +1237,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
 	      int dL = dv[3];
 	      int parity = s1.trace(s2.d(dL).d(dK).d(dJ).d(dI));
 	      double factor = parity*d1*d2*0.25;
-          matrixE += factor*vcccc_4idx_asymm(cL, cK, cJ, cI);  
+          matrixE += factor*vcccc_4idx_asymm(dL, dK, dJ, dI);  
         } else if (dmrginp.hamiltonian() == BCS && cv.size() == 3 && dv.size() == 1) {
           int cI = cv[0];
 	      int cJ = cv[1];
@@ -1255,6 +1261,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
           int cI = cv[0];
           int cJ = cv[1];
           int parity = s1.trace(s2.c(cJ).c(cI));
+          double factor = parity*d1*d2*0.5;
           matrixE += factor * (v_cc(cI,cJ)-v_cc(cJ,cI));
           // from v_cccd
           if (dmrginp.spinAdapted()) {
@@ -1264,7 +1271,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
             for (int kl = 0; kl < b->get_sites().size(); ++kl) {
               int K = b->get_sites()[kl];
               s1 = it1->first; s2 = it2->first;
-              parity = s1.trace(s2.d(K).c(K).c(J).c(I));
+              parity = s1.trace(s2.d(K).c(K).c(cJ).c(cI));
               factor = parity*d1*d2*0.5;
               matrixE += factor*(v_cccd(cI,cJ,K,K)-v_cccd(cI,K,cJ,K)+v_cccd(K,cI,cJ,K)
                   -v_cccd(cJ,cI,K,K)+v_cccd(cJ,K,cI,K)-v_cccd(K,cJ,cI,K));
@@ -1275,7 +1282,8 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
           int dI = dv[0];
           int dJ = dv[1];
           int parity = s1.trace(s2.d(dI).c(dJ));
-          matrixE += factor * (v_cc(cI,cJ)-v_cc(cJ,cI));
+          double factor = parity*d1*d2*0.5;          
+          matrixE += factor * (v_cc(dI,dJ)-v_cc(dJ,dI));
           // from v_cccd
           if (dmrginp.spinAdapted()) {
             cout << "Oops... BCS+SpinAdaption not implemented yet!" << endl;
@@ -1286,8 +1294,8 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
               s1 = it1->first; s2 = it2->first;
               parity = s1.trace(s2.d(dI).d(dJ).d(K).c(K));
               factor = parity*d1*d2*0.5;
-              matrixE += factor*(v_cccd(cI,cJ,K,K)-v_cccd(cI,K,cJ,K)+v_cccd(K,cI,cJ,K)
-                  -v_cccd(cJ,cI,K,K)+v_cccd(cJ,K,cI,K)-v_cccd(K,cJ,cI,K));
+              matrixE += factor*(v_cccd(dI,dJ,K,K)-v_cccd(dI,K,dJ,K)+v_cccd(K,dI,dJ,K)
+                  -v_cccd(dJ,dI,K,K)+v_cccd(dJ,K,dI,K)-v_cccd(K,dJ,dI,K));
             }
           }
         }

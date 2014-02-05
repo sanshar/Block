@@ -79,6 +79,8 @@ class Ham: public SpinAdapted::SparseMatrix
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
 };
 
+double vcccc_4idx_asymm(int i, int j, int k, int l);
+
 }
 
 
