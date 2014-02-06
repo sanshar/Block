@@ -390,15 +390,15 @@ class CCCCArray {
 @brief Class for CCCD type quantities
 
 - The Hamiltonian is given by
-    0.5*(w_{ijkl,a}C_{ia}C_{ja}C_{kb}D_{la} + w_{ijkl,b}C_{ib}C_{jb}C_{ka}D_{lb}) + c.c.
+    1/6*w_{ijkl}C_iC_jC_kD_l
   where C means creation operator and D means destruction operator
 
 - Antisymmetry is enforced:
-    w_{ijkl}=-w_{jikl}
-  therefore, the underlying storage has i>j, l, k, composed indice ij=i*(i-1)/2+j, kl=k*n+l and the storage is two matrices with (ij, kl) as indice
+    w_{ijkl}=-w_{ikjl}=-w_{jikl}=w_{jkil}=-w_{kjil}=w_{kijl}
+  Considering spin, we only store w_{ijkl} where i>j,k,l and spin of i,j,l the same, while k the opposite. Those which cannot be deduced from this type is 0. composed indice ij=i*(i-1)/2+j, kl=k*n+l and the storage is two matrices with (ij, kl) as indice
 
 - Spin symmetry is controled by rhf option. if rhf = true, additionaly
-    w_{ijkl,a}=-w_{ijkl,b}
+    w_{ia,ja,kb,la}=-w_{ib,jb,ka,lb}
   the underlying storage bocomes only one matrix
 */
 

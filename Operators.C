@@ -120,7 +120,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 	    vector<int>& Ind1 = op1.opindices[i1], Ind2 = op2.opindices[i2]; 
 	    if (comp == CD) {
 	      factor += 0.5*(-v_2(Ind1[0], Ind2[0], Ind2[1], Ind1[1]) - v_2(Ind2[0], Ind1[0], Ind1[1], Ind2[1]) 
-	    		 + v_2(Ind2[0], Ind1[0], Ind2[1], Ind1[1]) + v_2(Ind1[0], Ind2[0], Ind1[1], Ind2[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
+	    		 + v_2(Ind2[0], Ind1[0], Ind2[1], Ind1[1]) + v_2(Ind1[0], Ind2[0], Ind1[1], Ind2[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb; // FIXME probably this factor should be 1/4
 	    }
 	    else if (comp == DD) {
 	      factor += 0.5*(v_2(Ind1[0], Ind1[1], Ind2[1], Ind2[0]) )*iSz1.at(i1)*iSz2.at(i2)/cleb;	  
@@ -212,16 +212,16 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
         for (i2 =0; i2<iSz2.size(); ++i2) {
           vector<int>& Ind1 = op1.opindices[i1], Ind2 = op2.opindices[i2]; 
           if (comp == CD) {
-            factor += 0.5*(vcccd(Ind1[0],Ind2[0],Ind2[1],Ind1[1]) - vcccd(Ind2[0],Ind1[0],Ind2[1],Ind1[1])
+            factor += (1./6)*(vcccd(Ind1[0],Ind2[0],Ind2[1],Ind1[1]) - vcccd(Ind2[0],Ind1[0],Ind2[1],Ind1[1])
                 +vcccd(Ind2[0],Ind2[1],Ind1[0],Ind1[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
           } else if (comp == DD) {
-            factor += 0.5*(vcccd(Ind1[0],Ind1[1],Ind2[0],Ind2[1]) - vcccd(Ind1[0],Ind2[0],Ind1[1],Ind2[1])
+            factor += (1./6)*(vcccd(Ind1[0],Ind1[1],Ind2[0],Ind2[1]) - vcccd(Ind1[0],Ind2[0],Ind1[1],Ind2[1])
                 +vcccd(Ind2[0],Ind1[0],Ind1[1],Ind2[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
           } else if (comp == CCD) { // two cases CDD and CCC
             if (op1.dn() == 3) { // CCC
-              factor += 0.5 * vcccd(Ind1[0], Ind1[1], Ind1[2], Ind2[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;
+              factor += (1./6) * vcccd(Ind1[0], Ind1[1], Ind1[2], Ind2[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;
             } else { // CDD
-              factor += 0.5 * (vcccd(Ind2[0], Ind1[2], Ind1[1], Ind1[0]) - vcccd(Ind1[2], Ind2[0], Ind1[1], Ind1[0]) 
+              factor += (1./6) * (vcccd(Ind2[0], Ind1[2], Ind1[1], Ind1[0]) - vcccd(Ind1[2], Ind2[0], Ind1[1], Ind1[0]) 
                   + vcccd(Ind1[2], Ind1[1], Ind2[0], Ind1[0])) *iSz1.at(i1)*iSz2.at(i2)/cleb;
             }
           } else {
@@ -935,28 +935,26 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
   SpinBlock* loopBlock, *otherBlock;
   assignloopblock(loopBlock, otherBlock, leftBlock, rightBlock);
 
-  if (leftBlock->get_op_array(CRE_CRE_DESCOMP).has(k))
-    {      
-      const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DESCOMP, deltaQuantum, k);
-      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
-    }
+  if (leftBlock->get_op_array(CRE_CRE_DESCOMP).has(k)) {      
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DESCOMP, deltaQuantum, k);
+    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
+  }
   if (rightBlock->get_sites().size() == 0) {
     //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
     return;
   }
-  if (rightBlock->get_op_array(CRE_CRE_DESCOMP).has(k))
-    {
-      const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_CRE_DESCOMP, deltaQuantum, k);
-      SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
-    }  
+  if (rightBlock->get_op_array(CRE_CRE_DESCOMP).has(k)) {
+    const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_CRE_DESCOMP, deltaQuantum, k);
+    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
+  }  
 
-  if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
+  if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY || dmrginp.hamiltonian() == BCS) {
     if (loopBlock->has(CRE_DESCOMP)) {
 
 	  Functor f = boost::bind(&opxop::cxcdcomp, otherBlock, _1, &b, k, this, 1.0); 
 	  for_all_singlethread(loopBlock->get_op_array(CRE), f);
 	  
-	  f = boost::bind(&opxop::dxcccomp, otherBlock, _1, &b, k, this, 2.0);
+	  f = boost::bind(&opxop::dxcccomp, otherBlock, _1, &b, k, this, 2.0); // factor of 2.0 because CCcomp_{ij} = -CCcomp_{ji} not neccesarily true for BCS case
 	  for_all_singlethread(loopBlock->get_op_array(CRE), f);
           
 	  f = boost::bind(&opxop::cxcdcomp, loopBlock, _1, &b, k, this, 1.0); 
@@ -1081,7 +1079,7 @@ double SpinAdapted::CreCreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
           double factor = calcCompfactor(DI, D, C, *(b->get_twoInt()));
           if (fabs(factor) > dmrginp.oneindex_screen_tol())
             element += factor*MatElements[index]/cleb;
-        } else {
+        } else { // C
           TensorOp CI(_i, 1);
           std::vector<double> MatElements = calcMatrixElements(c1, CI, ladder[i]);
           double factor = calcCompfactor(CI, D, C, *(b->get_twoInt()));

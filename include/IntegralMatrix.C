@@ -688,12 +688,12 @@ void SpinAdapted::CCCDArray::set(int i, int j, int k, int l, double value) {
 
 double SpinAdapted::CCCDArray::operator()(int i, int j, int k, int l) const {
   assert(i >= 0 && i < dim && j >= 0 && j < dim && k >= 0 && k < dim && l >= 0 && l < dim);
-  bool is_odd_i = (i & 1);
-  bool is_odd_j = (j & 1);
-  bool is_odd_k = (k & 1);
-  bool is_odd_l = (l & 1);
+  int spin_i = 1 - (i % 2)*2;
+  int spin_j = 1 - (j % 2)*2;
+  int spin_k = 1 - (k % 2)*2;
+  int spin_l = 1 - (l % 2)*2;
 
-  bool zero = !((is_odd_i == is_odd_j) && (is_odd_i == is_odd_l) && (is_odd_i != is_odd_k)) || (i==j);
+  bool zero = spin_i+spin_j+spin_k-spin_l != 0;
   if (zero) {
     return 0.;
   }
@@ -703,18 +703,29 @@ double SpinAdapted::CCCDArray::operator()(int i, int j, int k, int l) const {
   k=k/2;
   l=l/2;
 
-  int n = indexMap(i, j);
-  int m = k*(dim/2)+l+1;
+  int factor = 1.;
+  int idx1, idx2, idx3;
+  if (spin_i != spin_l) {
+    idx1 = j;idx2 = k; idx3 = i;
+  } else if (spin_j != spin_l) {
+    factor = -1;
+    idx1 = i;idx2 = k; idx3 = j;    
+  } else {
+    idx1 = i;idx2 = j; idx3 = k;
+  }
+
+  int n = indexMap(idx1, idx2);
+  int m = idx3*(dim/2)+l+1;
 
   if (rhf) {
     int sign = ((n>0) == is_odd_i) ? -1:1;
-    return sign * repA(abs(n), m);
+    return factor * sign * repA(abs(n), m);
   } else {
     int sign = (n>0) ? 1:-1;
     if (is_odd_i) {
-      return sign*repB(abs(n), m);
+      return factor * sign*repB(abs(n), m);
     } else {
-      return sign*repA(abs(n), m);
+      return factor * sign*repA(abs(n), m);
     }
   }
 }
