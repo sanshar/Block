@@ -7,13 +7,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include <algorithm>
-#include <boost/format.hpp>
-#ifndef SERIAL
-#include <boost/mpi/environment.hpp>
-#include <boost/mpi/communicator.hpp>
-#include <boost/mpi.hpp>
-#endif
-#include "execinfo.h"
 #include "fourpdm_driver.h"
 #include "npdm_epermute.h"
 
@@ -21,12 +14,44 @@ namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
-Fourpdm_driver::Fourpdm_driver( int sites ) : Npdm_driver(4) {
-  // Initialize full in-core spin-orbital matrix if required in addition to sparse disk-based storage
-  if ( use_full_array_ ) {
-    resize_npdm_array(2*sites);
-    clear_npdm_array();
-  }
+Fourpdm_driver::Fourpdm_driver( int sites ) : Npdm_driver(4) 
+{
+  store_full_spin_array_ = true;
+  store_full_spatial_array_ = true;
+
+  if ( store_full_spin_array_ ) {
+    fourpdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);
+    fourpdm.Clear();
+  } 
+  if ( store_full_spatial_array_ ) {
+    spatial_fourpdm.resize(sites,sites,sites,sites,sites,sites,sites,sites);
+    spatial_fourpdm.Clear();
+  } 
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Fourpdm_driver::save_npdms(const int& i, const int& j)
+{
+//  save_sparse_array(i,j);
+
+//  if ( use_full_array_ ) {
+
+//FIXME
+boost::mpi::communicator world;
+world.barrier();
+    Timer timer;
+    // Combine NPDM elements from all mpi ranks and dump to file
+    accumulate_npdm();
+    save_npdm_text(i, j);
+    save_npdm_binary(i, j);
+    build_spatial_npdm(i, j);
+    save_spatial_npdm_text(i, j);
+    save_spatial_npdm_binary(i, j);
+world.barrier();
+    pout << "4PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -121,145 +146,8 @@ void Fourpdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Fourpdm_driver::build_spatial_npdm(const int &i, const int &j)
-{
-std::cout << "Building spatial 4pdm\n";
-  double factor = 1.0;
-  if( mpigetrank() == 0)
-  {
-    for(int i=0; i<fourpdm.dim1()/2; ++i)
-      for(int j=0; j<fourpdm.dim2()/2; ++j)
-        for(int k=0; k<fourpdm.dim3()/2; ++k)
-          for(int l=0; l<fourpdm.dim4()/2; ++l)
-            for(int m=0; m<fourpdm.dim5()/2; ++m)
-              for(int n=0; n<fourpdm.dim6()/2; ++n)
-                for(int p=0; p<fourpdm.dim7()/2; ++p)
-                  for(int q=0; q<fourpdm.dim8()/2; ++q) {
+void Fourpdm_driver::load_npdm_binary(const int &i, const int &j) { assert(false); }
 
-                    double pdm = 0.0;
-                    for (int s=0; s<2; s++) {
-                      for (int t=0; t<2; t++) {
-                        for (int u=0; u<2; u++) {
-                          for (int v=0; v<2; v++) {
-                            pdm += fourpdm(2*i+s, 2*j+t, 2*k+u, 2*l+v, 2*m+v, 2*n+u, 2*p+t, 2*q+s);
-                          }
-                        }
-                      }
-                    }
-                    if ( abs(pdm) > 1e-14 ) spatial_fourpdm(i,j,k,l,m,n,p,q) = factor * pdm;
-                  }
-  }
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//void Fourpdm_driver::save_spatial_npdm_text(const int &i, const int &j)
-//{
-//std::cout << "Building spatial 4pdm\n";
-//  double factor = 1.0;
-//  if( mpigetrank() == 0)
-//  {
-//    char file[5000];
-//    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.", i, j,".txt");
-//    ofstream ofs(file);
-//    ofs << fourpdm.dim1()/2 << endl;
-//
-//    for(int i=0; i<fourpdm.dim1()/2; ++i)
-//      for(int j=0; j<fourpdm.dim2()/2; ++j)
-//        for(int k=0; k<fourpdm.dim3()/2; ++k)
-//          for(int l=0; l<fourpdm.dim4()/2; ++l)
-//            for(int m=0; m<fourpdm.dim5()/2; ++m)
-//              for(int n=0; n<fourpdm.dim6()/2; ++n)
-//                for(int p=0; p<fourpdm.dim7()/2; ++p)
-//                  for(int q=0; q<fourpdm.dim8()/2; ++q) {
-//
-//                    double pdm = 0.0;
-//                    for (int s=0; s<2; s++)
-//                      for (int t=0; t<2; t++)
-//                        for (int u=0; u<2; u++)
-//                          for (int v=0; v<2; v++) {
-//                            pdm += factor * fourpdm(2*i+s, 2*j+t, 2*k+u, 2*l+v, 2*m+v, 2*n+u, 2*p+t, 2*q+s);
-//                              //if ( (i==1)&& (j==1)&& (k==0)&& (l==0)&& (m==2)&& (n==2) &&(p==1) &&(q==1) ) {
-//                              //if ( (i==1)&& (j==1)&& (k==0)&& (l==0)&& (m==1)&& (n==1) &&(p==2) &&(q==2) ) {
-//                              //  std::cout <<2*i+s<<","<<2*j+t<<","<<2*k+u<<","<<2*l+v<<","<<2*m+v<<","<<2*n+u<<","<<2*p+t<<","<<2*q+s<<"\t\t";
-//                              //  std::cout << pdm << "\t\t" <<  fourpdm(2*i+s, 2*j+t, 2*k+u, 2*l+v, 2*m+v, 2*n+u, 2*p+t, 2*q+s) << std::endl;
-//                              //}
-//                          }
-//        
-//                    if ( abs(pdm) > 1e-14 ) ofs << boost::format("%d %d %d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % p % q % pdm;
-//                  }
-//    ofs.close();
-//  }
-//}
-//
-////-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//void Fourpdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
-//{
-//
-//  double factor = 1.0;
-//  if(!mpigetrank())
-//  {
-//    char file[5000];
-//    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.", i, j,".bin");
-//    FILE* f = fopen(file, "wb");
-//
-//    int nrows = fourpdm.dim1()/2;
-//    array_8d<double> pdm; 
-//    pdm.resize(nrows, nrows, nrows, nrows, nrows, nrows);
-//
-//    for(int i=0; i<fourpdm.dim1()/2; ++i)
-//      for(int j=0; j<fourpdm.dim2()/2; ++j)
-//        for(int k=0; k<fourpdm.dim3()/2; ++k)
-//          for(int l=0; l<fourpdm.dim4()/2; ++l)
-//            for(int m=0; m<fourpdm.dim5()/2; ++m)
-//              for(int n=0; n<fourpdm.dim6()/2; ++n) {
-//
-//                pdm(i, j, k, l, m, n) = 0.0;
-//                for (int s=0; s<2; s++)
-//                  for (int t =0; t<2; t++)
-//                    for (int u =0; u<2; u++)
-//                      pdm(i, j, k, l, m, n) += factor * fourpdm(2*i+s, 2*j+t, 2*k+u, 2*l+u, 2*m+t, 2*n+s) * factor;
-//              }
-//
-//    int result = fwrite(&nrows,  1, sizeof(int), f);
-//    result = fwrite(&pdm(0,0,0,0,0,0), pdm.size(), sizeof(double), f);
-//    fclose(f);
-//  }
-//}
-//
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Fourpdm_driver::load_npdm_binary(const int &i, const int &j)
-{
-pout << "load_fourpdm_binary\n";
-cout.flush();
-assert(false);
-  if( mpigetrank() == 0)
-  {
-    char file[5000];
-    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/fourpdm.", i, j,".bin");
-    std::ifstream ifs(file, std::ios::binary);
-    boost::archive::binary_iarchive load(ifs);
-    load >> fourpdm;
-    ifs.close();
-  }
-#ifndef SERIAL
-  mpi::communicator world;
-  mpi::broadcast(world,fourpdm,0);
-  if( mpigetrank() != 0)
-    fourpdm.Clear();
-#endif
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//void Fourpdm_driver::save_averaged_npdm(const int &nroots)
-//{
-/////  NYI
-//  assert(false);
-//}
-//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Fourpdm_driver::accumulate_npdm()
@@ -287,6 +175,37 @@ void Fourpdm_driver::accumulate_npdm()
     world.send(0, mpigetrank(), fourpdm);
   }
 #endif
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Fourpdm_driver::build_spatial_npdm(const int &i, const int &j)
+{
+  double factor = 1.0;
+  if( mpigetrank() == 0)
+  {
+    for(int i=0; i<fourpdm.dim1()/2; ++i)
+      for(int j=0; j<fourpdm.dim2()/2; ++j)
+        for(int k=0; k<fourpdm.dim3()/2; ++k)
+          for(int l=0; l<fourpdm.dim4()/2; ++l)
+            for(int m=0; m<fourpdm.dim5()/2; ++m)
+              for(int n=0; n<fourpdm.dim6()/2; ++n)
+                for(int p=0; p<fourpdm.dim7()/2; ++p)
+                  for(int q=0; q<fourpdm.dim8()/2; ++q) {
+
+                    double pdm = 0.0;
+                    for (int s=0; s<2; s++) {
+                      for (int t=0; t<2; t++) {
+                        for (int u=0; u<2; u++) {
+                          for (int v=0; v<2; v++) {
+                            pdm += fourpdm(2*i+s, 2*j+t, 2*k+u, 2*l+v, 2*m+v, 2*n+u, 2*p+t, 2*q+s);
+                          }
+                        }
+                      }
+                    }
+                    if ( abs(pdm) > 1e-14 ) spatial_fourpdm(i,j,k,l,m,n,p,q) = factor * pdm;
+                  }
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

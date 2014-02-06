@@ -6,25 +6,48 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#include <boost/format.hpp>
-#ifndef SERIAL
-#include <boost/mpi/environment.hpp>
-#include <boost/mpi/communicator.hpp>
-#include <boost/mpi.hpp>
-#endif
-#include "execinfo.h"
 #include "twopdm_driver.h"
 
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
-Twopdm_driver::Twopdm_driver( int sites ) : Npdm_driver(2) {
-  // Initialize full in-core spin-orbital matrix if required in addition to sparse disk-based storage
-  if ( use_full_array_ ) {
-    resize_npdm_array(2*sites);
-    clear_npdm_array();
+Twopdm_driver::Twopdm_driver( int sites ) : Npdm_driver(2) 
+{
+  store_full_spin_array_ = true;
+  store_full_spatial_array_ = true;
+
+  if ( store_full_spin_array_ ) {
+    twopdm.resize(2*sites,2*sites,2*sites,2*sites);
+    twopdm.Clear();
   }
+  if ( store_full_spatial_array_ ) {
+    spatial_twopdm.resize(sites,sites,sites,sites);
+    spatial_twopdm.Clear();
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+  
+void Twopdm_driver::save_npdms(const int& i, const int& j)
+{
+//  save_sparse_array(i,j);
+
+//  if ( store_full_array_ ) {
+
+//FIXME
+boost::mpi::communicator world;
+world.barrier();
+    Timer timer;
+    // Combine NPDM elements from all mpi ranks and dump to file
+    accumulate_npdm();
+    save_npdm_text(i, j);
+    save_npdm_binary(i, j);
+    save_spatial_npdm_text(i, j);
+    save_spatial_npdm_binary(i, j);
+world.barrier();
+    pout << "2PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+//  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -74,7 +97,6 @@ void Twopdm_driver::save_spatial_npdm_text(const int &i, const int &j)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//FIXME these are easily moved to Npdm_driver methods
 
 void Twopdm_driver::save_npdm_binary(const int &i, const int &j)
 {
@@ -90,7 +112,6 @@ void Twopdm_driver::save_npdm_binary(const int &i, const int &j)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//FIXME these are easily moved to Npdm_driver methods
 
 void Twopdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
 {
@@ -105,94 +126,6 @@ void Twopdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
   }
 }
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Twopdm_driver::build_spatial_npdm(const int &i, const int &j)
-{
-  //Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
-  if( mpigetrank() == 0)
-  {
-    spatial_twopdm.Clear();
-    double factor = 0.5;
-    for(int k=0;k<twopdm.dim1()/2;++k) {
-      for(int l=0;l<twopdm.dim2()/2;++l) {
-        for(int m=0;m<twopdm.dim3()/2;++m) {
-          for(int n=0;n<twopdm.dim4()/2;++n) {
-
-            double pdm = 0.0;
-            for (int s=0; s<2; s++) {
-              for (int t =0; t<2; t++) {
-                pdm += twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s);
-	           }
-	         }
-            spatial_twopdm(k,l,m,n) = factor * pdm;
-	       }
-	     }
-	   }
-	 }
-  }
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//void Twopdm_driver::save_spatial_npdm_text(const int &i, const int &j)
-//{
-//  //Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
-//  if( mpigetrank() == 0)
-//  {
-//    char file[5000];
-//    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j,".txt");
-//    ofstream ofs(file);
-//    ofs << twopdm.dim1()/2 << endl;
-//    double trace = 0.0;
-//    for(int k=0;k<twopdm.dim1()/2;++k)
-//      for(int l=0;l<twopdm.dim2()/2;++l)
-//        for(int m=0;m<twopdm.dim3()/2;++m)
-//          for(int n=0;n<twopdm.dim4()/2;++n) {
-//	          double pdm = 0.0;
-//      	    for (int s=0; s<2; s++)
-//      	      for (int t =0; t<2; t++) {
-////                 if ( (k==0) && (l==0) && (m==1) && (n==2) ) 
-////                 if ( (k==0) && (l==0) && (m==2) && (n==1) ) 
-////                     std::cout << 2*k+s<<","<< 2*l+t<<","<< 2*m+t<<","<< 2*n+s<<"\t\t"<<pdm<<"\t"<<twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s)*0.5 <<std::endl;
-//                 pdm += 0.5 * twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s);
-//               }
-//             if ( (k==n) && (l==m) ) trace += pdm;
-//             ofs << boost::format("%d %d %d %d %20.14e\n") % k % l % m % n % pdm;
-//	  }
-//    ofs.close();
-//    std::cout << "Spatial      2PDM trace = " << trace << "\n";
-//  }
-//}
-//
-////-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//void Twopdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
-//{
-//  //Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
-//  if( mpigetrank() == 0)
-//  {
-//    char file[5000];
-//    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j,".bin");
-//    FILE* f = fopen(file, "wb");
-//
-//    int nrows = twopdm.dim1()/2;
-//    array_4d<double> pdm; pdm.resize(nrows, nrows, nrows, nrows);
-//    for(int k=0;k<twopdm.dim1()/2;++k)
-//      for(int l=0;l<twopdm.dim2()/2;++l)
-//        for(int m=0;m<twopdm.dim3()/2;++m)
-//          for(int n=0;n<twopdm.dim4()/2;++n) {
-//            pdm(k, l, m, n) = 0.0;
-//            for (int s=0; s<2; s++)
-//            for (int t =0; t<2; t++)
-//            pdm(k, l, m, n) += 0.5 * twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s);
-//          }
-//    int result = fwrite(&nrows,  1, sizeof(int), f);
-//    result = fwrite(&pdm(0,0,0,0), pdm.size(), sizeof(double), f);
-//    fclose(f);
-//  }
-//}
-//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Twopdm_driver::load_npdm_binary(const int &i, const int &j)
@@ -216,43 +149,6 @@ assert(false); // <<<< CAN WE RETHINK USE OF DISK FOR NPDM?
 //#endif
 }
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//void Twopdm_driver::save_averaged_twopdm(const int &nroots)
-//{
-//  if(!mpigetrank())
-//  {
-//    array_4d<double> twopdm;
-//    char file[5000];
-//    for(int i=0;i<nroots;++i)
-//    {
-//      sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/twopdm.", i, i);
-//      ifstream ifs(file);
-//      int size = 0;
-//      ifs >> size;
-//      if(i==0)
-//        twopdm.resize(size,size,size,size);
-//      int k,l,m,n;
-//      double val;
-//      while(ifs >> k)
-//      {
-//        ifs >> l >> m >> n >> val;
-//        twopdm(k,l,m,n) += dmrginp.weights()[i]*val;
-//      }
-//    }
-//    sprintf (file, "%s%s", dmrginp.save_prefix().c_str(),"/twopdm");
-//    ofstream ofs(file);
-//    ofs << twopdm.dim1() << endl;
-//    for(int k=0;k<twopdm.dim1();++k)
-//      for(int l=0;l<twopdm.dim2();++l)
-//        for(int m=0;m<twopdm.dim3();++m)
-//          for(int n=0;n<twopdm.dim4();++n)
-//            ofs << boost::format("%d %d %d %d %20.14e\n") % k % l % m % n % twopdm(k,l,m,n);
-//
-//    ofs.close();
-//  }
-//}
-//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Twopdm_driver::accumulate_npdm()
@@ -278,16 +174,20 @@ void Twopdm_driver::accumulate_npdm()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_driver::assign_npdm_antisymmetric(const int i, const int j, const int k, const int l, const double val)
+void Twopdm_driver::update_full_spin_array()
 {
+  for (auto it = spin_map.begin(); it != spin_map.end(); ++it) {
+    int i = std::get<0>( it->first );
+    int j = std::get<1>( it->first );
+    int k = std::get<2>( it->first );
+    int l = std::get<3>( it->first );
 
-//MAW
-if ( abs(val) > 1e-8 ) pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
-pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
+    double val = it->second;
+    //if ( abs(val) > 1e-8 ) pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
+    //pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
 
-  // Test for duplicates
-  if ( twopdm(i, j, k, l) != 0.0 && abs(twopdm(i,j,k,l)-val) > 1e-6)
-    {
+    // Test for duplicates
+    if ( twopdm(i, j, k, l) != 0.0 && abs(twopdm(i,j,k,l)-val) > 1e-6) {
       void *array[10];
       size_t size;
       size = backtrace(array, 10);
@@ -295,13 +195,99 @@ pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << 
       //backtrace_symbols_fd(array, size, 2);
       cout << "earlier value: "<<twopdm(i,j,k,l)<<endl<< "new value:     "<<val<<endl;
       assert( false );
-      return;
     }
+    twopdm(i,j,k,l) = val;
+  }
 
-  twopdm(i, j, k, l) = val;
-  twopdm(i, j, l, k) = -val;
-  twopdm(j, i, k, l) = -val;
-  twopdm(j, i, l, k) = val;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Twopdm_driver::update_full_spatial_array()
+{
+  for (auto it = spatial_map.begin(); it != spatial_map.end(); ++it) {
+    int i = std::get<0>( it->first );
+    int j = std::get<1>( it->first );
+    int k = std::get<2>( it->first );
+    int l = std::get<3>( it->first );
+    spatial_twopdm(i,j,k,l) = it->second;
+  }
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Twopdm_driver::build_spatial_elements()
+{
+  //Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
+//FIXME parallelization!
+//  if( mpigetrank() == 0)
+//  {
+    double factor = 0.5;
+
+    for (auto it = spatial_map.begin(); it != spatial_map.end(); ++it) {
+      int i = std::get<0>( it->first );
+      int j = std::get<1>( it->first );
+      int k = std::get<2>( it->first );
+      int l = std::get<3>( it->first );
+
+      double val = 0.0;
+      for (int s=0; s<2; s++) {
+        for (int t =0; t<2; t++) {
+          val += spin_map[ std::make_tuple( 2*i+s, 2*j+t, 2*k+t, 2*l+s ) ];
+        }
+      }
+      it->second = factor * val;
+    }
+// }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+std::map< std::tuple<int,int,int,int>, int > Twopdm_driver::get_spin_permutations( std::vector<int>& indices )
+{
+
+  std::map< std::tuple<int,int,int,int>, int > perms;
+  int i = indices[0];
+  int j = indices[1];
+  int k = indices[2];
+  int l = indices[3];
+
+  // 8 permutations
+  //--------------------------
+  perms[std::make_tuple(i, j, k, l)] = 1;
+  perms[std::make_tuple(i, j, l, k)] = -1;
+  perms[std::make_tuple(j, i, k, l)] = -1;
+  perms[std::make_tuple(j, i, l, k)] = 1;
+
+  perms[std::make_tuple(l, k, j, i)] = 1;
+  perms[std::make_tuple(k, l, j, i)] = -1;
+  perms[std::make_tuple(l, k, i, j)] = -1;
+  perms[std::make_tuple(k, l, i, j)] = 1;
+
+  return perms;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Twopdm_driver::screen_sparse_arrays()
+{
+  // Screen spatial elements
+  for (auto it = spatial_map.begin(); it != spatial_map.end(); ) {
+    if ( abs(it->second) < 1e-14 ) {
+      spatial_map.erase(it++); // Note postfix operator
+    }
+    else { ++it; }
+  }
+
+  // Screen spin-orbital elements
+  for (auto it = spin_map.begin(); it != spin_map.end(); ) {
+    if ( abs(it->second) < 1e-14 ) {
+      spin_map.erase(it++); // Note postfix operator
+    }
+    else { ++it; }
+  }
+//FIXME add prints to see if it makes any difference?
 
 }
 
@@ -309,67 +295,32 @@ pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << 
 
 void Twopdm_driver::store_npdm_elements( std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
-  for (int i=0; i < new_spin_orbital_elements.size(); ++i) {
-    int ix = new_spin_orbital_elements[i].first[0];
-    int jx = new_spin_orbital_elements[i].first[1];
-    int kx = new_spin_orbital_elements[i].first[2];
-    int lx = new_spin_orbital_elements[i].first[3];
-    double x = new_spin_orbital_elements[i].second;
-    assign_npdm_antisymmetric(ix, jx, kx, lx, x);
+  assert( new_spin_orbital_elements.size() == 6 );
+
+  for (int idx=0; idx < new_spin_orbital_elements.size(); ++idx) {
+    // Get all spin-index permutations
+    std::map< std::tuple<int,int,int,int>, int > spin_indices = get_spin_permutations( new_spin_orbital_elements[idx].first );
+    // Assign batch of spin-orbital 2PDM values
+    double val = new_spin_orbital_elements[idx].second;
+    for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
+      spin_map[ it->first ] = it->second * val;
+    }
+    // Initialize spatial 2PDM indices
+    for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
+      int i = std::get<0>( it->first );
+      int j = std::get<1>( it->first );
+      int k = std::get<2>( it->first );
+      int l = std::get<3>( it->first );
+      spatial_map[ std::make_tuple(i/2, j/2, k/2, l/2) ] = 0.0;
+    }
   }
 
-//FIXME is the transpose always needed?
-  for (int i=0; i < new_spin_orbital_elements.size(); ++i) {
-    int ix = new_spin_orbital_elements[i].first[3];
-    int jx = new_spin_orbital_elements[i].first[2];
-    int kx = new_spin_orbital_elements[i].first[1];
-    int lx = new_spin_orbital_elements[i].first[0];
-    double x = new_spin_orbital_elements[i].second;
-    assign_npdm_antisymmetric(ix, jx, kx, lx, x);
-  }
-}
+  // Build and store batch of spatial 2PDM elements
+  build_spatial_elements();
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+  // Screen away small or zero elements
+  screen_sparse_arrays();
 
-void Twopdm_driver::calcenergy(int state)
-{
-  using namespace SpinAdapted;
-  Matrix onepdm(2*dmrginp.last_site(), 2*dmrginp.last_site()); onepdm = 0.0;
-  int nelec = dmrginp.real_particle_number();
-
-  for (int i=0; i<dmrginp.last_site()*2; i++)
-  for (int j=0; j<dmrginp.last_site()*2; j++)
-  for (int k=0; k<dmrginp.last_site()*2; k++)
-    onepdm(i+1, j+1) += twopdm(i, k, k, j);
-
-  onepdm /= (nelec-1);
-  double nel = 0.0, sz=0.0;
-  for (int i=0; i<dmrginp.last_site(); i++) {
-    nel += onepdm(2*i+1, 2*i+1)+onepdm(2*i+2, 2*i+2);
-    sz += onepdm(2*i+1, 2*i+1)-onepdm(2*i+2, 2*i+2);
-  }
-
-  double energy = 0.0;
-  for (int i=0; i<dmrginp.last_site()*2; i++)
-  for (int j=0; j<dmrginp.last_site()*2; j++)
-  for (int k=0; k<dmrginp.last_site()*2; k++)
-  for (int l=0; l<dmrginp.last_site()*2; l++)
-    energy += v_2(i,j,k,l)*twopdm(i,j,l,k);
-
-  energy *= 0.5;
-
-  for (int i=0; i<dmrginp.last_site()*2; i++)
-  for (int j=0; j<dmrginp.last_site()*2; j++)
-    energy += v_1(i,j) * onepdm(i+1,j+1);
-
-  pout << "energy of state "<< state <<" = "<< energy+dmrginp.get_coreenergy()<<endl;
-
-  ofstream out("onepdm_fromtpdm");
-  for (int i=0; i<dmrginp.last_site()*2; i++)
-  for (int j=0; j<dmrginp.last_site()*2; j++)
-    out<<i<<"  "<<j<<"  "<<onepdm(i+1,j+1)<<endl;
-  out.close();
-  
 }
 
 //===========================================================================================================================================================

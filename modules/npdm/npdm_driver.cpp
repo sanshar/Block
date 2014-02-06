@@ -27,84 +27,28 @@ std::vector<int> DEBUG_CALL_GET_EXPECT(1000);
 boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::vector<Npdm::CD> & cd_type );
 
 //===========================================================================================================================================================
-//void check_operator_count( NpdmSpinOps& Ops )
+
+Npdm_driver::Npdm_driver(int order) : 
+npdm_order_(order),
+store_full_spin_array_(false),
+store_full_spatial_array_(false)
+{}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//void Npdm_driver::save_sparse_array(int i, int j) 
 //{
-//  boost::mpi::communicator world;
-//
-//  // Serial case
-//  if ( world.size() == 1 ) return;
-//
-//  pout << "Finding duplicate ops\n";
-//  std::vector< int > indices = Ops.get_1d_indices();
-//
-//  if ( mpigetrank() == 0 ) {
-//    // Gather indices from all ranks
-//    std::vector< std::vector<int> > all_indices;
-//    boost::mpi::gather( world, indices, all_indices, 0 );
-//    // Identify duplicates
-//    std::set<int> unique;
-//    std::set<int> duplicates;
-//    for (int rank=0; rank < world.size(); ++rank ) { 
-//      for (int k=0; k < all_indices.at(rank).size(); ++k ) { 
-//        int id = all_indices[rank][k];
-//        if (unique.find(id) != unique.end() )
-//          unique.insert(id);
-//        else
-//          duplicates.insert(id);
-//      }
-//    }
-//    cout << "Duplicates:\n";
-//    for (auto it = duplicates.begin(); it != duplicates.end(); ++it) {
-//      cout << *it << endl;
-//    }
-//  }
-//  else {
-//    gather( world, indices, 0 );
-//  }
+////FIXME
+//boost::mpi::communicator world;
+//world.barrier();
+//  Timer timer;
+//  // Save nonredundant npdm elements from each mpi rank as separate files
+//  sparse_array_.dump_file(i,j);
+////FIXME
+//world.barrier();
+//  pout << "NPDM save sparse array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 //}
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Npdm_driver::save_array(int i, int j) 
-{
-  save_sparse_array(i,j);
-  if ( use_full_array_ ) save_full_array(i,j);
-} 
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Npdm_driver::save_full_array(int i, int j) 
-{
-//FIXME
-boost::mpi::communicator world;
-world.barrier();
-  Timer timer;
-  // Combine NPDM elements from all mpi ranks and dump to file
-  accumulate_npdm();
-  save_npdm_text(i, j);
-  save_npdm_binary(i, j);
-  // Build and save full spatial NPDM
-  build_spatial_npdm(i, j);
-  save_spatial_npdm_text(i, j);
-  save_spatial_npdm_binary(i, j);
-world.barrier();
-  pout << "NPDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Npdm_driver::save_sparse_array(int i, int j) 
-{
-//FIXME
-boost::mpi::communicator world;
-world.barrier();
-  Timer timer;
-  // Save nonredundant npdm elements from each mpi rank as separate files
-  sparse_array_.dump_file(i,j);
-//FIXME
-world.barrier();
-  pout << "NPDM save sparse array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
-}
-
+//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 unsigned int get_mpi_tag( int rank0, int rank1, int lda )
@@ -319,19 +263,9 @@ return skip;
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos)
+void Npdm_driver::loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Npdm::Npdm_expectations& expectations, const SpinBlock& big )
 {
   boost::mpi::communicator world;
-  std::cout.flush();
-  world.barrier();
-  DEBUG_COMM_TIME[mpigetrank()] = 0;
-  DEBUG_CALL_GET_EXPECT[mpigetrank()] = 0;
-  Timer timer;
-  pout << "===========================================================================================\n";
-  pout << "Current NPDM sweep position = "<< sweepPos+1 << " of " << endPos+1 << "\n";
-
-  // Initialize class that computes expectation values when sent LHS, Dot and RHS operator spin-sets from this spin-block
-  Npdm::Npdm_expectations npdm_expectations( npdm_order_, wavefunctions.at(0), big );
 
   // Get LHS, Dot and RHS spin-blocks
   SpinBlock* rhsBlock = big.get_rightBlock();
@@ -339,10 +273,7 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
   SpinBlock* lhsBlock = lhsdotBlock->get_leftBlock();
   SpinBlock* dotBlock = lhsdotBlock->get_rightBlock();
 
-  // Loop over NPDM operator patterns
-  Npdm::Npdm_patterns npdm_patterns( npdm_order_, sweepPos, endPos );
-
-  for (auto pattern = npdm_patterns.ldr_cd_begin(); pattern != npdm_patterns.ldr_cd_end(); ++pattern) {
+  for (auto pattern = patterns.ldr_cd_begin(); pattern != patterns.ldr_cd_end(); ++pattern) {
     DEBUG_CALL_GET_EXPECT[mpigetrank()] = 0;
 
     // MPI threads must be synchronised here so they all work on same operator pattern simultaneously
@@ -351,9 +282,9 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
 
     //pout << "-------------------------------------------------------------------------------------------\n";
     pout << "Doing pattern:  ";
-    npdm_patterns.print_cd_string( pattern->at('l') );
-    npdm_patterns.print_cd_string( pattern->at('d') );
-    npdm_patterns.print_cd_string( pattern->at('r') );
+    patterns.print_cd_string( pattern->at('l') );
+    patterns.print_cd_string( pattern->at('d') );
+    patterns.print_cd_string( pattern->at('r') );
     pout << std::endl;
 
     // Choice of read from disk or not done inside the wrapper
@@ -373,13 +304,41 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
       bool lhs_or_rhs_dot = ( (lhsBlock->size() == 1) || (rhsBlock->size() == 1) );
       // Compute all irreducible PDM elements generated by this block operator pattern at this sweep position
       if ( broadcast_lhs( lhsOps->size(), rhsOps->size() ) ) {
-        loop_over_block_operators( 'r', npdm_expectations, *lhsOps, *rhsOps, *dotOps, lhs_or_rhs_dot );
+        loop_over_block_operators( 'r', expectations, *lhsOps, *rhsOps, *dotOps, lhs_or_rhs_dot );
       }
       else {
-        loop_over_block_operators( 'l', npdm_expectations, *rhsOps, *lhsOps, *dotOps, lhs_or_rhs_dot );
+        loop_over_block_operators( 'l', expectations, *rhsOps, *lhsOps, *dotOps, lhs_or_rhs_dot );
       }
     }
   }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos)
+{
+  boost::mpi::communicator world;
+  std::cout.flush();
+  world.barrier();
+  DEBUG_COMM_TIME[mpigetrank()] = 0;
+  DEBUG_CALL_GET_EXPECT[mpigetrank()] = 0;
+  Timer timer;
+  pout << "===========================================================================================\n";
+  pout << "Current NPDM sweep position = "<< sweepPos+1 << " of " << endPos+1 << "\n";
+
+  // Clear sparse arrays of NPDM elements built at single sweep position
+  clear_sparse_arrays();
+
+  // Initialize class that computes expectation values when sent operator spin-sets from this spinblock
+  Npdm::Npdm_expectations npdm_expectations( npdm_order_, wavefunctions.at(0), big );
+
+  // Loop over NPDM operator patterns
+  Npdm::Npdm_patterns npdm_patterns( npdm_order_, sweepPos, endPos );
+  loop_over_operator_patterns( npdm_patterns, npdm_expectations, big );
+
+  // Update full NPDM in-core spin and spatial arrays if requested
+  if ( store_full_spin_array_ ) update_full_spin_array();
+  if ( store_full_spatial_array_ ) update_full_spatial_array();
 
   // Print outs
   if (world.rank() == 0) {

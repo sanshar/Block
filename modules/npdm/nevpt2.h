@@ -16,8 +16,10 @@ namespace Npdm {
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  void compute_EEEE_matrix( Twopdm_driver& twopdm_driver, Threepdm_driver& threepdm_driver, Fourpdm_driver& fourpdm_driver );
-  void compute_A16_matrix( Twopdm_driver& twopdm_driver, Threepdm_driver& threepdm_driver, Fourpdm_driver& fourpdm_driver );
+  array_6d<double> compute_EEE_matrix( Twopdm_driver& twopdm_driver, Threepdm_driver& threepdm_driver );
+  array_8d<double> compute_EEEE_matrix( Twopdm_driver& twopdm_driver, Threepdm_driver& threepdm_driver, Fourpdm_driver& fourpdm_driver );
+  void compute_A16_matrix( int dim, array_8d<double>& eeee );
+  void compute_A22_matrix( int dim, array_6d<double>& eee, array_8d<double>& eeee );
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 

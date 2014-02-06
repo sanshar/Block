@@ -22,8 +22,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "twopdm_driver.h"
 #include "threepdm_driver.h"
 #include "fourpdm_driver.h"
-//FIXME
-//#include "nevpt2_pdm_driver.h"
+#include "nevpt2_pdm_driver.h"
 
 //FIXME
 #include <boost/mpi.hpp>
