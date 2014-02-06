@@ -107,7 +107,7 @@ void SparseMatrix::allocate(const StateInfo& s)
           break;
         }
       }
-      allowedQuantaMatrix (i,j) = allowedcoupling;
+      allowedQuantaMatrix(i,j) = allowedcoupling;
       if (allowedQuantaMatrix (i,j)) 
 	{
 	  operatorMatrix (i,j).ReSize (s.quantaStates.at(i), s.quantaStates.at(j));//, largeArray+usedindex);
@@ -381,4 +381,27 @@ SparseMatrix& SparseMatrix::operator+=(const SparseMatrix& other)
 	}
   return *this;
 }
+
+SubSparseMatrix::SubSparseMatrix(const boost::shared_ptr<SparseMatrix>& opptr, int sec, const StateInfo& s): opdata(opptr), section(sec) {
+  SpinQuantum q = opdata->get_deltaQuantum(section);
+  SuballowedQuantaMatrix.ReSize(s.quanta.size(), s.quanta.size());
+  for (int i = 0; i < SuballowedQuantaMatrix.Nrows (); ++i)
+    for (int j = 0; j < SuballowedQuantaMatrix.Ncols (); ++j) {
+      if (s.quanta[i].allow(q, s.quanta[j])) {
+        SuballowedQuantaMatrix(i,j) = true;
+      }
+    }
+}
+
+SubSparseMatrix::SubSparseMatrix(const boost::shared_ptr<SparseMatrix>& opptr, int sec, const StateInfo& sr, const StateInfo& sc): opdata(opptr), section(sec) {
+  SpinQuantum q = opdata->get_deltaQuantum(section);
+  SuballowedQuantaMatrix.ReSize(sr.quanta.size(), sc.quanta.size());
+  for (int i = 0; i < SuballowedQuantaMatrix.Nrows (); ++i)
+    for (int j = 0; j < SuballowedQuantaMatrix.Ncols (); ++j) {
+      if (sr.quanta[i].allow(q, sc.quanta[j])) {
+        SuballowedQuantaMatrix(i,j) = true;
+      }
+    }
+}
+
 }

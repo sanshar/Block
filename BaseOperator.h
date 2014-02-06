@@ -200,6 +200,44 @@ public:
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b){return 0.0;}
 }; 
 
+class SubSparseMatrix : public SparseMatrix
+{
+private:
+  boost::shared_ptr<SparseMatrix> opdata;
+  int section;
+  ObjectMatrix<char> SuballowedQuantaMatrix;
+public:
+  SubSparseMatrix(const boost::shared_ptr<SparseMatrix>& opptr, int sec, const StateInfo& s);
+  SubSparseMatrix(const boost::shared_ptr<SparseMatrix>& opptr, int sec, const StateInfo& sr, const StateInfo& sc);
+  std::vector<SpinQuantum> get_deltaQuantum() const {
+    std::vector<SpinQuantum> deltaQuantum(1, opdata->get_deltaQuantum(section));
+    return deltaQuantum;
+  }
+  int get_deltaQuantum_size() const {return 1;}
+  SpinQuantum get_deltaQuantum(int i) const {
+    return get_deltaQuantum()[0]; // this i is dummy
+  }
+  bool get_fermion() const { return opdata->get_fermion(); }
+  bool get_initialised() const { return opdata->get_initialised(); }
+  int nrows() const { return opdata->ncols(); }
+  int ncols() const { return opdata->nrows(); }
+  const char &allowed(int i, int j) const { return SuballowedQuantaMatrix(i, j); }  
+  char &allowed(int i, int j) { return SuballowedQuantaMatrix(i, j); }
+  const Matrix& operator_element(int i, int j) const { return opdata->operator_element(i, j); }
+  Matrix& operator_element(int i, int j) { return opdata->operator_element(i, j); }
+  SpinSpace get_spin(int i=0) const  { return opdata->get_deltaQuantum(section).get_s();}
+  IrrepSpace get_symm(int i=0) const  { return -opdata->get_deltaQuantum(section).get_symm();}
+  int get_orbs(int i) const {return opdata->get_orbs(i);}
+  const std::vector<int>& get_orbs() const { return opdata->get_orbs(); }
+  const Matrix& operator()(int i, int j) const { return opdata->operator()(j, i); }
+  Matrix& operator()(int i, int j) { return opdata->operator()(j, i); }
+  char conjugacy() const { return opdata->conjugacy(); }
+  double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const {  return 1.0; } // FIXME is it right?
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata;} // FIXME what does this function mean? is it right?
+  void build(const SpinBlock& b){};
+  double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b){return 0.0;}
+};
+
 const Transposeview Transpose(SparseMatrix& op);
 
 double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c);
@@ -210,6 +248,7 @@ void Scale(double d, SparseMatrix& a);
 void assignloopblock(SpinBlock*& loopblock, SpinBlock*& otherblock, SpinBlock* leftSpinBlock, SpinBlock* rightSpinBlock);
 void copy(const ObjectMatrix<Matrix>& a, ObjectMatrix<Matrix>& b);
 void copy(const Matrix& a, Matrix& b);
-}
+} 
+
 
 #endif
