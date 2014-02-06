@@ -9,35 +9,39 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef NPDM_DRIVER_HEADER_H
 #define NPDM_DRIVER_HEADER_H
 
+//FIXME remove includes?
 #include <vector>
 #include <multiarray.h>
 #include "spinblock.h"
 #include "wavefunction.h"
 #include "BaseOperator.h"
-#include "npdm_patterns.h"
 #include "npdm_expectations.h"
 #include "npdm_operator_wrappers.h"
-//#include "npdm_sparse_array.h"
+#include "npdm_container.h"
 
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
-class Npdm_driver {
+class Npdm_driver_base {
+  public:
+    Npdm_driver_base() {}
+    virtual ~Npdm_driver_base() {}
+    virtual void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos ) = 0;
+};
+
+//===========================================================================================================================================================
+
+class Npdm_driver : public Npdm_driver_base {
 
   public:
-    explicit Npdm_driver(int order);
-    virtual ~Npdm_driver() {};
-
-    virtual void save_npdms(const int &i, const int &j) = 0;
-    virtual void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos );
-
-  protected:
-    bool store_full_spin_array_;
-    bool store_full_spatial_array_;
+    Npdm_driver(int order, int sites);
+    ~Npdm_driver() { container_->save_npdms(0,0); }
+    void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos );
 
   private:
     int npdm_order_;
+    boost::shared_ptr<Npdm_container> container_;
 
     void loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Npdm::Npdm_expectations& expectations, const SpinBlock& big );
 
@@ -54,11 +58,6 @@ class Npdm_driver {
     bool broadcast_lhs( int lhs_size, int rhs_size );
     bool skip_this_mpi_rank( NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps );
     bool skip_parallel( NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, bool lhsrhsdot );
-
-    virtual void clear_sparse_arrays() = 0;
-    virtual void update_full_spin_array() = 0;
-    virtual void update_full_spatial_array() = 0;
-    virtual void store_npdm_elements( std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements) = 0;
 
 };
   

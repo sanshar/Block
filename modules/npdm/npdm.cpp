@@ -7,7 +7,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include "npdm.h"
-#include "nevpt2.h"
+#include "npdm_driver.h"
+//#include "nevpt2_pdm_driver.h"
 #include "sweeptwopdm.h"  // For old version of 2pdm
 
 void dmrg(double sweep_tol);
@@ -20,7 +21,7 @@ namespace Npdm {
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void npdm_block_and_decimate( Npdm_driver& npdm_driver, SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
+void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
                               const bool &useSlater, const bool& dot_with_sys, const int state)
 {
   Timer timer;
@@ -118,7 +119,7 @@ void npdm_block_and_decimate( Npdm_driver& npdm_driver, SweepParams &sweepParams
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-double npdm_do_one_sweep(Npdm_driver& npdm_driver, SweepParams &sweepParams, const bool &warmUp, const bool &forward, 
+double npdm_do_one_sweep(Npdm_driver_base& npdm_driver, SweepParams &sweepParams, const bool &warmUp, const bool &forward, 
                          const bool &restart, const int &restartSize, const int state)
 {
   cout.precision(12);
@@ -207,11 +208,6 @@ assert(i==0);
   pout << "\t\t\t ============================================================================ " << endl;
 
 
-  // Combine NPDM elements from all mpi ranks and dump files
-  assert(state==0);
-  int i = state, j = state;
-  npdm_driver.save_npdms(i,j);
-
   // Update the static number of iterations
   ++sweepParams.set_sweep_iter();
 
@@ -281,7 +277,7 @@ void npdm( int npdm_order )
       } 
       else {
         // Compute twopdm with general npdm code
-        Twopdm_driver twopdm_driver( dmrginp.last_site() );
+        Npdm_driver twopdm_driver( 2, dmrginp.last_site() );
         npdm_do_one_sweep(twopdm_driver, sweepParams, false, direction, false, 0, state);
       }
     }
@@ -289,58 +285,34 @@ void npdm( int npdm_order )
   case (3):
     // Compute threepdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
-      Threepdm_driver threepdm_driver( dmrginp.last_site() );
+      Npdm_driver threepdm_driver( 3, dmrginp.last_site() );
       npdm_do_one_sweep(threepdm_driver, sweepParams, false, direction, false, 0, state);
     }
     break;
   case (4):
     // Compute fourpdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
-      Fourpdm_driver fourpdm_driver( dmrginp.last_site() );
+      Npdm_driver fourpdm_driver( 4, dmrginp.last_site() );
       npdm_do_one_sweep(fourpdm_driver, sweepParams, false, direction, false, 0, state);
     }
     break;
-//  case (0):
-//    // Compute NEVPT2 matrix elements requiring 4PDM
-//    for (int state=0; state<dmrginp.nroots(); state++) {
-//      // Compute onepdm elements
-//      SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
-//      // Compute twopdm with general npdm code
-//      Twopdm_driver twopdm_driver( dmrginp.last_site() );
-//      npdm_do_one_sweep(twopdm_driver, sweepParams, false, direction, false, 0, state);
-//      // Compute threepdm with general npdm code
-//      Threepdm_driver threepdm_driver( dmrginp.last_site() );
-//      npdm_do_one_sweep(threepdm_driver, sweepParams, false, direction, false, 0, state);
-//      // Compute fourpdm with general npdm code
-//      Fourpdm_driver fourpdm_driver( dmrginp.last_site() );
-//      npdm_do_one_sweep(fourpdm_driver, sweepParams, false, direction, false, 0, state);
-//      // Compute EEE matrix elements
-//      array_6d<double> eee = compute_EEE_matrix( twopdm_driver, threepdm_driver );
-//      // Compute EEEE matrix elements
-//      array_8d<double> eeee = compute_EEEE_matrix( twopdm_driver, threepdm_driver, fourpdm_driver );
-//      // Compute NEVPT2 A-matrix elements
-//      compute_A16_matrix( twopdm_driver.spatial_twopdm.dim1(), eeee );
-//      // Compute NEVPT2 A-matrix elements
-//      compute_A22_matrix( twopdm_driver.spatial_twopdm.dim1(), eee, eeee );
-//    }
-//    break;
   case (0):
     for (int state=0; state<dmrginp.nroots(); state++) {
       // Compute full onepdm matrix
       SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
       // Compute NEVPT2 NPDM matrix elements incrementally along the sweep
-      Nevpt2_pdm_driver nevpt2_pdm_driver( dmrginp.last_site() );
-      npdm_do_one_sweep(nevpt2_pdm_driver, sweepParams, false, direction, false, 0, state);
+//      Nevpt2_pdm_driver nevpt2_pdm_driver( dmrginp.last_site() );
+//      npdm_do_one_sweep(nevpt2_pdm_driver, sweepParams, false, direction, false, 0, state);
 
 
-      // Compute EEE matrix elements
-      array_6d<double> eee = compute_EEE_matrix( *nevpt2_pdm_driver.twopdm_driver, *nevpt2_pdm_driver.threepdm_driver );
-      // Compute EEEE matrix elements
-      array_8d<double> eeee = compute_EEEE_matrix( *nevpt2_pdm_driver.twopdm_driver, *nevpt2_pdm_driver.threepdm_driver, *nevpt2_pdm_driver.fourpdm_driver );
-      // Compute NEVPT2 A-matrix elements
-      compute_A16_matrix( nevpt2_pdm_driver.twopdm_driver->spatial_twopdm.dim1(), eeee );
-      // Compute NEVPT2 A-matrix elements
-      compute_A22_matrix( nevpt2_pdm_driver.twopdm_driver->spatial_twopdm.dim1(), eee, eeee );
+//      // Compute EEE matrix elements
+//      array_6d<double> eee = compute_EEE_matrix( *nevpt2_pdm_driver.twopdm_driver, *nevpt2_pdm_driver.threepdm_driver );
+//      // Compute EEEE matrix elements
+//      array_8d<double> eeee = compute_EEEE_matrix( *nevpt2_pdm_driver.twopdm_driver, *nevpt2_pdm_driver.threepdm_driver, *nevpt2_pdm_driver.fourpdm_driver );
+//      // Compute NEVPT2 A-matrix elements
+//      compute_A16_matrix( nevpt2_pdm_driver.twopdm_driver->spatial_twopdm.dim1(), eeee );
+//      // Compute NEVPT2 A-matrix elements
+//      compute_A22_matrix( nevpt2_pdm_driver.twopdm_driver->spatial_twopdm.dim1(), eee, eeee );
     }
     break;
   }
@@ -388,9 +360,6 @@ void npdm_restart( int npdm_order )
   case (2):
     for (int state=0; state<dmrginp.nroots(); state++) {
       assert(false); // restart not tested!
-      Twopdm_driver twopdm_driver( dmrginp.last_site() );
-      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-      npdm_do_one_sweep(twopdm_driver, sweepParams, false, direction, false, 0, state);
     }
     break;
   }

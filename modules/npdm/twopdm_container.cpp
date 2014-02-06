@@ -6,16 +6,16 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#include "twopdm_driver.h"
+#include "twopdm_container.h"
 
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
-Twopdm_driver::Twopdm_driver( int sites ) : Npdm_driver(2) 
+Twopdm_container::Twopdm_container( int sites )
 {
-  store_full_spin_array_ = true;
-  store_full_spatial_array_ = true;
+  bool store_full_spin_array_ = true;
+  bool store_full_spatial_array_ = true;
 
   if ( store_full_spin_array_ ) {
     twopdm.resize(2*sites,2*sites,2*sites,2*sites);
@@ -29,7 +29,7 @@ Twopdm_driver::Twopdm_driver( int sites ) : Npdm_driver(2)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
   
-void Twopdm_driver::save_npdms(const int& i, const int& j)
+void Twopdm_container::save_npdms(const int& i, const int& j)
 {
 //  save_sparse_array(i,j);
 
@@ -52,7 +52,7 @@ world.barrier();
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_driver::save_npdm_text(const int &i, const int &j)
+void Twopdm_container::save_npdm_text(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
   {
@@ -75,7 +75,7 @@ void Twopdm_driver::save_npdm_text(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_driver::save_spatial_npdm_text(const int &i, const int &j)
+void Twopdm_container::save_spatial_npdm_text(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
   {
@@ -98,7 +98,7 @@ void Twopdm_driver::save_spatial_npdm_text(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_driver::save_npdm_binary(const int &i, const int &j)
+void Twopdm_container::save_npdm_binary(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
   {
@@ -113,7 +113,7 @@ void Twopdm_driver::save_npdm_binary(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
+void Twopdm_container::save_spatial_npdm_binary(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
   {
@@ -128,7 +128,7 @@ void Twopdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_driver::load_npdm_binary(const int &i, const int &j)
+void Twopdm_container::load_npdm_binary(const int &i, const int &j)
 {
 assert(false); // <<<< CAN WE RETHINK USE OF DISK FOR NPDM?
   if( mpigetrank() == 0)
@@ -151,7 +151,7 @@ assert(false); // <<<< CAN WE RETHINK USE OF DISK FOR NPDM?
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_driver::accumulate_npdm()
+void Twopdm_container::accumulate_npdm()
 {
 #ifndef SERIAL
   array_4d<double> tmp_recv;
@@ -174,9 +174,9 @@ void Twopdm_driver::accumulate_npdm()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_driver::update_full_spin_array()
+void Twopdm_container::update_full_spin_array()
 {
-  for (auto it = spin_map.begin(); it != spin_map.end(); ++it) {
+  for (auto it = sparse_spin_pdm.begin(); it != sparse_spin_pdm.end(); ++it) {
     int i = std::get<0>( it->first );
     int j = std::get<1>( it->first );
     int k = std::get<2>( it->first );
@@ -203,9 +203,9 @@ void Twopdm_driver::update_full_spin_array()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_driver::update_full_spatial_array()
+void Twopdm_container::update_full_spatial_array()
 {
-  for (auto it = spatial_map.begin(); it != spatial_map.end(); ++it) {
+  for (auto it = sparse_spatial_pdm.begin(); it != sparse_spatial_pdm.end(); ++it) {
     int i = std::get<0>( it->first );
     int j = std::get<1>( it->first );
     int k = std::get<2>( it->first );
@@ -217,34 +217,33 @@ void Twopdm_driver::update_full_spatial_array()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_driver::build_spatial_elements()
+void Twopdm_container::build_spatial_elements( std::map< std::tuple<int,int,int,int>, double >& spin_batch, 
+                                               std::map< std::tuple<int,int,int,int>, double >& spatial_batch )
 {
   //Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
-//FIXME parallelization!
-//  if( mpigetrank() == 0)
-//  {
-    double factor = 0.5;
+  double factor = 0.5;
 
-    for (auto it = spatial_map.begin(); it != spatial_map.end(); ++it) {
-      int i = std::get<0>( it->first );
-      int j = std::get<1>( it->first );
-      int k = std::get<2>( it->first );
-      int l = std::get<3>( it->first );
-
-      double val = 0.0;
-      for (int s=0; s<2; s++) {
-        for (int t =0; t<2; t++) {
-          val += spin_map[ std::make_tuple( 2*i+s, 2*j+t, 2*k+t, 2*l+s ) ];
-        }
+  for (auto it = spatial_batch.begin(); it != spatial_batch.end(); ++it) {
+    int i = std::get<0>( it->first );
+    int j = std::get<1>( it->first );
+    int k = std::get<2>( it->first );
+    int l = std::get<3>( it->first );
+    // Sum over spin indices 
+    double val = 0.0;
+    for (int s=0; s<2; s++) {
+      for (int t =0; t<2; t++) {
+        val += spin_batch[ std::make_tuple( 2*i+s, 2*j+t, 2*k+t, 2*l+s ) ];
       }
-      it->second = factor * val;
     }
-// }
+    // Store significant elements only
+    if ( abs(val) > 1e-14 ) sparse_spatial_pdm[ it->first ] = factor * val;
+  }
+
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-std::map< std::tuple<int,int,int,int>, int > Twopdm_driver::get_spin_permutations( std::vector<int>& indices )
+std::map< std::tuple<int,int,int,int>, int > Twopdm_container::get_spin_permutations( const std::vector<int>& indices )
 {
 
   std::map< std::tuple<int,int,int,int>, int > perms;
@@ -270,56 +269,33 @@ std::map< std::tuple<int,int,int,int>, int > Twopdm_driver::get_spin_permutation
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_driver::screen_sparse_arrays()
-{
-  // Screen spatial elements
-  for (auto it = spatial_map.begin(); it != spatial_map.end(); ) {
-    if ( abs(it->second) < 1e-14 ) {
-      spatial_map.erase(it++); // Note postfix operator
-    }
-    else { ++it; }
-  }
-
-  // Screen spin-orbital elements
-  for (auto it = spin_map.begin(); it != spin_map.end(); ) {
-    if ( abs(it->second) < 1e-14 ) {
-      spin_map.erase(it++); // Note postfix operator
-    }
-    else { ++it; }
-  }
-//FIXME add prints to see if it makes any difference?
-
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Twopdm_driver::store_npdm_elements( std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
+void Twopdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
   assert( new_spin_orbital_elements.size() == 6 );
+  // Temporary batches of npdm elements
+  std::map< std::tuple<int,int,int,int>, double > spin_batch;
+  std::map< std::tuple<int,int,int,int>, double > spatial_batch;
 
   for (int idx=0; idx < new_spin_orbital_elements.size(); ++idx) {
     // Get all spin-index permutations
     std::map< std::tuple<int,int,int,int>, int > spin_indices = get_spin_permutations( new_spin_orbital_elements[idx].first );
-    // Assign batch of spin-orbital 2PDM values
     double val = new_spin_orbital_elements[idx].second;
     for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
-      spin_map[ it->first ] = it->second * val;
-    }
-    // Initialize spatial 2PDM indices
-    for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
+      // Initialize spatial indices
       int i = std::get<0>( it->first );
       int j = std::get<1>( it->first );
       int k = std::get<2>( it->first );
       int l = std::get<3>( it->first );
-      spatial_map[ std::make_tuple(i/2, j/2, k/2, l/2) ] = 0.0;
+      spatial_batch[ std::make_tuple(i/2, j/2, k/2, l/2) ] = 0.0;
+      // Assign temporary batch of spin-orbital elements
+      spin_batch[ it->first ] = it->second * val;
+      // Store significant elements only
+      if ( abs(val) > 1e-14 ) sparse_spin_pdm[ it->first ] = it->second * val;
     }
   }
 
-  // Build and store batch of spatial 2PDM elements
-  build_spatial_elements();
-
-  // Screen away small or zero elements
-  screen_sparse_arrays();
+  // Build and store new spatial elements
+  build_spatial_elements( spin_batch, spatial_batch );
 
 }
 

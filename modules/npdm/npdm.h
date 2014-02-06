@@ -18,11 +18,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "sweepgenblock.h"
 #include "sweep_params.h"
 #include "sweeponepdm.h"
-#include "npdm_driver.h"
-#include "twopdm_driver.h"
-#include "threepdm_driver.h"
-#include "fourpdm_driver.h"
-#include "nevpt2_pdm_driver.h"
 
 //FIXME
 #include <boost/mpi.hpp>
@@ -42,6 +37,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "density.h"
 #include "davidson.h"
 #include "pario.h"
+#include "npdm_driver.h"
 
 using namespace boost;
 using namespace std;
@@ -55,11 +51,11 @@ namespace Npdm{
   void npdm(int npdm_order);
   void npdm_restart(int npdm_order);
 
-  void npdm_block_and_decimate( Npdm_driver& npdm_driver, SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
+  void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
                                 const bool &useSlater, const bool& dot_with_sys, const int state);
 
-  double npdm_do_one_sweep(Npdm_driver& npdm_driver, SweepParams &sweepParams, const bool &warmUp, const bool &forward, 
-                           const bool &restart, const int &restartSize, const int state);
+  double npdm_do_one_sweep( Npdm_driver_base& npdm_driver, SweepParams &sweepParams, const bool &warmUp, const bool &forward, 
+                            const bool &restart, const int &restartSize, const int state);
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 

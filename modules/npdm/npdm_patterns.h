@@ -7,7 +7,6 @@
 #include <map>
 #include <set>
 #include <tuple>
-#include <tuple>
 #include <vector>
 
 namespace SpinAdapted {

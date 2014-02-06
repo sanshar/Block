@@ -7,17 +7,17 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include <algorithm>
-#include "fourpdm_driver.h"
+#include "fourpdm_container.h"
 #include "npdm_epermute.h"
 
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
-Fourpdm_driver::Fourpdm_driver( int sites ) : Npdm_driver(4) 
+Fourpdm_container::Fourpdm_container( int sites )
 {
-  store_full_spin_array_ = true;
-  store_full_spatial_array_ = true;
+  bool store_full_spin_array_ = true;
+  bool store_full_spatial_array_ = true;
 
   if ( store_full_spin_array_ ) {
     fourpdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);
@@ -32,7 +32,7 @@ Fourpdm_driver::Fourpdm_driver( int sites ) : Npdm_driver(4)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Fourpdm_driver::save_npdms(const int& i, const int& j)
+void Fourpdm_container::save_npdms(const int& i, const int& j)
 {
 //  save_sparse_array(i,j);
 
@@ -46,7 +46,6 @@ world.barrier();
     accumulate_npdm();
     save_npdm_text(i, j);
     save_npdm_binary(i, j);
-    build_spatial_npdm(i, j);
     save_spatial_npdm_text(i, j);
     save_spatial_npdm_binary(i, j);
 world.barrier();
@@ -56,7 +55,7 @@ world.barrier();
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Fourpdm_driver::save_npdm_text(const int &i, const int &j)
+void Fourpdm_container::save_npdm_text(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
   {
@@ -86,7 +85,7 @@ void Fourpdm_driver::save_npdm_text(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Fourpdm_driver::save_spatial_npdm_text(const int &i, const int &j)
+void Fourpdm_container::save_spatial_npdm_text(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
   {
@@ -116,7 +115,7 @@ void Fourpdm_driver::save_spatial_npdm_text(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Fourpdm_driver::save_npdm_binary(const int &i, const int &j)
+void Fourpdm_container::save_npdm_binary(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
   {
@@ -131,7 +130,7 @@ void Fourpdm_driver::save_npdm_binary(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Fourpdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
+void Fourpdm_container::save_spatial_npdm_binary(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
   {
@@ -146,11 +145,11 @@ void Fourpdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Fourpdm_driver::load_npdm_binary(const int &i, const int &j) { assert(false); }
+void Fourpdm_container::load_npdm_binary(const int &i, const int &j) { assert(false); }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Fourpdm_driver::accumulate_npdm()
+void Fourpdm_container::accumulate_npdm()
 {
 #ifndef SERIAL
   array_8d<double> tmp_recv;
@@ -176,43 +175,114 @@ void Fourpdm_driver::accumulate_npdm()
   }
 #endif
 }
-
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Fourpdm_driver::build_spatial_npdm(const int &i, const int &j)
+void Fourpdm_container::update_full_spin_array()
 {
-  double factor = 1.0;
-  if( mpigetrank() == 0)
-  {
-    for(int i=0; i<fourpdm.dim1()/2; ++i)
-      for(int j=0; j<fourpdm.dim2()/2; ++j)
-        for(int k=0; k<fourpdm.dim3()/2; ++k)
-          for(int l=0; l<fourpdm.dim4()/2; ++l)
-            for(int m=0; m<fourpdm.dim5()/2; ++m)
-              for(int n=0; n<fourpdm.dim6()/2; ++n)
-                for(int p=0; p<fourpdm.dim7()/2; ++p)
-                  for(int q=0; q<fourpdm.dim8()/2; ++q) {
+cout << "updating full spin array\n";
+  for (auto it = sparse_spin_pdm.begin(); it != sparse_spin_pdm.end(); ++it) {
+    int i = (it->first)[0];
+    int j = (it->first)[1];
+    int k = (it->first)[2];
+    int l = (it->first)[3];
+    int m = (it->first)[4];
+    int n = (it->first)[5];
+    int p = (it->first)[6];
+    int q = (it->first)[7];
 
-                    double pdm = 0.0;
-                    for (int s=0; s<2; s++) {
-                      for (int t=0; t<2; t++) {
-                        for (int u=0; u<2; u++) {
-                          for (int v=0; v<2; v++) {
-                            pdm += fourpdm(2*i+s, 2*j+t, 2*k+u, 2*l+v, 2*m+v, 2*n+u, 2*p+t, 2*q+s);
-                          }
-                        }
-                      }
-                    }
-                    if ( abs(pdm) > 1e-14 ) spatial_fourpdm(i,j,k,l,m,n,p,q) = factor * pdm;
-                  }
+    double val = it->second;
+
+//if ( abs(val) > 1e-8 ) {
+//  pout << "so-fourpdm val: i,j,k,l,m,n,p,q = " 
+//       << i << "," << j << "," << k << "," << l << "," << m << "," << n << "," << p << "," << q
+//       << "\t\t" << val << endl;
+//}
+
+    // Test for duplicates
+    if ( fourpdm(i,j,k,l,m,n,p,q) != 0.0 && abs(fourpdm(i,j,k,l,m,n,p,q)-val) > 1e-6) {
+      void *array[10];
+      size_t size;
+      size = backtrace(array, 10);
+      cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<" "<<p<<" "<<q<<endl;
+      //backtrace_symbols_fd(array, size, 2);
+      cout << "earlier value: " << fourpdm(i,j,k,l,m,n,p,q) << endl << "new value:     " <<val<<endl;
+      cout.flush();
+      assert( false );
+    }
+  
+    if ( abs(val) < 1e-14 ) return;
+  
+    // If indices are not all unique, then all elements should be zero (and next_even_permutation fails)
+    std::vector<int> v = {i,j,k,l};
+    std::sort( v.begin(), v.end() );
+    if ( (v[0]==v[1]) || (v[1]==v[2]) || (v[2]==v[3]) ) { if (abs(val) > 1e-15) { std::cout << abs(val) << std::endl; assert(false); } }
+    std::vector<int> w = {m,n,p,q};
+    std::sort( w.begin(), w.end() );
+    if ( (w[0]==w[1]) || (w[1]==w[2]) || (w[2]==w[3]) ) { if (abs(val) > 1e-15) { std::cout << abs(val) << std::endl; assert(false); } }
+
+    fourpdm(i,j,k,l,m,n,p,q) = val;
   }
+
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Fourpdm_driver::get_even_and_odd_perms( const std::vector<int> mnpq, 
-                                             std::vector< std::vector<int> > & even_perms, 
-                                             std::vector< std::vector<int> > & odd_perms )
+void Fourpdm_container::update_full_spatial_array()
+{
+cout << "updating full spatial array\n";
+  for (auto it = sparse_spatial_pdm.begin(); it != sparse_spatial_pdm.end(); ++it) {
+    int i = (it->first)[0];
+    int j = (it->first)[1];
+    int k = (it->first)[2];
+    int l = (it->first)[3];
+    int m = (it->first)[4];
+    int n = (it->first)[5];
+    int p = (it->first)[6];
+    int q = (it->first)[7];
+    spatial_fourpdm(i,j,k,l,m,n,p,q) = it->second;
+  }
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Fourpdm_container::build_spatial_elements( std::map< std::vector<int>, double >& spin_batch, 
+                                                std::map< std::vector<int>, double >& spatial_batch )
+{
+  double factor = 1.0;
+
+  for (auto it = spatial_batch.begin(); it != spatial_batch.end(); ++it) {
+    int i = (it->first)[0];
+    int j = (it->first)[1];
+    int k = (it->first)[2];
+    int l = (it->first)[3];
+    int m = (it->first)[4];
+    int n = (it->first)[5];
+    int p = (it->first)[6];
+    int q = (it->first)[7];
+    // Sum over spin indices
+    double val = 0.0;
+    for (int s=0; s<2; s++) {
+      for (int t=0; t<2; t++) {
+        for (int u=0; u<2; u++) {
+          for (int v=0; v<2; v++) {
+            std::vector<int> idx = { 2*i+s, 2*j+t, 2*k+u, 2*l+v, 2*m+v, 2*n+u, 2*p+t, 2*q+s };
+            val += spin_batch[ idx ];
+          }
+        }
+      }
+    }
+    // Store significant elements only
+    if ( abs(val) > 1e-14 ) sparse_spatial_pdm[ it->first ] = factor * val;
+  }
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Fourpdm_container::get_even_and_odd_perms( const std::vector<int> mnpq, 
+                                                std::vector< std::vector<int> > & even_perms, 
+                                                std::vector< std::vector<int> > & odd_perms )
 {
 
   // Get all even and odd mnpq permutations
@@ -248,39 +318,31 @@ void Fourpdm_driver::get_even_and_odd_perms( const std::vector<int> mnpq,
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// The number of possible combinations are (4!)**2
 
-void Fourpdm_driver::assign_npdm_antisymmetric(const int i, const int j, const int k, const int l, 
-                                               const int m, const int n, const int p, const int q, const double val)
+std::map< std::vector<int>, int > Fourpdm_container::get_spin_permutations( const std::vector<int>& indices )
 {
-//if ( abs(val) > 1e-8 ) {
-//  pout << "so-fourpdm val: i,j,k,l,m,n,p,q = " 
-//       << i << "," << j << "," << k << "," << l << "," << m << "," << n << "," << p << "," << q
-//       << "\t\t" << val << endl;
-//}
-
-  // Test for duplicates
-  if ( fourpdm(i,j,k,l,m,n,p,q) != 0.0 && abs(fourpdm(i,j,k,l,m,n,p,q)-val) > 1e-6) {
-    void *array[10];
-    size_t size;
-    size = backtrace(array, 10);
-    cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<" "<<p<<" "<<q<<endl;
-    //backtrace_symbols_fd(array, size, 2);
-    cout << "earlier value: " << fourpdm(i,j,k,l,m,n,p,q) << endl << "new value:     " <<val<<endl;
-    cout.flush();
-    assert( false );
-    return;
-  }
-
-  if ( abs(val) < 1e-14 ) return;
+  assert( indices.size() == 8 );
+  std::map< std::vector<int>, int > perms;
+  std::vector<int> idx;
+  int i = indices[0];
+  int j = indices[1];
+  int k = indices[2];
+  int l = indices[3];
+  int m = indices[4];
+  int n = indices[5];
+  int p = indices[6];
+  int q = indices[7];
 
   // If indices are not all unique, then all elements should be zero (and next_even_permutation fails)
   std::vector<int> v = {i,j,k,l};
   std::sort( v.begin(), v.end() );
-  if ( (v[0]==v[1]) || (v[1]==v[2]) || (v[2]==v[3]) ) { if (abs(val) > 1e-15) { std::cout << abs(val) << std::endl; assert(false); } }
+  if ( (v[0]==v[1]) || (v[1]==v[2]) || (v[2]==v[3]) ) return perms;
   std::vector<int> w = {m,n,p,q};
   std::sort( w.begin(), w.end() );
-  if ( (w[0]==w[1]) || (w[1]==w[2]) || (w[2]==w[3]) ) { if (abs(val) > 1e-15) { std::cout << abs(val) << std::endl; assert(false); } }
+  if ( (w[0]==w[1]) || (w[1]==w[2]) || (w[2]==w[3]) ) return perms;
+
+  // The number of possible combinations is (4!)**2 
+  //------------------------------------------------
 
   // Get all even and odd permutations
   const std::vector<int> ijkl = {i,j,k,l};
@@ -294,58 +356,77 @@ void Fourpdm_driver::assign_npdm_antisymmetric(const int i, const int j, const i
   assert ( mnpq_even.size() + mnpq_odd.size() == 24 );
 
   // Even-Even terms
-  for ( auto u = ijkl_even.begin(); u != ijkl_even.end(); ++u )
-    for ( auto v = mnpq_even.begin(); v != mnpq_even.end(); ++v )
-      fourpdm( (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] ) = val;
+  for ( auto u = ijkl_even.begin(); u != ijkl_even.end(); ++u ) {
+    for ( auto v = mnpq_even.begin(); v != mnpq_even.end(); ++v ) {
+      idx = { (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] }; perms[ idx ] = 1;
+    }
+  }
   // Even-Odd terms
-  for ( auto u = ijkl_even.begin(); u != ijkl_even.end(); ++u )
-    for ( auto v = mnpq_odd.begin(); v != mnpq_odd.end(); ++v )
-      fourpdm( (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] ) = -val;
+  for ( auto u = ijkl_even.begin(); u != ijkl_even.end(); ++u ) {
+    for ( auto v = mnpq_odd.begin(); v != mnpq_odd.end(); ++v ) {
+      idx = { (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] }; perms[ idx ] = -1;
+    }
+  }
   // Odd-Even terms
-  for ( auto u = ijkl_odd.begin(); u != ijkl_odd.end(); ++u )
-    for ( auto v = mnpq_even.begin(); v != mnpq_even.end(); ++v )
-      fourpdm( (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] ) = -val;
+  for ( auto u = ijkl_odd.begin(); u != ijkl_odd.end(); ++u ) {
+    for ( auto v = mnpq_even.begin(); v != mnpq_even.end(); ++v ) {
+      idx = { (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] }; perms[ idx ] = -1;
+    }
+  }
   // Odd-Odd terms
-  for ( auto u = ijkl_odd.begin(); u != ijkl_odd.end(); ++u )
-    for ( auto v = mnpq_odd.begin(); v != mnpq_odd.end(); ++v )
-      fourpdm( (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] ) = val;
+  for ( auto u = ijkl_odd.begin(); u != ijkl_odd.end(); ++u ) {
+    for ( auto v = mnpq_odd.begin(); v != mnpq_odd.end(); ++v ) {
+      idx = { (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] }; perms[ idx ] = 1;
+    }
+  }
 
+  // Get transpose elements with same parity factors
+  std::map< std::vector<int>, int > trans_perms;
+  for (auto it = perms.begin(); it != perms.end(); ++it) {
+    std::vector<int> indices = it->first;
+    std::reverse( indices.begin(), indices.end() );
+    trans_perms[ indices ] = it->second;
+  }
+
+  // Now bundle them togther
+  for (auto it = trans_perms.begin(); it != trans_perms.end(); ++it) {
+    perms[ it->first ] = it->second;
+  }
+
+  return perms;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Fourpdm_driver::store_npdm_elements( std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements )
+void Fourpdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
-  for (int i=0; i < new_spin_orbital_elements.size(); ++i) {
-    assert( new_spin_orbital_elements[i].first.size() == 8 );
-    int ix = new_spin_orbital_elements[i].first[0];
-    int jx = new_spin_orbital_elements[i].first[1];
-    int kx = new_spin_orbital_elements[i].first[2];
-    int lx = new_spin_orbital_elements[i].first[3];
-    int mx = new_spin_orbital_elements[i].first[4];
-    int nx = new_spin_orbital_elements[i].first[5];
-    int px = new_spin_orbital_elements[i].first[6];
-    int qx = new_spin_orbital_elements[i].first[7];
-    double x = new_spin_orbital_elements[i].second;
-    assign_npdm_antisymmetric(ix, jx, kx, lx, mx, nx, px, qx, x);
+  assert( new_spin_orbital_elements.size() == 70 );
+  // Temporary batches of npdm elements
+  std::map< std::vector<int>, double > spin_batch;
+  std::map< std::vector<int>, double > spatial_batch;
+
+  for (int idx=0; idx < new_spin_orbital_elements.size(); ++idx) {
+    // Get all spin-index permutations
+    std::map< std::vector<int>, int > spin_indices = get_spin_permutations( new_spin_orbital_elements[idx].first );
+    double val = new_spin_orbital_elements[idx].second;
+    for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
+      // Initialize spatial indices
+      std::vector<int> vec;
+      for (int i=0; i < (it->first).size(); ++i)
+        vec.push_back( (it->first)[i]/2 );
+      spatial_batch[ vec ] = 0.0;
+      // Assign temporary batch of spin-orbital elements
+      spin_batch[ it->first ] = it->second * val;
+      // Store significant elements only
+      if ( abs(val) > 1e-14 ) sparse_spin_pdm[ it->first ] = it->second * val;
+    }
   }
 
-  for (int i=0; i < new_spin_orbital_elements.size(); ++i) {
-    assert( new_spin_orbital_elements[i].first.size() == 8 );
-    int ix = new_spin_orbital_elements[i].first[7];
-    int jx = new_spin_orbital_elements[i].first[6];
-    int kx = new_spin_orbital_elements[i].first[5];
-    int lx = new_spin_orbital_elements[i].first[4];
-    int mx = new_spin_orbital_elements[i].first[3];
-    int nx = new_spin_orbital_elements[i].first[2];
-    int px = new_spin_orbital_elements[i].first[1];
-    int qx = new_spin_orbital_elements[i].first[0];
-    double x = new_spin_orbital_elements[i].second;
-    assign_npdm_antisymmetric(ix, jx, kx, lx, mx, nx, px, qx, x);
-  }
+  // Build and store new spatial elements
+  build_spatial_elements( spin_batch, spatial_batch );
+
 }
 
 //===========================================================================================================================================================
 
 }
-

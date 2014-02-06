@@ -7,16 +7,16 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include <algorithm>
-#include "threepdm_driver.h"
+#include "threepdm_container.h"
 
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
-Threepdm_driver::Threepdm_driver( int sites ) : Npdm_driver(3) 
+Threepdm_container::Threepdm_container( int sites )
 {
-  store_full_spin_array_ = true;
-  store_full_spatial_array_ = true;
+  bool store_full_spin_array_ = true;
+  bool store_full_spatial_array_ = true;
 
   if ( store_full_spin_array_ ) {
     threepdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);
@@ -31,7 +31,7 @@ Threepdm_driver::Threepdm_driver( int sites ) : Npdm_driver(3)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_driver::save_npdms(const int& i, const int& j)
+void Threepdm_container::save_npdms(const int& i, const int& j)
 {
 //  save_sparse_array(i,j);
 
@@ -54,7 +54,7 @@ world.barrier();
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_driver::save_npdm_text(const int &i, const int &j)
+void Threepdm_container::save_npdm_text(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
   {
@@ -82,7 +82,7 @@ void Threepdm_driver::save_npdm_text(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_driver::save_spatial_npdm_text(const int &i, const int &j)
+void Threepdm_container::save_spatial_npdm_text(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
   {
@@ -110,7 +110,7 @@ void Threepdm_driver::save_spatial_npdm_text(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_driver::save_npdm_binary(const int &i, const int &j)
+void Threepdm_container::save_npdm_binary(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
   {
@@ -125,7 +125,7 @@ void Threepdm_driver::save_npdm_binary(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
+void Threepdm_container::save_spatial_npdm_binary(const int &i, const int &j)
 {
   if( mpigetrank() == 0)
   {
@@ -140,11 +140,11 @@ void Threepdm_driver::save_spatial_npdm_binary(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_driver::load_npdm_binary(const int &i, const int &j) { assert(false); }
+void Threepdm_container::load_npdm_binary(const int &i, const int &j) { assert(false); }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_driver::accumulate_npdm()
+void Threepdm_container::accumulate_npdm()
 {
 #ifndef SERIAL
   array_6d<double> tmp_recv;
@@ -176,9 +176,9 @@ void Threepdm_driver::accumulate_npdm()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_driver::update_full_spin_array()
+void Threepdm_container::update_full_spin_array()
 {
-  for (auto it = spin_map.begin(); it != spin_map.end(); ++it) {
+  for (auto it = sparse_spin_pdm.begin(); it != sparse_spin_pdm.end(); ++it) {
     int i = (it->first)[0];
     int j = (it->first)[1];
     int k = (it->first)[2];
@@ -221,9 +221,9 @@ void Threepdm_driver::update_full_spin_array()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_driver::update_full_spatial_array()
+void Threepdm_container::update_full_spatial_array()
 {
-  for (auto it = spatial_map.begin(); it != spatial_map.end(); ++it) {
+  for (auto it = sparse_spatial_pdm.begin(); it != sparse_spatial_pdm.end(); ++it) {
     int i = (it->first)[0];
     int j = (it->first)[1];
     int k = (it->first)[2];
@@ -237,41 +237,39 @@ void Threepdm_driver::update_full_spatial_array()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_driver::build_spatial_elements()
+void Threepdm_container::build_spatial_elements( std::map< std::vector<int>, double >& spin_batch, 
+                                                 std::map< std::vector<int>, double >& spatial_batch )
 {
-//FIXME parallelization!
-//  if( mpigetrank() == 0)
-//  {
-    double factor = 1.0;
+  double factor = 1.0;
 
-    for (auto it = spatial_map.begin(); it != spatial_map.end(); ++it) {
-      int i = (it->first)[0];
-      int j = (it->first)[1];
-      int k = (it->first)[2];
-      int l = (it->first)[3];
-      int m = (it->first)[4];
-      int n = (it->first)[5];
-      // Sum over spin indices
-      double val = 0.0;
-      for (int s=0; s<2; s++) {
-        for (int t=0; t<2; t++) {
-          for (int u=0; u<2; u++) {
-            std::vector<int> idx = { 2*i+s, 2*j+t, 2*k+u, 2*l+u, 2*m+t, 2*n+s };
-            val += spin_map[ idx ];
-          }
+  for (auto it = spatial_batch.begin(); it != spatial_batch.end(); ++it) {
+    int i = (it->first)[0];
+    int j = (it->first)[1];
+    int k = (it->first)[2];
+    int l = (it->first)[3];
+    int m = (it->first)[4];
+    int n = (it->first)[5];
+    // Sum over spin indices
+    double val = 0.0;
+    for (int s=0; s<2; s++) {
+      for (int t=0; t<2; t++) {
+        for (int u=0; u<2; u++) {
+          std::vector<int> idx = { 2*i+s, 2*j+t, 2*k+u, 2*l+u, 2*m+t, 2*n+s };
+          val += spin_batch[ idx ];
         }
       }
-      it->second = factor * val;
     }
-// }
+    // Store significant elements only
+    if ( abs(val) > 1e-14 ) sparse_spatial_pdm[ it->first ] = factor * val;
+  }
 
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-std::map< std::vector<int>, int > Threepdm_driver::get_spin_permutations( std::vector<int>& indices )
+std::map< std::vector<int>, int > Threepdm_container::get_spin_permutations( const std::vector<int>& indices )
 {
-
+  assert( indices.size() == 6 );
   std::map< std::vector<int>, int > perms;
   std::vector<int> idx;
   int i = indices[0];
@@ -281,8 +279,8 @@ std::map< std::vector<int>, int > Threepdm_driver::get_spin_permutations( std::v
   int m = indices[4];
   int n = indices[5];
 
-  // The number of possible combinations is (3!)**2 before transpose
-  //-----------------------------------------------------------------
+  // The number of possible combinations is (3!)**2
+  //------------------------------------------------
 
   idx = { i, j, k, l, m, n }; perms[ idx ] =  1;
   idx = { i, j, k, l, n, m }; perms[ idx ] = -1;
@@ -344,55 +342,33 @@ std::map< std::vector<int>, int > Threepdm_driver::get_spin_permutations( std::v
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_driver::screen_sparse_arrays()
-{
-  // Screen spatial elements
-  for (auto it = spatial_map.begin(); it != spatial_map.end(); ) {
-    if ( abs(it->second) < 1e-14 ) {
-      spatial_map.erase(it++); // Note postfix operator
-    }
-    else { ++it; }
-  }
-
-  // Screen spin-orbital elements
-  for (auto it = spin_map.begin(); it != spin_map.end(); ) {
-    if ( abs(it->second) < 1e-14 ) {
-      spin_map.erase(it++); // Note postfix operator
-    }
-    else { ++it; }
-  }
-//FIXME add prints to see if it makes any difference?
-
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Threepdm_driver::store_npdm_elements( std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
+void Threepdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
   assert( new_spin_orbital_elements.size() == 20 );
+  // Temporary batches of npdm elements
+  std::map< std::vector<int>, double > spin_batch;
+  std::map< std::vector<int>, double > spatial_batch;
 
   for (int idx=0; idx < new_spin_orbital_elements.size(); ++idx) {
     // Get all spin-index permutations
     std::map< std::vector<int>, int > spin_indices = get_spin_permutations( new_spin_orbital_elements[idx].first );
-    // Assign batch of spin-orbital 3PDM values
     double val = new_spin_orbital_elements[idx].second;
     for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
-      spin_map[ it->first ] = it->second * val;
-    }
-    // Initialize spatial 3PDM indices
-    for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
-      std::vector<int> idx;
+      // Initialize spatial indices
+      std::vector<int> vec;
       for (int i=0; i < (it->first).size(); ++i)
-         idx.push_back( (it->first)[i]/2 );
-      spatial_map[ idx ] = 0.0;
+        vec.push_back( (it->first)[i]/2 );
+      spatial_batch[ vec ] = 0.0;
+      // Assign temporary batch of spin-orbital elements
+      spin_batch[ it->first ] = it->second * val;
+      // Store significant elements only
+      if ( abs(val) > 1e-14 ) sparse_spin_pdm[ it->first ] = it->second * val;
     }
   }
 
-  // Build and store spatial 3PDM elements at this sweep position
-  build_spatial_elements();
+  // Build and store new spatial elements
+  build_spatial_elements( spin_batch, spatial_batch );
 
-  // Screen away small or zero elements
-  screen_sparse_arrays();
 }
 
 //===========================================================================================================================================================

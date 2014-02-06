@@ -12,42 +12,45 @@ namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
-Nevpt2_pdm_driver::Nevpt2_pdm_driver( int sites ) : Npdm_driver(0) {
-
-  twopdm_driver = boost::shared_ptr<Twopdm_driver>( new Twopdm_driver(sites) );
-  threepdm_driver = boost::shared_ptr<Threepdm_driver>( new Threepdm_driver(sites) );
-  fourpdm_driver = boost::shared_ptr<Fourpdm_driver>( new Fourpdm_driver(sites) );
-
+Nevpt2_pdm_driver::Nevpt2_pdm_driver( int sites )
+{
+  twopdm_container = boost::shared_ptr<Twopdm_container>( new Twopdm_container(sites) );
+  threepdm_container = boost::shared_ptr<Threepdm_container>( new Threepdm_container(sites) );
+  fourpdm_container = boost::shared_ptr<Fourpdm_container>( new Fourpdm_container(sites) );
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Nevpt2_pdm_driver::save_npdms(const int& i, const int& j)
 {
-  twopdm_driver->save_npdms(i,j);
-  threepdm_driver->save_npdms(i,j);
-  fourpdm_driver->save_npdms(i,j);
+  twopdm_container->save_npdms(i,j);
+  threepdm_container->save_npdms(i,j);
+  fourpdm_container->save_npdms(i,j);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void update_A16_matrix( Twopdm_driver& twopdm_driver, Threepdm_driver& Threepdm_driver, Fourpdm_driver& fourpdm_driver ) {
+void update_A16_matrix( Twopdm_container& twopdm_container, Threepdm_container& Threepdm_container, Fourpdm_container& fourpdm_container ) 
+{
   assert(false);
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Nevpt2_pdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos) {
+void Nevpt2_pdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos) 
+{
 
   cout << "Computing all relevent NPDM matrix elements for NEVPT2 at this sweep position\n";
   // Get NPDM elements from this sweep position
-  twopdm_driver->compute_npdm_elements(wavefunctions, big, sweepPos, endPos);
-  threepdm_driver->compute_npdm_elements(wavefunctions, big, sweepPos, endPos);
-  fourpdm_driver->compute_npdm_elements(wavefunctions, big, sweepPos, endPos);
+  
+
+  twopdm_container->compute_npdm_elements(wavefunctions, big, sweepPos, endPos);
+  threepdm_container->compute_npdm_elements(wavefunctions, big, sweepPos, endPos);
+  fourpdm_container->compute_npdm_elements(wavefunctions, big, sweepPos, endPos);
 
   // Increment NEVPT2 matrices with information from this sweep position.
-//  update_A16_matrix( *twopdm_driver, *threepdm_driver, *fourpdm_driver );
-//  update_A22_matrix( twopdm_driver, threepdm_driver, fourpdm_driver );
+//  update_A16_matrix( *twopdm_container, *threepdm_container, *fourpdm_container );
+//  update_A22_matrix( twopdm_container, threepdm_container, fourpdm_container );
 
 }
 

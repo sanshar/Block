@@ -13,6 +13,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "wavefunction.h"
 #include "BaseOperator.h"
 #include "npdm_driver.h"
+#include "twopdm_container.h"
+#include "threepdm_container.h"
+#include "fourpdm_container.h"
 #include "npdm_patterns.h"
 #include "npdm_expectations.h"
 #include "npdm_operator_wrappers.h"
@@ -28,11 +31,23 @@ boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::ve
 
 //===========================================================================================================================================================
 
-Npdm_driver::Npdm_driver(int order) : 
-npdm_order_(order),
-store_full_spin_array_(false),
-store_full_spatial_array_(false)
-{}
+Npdm_driver::Npdm_driver(int order, int sites) : npdm_order_(order)
+{
+   switch (order) {
+   case (1):
+     assert(false);
+     break;
+   case (2):
+     container_ = boost::shared_ptr<Twopdm_container>( new Twopdm_container(sites) );
+     break;
+   case (3):
+     container_ = boost::shared_ptr<Threepdm_container>( new Threepdm_container(sites) );
+     break;
+   case (4):
+     container_ = boost::shared_ptr<Fourpdm_container>( new Fourpdm_container(sites) );
+     break;
+   }
+}
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //
@@ -137,7 +152,7 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
       assert(false);
 
     // Store new npdm elements
-    store_npdm_elements( new_spin_orbital_elements );
+    container_->store_npdm_elements( new_spin_orbital_elements );
   }
 
   assert( ! innerOps.ifs_.is_open() );
@@ -327,7 +342,7 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
   pout << "Current NPDM sweep position = "<< sweepPos+1 << " of " << endPos+1 << "\n";
 
   // Clear sparse arrays of NPDM elements built at single sweep position
-  clear_sparse_arrays();
+  container_->clear_sparse_arrays();
 
   // Initialize class that computes expectation values when sent operator spin-sets from this spinblock
   Npdm::Npdm_expectations npdm_expectations( npdm_order_, wavefunctions.at(0), big );
@@ -337,8 +352,8 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
   loop_over_operator_patterns( npdm_patterns, npdm_expectations, big );
 
   // Update full NPDM in-core spin and spatial arrays if requested
-  if ( store_full_spin_array_ ) update_full_spin_array();
-  if ( store_full_spatial_array_ ) update_full_spatial_array();
+  container_->update_full_spin_array();
+  container_->update_full_spatial_array();
 
   // Print outs
   if (world.rank() == 0) {

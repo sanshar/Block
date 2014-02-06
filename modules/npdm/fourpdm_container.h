@@ -6,29 +6,34 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#ifndef TWOPDM_DRIVER_HEADER_H
-#define TWOPDM_DRIVER_HEADER_H
+#ifndef FOURPDM_CONTAINER_H
+#define FOURPDM_CONTAINER_H
 
-#include "npdm_driver.h"
+#include "npdm_container.h"
+#include "npdm.h"
 
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
-class Twopdm_driver : public Npdm_driver {
+class Fourpdm_container : public Npdm_container {
 
   public:
-    Twopdm_driver( int sites );
-    ~Twopdm_driver() {};
+    Fourpdm_container( int sites );
+    ~Fourpdm_container() {};
   
     // These maps are designed to hold elements computed at one sweep position only, but could still be memory-intensive.
-    std::map< std::tuple<int,int,int,int>, double > spin_map;
-    std::map< std::tuple<int,int,int,int>, double > spatial_map;
-    // Optional arrays to store the full spin and/or spatial 2PDMs in core if memory allows.
-    array_4d<double> twopdm;
-    array_4d<double> spatial_twopdm;
+    std::map< std::vector<int>, double > sparse_spin_pdm;
+    std::map< std::vector<int>, double > sparse_spatial_pdm;
+    // Optional arrays to store the full spin and/or spatial PDMs in core if memory allows.
+    array_8d<double> fourpdm;
+    array_8d<double> spatial_fourpdm;
 
     void save_npdms(const int &i, const int &j);
+    void update_full_spin_array();
+    void update_full_spatial_array();
+    void clear_sparse_arrays() { sparse_spin_pdm.clear(); sparse_spatial_pdm.clear(); }
+    void store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements );
 
   private:
     void save_npdm_text(const int &i, const int &j);
@@ -38,13 +43,13 @@ class Twopdm_driver : public Npdm_driver {
     void load_npdm_binary(const int &i, const int &j);
     void accumulate_npdm();
   
-    void update_full_spin_array();
-    void update_full_spatial_array();
-    void build_spatial_elements();
-    void screen_sparse_arrays();
-    std::map< std::tuple<int,int,int,int>, int > get_spin_permutations( std::vector<int>& indices );
-    void store_npdm_elements(std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements);
-    void clear_sparse_arrays() { spin_map.clear(); spatial_map.clear(); }
+    void get_even_and_odd_perms( const std::vector<int> mnpq, 
+                                 std::vector< std::vector<int> > & even_perms, 
+                                 std::vector< std::vector<int> > & odd_perms );
+    std::map< std::vector<int>, int > get_spin_permutations( const std::vector<int>& indices );
+
+    void build_spatial_elements( std::map< std::vector<int>, double >& spin_batch, 
+                                 std::map< std::vector<int>, double >& spatial_batch );
 
 };
 
