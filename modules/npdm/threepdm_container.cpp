@@ -15,8 +15,10 @@ namespace SpinAdapted{
 
 Threepdm_container::Threepdm_container( int sites )
 {
-  bool store_full_spin_array_ = true;
-  bool store_full_spatial_array_ = true;
+  store_full_spin_array_ = false;
+  store_full_spatial_array_ = true;
+  store_sparse_spin_array_ = false;
+  store_sparse_spatial_array_ = false;
 
   if ( store_full_spin_array_ ) {
     threepdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);
@@ -33,20 +35,21 @@ Threepdm_container::Threepdm_container( int sites )
 
 void Threepdm_container::save_npdms(const int& i, const int& j)
 {
-//  save_sparse_array(i,j);
 
-//  if ( use_full_array_ ) {
-
-//FIXME
+//FIXME parallel    
 boost::mpi::communicator world;
 world.barrier();
     Timer timer;
-    // Combine NPDM elements from all mpi ranks and dump to file
-    accumulate_npdm();
-    save_npdm_text(i, j);
-    save_npdm_binary(i, j);
-    save_spatial_npdm_text(i, j);
-    save_spatial_npdm_binary(i, j);
+    // accumulate_npdm();
+    if ( store_full_spin_array_ ) {
+      save_npdm_text(i, j);
+      save_npdm_binary(i, j);
+    }
+    if ( store_full_spatial_array_ ) {
+      save_spatial_npdm_text(i, j);
+      save_spatial_npdm_binary(i, j);
+    }
+
 world.barrier();
     pout << "3PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 
@@ -176,9 +179,11 @@ void Threepdm_container::accumulate_npdm()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_container::update_full_spin_array()
+void Threepdm_container::update_full_spin_array( std::map< std::vector<int>, double >& spin_batch )
 {
-  for (auto it = sparse_spin_pdm.begin(); it != sparse_spin_pdm.end(); ++it) {
+
+  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
+    assert( (it->first).size() == 6 );
     int i = (it->first)[0];
     int j = (it->first)[1];
     int k = (it->first)[2];
@@ -187,11 +192,11 @@ void Threepdm_container::update_full_spin_array()
     int n = (it->first)[5];
 
     double val = it->second;
-    //if ( abs(val) > 1e-8 ) {
-    //  cout << "so-threepdm val: i,j,k,l,m,n = " 
-    //       << i << "," << j << "," << k << "," << l << "," << m << "," << n
-    //       << "\t\t" << val << endl;
-    //}
+//    if ( abs(val) > 1e-8 ) {
+//      cout << "so-threepdm val: i,j,k,l,m,n = " 
+//           << i << "," << j << "," << k << "," << l << "," << m << "," << n
+//           << "\t\t" << val << endl;
+//    }
 
     // Test for duplicates
     if ( threepdm(i,j,k,l,m,n) != 0.0 && abs(threepdm(i,j,k,l,m,n)-val) > 1e-6) {
@@ -204,7 +209,7 @@ void Threepdm_container::update_full_spin_array()
       assert( false );
     }
   
-    if ( abs(val) < 1e-14 ) return;
+    if ( abs(val) < 1e-14 ) continue;
   
     // If indices are not all unique, then all elements should be zero
     std::vector<int> v = {i,j,k};
@@ -221,28 +226,13 @@ void Threepdm_container::update_full_spin_array()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_container::update_full_spatial_array()
-{
-  for (auto it = sparse_spatial_pdm.begin(); it != sparse_spatial_pdm.end(); ++it) {
-    int i = (it->first)[0];
-    int j = (it->first)[1];
-    int k = (it->first)[2];
-    int l = (it->first)[3];
-    int m = (it->first)[4];
-    int n = (it->first)[5];
-    spatial_threepdm(i,j,k,l,m,n) = it->second;
-  }
-
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
 void Threepdm_container::build_spatial_elements( std::map< std::vector<int>, double >& spin_batch, 
                                                  std::map< std::vector<int>, double >& spatial_batch )
 {
   double factor = 1.0;
 
   for (auto it = spatial_batch.begin(); it != spatial_batch.end(); ++it) {
+    assert( (it->first).size() == 6 );
     int i = (it->first)[0];
     int j = (it->first)[1];
     int k = (it->first)[2];
@@ -260,7 +250,10 @@ void Threepdm_container::build_spatial_elements( std::map< std::vector<int>, dou
       }
     }
     // Store significant elements only
-    if ( abs(val) > 1e-14 ) sparse_spatial_pdm[ it->first ] = factor * val;
+    if ( abs(val) > 1e-14 ) {
+      if ( store_sparse_spatial_array_ ) sparse_spatial_pdm[ it->first ] = factor * val;
+      if ( store_full_spatial_array_ ) spatial_threepdm(i,j,k,l,m,n) = factor * val;
+    }
   }
 
 }
@@ -361,14 +354,13 @@ void Threepdm_container::store_npdm_elements( const std::vector< std::pair< std:
       spatial_batch[ vec ] = 0.0;
       // Assign temporary batch of spin-orbital elements
       spin_batch[ it->first ] = it->second * val;
-      // Store significant elements only
-      if ( abs(val) > 1e-14 ) sparse_spin_pdm[ it->first ] = it->second * val;
+      if ( store_sparse_spin_array_ && (abs(val) > 1e-14) ) sparse_spin_pdm[ it->first ] = it->second * val;
     }
   }
 
   // Build and store new spatial elements
   build_spatial_elements( spin_batch, spatial_batch );
-
+  if ( store_full_spin_array_ ) update_full_spin_array( spin_batch );
 }
 
 //===========================================================================================================================================================

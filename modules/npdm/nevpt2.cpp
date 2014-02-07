@@ -9,32 +9,24 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "nevpt2.h"
 
 namespace SpinAdapted {
-namespace Npdm {
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-array_6d<double> compute_EEE_matrix( Twopdm_driver& twopdm_driver, Threepdm_driver& threepdm_driver) {
-
+array_6d<double> compute_EEE_matrix( Matrix& onepdm, array_4d<double>& twopdm, array_6d<double>& threepdm )
+{
 if( mpigetrank() == 0 ) {
 
   std::cout << "Building spatial <0|EEE|0>\n";
 
-  int dim = threepdm_driver.spatial_threepdm.dim1(); 
+  int dim = threepdm.dim1(); 
+  assert( onepdm.Nrows() == twopdm.dim1() );
   array_6d<double> eee_matrix(dim,dim,dim,dim,dim,dim);
   eee_matrix.Clear();
-
-  // Get 1PDM, 2PDM, 3PDM
-  Matrix onepdm; 
-  int i=0; int j=0;
-  load_onepdm_spatial_binary(onepdm,i,j);
-  array_4d<double>& twopdm = twopdm_driver.spatial_twopdm;
-  array_6d<double>& threepdm = threepdm_driver.spatial_threepdm;
-  assert( onepdm.Nrows() == twopdm.dim1() );
 
   // Output text file
   double factor = 1.0;
   char file[5000];
-  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/EEE_matrix.", i, j,".txt");
+  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/EEE_matrix.", 0, 0,".txt");
   ofstream ofs(file);
   ofs << dim << endl;
 
@@ -71,7 +63,7 @@ if( mpigetrank() == 0 ) {
   ofs.close();
 
   // Save binary matrix
-  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/EEE_matrix.", i, j,".bin");
+  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/EEE_matrix.", 0, 0,".bin");
   std::ofstream ofs2(file, std::ios::binary);
   boost::archive::binary_oarchive save(ofs2);
   save << eee_matrix;
@@ -84,29 +76,21 @@ if( mpigetrank() == 0 ) {
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-array_8d<double> compute_EEEE_matrix( Twopdm_driver& twopdm_driver, Threepdm_driver& threepdm_driver, Fourpdm_driver& fourpdm_driver ) {
-
+array_8d<double> compute_EEEE_matrix( Matrix& onepdm, array_4d<double>& twopdm, array_6d<double>& threepdm, array_8d<double>& fourpdm )
+{
 if( mpigetrank() == 0 ) {
 
   std::cout << "Building spatial <0|EEEE|0>\n";
 
-  int dim = threepdm_driver.spatial_threepdm.dim1(); 
+  int dim = threepdm.dim1(); 
+  assert( onepdm.Nrows() == twopdm.dim1() );
   array_8d<double> eeee_matrix(dim,dim,dim,dim,dim,dim,dim,dim);
   eeee_matrix.Clear();
-
-  // Get 1PDM, 2PDM, 3PDM, 4PDM
-  Matrix onepdm; 
-  int i=0; int j=0;
-  load_onepdm_spatial_binary(onepdm,i,j);
-  array_4d<double>& twopdm = twopdm_driver.spatial_twopdm;
-  array_6d<double>& threepdm = threepdm_driver.spatial_threepdm;
-  array_8d<double>& fourpdm = fourpdm_driver.spatial_fourpdm;
-  assert( onepdm.Nrows() == twopdm.dim1() );
 
   // Output text file
   double factor = 1.0;
   char file[5000];
-  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/EEEE_matrix.", i, j,".txt");
+  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/EEEE_matrix.", 0, 0,".txt");
   ofstream ofs(file);
   ofs << dim << endl;
 
@@ -161,7 +145,7 @@ if( mpigetrank() == 0 ) {
   ofs.close();
 
   // Save binary matrix
-  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/EEEE_matrix.", i, j,".bin");
+  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/EEEE_matrix.", 0, 0,".bin");
   std::ofstream ofs2(file, std::ios::binary);
   boost::archive::binary_oarchive save(ofs2);
   save << eeee_matrix;
@@ -174,8 +158,8 @@ if( mpigetrank() == 0 ) {
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void compute_A16_matrix( int dim, array_8d<double>& eeee ) { 
-
+void compute_A16_matrix( int dim, array_8d<double>& eeee ) 
+{ 
 if( mpigetrank() == 0 ) {
 
   std::cout << "Building NEVPT2 A16 matrix\n";
@@ -220,8 +204,8 @@ if( mpigetrank() == 0 ) {
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void compute_A22_matrix( int dim, array_6d<double>& eee, array_8d<double>& eeee ) { 
-
+void compute_A22_matrix( int dim, array_6d<double>& eee, array_8d<double>& eeee ) 
+{ 
 if( mpigetrank() == 0 ) {
 
   std::cout << "Building NEVPT2 A22 matrix\n";
@@ -268,6 +252,5 @@ if( mpigetrank() == 0 ) {
 
 //===========================================================================================================================================================
 
-}
 }
 

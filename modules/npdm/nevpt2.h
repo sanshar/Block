@@ -12,18 +12,17 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "npdm.h"
 
 namespace SpinAdapted {
-namespace Npdm {
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  array_6d<double> compute_EEE_matrix( Twopdm_driver& twopdm_driver, Threepdm_driver& threepdm_driver );
-  array_8d<double> compute_EEEE_matrix( Twopdm_driver& twopdm_driver, Threepdm_driver& threepdm_driver, Fourpdm_driver& fourpdm_driver );
+  array_6d<double>  compute_EEE_matrix( Matrix& onepdm, array_4d<double>& twopdm, array_6d<double>& threepdm );
+  array_8d<double> compute_EEEE_matrix( Matrix& onepdm, array_4d<double>& twopdm, array_6d<double>& threepdm, array_8d<double>& fourpdm );
+
   void compute_A16_matrix( int dim, array_8d<double>& eeee );
   void compute_A22_matrix( int dim, array_6d<double>& eee, array_8d<double>& eeee );
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-}
 }
 
 #endif

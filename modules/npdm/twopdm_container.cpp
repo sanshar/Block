@@ -14,8 +14,10 @@ namespace SpinAdapted{
 
 Twopdm_container::Twopdm_container( int sites )
 {
-  bool store_full_spin_array_ = true;
-  bool store_full_spatial_array_ = true;
+  store_full_spin_array_ = false;
+  store_full_spatial_array_ = true;
+  store_sparse_spin_array_ = false;
+  store_sparse_spatial_array_ = false;
 
   if ( store_full_spin_array_ ) {
     twopdm.resize(2*sites,2*sites,2*sites,2*sites);
@@ -31,20 +33,21 @@ Twopdm_container::Twopdm_container( int sites )
   
 void Twopdm_container::save_npdms(const int& i, const int& j)
 {
-//  save_sparse_array(i,j);
 
-//  if ( store_full_array_ ) {
-
-//FIXME
+//FIXME parallel    
 boost::mpi::communicator world;
 world.barrier();
     Timer timer;
-    // Combine NPDM elements from all mpi ranks and dump to file
-    accumulate_npdm();
-    save_npdm_text(i, j);
-    save_npdm_binary(i, j);
-    save_spatial_npdm_text(i, j);
-    save_spatial_npdm_binary(i, j);
+    // accumulate_npdm();
+    if ( store_full_spin_array_ ) {
+      save_npdm_text(i, j);
+      save_npdm_binary(i, j);
+    }
+    if ( store_full_spatial_array_ ) {
+      save_spatial_npdm_text(i, j);
+      save_spatial_npdm_binary(i, j);
+    }
+
 world.barrier();
     pout << "2PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 //  }
@@ -174,9 +177,9 @@ void Twopdm_container::accumulate_npdm()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_container::update_full_spin_array()
+void Twopdm_container::update_full_spin_array( std::map< std::tuple<int,int,int,int>, double >& spin_batch ) 
 {
-  for (auto it = sparse_spin_pdm.begin(); it != sparse_spin_pdm.end(); ++it) {
+  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
     int i = std::get<0>( it->first );
     int j = std::get<1>( it->first );
     int k = std::get<2>( it->first );
@@ -196,21 +199,7 @@ void Twopdm_container::update_full_spin_array()
       cout << "earlier value: "<<twopdm(i,j,k,l)<<endl<< "new value:     "<<val<<endl;
       assert( false );
     }
-    twopdm(i,j,k,l) = val;
-  }
-
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Twopdm_container::update_full_spatial_array()
-{
-  for (auto it = sparse_spatial_pdm.begin(); it != sparse_spatial_pdm.end(); ++it) {
-    int i = std::get<0>( it->first );
-    int j = std::get<1>( it->first );
-    int k = std::get<2>( it->first );
-    int l = std::get<3>( it->first );
-    spatial_twopdm(i,j,k,l) = it->second;
+    if ( abs(val) > 1e-14 ) twopdm(i,j,k,l) = val;
   }
 
 }
@@ -236,7 +225,10 @@ void Twopdm_container::build_spatial_elements( std::map< std::tuple<int,int,int,
       }
     }
     // Store significant elements only
-    if ( abs(val) > 1e-14 ) sparse_spatial_pdm[ it->first ] = factor * val;
+    if ( abs(val) > 1e-14 ) {
+      if ( store_sparse_spatial_array_ ) sparse_spatial_pdm[ it->first ] = factor * val;
+      if ( store_full_spatial_array_ ) spatial_twopdm(i,j,k,l) = factor * val;
+    }
   }
 
 }
@@ -289,13 +281,13 @@ void Twopdm_container::store_npdm_elements( const std::vector< std::pair< std::v
       spatial_batch[ std::make_tuple(i/2, j/2, k/2, l/2) ] = 0.0;
       // Assign temporary batch of spin-orbital elements
       spin_batch[ it->first ] = it->second * val;
-      // Store significant elements only
-      if ( abs(val) > 1e-14 ) sparse_spin_pdm[ it->first ] = it->second * val;
+      if ( store_sparse_spin_array_ && (abs(val) > 1e-14) ) sparse_spin_pdm[ it->first ] = it->second * val;
     }
   }
 
   // Build and store new spatial elements
   build_spatial_elements( spin_batch, spatial_batch );
+  if ( store_full_spin_array_ ) update_full_spin_array( spin_batch );
 
 }
 

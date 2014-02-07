@@ -8,7 +8,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include "npdm.h"
 #include "npdm_driver.h"
-//#include "nevpt2_pdm_driver.h"
+#include "nevpt2_npdm_driver.h"
 #include "sweeptwopdm.h"  // For old version of 2pdm
 
 void dmrg(double sweep_tol);
@@ -146,7 +146,6 @@ double npdm_do_one_sweep(Npdm_driver_base& npdm_driver, SweepParams &sweepParams
   for (int i=0; i<nroots; i++) {
 //FIXME only allows for one root at present (actually, should be trivial to change...?)
 assert(i==0);
-//MAW    save_npdm_binary(i, i); 
 
     // Loop over all block sites
     for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) {
@@ -199,6 +198,8 @@ assert(i==0);
     }
   }
 
+  npdm_driver.save_data();
+
   //for(int j=0;j<nroots;++j)
   {int j = state;
     pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
@@ -206,7 +207,6 @@ assert(i==0);
   }
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
   pout << "\t\t\t ============================================================================ " << endl;
-
 
   // Update the static number of iterations
   ++sweepParams.set_sweep_iter();
@@ -277,7 +277,7 @@ void npdm( int npdm_order )
       } 
       else {
         // Compute twopdm with general npdm code
-        Npdm_driver twopdm_driver( 2, dmrginp.last_site() );
+        Twopdm_driver twopdm_driver( dmrginp.last_site() );
         npdm_do_one_sweep(twopdm_driver, sweepParams, false, direction, false, 0, state);
       }
     }
@@ -285,14 +285,14 @@ void npdm( int npdm_order )
   case (3):
     // Compute threepdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
-      Npdm_driver threepdm_driver( 3, dmrginp.last_site() );
+      Threepdm_driver threepdm_driver( dmrginp.last_site() );
       npdm_do_one_sweep(threepdm_driver, sweepParams, false, direction, false, 0, state);
     }
     break;
   case (4):
     // Compute fourpdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
-      Npdm_driver fourpdm_driver( 4, dmrginp.last_site() );
+      Fourpdm_driver fourpdm_driver( dmrginp.last_site() );
       npdm_do_one_sweep(fourpdm_driver, sweepParams, false, direction, false, 0, state);
     }
     break;
@@ -301,18 +301,9 @@ void npdm( int npdm_order )
       // Compute full onepdm matrix
       SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
       // Compute NEVPT2 NPDM matrix elements incrementally along the sweep
-//      Nevpt2_pdm_driver nevpt2_pdm_driver( dmrginp.last_site() );
-//      npdm_do_one_sweep(nevpt2_pdm_driver, sweepParams, false, direction, false, 0, state);
-
-
-//      // Compute EEE matrix elements
-//      array_6d<double> eee = compute_EEE_matrix( *nevpt2_pdm_driver.twopdm_driver, *nevpt2_pdm_driver.threepdm_driver );
-//      // Compute EEEE matrix elements
-//      array_8d<double> eeee = compute_EEEE_matrix( *nevpt2_pdm_driver.twopdm_driver, *nevpt2_pdm_driver.threepdm_driver, *nevpt2_pdm_driver.fourpdm_driver );
-//      // Compute NEVPT2 A-matrix elements
-//      compute_A16_matrix( nevpt2_pdm_driver.twopdm_driver->spatial_twopdm.dim1(), eeee );
-//      // Compute NEVPT2 A-matrix elements
-//      compute_A22_matrix( nevpt2_pdm_driver.twopdm_driver->spatial_twopdm.dim1(), eee, eeee );
+      Nevpt2_npdm_driver nevpt2_npdm_driver( dmrginp.last_site() );
+      npdm_do_one_sweep(nevpt2_npdm_driver, sweepParams, false, direction, false, 0, state);
+      nevpt2_npdm_driver.compute_matrices();
     }
     break;
   }
