@@ -27,6 +27,7 @@ template<class T> struct para_sparse_vector;
 template<class T> class para_array_0d;
 template<class T> class para_array_1d;
 template<class T> class para_array_triang_2d;
+template<class T> class para_array_2d;
 
 // utility functions for communication
 inline int processorindex(int i)
@@ -365,6 +366,10 @@ inline int trimap(int i, int j, int length, bool ut = false)
   return 0;
 }
 
+inline int map(int i, int j, int length) {
+  return i*length + j;
+}
+
 /// parallel 2d lower triangular array class
 /**
  * This has a flat layout; the corresponding 1d storage can the be distributed
@@ -611,6 +616,240 @@ private:
 
 };
 
+template<class T> class para_array_2d : public para_sparse_vector<T>
+{
+public:
+  para_array_2d() : stored_local(true) {}
+
+  /// exposes storage
+  const std::vector<T>& get_store() const { return store; }	/**< deprecated */
+
+  /// clears all elements
+  void clear()
+  {
+    global_indices.clear();
+    global_indices_map.clear();
+    local_indices.clear();
+    local_indices_map.clear();
+    global_index_pair.clear();
+    local_index_pair.clear(); 
+    store.clear();
+    length = 0;
+  }
+
+  /// set storage flags
+  bool& set_local() { return stored_local; }
+  /// is storage distributed?
+  bool is_distributed() const { return !stored_local; }
+  /// is storage local?
+  bool is_local() const { return stored_local; }
+
+  const std::vector<int>& get_indices() const { return global_indices; }
+
+  std::vector<int>& get_local_indices() { return local_indices; }
+
+
+  /// number of non-null elements in local storage
+  int local_nnz() const { return local_indices.size(); }
+
+  /// number of non-null elements in global storage
+  int global_nnz() const { return global_indices.size(); }
+
+  /// ith element of local storage
+  T& get_local_element(int i)
+  {
+    return store[local_indices[i]];
+  }
+  const T& get_local_element(int i) const
+  {
+    return store[local_indices[i]];
+  }
+
+  T& get_global_element(int i)
+  {
+    return store[global_indices[i]];
+  }
+
+  /// ith element of global storage
+  const T& get_global_element(int i) const
+  {
+    return store[global_indices[i]];
+  }
+
+
+  T& get(const std::vector<int>& orbs)
+  {
+    return (*this)(orbs[0], orbs[1]);
+  }
+
+  /// returns elements at orbs
+  T& operator()(const std::vector<int>& orbs)
+  {
+    int i = orbs[0]; int j = orbs[1];
+    return (*this)(i, j);
+  }
+  const T& operator()(const std::vector<int>& orbs) const
+  {
+    int i = orbs[0]; int j = orbs[1];
+    return (*this)(i, j);
+  }
+  /// returns elements at i, j
+  T& operator()(int i, int j, int k=-1)
+  {
+    assert(has(i, j));
+    if (!stored_local)
+      assert(has_local_index(map(i, j)));
+    return store[map(i, j)];
+  }
+  const T& operator()(int i, int j, int k=-1) const
+  {
+    assert (i >= j);
+    assert(has(i, j));
+    if (!stored_local)
+      assert(has_local_index(map(i, j)));
+    return store[map(i, j)];
+  }
+
+  /// query whether elements are non-null
+  bool has(int i, int j, int k=-1) const { return has_global_index(map(i, j)); }
+  bool has(const std::vector<int>& orbs) const
+  {
+    assert(orbs.size() == 2);
+    return has(orbs[0], orbs[1]);
+  }
+  bool has_global_index(int i, int j, int k=-1) const
+  {
+    return has_global_index(map(i, j));
+  }
+  bool has_local_index(int i, int j, int k=-1) const
+  {
+    return has_local_index(map(i, j));
+  }
+  bool has_global_index(int i) const
+  {
+    return (global_indices_map[i] != -1);
+  }
+  bool has_local_index(int i) const
+  {
+    return (local_indices_map[i] != -1);
+  }
+  
+  friend std::ostream& operator<<(std::ostream& os, para_array_2d& op)
+  {
+    abort();
+    return os;
+  }
+
+  /// returns 1d index from i, j
+  int map(int i, int j) const
+  {
+    return ::map(i, j, length);
+  }
+
+  /// returns i j for ith element of global storage
+  std::pair<int, int> unmap_global_index(int i)
+  {
+    return global_index_pair[i];
+  }
+  /// returns i j for ith element of local storage
+  const std::pair<int, int> unmap_local_index(int i) const
+  {
+    return local_index_pair[i];
+  }
+
+  para_array_triang_2d<T>* clone() const { return new para_array_2d<T>(*this); }
+
+  void add_local_indices(int i, int j)
+  {
+    int index = map(i, j);
+    local_indices.push_back(index);
+    local_indices_map[index]= index;
+    // I am not updating local_index_pair because it seems to do nothing
+    //local_index_pair.push_back(global_index_pair[index]);
+  }
+
+  /**
+  * make a sparse para_array_triang2d with specified
+  * non-zero indices
+  *
+  * see corresponding set_indices member fn.
+  */
+  void set_pair_indices(const std::vector<std::pair<int, int> >& occupied, 
+			int len)
+  {
+    clear();
+
+    length = len;
+
+    int length_1d = len*len;
+
+    /* this part is different from set_indices */
+    for (std::vector<std::pair<int, int> >::const_iterator ptr = occupied.begin(); 
+	 ptr != occupied.end(); ++ptr)
+      {
+	global_indices.push_back(map(ptr->first, ptr->second));
+	global_index_pair.push_back(*ptr);
+      }
+				 
+    global_indices_map.resize(length_1d);
+    for (int i = 0; i < length_1d; ++i) global_indices_map[i] = -1;
+    for (int i = 0; i < global_indices.size(); ++i)
+      global_indices_map[global_indices[i]] = global_indices[i];
+    
+    store.resize(length_1d);
+
+    // now setup local indices
+    setup_local_indices();
+  }
+
+private:
+  /**
+   * having filled out the global indices, assign indices
+   * to individual processors (i.e. local indices)
+   */
+  void setup_local_indices()
+  {
+    int length_1d = tristore(length);
+    if (stored_local)
+      {
+	local_indices = global_indices;
+	local_indices_map = global_indices_map;
+	local_index_pair = global_index_pair;
+      }
+    else
+      {
+	local_indices_map.resize(length_1d);
+	int rank = mpigetrank();
+	for (int i = 0; i < length_1d; ++i) local_indices_map[i] = -1;
+	for (int i = 0; i < global_indices.size(); ++i)
+	  if (processorindex(global_indices[i]) == rank)
+	    {
+	      local_indices.push_back(global_indices[i]);
+	      local_indices_map[global_indices[i]] = global_indices[i];
+	      local_index_pair.push_back(global_index_pair[i]);
+	    }
+
+      }  
+  }
+  friend class boost::serialization::access;
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version)
+  {
+    ar & stored_local & length & global_indices & global_indices_map
+       & local_indices & local_indices_map & global_index_pair & local_index_pair & store;
+  }
+
+  std::vector<int> global_indices;
+  std::vector<int> global_indices_map;
+  std::vector<int> local_indices;
+  std::vector<int> local_indices_map;
+  std::vector<std::pair<int, int> > global_index_pair; 
+  std::vector<std::pair<int, int> > local_index_pair;
+  std::vector<T> store;
+  bool stored_local;
+  int length;
+
+};
 
 
 

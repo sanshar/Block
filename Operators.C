@@ -1142,20 +1142,21 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
   initiateMultiThread(this, op_array, op_distributed, MAX_THRD);
 
 
-  boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_rep(HAM, deltaQuantum);
+  boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_rep(HAM, deltaQuantum); // H_A
   
   SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
 
   if (rightBlock->get_sites().size() == 0) {
     //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
     accumulateMultiThread(this, op_array, op_distributed, MAX_THRD);
-    dmrginp.makeopsT -> stop();    
+    dmrginp.makeopsT -> stop();
     return;
   }
 
-  op = rightBlock->get_op_rep(HAM, deltaQuantum);
+  op = rightBlock->get_op_rep(HAM, deltaQuantum);  // H_B
   SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);  
 
+  // CCD_A*D_B + CCD_B*D_A + c.c. 
   op_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? op_array : op_distributed;
   Functor f = boost::bind(&opxop::cxcddcomp, leftBlock, _1, &b, op_add); 
   for_all_multithread(rightBlock->get_op_array(CRE), f);
@@ -1164,7 +1165,7 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
   f = boost::bind(&opxop::cxcddcomp, rightBlock, _1, &b, op_add); 
   for_all_multithread(leftBlock->get_op_array(CRE), f);  
 
-  if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {    
+  if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY || dmrginp.hamiltonian() == BCS) {    
     op_add =  (otherBlock->get_op_array(CRE_DESCOMP).is_local() && loopBlock->get_op_array(CRE_DES).is_local())? op_array : op_distributed;
     f = boost::bind(&opxop::cdxcdcomp, otherBlock, _1, &b, op_add);
     for_all_multithread(loopBlock->get_op_array(CRE_DES), f);

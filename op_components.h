@@ -26,7 +26,7 @@ class SpinBlock;
 
 //********************************
 //choose the type of array for different types of Operators
-template <class T> struct ChooseArray {
+template <class T, int i> struct ChooseArray {
   typedef para_array_1d<std::vector<boost::shared_ptr<SparseMatrix> > > ArrayType;
 };
 template <> struct ChooseArray<Cre> {
@@ -39,7 +39,7 @@ template <> struct ChooseArray<CreCre> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<CreCre> > > ArrayType;
 };
 template <> struct ChooseArray<CreDesComp> {
-  typedef para_array_triang_2d<std::vector<boost::shared_ptr<CreDesComp> > > ArrayType;
+    typedef para_array_triang_2d<std::vector<boost::shared_ptr<CreDesComp> > > ArrayType;
 };
 template <> struct ChooseArray<DesDesComp> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<DesDesComp> > > ArrayType;
