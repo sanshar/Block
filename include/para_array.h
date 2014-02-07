@@ -366,7 +366,7 @@ inline int trimap(int i, int j, int length, bool ut = false)
   return 0;
 }
 
-inline int map(int i, int j, int length) {
+inline int squaremap(int i, int j, int length) {
   return i*length + j;
 }
 
@@ -698,20 +698,20 @@ public:
   {
     assert(has(i, j));
     if (!stored_local)
-      assert(has_local_index(map(i, j)));
-    return store[map(i, j)];
+      assert(has_local_index(squaremap(i, j)));
+    return store[squaremap(i, j)];
   }
   const T& operator()(int i, int j, int k=-1) const
   {
     assert (i >= j);
     assert(has(i, j));
     if (!stored_local)
-      assert(has_local_index(map(i, j)));
-    return store[map(i, j)];
+      assert(has_local_index(squaremap(i, j)));
+    return store[squaremap(i, j)];
   }
 
   /// query whether elements are non-null
-  bool has(int i, int j, int k=-1) const { return has_global_index(map(i, j)); }
+  bool has(int i, int j, int k=-1) const { return has_global_index(squaremap(i, j)); }
   bool has(const std::vector<int>& orbs) const
   {
     assert(orbs.size() == 2);
@@ -719,11 +719,11 @@ public:
   }
   bool has_global_index(int i, int j, int k=-1) const
   {
-    return has_global_index(map(i, j));
+    return has_global_index(squaremap(i, j));
   }
   bool has_local_index(int i, int j, int k=-1) const
   {
-    return has_local_index(map(i, j));
+    return has_local_index(squaremap(i, j));
   }
   bool has_global_index(int i) const
   {
@@ -741,9 +741,9 @@ public:
   }
 
   /// returns 1d index from i, j
-  int map(int i, int j) const
+  int squaremap(int i, int j) const
   {
-    return ::map(i, j, length);
+    return ::squaremap(i, j, length);
   }
 
   /// returns i j for ith element of global storage
@@ -757,11 +757,11 @@ public:
     return local_index_pair[i];
   }
 
-  para_array_triang_2d<T>* clone() const { return new para_array_2d<T>(*this); }
+  para_array_2d<T>* clone() const { return new para_array_2d<T>(*this); }
 
   void add_local_indices(int i, int j)
   {
-    int index = map(i, j);
+    int index = squaremap(i, j);
     local_indices.push_back(index);
     local_indices_map[index]= index;
     // I am not updating local_index_pair because it seems to do nothing
@@ -787,7 +787,7 @@ public:
     for (std::vector<std::pair<int, int> >::const_iterator ptr = occupied.begin(); 
 	 ptr != occupied.end(); ++ptr)
       {
-	global_indices.push_back(map(ptr->first, ptr->second));
+	global_indices.push_back(squaremap(ptr->first, ptr->second));
 	global_index_pair.push_back(*ptr);
       }
 				 
