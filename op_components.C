@@ -160,8 +160,7 @@ namespace SpinAdapted {
 	    op.set_initialised() = true;
 	    op.set_fermion() = false;
 	    op.set_deltaQuantum(1, spinvec[j]);
-        }      
-	  }
+      }      
 	}
   }
   

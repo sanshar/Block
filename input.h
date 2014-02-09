@@ -319,7 +319,17 @@ class Input {
       return m_molecule_quantum;
     else 
       return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), total_symmetry_number());
-  }  
+  }
+  vector<SpinQuantum> effective_molecule_quantum_vec() {
+    vector<SpinQuantum> q;
+    if (!m_Bogoliubov)
+      q.push_back(effective_molecule_quantum());
+    else
+      for (int i = 0; i < (total_particle_number() + total_spin_number().getirrep()) / 2; ++i) {
+        q.push_back(SpinQuantum(i*2, SpinSpace(0), total_symmetry_number()));
+      }
+    return q;
+  }
   std::vector<double>& get_orbenergies() {return m_orbenergies;}
   int getHFQuanta(const SpinBlock& b) const;
   const bool &do_cd() const {return m_do_cd;}

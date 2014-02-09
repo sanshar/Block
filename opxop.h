@@ -14,6 +14,7 @@ namespace opxop
   
   void cxcddcomp_d(const SpinBlock* otherblock, std::vector< boost::shared_ptr<SparseMatrix> >& op1, const SpinBlock* b, DiagonalMatrix* e);
   void cdxcdcomp_d(const SpinBlock* otherblock, std::vector< boost::shared_ptr<SparseMatrix> >& op1, const SpinBlock* b, DiagonalMatrix* e);
+  void cdxcdcomp_no_symm_d(const SpinBlock* otherblock, std::vector<boost::shared_ptr<SparseMatrix> >& opvec1, const SpinBlock* b, DiagonalMatrix* e);
   void ddxcccomp_d(const SpinBlock* otherblock, std::vector< boost::shared_ptr<SparseMatrix> >& op1, const SpinBlock* b, DiagonalMatrix* e);
   
 
@@ -23,6 +24,7 @@ namespace opxop
 
   void cxcddcomp(const SpinBlock* otherblock, std::vector< boost::shared_ptr<SparseMatrix> >& op1, const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q);
   void cdxcdcomp(const SpinBlock* otherblock, std::vector< boost::shared_ptr<SparseMatrix> >& op1, const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q);
+  void cdxcdcomp_no_symm(const SpinBlock* otherblock, std::vector< boost::shared_ptr<SparseMatrix> >& op1, const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q);  
   void ddxcccomp(const SpinBlock* otherblock, std::vector< boost::shared_ptr<SparseMatrix> >& op1, const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q);
   /*
   void cxddcomp(const SpinBlock* otherBlock, std::vector< boost::shared_ptr<SparseMatrix> >& op1, const SpinBlock* b, int I, SparseMatrix* o, double scale);

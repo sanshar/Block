@@ -233,7 +233,7 @@ public:
   Matrix& operator()(int i, int j) { return opdata->operator()(j, i); }
   char conjugacy() const { return opdata->conjugacy(); }
   double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const {  return 1.0; } // FIXME is it right?
-  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata;} // FIXME what does this function mean? is it right?
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata;}
   void build(const SpinBlock& b){};
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b){return 0.0;}
 };

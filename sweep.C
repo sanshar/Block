@@ -106,7 +106,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 					sweepParams.get_onedot(), nexact, useSlater, !dot_with_sys, true, dot_with_sys);
   }
-  SpinBlock big;
+  SpinBlock big;  // new_sys = sys+sys_dot; new_env = env+env_dot; big = new_sys + new_env then renormalize to find new_sys(new)
   if (dot_with_sys) {
     newSystem.set_loopblock(true);
     system.set_loopblock(false);
@@ -400,7 +400,7 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   int nquanta = newSystem.get_stateInfo().quanta.size();
   std::vector<DiagonalMatrix > energies(nquanta);
   std::vector<Matrix> rotateMatrix(nquanta);
-  DensityMatrix transformmatrix; 
+  DensityMatrix transformmatrix; // FIXME pay attention to this: density matrix with certain quantum
   transformmatrix.allocate(newSystem.get_stateInfo());
   SpinQuantum q(0,SpinSpace(0),IrrepSpace(0));
 

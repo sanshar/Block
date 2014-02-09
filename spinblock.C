@@ -338,7 +338,7 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   dmrginp.s0time -> start();
 
   boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0];
-  TensorMultiply(leftBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);
+  TensorMultiply(leftBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
 
   op = rightBlock->get_op_array(HAM).get_local_element(0)[0];
   TensorMultiply(rightBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum(), 1.0, MAX_THRD);  
@@ -364,7 +364,7 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
 
   dmrginp.twoelecT -> start();
 
-  if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
+  if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY || dmrginp.hamiltonian() == BCS) {
     
     dmrginp.s0time -> start();
     v_add =  otherBlock->get_op_array(CRE_DESCOMP).is_local() ? v_array : v_distributed;
@@ -376,6 +376,15 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
     for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);
     dmrginp.s0time -> stop();
   }
+  
+  if (dmrginp.hamiltonian() == BCS) {
+    dmrginp.s0time -> start();
+    v_add = otherBlock->get_op_array(CRE_DESCOMP_No_Symm).is_local() ? v_array : v_distributed;
+    f = boost::bind(&opxop::cdxcdcomp_no_symm, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
+    for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
+    dmrginp.s0time -> stop();    
+  }
+
   dmrginp.twoelecT -> stop();
 
   accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
@@ -404,35 +413,35 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
   int size = world.size();
 #endif
 
-  std::vector< std::vector<int> > indices;
   e_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? e_array : e_distributed;
-  indices = rightBlock->get_op_array(CRE).get_array();
   Functor f = boost::bind(&opxop::cxcddcomp_d, leftBlock, _1, this, e_add); 
   for_all_multithread(rightBlock->get_op_array(CRE), f); //not needed in diagonal
 
 
   e_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? e_array : e_distributed;
-  indices = leftBlock->get_op_array(CRE).get_array();
   f = boost::bind(&opxop::cxcddcomp_d, rightBlock, _1, this, e_add); 
   for_all_multithread(leftBlock->get_op_array(CRE), f);  //not needed in diagonal
 
 
 
-  if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
+  if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY || dmrginp.hamiltonian() == BCS) {
     
     e_add =  otherBlock->get_op_array(CRE_DESCOMP).is_local() ? e_array : e_distributed;
-    indices = loopBlock->get_op_array(CRE_DES).get_array();
     f = boost::bind(&opxop::cdxcdcomp_d, otherBlock, _1, this, e_add);
     for_all_multithread(loopBlock->get_op_array(CRE_DES), f);  
-
     
     e_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? e_array : e_distributed;
-    indices = loopBlock->get_op_array(CRE_CRE).get_array();
     f = boost::bind(&opxop::ddxcccomp_d, otherBlock, _1, this, e_add);
     for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);  //not needed in diagonal 
 
   }
 
+  if ( dmrginp.hamiltonian() == BCS) {
+    e_add =  otherBlock->get_op_array(CRE_DESCOMP_No_Symm).is_local() ? e_array : e_distributed;
+    f = boost::bind(&opxop::cdxcdcomp_no_symm_d, otherBlock, _1, this, e_add);
+    for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
+  }
+  
   accumulateMultiThread(&e, e_array, e_distributed, MAX_THRD);
 
 }
