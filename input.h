@@ -139,7 +139,7 @@ class Input {
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & m_thrds_per_node;
+    ar & m_thrds_per_node & m_spinAdapted;
     ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz;
     ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occ_user & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule;
