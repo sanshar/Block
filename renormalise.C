@@ -84,7 +84,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   dmrginp.davidsonT -> stop();
 
   dmrginp.rotmatrixT -> start();
-  DensityMatrix tracedMatrix;
+  DensityMatrix tracedMatrix(stateInfo);
   tracedMatrix.allocate(stateInfo);
 
   bool normalnoise = warmUp;
@@ -124,7 +124,11 @@ double SpinBlock::makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& 
   DensityMatrix transformmatrix;
   transformmatrix.allocate(stateInfo);
   std::vector<DiagonalMatrix> eigenMatrix;
-  diagonalise_dm(tracedMatrix, transformmatrix, eigenMatrix);
+
+  if (dmrginp.hamiltonian() == BCS)
+    svd_densitymat(tracedMatrix, transformmatrix, eigenMatrix);
+  else
+    diagonalise_dm(tracedMatrix, transformmatrix, eigenMatrix);
 
   vector<pair<int, int> > inorderwts;
   vector<vector<int> > wtsbyquanta;

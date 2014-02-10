@@ -25,7 +25,26 @@ public:
     orbs = std::vector<int>();
     initialised = true;
     fermion = false;
-    vector<SpinQuantum> deltaQuantum(1, SpinQuantum(0, SpinSpace(0), IrrepSpace(0)));
+    deltaQuantum.assign(1, SpinQuantum(0, SpinSpace(0), IrrepSpace(0)));
+  }
+  DensityMatrix(const StateInfo& s) {
+    orbs = std::vector<int>();
+    initialised = true;
+    fermion = false;
+    deltaQuantum.assign(1, SpinQuantum(0, SpinSpace(0), IrrepSpace(0)));   
+    if (dmrginp.hamiltonian() == BCS) {
+      int n_min = 100000, n_max = 0;
+      for (int i = 0; i < s.quanta.size(); ++i) {
+        if (s.quanta[i].get_n() > n_max)
+          n_max = s.quanta[i].get_n();
+        if (s.quanta[i].get_n() < n_min)
+          n_min = s.quanta[i].get_n();
+      }
+      for (int dn=2; dn<=n_max-n_min; dn+=2) {
+        deltaQuantum.push_back(SpinQuantum(dn, SpinSpace(0), IrrepSpace(0)));
+        deltaQuantum.push_back(SpinQuantum(-dn, SpinSpace(0), IrrepSpace(0)));
+      }
+    }
   }
   void makedensitymatrix(const std::vector<Wavefunction>& wave_solutions, SpinBlock &big, const std::vector<double> &wave_weights,
 			 const double noise, const double additional_noise, bool warmup);

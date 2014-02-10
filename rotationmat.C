@@ -13,6 +13,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <include/sortutils.h>
 #include <boost/serialization/vector.hpp>
 #include "pario.h"
+#include "cmath"
 using namespace boost;
 using namespace std;
 
@@ -251,7 +252,7 @@ void SpinAdapted::diagonalise_dm(SparseMatrix& tracedMatrix, SparseMatrix& trans
   for (int tQ = 0; tQ < nquanta; ++tQ)
     {
       int nStates = tracedMatrix.operator_element(tQ, tQ).Nrows ();
-      DiagonalMatrix weights (nStates); 
+      DiagonalMatrix weights (nStates);
 #ifdef USELAPACK
       diagonalise(tracedMatrix.operator_element(tQ, tQ), weights, transformMatrix.operator_element(tQ, tQ));
 #else
@@ -264,6 +265,38 @@ void SpinAdapted::diagonalise_dm(SparseMatrix& tracedMatrix, SparseMatrix& trans
           weights.element(i,i) = 0.;
       eigenMatrix [tQ] = weights;
     }  
+}
+
+void SpinAdapted::svd_densitymat(SparseMatrix& tracedMatrix, SparseMatrix& transformMatrix, std::vector<DiagonalMatrix>& eigenMatrix) {
+  // SVD of matrix M=(A,B,C)=USV^T
+  // since MM^T=AA^T+BB^T+CC^T=USS^TU^T, we don't have to explicitly construct M
+  int nquanta = tracedMatrix.nrows();
+  eigenMatrix.resize(nquanta);
+  vector<double> totalquantaweights(nquanta);
+  for (int tQ = 0; tQ < nquanta; ++tQ) {
+    int nStates = tracedMatrix.operator_element(tQ, tQ).Nrows ();
+    DiagonalMatrix weights(nStates);
+    Matrix M(nStates, nStates);
+    M = 0.;
+    for (int sQ = 0; sQ < nquanta; ++sQ)
+      if (tracedMatrix.allowed(tQ, sQ))
+        M += tracedMatrix.operator_element(tQ, tQ) * tracedMatrix.operator_element(tQ, tQ).t();
+
+#ifdef USELAPACK
+    diagonalise(M, weights, transformMatrix.operator_element(tQ, tQ));
+#else
+    SymmetricMatrix dM (nStates);
+    dM << M;
+    EigenValues(dM, weights, transformMatrix.operator_element(tQ,tQ));
+#endif
+    for (int i=0; i<weights.Nrows(); ++i) {
+      if(weights.element(i,i) < 1.e-28)
+        weights.element(i,i) = 0.;
+      else
+        weights.element(i,i) = sqrt(weights.element(i,i));
+    }
+    eigenMatrix[tQ] = weights;    
+  }
 }
 
 void SpinAdapted::sort_weights(std::vector<DiagonalMatrix>& eigenMatrix, vector<pair<int, int> >& inorderwts, vector<vector<int> >& weightsbyquanta)
