@@ -67,7 +67,7 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 #endif
 
   std::vector<Matrix> rotateMatrix;
-  DensityMatrix tracedMatrix;
+  DensityMatrix tracedMatrix(newSystem.get_stateInfo());
   tracedMatrix.allocate(newSystem.get_stateInfo());
   tracedMatrix.makedensitymatrix(solution, big, std::vector<double>(1,1.0), 0.0, 0.0, false);
   rotateMatrix.clear();
@@ -87,27 +87,45 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 
   Matrix onepdm;
   load_onepdm_binary(onepdm, state ,state);
+  Matrix pairmat;
+  if (dmrginp.hamiltonian() == BCS)
+    load_pairmat_binary(pairmat, state ,state);
 
   if (sweepParams.get_block_iter() == 0) {
     //this is inface a combination of  2_0_0, 1_1_0 and 0_2_0
     pout << "compute 2_0_0"<<endl;
     compute_one_pdm_2_0_0(solution[0], solution[0], big, onepdm);
+    if (dmrginp.hamiltonian() == BCS)
+      compute_pair_2_0_0(solution[0], solution[0], big, pairmat);
     pout << "compute 1_1_0"<<endl;
     compute_one_pdm_1_1_0(solution[0], solution[0], big, onepdm);
+    if (dmrginp.hamiltonian() == BCS)    
+      compute_pair_1_1_0(solution[0], solution[0], big, pairmat);
   }
 
   pout << "compute 0_2_0"<<endl;
   compute_one_pdm_0_2_0(solution[0], solution[0], big, onepdm);
+  if (dmrginp.hamiltonian() == BCS)  
+    compute_pair_0_2_0(solution[0], solution[0], big, pairmat);  
   pout << "compute 1_1"<<endl;
   compute_one_pdm_1_1(solution[0], solution[0], big, onepdm);
+  if (dmrginp.hamiltonian() == BCS)  
+    compute_pair_1_1(solution[0], solution[0], big, pairmat);
 
   if (sweepParams.get_block_iter()  == sweepParams.get_n_iters() - 1) {
     pout << "compute 0_2"<<endl;
     compute_one_pdm_0_2(solution[0], solution[0], big, onepdm);
+    if (dmrginp.hamiltonian() == BCS)    
+      compute_pair_0_2(solution[0], solution[0], big, pairmat);    
   }
 
   accumulate_onepdm(onepdm);
   save_onepdm_binary(onepdm, state, state);
+
+  if (dmrginp.hamiltonian() == BCS) {
+    accumulate_onepdm(pairmat);
+    save_pairmat_binary(pairmat, state, state);
+  }
 
   SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
 
@@ -128,6 +146,12 @@ double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
   int pdmsize = dmrginp.spinAdapted() ? 2*dmrginp.last_site() : dmrginp.last_site();
   Matrix onepdm(pdmsize, pdmsize);onepdm=0.0;
+  Matrix pairmat;
+  if (dmrginp.hamiltonian() == BCS) {
+    pairmat.ReSize(pdmsize, pdmsize);
+    pairmat = 0.0;
+    save_pairmat_binary(pairmat, state, state);
+  }
 
   save_onepdm_binary(onepdm, state ,state);
 
@@ -187,6 +211,13 @@ double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   save_onepdm_text(onepdm, state, state);
   save_onepdm_spatial_binary(onepdm, state, state);
 
+  if (dmrginp.hamiltonian() == BCS) {
+    load_pairmat_binary(pairmat, state, state);
+    accumulate_onepdm(pairmat);
+    // FIXME write out text version
+    // only <D{ia}D{jb}> is in the matrix
+    save_pairmat_text(pairmat , state, state);
+  }
   return sweepParams.get_lowest_energy()[0];
 }
 }

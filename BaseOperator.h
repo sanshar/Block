@@ -170,15 +170,15 @@ private:
 public:
   Transposeview(const boost::shared_ptr<SparseMatrix>& opptr) : opdata(opptr) {}
   Transposeview(SparseMatrix& op) { opdata = boost::shared_ptr<SparseMatrix>(&op, boostutils::null_deleter());}
-  std::vector<SpinQuantum> get_deltaQuantum() const {
-    std::vector<SpinQuantum> deltaQuanta = opdata->get_deltaQuantum();
-    for (int i = 0; i < deltaQuanta.size(); ++i) {
-      deltaQuanta[i] = -deltaQuanta[i];
-    }
-    return deltaQuanta;
-  }
   int get_deltaQuantum_size() const { return opdata->get_deltaQuantum_size(); }  
   SpinQuantum get_deltaQuantum(int i) const {return -(opdata->get_deltaQuantum(i));}
+  std::vector<SpinQuantum> get_deltaQuantum() const {
+    std::vector<SpinQuantum> q;
+    for (int i = 0; i < opdata->get_deltaQuantum_size(); ++i) {
+      q.push_back(-opdata->get_deltaQuantum(i));
+    }
+    return q;
+  }
   bool get_fermion() const { return opdata->get_fermion(); }
   bool get_initialised() const { return opdata->get_initialised(); }
   int nrows() const { return opdata->ncols(); }

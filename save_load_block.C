@@ -212,14 +212,13 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   std::vector<int> newQuantaStates;
   std::vector<int> newQuantaMap;
   for (int Q = 0; Q < rotateMatrix.size (); ++Q)
-    {
-      if (rotateMatrix [Q].Ncols () != 0)
-        {
+  {
+    if (rotateMatrix [Q].Ncols () != 0) {
           newQuanta.push_back (stateInfo.quanta [Q]);
           newQuantaStates.push_back (rotateMatrix [Q].Ncols ());
           newQuantaMap.push_back (Q);
-        }
     }
+  }
   StateInfo newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)

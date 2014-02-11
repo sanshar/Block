@@ -18,9 +18,9 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
 {
   if (dmrginp.outputlevel() > 0) 
     mcheck("at the start of block and decimate");
-  // figure out if we are going forward or backwards
   pout << "\t\t\t Performing Blocking"<<endl;
   dmrginp.guessgenT -> start();
+  // figure out if we are going forward or backwards  
   bool forward = (system.get_sites() [0] == 0);
   SpinBlock systemDot;
   int systemDotStart, systemDotEnd;
