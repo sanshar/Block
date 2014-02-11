@@ -40,7 +40,7 @@ class OneElectronArray
     template<class Archive> void serialize(Archive & ar, const unsigned int version)
     {
       ar & rep;
-      ar & dim;
+      ar & dim & rhf & dummyZero & bin & Occnum;
     }
 #ifdef NO_SYM_2E
     Matrix rep;
@@ -130,6 +130,8 @@ class TwoElectronArray // 2e integral, notation (12|12), symmetric matrix
       ar & rep;
       ar & dim;
       ar & indexMap;
+      ar & rhf;
+      ar & bin;
     }
 
 

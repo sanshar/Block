@@ -327,16 +327,19 @@ void restart(double sweep_tol, bool reset_iter)
   double last_be = 100.;
   double old_fe = 0.;
   double old_be = 0.;
-  int ls_count=0;
   bool direction;
   int restartsize;
   SweepParams sweepParams;
+  /*
+  //For obtaining the extrapolated energy
+  int ls_count=0;
   sweepParams.ls_dw.resize(0);
   sweepParams.ls_energy.resize(0);
   int old_states=sweepParams.get_keep_states();
   int new_states;
   double old_error=0.0;
   double old_energy=0.0;
+  */
   bool dodiis = false;
 
   int domoreIter = 2;
@@ -365,6 +368,7 @@ void restart(double sweep_tol, bool reset_iter)
 
 
     //For obtaining the extrapolated energy
+    /*
     old_states=sweepParams.get_keep_states();
     new_states=sweepParams.get_keep_states_ls();
     if (old_states != new_states) 
@@ -379,6 +383,7 @@ void restart(double sweep_tol, bool reset_iter)
           least_squares(sweepParams.ls_dw, sweepParams.ls_energy);
        }
     }
+    */
 
 
     if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
@@ -389,6 +394,7 @@ void restart(double sweep_tol, bool reset_iter)
   }
 
   if(dmrginp.max_iter() <= sweepParams.get_sweep_iter()){
+    /*
     //For obtaining the extrapolated energy
     old_energy = last_be+dmrginp.get_coreenergy();
     old_error = sweepParams.get_largest_dw();
@@ -398,6 +404,7 @@ void restart(double sweep_tol, bool reset_iter)
     if (ls_count >=3) {
        least_squares(sweepParams.ls_dw, sweepParams.ls_energy);
     }
+    */
 #ifndef MOLPRO
     pout << "Maximum sweep iterations achieved " << std::endl;
 #else
@@ -413,10 +420,12 @@ void dmrg(double sweep_tol)
   double last_be = 10.e6;
   double old_fe = 0.;
   double old_be = 0.;
-  int ls_count=0;
   SweepParams sweepParams;
+  /*
+  int ls_count=0;
   sweepParams.ls_dw.resize(0);
   sweepParams.ls_energy.resize(0);
+  */
   int old_states=sweepParams.get_keep_states();
   int new_states;
   double old_error=0.0;
@@ -447,6 +456,7 @@ void dmrg(double sweep_tol)
       //For obtaining the extrapolated energy
       old_states=sweepParams.get_keep_states();
       new_states=sweepParams.get_keep_states_ls();
+         /*
       if (old_states != new_states) 
       {
          old_energy = last_be+dmrginp.get_coreenergy();
@@ -459,6 +469,7 @@ void dmrg(double sweep_tol)
             least_squares(sweepParams.ls_dw, sweepParams.ls_energy);
          }
       }
+         */
 
       last_fe = Sweep::do_one(sweepParams, false, true, false, 0); // forward sweep again
 
@@ -473,9 +484,10 @@ void dmrg(double sweep_tol)
       }
 
     }
+    //For obtaining the extrapolated energy
+    /*
     if(dmrginp.max_iter() <= sweepParams.get_sweep_iter()) {
 
-    //For obtaining the extrapolated energy
     old_energy = last_be+dmrginp.get_coreenergy();
     old_error = sweepParams.get_largest_dw();
     sweepParams.ls_dw.push_back(old_error);
@@ -487,6 +499,7 @@ void dmrg(double sweep_tol)
 
     pout << "Maximum sweep iterations achieved " << std::endl;
   }
+  */
 
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
 }
