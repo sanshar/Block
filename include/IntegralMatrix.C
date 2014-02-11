@@ -718,11 +718,11 @@ double SpinAdapted::CCCDArray::operator()(int i, int j, int k, int l) const {
   int m = idx3*(dim/2)+l+1;
 
   if (rhf) {
-    int sign = ((n>0) == is_odd_i) ? -1:1;
+    int sign = ((n>0) == (spin_i == -1)) ? -1:1;
     return factor * sign * repA(abs(n), m);
   } else {
     int sign = (n>0) ? 1:-1;
-    if (is_odd_i) {
+    if (spin_i == -1) {
       return factor * sign*repB(abs(n), m);
     } else {
       return factor * sign*repA(abs(n), m);
