@@ -26,6 +26,7 @@ class Twopdm_container : public Npdm_container {
     void save_npdms(const int &i, const int &j);
 
     array_4d<double>& get_spatial_twopdm() { assert(store_full_spatial_array_); return spatial_twopdm; }
+    std::map< std::tuple<int,int,int,int>, double >& get_sparse_spatial_pdm() { assert(store_sparse_spatial_array_); return sparse_spatial_pdm; }
 
   private:
     // These maps are designed to hold elements computed at one sweep position only, but could still be memory-intensive.
@@ -48,8 +49,6 @@ class Twopdm_container : public Npdm_container {
     void accumulate_npdm();
   
     void update_full_spin_array( std::map< std::tuple<int,int,int,int>, double >& spin_batch );
-    std::map< std::tuple<int,int,int,int>, int > get_spin_permutations( const std::vector<int>& indices );
-
     void build_spatial_elements( std::map< std::tuple<int,int,int,int>, double >& spin_batch, 
                                  std::map< std::tuple<int,int,int,int>, double >& spatial_batch );
 

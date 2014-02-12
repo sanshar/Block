@@ -23,15 +23,46 @@ void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matri
 
 //===========================================================================================================================================================
 
-Npdm_expectations::Npdm_expectations( const int order, Wavefunction & wavefunction, const SpinBlock & big )
-: npdm_order_(order),
+Npdm_expectations::Npdm_expectations( Npdm_patterns& npdm_patterns, const int order, Wavefunction & wavefunction, const SpinBlock & big )
+: npdm_patterns_(npdm_patterns),
+  npdm_order_(order),
   wavefunction_(wavefunction),
   big_(big)
 { }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// The pattern generator for the non-redundant NPDM elements leads to duplicates if indices are repeated, so some can be skipped explicitly.
+// If the normal-ordered string is not of non-redundant form, then the original string produces duplicates when permutations are applied.
 
-std::string Npdm_expectations::get_op_string( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps )
+bool Npdm_expectations::screen_op_string_for_duplicates( std::string& op )
+{
+  std::vector<int> indices;  
+  std::string CD;
+  for (auto it = op.begin(); it != op.end(); ++it) {
+    if ( (*it == '(') || (*it == ')') ) { continue; }
+    else if ( (*it == 'C') || (*it == 'D') ) { CD.push_back(*it); }
+    else { indices.push_back(*it); }
+  }
+
+  if ( indices.size() == 4 ) {
+    // 2PDM case
+    return npdm_patterns_.screen_2pdm_strings( indices, CD ); 
+  }
+  else if ( indices.size() == 6 ) {
+    // 3PDM case
+    return npdm_patterns_.screen_3pdm_strings( indices, CD ); 
+  }
+  else if ( indices.size() == 8 ) {
+    // 4PDM case
+    return npdm_patterns_.screen_4pdm_strings( indices, CD ); 
+  }
+  else assert(false);
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+std::string Npdm_expectations::get_full_op_string( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps )
 {
 
   // Set up npdm element indices
@@ -214,12 +245,20 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
   else if ( npdm_order_ == 3 ) dim = 20;
   else if ( npdm_order_ == 4 ) dim = 70;
   else assert(false);
+  std::vector< std::pair< std::vector<int>, double > > new_pdm_elements;
+
+  // Get operator build string. e.g. (C2C4)(D5D6)
+  std::string op_string = get_full_op_string( lhsOps, rhsOps, dotOps );
+
+  // Screen away unwanted strings (e.g. those that produce duplicate NPDM elements)
+  if ( screen_op_string_for_duplicates(op_string) ) return new_pdm_elements;
 
   // Contract spin-adapted spatial operators and build singlet expectation values
   build_spin_adapted_singlet_expectations( lhsOps, rhsOps, dotOps );
   
   // Now transform to non-spin-adapted spin-orbital representation
   // b holds the spin-adapted expectation values (we only care about the singlets)
+  // Note the spin-order of elements in b follows a convention
   ColumnVector x(dim), b(dim);
   // x holds the non-spin-adapted expectation values
   x=0.0;
@@ -230,14 +269,12 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
   std::vector< std::vector<int> > so_indices(dim);
 
   // Parse operator string and set up linear equations
-  std::string op_string = get_op_string( lhsOps, rhsOps, dotOps );
   npdm_set_up_linear_equations(op_string, expectations_, A, b, so_indices );
 
   // Solve A.x = b to get non-spin-adapted expectations in x
   xsolve_AxeqB(A, b, x);
 
   // Package transformed elements into container and return
-  std::vector< std::pair< std::vector<int>, double > > new_pdm_elements;
   for (int i=0; i < so_indices.size(); ++i) {
     new_pdm_elements.push_back( std::make_pair(so_indices[i], x(i+1)) );
   } 

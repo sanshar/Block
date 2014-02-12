@@ -26,6 +26,7 @@ class Fourpdm_container : public Npdm_container {
     void store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements );
 
     array_8d<double>& get_spatial_fourpdm() { assert(store_full_spatial_array_); return spatial_fourpdm; }
+    std::map< std::vector<int>, double >& get_sparse_spatial_pdm() { assert(store_sparse_spatial_array_); return sparse_spatial_pdm; }
 
   private:
     // These maps are designed to hold elements computed at one sweep position only, but could still be memory-intensive.
@@ -47,16 +48,8 @@ class Fourpdm_container : public Npdm_container {
     void load_npdm_binary(const int &i, const int &j);
     void accumulate_npdm();
   
-    void get_even_and_odd_perms( const std::vector<int> mnpq, 
-                                 std::vector< std::vector<int> > & even_perms, 
-                                 std::vector< std::vector<int> > & odd_perms );
-    std::map< std::vector<int>, int > get_spin_permutations( const std::vector<int>& indices );
-
     void update_full_spin_array( std::map< std::vector<int>, double >& spin_batch );
-    void update_full_spatial_array( std::map< std::vector<int>, double >& spatial_batch );
-
-    void build_spatial_elements( std::map< std::vector<int>, double >& spin_batch, 
-                                 std::map< std::vector<int>, double >& spatial_batch );
+    void build_spatial_elements( std::map< std::vector<int>, double >& spin_batch, std::map< std::vector<int>, double >& spatial_batch );
 
 };
 

@@ -6,31 +6,30 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#ifndef NPDM_CONTAINER_H
-#define NPDM_CONTAINER_H
+#ifndef NEVPT2_4PDM_CONTAINER_H
+#define NEVPT2_4PDM_CONTAINER_H
 
-#include <tuple>
-#include <boost/mpi.hpp>
-#include <vector>
-#include <multiarray.h>
-#include "spinblock.h"
-#include "wavefunction.h"
-#include "BaseOperator.h"
-#include "npdm_permutations.h"
+#include "npdm_container.h"
 
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
-class Npdm_container {
+class Nevpt2_4pdm_container : public Npdm_container {
 
   public:
-    Npdm_container() {}
-    virtual ~Npdm_container() {}
+    Nevpt2_4pdm_container( array_6d<double>& a16_matrix ) : a16_matrix_(a16_matrix) {};
+    ~Nevpt2_4pdm_container() {};
   
-    virtual void store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements ) = 0;
-    virtual void clear_sparse_arrays() = 0;
-    virtual void save_npdms(const int &i, const int &j) = 0;
+    void save_npdms(const int &i, const int &j) { };
+    void clear_sparse_arrays() { };
+    void store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements );
+
+  private:
+    array_6d<double>& a16_matrix_;
+
+    void store_a16_contribution( std::map< std::vector<int>, double >& spatial_batch );
+    void build_spatial_elements( std::map< std::vector<int>, double >& spin_batch, std::map< std::vector<int>, double >& spatial_batch );
 
 };
 

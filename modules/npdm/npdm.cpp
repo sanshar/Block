@@ -303,7 +303,6 @@ void npdm( int npdm_order )
       // Compute NEVPT2 NPDM matrix elements incrementally along the sweep
       Nevpt2_npdm_driver nevpt2_npdm_driver( dmrginp.last_site() );
       npdm_do_one_sweep(nevpt2_npdm_driver, sweepParams, false, direction, false, 0, state);
-      nevpt2_npdm_driver.compute_matrices();
     }
     break;
   }

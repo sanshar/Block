@@ -17,7 +17,7 @@ Twopdm_container::Twopdm_container( int sites )
   store_full_spin_array_ = false;
   store_full_spatial_array_ = true;
   store_sparse_spin_array_ = false;
-  store_sparse_spatial_array_ = false;
+  store_sparse_spatial_array_ = true;
 
   if ( store_full_spin_array_ ) {
     twopdm.resize(2*sites,2*sites,2*sites,2*sites);
@@ -227,36 +227,16 @@ void Twopdm_container::build_spatial_elements( std::map< std::tuple<int,int,int,
     // Store significant elements only
     if ( abs(val) > 1e-14 ) {
       if ( store_sparse_spatial_array_ ) sparse_spatial_pdm[ it->first ] = factor * val;
-      if ( store_full_spatial_array_ ) spatial_twopdm(i,j,k,l) = factor * val;
+      if ( store_full_spatial_array_ ) {
+        if ( abs( spatial_twopdm(i,j,k,l) ) > 1e-14 ) { 
+          cout << "repeated spatial indices!\n";
+          assert(false);
+        }
+        spatial_twopdm(i,j,k,l) = factor * val;
+      }
     }
   }
 
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-std::map< std::tuple<int,int,int,int>, int > Twopdm_container::get_spin_permutations( const std::vector<int>& indices )
-{
-
-  std::map< std::tuple<int,int,int,int>, int > perms;
-  int i = indices[0];
-  int j = indices[1];
-  int k = indices[2];
-  int l = indices[3];
-
-  // 8 permutations
-  //--------------------------
-  perms[std::make_tuple(i, j, k, l)] = 1;
-  perms[std::make_tuple(i, j, l, k)] = -1;
-  perms[std::make_tuple(j, i, k, l)] = -1;
-  perms[std::make_tuple(j, i, l, k)] = 1;
-
-  perms[std::make_tuple(l, k, j, i)] = 1;
-  perms[std::make_tuple(k, l, j, i)] = -1;
-  perms[std::make_tuple(l, k, i, j)] = -1;
-  perms[std::make_tuple(k, l, i, j)] = 1;
-
-  return perms;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -270,7 +250,8 @@ void Twopdm_container::store_npdm_elements( const std::vector< std::pair< std::v
 
   for (int idx=0; idx < new_spin_orbital_elements.size(); ++idx) {
     // Get all spin-index permutations
-    std::map< std::tuple<int,int,int,int>, int > spin_indices = get_spin_permutations( new_spin_orbital_elements[idx].first );
+    Twopdm_permutations p;
+    std::map< std::tuple<int,int,int,int>, int > spin_indices = p.get_spin_permutations( new_spin_orbital_elements[idx].first );
     double val = new_spin_orbital_elements[idx].second;
     for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
       // Initialize spatial indices

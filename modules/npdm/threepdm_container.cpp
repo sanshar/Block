@@ -6,9 +6,9 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#include <algorithm>
 #include "threepdm_container.h"
 
+//FIXME parallel
 namespace SpinAdapted{
 
 //===========================================================================================================================================================
@@ -18,7 +18,7 @@ Threepdm_container::Threepdm_container( int sites )
   store_full_spin_array_ = false;
   store_full_spatial_array_ = true;
   store_sparse_spin_array_ = false;
-  store_sparse_spatial_array_ = false;
+  store_sparse_spatial_array_ = true;
 
   if ( store_full_spin_array_ ) {
     threepdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);
@@ -251,86 +251,18 @@ void Threepdm_container::build_spatial_elements( std::map< std::vector<int>, dou
     }
     // Store significant elements only
     if ( abs(val) > 1e-14 ) {
+      cout << "i,j,k,l,m,n = " << i << "," << j << "," << k << "," << l << "," << m << "," << n << endl;
       if ( store_sparse_spatial_array_ ) sparse_spatial_pdm[ it->first ] = factor * val;
-      if ( store_full_spatial_array_ ) spatial_threepdm(i,j,k,l,m,n) = factor * val;
+      if ( store_full_spatial_array_ ) {
+        if ( abs( spatial_threepdm(i,j,k,l,m,n) ) > 1e-14 ) {
+          cout << "repeated spatial indices!\n";
+          assert(false);
+        }
+        spatial_threepdm(i,j,k,l,m,n) = factor * val;
+      }
     }
   }
 
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-std::map< std::vector<int>, int > Threepdm_container::get_spin_permutations( const std::vector<int>& indices )
-{
-  assert( indices.size() == 6 );
-  std::map< std::vector<int>, int > perms;
-  std::vector<int> idx;
-  int i = indices[0];
-  int j = indices[1];
-  int k = indices[2];
-  int l = indices[3];
-  int m = indices[4];
-  int n = indices[5];
-
-  // The number of possible combinations is (3!)**2
-  //------------------------------------------------
-
-  idx = { i, j, k, l, m, n }; perms[ idx ] =  1;
-  idx = { i, j, k, l, n, m }; perms[ idx ] = -1;
-  idx = { i, j, k, n, m, l }; perms[ idx ] = -1;
-  idx = { i, j, k, n, l, m }; perms[ idx ] =  1;
-  idx = { i, j, k, m, l, n }; perms[ idx ] = -1;
-  idx = { i, j, k, m, n, l }; perms[ idx ] =  1;
-
-  idx = { i, k, j, l, m, n }; perms[ idx ] = -1;
-  idx = { i, k, j, l, n, m }; perms[ idx ] =  1;
-  idx = { i, k, j, n, m, l }; perms[ idx ] =  1;
-  idx = { i, k, j, n, l, m }; perms[ idx ] = -1;
-  idx = { i, k, j, m, l, n }; perms[ idx ] =  1;
-  idx = { i, k, j, m, n, l }; perms[ idx ] = -1;
-
-  idx = { j, i, k, l, m, n }; perms[ idx ] = -1;
-  idx = { j, i, k, l, n, m }; perms[ idx ] =  1;
-  idx = { j, i, k, n, m, l }; perms[ idx ] =  1;
-  idx = { j, i, k, n, l, m }; perms[ idx ] = -1;
-  idx = { j, i, k, m, l, n }; perms[ idx ] =  1;
-  idx = { j, i, k, m, n, l }; perms[ idx ] = -1;
-
-  idx = { j, k, i, l, m, n }; perms[ idx ] =  1;
-  idx = { j, k, i, l, n, m }; perms[ idx ] = -1;
-  idx = { j, k, i, n, m, l }; perms[ idx ] = -1;
-  idx = { j, k, i, n, l, m }; perms[ idx ] =  1;
-  idx = { j, k, i, m, l, n }; perms[ idx ] = -1;
-  idx = { j, k, i, m, n, l }; perms[ idx ] =  1;
-
-  idx = { k, j, i, l, m, n }; perms[ idx ] = -1;
-  idx = { k, j, i, l, n, m }; perms[ idx ] =  1;
-  idx = { k, j, i, n, m, l }; perms[ idx ] =  1;
-  idx = { k, j, i, n, l, m }; perms[ idx ] = -1;
-  idx = { k, j, i, m, l, n }; perms[ idx ] =  1;
-  idx = { k, j, i, m, n, l }; perms[ idx ] = -1;
-
-  idx = { k, i, j, l, m, n }; perms[ idx ] =  1;
-  idx = { k, i, j, l, n, m }; perms[ idx ] = -1;
-  idx = { k, i, j, n, m, l }; perms[ idx ] = -1;
-  idx = { k, i, j, n, l, m }; perms[ idx ] =  1;
-  idx = { k, i, j, m, l, n }; perms[ idx ] = -1;
-  idx = { k, i, j, m, n, l }; perms[ idx ] =  1;
-
-  // Get transpose elements with same parity factors
-  std::map< std::vector<int>, int > trans_perms;
-  for (auto it = perms.begin(); it != perms.end(); ++it) {
-    std::vector<int> indices = it->first;
-    std::reverse( indices.begin(), indices.end() );
-    trans_perms[ indices ] = it->second;
-  }
-
-  // Now bundle them togther
-  for (auto it = trans_perms.begin(); it != trans_perms.end(); ++it) {
-    perms[ it->first ] = it->second;
-  }
-
-  return perms;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -344,7 +276,8 @@ void Threepdm_container::store_npdm_elements( const std::vector< std::pair< std:
 
   for (int idx=0; idx < new_spin_orbital_elements.size(); ++idx) {
     // Get all spin-index permutations
-    std::map< std::vector<int>, int > spin_indices = get_spin_permutations( new_spin_orbital_elements[idx].first );
+    Threepdm_permutations p;
+    std::map< std::vector<int>, int > spin_indices = p.get_spin_permutations( new_spin_orbital_elements[idx].first );
     double val = new_spin_orbital_elements[idx].second;
     for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
       // Initialize spatial indices

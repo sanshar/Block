@@ -105,7 +105,7 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
     // Get non-spin-adapated spin-orbital 3PDM elements after building spin-adapted elements
     std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements;
     DEBUG_CALL_GET_EXPECT[mpigetrank()] += 1;
-    // This should always works out as calling in order (lhs,rhs,dot)
+    // This should always work out as calling in order (lhs,rhs,dot)
     if ( inner == 'r' )
       new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( outerOps, innerOps, dotOps );
     else if ( inner == 'l' )
@@ -114,7 +114,7 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
       assert(false);
 
     // Store new npdm elements
-    container_.store_npdm_elements( new_spin_orbital_elements );
+    if ( new_spin_orbital_elements.size() > 0 ) container_.store_npdm_elements( new_spin_orbital_elements );
   }
 
   assert( ! innerOps.ifs_.is_open() );
@@ -304,13 +304,12 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
   pout << "Current NPDM sweep position = "<< sweepPos+1 << " of " << endPos+1 << "\n";
 
   // Clear sparse arrays of NPDM elements built at single sweep position
+//FIXME clear here or elsewhere?
   container_.clear_sparse_arrays();
-
-  // Initialize class that computes expectation values when sent operator spin-sets from this spinblock
-  Npdm::Npdm_expectations npdm_expectations( npdm_order_, wavefunctions.at(0), big );
 
   // Loop over NPDM operator patterns
   Npdm::Npdm_patterns npdm_patterns( npdm_order_, sweepPos, endPos );
+  Npdm::Npdm_expectations npdm_expectations( npdm_patterns, npdm_order_, wavefunctions.at(0), big );
   loop_over_operator_patterns( npdm_patterns, npdm_expectations, big );
 
   // Print outs

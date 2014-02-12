@@ -34,6 +34,11 @@ class Npdm_patterns
     std::set< std::vector<CD> >::const_iterator rhs_cd_end() { return rhs_cd_types_.end(); };
     void print_cd_string( const std::vector<CD> & );
 
+    // Screening of duplications
+    bool screen_2pdm_strings( std::vector<int>& indices, std::string& CD );
+    bool screen_3pdm_strings( std::vector<int>& indices, std::string& CD );
+    bool screen_4pdm_strings( std::vector<int>& indices, std::string& CD );
+
   private:
     int pdm_order_;
     // Operator dimensions on LHS, RHS and Dot (add up to 2*order of PDM)
@@ -53,11 +58,13 @@ class Npdm_patterns
     void add_operator( int cre_ops, int des_ops, std::vector<CD> cd_type1 );
     // Combine ldr and cd patterns together
     void build_ldr_cd_types( int sweep_pos, int end_pos );
+
     // Test if valid creation-destruction string on dot assuming fermions
     bool is_valid_dot_type( std::vector<CD> );
     // Test if unique creation-destruction string over all blocks
     bool is_valid_ldr_type( std::map< char, std::vector<CD> > & cd_pattern );
     bool is_rhs_gte_lhs( std::vector<int> &, std::vector<int> & );
+
     // Print functions
     void print_int_string( const std::vector<int> & vec );
 //FIXME

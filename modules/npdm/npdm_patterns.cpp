@@ -25,6 +25,120 @@ Npdm_patterns::Npdm_patterns( int pdm_order, int sweep_pos, int end_pos )
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// The pattern generator for the non-redundant NPDM elements leads to duplicates if indices are repeated, so some can be skipped explicitly.
+// If the normal-ordered string is not of non-redundant form, then the original string produces duplicates when permutations are applied.
+
+bool Npdm_patterns::screen_2pdm_strings( std::vector<int>& indices, std::string& CD )
+{
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'C' };
+    if ( CD == foo ) return true;
+  }
+  return false;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+bool Npdm_patterns::screen_3pdm_strings( std::vector<int>& indices, std::string& CD )
+{
+  if ( (indices[0] == indices[2]) && (indices[1] == indices[3]) ) {
+    std::string foo = { 'C', 'C', 'D', 'D', 'D', 'C' }; if ( CD == foo ) return true;
+  }
+  if ( (indices[0] == indices[1]) && (indices[2] == indices[3]) ) {
+    std::string foo = { 'C', 'D', 'C', 'D', 'D', 'C' }; if ( CD == foo ) return true;
+  }
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'C', 'D', 'C' }; if ( CD == foo ) return true;
+  }
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'C', 'C', 'D' }; if ( CD == foo ) return true;
+  }
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'D', 'C', 'C' }; if ( CD == foo ) return true;
+  }
+  return false;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+bool Npdm_patterns::screen_4pdm_strings( std::vector<int>& indices, std::string& CD )
+{
+  if ( (indices[0] == indices[1]) 
+    && (indices[2] == indices[4])
+    && (indices[3] == indices[5]) ) {
+    std::string foo = { 'C', 'D', 'C', 'C', 'D', 'D', 'D', 'C' }; if ( CD == foo ) return true;
+  }
+  if ( (indices[0] == indices[2]) 
+    && (indices[1] == indices[3])
+    && (indices[4] == indices[5]) ) {
+    std::string foo = { 'C', 'C', 'D', 'D', 'C', 'D', 'D', 'C' }; if ( CD == foo ) return true;
+  }
+  if ( (indices[0] == indices[1]) 
+    && (indices[2] == indices[3])
+    && (indices[4] == indices[5]) ) {
+    std::string foo = { 'C', 'D', 'C', 'D', 'C', 'D', 'D', 'C' }; if ( CD == foo ) return true;
+  }
+  // New type
+  if ( (indices[0] == indices[1]) 
+    && (indices[2] == indices[3]) ) {
+    std::string foo = { 'C', 'D', 'C', 'D', 'D', 'C', 'C', 'D' }; if ( CD == foo ) return true;
+  }
+  if ( (indices[0] == indices[1]) 
+    && (indices[2] == indices[3]) ) {
+    std::string foo = { 'C', 'D', 'C', 'D', 'D', 'C', 'D', 'C' }; if ( CD == foo ) return true;
+  }
+  if ( (indices[0] == indices[1]) 
+    && (indices[2] == indices[3]) ) {
+    std::string foo = { 'C', 'D', 'C', 'D', 'D', 'D', 'C', 'C' }; if ( CD == foo ) return true;
+  }
+  // Full 3 starting with CCDDD
+  if ( (indices[0] == indices[2]) 
+    && (indices[1] == indices[3]) ) {
+    std::string foo = { 'C', 'C', 'D', 'D', 'D', 'C', 'C', 'D' }; if ( CD == foo ) return true;
+  }
+  if ( (indices[0] == indices[2]) 
+    && (indices[1] == indices[3]) ) {
+    std::string foo = { 'C', 'C', 'D', 'D', 'D', 'C', 'D', 'C' }; if ( CD == foo ) return true;
+  }
+  if ( (indices[0] == indices[2]) 
+    && (indices[1] == indices[3]) ) {
+    std::string foo = { 'C', 'C', 'D', 'D', 'D', 'D', 'C', 'C' }; if ( CD == foo ) return true;
+  }
+  // Full 10 starting with CDD
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'C', 'C', 'D', 'D', 'C' }; if ( CD == foo ) return true;
+  }
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'C', 'D', 'C', 'D', 'C' }; if ( CD == foo ) return true;
+  }
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'C', 'D', 'C', 'C', 'D' }; if ( CD == foo ) return true;
+  }
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'C', 'C', 'D', 'C', 'D' }; if ( CD == foo ) return true;
+  }
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'C', 'D', 'D', 'C', 'C' }; if ( CD == foo ) return true;
+  }
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'C', 'C', 'C', 'D', 'D' }; if ( CD == foo ) return true;
+  }
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'D', 'D', 'C', 'C', 'C' }; if ( CD == foo ) return true;
+  }
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'D', 'C', 'D', 'C', 'C' }; if ( CD == foo ) return true;
+  }
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'D', 'C', 'C', 'D', 'C' }; if ( CD == foo ) return true;
+  }
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'D', 'C', 'C', 'C', 'D' }; if ( CD == foo ) return true;
+  }
+  return false;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // Generates all required block partitionings for an NPDM
 
 void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
