@@ -46,7 +46,9 @@ template<class T> class Baseoperator  // The abstract class of an operator
   virtual const T& operator_element(int i, int j) const = 0;
   virtual T& operator()(int i, int j) = 0;
   virtual const T& operator()(int i, int j) const = 0;
+  virtual int get_deltaQuantum_size() const = 0;
   virtual std::vector<SpinQuantum> get_deltaQuantum() const = 0;
+  virtual SpinQuantum get_deltaQuantum(int i) const = 0;  
   virtual char conjugacy() const = 0;
   virtual ~Baseoperator() {};
   virtual SpinSpace get_spin(int i=0) const = 0;
@@ -171,7 +173,7 @@ public:
   Transposeview(const boost::shared_ptr<SparseMatrix>& opptr) : opdata(opptr) {}
   Transposeview(SparseMatrix& op) { opdata = boost::shared_ptr<SparseMatrix>(&op, boostutils::null_deleter());}
   int get_deltaQuantum_size() const { return opdata->get_deltaQuantum_size(); }  
-  SpinQuantum get_deltaQuantum(int i) const {return -(opdata->get_deltaQuantum(i));}
+  SpinQuantum get_deltaQuantum(int i) const {return -opdata->get_deltaQuantum(i);}
   std::vector<SpinQuantum> get_deltaQuantum() const {
     std::vector<SpinQuantum> q;
     for (int i = 0; i < opdata->get_deltaQuantum_size(); ++i) {

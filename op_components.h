@@ -170,7 +170,7 @@ template <class Op> class Op_component : public Op_component_base
     Op* o = 0;
     std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
     for (int l=0; l<vec.size(); l++) {
-      if (boost::iequals(s, vec[l]->get_deltaQuantum()))
+      if (s == vec[l]->get_deltaQuantum())
 	    return m_op(i,j,k)[l];
     }
     return boost::shared_ptr<Op>(o);
@@ -180,7 +180,7 @@ template <class Op> class Op_component : public Op_component_base
     Op* o = 0;
     const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
     for (int l=0; l<vec.size(); l++)
-      if (boost::iequals(s, vec[l]->get_deltaQuantum()))
+      if (s == vec[l]->get_deltaQuantum())
 	    return m_op(i,j,k)[l];
     return boost::shared_ptr<Op>(o);
   }
