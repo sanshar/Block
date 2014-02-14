@@ -66,7 +66,7 @@ void DensityMatrix::add_twodot_noise(const SpinBlock &big, const double noise)
     int particlenumber = dmrginp.total_particle_number();
     if (dmrginp.hamiltonian() == BCS) {
       particlenumber /= 2;
-    }
+    } // FIXME do I need to use all particle numbers when doing BCS?
     const int spinnumber = dmrginp.total_spin_number().getirrep();
     const IrrepSpace& symmetrynumber = dmrginp.total_symmetry_number();
     toadd.push_back(SpinQuantum(particlenumber + 1, SpinSpace(spinnumber + 1), symmetrynumber));
@@ -137,7 +137,7 @@ class onedot_noise_f
 {
 private:
   const Wavefunction& wavefunction;
-  DensityMatrix* dm;
+  vector<DensityMatrix>& dm;
   const SpinBlock& big; 
   const double scale;
   const int num_threads;
@@ -145,7 +145,7 @@ private:
   bool distributed;
   bool synced;
 public:
-  onedot_noise_f(DensityMatrix* dm_, const Wavefunction& wavefunction_, const SpinBlock& big_, const double scale_, const int num_threads_)
+  onedot_noise_f(vector<DensityMatrix>& dm_, const Wavefunction& wavefunction_, const SpinBlock& big_, const double scale_, const int num_threads_)
     : distributed(false), synced(true), wavefunction(wavefunction_), dm(dm_), big(big_), scale(scale_), num_threads(num_threads_) { }
   
   void set_opType(const opTypes &optype_)
@@ -174,12 +174,11 @@ public:
 	for (int j=0; j<vec.size(); j++)
 	for (int i=0; i<spinvec.size(); i++)
 	{
-
 	  SpinQuantum q = SpinQuantum(wQ[k].get_n()+oQ[l].get_n(), spinvec[i], vec[j]);
 	  const boost::shared_ptr<SparseMatrix> fullop = op.getworkingrepresentation(big.get_leftBlock());      
-      if (q.get_n() <= dmrginp.effective_molecule_quantum().get_n()) {
-	    Wavefunction opxwave = Wavefunction(q, &big, wavefunction.get_onedot());
-	    opxwave.Clear();
+      if (dmrginp.hamiltonian() != BCS || q.get_n() <= dmrginp.effective_molecule_quantum().get_n()) {
+        Wavefunction opxwave = Wavefunction(q, &big, wavefunction.get_onedot());
+        opxwave.Clear();
 	    TensorMultiply(big.get_leftBlock(), *fullop, &big, const_cast<Wavefunction&> (wavefunction), opxwave, dmrginp.molecule_quantum(), 1.0);
 	    double norm = DotProduct(opxwave, opxwave);
 	    if (abs(norm) > NUMERICAL_ZERO) {
@@ -188,7 +187,7 @@ public:
 	    }
       }
 	  q = SpinQuantum(wQ[k].get_n()-oQ[l].get_n(), spinvec[i], vec[j]);
-      if (q.get_n() >= 0) {
+      if (dmrginp.hamiltonian() != BCS || q.get_n() >= 0) {
 	    Wavefunction opxwave2 = Wavefunction(q, &big, wavefunction.get_onedot());
 	    opxwave2.Clear();
 	    TensorMultiply(big.get_leftBlock(),Transpose(*fullop),&big, const_cast<Wavefunction&> (wavefunction), opxwave2, dmrginp.molecule_quantum(), 1.0);
@@ -230,7 +229,7 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Modifying density matrix " << endl;
   //int maxt = 1;
-  DensityMatrix* dmnoise = new DensityMatrix[MAX_THRD];
+  vector<DensityMatrix> dmnoise(MAX_THRD, DensityMatrix(big.get_leftBlock()->get_stateInfo()));
   for(int j=0;j<MAX_THRD;++j)
     dmnoise[j].allocate(big.get_leftBlock()->get_stateInfo());
   int nroots = wave_solutions.size();
@@ -264,7 +263,7 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
       for_all_multithread(leftBlock->get_op_array(CRE), onedot_noise);
     }
     
-    if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
+    if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY || dmrginp.hamiltonian() == BCS) {
     if (leftBlock->has(CRE_CRE))
     {
       onedot_noise.set_opType(CRE_CRE);
@@ -286,6 +285,12 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
     }
     }
 
+    if (dmrginp.hamiltonian() == BCS && leftBlock->has(CRE_DESCOMP_No_Symm)) {
+      onedot_noise.set_opType(CRE_DESCOMP_No_Symm);
+      for_all_multithread(leftBlock->get_op_array(CRE_DESCOMP_No_Symm), onedot_noise);
+    }
+
+
     onedot_noise.syncaccumulate();
     norm = 0.0;
     for(int lQ=0;lQ<dmnoise[0].nrows();++lQ)
@@ -296,7 +301,6 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
     if (norm > 1.0)
       ScaleAdd(noise/norm/nroots, dmnoise[0], *this);
   }
-  delete[] dmnoise;  
 
   norm = 0.0;
   for(int lQ=0;lQ<this->nrows();++lQ)

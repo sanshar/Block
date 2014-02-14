@@ -781,6 +781,7 @@ SpinAdapted::Input::Input(const string& config_name)
       v_cccc.rhf=true;
       v_cccd.rhf=true;
       readorbitalsfile(orbitalfile, v_1, v_2, v_cc, v_cccc, v_cccd);
+      assert(!m_add_noninteracting_orbs);
       m_molecule_quantum = SpinQuantum(m_norbs, SpinSpace(m_alpha - m_beta), m_total_symmetry_number);
     } else {
       readorbitalsfile(orbitalfile, v_1, v_2);

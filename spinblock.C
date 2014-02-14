@@ -35,8 +35,8 @@ void SpinBlock::printOperatorSummary()
   else {
     for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
     {
-      if(it->second->is_core()) 
-         cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
+      if(it->second->is_core())
+         cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";
       else
          cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
       
@@ -49,6 +49,18 @@ void SpinBlock::printOperatorSummary()
          cout <<numops[proc]<<"  ";
       }
       cout << endl;
+      /*
+      if(it->second->is_core()) { 
+        for (int i = 0; i < it->second->size(); ++i) {
+           std::vector<boost::shared_ptr<SparseMatrix> > global_element = it->second->get_global_element(i);
+           cout << "Element " << i  << " has " << global_element.size() << "operators" << endl;
+           for (int j = 0; j < global_element.size(); ++j) {
+             cout << "Operator " << j << endl; 
+             cout << *(global_element[j]) << endl;
+           }
+        }
+      }
+      */      
     }
   }
 #else

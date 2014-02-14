@@ -47,4 +47,4 @@ python test_onepdm_withtwopdm.py
 cd ../
 
 
-#./clean
+./clean
