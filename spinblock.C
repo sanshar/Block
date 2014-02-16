@@ -297,7 +297,7 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
   }
 
   TensorProduct (lBlock.stateInfo, rBlock.stateInfo, stateInfo, condition, compState);
-  if (condition != PARTICLE_SPIN_NUMBER_CONSTRAINT)
+  if (condition != PARTICLE_SPIN_NUMBER_CONSTRAINT && condition != SPIN_NUMBER_CONSTRAINT)
     stateInfo.CollectQuanta();
 }
 
@@ -408,7 +408,7 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 {
   SpinBlock* loopBlock=(leftBlock->is_loopblock()) ? leftBlock : rightBlock;
   SpinBlock* otherBlock = loopBlock == leftBlock ? rightBlock : leftBlock;
-
+  
   DiagonalMatrix *e_array=0, *e_distributed=0, *e_add=0;
 
   initiateMultiThread(&e, e_array, e_distributed, MAX_THRD);
@@ -418,8 +418,6 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 
   op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(this);
   TensorTrace(rightBlock, *op, this, &(get_stateInfo()), e, 1.0);  
-
-
 #ifndef SERIAL
   boost::mpi::communicator world;
   int size = world.size();
@@ -428,13 +426,10 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
   e_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? e_array : e_distributed;
   Functor f = boost::bind(&opxop::cxcddcomp_d, leftBlock, _1, this, e_add); 
   for_all_multithread(rightBlock->get_op_array(CRE), f); //not needed in diagonal
-
-
+  
   e_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? e_array : e_distributed;
   f = boost::bind(&opxop::cxcddcomp_d, rightBlock, _1, this, e_add); 
   for_all_multithread(leftBlock->get_op_array(CRE), f);  //not needed in diagonal
-
-
 
   if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY || dmrginp.hamiltonian() == BCS) {
     
@@ -444,8 +439,7 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
     
     e_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? e_array : e_distributed;
     f = boost::bind(&opxop::ddxcccomp_d, otherBlock, _1, this, e_add);
-    for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);  //not needed in diagonal 
-
+    for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);  //not needed in diagonal
   }
 
   if ( dmrginp.hamiltonian() == BCS) {

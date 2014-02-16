@@ -693,7 +693,7 @@ double SpinAdapted::CCCDArray::operator()(int i, int j, int k, int l) const {
   int spin_k = 1 - (k % 2)*2;
   int spin_l = 1 - (l % 2)*2;
 
-  bool zero = spin_i+spin_j+spin_k-spin_l != 0;
+  bool zero = (spin_i+spin_j+spin_k-spin_l != 0);
   if (zero) {
     return 0.;
   }
@@ -715,8 +715,10 @@ double SpinAdapted::CCCDArray::operator()(int i, int j, int k, int l) const {
   }
 
   int n = indexMap(idx1, idx2);
+  if (n == 0) {
+    return 0.;
+  }
   int m = idx3*(dim/2)+l+1;
-
   if (rhf) {
     int sign = ((n>0) == (spin_i == -1)) ? -1:1;
     return factor * sign * repA(abs(n), m);

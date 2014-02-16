@@ -883,7 +883,7 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
           if (leftBlock->get_op_array(CRE).has(k) && rightBlock->get_op_array(CRE).has(l) && (fabs(scaleV2)+fabs(scaleV)) > dmrginp.twoindex_screen_tol()) {
 	        boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(k), k);
             boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(l), l);
-            double parity = getCommuteParity(op1->get_deltaQuantum()[0], op2->get_deltaQuantum()[0], get_deltaQuantum()[0]);
+            double parity = getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), get_deltaQuantum(0));
             scaleV += parity*scaleV2;
 
             if (fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
@@ -912,9 +912,8 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
           if (leftBlock->get_op_array(CRE).has(k) && rightBlock->get_op_array(CRE).has(l) && fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
 	        boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE, getSpinQuantum(l), l);
 	        Transposeview top2 = Transposeview(leftBlock->get_op_rep(CRE, getSpinQuantum(k), k));
-	        double parity = getCommuteParity(op1->get_deltaQuantum()[0], top2.get_deltaQuantum()[0], get_deltaQuantum()[1]);
-            // FIXME Use the right deltaQuantum. But doesn't really matter, because nparticle not in expression of getCommuteParity, but we can make it right later
-	        SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV*parity);            
+	        double parity = getCommuteParity(op1->get_deltaQuantum(0), top2.get_deltaQuantum(0), get_deltaQuantum(1));
+	        SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV*parity);
           }
         }
       }

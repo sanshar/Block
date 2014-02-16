@@ -50,8 +50,8 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 
   dmrginp.solvewf -> start();
   Solver::solve_wavefunction(wave_solutions, energies, big, tol, guesswavetype, onedot, dot_with_sys, warmUp, additional_noise);
-
   dmrginp.solvewf -> stop();
+ 
   SpinBlock newsystem;
   SpinBlock newenvironment;
   SpinBlock newbig;
