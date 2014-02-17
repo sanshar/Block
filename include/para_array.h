@@ -781,22 +781,17 @@ public:
     length = len;
 
     int length_1d = len*len;
-
     /* this part is different from set_indices */
-    for (std::vector<std::pair<int, int> >::const_iterator ptr = occupied.begin(); 
-	 ptr != occupied.end(); ++ptr)
-      {
-	global_indices.push_back(squaremap(ptr->first, ptr->second));
-	global_index_pair.push_back(*ptr);
-      }
-				 
+    for (std::vector<std::pair<int, int> >::const_iterator ptr = occupied.begin(); ptr != occupied.end(); ++ptr) {
+	  global_indices.push_back(squaremap(ptr->first, ptr->second));
+	  global_index_pair.push_back(*ptr);
+    }
     global_indices_map.resize(length_1d);
-    for (int i = 0; i < length_1d; ++i) global_indices_map[i] = -1;
+    for (int i = 0; i < length_1d; ++i)
+      global_indices_map[i] = -1;
     for (int i = 0; i < global_indices.size(); ++i)
       global_indices_map[global_indices[i]] = global_indices[i];
-    
     store.resize(length_1d);
-
     // now setup local indices
     setup_local_indices();
   }
@@ -808,7 +803,7 @@ private:
    */
   void setup_local_indices()
   {
-    int length_1d = tristore(length);
+    int length_1d = length * length;
     if (stored_local)
       {
 	local_indices = global_indices;

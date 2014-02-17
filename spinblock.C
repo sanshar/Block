@@ -201,9 +201,7 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
     dmrginp.oneindex_screen_tol() = oneindex_ScreenTol;
   }
 
-
   build_operators(dets, ladders);
-
 }
 
 std::vector<int> SpinBlock::make_complement(const std::vector<int>& sites)

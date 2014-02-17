@@ -327,7 +327,7 @@ bool screen_cd_interaction(int ci, int dj, const std::vector<int, std::allocator
   } else {
     int ninter = interactingix.size();
     for (int k = 0; k < ninter; ++k)
-    for (int l = 0; l < ninter; ++k) {
+    for (int l = 0; l < ninter; ++l) {
       int kx = interactingix[k];
 	  int lx = interactingix[l];
       if (symm && !comp) {

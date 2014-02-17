@@ -211,7 +211,6 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   std::vector<SpinQuantum> newQuanta;
   std::vector<int> newQuantaStates;
   std::vector<int> newQuantaMap;
-  cout << "rotate" << endl;
   for (int Q = 0; Q < rotateMatrix.size (); ++Q)
   {
     if (rotateMatrix [Q].Ncols () != 0) {
@@ -220,18 +219,13 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
           newQuantaMap.push_back (Q);
     }
   }
-  cout << "rotate" << endl;  
   StateInfo newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
 
-  cout << "rotate" << endl;  
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    if (! it->second->is_core()) {
-      cout << it->second->get_op_string() << endl;
+    if (! it->second->is_core())
       for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
-						       ref(rotateMatrix) , &newStateInfo));
-      cout << it->second->get_op_string() << endl;      
-    }
-  cout << "rotate" << endl;  
+		  ref(rotateMatrix) , &newStateInfo));
+
   stateInfo = newStateInfo;
   stateInfo.AllocatePreviousStateInfo ();
   *stateInfo.previousStateInfo = oldStateInfo;

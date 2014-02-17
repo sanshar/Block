@@ -196,15 +196,12 @@ namespace SpinAdapted {
     vector< pair<int, int> > screened_cd_ix = (dmrginp.hamiltonian() == BCS) ? 
       screened_cd_indices( b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), v_cc, v_cccc, v_cccd, screen_tol, false, true) :
       screened_cd_indices( b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), screen_tol);
-    m_op.set_pair_indices(screened_cd_ix, dmrginp.last_site());      
-    
+    m_op.set_pair_indices(screened_cd_ix, dmrginp.last_site());
+
     std::vector<int> orbs(2);
-    cout << "cd_no_symm_iterators" << endl;
     for (int i = 0; i < m_op.local_nnz(); ++i)
 	{
 	  pair<int, int> opair = m_op.unmap_local_index(i);
-      cout << i << endl;
-      cout << opair.first << " " << opair.second << endl;
 	  orbs[0] = opair.first; orbs[1] = opair.second;
 	  std::vector<boost::shared_ptr<CreDesComp_No_Symm> >& vec = m_op.get_local_element(i);
 	  SpinQuantum spin1 = getSpinQuantum(orbs[0]);
@@ -220,7 +217,6 @@ namespace SpinAdapted {
         op.set_deltaQuantum(1, SpinQuantum(2, spinvec[j].get_s(), spinvec[j].get_symm()));
 	  }
 	}
-    cout << "cd_no_symm_iterators" << endl;    
   }
   
   template<> void Op_component<CreDesComp_No_Symm>::add_local_indices(int i, int j , int k)

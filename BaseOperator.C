@@ -343,10 +343,8 @@ void SparseMatrix::build_and_renormalise_transform(SpinBlock *big, const opTypes
     tmp =   big->get_op_rep(ot, deltaQuantum);
   if (orbs.size() == 1)
     tmp =   big->get_op_rep(ot, deltaQuantum, orbs[0]);
-  if (orbs.size() == 2) {
-    cout << orbs[0] << " " << orbs[1] << endl;
+  if (orbs.size() == 2)
     tmp =   big->get_op_rep(ot, deltaQuantum, orbs[0], orbs[1]);
-  }
 
   tmp->built = true;
 

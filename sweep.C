@@ -172,9 +172,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 
   dmrginp.multiplierT -> stop();
   dmrginp.operrotT -> start();
-  cout << "transform" << endl;
   newSystem.transform_operators(rotatematrix);
-  cout << "transform" << endl;  
   storeStates[2] = newSystem.get_stateInfo();
   dmrginp.operrotT -> stop();
   if (dmrginp.outputlevel() > 0)
