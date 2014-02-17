@@ -703,7 +703,6 @@ public:
   }
   const T& operator()(int i, int j, int k=-1) const
   {
-    assert (i >= j);
     assert(has(i, j));
     if (!stored_local)
       assert(has_local_index(squaremap(i, j)));

@@ -217,11 +217,10 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
 {
 /* check normalisation */
   double norm = 0.0;
-  for(int lQ=0;lQ<this->nrows();++lQ)
-    for(int rQ=0;rQ<this->ncols();++rQ)
-      if(this->allowed(lQ,rQ))
-        for(int i=0;i<(*this)(lQ,rQ).Nrows();++i)
-          norm += (*this)(lQ,rQ)(i+1,i+1);
+  for(int lQ=0;lQ<nrows();++lQ)
+    if(allowed(lQ,lQ))
+      for(int i=0;i<(*this)(lQ,lQ).Nrows();++i)
+        norm += (*this)(lQ,lQ)(i+1,i+1);
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t norm before modification " << norm << endl;
 
@@ -239,8 +238,7 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
   boost::mpi::broadcast(world, nroots, 0);
 #endif
 
-  for(int i=0;i<nroots;++i)
-  {
+  for(int i=0;i<nroots;++i) {
     for(int j=0;j<MAX_THRD;++j)
       dmnoise[j].Clear();
 
@@ -257,60 +255,50 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
 
     onedot_noise_f onedot_noise(dmnoise, *wvptr, big, 1., MAX_THRD);
 
-    if (leftBlock->has(CRE))
-    {
+    if (leftBlock->has(CRE)) {
       onedot_noise.set_opType(CRE);
       for_all_multithread(leftBlock->get_op_array(CRE), onedot_noise);
     }
     
     if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY || dmrginp.hamiltonian() == BCS) {
-    if (leftBlock->has(CRE_CRE))
-    {
-      onedot_noise.set_opType(CRE_CRE);
-      for_all_multithread(leftBlock->get_op_array(CRE_CRE), onedot_noise);
 
-      onedot_noise.set_opType(CRE_DES);
-      for_all_multithread(leftBlock->get_op_array(CRE_DES), onedot_noise);
+      if (leftBlock->has(CRE_CRE)) {
+        onedot_noise.set_opType(CRE_CRE);
+        for_all_multithread(leftBlock->get_op_array(CRE_CRE), onedot_noise);
 
+        onedot_noise.set_opType(CRE_DES);
+        for_all_multithread(leftBlock->get_op_array(CRE_DES), onedot_noise);
+      } else if (leftBlock->has(DES_DESCOMP)) {
+        onedot_noise.set_opType(DES_DESCOMP);
+        for_all_multithread(leftBlock->get_op_array(DES_DESCOMP), onedot_noise);
+
+        onedot_noise.set_opType(CRE_DESCOMP);
+        for_all_multithread(leftBlock->get_op_array(CRE_DESCOMP), onedot_noise);
+
+        if (dmrginp.hamiltonian() == BCS) {
+          onedot_noise.set_opType(CRE_DESCOMP_No_Symm);
+          for_all_multithread(leftBlock->get_op_array(CRE_DESCOMP_No_Symm), onedot_noise);
+        }
+      }
     }
-
-    else if (leftBlock->has(DES_DESCOMP))
-    {
-      onedot_noise.set_opType(DES_DESCOMP);
-      for_all_multithread(leftBlock->get_op_array(DES_DESCOMP), onedot_noise);
-
-      onedot_noise.set_opType(CRE_DESCOMP);
-      for_all_multithread(leftBlock->get_op_array(CRE_DESCOMP), onedot_noise);
-
-    }
-    }
-
-    if (dmrginp.hamiltonian() == BCS && leftBlock->has(CRE_DESCOMP_No_Symm)) {
-      onedot_noise.set_opType(CRE_DESCOMP_No_Symm);
-      for_all_multithread(leftBlock->get_op_array(CRE_DESCOMP_No_Symm), onedot_noise);
-    }
-
 
     onedot_noise.syncaccumulate();
     norm = 0.0;
     for(int lQ=0;lQ<dmnoise[0].nrows();++lQ)
-      for(int rQ=0;rQ<dmnoise[0].ncols();++rQ)
-	if(this->allowed(lQ,rQ))
-	  for(int i=0;i<(dmnoise[0])(lQ,rQ).Nrows();++i)
-	    norm += (dmnoise[0])(lQ,rQ)(i+1,i+1);
+	  if(this->allowed(lQ,lQ))
+	    for(int i=0;i<(dmnoise[0])(lQ,lQ).Nrows();++i)
+	      norm += (dmnoise[0])(lQ,lQ)(i+1,i+1);
     if (norm > 1.0)
       ScaleAdd(noise/norm/nroots, dmnoise[0], *this);
   }
 
   norm = 0.0;
-  for(int lQ=0;lQ<this->nrows();++lQ)
-    for(int rQ=0;rQ<this->ncols();++rQ)
-      if(this->allowed(lQ,rQ))
-        for(int i=0;i<(*this)(lQ,rQ).Nrows();++i)
-          norm += (*this)(lQ,rQ)(i+1,i+1);
+  for(int lQ=0;lQ<nrows();++lQ)
+      if(this->allowed(lQ,lQ))
+        for(int i=0;i<(*this)(lQ,lQ).Nrows();++i)
+          norm += (*this)(lQ,lQ)(i+1,i+1);
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t norm after modification " << norm << endl;
-
 }
 
 }
