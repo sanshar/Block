@@ -214,7 +214,6 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
     if (dmrginp.outputlevel() > 0)
       mcheck("");
   }
-
   // now initialise newEnvironment
   if (!dot_with_sys || !onedot)
   {

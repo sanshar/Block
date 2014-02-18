@@ -33,7 +33,7 @@ bool SpinAdapted::SparseMatrix::nonZeroTensorComponent(Csf& c1, SpinQuantum& ops
 {
   if (!dmrginp.spinAdapted()) {
     double clebsp = Symmetry::spatial_cg(ladder.sym_is().getirrep(), opsym.get_symm().getirrep(), c1.sym_is().getirrep(), ladder.row(), 0, c1.row());    
-    if(c1.S.getirrep() == ladder.S.getirrep()+opsym.get_s().getirrep() &&
+    if(c1.n_is() == ladder.n_is() + opsym.get_n() && c1.S.getirrep() == ladder.S.getirrep()+opsym.get_s().getirrep() &&
        fabs(clebsp) >=1.0e-14) {
       nonzeroindex = 0;
       cleb = 1.0;
