@@ -1511,7 +1511,10 @@ void SpinAdapted::Input::writeSummary()
   if (mpigetrank() == 0) {
 #endif
   printf("%-50s :   %-i\n", "Total number of orbitals", m_norbs/2);
-  printf("%-50s :   %-i:%-i:%-i\n", "Symmetry of the targeted wavefunctions",m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number.getirrep()+1);
+  if (m_Bogoliubov)
+    printf("%-50s :   even:%-i:%-i\n", "Symmetry of the targeted wavefunctions", m_alpha - m_beta, m_total_symmetry_number.getirrep()+1);    
+  else
+    printf("%-50s :   %-i:%-i:%-i\n", "Symmetry of the targeted wavefunctions",m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number.getirrep()+1);
   printf("%-50s :   %-i\n", "Number of wavefunctions targeted", m_nroots);
   if (m_nroots >1) {
     printf("%-50s :   ", "The weights of the wavefunctions");

@@ -63,10 +63,13 @@ void SpinAdapted::Wavefunction::initialise(const vector<SpinQuantum>& dQ, const 
 
   long totalmemory = 0;
   for (int lQ = 0; lQ < lBlock->get_stateInfo().quanta.size (); ++lQ)
-    for (int rQ = 0; rQ < rBlock->get_stateInfo().quanta.size (); ++rQ)
-    {
+    for (int rQ = 0; rQ < rBlock->get_stateInfo().quanta.size (); ++rQ) {
+      allowedQuantaMatrix(lQ, rQ) = false;
       for (int i = 0; i < deltaQuantum.size(); ++i)
-        allowedQuantaMatrix(lQ, rQ) = deltaQuantum[i].allow(lBlock->get_stateInfo().quanta [lQ] , rBlock->get_stateInfo().quanta [rQ]);
+        if (deltaQuantum[i].allow(lBlock->get_stateInfo().quanta [lQ] , rBlock->get_stateInfo().quanta [rQ])) {
+          allowedQuantaMatrix(lQ, rQ) = true;
+          break;
+        }
       if (allowedQuantaMatrix(lQ, rQ))
 	    totalmemory += lBlock->get_stateInfo().quantaStates [lQ]* rBlock->get_stateInfo().quantaStates [rQ];
     }
@@ -317,8 +320,13 @@ void SpinAdapted::Wavefunction::AllowQuantaFor (const StateInfo& sRow, const Sta
   initialised = true;
   for (int i = 0; i < sRow.quanta.size (); ++i)
     for (int j = 0; j < sCol.quanta.size (); ++j) {
-      for (int k = 0; k < q.size(); ++k)
-	    allowedQuantaMatrix(i, j) = q[k].allow(sRow.quanta[i], sCol.quanta[j]);
+      allowedQuantaMatrix(i, j) = false;
+      for (int k = 0; k < q.size(); ++k) {
+        if (q[k].allow(sRow.quanta[i], sCol.quanta[j])) {
+	      allowedQuantaMatrix(i, j) = true;
+          break;
+        }
+      }
 	  operator_element(i, j).CleanUp ();
 	  if (allowedQuantaMatrix(i,j))
 	  {

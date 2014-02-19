@@ -325,7 +325,7 @@ class Input {
     if (!m_Bogoliubov)
       q.push_back(effective_molecule_quantum());
     else
-      for (int i = 0; i < (total_particle_number() + total_spin_number().getirrep()) / 2; ++i) {
+      for (int i = 0; i <= m_norbs/2; ++i) {
         q.push_back(SpinQuantum(i*2, SpinSpace(0), total_symmetry_number()));
       }
     return q;

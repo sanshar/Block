@@ -42,11 +42,11 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
   }
   else 
     e.ReSize(0);
-  
+
   if(dmrginp.solve_method() == DAVIDSON) {
     solution.resize(nroots);
     multiply_h davidson_f(big, onedot);
-    GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise); 
+    GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise);
     Linear::block_davidson(solution, e, tol, warmUp, davidson_f, useprecond);
   }
   else {

@@ -220,14 +220,23 @@ void GuessWave::basic_guess_wavefunction(DiagonalMatrix& e, Wavefunction& trial,
   for (int i = 0; i < e.Nrows (); ++i)
     e_sort.insert (pair<double, int> (e (i+1), i+1));
 
-  multimap<double, int>::iterator e_iter = e_sort.begin ();
-
   int states = stateinfo->totalStates;
+  vector<int> ns(states, -1);
+  vector<int> initialised_ns(0);
+  int count = 0;
+  for (int i = 0; i < stateinfo->quanta.size(); ++i)
+    for (int j = 0; j < stateinfo->quantaStates[i]; ++j) {
+      ns[count++] = stateinfo->quanta[i].get_n();
+    }
+
   RowVector trialvector(states);
   trialvector = 0.;
-  for(int i=0;i<state;++i)
-    ++e_iter;
-  trialvector(e_iter->second) = 1.;
+
+  for (multimap<double, int>::reverse_iterator e_iter = e_sort.rbegin(); e_iter != e_sort.rend(); ++e_iter)
+    if (find(initialised_ns.begin(), initialised_ns.end(), ns[e_iter->second-1]) == initialised_ns.end()) {
+      trialvector(e_iter->second) = 1.;
+      initialised_ns.push_back(ns[e_iter->second-1]);
+    }
   trial.CollectFrom(trialvector);
 }
 
@@ -245,13 +254,13 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
   {
     switch(guesswavetype)
     {
-    case TRANSFORM: 
+    case TRANSFORM:
       transform_previous_wavefunction(solution, big, state, onedot, transpose_guess_wave);
       break;
-    case BASIC: 
+    case BASIC:
       basic_guess_wavefunction(e, solution, &big.get_stateInfo(), state);
       break;
-    case TRANSPOSE: 
+    case TRANSPOSE:
       transpose_previous_wavefunction(solution, big, state, onedot, transpose_guess_wave);
       break;
     }
