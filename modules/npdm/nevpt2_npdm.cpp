@@ -143,13 +143,13 @@ if( mpigetrank() == 0 ) {
 //                  // 1PDM terms
 //                  val += d_jk * d_lm * d_np * onepdm(i+1,q+1); // Note Matrix indices start at 1 not 0
 //                  // 2PDM terms 
-//                  val += d_jk * d_lm * 2.0*twopdm(i,p,q,n); // Note factor of two difference between Block 2PDMs and other codes
-//                  val += d_jk * d_np * 2.0*twopdm(i,m,q,l);
-//                  val += d_jk * d_lp * 2.0*twopdm(i,m,n,q);
-//                  val += d_jm * d_np * 2.0*twopdm(i,k,l,q);
-//                  val += d_jm * d_lp * 2.0*twopdm(i,k,q,n);
-//                  val += d_lm * d_np * 2.0*twopdm(i,k,q,j);
-//                  val += d_lm * d_jp * 2.0*twopdm(i,k,n,q);
+                  val += d_jk * d_lm * 2.0*twopdm(i,p,q,n); // Note factor of two difference between Block 2PDMs and other codes
+                  val += d_jk * d_np * 2.0*twopdm(i,m,q,l);
+                  val += d_jk * d_lp * 2.0*twopdm(i,m,n,q);
+                  val += d_jm * d_np * 2.0*twopdm(i,k,l,q);
+                  val += d_jm * d_lp * 2.0*twopdm(i,k,q,n);
+                  val += d_lm * d_np * 2.0*twopdm(i,k,q,j);
+                  val += d_lm * d_jp * 2.0*twopdm(i,k,n,q);
                   // 3PDM terms
                   val += d_jk * threepdm(i,m,p,q,n,l);
                   val += d_jm * threepdm(i,k,p,q,l,n);

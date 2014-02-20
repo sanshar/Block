@@ -17,7 +17,7 @@ Twopdm_container::Twopdm_container( int sites )
   store_full_spin_array_ = false;
   store_full_spatial_array_ = true;
   store_sparse_spin_array_ = false;
-  store_sparse_spatial_array_ = true;
+  store_sparse_spatial_array_ = false;
 
   if ( store_full_spin_array_ ) {
     twopdm.resize(2*sites,2*sites,2*sites,2*sites);
@@ -177,13 +177,13 @@ void Twopdm_container::accumulate_npdm()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_container::update_full_spin_array( std::map< std::tuple<int,int,int,int>, double >& spin_batch ) 
+void Twopdm_container::update_full_spin_array( std::map< std::vector<int>, double >& spin_batch ) 
 {
   for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
-    int i = std::get<0>( it->first );
-    int j = std::get<1>( it->first );
-    int k = std::get<2>( it->first );
-    int l = std::get<3>( it->first );
+    int i = (it->first)[0];
+    int j = (it->first)[1];
+    int k = (it->first)[2];
+    int l = (it->first)[3];
 
     double val = it->second;
     //if ( abs(val) > 1e-8 ) pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
@@ -206,22 +206,22 @@ void Twopdm_container::update_full_spin_array( std::map< std::tuple<int,int,int,
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_container::build_spatial_elements( std::map< std::tuple<int,int,int,int>, double >& spin_batch, 
-                                               std::map< std::tuple<int,int,int,int>, double >& spatial_batch )
+void Twopdm_container::build_spatial_elements( std::map< std::vector<int>, double >& spin_batch, std::map< std::vector<int>, double >& spatial_batch )
 {
   //Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
   double factor = 0.5;
 
   for (auto it = spatial_batch.begin(); it != spatial_batch.end(); ++it) {
-    int i = std::get<0>( it->first );
-    int j = std::get<1>( it->first );
-    int k = std::get<2>( it->first );
-    int l = std::get<3>( it->first );
+    int i = (it->first)[0];
+    int j = (it->first)[1];
+    int k = (it->first)[2];
+    int l = (it->first)[3];
     // Sum over spin indices 
     double val = 0.0;
     for (int s=0; s<2; s++) {
       for (int t =0; t<2; t++) {
-        val += spin_batch[ std::make_tuple( 2*i+s, 2*j+t, 2*k+t, 2*l+s ) ];
+        std::vector<int> idx = { 2*i+s, 2*j+t, 2*k+t, 2*l+s };
+        val += spin_batch[ idx ];
       }
     }
     // Store significant elements only
@@ -245,21 +245,20 @@ void Twopdm_container::store_npdm_elements( const std::vector< std::pair< std::v
 {
   assert( new_spin_orbital_elements.size() == 6 );
   // Temporary batches of npdm elements
-  std::map< std::tuple<int,int,int,int>, double > spin_batch;
-  std::map< std::tuple<int,int,int,int>, double > spatial_batch;
+  std::map< std::vector<int>, double > spin_batch;
+  std::map< std::vector<int>, double > spatial_batch;
 
   for (int idx=0; idx < new_spin_orbital_elements.size(); ++idx) {
     // Get all spin-index permutations
     Twopdm_permutations p;
-    std::map< std::tuple<int,int,int,int>, int > spin_indices = p.get_spin_permutations( new_spin_orbital_elements[idx].first );
+    std::map< std::vector<int>, int > spin_indices = p.get_spin_permutations( new_spin_orbital_elements[idx].first );
     double val = new_spin_orbital_elements[idx].second;
     for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
       // Initialize spatial indices
-      int i = std::get<0>( it->first );
-      int j = std::get<1>( it->first );
-      int k = std::get<2>( it->first );
-      int l = std::get<3>( it->first );
-      spatial_batch[ std::make_tuple(i/2, j/2, k/2, l/2) ] = 0.0;
+      std::vector<int> vec;
+      for (int i=0; i < (it->first).size(); ++i)
+        vec.push_back( (it->first)[i]/2 );
+      spatial_batch[ vec ] = 0.0;
       // Assign temporary batch of spin-orbital elements
       spin_batch[ it->first ] = it->second * val;
       if ( store_sparse_spin_array_ && (abs(val) > 1e-14) ) sparse_spin_pdm[ it->first ] = it->second * val;

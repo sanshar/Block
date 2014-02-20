@@ -29,8 +29,8 @@ class Npdm_expectations {
   private:
     std::vector< double > expectations_;
     Npdm_patterns& npdm_patterns_;
-    Wavefunction & wavefunction_; 
-    const SpinBlock & big_; 
+    Wavefunction& wavefunction_; 
+    const SpinBlock& big_; 
     const int npdm_order_;
 
     bool screen_op_string_for_duplicates( std::string& op );

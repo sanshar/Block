@@ -27,6 +27,7 @@ Npdm_patterns::Npdm_patterns( int pdm_order, int sweep_pos, int end_pos )
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // The pattern generator for the non-redundant NPDM elements leads to duplicates if indices are repeated, so some can be skipped explicitly.
 // If the normal-ordered string is not of non-redundant form, then the original string produces duplicates when permutations are applied.
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 bool Npdm_patterns::screen_2pdm_strings( std::vector<int>& indices, std::string& CD )
 {
@@ -160,12 +161,22 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
     }
   }
 
-  //FIXME make sure no unneccesary patterns
   //---------------
   // Edge cases 
   //---------------
+  // 1PDM
+  if (pdm_order_ == 1) {
+    if ( sweep_pos == 0 ) {
+      lhs_dot_rhs_types_.insert( std::make_tuple(2,0,0) );
+    }
+    else if ( sweep_pos == end_pos ) {
+      lhs_dot_rhs_types_.insert( std::make_tuple(0,0,2) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(0,1,1) );
+      lhs_dot_rhs_types_.insert( std::make_tuple(1,0,1) );
+    }
+  }
   // 2PDM
-  if (pdm_order_ == 2) {
+  else if (pdm_order_ == 2) {
     if ( sweep_pos == 0 ) {
       lhs_dot_rhs_types_.insert( std::make_tuple(4,0,0) );
       lhs_dot_rhs_types_.insert( std::make_tuple(3,1,0) );

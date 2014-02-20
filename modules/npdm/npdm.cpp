@@ -266,7 +266,17 @@ void npdm( int npdm_order )
   switch (npdm_order) {
   case (1):
     // Compute onepdm elements
-    SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
+    for (int state=0; state<dmrginp.nroots(); state++) {
+      if (false) {
+        // Compute onepdm with the original code
+        SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
+      }
+      else {
+        // Compute onepdm with general npdm code
+        Onepdm_driver onepdm_driver( dmrginp.last_site() );
+        npdm_do_one_sweep(onepdm_driver, sweepParams, false, direction, false, 0, state);
+      }
+    }
     break;
   case (2):
     // Compute twopdm elements
@@ -298,8 +308,6 @@ void npdm( int npdm_order )
     break;
   case (0):
     for (int state=0; state<dmrginp.nroots(); state++) {
-      // Compute full onepdm matrix
-      SweepOnepdm::do_one(sweepParams, false, direction, false, 0);
       // Compute NEVPT2 NPDM matrix elements incrementally along the sweep
       Nevpt2_npdm_driver nevpt2_npdm_driver( dmrginp.last_site() );
       npdm_do_one_sweep(nevpt2_npdm_driver, sweepParams, false, direction, false, 0, state);

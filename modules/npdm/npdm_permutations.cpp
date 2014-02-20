@@ -12,10 +12,28 @@ namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
-std::map< std::tuple<int,int,int,int>, int > Twopdm_permutations::get_spin_permutations( const std::vector<int>& indices )
+std::map< std::vector<int>, int > Onepdm_permutations::get_spin_permutations( const std::vector<int>& indices )
 {
+  assert( indices.size() == 2 );
+  std::map< std::vector<int>, int > perms;
+  std::vector<int> idx;
+  int i = indices[0];
+  int j = indices[1];
 
-  std::map< std::tuple<int,int,int,int>, int > perms;
+  idx = { i, j }; perms[ idx ] =  1;
+  // Transpose is same 
+  idx = { j, i }; perms[ idx ] =  1; 
+
+  return perms;
+}
+
+//===========================================================================================================================================================
+
+std::map< std::vector<int>, int > Twopdm_permutations::get_spin_permutations( const std::vector<int>& indices )
+{
+  assert( indices.size() == 4 );
+  std::map< std::vector<int>, int > perms;
+  std::vector<int> idx;
   int i = indices[0];
   int j = indices[1];
   int k = indices[2];
@@ -23,15 +41,15 @@ std::map< std::tuple<int,int,int,int>, int > Twopdm_permutations::get_spin_permu
 
   // 8 permutations
   //--------------------------
-  perms[std::make_tuple(i, j, k, l)] = 1;
-  perms[std::make_tuple(i, j, l, k)] = -1;
-  perms[std::make_tuple(j, i, k, l)] = -1;
-  perms[std::make_tuple(j, i, l, k)] = 1;
-
-  perms[std::make_tuple(l, k, j, i)] = 1;
-  perms[std::make_tuple(k, l, j, i)] = -1;
-  perms[std::make_tuple(l, k, i, j)] = -1;
-  perms[std::make_tuple(k, l, i, j)] = 1;
+  idx = { i, j, k, l }; perms[ idx ] =  1;
+  idx = { i, j, l, k }; perms[ idx ] =  -1;
+  idx = { j, i, k, l }; perms[ idx ] =  -1;
+  idx = { j, i, l, k }; perms[ idx ] =  1;
+                    
+  idx = { l, k, j, i }; perms[ idx ] =  1;
+  idx = { k, l, j, i }; perms[ idx ] =  -1;
+  idx = { l, k, i, j }; perms[ idx ] =  -1;
+  idx = { k, l, i, j }; perms[ idx ] =  1;
 
   return perms;
 }
@@ -50,7 +68,7 @@ std::map< std::vector<int>, int > Threepdm_permutations::get_spin_permutations( 
   int m = indices[4];
   int n = indices[5];
 
-  // The number of possible combinations is (3!)**2
+  // The number of possible permutations is (3!)**2
   //------------------------------------------------
 
   idx = { i, j, k, l, m, n }; perms[ idx ] =  1;

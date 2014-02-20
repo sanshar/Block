@@ -12,7 +12,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 //FIXME use forward declaration for spinExpectation
 #include "npdm_expectations_engine.h"
 #include "npdm_expectations.h"
-//#include "npdm_operators.h"
 #include "npdm_patterns.h"
 
 namespace SpinAdapted{
@@ -44,7 +43,12 @@ bool Npdm_expectations::screen_op_string_for_duplicates( std::string& op )
     else { indices.push_back(*it); }
   }
 
-  if ( indices.size() == 4 ) {
+  if ( indices.size() == 2 ) {
+    // 1PDM case
+//    return npdm_patterns_.screen_1pdm_strings( indices, CD ); 
+    return false;
+  }
+  else if ( indices.size() == 4 ) {
     // 2PDM case
     return npdm_patterns_.screen_2pdm_strings( indices, CD ); 
   }
@@ -75,7 +79,6 @@ std::string Npdm_expectations::get_full_op_string( NpdmSpinOps_base & lhsOps, Np
   //cout << "dot indices = "; for (auto it = dotOps.indices_.begin(); it != dotOps.indices_.end(); ++it) { cout << *it << " "; } cout << std::endl;
   //cout << "rhs indices = "; for (auto it = rhsOps.indices_.begin(); it != rhsOps.indices_.end(); ++it) { cout << *it << " "; } cout << std::endl;
   //cout << "spatial indices = "; for (auto it = indices.begin(); it != indices.end(); ++it) { cout << *it << " "; } cout << std::endl;
-  assert( (indices.size() == 4) || (indices.size() == 6) || (indices.size() == 8) );
 
   // Set up how tensor operator is constructed from (compound) block operators
   std::string build_pattern = "(";
@@ -224,13 +227,13 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_bas
   }
 
   assert (expectations_.size() > 0);
-cout << "---------------------------------\n";
-cout << "spin-adapted expectations =\n";
-//cout << "mpirank = " << mpigetrank() << endl;
-for (auto it = expectations_.begin(); it != expectations_.end(); ++it) {
-  cout << *it << std::endl;
-}
-cout << "---------------------------------\n";
+//cout << "---------------------------------\n";
+//cout << "spin-adapted expectations =\n";
+////cout << "mpirank = " << mpigetrank() << endl;
+//for (auto it = expectations_.begin(); it != expectations_.end(); ++it) {
+//  cout << *it << std::endl;
+//}
+//cout << "---------------------------------\n";
 
 }
 
@@ -241,7 +244,8 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
 {
   // Initialize dimension of spin-adapted to non-spin-adapted transformation
   int dim;
-  if ( npdm_order_ == 2 ) dim = 6;
+  if ( npdm_order_ == 1 ) dim = 2;
+  else if ( npdm_order_ == 2 ) dim = 6;
   else if ( npdm_order_ == 3 ) dim = 20;
   else if ( npdm_order_ == 4 ) dim = 70;
   else assert(false);

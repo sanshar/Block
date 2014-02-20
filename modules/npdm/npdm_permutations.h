@@ -9,7 +9,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef NPDM_PERMUTATIONS_H
 #define NPDM_PERMUTATIONS_H
 
-#include <tuple>
 #include <boost/mpi.hpp>
 #include <vector>
 #include <multiarray.h>
@@ -23,21 +22,37 @@ namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
-class Twopdm_permutations {
+class Npdm_permutations {
   public:
-    std::map< std::tuple<int,int,int,int>, int > get_spin_permutations( const std::vector<int>& indices );
+    Npdm_permutations() {}
+    virtual ~Npdm_permutations() {}
+    virtual std::map< std::vector<int>, int > get_spin_permutations( const std::vector<int>& indices ) = 0;
 };
 
 //===========================================================================================================================================================
 
-class Threepdm_permutations {
+class Onepdm_permutations : public Npdm_permutations {
   public:
     std::map< std::vector<int>, int > get_spin_permutations( const std::vector<int>& indices );
 };
 
 //===========================================================================================================================================================
 
-class Fourpdm_permutations {
+class Twopdm_permutations : public Npdm_permutations {
+  public:
+    std::map< std::vector<int>, int > get_spin_permutations( const std::vector<int>& indices );
+};
+
+//===========================================================================================================================================================
+
+class Threepdm_permutations : public Npdm_permutations {
+  public:
+    std::map< std::vector<int>, int > get_spin_permutations( const std::vector<int>& indices );
+};
+
+//===========================================================================================================================================================
+
+class Fourpdm_permutations : public Npdm_permutations {
   public:
     std::map< std::vector<int>, int > get_spin_permutations( const std::vector<int>& indices );
     void get_even_and_odd_perms(const std::vector<int> mnpq, std::vector< std::vector<int> > & even_perms, std::vector< std::vector<int> > & odd_perms);
