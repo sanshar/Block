@@ -54,7 +54,8 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
 {
   int iter;
   int current = 0;
-  int current_ls = 0;
+  //ROA: Deactivated least squares
+  //int current_ls = 0;
   int sweep_iter_ls = sweep_iter + 1;
   for (iter = 0; iter < dmrginp.sweep_iter_schedule().size(); ++iter)
   {
@@ -63,6 +64,8 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
        //pout << "chosen current " << iter << endl;
      }
   }
+  /*
+  //ROA: Deactivated least squares
   for (iter = 0; iter < dmrginp.sweep_iter_schedule().size(); ++iter)
   {
      if (sweep_iter_ls >= dmrginp.sweep_iter_schedule()[iter]) { 
@@ -70,8 +73,10 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
        //pout << "chosen current " << iter << endl;
      }
   }
+  */
   keep_states = dmrginp.sweep_state_schedule()[current];
-  keep_states_ls = dmrginp.sweep_state_schedule()[current_ls];
+  //ROA: Deactivated least squares
+  //keep_states_ls = dmrginp.sweep_state_schedule()[current_ls];
   keep_qstates = 0.0;//dmrginp.sweep_qstate_schedule()[current];
   davidson_tol = dmrginp.sweep_tol_schedule()[current];
   noise = dmrginp.sweep_noise_schedule()[current];

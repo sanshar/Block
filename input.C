@@ -833,7 +833,6 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
   std::ifstream ReorderFileInput;
   char ReorderFileName[5000];
   std::vector<int> reorder;
-  boost::filesystem::path p(ReorderFileName);
 
   if (mpigetrank() == 0) {
     ReadMeaningfulLine(dumpFile, msg, msgsize);
@@ -851,6 +850,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     //this is the file to which the reordering is written
     sprintf(ReorderFileName, "%s%s", save_prefix().c_str(), "/RestartReorder.dat");
   }
+  boost::filesystem::path p(ReorderFileName);
 
 #ifndef SERIAL
   boost::mpi::communicator world;
