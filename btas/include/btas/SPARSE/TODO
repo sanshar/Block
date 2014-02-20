@@ -1,0 +1,5 @@
+TODO lists:
+
+STArray should have dense-block shapes:
+When 0-sized index appears, STdsum and QSTmerge are failed due to the missing infomation.
+
