@@ -50,6 +50,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 void dmrg(double sweep_tol);
 void restart(double sweep_tol, bool reset_iter);
+void dmrg_stateSpecific(double sweep_tol, int targetState);
 void ReadInput(char* conf);
 void fullrestartGenblock();
 void license() {
@@ -107,8 +108,15 @@ int calldmrg(char* input, char* output)
 
   SweepParams sweep_copy;
   bool direction_copy; int restartsize_copy;
-
-
+  
+  /*
+  {
+   SweepParams sweepParams;
+   sweepParams.ls_dw.resize(0);
+   sweepParams.ls_energy.resize(0);
+   Sweep::do_overlap(sweepParams, false, true, false, 0);
+  }
+  */  
   switch(dmrginp.calc_type()) {
     
   case (DMRG):
@@ -292,6 +300,7 @@ int calldmrg(char* input, char* output)
 
     break;
   }
+  //case (EXCITEDDMRG) :
 
   return 0;
 
@@ -339,6 +348,7 @@ void restart(double sweep_tol, bool reset_iter)
   int domoreIter = 2;
 
   sweepParams.restorestate(direction, restartsize);
+
   if(reset_iter) { //this is when you restart from the start of the sweep
     sweepParams.set_sweep_iter() = 0;
     sweepParams.set_restart_iter() = 0;
@@ -422,11 +432,12 @@ void dmrg(double sweep_tol)
   bool dodiis = false;
 
   int domoreIter = 0;
+  bool direction;
 
   //initialize array of size m_maxiter or dmrginp.max_iter() for dw and energy
-
-
+  sweepParams.current_root() = 0;
   last_fe = Sweep::do_one(sweepParams, true, true, false, 0);
+  direction = false;
   while ((fabs(last_fe - old_fe) > sweep_tol) || (fabs(last_be - old_be) > sweep_tol) || 
 	 (dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter()+1 >= sweepParams.get_sweep_iter()) )
     {
@@ -435,6 +446,7 @@ void dmrg(double sweep_tol)
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
       last_be = Sweep::do_one(sweepParams, false, false, false, 0);
+      direction = true;
       if (dmrginp.outputlevel() > 0) 
          pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
 
@@ -458,6 +470,7 @@ void dmrg(double sweep_tol)
       }
 
       last_fe = Sweep::do_one(sweepParams, false, true, false, 0);
+      direction = false;
 
       new_states=sweepParams.get_keep_states();
 
@@ -485,6 +498,74 @@ void dmrg(double sweep_tol)
     pout << "Maximum sweep iterations achieved " << std::endl;
   }
 
+  const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
+
+  if(nroots > 1 && dmrginp.doStateSpecific()) {
+    dmrginp.setStateSpecific() = true;
+    for (int i=0; i<nroots; i++) {
+      if (i != 0) 
+	SweepGenblock::do_one(sweepParams, false, direction, false, 0, i);
+      dmrg_stateSpecific(sweep_tol, i);
+    }
+  }
+}
+
+void dmrg_stateSpecific(double sweep_tol, int targetState)
+{
+  double last_fe = 10.e6;
+  double last_be = 10.e6;
+  double old_fe = 0.;
+  double old_be = 0.;
+  int ls_count=0;
+  SweepParams sweepParams;
+  int old_states=sweepParams.get_keep_states();
+  int new_states;
+  double old_error=0.0;
+  double old_energy=0.0;
+  // warm up sweep ...
+
+  bool direction;
+  int restartsize;
+  sweepParams.restorestate(direction, restartsize);
+
+  //initialize array of size m_maxiter or dmrginp.max_iter() for dw and energy
+  sweepParams.current_root() = targetState;
+
+  sweepParams.set_sweep_iter() = 0;
+  sweepParams.set_restart_iter() = 0;
+
+  last_fe = Sweep::do_one(sweepParams, false, direction, true, 0);
+
+  while ((fabs(last_fe - old_fe) > sweep_tol) || (fabs(last_be - old_be) > sweep_tol)  )
+    {
+      old_fe = last_fe;
+      old_be = last_be;
+      if(dmrginp.max_iter() <= 10) //CHANGE THIS TO SOME INPUT PARAMETER
+	break;
+      last_be = Sweep::do_one(sweepParams, false, !direction, false, 0);
+      if (dmrginp.outputlevel() > 0) 
+         pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+
+      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+         break;
+
+
+      last_fe = Sweep::do_one(sweepParams, false, direction, false, 0);
+
+      new_states=sweepParams.get_keep_states();
+
+
+      if (dmrginp.outputlevel() > 0)
+         pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+
+    }
+  if(dmrginp.max_iter() <= sweepParams.get_sweep_iter()) {
+    
+    pout << "Maximum sweep iterations achieved " << std::endl;
+  }
+
+  //SweepGenblock::makeRotationsAndOverlaps(sweepParams, false, !direction, targetState);
+  //SweepGenblock::makeRotationsAndOverlaps(sweepParams, false, direction, targetState);
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
 }
 

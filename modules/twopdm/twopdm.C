@@ -546,7 +546,7 @@ void compute_two_pdm_1_2_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 #endif
   for (int j = 0; j < csize; ++j)
   {
-    shared_ptr<SparseMatrix> leftop = leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(j)[0];
+    boost::shared_ptr<SparseMatrix> leftop = leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(j)[0];
     int ix = leftop->get_orbs(0);
     if (ix == jx ) continue;
     boost::shared_ptr<SparseMatrix> dotop0  = dotBlock->get_op_array(CRE_CRE).get_local_element(0)[0];

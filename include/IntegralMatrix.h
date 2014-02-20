@@ -165,7 +165,7 @@ class OneElectronArray
 	//int size = dumpFile.tellg();
 	double size = dumpFile.tellg();
         dumpFile.seekg (0, ios::beg);
-        FORTINT nmo = rhf ? static_cast<int>(2*sqrt(size / (sizeof(double)))) : static_cast<int>(sqrt(size / (sizeof(double))));
+        int nmo = rhf ? static_cast<int>(2*sqrt(size / (sizeof(double)))) : static_cast<int>(sqrt(size / (sizeof(double))));
 	ReSize(nmo);
         if (rhf) nmo /= 2;
         char buffer[nmo*nmo*sizeof(double)] ;
@@ -209,8 +209,8 @@ class OneElectronArray
 	  double scale=1.0, cfactor=0.0;
 	  double* inter = new double[nmo*nmo];
 	  char n='n', t='t';
-	  dgemm_ (&n, &n, &nmo, &nmo, &nmo, &scale, Aoints.Store(), &nmo, CoeffMatrix.Store (), &nmo, &cfactor, inter, &nmo);
-	  dgemm_ (&t, &n, &nmo, &nmo, &nmo, &scale, CoeffMatrix.Store (), &nmo, inter, &nmo, &cfactor, Moints.Store (), &nmo);
+	  DGEMM(n, n, nmo, nmo, nmo, scale, Aoints.Store(), nmo, CoeffMatrix.Store (), nmo, cfactor, inter, nmo);
+	  DGEMM(t, n, nmo, nmo, nmo, scale, CoeffMatrix.Store (), nmo, inter, nmo, cfactor, Moints.Store (), nmo);
 	  delete [] inter;
 
 

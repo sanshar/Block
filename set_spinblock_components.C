@@ -160,7 +160,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
     ops[HAM] = make_new_op(HAM, true);
     //for hubbard model if we want to calculate twopdm we still need cd operators
-    if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY || dmrginp.do_cd()) {
+    if (dmrginp.hamiltonian() != HUBBARD || dmrginp.do_cd()) {
       
       if (haveNormops)
       {
@@ -187,7 +187,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     ops[HAM] = make_new_op(HAM, true);
     
     //for hubbard model if we want to calculate twopdm we still need cd operators
-    if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY || dmrginp.do_cd()) {
+    if (dmrginp.hamiltonian() != HUBBARD || dmrginp.do_cd()) {
       
       if (haveNormops || dmrginp.do_cd())
       {

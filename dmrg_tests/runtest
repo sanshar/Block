@@ -32,7 +32,11 @@ python ../test_energy.py 1  1.0e-6 -6.56819216
 python ../test_onepdm.py spatial_onepdm.0.0 spat_onepdm.0.0 1e-7
 cd ../
 
-
+echo "performing heisenberg test..."
+cd heisenberg_2d
+ ../../block.spin_adapted dmrg.conf >dmrg.out
+python ../test_energy.py 1  1.0e-6 -11.2284830996
+cd ../
 
 #this first calculated twopdm with a small M for two lowest states (so the energy is not converged)
 #checks if the twopdm traced with integrals matches the energies

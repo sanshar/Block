@@ -73,7 +73,7 @@ class SpinBlock
   double memoryUsed();
   void addAdditionalCompOps();
   const StateInfo& get_stateInfo() const {return stateInfo;}
-  std::vector<int> make_complement(const std::vector<int>& sites);
+  static std::vector<int> make_complement(const std::vector<int>& sites);
   void setstoragetype(Storagetype st);
   void default_op_components(bool complementary_);
   void default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops);
@@ -130,7 +130,7 @@ class SpinBlock
   void RenormaliseFrom (std::vector<double> &energies, std::vector<double> &spins, double &error, std::vector<Matrix>& rotateMatrix,
                         const int keptstates, const int keptqstates, const double tol, SpinBlock& big,
                         const guessWaveTypes &guesswavetype, const double noise, const double additional_noise, const bool &onedot, SpinBlock& system, 
-			SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, const bool& warmUp, int sweepiter);
+			SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, const bool& warmUp, int sweepiter, int currenroot, std::vector<Wavefunction>& lowerStates);
 
   double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates);
   void transform_operators(std::vector<Matrix>& rotateMatrix);

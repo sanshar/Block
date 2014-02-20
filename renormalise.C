@@ -40,7 +40,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 				const int keptstates, const int keptqstates, const double tol, SpinBlock& big, 
 				const guessWaveTypes &guesswavetype, const double noise, const double additional_noise, const bool &onedot, SpinBlock& System, 
 				SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys,
-				const bool& warmUp, int sweepiter)
+				const bool& warmUp, int sweepiter, int currentRoot, std::vector<Wavefunction>& lowerStates)
 {
   int nroots = dmrginp.nroots(sweepiter);
   vector<Wavefunction> wave_solutions(nroots);
@@ -49,7 +49,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
     mcheck("before davidson but after all blocks are built");
 
   dmrginp.solvewf -> start();
-  Solver::solve_wavefunction(wave_solutions, energies, big, tol, guesswavetype, onedot, dot_with_sys, warmUp, additional_noise);
+  Solver::solve_wavefunction(wave_solutions, energies, big, tol, guesswavetype, onedot, dot_with_sys, warmUp, additional_noise, currentRoot, lowerStates);
 
   dmrginp.solvewf -> stop();
   SpinBlock newsystem;
@@ -109,10 +109,11 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 #endif
 
   SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix);
-  for (int i=0; i<nroots; i++)
-    SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix, i);
-  for(int i=0;i<nroots;++i)
-    wave_solutions[i].SaveWavefunctionInfo (newbig.stateInfo, newbig.leftBlock->sites, i);
+  for (int i=0; i<nroots; i++) {
+    int state = nroots==1 ? currentRoot : i;
+    SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix, state);
+    wave_solutions[i].SaveWavefunctionInfo (newbig.stateInfo, newbig.leftBlock->sites, state);
+  }
   dmrginp.rotmatrixT -> stop();
   if (dmrginp.outputlevel() > 0)
     mcheck("after noise and calculation of density matrix");

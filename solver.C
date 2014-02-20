@@ -20,7 +20,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vector<double>& energies, SpinBlock& big, const double tol, 
 				const guessWaveTypes& guesswavetype, const bool &onedot, const bool& dot_with_sys, const bool& warmUp,
-					     double additional_noise)
+					     double additional_noise, int currentRoot, std::vector<Wavefunction>& lowerStates)
 {
   const int nroots = solution.size();
 
@@ -42,26 +42,57 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
   }
   else 
     e.ReSize(0);
-  
-  if(dmrginp.solve_method() == DAVIDSON) {
+
+  if (e.Ncols() <= nroots) {
+    //sometimes when you need many roots and at the start of the sweep the hilbert space is not big
+    //enough to support all the roots
     solution.resize(nroots);
-    multiply_h davidson_f(big, onedot);
-    GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise); 
-    Linear::block_davidson(solution, e, tol, warmUp, davidson_f, useprecond);
+    
+    for (int i=0; i<nroots; i++) {
+      solution[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
+      solution[i].Randomise();
+      Normalise(solution[i]);
+    }
   }
   else {
-    solution.resize(1);
-    multiply_h davidson_f(big, onedot);
-    GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise); 
-    Linear::Lanczos(solution, e, tol, davidson_f, nroots);
+    if(dmrginp.solve_method() == DAVIDSON) {
+      solution.resize(nroots);
+      multiply_h davidson_f(big, onedot);
+      GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise, currentRoot); 
+      //cout << solution[0]<<endl<<endl;
+      //cout << lowerStates[0]<<endl<<endl;
+      if(lowerStates.size() != 0)
+	cout << "overlap in "<<DotProduct(solution[0], lowerStates[0])<<"  "<<DotProduct(solution[0], solution[0])<<"  "<<DotProduct(lowerStates[0], lowerStates[0])<<endl;
+      /*
+	Wavefunction sigma=solution[0];
+	sigma.Clear();
+	davidson_f(solution[0], sigma);
+	cout <<"energy "<<DotProduct(sigma, solution[0])<<endl;
+      */
+      Linear::block_davidson(solution, e, tol, warmUp, davidson_f, useprecond, currentRoot, lowerStates);
+      if(lowerStates.size() != 0)
+	cout << "overlap out "<<DotProduct(solution[0], lowerStates[0])<<"  "<<DotProduct(solution[0], solution[0])<<"  "<<DotProduct(lowerStates[0], lowerStates[0])<<endl;
+      
+    }
+    else {
+      solution.resize(1);
+      multiply_h davidson_f(big, onedot);
+      GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise, currentRoot); 
+      Linear::Lanczos(solution, e, tol, davidson_f, nroots);
+    }
   }
- 
 
   solution.resize(nroots);
   energies.resize(nroots);
-  for (int i=0; i<nroots&& mpigetrank() == 0;i++) {
-    energies[i] = e(i+1);
-    //pout << "\t\t\t Energy of wavefunction "<<i<<"  =  "<<e(i+1)<<endl;
+  if (e.Ncols() > nroots) {
+    for (int i=0; i<nroots&& mpigetrank() == 0;i++) {
+      energies[i] = e(i+1);
+      //pout << "\t\t\t Energy of wavefunction "<<i<<"  =  "<<e(i+1)<<endl;
+    }
+  }
+  else {
+    for (int i=0; i<nroots&& mpigetrank() == 0;i++) 
+      energies[i] = e(1);
   }
 #ifndef SERIAL
   mpi::communicator world;

@@ -15,11 +15,12 @@ namespace GuessWave
   void TransformLeftBlock(Wavefunction& oldwavefunction, const StateInfo& newstateinfo, const std::vector<Matrix>& RotationMatrix, Wavefunction& tempoldWave);
   void TransformRightBlock(const Wavefunction& tempnewWave, const StateInfo& tempoldStateInfo, const std::vector<Matrix>& RotationMatrix, Wavefunction& trial);
   void guess_wavefunctions(std::vector<Wavefunction>& solution, DiagonalMatrix& e, const SpinBlock &big, 
-			   const guessWaveTypes &guesswavetype, const bool &onedot,  const bool& transpose_guess_wave, double additional_noise=0.0);
+			   const guessWaveTypes &guesswavetype, const bool &onedot,  const bool& transpose_guess_wave, double additional_noise=0.0, int currentState=0);
   void guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, const SpinBlock &big,
 			   const guessWaveTypes &guesswavetype, const bool &onedot, const int &state, const bool& transpose_guess_wave, double additional_noise=0.0);
 
   //onedot transpose wave guess
+  void transpose_previous_wavefunction(Wavefunction& trial, const StateInfo& stateInfo, const std::vector<int>& rightsites, const std::vector<int> &dotsites, const int state, const bool &onedot, const bool& transpose_guess_wave);
   void transpose_previous_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state, const bool &onedot, const bool& transpose_guess_wave);
   void onedot_transpose_wavefunction(const StateInfo& guessstateinfo, const StateInfo& transposestateinfo,
                                       const Wavefunction& guesswf, Wavefunction& transposewf);
@@ -35,6 +36,7 @@ namespace GuessWave
 						   ObjectMatrix3D< vector<Matrix> >& threewavefunction);
   void transform_previous_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state, const bool &onedt, 
 				       const bool& transpose_guess_wave);
+  void transform_previous_wavefunction(Wavefunction& trial, const StateInfo& stateInfo, const std::vector<int> &leftsites, const std::vector<int> &rightsites, const int state, const bool &onedot, const bool& transpose_guess_wave);
 
   //ondeot transform wave guess                                                                                  
   void onedot_transform_wavefunction(const StateInfo& oldstateinfo, const StateInfo& newstateinfo, const Wavefunction& oldwavefunction,

@@ -16,6 +16,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "Symmetry.h"
 #include <boost/functional/hash.hpp>
 
+
 namespace SpinAdapted{
   //this is the slater orbital index
 inline int SymmetryOfSpinOrb (const int i)
@@ -89,8 +90,8 @@ public:
     return (*this);
   }
   
-  shared_ptr<Slater> getLeftSlater(int index);
-  shared_ptr<Slater> getRightSlater(int index);
+  boost::shared_ptr<Slater> getLeftSlater(int index);
+  boost::shared_ptr<Slater> getRightSlater(int index);
 
   inline Slater& d (int i)
   {

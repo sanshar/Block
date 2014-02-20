@@ -256,7 +256,7 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
       for_all_multithread(leftBlock->get_op_array(CRE), onedot_noise);
     }
     
-    if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
+    if (dmrginp.hamiltonian() != HUBBARD) {
     if (leftBlock->has(CRE_CRE))
     {
       onedot_noise.set_opType(CRE_CRE);

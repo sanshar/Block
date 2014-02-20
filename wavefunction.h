@@ -11,6 +11,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #define SPIN_WAVEFUNCTION_HEADER
 #include "BaseOperator.h"
 
+#ifdef USE_BTAS
+#include "btas/SPARSE/STArray.h"
+#endif
+
 namespace SpinAdapted{
 class Wavefunction : public SpinAdapted::SparseMatrix
 {
@@ -39,6 +43,13 @@ public:
 
   void LoadWavefunctionInfo (StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num);
   void SaveWavefunctionInfo (const StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num);
+  
+#ifdef USE_BTAS
+  void CollectQuantaAlongRows (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const SpinQuantum dQ);
+  void UnCollectQuantaAlongRows(const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave);
+  void CollectQuantaAlongColumns (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const SpinQuantum dQ);
+  void UnCollectQuantaAlongColumns(const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave);
+#endif
 
   void UnCollectQuantaAlongRows(const StateInfo& sRow, const StateInfo& sCol);
   void AllowQuantaFor(const StateInfo& sRow, const StateInfo& sCol, const SpinQuantum q);

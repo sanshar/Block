@@ -51,8 +51,6 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
     newSystem.printOperatorSummary();
 
   std::vector<Matrix> rotateMatrix;
-
-
   LoadRotationMatrix (newSystem.get_sites(), rotateMatrix);
 
 #ifndef SERIAL
@@ -162,4 +160,59 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
 
   return finalEnergy[0];
 }
+  /*
+void SweepGenblock::makeRotationsAndOverlaps(SweepParams &sweepParams, bool warmUp, const bool &forward, int targetState) {
+
+  SpinBlock system;
+
+  sweepParams.set_sweep_parameters();
+  // a new renormalisation sweep routine
+  pout << ((forward) ? "\t\t\t Starting renormalisation sweep in forwards direction" : "\t\t\t Starting renormalisation sweep in backwards direction") << endl;
+  pout << "\t\t\t ============================================================================ " << endl;
+  
+  sweepParams.set_block_iter() = 0;
+
+  sweepParams.savestate(forward, system.get_sites().size());
+
+  for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
+    {
+      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+      pout << "\t\t\t ----------------------------" << endl;
+      if (dmrginp.outputlevel() > 0) {
+      if (forward)
+	pout << "\t\t\t Current direction is :: Forwards " << endl;
+      else
+	pout << "\t\t\t Current direction is :: Backwards " << endl;
+      }
+      //if (SHOW_MORE) pout << "system block" << endl << system << endl;
+  
+      if (dmrginp.no_transform())
+	      sweepParams.set_guesstype() = BASIC;
+      else if (!warmUp && sweepParams.get_block_iter() != 0) 
+  	    sweepParams.set_guesstype() = TRANSFORM;
+      else if (!warmUp && sweepParams.get_block_iter() == 0 && 
+                ((dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter() != sweepParams.get_sweep_iter()) ||
+                  dmrginp.algorithm_method() != TWODOT_TO_ONEDOT))
+        sweepParams.set_guesstype() = TRANSPOSE;
+      else
+        sweepParams.set_guesstype() = BASIC;
+      
+
+
+      if (dmrginp.outputlevel() > 0) 
+	pout << "\t\t\t saving state " << system.get_sites().size() << endl;
+      ++sweepParams.set_block_iter();
+      //if (sweepParams.get_onedot())
+      //pout << "\t\t\tUsing one dot algorithm!!"<<endl; 
+      sweepParams.savestate(forward, system.get_sites().size());
+    }
+  pout << "\t\t\t Finished Generate-Blocks Sweep. " << endl;
+  pout << "\t\t\t ============================================================================ " << endl;
+
+  // update the static number of iterations
+
+  ++sweepParams.set_sweep_iter();  
+
+}
+  */
 }

@@ -26,11 +26,11 @@ class SpinBlock;
 class OneElectronArray;
 class TwoElectronArray;
 
-enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD};
+enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD, HEISENBERG};
 enum solveTypes {LANCZOS, DAVIDSON};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
-enum calcType {DMRG, ONEPDM, TWOPDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI};
+enum calcType {DMRG, ONEPDM, TWOPDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI, EXCITEDDMRG};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
@@ -51,6 +51,9 @@ class Input {
   SpinQuantum m_molecule_quantum;
   int m_total_spin;
   int m_guess_permutations;
+  bool m_doStateSpecific;
+  bool m_stateSpecific; //when targetting excited states we switch from state 
+  //average to statespecific 
 
   std::vector<int> m_hf_occupancy;
   std::string m_hf_occ_user;
@@ -135,7 +138,7 @@ class Input {
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & m_thrds_per_node & m_spinAdapted;
+    ar & m_thrds_per_node & m_spinAdapted & m_stateSpecific & m_doStateSpecific;
     ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz;
     ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occ_user & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule;
@@ -231,6 +234,10 @@ class Input {
   boost::shared_ptr<cumulTimer> s1time; 
   boost::shared_ptr<cumulTimer> s2time; 
 
+  const bool& doStateSpecific() const {return m_doStateSpecific;}
+  bool& doStateSpecific() {return m_doStateSpecific;}
+  const bool& setStateSpecific() const {return m_stateSpecific;}
+  bool& setStateSpecific() {return m_stateSpecific;}
   const orbitalFormat& orbformat() const {return m_orbformat;}
   const int& outputlevel() const {return m_outputlevel;}
   const vector<int>& spatial_to_spin() const {return m_spatial_to_spin;}

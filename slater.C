@@ -81,23 +81,23 @@ SpinAdapted::Slater::Slater (const Orbstring& a)
 
 }
 
-shared_ptr<SpinAdapted::Slater> SpinAdapted::Slater::getLeftSlater (int index)
+boost::shared_ptr<SpinAdapted::Slater> SpinAdapted::Slater::getLeftSlater (int index)
 {
   std::vector<bool>::const_iterator it = alpha.get_occ_rep().begin();
   std::vector<bool> occ_rep_left;
   occ_rep_left.insert(occ_rep_left.begin(), it, it+index);
   Orbstring o(occ_rep_left);
-  shared_ptr<Slater> leftSlater(new Slater(o));
+  boost::shared_ptr<Slater> leftSlater(new Slater(o));
   return leftSlater;
 }
 
-shared_ptr<SpinAdapted::Slater> SpinAdapted::Slater::getRightSlater (int index)
+boost::shared_ptr<SpinAdapted::Slater> SpinAdapted::Slater::getRightSlater (int index)
 {
   std::vector<bool>::const_iterator it = alpha.get_occ_rep().begin();
   std::vector<bool> occ_rep_left;
   occ_rep_left.insert(occ_rep_left.begin(), it+index, alpha.get_occ_rep().end());
   Orbstring o(occ_rep_left);
-  shared_ptr<Slater> rightSlater(new Slater(o));
+  boost::shared_ptr<Slater> rightSlater(new Slater(o));
   return rightSlater;
 }
 

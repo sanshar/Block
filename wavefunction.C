@@ -104,6 +104,7 @@ void SpinAdapted::Wavefunction::SaveWavefunctionInfo (const StateInfo &waveInfo,
       this->Save (ofs);
       ofs.close();
     }
+
 }
 
 void SpinAdapted::Wavefunction::LoadWavefunctionInfo (StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num)
@@ -194,6 +195,8 @@ void SpinAdapted::Wavefunction::UnCollectQuantaAlongRows (const StateInfo& sRow,
       abort ();
     }
 }
+
+
 
 void SpinAdapted::Wavefunction::CollectQuantaAlongColumns (const StateInfo& sRow, const StateInfo& sCol)
 {

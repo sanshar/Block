@@ -149,11 +149,21 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     pout << "\t\t\t Solving wavefunction "<<endl;
   }
 
+  std::vector<Wavefunction> lowerStates;
+#ifdef USE_BTAS
+  if(sweepParams.current_root() != 0 && sweepParams.get_guesstype() != BASIC) {
+    if (dot_with_sys) 
+      getLowerStatesBlockRow(sweepParams.current_root(), newSystem.get_sites(), newEnvironment.get_sites(), lowerStates, newSystem.get_stateInfo(), newEnvironment.get_stateInfo());
+    else
+      getLowerStatesBlockCol(sweepParams.current_root(), system.get_sites(), newEnvironment.get_sites(), lowerStates, system.get_stateInfo(), newEnvironment.get_stateInfo());
+  }
+#endif
+
   newSystem.RenormaliseFrom (sweepParams.set_lowest_energy(), sweepParams.set_lowest_energy_spins(), sweepParams.set_lowest_error(), 
                              rotatematrix, sweepParams.get_keep_states(), 
                              sweepParams.get_keep_qstates(), sweepParams.get_davidson_tol(), big, sweepParams.get_guesstype(), sweepParams.get_noise(), 
                              sweepParams.get_additional_noise(), sweepParams.get_onedot(), system, systemDot, environmentDot, environment, 
-			     dot_with_sys, useSlater, sweepParams.get_sweep_iter());
+			     dot_with_sys, useSlater, sweepParams.get_sweep_iter(), sweepParams.current_root(), lowerStates);
 
   std::vector<StateInfo> storeStates(3);
   storeStates[0] = newSystem.get_stateInfo();
@@ -176,6 +186,11 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   newSystem.transform_operators(rotatematrix);
   storeStates[2] = newSystem.get_stateInfo();
   dmrginp.operrotT -> stop();
+
+#ifdef USE_BTAS
+  saveOverlapMatrices(sweepParams.current_root(), newSystem.get_sites(), storeStates[0], storeStates[2]);
+#endif
+
   if (dmrginp.outputlevel() > 0)
     mcheck("after rotation and transformation of block");
 
@@ -272,7 +287,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       SpinBlock newSystem;
 
       //Need to substitute by:
-      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian" || NonabelianSym))
+      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG))
          Startup(sweepParams, system, newSystem);
       else {
          if (sweepParams.set_sweep_iter() == 1 && sweepParams.get_block_iter() == 0)
@@ -281,7 +296,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       }
       
       //Need to substitute by?
-      if (!(warmUp && (sym=="trans" || sym == "dinfh_abelian" || NonabelianSym))){
+      if (!(warmUp && (sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG))){
       for(int j=0;j<nroots;++j)
       {
 #ifndef MOLPRO
@@ -350,20 +365,21 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   // update the static number of iterations
 
   ++sweepParams.set_sweep_iter();
-  if (!mpigetrank())
-  {
-    std::string efile;
-    efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
-    FILE* f = fopen(efile.c_str(), "wb");
-    
-    for(int j=0;j<nroots;++j) {
-      //double e = finalEnergy[j]+dmrginp.get_coreenergy(); 
-      double e = sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy(); //instead of the lowest energy of the sweep, we record the last energy of the sweep
-      fwrite( &e, 1, sizeof(double), f);
+  if (!(warmUp && (sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG))){
+    if (!mpigetrank())
+    {
+      std::string efile;
+      efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
+      FILE* f = fopen(efile.c_str(), "wb");
+      
+      for(int j=0;j<nroots;++j) {
+	//double e = finalEnergy[j]+dmrginp.get_coreenergy(); 
+	double e = sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy(); //instead of the lowest energy of the sweep, we record the last energy of the sweep
+	fwrite( &e, 1, sizeof(double), f);
+      }
+      fclose(f);
     }
-    fclose(f);
   }
-
 
   return finalEnergy[0];
 }
@@ -468,3 +484,5 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
 
   //mcheck("After renorm transform");
 }
+
+

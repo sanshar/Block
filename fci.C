@@ -75,7 +75,9 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   double tol = sweepParams.get_davidson_tol();
 
   pout << "\t\t\t Solving the Wavefunction "<<endl;
-  Solver::solve_wavefunction(solution, energies, big, tol, BASIC, false, true, false, sweepParams.get_additional_noise());
+  int currentState = 0;
+  std::vector<Wavefunction> lowerStates;
+  Solver::solve_wavefunction(solution, energies, big, tol, BASIC, false, true, false, sweepParams.get_additional_noise(), currentState, lowerStates);
   for (int i=0; i<nroots; i++) {
     pout << "fullci energy "<< energies[i]+dmrginp.get_coreenergy()<<endl;
   }
