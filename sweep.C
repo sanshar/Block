@@ -221,7 +221,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
  
   if (dmrginp.outputlevel() > 0)
     pout << "\t\t\t Starting block is :: " << endl << system << endl;
-
+  
   SpinBlock::store(forward, system.get_sites(), system); // if restart, just restoring an existing block --
   // just store the block in file for restart, no need to worry about it
   sweepParams.savestate(forward, system.get_sites().size()); // save on disk

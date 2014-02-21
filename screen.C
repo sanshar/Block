@@ -301,7 +301,7 @@ bool screen_d_interaction(int index, const std::vector<int, std::allocator<int> 
 	  const int jx = interactingix[j];
 	  const int kx = interactingix[k];
       int xl = index;
-      if (fabs(twoe(xl, ix, jx, kx)) >= thresh || fabs(vcccd(xl, ix, jx, kx)) >= thresh || fabs(vcccd(ix, jx, kx, xl)) > thresh || fabs(vcccc(xl, ix, jx, kx)) > thresh || fabs(vcccc(ix, jx, xl, kx)) > thresh)
+      if (fabs(twoe(xl, ix, jx, kx)) >= thresh || fabs(vcccd(xl, ix, jx, kx)) >= thresh || fabs(vcccd(ix, jx, kx, xl)) > thresh || fabs(vcccc(xl, ix, jx, kx)) > thresh)
         return true;
     }
     return (interactingix.size() == 0);
@@ -331,13 +331,13 @@ bool screen_cd_interaction(int ci, int dj, const std::vector<int, std::allocator
       int kx = interactingix[k];
 	  int lx = interactingix[l];
       if (symm && !comp) {
-	    if (fabs(twoe(ci, kx, lx, dj))>= thresh || fabs(twoe(kx, ci, lx, dj)) >= thresh || fabs(v_cccd(ci, kx, lx, dj)) >= thresh)
+	    if (fabs(twoe(ci, kx, lx, dj))>= thresh || fabs(twoe(kx, ci, lx, dj)) >= thresh || fabs(v_cccd(ci, kx, lx, dj)) >= thresh || fabs(v_cccd(dj, kx, lx, ci)) >= thresh)
           return true;
       } else if (symm && comp) {
         if (fabs(twoe(ci, kx, lx, dj))>=thresh || fabs(twoe(kx, ci, lx, dj)) >= thresh)
           return true;
       } else { // !symm
-        if (fabs(v_cccd(ci, kx, lx, dj)) >= thresh)
+        if (fabs(v_cccd(ci, kx, lx, dj)) >= thresh || fabs(v_cccd(dj, kx, lx, ci)) >= thresh)
           return true;
       }
     }
@@ -365,7 +365,7 @@ bool screen_dd_interaction(int ci, int cj, const std::vector<int, std::allocator
     for (int l = 0; l < ninter; ++l) {
       int kx = interactingix[k];
 	  int lx = interactingix[l];
-	  if (fabs(twoe(ci, cj, kx, lx))>=thresh || fabs(vcccd(kx, lx, ci, cj)) >= thresh || fabs(vcccc(ci, cj, kx, lx)) >= thresh || fabs(vcccc(ci, kx, cj, lx)) >= thresh || fabs(vcccc(kx, lx, ci, cj)) >= thresh)
+	  if (fabs(twoe(ci, cj, kx, lx))>=thresh || fabs(vcccd(ci, cj, k, l)) >= thresh || fabs(vcccc(ci, cj, kx, lx)) >= thresh)
         return true;
     }
     return (ninter == 0);
@@ -375,7 +375,7 @@ bool screen_dd_interaction(int ci, int cj, const std::vector<int, std::allocator
 std::vector<int, std::allocator<int> > screened_cddcomp_indices(const std::vector<int, std::allocator<int> >& otherindices, const std::vector<int, std::allocator<int> >& selfindices, const OneElectronArray& onee, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh) {
   vector<int, std::allocator<int> > screened_indices;
   for (int i = 0; i < otherindices.size(); ++i)
-    if (dmrginp.use_partial_two_integrals() || screen_cddcomp_interaction(otherindices[i], selfindices, onee, twoe, v_cc, v_cccc, v_cccd, thresh))
+    if (dmrginp.use_partial_two_integrals() || screen_cddcomp_interaction(otherindices[i], selfindices, onee, twoe, vcc, vcccc, vcccd, thresh))
       screened_indices.push_back(otherindices[i]);
   //pout << "\t\t\tnumber of significant cdd and cdd_comp indices: " << screened_indices.size() << endl;
   return screened_indices;
@@ -399,7 +399,7 @@ bool screen_cddcomp_interaction(int otherindex, const std::vector<int, std::allo
 	  const int jx = selfindices[j];
 	  const int kx = selfindices[k];
       int lx = otherindex;
-      if (fabs(twoe(lx, ix, jx, kx)) >= thresh || fabs(vcccd(lx, ix, jx, kx)) >= thresh || fabs(vcccd(ix, jx, kx, lx)) > thresh || fabs(vcccc(lx, ix, jx, kx)) > thresh || fabs(vcccc(ix, jx, lx, kx)) > thresh)
+      if (fabs(twoe(lx, ix, jx, kx)) >= thresh || fabs(vcccd(lx, ix, jx, kx)) >= thresh || fabs(vcccd(ix, jx, kx, lx)) > thresh || fabs(vcccc(lx, ix, jx, kx)) > thresh)
         return true;
     }
     return (selfindices.size() == 0);

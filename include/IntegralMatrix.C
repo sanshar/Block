@@ -601,29 +601,50 @@ void SpinAdapted::CCCCArray::set(int i, int j, int k, int l, double value) {
 
 double SpinAdapted::CCCCArray::operator()(int i, int j, int k, int l) const {
   assert(i >= 0 && i < dim && j >= 0 && j < dim && k >= 0 && k < dim && l >= 0 && l < dim);
-  bool is_odd_i = (i & 1);
-  bool is_odd_j = (j & 1);
-  bool is_odd_k = (k & 1);
-  bool is_odd_l = (l & 1);
-  
-  bool zero = is_odd_i || is_odd_j || (!is_odd_k) || (!is_odd_l) || (i==j) || (k==l);
+
+  int spin_i = 1 - (i % 2)*2;
+  int spin_j = 1 - (j % 2)*2;
+  int spin_k = 1 - (k % 2)*2;
+  int spin_l = 1 - (l % 2)*2;
+  bool zero = (spin_i+spin_j+spin_k+spin_l != 0);
   if (zero) {
-    return 0.0;
+    return 0.;
   }
+
   i=i/2;
   j=j/2;
   k=k/2;
   l=l/2;
 
-  int n = indexMap(i, j);
-  int m = indexMap(l, k);
-  
-  int sign = (n>0) == (m>0) ? 1:-1;
-  
-  if (rhf) {
-    return sign * srep(abs(n), abs(m));
+  int factor = 1.;
+  int n = 0, m = 0;
+  if (spin_i == spin_j) {
+    n = indexMap(i, j);
+    m = indexMap(l, k);
+  } else if (spin_i == spin_k) {
+    factor = -1;
+    n = indexMap(i, k);
+    m = indexMap(l, j);
   } else {
-    return sign * rep(abs(n), abs(m));
+    n = indexMap(i, l);
+    m = indexMap(k, j);
+  }
+  
+  if (n == 0 || m == 0) {
+    return 0.;
+  }
+
+  if (spin_i == -1) {
+    int temp = n;
+    n = m;
+    m = temp;
+  }
+
+  factor *= (n>0) == (m>0) ? 1:-1;
+  if (rhf) {
+    return factor * srep(abs(n), abs(m));
+  } else {
+    return factor * rep(abs(n), abs(m));
   }
 }
 
@@ -720,14 +741,14 @@ double SpinAdapted::CCCDArray::operator()(int i, int j, int k, int l) const {
   }
   int m = idx3*(dim/2)+l+1;
   if (rhf) {
-    int sign = ((n>0) == (spin_i == -1)) ? -1:1;
-    return factor * sign * repA(abs(n), m);
+    factor *= ((n>0) == (spin_i == -1)) ? -1:1;
+    return factor * repA(abs(n), m);
   } else {
-    int sign = (n>0) ? 1:-1;
+    factor *= (n>0) ? 1:-1;
     if (spin_i == -1) {
-      return factor * sign*repB(abs(n), m);
+      return factor * repB(abs(n), m);
     } else {
-      return factor * sign*repA(abs(n), m);
+      return factor * repA(abs(n), m);
     }
   }
 }

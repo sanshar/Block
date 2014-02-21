@@ -221,9 +221,9 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
             if (op1.dn() == 3) { // CCC
               factor += (1./6) * vcccd(Ind1[0], Ind1[1], Ind1[2], Ind2[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;
             } else { // CDD
-              //factor += (1./6) * (vcccd(Ind2[0], Ind1[2], Ind1[1], Ind1[0]) - vcccd(Ind1[2], Ind2[0], Ind1[1], Ind1[0]) 
-              //+ vcccd(Ind1[2], Ind1[1], Ind2[0], Ind1[0])) *iSz1.at(i1)*iSz2.at(i2)/cleb;
-              factor += 0.5 * vcccd(Ind2[0], Ind1[2], Ind1[1], Ind1[0]) *iSz1.at(i1)*iSz2.at(i2)/cleb; // FIXME is this right?
+              factor += (1./6) * (vcccd(Ind2[0], Ind1[2], Ind1[1], Ind1[0]) - vcccd(Ind1[2], Ind2[0], Ind1[1], Ind1[0]) 
+              + vcccd(Ind1[2], Ind1[1], Ind2[0], Ind1[0])) *iSz1.at(i1)*iSz2.at(i2)/cleb;
+              //factor += 0.5 * vcccd(Ind2[0], Ind1[2], Ind1[1], Ind1[0]) *iSz1.at(i1)*iSz2.at(i2)/cleb; // FIXME is this right?
             }
           } else {
             abort();
@@ -266,12 +266,12 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
         for (i2 =0; i2<iSz2.size(); ++i2) {
           vector<int>& Ind1 = op1.opindices[i1], Ind2 = op2.opindices[i2]; 
           if (comp == DD) {
-            factor += 0.25 * (vcccc(Ind1[0], Ind1[1], Ind2[0], Ind2[1]) 
+            factor += (1./24) * (vcccc(Ind1[0], Ind1[1], Ind2[0], Ind2[1]) 
                 - vcccc(Ind1[0], Ind2[0], Ind1[1], Ind2[1]) + vcccc(Ind1[0], Ind2[0], Ind2[1], Ind1[1])
                 + vcccc(Ind2[0], Ind1[0], Ind1[1], Ind2[1]) - vcccc(Ind2[0], Ind1[0], Ind2[1], Ind1[1])
                 + vcccc(Ind2[0], Ind2[1], Ind1[0], Ind1[1]))* iSz1.at(i1)*iSz2.at(i2)/cleb;
           } else if (comp == CCD) {
-            factor += 0.25*(vcccc(Ind2[0], Ind1[2], Ind1[1], Ind1[0])
+            factor += (1./24) * (vcccc(Ind2[0], Ind1[2], Ind1[1], Ind1[0])
                 - vcccc(Ind1[2], Ind2[0], Ind1[1], Ind1[0]) + vcccc(Ind1[2], Ind1[1], Ind2[0], Ind1[0])
                 - vcccc(Ind1[2], Ind1[1], Ind1[0], Ind2[0]))* iSz1.at(i1)*iSz2.at(i2)/cleb;
           } else {
@@ -935,7 +935,6 @@ double SpinAdapted::DesDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder, co
   int dn = c1.n_is() - ladder[0].n_is();
 
   TensorOp C(I,1), C2(J,1);
-
   TensorOp CC1 = C.product(C2, (-deltaQuantum[0].get_s()).getirrep(), (-sym).getirrep(), I==J);
  
   for (int j = 0; j < deltaQuantum.size(); ++j) {
@@ -1389,7 +1388,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
 	      int cK = cv[2];
 	      int cL = cv[3];
 	      int parity = s1.trace(s2.c(cL).c(cK).c(cJ).c(cI));
-	      double factor = parity*d1*d2*0.25;
+	      double factor = parity*d1*d2/24;
           matrixE += factor*vcccc_4idx_asymm(cI, cJ, cK, cL);
         } else if (dmrginp.hamiltonian() == BCS && cv.size() == 0 && dv.size() == 4) {
           int dI = dv[0];
@@ -1397,7 +1396,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
 	      int dK = dv[2];
 	      int dL = dv[3];
 	      int parity = s1.trace(s2.d(dL).d(dK).d(dJ).d(dI));
-	      double factor = parity*d1*d2*0.25;
+	      double factor = parity*d1*d2/24;
           matrixE += factor*vcccc_4idx_asymm(dL, dK, dJ, dI);  
         } else if (dmrginp.hamiltonian() == BCS && cv.size() == 3 && dv.size() == 1) {
           int cI = cv[0];
@@ -1405,7 +1404,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
 	      int cK = cv[2];
 	      int dL = dv[0];
 	      int parity = s1.trace(s2.d(dL).c(cK).c(cJ).c(cI));
-	      double factor = parity*d1*d2*0.5;
+	      double factor = parity*d1*d2/6;
           matrixE += factor*(v_cccd(cI,cJ,cK,dL)-v_cccd(cI,cK,cJ,dL)+v_cccd(cK,cI,cJ,dL)
               -v_cccd(cJ,cI,cK,dL)+v_cccd(cJ,cK,cI,dL)-v_cccd(cK,cJ,cI,dL));
         } else if (dmrginp.hamiltonian() == BCS && cv.size() == 1 && dv.size() == 3) {
@@ -1414,7 +1413,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
 	      int dK = dv[1];
 	      int dL = dv[2];
 	      int parity = s1.trace(s2.d(dL).d(dK).d(dJ).c(cI));
-	      double factor = parity*d1*d2*0.5;
+	      double factor = parity*d1*d2/6;
           matrixE += factor*(v_cccd(dL,dK,dJ,cI)-v_cccd(dL,dJ,dK,cI)+v_cccd(dJ,dL,dK,cI)
               -v_cccd(dK,dL,dJ,cI)+v_cccd(dK,dJ,dL,cI)-v_cccd(dJ,dK,dL,cI));
         } else if (dmrginp.hamiltonian() == BCS && cv.size() == 2 && dv.size() == 0) {

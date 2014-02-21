@@ -313,7 +313,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	  if (dmrginp.outputlevel() > 0)
 	    pout << "\t\t\t Converged root " << converged_roots << endl;
 
-	  ++converged_roots;	  
+	  ++converged_roots;
 	  if (converged_roots == nroots)
 	    {
 	      if (mpigetrank() == 0) {
