@@ -382,6 +382,18 @@ SparseMatrix& SparseMatrix::operator+=(const SparseMatrix& other)
   return *this;
 }
 
+SubSparseMatrix::SubSparseMatrix(SparseMatrix& op, int sec, const StateInfo& s): section(sec) {
+  opdata = boost::shared_ptr<SparseMatrix>(&op, boostutils::null_deleter());
+  SpinQuantum q = opdata->get_deltaQuantum(section);
+  SuballowedQuantaMatrix.ReSize(s.quanta.size(), s.quanta.size());
+  for (int i = 0; i < SuballowedQuantaMatrix.Nrows (); ++i)
+    for (int j = 0; j < SuballowedQuantaMatrix.Ncols (); ++j) {
+      if (s.quanta[i].allow(q, s.quanta[j])) {
+        SuballowedQuantaMatrix(i,j) = true;
+      }
+    }
+}
+
 SubSparseMatrix::SubSparseMatrix(const boost::shared_ptr<SparseMatrix>& opptr, int sec, const StateInfo& s): opdata(opptr), section(sec) {
   SpinQuantum q = opdata->get_deltaQuantum(section);
   SuballowedQuantaMatrix.ReSize(s.quanta.size(), s.quanta.size());

@@ -197,7 +197,7 @@ public:
   Matrix& operator()(int i, int j) { return opdata->operator()(j, i); }
   char conjugacy() const { if (opdata->conjugacy() == 'n') return 't'; else return 'n';}
   double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const ;
-  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata;}
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata->getworkingrepresentation(block);}
   void build(const SpinBlock& b){};
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b){return 0.0;}
 }; 
@@ -209,6 +209,7 @@ private:
   int section;
   ObjectMatrix<char> SuballowedQuantaMatrix;
 public:
+  SubSparseMatrix(SparseMatrix& op, int sec, const StateInfo& s);  
   SubSparseMatrix(const boost::shared_ptr<SparseMatrix>& opptr, int sec, const StateInfo& s);
   SubSparseMatrix(const boost::shared_ptr<SparseMatrix>& opptr, int sec, const StateInfo& sr, const StateInfo& sc);
   std::vector<SpinQuantum> get_deltaQuantum() const {
@@ -235,7 +236,7 @@ public:
   Matrix& operator()(int i, int j) { return opdata->operator()(j, i); }
   char conjugacy() const { return opdata->conjugacy(); }
   double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const {  return 1.0; } // FIXME is it right?
-  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata;}
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata->getworkingrepresentation(block);}
   void build(const SpinBlock& b){};
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b){return 0.0;}
 };

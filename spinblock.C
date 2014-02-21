@@ -49,7 +49,6 @@ void SpinBlock::printOperatorSummary()
          cout <<numops[proc]<<"  ";
       }
       cout << endl;
-      /*
       if(it->second->is_core()) { 
         for (int i = 0; i < it->second->size(); ++i) {
            std::vector<boost::shared_ptr<SparseMatrix> > global_element = it->second->get_global_element(i);
@@ -60,7 +59,6 @@ void SpinBlock::printOperatorSummary()
            }
         }
       }
-      */
     }
   }
 #else

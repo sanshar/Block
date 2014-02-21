@@ -267,7 +267,7 @@ namespace SpinAdapted {
           op.resize_deltaQuantum(3);          
           op.set_deltaQuantum(0) = -spinvec[j];
           op.set_deltaQuantum(1) = -SpinQuantum(0, spinvec[j].get_s(), spinvec[j].get_symm());
-          op.set_deltaQuantum(2) = -SpinQuantum(-2, spinvec[j].get_s(), spinvec[j].get_symm());          
+          op.set_deltaQuantum(2) = -SpinQuantum(-2, spinvec[j].get_s(), spinvec[j].get_symm());
         } else {
 	      op.set_deltaQuantum(1, -spinvec[j]);
         }  

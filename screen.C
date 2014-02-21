@@ -365,7 +365,7 @@ bool screen_dd_interaction(int ci, int cj, const std::vector<int, std::allocator
     for (int l = 0; l < ninter; ++l) {
       int kx = interactingix[k];
 	  int lx = interactingix[l];
-	  if (fabs(twoe(ci, cj, kx, lx))>=thresh || fabs(vcccd(ci, cj, k, l)) >= thresh || fabs(vcccc(ci, cj, kx, lx)) >= thresh)
+	  if (fabs(twoe(ci, cj, kx, lx))>=thresh || fabs(vcccd(ci, cj, kx, lx)) >= thresh || fabs(vcccc(ci, cj, kx, lx)) >= thresh)
         return true;
     }
     return (ninter == 0);

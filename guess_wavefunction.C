@@ -236,7 +236,10 @@ void GuessWave::basic_guess_wavefunction(DiagonalMatrix& e, Wavefunction& trial,
     if (find(initialised_ns.begin(), initialised_ns.end(), ns[e_iter->second-1]) == initialised_ns.end()) {
       trialvector(e_iter->second) = 1.;
       initialised_ns.push_back(ns[e_iter->second-1]);
+    } else {
+      trialvector(e_iter->second) = double(rand()/1000) / RAND_MAX;
     }
+
   trial.CollectFrom(trialvector);
 }
 
