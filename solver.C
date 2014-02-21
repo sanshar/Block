@@ -43,9 +43,17 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
   else 
     e.ReSize(0);
 
-  if (e.Ncols() <= nroots) {
+  bool haveEnoughStates = e.Ncols()<= nroots ? false : true;
+#ifndef SERIAL
+  mpi::communicator world;
+  broadcast(world, haveEnoughStates, 0);
+#endif
+
+
+  if (!haveEnoughStates) {
     //sometimes when you need many roots and at the start of the sweep the hilbert space is not big
     //enough to support all the roots
+
     solution.resize(nroots);
     
     for (int i=0; i<nroots; i++) {
@@ -53,6 +61,7 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
       solution[i].Randomise();
       Normalise(solution[i]);
     }
+  
   }
   else {
     if(dmrginp.solve_method() == DAVIDSON) {
@@ -95,7 +104,6 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
       energies[i] = e(1);
   }
 #ifndef SERIAL
-  mpi::communicator world;
   broadcast(world, energies, 0);
 #endif
   pout<<endl;

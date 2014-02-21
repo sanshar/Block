@@ -33,7 +33,7 @@ endif
 EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
-CXX = g++
+CXX =  g++
 MPICXX = mpic++
 HOME = .
 NEWMATINCLUDE = $(HOME)/newmat10/
@@ -50,14 +50,15 @@ ifeq ($(MOLPRO), yes)
    MOLPRO_BLOCK= -DMOLPRO
 endif
 FLAGS =  -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(HOME)/modules/twopdm/ -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(MOLPROINCLUDE) 
-LIBS =  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp 
-MPI_OPT = -DSERIAL
-
 ifeq ($(USE_BTAS), yes)
 	FLAGS +=  -I$(BTAS)/include -std=c++0x -DUSE_BTAS
-	LIBS += -L$(BTAS)/lib -lbtas
+	LIBS = -L$(BTAS)/lib -lbtas 
+else
+	LIBS = 
 endif
 
+LIBS +=  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp 
+MPI_OPT = -DSERIAL
 
 ifeq ($(notdir $(firstword $(CXX))),icpc)
    ifeq ($(OPENMP), yes)
@@ -126,10 +127,10 @@ endif
 $(NEWMATLIB)/libnewmat.a : 
 	cd $(NEWMATLIB) && $(MAKE) -f makefile libnewmat.a
 
-$(BTAS)/lib/libbtas.a: $(BTAS_source)
-	ar cr libbtas.a $(BTAS_obj)
+$(BTAS)/lib/libbtas.a: $(BTAS_obj)
+	ar cr $(BTAS)/lib/libbtas.a $(BTAS_obj)
 
 clean:
-	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o modules/npdm/*.o $(NEWMATLIB)*.o libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a genetic/gaopt genetic/*.o
+	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o modules/npdm/*.o $(NEWMATLIB)*.o libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a genetic/gaopt genetic/*.o btas/lib/*.o btas/lib/libbtas.a
 
 # DO NOT DELETE

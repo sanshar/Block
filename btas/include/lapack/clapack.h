@@ -45,14 +45,14 @@ enum CLAPACK_UPLO       { ClapackUpper = 121, ClapackLower = 122 };
 //! Calculate eigenvectors
 enum CLAPACK_CALCVECTOR { ClapackNoCalcVector = 201, ClapackCalcVector = 202, ClapackCalcThinVector = 203 };
 
-#ifdef _HAS_INTEL_MKL
+//#ifdef _HAS_INTEL_MKL
 
 //#include <mkl_lapack.h>
 
-typedef MKL_Complex8  FC_COMPLEX_08;
-typedef MKL_Complex16 FC_COMPLEX_16;
+//typedef MKL_Complex8  FC_COMPLEX_08;
+//typedef MKL_Complex16 FC_COMPLEX_16;
 
-#else // _HAS_INTEL_MKL
+//#else // _HAS_INTEL_MKL
 
 struct FC_COMPLEX_08 {
   float real;
@@ -64,7 +64,7 @@ struct FC_COMPLEX_16 {
   double imag;
 };
 
-#endif // _HAS_INTEL_MKL
+//#endif // _HAS_INTEL_MKL
 
 #ifdef __cplusplus
 extern "C" {
