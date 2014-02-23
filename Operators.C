@@ -870,7 +870,7 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
         if (!CC2.empty) {
           double scaleV = calcCompfactor(CC1, CC2, DD, v_cccc);
           CK = TensorOp(k, 1);
-          CL = TensorOp(k, 2);
+          CL = TensorOp(l, 1);
           TensorOp CC2_commute = CL.product(CK, spin, sym.getirrep(), k==l);
           double scaleV2 = calcCompfactor(CC1, CC2_commute, DD, v_cccc);
 

@@ -99,10 +99,6 @@ void SpinAdapted::opxop::ddxcccomp(const SpinBlock* otherblock, std::vector<boos
       parity = getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), o->get_deltaQuantum(0));
 
     SpinAdapted::operatorfunctions::TensorProduct(otherblock, *op2, *op1, b, &(b->get_stateInfo()), o[ilock], parity*factor, numthrds);
-    if (dmrginp.hamiltonian() == BCS) {
-      SpinAdapted::operatorfunctions::TensorProduct(otherblock, SubSparseMatrix(op2, 1, otherblock->get_stateInfo()), *op1, b, &(b->get_stateInfo()), o[ilock], parity*factor, numthrds);
-      SpinAdapted::operatorfunctions::TensorProduct(otherblock, SubSparseMatrix(op2, 2, otherblock->get_stateInfo()), *op1, b, &(b->get_stateInfo()), o[ilock], parity*factor, numthrds);
-    }
 
     Transposeview top1 = Transposeview(*op1);
     Transposeview top2 = Transposeview(*op2);
@@ -115,10 +111,6 @@ void SpinAdapted::opxop::ddxcccomp(const SpinBlock* otherblock, std::vector<boos
     parity *= parity2;
 
     SpinAdapted::operatorfunctions::TensorProduct(otherblock, top2, top1, b, &(b->get_stateInfo()), o[ilock], parity*factor, numthrds);
-    if (dmrginp.hamiltonian() == BCS) {    
-      SpinAdapted::operatorfunctions::TensorProduct(otherblock, SubSparseMatrix(top2, 1, otherblock->get_stateInfo()), top1, b, &(b->get_stateInfo()), o[ilock], parity*factor, numthrds);
-      SpinAdapted::operatorfunctions::TensorProduct(otherblock, SubSparseMatrix(top2, 2, otherblock->get_stateInfo()), top1, b, &(b->get_stateInfo()), o[ilock], parity*factor, numthrds);
-    }
   }
 }
 
@@ -239,10 +231,6 @@ void SpinAdapted::opxop::ddxcccomp(const SpinBlock* otherblock, std::vector<boos
       parity = getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), hq);
 
     SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, *op1, b, c, v[ilock], hq, factor*parity);
-    if (dmrginp.hamiltonian() == BCS) {
-      SpinAdapted::operatorfunctions::TensorMultiply(otherblock, SubSparseMatrix(op2, 1, otherblock->get_stateInfo()), *op1, b, c, v[ilock], hq, parity*factor);
-      SpinAdapted::operatorfunctions::TensorMultiply(otherblock, SubSparseMatrix(op2, 2, otherblock->get_stateInfo()), *op1, b, c, v[ilock], hq, parity*factor);
-    }
 
     Transposeview top1 = Transposeview(*op1);
     Transposeview top2 = Transposeview(*op2);
@@ -254,10 +242,6 @@ void SpinAdapted::opxop::ddxcccomp(const SpinBlock* otherblock, std::vector<boos
 
     parity *= parity2;
     SpinAdapted::operatorfunctions::TensorMultiply(otherblock, top2, top1, b, c, v[ilock], hq, factor*parity);
-    if (dmrginp.hamiltonian() == BCS) {    
-      SpinAdapted::operatorfunctions::TensorMultiply(otherblock, SubSparseMatrix(top2, 1, otherblock->get_stateInfo()), top1, b, c, v[ilock], hq, parity*factor);
-      SpinAdapted::operatorfunctions::TensorMultiply(otherblock, SubSparseMatrix(top2, 2, otherblock->get_stateInfo()), top1, b, c, v[ilock], hq, parity*factor);
-    }
   }
 }
 
@@ -371,18 +355,10 @@ void SpinAdapted::opxop::ddxcccomp_d(const SpinBlock* otherblock, std::vector<bo
     double scale = 1.0;
     
     SpinAdapted::operatorfunctions::TensorProduct(otherblock, *op2, *op1, b, &(b->get_stateInfo()), e[ilock], scale*factor);
-    if (dmrginp.hamiltonian() == BCS) {    
-      SpinAdapted::operatorfunctions::TensorProduct(otherblock, SubSparseMatrix(op2, 1, otherblock->get_stateInfo()), *op1, b, &(b->get_stateInfo()), e[ilock], scale*factor);
-      SpinAdapted::operatorfunctions::TensorProduct(otherblock, SubSparseMatrix(op2, 2, otherblock->get_stateInfo()), *op1, b, &(b->get_stateInfo()), e[ilock], scale*factor);
-    }
     
     Transposeview top1 = Transposeview(*op1);
     Transposeview top2 = Transposeview(*op2);
     SpinAdapted::operatorfunctions::TensorProduct(otherblock, top2, top1, b, &(b->get_stateInfo()), e[ilock], scale*factor);
-    if (dmrginp.hamiltonian() == BCS) {    
-      SpinAdapted::operatorfunctions::TensorProduct(otherblock, SubSparseMatrix(top2, 1, otherblock->get_stateInfo()), top1, b, &(b->get_stateInfo()), e[ilock], scale*factor);
-      SpinAdapted::operatorfunctions::TensorProduct(otherblock, SubSparseMatrix(top2, 2, otherblock->get_stateInfo()), top1, b, &(b->get_stateInfo()), e[ilock], scale*factor);
-    }
   }
 }
 

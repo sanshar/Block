@@ -591,12 +591,11 @@ void SpinAdapted::CCCCArray::set(int i, int j, int k, int l, double value) {
   int m = indexMap(l, k);
   
   int sign = (n>0) == (m>0) ? 1:-1;
-  double diag_factor = (n == m) ? 0.5: 1.;
 
   if (rhf) {
-    srep(abs(n), abs(m)) = diag_factor * sign * value;
+    srep(abs(n), abs(m)) = sign * value;
   } else {
-    rep(abs(n), abs(m)) = diag_factor * sign * value;
+    rep(abs(n), abs(m)) = sign * value;
   }
 }
 
