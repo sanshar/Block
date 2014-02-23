@@ -69,6 +69,9 @@ template <> struct ChooseArray<RI3index> {
 template <> struct ChooseArray<RI4index> {
   typedef para_array_4d<std::vector<boost::shared_ptr<RI4index> > > ArrayType;
 };
+template <> struct ChooseArray<Des> {
+  typedef para_array_1d<std::vector<boost::shared_ptr<Des> > > ArrayType;
+};
 template <> struct ChooseArray<DesDes> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<DesDes> > > ArrayType;
 };
@@ -230,8 +233,7 @@ template <class Op> class Op_component : public Op_component_base
   void build_csf_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) 
   { 
 //FIXME
-//    if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
-    if ( ot == CRE_CRE_DES_DES ) {
+    if ( ((m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) || (ot == CRE_CRE_DES_DES) ) {
 cout << "building csf on disk... " << ofile << endl;
       // Build on disk (assume we are building from scratch)
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
@@ -261,6 +263,7 @@ cout << "building csf on disk... " << ofile << endl;
 //    }
     if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
       // Build on disk (reading from disk, as necessary)
+cout << "building on disk... " << ofile << endl;
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
       std::ifstream sysfs(sysfile.c_str(), std::ios::binary);
       std::ifstream dotfs(dotfile.c_str(), std::ios::binary);
@@ -289,7 +292,7 @@ cout << "building csf on disk... " << ofile << endl;
 //cout << "renormalize transform: opType = " << ot << endl;
 //    if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
 //FIXME
-    if ( ot == CRE_CRE_DES_DES ) {
+    if ( ((m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) || (ot == CRE_CRE_DES_DES) ) {
       // Build on disk (load, renormalize, save)
       std::string ifile = get_filename();
       std::string ofile = get_filename() + ".renorm";

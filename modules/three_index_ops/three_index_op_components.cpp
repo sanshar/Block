@@ -193,7 +193,7 @@ void Op_component<RI3index>::build_iterators(SpinBlock& b)
 
 template<> 
 string Op_component<DesDesDes>::get_op_string() const {
-  return "DESDESDES";
+  return "DesDesDes";
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -276,7 +276,7 @@ void Op_component<DesDesDes>::build_iterators(SpinBlock& b)
 
 template<> 
 string Op_component<CreCreCre>::get_op_string() const {
-  return "CRECRECRE";
+  return "CreCreCre";
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -371,7 +371,7 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
 
 template<> 
 string Op_component<CreCreDes>::get_op_string() const {
-  return "CRECREDES";
+  return "CreCreDes";
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -454,7 +454,7 @@ void Op_component<CreCreDes>::build_iterators(SpinBlock& b)
 
 template<> 
 string Op_component<CreDesDes>::get_op_string() const {
-  return "CREDESDES";
+  return "CreDesDes";
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -538,7 +538,7 @@ void Op_component<CreDesDes>::build_iterators(SpinBlock& b)
 
 template<> 
 string Op_component<CreDesCre>::get_op_string() const {
-  return "CREDESCRE";
+  return "CreDesCre";
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -626,7 +626,7 @@ void Op_component<CreDesCre>::build_iterators(SpinBlock& b)
 
 template<> 
 string Op_component<DesCreDes>::get_op_string() const {
-  return "DESCREDES";
+  return "DesCreDes";
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  

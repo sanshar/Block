@@ -32,7 +32,7 @@ enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESC
               //MAW Resolution-of-identity skeleton operators
               RI_3INDEX, RI_4INDEX,
               //MAW Auxiliary NPDM (to avoid transposes)
-              DES_DES, DES_DES_DES,
+              DES, DES_DES, DES_DES_DES,
               //MAW 3PDM
               DES_CRE, 
               CRE_CRE_CRE, CRE_CRE_DES, CRE_DES_DES, CRE_DES_CRE,

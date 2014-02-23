@@ -113,41 +113,8 @@ cout << "getting CDCD operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
-  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_DES_CRE_DES).get_local_element(idx);
     build_pattern_ = opReps_.at(0)->get_build_pattern();
-  }
-  else {
-cout << "...from disk...\n";
-    // Get first operator of spin set
-    assert( check_file_open( idx ) );
-    boost::shared_ptr<SparseMatrix> op (new CreDesCreDes);
-    boost::archive::binary_iarchive load_op(ifs_);
-    load_op >> *op;
-    build_pattern_ = op->get_build_pattern();
-    // Get order of spin components
-    ix = op->get_orbs(0); jx = op->get_orbs(1); kx = op->get_orbs(2); lx = op->get_orbs(3);
-    opReps_ = spinBlock_->get_op_array(CRE_DES_CRE_DES).get_element(ix,jx,kx,lx);
-    // Store spin components in correct order
-    for (int j = 0; j < opReps_.size(); j++) {
-      if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-        opReps_[j] = op;
-      }
-    }
-    // Read in remaining spin-set from disk 
-    for (int i = 1; i < opReps_.size(); i++) {
-      boost::shared_ptr<SparseMatrix> op (new CreDesCreDes);
-      boost::archive::binary_iarchive load_op(ifs_);
-      load_op >> *op;
-      for (int j = 0; j < opReps_.size(); j++) {
-        // Store spin components in correct order
-        if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-          opReps_[j] = op;
-        }
-      }
-    }
-    assert( check_file_close( idx ) );
-  }
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -188,41 +155,8 @@ cout << "getting CDDC operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
-  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_DES_DES_CRE).get_local_element(idx);
     build_pattern_ = opReps_.at(0)->get_build_pattern();
-  }
-  else {
-cout << "...from disk...\n";
-    // Get first operator of spin set
-    assert( check_file_open( idx ) );
-    boost::shared_ptr<SparseMatrix> op (new CreDesDesCre);
-    boost::archive::binary_iarchive load_op(ifs_);
-    load_op >> *op;
-    build_pattern_ = op->get_build_pattern();
-    // Get order of spin components
-    ix = op->get_orbs(0); jx = op->get_orbs(1); kx = op->get_orbs(2); lx = op->get_orbs(3);
-    opReps_ = spinBlock_->get_op_array(CRE_DES_DES_CRE).get_element(ix,jx,kx,lx);
-    // Store spin components in correct order
-    for (int j = 0; j < opReps_.size(); j++) {
-      if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-        opReps_[j] = op;
-      }
-    }
-    // Read in remaining spin-set from disk 
-    for (int i = 1; i < opReps_.size(); i++) {
-      boost::shared_ptr<SparseMatrix> op (new CreDesDesCre);
-      boost::archive::binary_iarchive load_op(ifs_);
-      load_op >> *op;
-      for (int j = 0; j < opReps_.size(); j++) {
-        // Store spin components in correct order
-        if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-          opReps_[j] = op;
-        }
-      }
-    }
-    assert( check_file_close( idx ) );
-  }
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -263,41 +197,8 @@ cout << "getting CDDD operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
-  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_DES_DES_DES).get_local_element(idx);
     build_pattern_ = opReps_.at(0)->get_build_pattern();
-  }
-  else {
-cout << "...from disk...\n";
-    // Get first operator of spin set
-    assert( check_file_open( idx ) );
-    boost::shared_ptr<SparseMatrix> op (new CreDesDesDes);
-    boost::archive::binary_iarchive load_op(ifs_);
-    load_op >> *op;
-    build_pattern_ = op->get_build_pattern();
-    // Get order of spin components
-    ix = op->get_orbs(0); jx = op->get_orbs(1); kx = op->get_orbs(2); lx = op->get_orbs(3);
-    opReps_ = spinBlock_->get_op_array(CRE_DES_DES_DES).get_element(ix,jx,kx,lx);
-    // Store spin components in correct order
-    for (int j = 0; j < opReps_.size(); j++) {
-      if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-        opReps_[j] = op;
-      }
-    }
-    // Read in remaining spin-set from disk 
-    for (int i = 1; i < opReps_.size(); i++) {
-      boost::shared_ptr<SparseMatrix> op (new CreDesDesDes);
-      boost::archive::binary_iarchive load_op(ifs_);
-      load_op >> *op;
-      for (int j = 0; j < opReps_.size(); j++) {
-        // Store spin components in correct order
-        if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-          opReps_[j] = op;
-        }
-      }
-    }
-    assert( check_file_close( idx ) );
-  }
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -338,41 +239,8 @@ cout << "getting CCCD operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
-  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE_DES).get_local_element(idx);
     build_pattern_ = opReps_.at(0)->get_build_pattern();
-  }
-  else {
-cout << "...from disk...\n";
-    // Get first operator of spin set
-    assert( check_file_open( idx ) );
-    boost::shared_ptr<SparseMatrix> op (new CreCreCreDes);
-    boost::archive::binary_iarchive load_op(ifs_);
-    load_op >> *op;
-    build_pattern_ = op->get_build_pattern();
-    // Get order of spin components
-    ix = op->get_orbs(0); jx = op->get_orbs(1); kx = op->get_orbs(2); lx = op->get_orbs(3);
-    opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE_DES).get_element(ix,jx,kx,lx);
-    // Store spin components in correct order
-    for (int j = 0; j < opReps_.size(); j++) {
-      if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-        opReps_[j] = op;
-      }
-    }
-    // Read in remaining spin-set from disk 
-    for (int i = 1; i < opReps_.size(); i++) {
-      boost::shared_ptr<SparseMatrix> op (new CreCreCreDes);
-      boost::archive::binary_iarchive load_op(ifs_);
-      load_op >> *op;
-      for (int j = 0; j < opReps_.size(); j++) {
-        // Store spin components in correct order
-        if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-          opReps_[j] = op;
-        }
-      }
-    }
-    assert( check_file_close( idx ) );
-  }
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -413,41 +281,8 @@ cout << "getting CCDC operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
-  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_CRE_DES_CRE).get_local_element(idx);
     build_pattern_ = opReps_.at(0)->get_build_pattern();
-  }
-  else {
-cout << "...from disk...\n";
-    // Get first operator of spin set
-    assert( check_file_open( idx ) );
-    boost::shared_ptr<SparseMatrix> op (new CreCreDesCre);
-    boost::archive::binary_iarchive load_op(ifs_);
-    load_op >> *op;
-    build_pattern_ = op->get_build_pattern();
-    // Get order of spin components
-    ix = op->get_orbs(0); jx = op->get_orbs(1); kx = op->get_orbs(2); lx = op->get_orbs(3);
-    opReps_ = spinBlock_->get_op_array(CRE_CRE_DES_CRE).get_element(ix,jx,kx,lx);
-    // Store spin components in correct order
-    for (int j = 0; j < opReps_.size(); j++) {
-      if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-        opReps_[j] = op;
-      }
-    }
-    // Read in remaining spin-set from disk 
-    for (int i = 1; i < opReps_.size(); i++) {
-      boost::shared_ptr<SparseMatrix> op (new CreCreDesCre);
-      boost::archive::binary_iarchive load_op(ifs_);
-      load_op >> *op;
-      for (int j = 0; j < opReps_.size(); j++) {
-        // Store spin components in correct order
-        if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-          opReps_[j] = op;
-        }
-      }
-    }
-    assert( check_file_close( idx ) );
-  }
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -488,41 +323,8 @@ cout << "getting CDCC operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
-  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_DES_CRE_CRE).get_local_element(idx);
     build_pattern_ = opReps_.at(0)->get_build_pattern();
-  }
-  else {
-cout << "...from disk...\n";
-    // Get first operator of spin set
-    assert( check_file_open( idx ) );
-    boost::shared_ptr<SparseMatrix> op (new CreDesCreCre);
-    boost::archive::binary_iarchive load_op(ifs_);
-    load_op >> *op;
-    build_pattern_ = op->get_build_pattern();
-    // Get order of spin components
-    ix = op->get_orbs(0); jx = op->get_orbs(1); kx = op->get_orbs(2); lx = op->get_orbs(3);
-    opReps_ = spinBlock_->get_op_array(CRE_DES_CRE_CRE).get_element(ix,jx,kx,lx);
-    // Store spin components in correct order
-    for (int j = 0; j < opReps_.size(); j++) {
-      if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-        opReps_[j] = op;
-      }
-    }
-    // Read in remaining spin-set from disk 
-    for (int i = 1; i < opReps_.size(); i++) {
-      boost::shared_ptr<SparseMatrix> op (new CreDesCreCre);
-      boost::archive::binary_iarchive load_op(ifs_);
-      load_op >> *op;
-      for (int j = 0; j < opReps_.size(); j++) {
-        // Store spin components in correct order
-        if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-          opReps_[j] = op;
-        }
-      }
-    }
-    assert( check_file_close( idx ) );
-  }
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -563,41 +365,8 @@ cout << "getting CCCC operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
-  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE_CRE).get_local_element(idx);
     build_pattern_ = opReps_.at(0)->get_build_pattern();
-  }
-  else {
-cout << "...from disk...\n";
-    // Get first operator of spin set
-    assert( check_file_open( idx ) );
-    boost::shared_ptr<SparseMatrix> op (new CreCreCreCre);
-    boost::archive::binary_iarchive load_op(ifs_);
-    load_op >> *op;
-    build_pattern_ = op->get_build_pattern();
-    // Get order of spin components
-    ix = op->get_orbs(0); jx = op->get_orbs(1); kx = op->get_orbs(2); lx = op->get_orbs(3);
-    opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE_CRE).get_element(ix,jx,kx,lx);
-    // Store spin components in correct order
-    for (int j = 0; j < opReps_.size(); j++) {
-      if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-        opReps_[j] = op;
-      }
-    }
-    // Read in remaining spin-set from disk 
-    for (int i = 1; i < opReps_.size(); i++) {
-      boost::shared_ptr<SparseMatrix> op (new CreCreCreCre);
-      boost::archive::binary_iarchive load_op(ifs_);
-      load_op >> *op;
-      for (int j = 0; j < opReps_.size(); j++) {
-        // Store spin components in correct order
-        if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-          opReps_[j] = op;
-        }
-      }
-    }
-    assert( check_file_close( idx ) );
-  }
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);

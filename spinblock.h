@@ -38,6 +38,7 @@ class SpinBlock
 //MAW NPDM
       ar.register_type(static_cast<Op_component<RI3index> *>(NULL));
       ar.register_type(static_cast<Op_component<RI4index> *>(NULL));
+      ar.register_type(static_cast<Op_component<Des> *>(NULL));
       ar.register_type(static_cast<Op_component<DesDes> *>(NULL));
       ar.register_type(static_cast<Op_component<DesDesDes> *>(NULL));
 //MAW 3PDM

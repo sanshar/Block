@@ -275,6 +275,85 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Cre::getworkingreprese
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+//******************DES*****************
+
+void SpinAdapted::Des::build(const SpinBlock& b)
+{
+  dmrginp.makeopsT -> start();
+  built = true;
+  allocate(b.get_stateInfo());
+
+  const int i = get_orbs()[0];
+  SpinBlock* leftBlock = b.get_leftBlock();
+  SpinBlock* rightBlock = b.get_rightBlock();
+
+  if (leftBlock->get_op_array(DES).has(i))
+  {      
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(DES, deltaQuantum, i);
+    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    dmrginp.makeopsT -> stop();
+    return;
+  }
+  if (rightBlock->get_op_array(DES).has(i))
+  {
+    const boost::shared_ptr<SparseMatrix>& op = rightBlock->get_op_rep(DES, deltaQuantum, i);
+    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
+    dmrginp.makeopsT -> stop();
+    return;
+  }  
+  else
+    abort();  
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+double SpinAdapted::Des::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
+{
+  double element = 0.0;
+  int I = dmrginp.spatial_to_spin()[get_orbs()[0]]; //convert spatial id to spin id because slaters need that
+  int Iirrep = SymmetryOfSpatialOrb(get_orbs()[0]).getirrep();;
+  IrrepSpace sym = deltaQuantum.get_symm();
+  int Sign = 1;
+
+  TensorOp D(get_orbs()[0], -1);
+
+  for (int i=0; i<ladder.size(); i++)
+  {
+    int index = 0; double cleb=0.0;
+    if (nonZeroTensorComponent(c1, deltaQuantum, ladder[i], index, cleb)) {
+      std::vector<double> MatElements = calcMatrixElements(c1, D, ladder[i]) ;
+      element = MatElements[index]/cleb;
+      break;
+    }
+    else
+      continue;
+    
+  }
+
+  return element;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Des::getworkingrepresentation(const SpinBlock* block)
+{
+  if (this->get_built())
+    {
+      return boost::shared_ptr<Des>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
+    }
+  else
+    {
+      boost::shared_ptr<SparseMatrix> rep(new Des);
+      *rep = *this;
+      rep->build(*block);
+      return rep;
+    }
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 //******************CREDES*****************
 
 void SpinAdapted::CreDes::build(const SpinBlock& b)

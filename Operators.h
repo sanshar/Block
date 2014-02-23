@@ -25,6 +25,20 @@ class Cre: public SpinAdapted::SparseMatrix
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+class Des: public SpinAdapted::SparseMatrix
+{
+ public:
+  Des() { orbs.resize(1); fermion = true; build_pattern = "(D)";}
+//MAW
+  void build_in_csf_space(const SpinBlock& b) {assert(false);}
+  void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
+  void build(const SpinBlock& b) ;
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+  double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 class CreDes: public SpinAdapted::SparseMatrix
 {
  public:

@@ -71,6 +71,39 @@ namespace SpinAdapted {
   }
   
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// -------------------- C_S1 ---------------------------  
+
+  template<> string Op_component<Des>::get_op_string() const {
+    return "DES";
+  }
+
+  template<> void Op_component<Des>::build_iterators(SpinBlock& b)
+  {
+      if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
+      const double screen_tol = dmrginp.screen_tol();
+      std::vector<int> screened_c_ix = screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1, *b.get_twoInt(), screen_tol); 
+      m_op.set_indices(screened_c_ix, dmrginp.last_site());  
+      std::vector<int> orbs(1);
+      
+      for (int i = 0; i < m_op.local_nnz(); ++i) 
+      {
+        orbs[0] = m_op.get_local_indices()[i];
+        m_op.get_local_element(i).resize(1);
+        m_op.get_local_element(i)[0]=boost::shared_ptr<Des>(new Des);
+        SparseMatrix& op = *m_op.get_local_element(i)[0];
+        op.set_orbs() = orbs;
+        op.set_initialised() = true;
+        op.set_fermion() = true;
+        // NOte minus sign
+        op.set_deltaQuantum() = - SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));      
+        //op.set_deltaQuantum() = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOf(orbs[0]));      
+        //MAW
+        op.set_quantum_ladder()["(D)"] = { op.get_deltaQuantum() };
+      }
+      
+  }
+  
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // -------------------- Cd_ ---------------------------  
 
   template<> string Op_component<CreDes>::get_op_string() const {

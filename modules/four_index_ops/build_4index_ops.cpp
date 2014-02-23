@@ -6,26 +6,18 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-
-//#include <vector>
-//#include <iostream>
-//#include <communicate.h>
 #include "op_components.h"
 #include "BaseOperator.h"
 #include "spinblock.h"
 #include "operatorfunctions.h"
-//#include "tensor_operator.h"
-//#include <boost/shared_ptr.hpp>
 
 #include "build_4index_ops.h"
 
 namespace SpinAdapted{
 
-//cout << "indices = " << i << "," << j << "," << k << "," << l << endl;
-
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-std::vector<boost::shared_ptr<SparseMatrix> > get_ops_from_disk( int idx, std::ifstream& ifs, Op_component_base& sysdot_array )
+std::vector<boost::shared_ptr<SparseMatrix> > get_ops_from_disk( std::ifstream& ifs, Op_component_base& sysdot_array )
 {
 //FIXME reference or copy??
   std::vector<boost::shared_ptr<SparseMatrix> > opReps;
@@ -82,9 +74,7 @@ void finish_tensor_trace( SpinBlock& b, SpinBlock* sysdot, SparseMatrix& sysdot_
   SpinAdapted::operatorfunctions::TensorTrace(sysdot, sysdot_op, &b, &(b.get_stateInfo()), op);
 
   // Move to disk if necessary
-//FIXME
-//          if ( ! dmrginp.do_npdm_in_core() ) {
-  if ( true ) {
+  if ( ! dmrginp.do_npdm_in_core() ) {
     op.set_built_on_disk() = true;
     boost::archive::binary_oarchive save_op(ofs);
     save_op << op;
@@ -114,8 +104,7 @@ void finish_tensor_product( SpinBlock& b, SpinBlock* sysdot,
   SpinAdapted::operatorfunctions::TensorProduct(sysdot, sysdot_op1, sysdot_op2, &b, &(b.get_stateInfo()), op, parity);
 
   // Move to disk if necessary
-//FIXME
-  if ( true ) {
+  if ( ! dmrginp.do_npdm_in_core() ) {
     op.set_built_on_disk() = true;
     boost::archive::binary_oarchive save_op(ofs);
     save_op << op;
@@ -130,26 +119,22 @@ void finish_tensor_product( SpinBlock& b, SpinBlock* sysdot,
 
 void do_4index_tensor_trace( opTypes& optype, SpinBlock& b, SpinBlock* sysdot, std::ofstream& ofs ) 
 {
-
   // Get pointer to sparse operator array
   Op_component_base& sysdot_array = sysdot->get_op_array(optype);
-//FIXME
   // Open filesystem if necessary
   std::ifstream ifs( sysdot_array.get_filename().c_str(), std::ios::binary );
-  if ( true ) {
-//  if ( ! dmrginp.do_npdm_in_core() ) {
+  if ( ! dmrginp.do_npdm_in_core() ) {
     ifs.open( sysdot_array.get_filename().c_str(), std::ios::binary );
   }
 
 //FIXME need reference?  don't want to copy?
-  std::vector<boost::shared_ptr<SparseMatrix> > sysdot_ops;
   // Loop over all operator indices
+  std::vector<boost::shared_ptr<SparseMatrix> > sysdot_ops;
   for (int idx = 0; idx < sysdot_array.get_size(); ++idx) {
-//    if ( dmrginp.do_npdm_in_core() ) {
-    if ( false )
+    if ( dmrginp.do_npdm_in_core() ) 
       sysdot_ops = sysdot_array.get_local_element(idx);
     else
-      sysdot_ops = get_ops_from_disk( idx, ifs, sysdot_array );
+      sysdot_ops = get_ops_from_disk( ifs, sysdot_array );
 
     // Loop over spin-op components
     for (int jdx=0; jdx < sysdot_ops.size(); jdx++) {
@@ -171,10 +156,9 @@ void do_4index_tensor_trace( opTypes& optype, SpinBlock& b, SpinBlock* sysdot, s
   }
 
   // Close filesystem if necessary
-//FIXME
   if ( ifs.is_open() ) {
     ifs.close();
-//  assert( ! dmrginp.do_npdm_in_core() );
+    assert( ! dmrginp.do_npdm_in_core() );
   }
 
 }
@@ -184,25 +168,31 @@ void do_4index_tensor_trace( opTypes& optype, SpinBlock& b, SpinBlock* sysdot, s
 void do_4index_2_2_tensor_products( bool forwards, opTypes& optype, const opTypes& rhsType, const opTypes& lhsType,
                                     SpinBlock& b, SpinBlock* rhsBlock, SpinBlock* lhsBlock, std::ofstream& ofs ) 
 {
-  // Loop over all rhs operator indices
   Op_component_base& rhs_array = rhsBlock->get_op_array(rhsType);
+  Op_component_base& lhs_array = lhsBlock->get_op_array(lhsType);
+  assert ( (rhs_array.get_size() == 1) || (lhs_array.get_size() == 1) );
+
+  // Loop over all rhs operator indices //FIXME copy or reference?
+  std::vector<boost::shared_ptr<SparseMatrix> > rhs_ops;
   for (int iidx = 0; iidx < rhs_array.get_size(); ++iidx) {
-    std::vector<boost::shared_ptr<SparseMatrix> > rhs_ops = rhs_array.get_local_element(iidx);
+    rhs_ops = rhs_array.get_local_element(iidx);
 
     // Loop over all lhs operator indices
-    Op_component_base& lhs_array = lhsBlock->get_op_array(lhsType);
+    std::vector<boost::shared_ptr<SparseMatrix> > lhs_ops;
     for (int idx = 0; idx < lhs_array.get_size(); ++idx) {
-      std::vector<boost::shared_ptr<SparseMatrix> > lhs_ops = lhs_array.get_local_element(idx);
+      lhs_ops = lhs_array.get_local_element(idx);
 
-      // Loop over rhs spin-op components //FIXME
+      // Loop over rhs spin-op components
       for (int jjdx=0; jjdx < rhs_ops.size(); jjdx++) {
         boost::shared_ptr<SparseMatrix>& rhs_op = rhs_ops[jjdx];
+        assert( rhs_op->get_built() );
         int i = rhs_op->get_orbs()[0]; int j = rhs_op->get_orbs()[1];
         const SpinQuantum& spin_12 = rhs_op->get_deltaQuantum();
 
         // Loop over lhs spin-op components
         for (int jdx=0; jdx < lhs_ops.size(); jdx++) {
           boost::shared_ptr<SparseMatrix>& lhs_op = lhs_ops[jdx];
+          assert( lhs_op->get_built() );
           int k = lhs_op->get_orbs()[0]; int l = lhs_op->get_orbs()[1];
           std::string build_12 = rhs_op->get_build_pattern();
           std::string build_34 = lhs_op->get_build_pattern();
@@ -233,31 +223,41 @@ void do_4index_1_3_tensor_products( bool forwards, opTypes& optype, const opType
 {
   // (i | j,k,l ) partition
   //-------------------------
-  // Loop over all rhs operator indices
   Op_component_base& rhs_array = rhsBlock->get_op_array(rhsType);
-  for (int iidx = 0; iidx < rhs_array.get_size(); ++iidx) {
-    std::vector<boost::shared_ptr<SparseMatrix> > rhs_ops = rhs_array.get_local_element(iidx);
+  Op_component_base& lhs_array = lhsBlock->get_op_array(lhsType);
+  assert ( (rhs_array.get_size() == 1) || (lhs_array.get_size() == 1) );
 
-    // Loop over all lhs operator indices
-    Op_component_base& lhs_array = lhsBlock->get_op_array(lhsType);
-    for (int idx = 0; idx < lhs_array.get_size(); ++idx) {
-      std::vector<boost::shared_ptr<SparseMatrix> > lhs_ops = lhs_array.get_local_element(idx);
+  // Initialize filesystem
+  std::ifstream lhsifs( lhs_array.get_filename().c_str(), std::ios::binary );
+  if ( ! dmrginp.do_npdm_in_core() ) lhsifs.open( lhs_array.get_filename().c_str(), std::ios::binary );
 
-      // Loop over rhs spin-op components
-      for (int jjdx=0; jjdx < rhs_ops.size(); jjdx++) {
-        boost::shared_ptr<SparseMatrix>& rhs_op = rhs_ops[jjdx];
-        assert( rhs_op->get_built() );
-        int i = rhs_op->get_orbs()[0];
+  // Loop over all lhs operator indices
+  for (int idx = 0; idx < lhs_array.get_size(); ++idx) {
+    std::vector<boost::shared_ptr<SparseMatrix> > lhs_ops;
+    if ( dmrginp.do_npdm_in_core() )
+      lhs_ops = lhs_array.get_local_element(idx);
+    else
+      lhs_ops = get_ops_from_disk( lhsifs, lhs_array );
 
-        // Loop over lhs spin-op components
-        for (int jdx=0; jdx < lhs_ops.size(); jdx++) {
-          boost::shared_ptr<SparseMatrix>& lhs_op = lhs_ops[jdx];
-          assert( lhs_op->get_built() );
-          int j = lhs_op->get_orbs()[0]; int k = lhs_op->get_orbs()[1]; int l = lhs_op->get_orbs()[2];
+    // Loop over all rhs operator indices
+    for (int iidx = 0; iidx < rhs_array.get_size(); ++iidx) {
+      std::vector<boost::shared_ptr<SparseMatrix> > rhs_ops = rhs_array.get_local_element(iidx);
+
+      // Loop over lhs spin-op components
+      for (int jdx=0; jdx < lhs_ops.size(); jdx++) {
+        boost::shared_ptr<SparseMatrix>& lhs_op = lhs_ops[jdx];
+        assert( lhs_op->get_built() );
+        int j = lhs_op->get_orbs()[0]; int k = lhs_op->get_orbs()[1]; int l = lhs_op->get_orbs()[2];
+        std::string build_234 = lhs_op->get_build_pattern();
+        std::vector<SpinQuantum> spin_234 = lhs_op->get_quantum_ladder().at(build_234);
+
+        // Loop over rhs spin-op components
+        for (int jjdx=0; jjdx < rhs_ops.size(); jjdx++) {
+          boost::shared_ptr<SparseMatrix>& rhs_op = rhs_ops[jjdx];
+          assert( rhs_op->get_built() );
+          int i = rhs_op->get_orbs()[0];
           std::string build_1 = rhs_op->get_build_pattern();
-          std::string build_234 = lhs_op->get_build_pattern();
           std::string build_pattern = "(" + build_1 + build_234 + ")";
-          std::vector<SpinQuantum> spin_234 = lhs_op->get_quantum_ladder().at(build_234);
 
           // Allocate and build new operator
           std::vector<boost::shared_ptr<SparseMatrix> > vec = b.get_op_array(optype).get_element(i,j,k,l);
@@ -272,6 +272,7 @@ void do_4index_1_3_tensor_products( bool forwards, opTypes& optype, const opType
       }
     }
   }
+  if ( lhsifs.is_open() ) lhsifs.close();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -281,13 +282,23 @@ void do_4index_3_1_tensor_products( bool forwards, opTypes& optype, const opType
 {
   // (i,j,k | l ) partition
   //-------------------------
+  Op_component_base& rhs_array = rhsBlock->get_op_array(rhsType);
+  Op_component_base& lhs_array = lhsBlock->get_op_array(lhsType);
+  assert ( (rhs_array.get_size() == 1) || (lhs_array.get_size() == 1) );
+
+  // Initialize filesystem
+  std::ifstream rhsifs( rhs_array.get_filename().c_str(), std::ios::binary );
+  if ( ! dmrginp.do_npdm_in_core() ) rhsifs.open( rhs_array.get_filename().c_str(), std::ios::binary );
+
   // Loop over all rhs operator indices
-  Op_component_base& rhs_array2 = rhsBlock->get_op_array(rhsType);
-  for (int idx = 0; idx < rhs_array2.get_size(); ++idx) {
-    std::vector<boost::shared_ptr<SparseMatrix> > rhs_ops = rhs_array2.get_local_element(idx);
+  for (int idx = 0; idx < rhs_array.get_size(); ++idx) {
+    std::vector<boost::shared_ptr<SparseMatrix> > rhs_ops;
+    if ( dmrginp.do_npdm_in_core() )
+      rhs_ops = rhs_array.get_local_element(idx);
+    else
+      rhs_ops = get_ops_from_disk( rhsifs, rhs_array );
 
     // Loop over all lhs operator indices
-    Op_component_base& lhs_array = lhsBlock->get_op_array(lhsType);
     for (int iidx = 0; iidx < lhs_array.get_size(); ++iidx) {
       std::vector<boost::shared_ptr<SparseMatrix> > lhs_ops = lhs_array.get_local_element(iidx);
 
@@ -297,9 +308,6 @@ void do_4index_3_1_tensor_products( bool forwards, opTypes& optype, const opType
         assert( rhs_op->get_built() );
         int i = rhs_op->get_orbs()[0]; int j = rhs_op->get_orbs()[1]; int k = rhs_op->get_orbs()[2];
         std::string build_123 = rhs_op->get_build_pattern();
-//FIXME only works with "D" as 4th operator!!
-assert( optype == CRE_CRE_DES_DES );
-        std::string build_pattern = "(" + build_123 + "(D))";
         std::vector<SpinQuantum> spin_123 = rhs_op->get_quantum_ladder().at(build_123);
 
         // Loop over lhs spin-op components //FIXME
@@ -307,6 +315,8 @@ assert( optype == CRE_CRE_DES_DES );
           boost::shared_ptr<SparseMatrix>& lhs_op = lhs_ops[jjdx];
           assert( lhs_op->get_built() );
           int l = lhs_op->get_orbs()[0];
+          std::string build_4 = lhs_op->get_build_pattern();
+          std::string build_pattern = "(" + build_123 + build_4 + ")";
 
           // Allocate and build new operator
           std::vector<boost::shared_ptr<SparseMatrix> > vec = b.get_op_array(optype).get_element(i,j,k,l);
@@ -314,13 +324,14 @@ assert( optype == CRE_CRE_DES_DES );
             boost::shared_ptr<SparseMatrix>& op = vec[sx];
             // Select relevant spin component
             std::vector<SpinQuantum> s = { op->get_quantum_ladder().at(build_pattern).at(0), op->get_quantum_ladder().at(build_pattern).at(1) };
-//FIXME Transposeview assumed for lhs_op
-            if ( s == spin_123 ) finish_tensor_product( b, rhsBlock, *rhs_op, Transposeview(lhs_op), *op, forwards, build_pattern, ofs );
+//            if ( s == spin_123 ) finish_tensor_product( b, rhsBlock, *rhs_op, Transposeview(lhs_op), *op, forwards, build_pattern, ofs );
+            if ( s == spin_123 ) finish_tensor_product( b, rhsBlock, *rhs_op, *lhs_op, *op, forwards, build_pattern, ofs );
           }
         }
       }
     }
   }
+  if ( rhsifs.is_open() ) rhsifs.close();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -337,8 +348,9 @@ void build_4index_ops( opTypes& optype, SpinBlock& big )
   do_4index_tensor_trace( optype, big, sysBlock, ofs );
   do_4index_tensor_trace( optype, big, dotBlock, ofs );
 
-  // 2,2 partitioning
   bool forwards = ! ( sysBlock->get_sites().at(0) > dotBlock->get_sites().at(0) );
+
+  // 2,2 partitioning
   if ( forwards ) {
     do_4index_2_2_tensor_products( forwards, optype, CRE_CRE, DES_DES, big, dotBlock, sysBlock, ofs );
   } else {
@@ -348,14 +360,13 @@ void build_4index_ops( opTypes& optype, SpinBlock& big )
   // 3,1 partitioning
   if ( forwards ) {
     do_4index_1_3_tensor_products( forwards, optype, CRE, CRE_DES_DES, big, dotBlock, sysBlock, ofs );
-    do_4index_3_1_tensor_products( forwards, optype, CRE_CRE_DES, CRE, big, dotBlock, sysBlock, ofs );
+    do_4index_3_1_tensor_products( forwards, optype, CRE_CRE_DES, DES, big, dotBlock, sysBlock, ofs );
   } else {
     do_4index_1_3_tensor_products( forwards, optype, CRE, CRE_DES_DES, big, sysBlock, dotBlock, ofs );
-    do_4index_3_1_tensor_products( forwards, optype, CRE_CRE_DES, CRE, big, sysBlock, dotBlock, ofs );
+    do_4index_3_1_tensor_products( forwards, optype, CRE_CRE_DES, DES, big, sysBlock, dotBlock, ofs );
   }
 
   ofs.close();
-
 
 }
 

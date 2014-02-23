@@ -36,6 +36,8 @@ void SpinBlock::setstoragetype(Storagetype st)
 //FIXME high-index operators should never be replicated on all procs
 //    if (has(DES_DES_CRE))
 //      set_op_array(DES_DES_CRE).set_local() = true;
+    if (has(DES))
+      set_op_array(DES).set_local() = true;
     if (has(RI_3INDEX))
       set_op_array(RI_3INDEX).set_local() = true;
     if (has(RI_4INDEX))
@@ -61,6 +63,8 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(RI_3INDEX).set_local() = false;
     if (has(RI_4INDEX))
       set_op_array(RI_4INDEX).set_local() = false;
+    if (has(DES))
+      set_op_array(DES).set_local() = false;
     if (has(DES_DES))
       set_op_array(DES_DES).set_local() = false;
     if (has(DES_DES_DES))
@@ -137,6 +141,9 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
       break;
     case RI_4INDEX:
       ret = boost::shared_ptr<Op_component<RI4index> >(new Op_component<RI4index>(is_core));
+      break;
+    case DES:
+      ret = boost::shared_ptr<Op_component<Des> >(new Op_component<Des>(is_core));
       break;
     case DES_DES:
       ret = boost::shared_ptr<Op_component<DesDes> >(new Op_component<DesDes>(is_core));
@@ -227,6 +234,7 @@ void SpinBlock::default_op_components(bool complementary_)
     if ( dmrginp.do_npdm_ops() ) {
       ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
       ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
+      ops[DES] = make_new_op(DES, true);
       ops[DES_DES] = make_new_op(DES_DES, true);
       if ( (dmrginp.calc_type() == THREEPDM) ||
            (dmrginp.calc_type() == FOURPDM)  ||
@@ -325,6 +333,7 @@ assert(false); //FIXME << if (haveNormops || dmrginp.do_npdm_ops()) not tested
         if ( dmrginp.do_npdm_ops() ) {
           ops[RI_3INDEX] = make_new_op(RI_3INDEX, false);
           ops[RI_4INDEX] = make_new_op(RI_4INDEX, false);
+          ops[DES] = make_new_op(DES, false);
           ops[DES_DES] = make_new_op(DES_DES, false);
           if ( (dmrginp.calc_type() == THREEPDM) ||
                (dmrginp.calc_type() == FOURPDM)  ||
