@@ -233,6 +233,9 @@ void SpinBlock::build_virtual_operators()
         if ( ot == CRE_CRE_DES_DES ) {
           build_4index_ops( ot, *this );
         }
+//        else if ( ot == CRE_DES_CRE_DES ) {
+//          build_4index_ops( ot, *this );
+//        }
         else {
           it->second->build_operators(*this, ot, ofile, sysfile, dotfile);
         }

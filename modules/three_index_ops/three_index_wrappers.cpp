@@ -26,9 +26,6 @@ Npdm_op_wrapper_CCC::Npdm_op_wrapper_CCC( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
-  // S={1/2,1/2,3/2}
-//FIXME get rid of mults_:: use deltaQuantum instead directly when needed
-  mults_ = { 2, 2, 4 };
   // For disk-based storage
   ifile_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
 }
@@ -98,8 +95,6 @@ Npdm_op_wrapper_CCD::Npdm_op_wrapper_CCD( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
-  // S={1/2,1/2,3/2}
-  mults_ = { 2, 2, 4 };
   // For disk-based storage
   ifile_ = spinBlock_->get_op_array(CRE_CRE_DES).get_filename();
 }
@@ -164,8 +159,6 @@ Npdm_op_wrapper_CDD::Npdm_op_wrapper_CDD( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
-  // S={1/2,1/2,3/2}
-  mults_ = { 2, 2, 4 };
   // For disk-based storage
   ifile_ = spinBlock_->get_op_array(CRE_DES_DES).get_filename();
 }
@@ -224,8 +217,6 @@ Npdm_op_wrapper_CDC::Npdm_op_wrapper_CDC( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
-  // S={1/2,1/2,3/2}
-  mults_ = { 2, 2, 4 };
   // For disk-based storage
   ifile_ = spinBlock_->get_op_array(CRE_DES_CRE).get_filename();
 }
@@ -289,8 +280,6 @@ Npdm_op_wrapper_DCD::Npdm_op_wrapper_DCD( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
-  // S={1/2,1/2,3/2}
-  mults_ = { 2, 2, 4 };
   // For disk-based storage
   ifile_ = spinBlock_->get_op_array(DES_CRE_DES).get_filename();
 }
@@ -352,8 +341,6 @@ Npdm_op_wrapper_DDC::Npdm_op_wrapper_DDC( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
-  // S={1/2,1/2,3/2}
-  mults_ = { 2, 2, 4 };
   // For disk-based storage
   ifile_ = spinBlock_->get_op_array(DES_DES_CRE).get_filename();
 }
@@ -417,8 +404,6 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
 ////  factor_ = 1.0;
 ////  transpose_ = true;
 ////  build_pattern_ = "0";
-////  // S={1/2,1/2,3/2}
-////  mults_ = { 2, 2, 4 };
 ////  // For disk-based storage
 ////  ifile_ = spinBlock_->get_op_array(DES_DES_CRE).get_filename();
 ////}
@@ -484,8 +469,6 @@ Npdm_op_wrapper_DCC::Npdm_op_wrapper_DCC( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
-  // S={1/2,1/2,3/2}
-  mults_ = { 2, 2, 4 };
   // For disk-based storage
   ifile_ = spinBlock_->get_op_array(DES_CRE_CRE).get_filename();
 }
@@ -552,8 +535,6 @@ cout << "getting DCC operator...\n";
 ////  factor_ = -1.0;
 ////  transpose_ = true;
 ////  build_pattern_ = "0";
-////  // S={1/2,1/2,3/2}
-////  mults_ = { 2, 2, 4 };
 ////  // For disk-based storage
 ////  ifile_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_filename();
 ////}
@@ -619,8 +600,6 @@ Npdm_op_wrapper_DDD::Npdm_op_wrapper_DDD( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
-  // S={1/2,1/2,3/2}
-  mults_ = { 2, 2, 4 };
   // For disk-based storage
   ifile_ = spinBlock_->get_op_array(DES_DES_DES).get_filename();
 }

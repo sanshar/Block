@@ -24,7 +24,6 @@ Npdm_op_wrapper_compound_CCDD::Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBl
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "";
-  mults_ = { };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -41,7 +40,6 @@ cout << "getting RI CCDD operator...\n";
   int lx = indices_[3];
 
   build_pattern_ = "((CC)(DD))";
-  mults_ = { 1, 3, 3, 1, 3, 5 };
   // Get 2-index ops as RI building blocks
   std::vector< boost::shared_ptr<SparseMatrix> > ijOps = spinBlock_->get_op_array(CRE_CRE).get_element(ix,jx);
   std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(DES_DES).get_element(kx,lx);
@@ -51,6 +49,7 @@ cout << "getting RI CCDD operator...\n";
 //  indices_[3] = kx;
   
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
+  // multiplicites = { 1, 3, 3, 1, 3, 5 };
   opReps_.clear();
   // S=0 (+) S=0  =>  S=0
   opReps_.push_back( build_compound_operator( false, 1, ijOps.at(0), klOps.at(0), 0, indices_, false ) );
@@ -102,7 +101,7 @@ cout << "getting RI CCDD operator...\n";
 ////  else if ( build_pattern_3 == "(C(CD))" ) build_pattern_ = "(((C)(CD))(D))";
 ////  else assert(false);
 ////  factor_ = 1.0;
-////  mults_ = { 1, 3, 1, 3, 3, 5 };
+////  multiplicities = { 1, 3, 1, 3, 3, 5 };
 ////
 ////  // Allocate and build operator representation on the fly as RI tensor product for each spin component
 ////  opReps_.clear();
@@ -136,7 +135,6 @@ Npdm_op_wrapper_compound_CCCD::Npdm_op_wrapper_compound_CCCD( SpinBlock * spinBl
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "((CC)(CD))";
-  mults_ = { 1, 3, 3, 1, 3, 5 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -157,6 +155,7 @@ cout << "getting RI CCCD operator...\n";
   std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(CRE_DES).get_element(kx,lx);
 
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
+  // multiplicities = { 1, 3, 3, 1, 3, 5 };
   opReps_.clear();
   // S=0 (+) S=0  =>  S=0
   opReps_.push_back( build_compound_operator( false, 1, ijOps.at(0), klOps.at(0), 0, indices_, false ) );
@@ -187,7 +186,6 @@ Npdm_op_wrapper_compound_CCDC::Npdm_op_wrapper_compound_CCDC( SpinBlock * spinBl
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "((CC)(DC))";
-  mults_ = { 1, 3, 3, 1, 3, 5 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -211,6 +209,7 @@ cout << "getting RI CCDC operator...\n";
   std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(DES_CRE).get_element(kx,lx);
 
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
+  // multiplicities = { 1, 3, 3, 1, 3, 5 };
   opReps_.clear();
   // S=0 (+) S=0  =>  S=0
   opReps_.push_back( build_compound_operator( false, -1, ijOps.at(0), klOps.at(0), 0, indices_, false ) );
@@ -241,7 +240,6 @@ Npdm_op_wrapper_compound_CDCC::Npdm_op_wrapper_compound_CDCC( SpinBlock * spinBl
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "((CD)(CC))";
-  mults_ = { 1, 3, 3, 1, 3, 5 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -265,6 +263,7 @@ cout << "getting RI CDCC operator...\n";
   std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(CRE_CRE).get_element(kx,lx);
 
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
+  // multiplicities = { 1, 3, 3, 1, 3, 5 };
   opReps_.clear();
   // S=0 (+) S=0  =>  S=0
   opReps_.push_back( build_compound_operator( false, 1, ijOps.at(0), klOps.at(0), 0, indices_, false ) );
@@ -295,7 +294,6 @@ Npdm_op_wrapper_compound_CDCD::Npdm_op_wrapper_compound_CDCD( SpinBlock * spinBl
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "((CD)(CD))";
-  mults_ = { 1, 3, 3, 1, 3, 5 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -319,6 +317,7 @@ cout << "getting RI CDCD operator...\n";
   std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(CRE_DES).get_element(kx,lx);
 
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
+  // multiplicities = { 1, 3, 3, 1, 3, 5 };
   opReps_.clear();
   // S=0 (+) S=0  =>  S=0
   opReps_.push_back( build_compound_operator( false, 1, ijOps.at(0), klOps.at(0), 0, indices_, false ) );
@@ -349,7 +348,6 @@ Npdm_op_wrapper_compound_CDDC::Npdm_op_wrapper_compound_CDDC( SpinBlock * spinBl
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "((CD)(DC))";
-  mults_ = { 1, 3, 3, 1, 3, 5 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -373,6 +371,7 @@ cout << "getting RI CDDC operator...\n";
   std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(DES_CRE).get_element(kx,lx);
 
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
+  // multiplicities = { 1, 3, 3, 1, 3, 5 };
   opReps_.clear();
   // S=0 (+) S=0  =>  S=0
   opReps_.push_back( build_compound_operator( false, -1, ijOps.at(0), klOps.at(0), 0, indices_, false ) );
@@ -403,7 +402,6 @@ Npdm_op_wrapper_compound_CDDD::Npdm_op_wrapper_compound_CDDD( SpinBlock * spinBl
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "((CD)(DD))";
-  mults_ = { 1, 3, 3, 1, 3, 5 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -424,6 +422,7 @@ cout << "getting RI CDDD operator...\n";
   std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(DES_DES).get_element(kx,lx);
 
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
+  // multiplicities = { 1, 3, 3, 1, 3, 5 };
   opReps_.clear();
   // S=0 (+) S=0  =>  S=0
   opReps_.push_back( build_compound_operator( false, 1, ijOps.at(0), klOps.at(0), 0, indices_, false ) );
@@ -454,7 +453,6 @@ Npdm_op_wrapper_compound_CCCC::Npdm_op_wrapper_compound_CCCC( SpinBlock * spinBl
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "((CC)(CC))";
-  mults_ = { 1, 3, 3, 1, 3, 5 };
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -475,6 +473,7 @@ cout << "getting RI CCCC operator...\n";
   std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(CRE_CRE).get_element(kx,lx);
 
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
+  // multiplicities = { 1, 3, 3, 1, 3, 5 };
   opReps_.clear();
   // S=0 (+) S=0  =>  S=0
   opReps_.push_back( build_compound_operator( false, 1, ijOps.at(0), klOps.at(0), 0, indices_, false ) );

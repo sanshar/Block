@@ -93,14 +93,10 @@ bool Npdm_driver::skip_parallel( NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, boo
 void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm_expectations, 
                                  NpdmSpinOps_base& outerOps, NpdmSpinOps& innerOps, NpdmSpinOps& dotOps ) 
 {
-  if ( dotOps.opReps_.size() > 0 ) assert( dotOps.mults_.size() == dotOps.opReps_.size() );
-  if ( outerOps.opReps_.size() > 0 ) assert( outerOps.mults_.size() == outerOps.opReps_.size() );
-
   // Many spatial combinations on right block
   for ( int iop = 0; iop < innerOps.size(); ++iop ) {
     bool skip = innerOps.set_local_ops( iop );
     if (skip) continue;
-    if ( innerOps.opReps_.size() > 0 ) assert( innerOps.mults_.size() == innerOps.opReps_.size() );
 
     // Get non-spin-adapated spin-orbital 3PDM elements after building spin-adapted elements
     std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements;
@@ -218,24 +214,24 @@ bool skip_this_pattern( std::vector<Npdm::CD>& lhs, std::vector<Npdm::CD>& dot, 
   bool skip = false;
 return skip;
 
-  //if ( (sweepPos==1) && (lhs_cd_type.size() ==4) ) continue;
-  if ( lhs.size() == 4 ) skip = true;
-  if ( dot.size() == 4 ) skip = true;
-  if ( rhs.size() == 4 ) skip = true;
-
-  std::vector<Npdm::CD> op;
-//  op = { Npdm::DESTRUCTION, Npdm::CREATION, Npdm::DESTRUCTION };
-//  if ( lhs == op || dot == op || rhs == op ) skip = true;
-//  op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::CREATION };
-//  if ( lhs == op || dot == op || rhs == op ) skip = true;
-//  op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
-//  if ( lhs == op || dot == op || rhs == op ) skip = true;
-
-  op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
-  if ( lhs == op || dot == op || rhs == op ) skip = false;
-
-  if ( skip ) cout << "Skipping this operator pattern!\n";
-  return skip;
+//  //if ( (sweepPos==1) && (lhs_cd_type.size() ==4) ) continue;
+//  if ( lhs.size() == 4 ) skip = true;
+//  if ( dot.size() == 4 ) skip = true;
+//  if ( rhs.size() == 4 ) skip = true;
+//
+//  std::vector<Npdm::CD> op;
+////  op = { Npdm::DESTRUCTION, Npdm::CREATION, Npdm::DESTRUCTION };
+////  if ( lhs == op || dot == op || rhs == op ) skip = true;
+////  op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::CREATION };
+////  if ( lhs == op || dot == op || rhs == op ) skip = true;
+////  op = { Npdm::DESTRUCTION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
+////  if ( lhs == op || dot == op || rhs == op ) skip = true;
+//
+//  op = { Npdm::CREATION, Npdm::CREATION, Npdm::DESTRUCTION, Npdm::DESTRUCTION };
+//  if ( lhs == op || dot == op || rhs == op ) skip = false;
+//
+//  if ( skip ) cout << "Skipping this operator pattern!\n";
+//  return skip;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

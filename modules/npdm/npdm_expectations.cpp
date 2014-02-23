@@ -6,6 +6,7 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
+#include <algorithm>
 #include <boost/lexical_cast.hpp>
 #include "MatrixBLAS.h"
 #include "pario.h"
@@ -45,7 +46,6 @@ bool Npdm_expectations::screen_op_string_for_duplicates( std::string& op )
 
   if ( indices.size() == 2 ) {
     // 1PDM case
-//    return npdm_patterns_.screen_1pdm_strings( indices, CD ); 
     return false;
   }
   else if ( indices.size() == 4 ) {
@@ -180,17 +180,28 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-bool Npdm_expectations::test_for_singlet( int lhs_mult, int dot_mult, int rhs_mult )
+bool Npdm_expectations::test_for_singlet( int ilhs, int idot, int irhs, NpdmSpinOps_base& lhsOps, NpdmSpinOps_base& rhsOps, NpdmSpinOps_base& dotOps )
 {
-  // Work with 2*S instead of multiplicities
-  int lhs2S = lhs_mult -1;
-  int dot2S = dot_mult -1;
-  int rhs2S = rhs_mult -1;
+  int lhs2S, rhs2S, dot2S;
+  // LHS
+  if ( lhsOps.opReps_.size() == 0 ) 
+    lhs2S = 0;
+  else
+    lhs2S = lhsOps.opReps_.at(ilhs)->get_deltaQuantum().totalSpin;
+  // RHS
+  if ( rhsOps.opReps_.size() == 0 ) 
+    rhs2S = 0;
+  else
+    rhs2S = rhsOps.opReps_.at(irhs)->get_deltaQuantum().totalSpin;
+  // DOT
+  if ( dotOps.opReps_.size() == 0 ) 
+    dot2S = 0;
+  else
+    dot2S = dotOps.opReps_.at(idot)->get_deltaQuantum().totalSpin;
 
   // Couple LHS and Dot spin angular momenta and see if any equal RHS  
   for (int twoS = std::abs(lhs2S - dot2S); twoS <= ( lhs2S + dot2S ); twoS += 2 ) {
     if ( twoS == rhs2S ) {
-//cout << "singlet!\n";
       return true;
     }
   }
@@ -205,22 +216,15 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_bas
 
   // IMPORTANT: generate spin-components in the same order as RHS of linear equation solver in npdm_set_up_linear_equations routine
   // i.e. in accordance with the operator string build_pattern
-  for (int irhs = 0; irhs < rhsOps.mults_.size(); ++irhs) {
-//if (rhsOps.opReps_.size() > 0) { pout << "rhs: " << rhsOps.mults_.at(irhs) << std::endl; }
-    for (int idot = 0; idot < dotOps.mults_.size(); ++idot) {
-//if (dotOps.opReps_.size() > 0) { pout << "dot: " << dotOps.mults_.at(idot) << std::endl; }
-      for (int ilhs = 0; ilhs < lhsOps.mults_.size(); ++ilhs) {
-//if (lhsOps.opReps_.size() > 0) { pout << "lhs: " << lhsOps.mults_.at(ilhs) << std::endl; }
-//pout << "spin comp: ilhs, idot, irhs = " << ilhs << idot << irhs << std::endl;
-
-//FIXME get rid of mults_; just use get_deltaQuantum directly
-        // Check that the spin multiplicities of the actual operators we've got are what we think they are!
-        if ( lhsOps.opReps_.size() > 0 ) assert( lhsOps.mults_.at(ilhs) -1 == lhsOps.opReps_.at(ilhs)->get_deltaQuantum().totalSpin );
-        if ( dotOps.opReps_.size() > 0 ) assert( dotOps.mults_.at(idot) -1 == dotOps.opReps_.at(idot)->get_deltaQuantum().totalSpin );
-        if ( rhsOps.opReps_.size() > 0 ) assert( rhsOps.mults_.at(irhs) -1 == rhsOps.opReps_.at(irhs)->get_deltaQuantum().totalSpin );
-
+  int hilhs = lhsOps.opReps_.size();
+  int hirhs = rhsOps.opReps_.size();
+  int hidot = dotOps.opReps_.size();
+  for (int irhs = 0; irhs < std::max(1,hirhs); ++irhs) {
+    for (int idot = 0; idot < std::max(1,hidot); ++idot) {
+      for (int ilhs = 0; ilhs < std::max(1,hilhs); ++ilhs) {
         // Screen operator combinations that do not combine to give a singlet
-        bool singlet = test_for_singlet( lhsOps.mults_.at(ilhs), dotOps.mults_.at(idot), rhsOps.mults_.at(irhs) );
+        bool singlet = test_for_singlet( ilhs, idot, irhs, lhsOps, rhsOps, dotOps );
+        // Contract operators to produce spin-adapted expectation value
         if ( singlet ) expectations_.push_back( contract_spin_adapted_operators( ilhs, idot, irhs, lhsOps, rhsOps, dotOps ) );
       }
     }

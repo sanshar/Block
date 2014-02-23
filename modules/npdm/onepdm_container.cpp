@@ -214,7 +214,6 @@ void Onepdm_container::store_npdm_elements( const std::vector< std::pair< std::v
         vec.push_back( (it->first)[i]/2 );
       spatial_batch[ vec ] = 0.0;
       // Assign temporary batch of spin-orbital elements
-cout << it->second << endl;
       spin_batch[ it->first ] = it->second * val;
     }
   }

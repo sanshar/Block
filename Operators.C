@@ -432,59 +432,36 @@ void SpinAdapted::CreCre::build(const SpinBlock& b)
 
   const int i = get_orbs()[0];
   const int j = get_orbs()[1];
-//pout << "indices  " << i << " " << j << std::endl;
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
-//pout << "sysBlock:\n";
-//pout << *leftBlock;
-//pout << "dotBlock:\n";
-//pout << *rightBlock;
 
   if (leftBlock->get_op_array(CRE_CRE).has(i, j))
   {      
-//pout << "maw sysBlock has i,j\n";
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
-//pout << "opCC\n";
-//pout << *this;
     return;
   }
   if (rightBlock->get_op_array(CRE_CRE).has(i, j))
   {
-//pout << "maw dotBlock has i,j\n";
     const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_CRE, deltaQuantum, i,j);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
-//pout << "opCC\n";
-//pout << *this;
     return;
   }  
   if (leftBlock->get_op_array(CRE).has(i))
   {
-//pout << "maw sysBlock has i\n";
     const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(i), i);
     const boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(j), j);
     SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, 1.0);
-//pout << "op1\n";
-//pout << *op1;
-//pout << "op2\n";
-//pout << *op2;
   }
   else if (rightBlock->get_op_array(CRE).has(i))
   {
-//pout << "maw dotBlock has i\n";
     const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(CRE, getSpinQuantum(i), i);
     const boost::shared_ptr<SparseMatrix> op2 = leftBlock->get_op_rep(CRE, getSpinQuantum(j), j);
-//pout << "op1\n";
-//pout << *op1;
-//pout << "op2\n";
-//pout << *op2;
     double parity = getCommuteParity(op1->get_deltaQuantum(), op2->get_deltaQuantum(), get_deltaQuantum());
     SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
-//pout << "opCC\n";
-//pout << *this;
   }
   else
     abort();  

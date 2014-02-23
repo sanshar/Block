@@ -40,7 +40,6 @@ class NpdmSpinOps_base {
 //        opReps_.at(i) = obj.opReps_.at(i);
 //      }
       opReps_ = obj.opReps_;
-      mults_ = obj.mults_;
       build_pattern_ = obj.build_pattern_;
       transpose_ = obj.transpose_;
       factor_ = obj.factor_;
@@ -49,11 +48,10 @@ class NpdmSpinOps_base {
     }
 
     // Numerical representation of the operators for several total spins (e.g. 2-index op has two forms with spin-1/2 particles)
+//FIXME should this be a reference?  Don't want to copy!!
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_;
     // is_local_ == true mean operators are duplicated on all mpi ranks
     bool is_local_;
-    // Spin multiplicity of each operator (this info should be in each OpReps element, but we can use this for diagnostics)
-    std::vector<int> mults_;
     // How the operator is built (e.g. 3-index from product of 2-index cre-cre and 1-index destruction)
     std::string build_pattern_;
     // Do we need to transpose the representation before using it?
@@ -72,7 +70,6 @@ class NpdmSpinOps_base {
       assert( tag_hi < boost::mpi::environment::max_tag() );
       std::vector< boost::mpi::request > reqs;
       int k = tag_lo;
-      reqs.push_back( world.isend(rank, k++, mults_) );
       reqs.push_back( world.isend(rank, k++, build_pattern_) );
       reqs.push_back( world.isend(rank, k++, transpose_) );
       reqs.push_back( world.isend(rank, k++, factor_) );
@@ -92,7 +89,6 @@ class NpdmSpinOps_base {
       std::vector< boost::mpi::request > reqs;
       assert( opReps_.size() == 0 );
       int k = tag_lo;
-      reqs.push_back( world.irecv(rank, k++, mults_) );
       reqs.push_back( world.irecv(rank, k++, build_pattern_) );
       reqs.push_back( world.irecv(rank, k++, transpose_) );
       reqs.push_back( world.irecv(rank, k++, factor_) );
@@ -114,8 +110,7 @@ class NpdmSpinOps_base {
 //    {
 ////      boost::serialization::void_cast_register<Cre, SparseMatrix>();
 //
-//      ar & mults_ \
-//         & build_pattern_ \
+//      ar & build_pattern_ \
 //         & transpose_ \
 //         & factor_ \
 //         & indices_;
@@ -151,6 +146,7 @@ class NpdmSpinOps : public NpdmSpinOps_base {
     int size() { return size_; }
     virtual bool set_local_ops( int idx ) { assert(false); }
 
+//FIXME public??
     // Input file stream for disk-based operators used to build NPDM
     std::ifstream ifs_;
     std::string ifile_;

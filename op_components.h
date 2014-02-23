@@ -217,7 +217,8 @@ template <class Op> class Op_component : public Op_component_base
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //MAW use for unique filename for disk-based operator storage -- note we need optype prefix!
-  std::string get_filename() const { 
+  std::string get_filename() const 
+  { 
     std::string file;
     file = str( boost::format("%s%s%s%s%d%s%d%s") % dmrginp.load_prefix() % "/" % get_op_string() % "_" % uniqueID % "_p" % mpigetrank() % ".tmp" ); 
     return file;
@@ -226,9 +227,12 @@ template <class Op> class Op_component : public Op_component_base
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //FIXME MAW for 3-index operators (or larger) we specialize these functions to build/modify operators out of core (on disk)
 
-  void build_csf_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) { 
-
-    if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
+  void build_csf_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) 
+  { 
+//FIXME
+//    if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
+    if ( ot == CRE_CRE_DES_DES ) {
+cout << "building csf on disk... " << ofile << endl;
       // Build on disk (assume we are building from scratch)
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
       for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::buildUsingCsf, _1,boost::ref(b), boost::ref(ladders), boost::ref(c)) );
@@ -248,14 +252,13 @@ template <class Op> class Op_component : public Op_component_base
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  void build_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::string& sysfile, std::string& dotfile) { 
-//cout << "building operators:  opType = " << ot << endl;
+  void build_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+  { 
 //FIXME
 //    if ( m_op.num_indices() > 3) {
-//      // New driver to build n-index operators (n>3)
+//      // Use alternative driver to build n-index operators for n>3
 //      assert(false);
 //    }
-//    else if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
     if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
       // Build on disk (reading from disk, as necessary)
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
@@ -280,7 +283,8 @@ template <class Op> class Op_component : public Op_component_base
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo* s) {
+  void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo* s) 
+  {
 //FIXME
 //cout << "renormalize transform: opType = " << ot << endl;
 //    if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
@@ -289,6 +293,7 @@ template <class Op> class Op_component : public Op_component_base
       // Build on disk (load, renormalize, save)
       std::string ifile = get_filename();
       std::string ofile = get_filename() + ".renorm";
+cout << "renomalizing on disk... " << ifile << endl;
       std::ifstream ifs(ifile.c_str(), std::ios::binary);
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
       for_all_operators_on_disk( *this, *s, ofs, bind(&SparseMatrix::renormalise_transform_on_disk, _1, boost::ref(rotateMatrix), s, boost::ref(ifs)) );
