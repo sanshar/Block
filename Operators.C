@@ -1421,7 +1421,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
           int cI = cv[0];
           int cJ = cv[1];
           int parity = s1.trace(s2.c(cJ).c(cI));
-          double factor = parity*d1*d2*0.5;
+          double factor = parity*d1*d2;
           matrixE += factor * (v_cc(cI,cJ)-v_cc(cJ,cI));
           // from v_cccd
           if (dmrginp.spinAdapted()) {
@@ -1432,7 +1432,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
               int K = b->get_sites()[kl];
               s1 = it1->first; s2 = it2->first;
               parity = s1.trace(s2.d(K).c(K).c(cJ).c(cI));
-              factor = parity*d1*d2*0.5;
+              factor = parity*d1*d2/6;
               matrixE += factor*(v_cccd(cI,cJ,K,K)-v_cccd(cI,K,cJ,K)+v_cccd(K,cI,cJ,K)
                   -v_cccd(cJ,cI,K,K)+v_cccd(cJ,K,cI,K)-v_cccd(K,cJ,cI,K));
             }
@@ -1441,8 +1441,8 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
           // from v_cc pairing
           int dI = dv[0];
           int dJ = dv[1];
-          int parity = s1.trace(s2.d(dI).c(dJ));
-          double factor = parity*d1*d2*0.5;          
+          int parity = s1.trace(s2.d(dI).d(dJ));
+          double factor = parity*d1*d2;
           matrixE += factor * (v_cc(dI,dJ)-v_cc(dJ,dI));
           // from v_cccd
           if (dmrginp.spinAdapted()) {
@@ -1453,7 +1453,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
               int K = b->get_sites()[kl];
               s1 = it1->first; s2 = it2->first;
               parity = s1.trace(s2.d(dI).d(dJ).d(K).c(K));
-              factor = parity*d1*d2*0.5;
+              factor = parity*d1*d2/6;
               matrixE += factor*(v_cccd(dI,dJ,K,K)-v_cccd(dI,K,dJ,K)+v_cccd(K,dI,dJ,K)
                   -v_cccd(dJ,dI,K,K)+v_cccd(dJ,K,dI,K)-v_cccd(K,dJ,dI,K));
             }
