@@ -336,7 +336,7 @@ void compute_pair_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock&
   SpinBlock* rightBlock = big.get_rightBlock();
 
   for (int ij = 0; ij < rightBlock->get_op_array(CRE_CRE).get_size(); ++ij) {
-    boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_array(CRE_DES).get_local_element(ij)[0]->getworkingrepresentation(rightBlock);
+    boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_array(CRE_CRE).get_local_element(ij)[0]->getworkingrepresentation(rightBlock);
     int ix = op->get_orbs(0);
     int jx = op->get_orbs(1);
 

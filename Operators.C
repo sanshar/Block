@@ -20,15 +20,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 //using namespace SpinAdapted::operatorfunctions;
 
-double SpinAdapted::vcccc_4idx_asymm(int i, int j, int k, int l) {
-  return v_cccc(i,j,k,l)-v_cccc(i,j,l,k)+v_cccc(i,l,j,k)-v_cccc(l,i,j,k)
-    -v_cccc(i,k,j,l)+v_cccc(i,k,l,j)-v_cccc(i,l,k,j)+v_cccc(l,i,k,j)
-    +v_cccc(k,i,j,l)-v_cccc(k,i,l,j)+v_cccc(k,l,i,j)-v_cccc(l,k,i,j)
-    -v_cccc(j,i,k,l)+v_cccc(j,i,l,k)-v_cccc(j,l,i,k)+v_cccc(l,j,i,k)
-    +v_cccc(j,k,i,l)-v_cccc(j,k,l,i)+v_cccc(j,l,k,i)-v_cccc(l,j,k,i)
-    -v_cccc(k,j,i,l)+v_cccc(k,j,l,i)-v_cccc(k,l,j,i)+v_cccc(l,k,j,i);
-}
-
 bool SpinAdapted::SparseMatrix::nonZeroTensorComponent(Csf& c1, SpinQuantum& opsym, Csf& ladder, int& nonzeroindex, double& cleb)
 {
   if (!dmrginp.spinAdapted()) {
@@ -266,14 +257,16 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
         for (i2 =0; i2<iSz2.size(); ++i2) {
           vector<int>& Ind1 = op1.opindices[i1], Ind2 = op2.opindices[i2]; 
           if (comp == DD) {
-            factor += (1./24) * (vcccc(Ind1[0], Ind1[1], Ind2[0], Ind2[1]) 
-                - vcccc(Ind1[0], Ind2[0], Ind1[1], Ind2[1]) + vcccc(Ind1[0], Ind2[0], Ind2[1], Ind1[1])
-                + vcccc(Ind2[0], Ind1[0], Ind1[1], Ind2[1]) - vcccc(Ind2[0], Ind1[0], Ind2[1], Ind1[1])
-                + vcccc(Ind2[0], Ind2[1], Ind1[0], Ind1[1]))* iSz1.at(i1)*iSz2.at(i2)/cleb;
+            factor += 0.25 * vcccc(Ind1[0], Ind1[1], Ind2[0], Ind2[1]) *iSz1.at(i1)*iSz2.at(i2)/cleb;
+            //factor += (1./24) * (vcccc(Ind1[0], Ind1[1], Ind2[0], Ind2[1]) 
+            //    - vcccc(Ind1[0], Ind2[0], Ind1[1], Ind2[1]) + vcccc(Ind1[0], Ind2[0], Ind2[1], Ind1[1])
+            //    + vcccc(Ind2[0], Ind1[0], Ind1[1], Ind2[1]) - vcccc(Ind2[0], Ind1[0], Ind2[1], Ind1[1])
+            //    + vcccc(Ind2[0], Ind2[1], Ind1[0], Ind1[1]))* iSz1.at(i1)*iSz2.at(i2)/cleb;
           } else if (comp == CCD) {
-            factor += (1./24) * (vcccc(Ind2[0], Ind1[2], Ind1[1], Ind1[0])
-                - vcccc(Ind1[2], Ind2[0], Ind1[1], Ind1[0]) + vcccc(Ind1[2], Ind1[1], Ind2[0], Ind1[0])
-                - vcccc(Ind1[2], Ind1[1], Ind1[0], Ind2[0]))* iSz1.at(i1)*iSz2.at(i2)/cleb;
+            factor += (1./6) * vcccc(Ind2[0], Ind1[2], Ind1[1], Ind1[0]) * iSz1.at(i1)*iSz2.at(i2)/cleb;
+            //factor += (1./24) * (vcccc(Ind2[0], Ind1[2], Ind1[1], Ind1[0])
+            //    - vcccc(Ind1[2], Ind2[0], Ind1[1], Ind1[0]) + vcccc(Ind1[2], Ind1[1], Ind2[0], Ind1[0])
+            //    - vcccc(Ind1[2], Ind1[1], Ind1[0], Ind2[0]))* iSz1.at(i1)*iSz2.at(i2)/cleb;
           } else {
             abort();
           }
@@ -1388,16 +1381,16 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
 	      int cK = cv[2];
 	      int cL = cv[3];
 	      int parity = s1.trace(s2.c(cL).c(cK).c(cJ).c(cI));
-	      double factor = parity*d1*d2/24;
-          matrixE += factor*vcccc_4idx_asymm(cI, cJ, cK, cL);
+	      double factor = parity*d1*d2;
+          matrixE += factor*v_cccc(cI, cJ, cK, cL);
         } else if (dmrginp.hamiltonian() == BCS && cv.size() == 0 && dv.size() == 4) {
           int dI = dv[0];
 	      int dJ = dv[1];
 	      int dK = dv[2];
 	      int dL = dv[3];
 	      int parity = s1.trace(s2.d(dL).d(dK).d(dJ).d(dI));
-	      double factor = parity*d1*d2/24;
-          matrixE += factor*vcccc_4idx_asymm(dL, dK, dJ, dI);  
+	      double factor = parity*d1*d2;
+          matrixE += factor*v_cccc(dL, dK, dJ, dI);  
         } else if (dmrginp.hamiltonian() == BCS && cv.size() == 3 && dv.size() == 1) {
           int cI = cv[0];
 	      int cJ = cv[1];
