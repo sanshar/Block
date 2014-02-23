@@ -49,6 +49,7 @@ void SpinBlock::printOperatorSummary()
          cout <<numops[proc]<<"  ";
       }
       cout << endl;
+      /*
       if(it->second->is_core()) { 
         for (int i = 0; i < it->second->size(); ++i) {
            std::vector<boost::shared_ptr<SparseMatrix> > global_element = it->second->get_global_element(i);
@@ -59,6 +60,7 @@ void SpinBlock::printOperatorSummary()
            }
         }
       }
+      */
     }
   }
 #else
@@ -339,7 +341,7 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   SpinBlock* otherBlock = loopBlock == leftBlock ? rightBlock : leftBlock;
 
   Wavefunction *v_array=0, *v_distributed=0, *v_add=0;
-  
+
   int maxt = 1;
   initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
   dmrginp.oneelecT -> start();

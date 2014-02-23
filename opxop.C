@@ -239,7 +239,7 @@ void SpinAdapted::opxop::ddxcccomp(const SpinBlock* otherblock, std::vector<boos
       parity = getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), hq);
 
     SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, *op1, b, c, v[ilock], hq, factor*parity);
-    if (dmrginp.hamiltonian() == BCS) {    
+    if (dmrginp.hamiltonian() == BCS) {
       SpinAdapted::operatorfunctions::TensorMultiply(otherblock, SubSparseMatrix(op2, 1, otherblock->get_stateInfo()), *op1, b, c, v[ilock], hq, parity*factor);
       SpinAdapted::operatorfunctions::TensorMultiply(otherblock, SubSparseMatrix(op2, 2, otherblock->get_stateInfo()), *op1, b, c, v[ilock], hq, parity*factor);
     }

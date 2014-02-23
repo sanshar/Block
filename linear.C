@@ -236,7 +236,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	    sigmai.Clear();
 	  }
 
-	  h_multiply(*bptr, *sigmaptr);
+      h_multiply(*bptr, *sigmaptr);
 	}
     dmrginp.hmultiply -> stop();
 

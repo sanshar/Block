@@ -164,8 +164,8 @@ ostream& operator<< (ostream& os, const SparseMatrix& a)
   for (int i = 0; i < a.get_deltaQuantum_size(); ++i) {
     os<<a.get_deltaQuantum(i)<<endl;
   }
-  for (int i = 0; i < a.allowedQuantaMatrix.Nrows (); ++i)
-	for (int j = 0; j < a.allowedQuantaMatrix.Ncols (); ++j)
+  for (int i = 0; i < a.nrows (); ++i)
+	for (int j = 0; j < a.ncols (); ++j)
 	{
 	  if (a.allowed(i, j)) 
 	    os << i << " " << j << endl << a.operator_element(i, j) << endl;

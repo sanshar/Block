@@ -197,7 +197,7 @@ public:
   Matrix& operator()(int i, int j) { return opdata->operator()(j, i); }
   char conjugacy() const { if (opdata->conjugacy() == 'n') return 't'; else return 'n';}
   double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const ;
-  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata->getworkingrepresentation(block);}
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata;}
   void build(const SpinBlock& b){};
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b){return 0.0;}
 }; 
@@ -222,8 +222,8 @@ public:
   }
   bool get_fermion() const { return opdata->get_fermion(); }
   bool get_initialised() const { return opdata->get_initialised(); }
-  int nrows() const { return opdata->ncols(); }
-  int ncols() const { return opdata->nrows(); }
+  int nrows() const { return opdata->nrows(); }
+  int ncols() const { return opdata->ncols(); }
   const char &allowed(int i, int j) const { return SuballowedQuantaMatrix(i, j); }  
   char &allowed(int i, int j) { return SuballowedQuantaMatrix(i, j); }
   const Matrix& operator_element(int i, int j) const { return opdata->operator_element(i, j); }
@@ -232,11 +232,11 @@ public:
   IrrepSpace get_symm(int i=0) const  { return -opdata->get_deltaQuantum(section).get_symm();}
   int get_orbs(int i) const {return opdata->get_orbs(i);}
   const std::vector<int>& get_orbs() const { return opdata->get_orbs(); }
-  const Matrix& operator()(int i, int j) const { return opdata->operator()(j, i); }
-  Matrix& operator()(int i, int j) { return opdata->operator()(j, i); }
+  const Matrix& operator()(int i, int j) const { return opdata->operator()(i, j); }
+  Matrix& operator()(int i, int j) { return opdata->operator()(i, j); }
   char conjugacy() const { return opdata->conjugacy(); }
-  double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const {  return 1.0; } // FIXME is it right?
-  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata->getworkingrepresentation(block);}
+  double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const {  return 1.0; }
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return opdata;}
   void build(const SpinBlock& b){};
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b){return 0.0;}
 };

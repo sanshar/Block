@@ -324,7 +324,6 @@ void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, con
 
   const char conjC = (cblock->get_leftBlock() == ablock) ? 'n' : 't';
 
-
   const Baseoperator<Matrix>& leftOp = (conjC == 'n') ? a : b; // an ugly hack to support the release memory optimisation
   const Baseoperator<Matrix>& rightOp = (conjC == 'n') ? b : a;
   const char leftConj = (conjC == 'n') ? a.conjugacy() : b.conjugacy();
@@ -346,8 +345,8 @@ void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, con
 	    u.allowed(lindex, rQPrime) = true;
 	    u(lindex,rQPrime).ReSize(lS->getquantastates(lQ), rS->getquantastates(rQPrime));
 	    double factor = leftOp.get_scaling(lS->quanta[lQ], lS->quanta[lQPrime]);
-	    MatrixMultiply (leftOp.operator_element(lQ, lQPrime), leftConj, c.operator_element(lQPrime, rQPrime), 'n',
-			    u.operator_element(lindex, rQPrime), factor, 0.);	      
+	    MatrixMultiply(leftOp.operator_element(lQ, lQPrime), leftConj, c.operator_element(lQPrime, rQPrime), 'n',
+			    u.operator_element(lindex, rQPrime), factor, 0.);
 	  }
     }
   }
