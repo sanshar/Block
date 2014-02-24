@@ -203,8 +203,12 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
         for (i2 =0; i2<iSz2.size(); ++i2) {
           vector<int>& Ind1 = op1.opindices[i1], Ind2 = op2.opindices[i2]; 
           if (comp == CD) {
-            factor += (1./6)*(vcccd(Ind1[0],Ind2[0],Ind2[1],Ind1[1]) - vcccd(Ind2[0],Ind1[0],Ind2[1],Ind1[1])
-                +vcccd(Ind2[0],Ind2[1],Ind1[0],Ind1[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
+            if (op2.dn() == 2) {
+              factor += (1./6)*(vcccd(Ind1[0],Ind2[0],Ind2[1],Ind1[1]) - vcccd(Ind2[0],Ind1[0],Ind2[1],Ind1[1])
+                  +vcccd(Ind2[0],Ind2[1],Ind1[0],Ind1[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
+            } else {
+              factor += (1./6)*(vcccd(Ind2[1],Ind2[0],Ind1[1],Ind1[0])-vcccd(Ind2[1],Ind1[1],Ind2[0],Ind1[0])+vcccd(Ind1[1],Ind2[1],Ind2[0],Ind1[0]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
+            }
           } else if (comp == DD) {
             factor += (1./6)*(vcccd(Ind1[0],Ind1[1],Ind2[0],Ind2[1]) - vcccd(Ind1[0],Ind2[0],Ind1[1],Ind2[1])
                 +vcccd(Ind2[0],Ind1[0],Ind1[1],Ind2[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
@@ -752,10 +756,9 @@ double SpinAdapted::CreDesComp_No_Symm::redMatrixElement(Csf c1, vector<Csf>& la
   int spin = deltaQuantum[0].get_s().getirrep();
   bool finish = false;
   int dn = c1.n_is() - ladder[0].n_is(); // classify whether we calculate CC or CD
-
-  TensorOp C(I,1), D(J,-1);
-
-  TensorOp CD1 = C.product(D, (-deltaQuantum[0].get_s()).getirrep(), (-sym).getirrep());
+  
+  TensorOp C(I, 1), D(J, -1);
+  TensorOp CD1 = C.product(D, -spin, (-deltaQuantum[0].get_symm()).getirrep());
 
   for (int j = 0; j < deltaQuantum.size(); ++j) {
     for (int i=0; i<ladder.size(); i++)
@@ -764,16 +767,24 @@ double SpinAdapted::CreDesComp_No_Symm::redMatrixElement(Csf c1, vector<Csf>& la
       if (nonZeroTensorComponent(c1, deltaQuantum[j], ladder[i], index, cleb)) {
         for (int kl =0; kl<b->get_sites().size(); kl++) 
           for (int kk =0; kk<b->get_sites().size(); kk++) {
-
             int k = b->get_sites()[kk];
             int l = b->get_sites()[kl];
-            
-            TensorOp CK(k,1), CL(l,1);
-            TensorOp CC2 = CK.product(CL, spin, sym.getirrep(), k==l);
-            if (!CC2.empty) {
-              std::vector<double> MatElements = calcMatrixElements(c1, CC2, ladder[i]);
-              double factor = calcCompfactor(CD1, CC2, CD, v_cccd);
-              element += MatElements[index]*factor/cleb;
+            if (dn == 2) {
+              TensorOp CK(k,1), CL(l,1);
+              TensorOp CC2 = CK.product(CL, spin, sym.getirrep(), k==l);
+              if (!CC2.empty) {
+                std::vector<double> MatElements = calcMatrixElements(c1, CC2, ladder[i]);
+                double factor = calcCompfactor(CD1, CC2, CD, v_cccd);
+                element += MatElements[index]*factor/cleb;
+              }
+            } else { // dn = -2
+              TensorOp DK(k,-1), DL(l,-1);
+              TensorOp DD2 = DK.product(DL, spin, sym.getirrep(), k==l);
+              if (!DD2.empty) {
+                std::vector<double> MatElements = calcMatrixElements(c1, DD2, ladder[i]);
+                double factor = calcCompfactor(CD1, DD2, CD, v_cccd);
+                element += MatElements[index]*factor/cleb;
+              }
             }
           }
         break;
@@ -1036,7 +1047,7 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
 	  Functor f = boost::bind(&opxop::cxcdcomp, otherBlock, _1, &b, k, this, 1.0); 
 	  for_all_singlethread(loopBlock->get_op_array(CRE), f);
 	  
-      f = boost::bind(&opxop::dxcccomp, otherBlock, _1, &b, k, this, 2.0); // factor of 2.0 because CCcomp_{ij} = -CCcomp_{ji} not neccesarily true for BCS case
+      f = boost::bind(&opxop::dxcccomp, otherBlock, _1, &b, k, this, 2.0); // factor of 2.0 because CCcomp_{ij} = -CCcomp_{ji}
 	  for_all_singlethread(loopBlock->get_op_array(CRE), f);
           
 	  f = boost::bind(&opxop::cxcdcomp, loopBlock, _1, &b, k, this, 1.0); 
@@ -1053,7 +1064,7 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
   if (dmrginp.hamiltonian() == BCS) {
     Functor f = boost::bind(&opxop::cxcdcomp_no_symm, otherBlock, _1, &b, k, this, 1.0); 
 	for_all_singlethread(loopBlock->get_op_array(CRE), f);
-	f = boost::bind(&opxop::cxcdcomp_no_symm, loopBlock, _1, &b, k, this, 1.0); 
+	f = boost::bind(&opxop::cxcdcomp_no_symm, loopBlock, _1, &b, k, this, 1.0);
 	for_all_singlethread(otherBlock->get_op_array(CRE), f);
   }
 

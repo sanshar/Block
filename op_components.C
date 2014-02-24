@@ -214,7 +214,9 @@ namespace SpinAdapted {
 	    op.set_orbs() = orbs;
 	    op.set_initialised() = true;
 	    op.set_fermion() = false;
-        op.set_deltaQuantum(1, SpinQuantum(2, spinvec[j].get_s(), spinvec[j].get_symm()));
+        op.resize_deltaQuantum(2);
+        op.set_deltaQuantum(0) = SpinQuantum(2, spinvec[j].get_s(), spinvec[j].get_symm());
+        op.set_deltaQuantum(1) = SpinQuantum(-2, spinvec[j].get_s(), spinvec[j].get_symm());
 	  }
 	}
   }

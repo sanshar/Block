@@ -741,7 +741,7 @@ double SpinAdapted::CCCDArray::operator()(int i, int j, int k, int l) const {
   }
   int m = idx3*(dim/2)+l+1;
   if (rhf) {
-    factor *= ((n>0) == ( spin == -1)) ? -1:1;
+    factor *= ((n>0) == ( spin == -1)) ? 1:-1;
     return factor * repA(abs(n), m);
   } else {
     factor *= (n>0) ? 1:-1;
