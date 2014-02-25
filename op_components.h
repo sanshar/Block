@@ -179,11 +179,6 @@ class Op_component_base
 
 //===========================================================================================================================================================
 
-// Forward declaration
-void renormalize_4index_ops( Op_component_base& ops_array, const std::vector<Matrix>& rotateMatrix, const StateInfo* s);
-
-//===========================================================================================================================================================
-
 template <class Op> class Op_component : public Op_component_base
 {
  private:
@@ -256,28 +251,28 @@ template <class Op> class Op_component : public Op_component_base
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//FIXME unify disk-based build for 3 and 4 index operators
-
+//FIXME remove string parameters
   void build_operators(SpinBlock& b, std::string& ofile, std::string& sysfile, std::string& dotfile) 
   { 
-    // Use alternative driver to build n-index operators for n>3
-    if ( m_op.num_indices() > 3 ) assert(false);
-    if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
-      // Build on disk (reading from disk, as necessary)
-      std::ofstream ofs(ofile.c_str(), std::ios::binary);
-      std::ifstream sysfs(sysfile.c_str(), std::ios::binary);
-      std::ifstream dotfs(dotfile.c_str(), std::ios::binary);
-      for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::build_from_disk, _1, boost::ref(b), boost::ref(sysfs), boost::ref(dotfs)) );
-      ofs.close();
-      sysfs.close();
-      dotfs.close();
-      // DEBUG only: now read back into core
-      if (false) { 
-        std::ifstream ifs(ofile.c_str(), std::ios::binary);
-        for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs)) );
-        ifs.close();
-      }
-    }
+    // Use alternative drivers to build n-index operators for n>2
+    if ( m_op.num_indices() > 2 ) 
+      assert(false);
+//    if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
+//      // Build on disk (reading from disk, as necessary)
+//      std::ofstream ofs(ofile.c_str(), std::ios::binary);
+//      std::ifstream sysfs(sysfile.c_str(), std::ios::binary);
+//      std::ifstream dotfs(dotfile.c_str(), std::ios::binary);
+//      for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::build_from_disk, _1, boost::ref(b), boost::ref(sysfs), boost::ref(dotfs)) );
+//      ofs.close();
+//      sysfs.close();
+//      dotfs.close();
+//      // DEBUG only: now read back into core
+//      if (false) { 
+//        std::ifstream ifs(ofile.c_str(), std::ios::binary);
+//        for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs)) );
+//        ifs.close();
+//      }
+//    }
     else {
       // Build in core
       singlethread_build(*this, b); 
@@ -285,34 +280,94 @@ template <class Op> class Op_component : public Op_component_base
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//FIXME unify disk-based renormalization for 3 and 4 index operators
 
-  void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo* s) 
+  void renormalise_transform_on_disk(const std::vector<Matrix>& rotateMatrix, const StateInfo* stateinfo) 
   {
-    if ( m_op.num_indices() == 4 ) {
-      renormalize_4index_ops( *this, rotateMatrix, s );
+    // Open filesystem if necessary
+    std::ifstream ifs;
+    std::ofstream ofs;
+    std::string ifile = get_filename();
+cout << "renormalize on disk; ofile = " << ifile << endl;
+    std::string ofile = ifile + ".renorm";
+    if ( ! dmrginp.do_npdm_in_core() ) {
+      ifs.open( ifile.c_str(), std::ios::binary );
+      ofs.open( ofile.c_str(), std::ios::binary );
     }
-    else if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
-      // Build on disk (load, renormalize, save)
-      std::string ifile = get_filename();
-cout << "renormalizing 3-index operators, ofile = " << ifile << endl;
-      std::string ofile = get_filename() + ".renorm";
-      std::ifstream ifs(ifile.c_str(), std::ios::binary);
-      std::ofstream ofs(ofile.c_str(), std::ios::binary);
-      for_all_operators_on_disk( *this, *s, ofs, bind(&SparseMatrix::renormalise_transform_on_disk, _1, boost::ref(rotateMatrix), s, boost::ref(ifs)) );
+  
+    // Loop over all operator indices
+    std::vector<boost::shared_ptr<SparseMatrix> > spin_ops;
+    for (int idx = 0; idx < get_size(); ++idx) {
+      if ( dmrginp.do_npdm_in_core() ) {
+        // Get from core
+        spin_ops = get_local_element(idx);
+      }
+      else {
+        // Get from disk
+        int size = get_local_element(0).size();
+        assert( (size == 3) || (size == 6) );
+        spin_ops.clear();
+        // Read in all spin components for this set of spatial indices
+        for ( int i=0; i<size; i++) {
+          boost::shared_ptr<SparseMatrix> op (new Cre);
+          boost::archive::binary_iarchive load_op(ifs);
+          load_op >> *op;
+          assert( op->get_built_on_disk() );
+          spin_ops.push_back(op);
+        }
+      }
+  
+      // Loop over spin-op components
+      for (int jdx=0; jdx < spin_ops.size(); jdx++) {
+        assert( spin_ops[jdx]->get_built() );
+        // Renormalize
+        spin_ops[jdx]->renormalise_transform( rotateMatrix, stateinfo );
+        // Move back to disk if necessary
+        if ( ! dmrginp.do_npdm_in_core() ) {
+          spin_ops[jdx]->set_built_on_disk() = true;
+          boost::archive::binary_oarchive save_op(ofs);
+          save_op << *spin_ops[jdx];
+        }
+      }
+    }
+  
+    // Close filesystem if necessary
+    if ( ! dmrginp.do_npdm_in_core() ) {
       ifs.close();
       ofs.close();
       int result = rename( ofile.c_str(), ifile.c_str() );
       assert( result == 0 );
-      // DEBUG only: now read back into core
-      if (false) { 
-        std::ifstream ifs2(ifile.c_str(), std::ios::binary);
-        for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs2)) );
-        ifs2.close();
-      }
     }
+  }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo* s) 
+  {
+    if ( m_op.num_indices() > 2 ) {
+      // For operators built on disk or in core
+      renormalise_transform_on_disk( rotateMatrix, s );
+    }
+//    if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
+//      // Build on disk (load, renormalize, save)
+//      std::string ifile = get_filename();
+//cout << "renormalizing 3-index operators, ofile = " << ifile << endl;
+//      std::string ofile = get_filename() + ".renorm";
+//      std::ifstream ifs(ifile.c_str(), std::ios::binary);
+//      std::ofstream ofs(ofile.c_str(), std::ios::binary);
+//      for_all_operators_on_disk( *this, *s, ofs, bind(&SparseMatrix::renormalise_transform_on_disk, _1, boost::ref(rotateMatrix), s, boost::ref(ifs)) );
+//      ifs.close();
+//      ofs.close();
+//      int result = rename( ofile.c_str(), ifile.c_str() );
+//      assert( result == 0 );
+//      // DEBUG only: now read back into core
+//      if (false) { 
+//        std::ifstream ifs2(ifile.c_str(), std::ios::binary);
+//        for_all_operators_multithread( *this, bind(&SparseMatrix::read_from_disk, _1, boost::ref(ifs2)) );
+//        ifs2.close();
+//      }
+//    }
     else {
-      // Build in core
+      // For operators built in core
       for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );
     }
   }

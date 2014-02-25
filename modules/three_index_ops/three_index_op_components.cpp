@@ -19,6 +19,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "spinblock.h"
 #include "op_components.h"
 //#include "screen.h"
+#include "build_3index_ops.h"
 
 namespace SpinAdapted {
   
@@ -168,6 +169,22 @@ string Op_component<RI3index>::get_op_string() const {
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+template<>
+void Op_component<RI3index>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile)
+{
+  // This is only a skeleton class, so actual operators should never be built
+  return;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+template<>
+void Op_component<RI3index>::renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo* s)
+{
+  // This is only a skeleton class, so actual operators should never be built
+  return;
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 
 template<> 
 void Op_component<RI3index>::build_iterators(SpinBlock& b)
@@ -194,6 +211,14 @@ void Op_component<RI3index>::build_iterators(SpinBlock& b)
 template<> 
 string Op_component<DesDesDes>::get_op_string() const {
   return "DesDesDes";
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+
+template<>
+void Op_component<DesDesDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile)
+{
+  Three_index_ops::build_3index_ops( DES_DES_DES, big, DES, DES_DES, DES, DES_DES );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -261,8 +286,8 @@ void Op_component<DesDesDes>::build_iterators(SpinBlock& b)
       boost::shared_ptr<DesDesDes> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      op->set_quantum_ladder()["((DD)D)"] = dd_d_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(D(DD))"] = d_dd_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((DD)(D))"] = dd_d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((D)(DD))"] = d_dd_quantum_ladder.at(q);
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
 
@@ -277,6 +302,14 @@ void Op_component<DesDesDes>::build_iterators(SpinBlock& b)
 template<> 
 string Op_component<CreCreCre>::get_op_string() const {
   return "CreCreCre";
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+
+template<>
+void Op_component<CreCreCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile)
+{
+  Three_index_ops::build_3index_ops( CRE_CRE_CRE, big, CRE, CRE_CRE, CRE, CRE_CRE );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -355,8 +388,8 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
       boost::shared_ptr<CreCreCre> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      op->set_quantum_ladder()["((CC)C)"] = cc_c_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(C(CC))"] = c_cc_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((CC)(C))"] = cc_c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)(CC))"] = c_cc_quantum_ladder.at(q);
       // This is updated when the build_pattern changes
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
@@ -372,6 +405,14 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
 template<> 
 string Op_component<CreCreDes>::get_op_string() const {
   return "CreCreDes";
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+
+template<>
+void Op_component<CreCreDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile)
+{
+  Three_index_ops::build_3index_ops( CRE_CRE_DES, big, CRE, CRE_CRE, DES, CRE_DES );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -439,8 +480,8 @@ void Op_component<CreCreDes>::build_iterators(SpinBlock& b)
       boost::shared_ptr<CreCreDes> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      op->set_quantum_ladder()["((CC)D)"] = cc_d_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(C(CD))"] = c_cd_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((CC)(D))"] = cc_d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)(CD))"] = c_cd_quantum_ladder.at(q);
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
 
@@ -455,6 +496,14 @@ void Op_component<CreCreDes>::build_iterators(SpinBlock& b)
 template<> 
 string Op_component<CreDesDes>::get_op_string() const {
   return "CreDesDes";
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+
+template<>
+void Op_component<CreDesDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile)
+{
+  Three_index_ops::build_3index_ops( CRE_DES_DES, big, CRE, CRE_DES, DES, DES_DES );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -523,8 +572,8 @@ void Op_component<CreDesDes>::build_iterators(SpinBlock& b)
       boost::shared_ptr<CreDesDes> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      op->set_quantum_ladder()["((CD)D)"] = cd_d_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(C(DD))"] = c_dd_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((CD)(D))"] = cd_d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)(DD))"] = c_dd_quantum_ladder.at(q);
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
 
@@ -539,6 +588,14 @@ void Op_component<CreDesDes>::build_iterators(SpinBlock& b)
 template<> 
 string Op_component<CreDesCre>::get_op_string() const {
   return "CreDesCre";
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+
+template<>
+void Op_component<CreDesCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile)
+{
+  Three_index_ops::build_3index_ops( CRE_DES_CRE, big, CRE, CRE_DES, CRE, DES_CRE );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -607,8 +664,8 @@ void Op_component<CreDesCre>::build_iterators(SpinBlock& b)
       boost::shared_ptr<CreDesCre> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      op->set_quantum_ladder()["((CD)C)"] = cd_c_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(C(DC))"] = c_dc_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((CD)(C))"] = cd_c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)(DC))"] = c_dc_quantum_ladder.at(q);
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
 
@@ -627,6 +684,14 @@ void Op_component<CreDesCre>::build_iterators(SpinBlock& b)
 template<> 
 string Op_component<DesCreDes>::get_op_string() const {
   return "DesCreDes";
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+
+template<>
+void Op_component<DesCreDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile)
+{
+  Three_index_ops::build_3index_ops( DES_CRE_DES, big, DES, DES_CRE, DES, CRE_DES );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -693,8 +758,8 @@ void Op_component<DesCreDes>::build_iterators(SpinBlock& b)
       boost::shared_ptr<DesCreDes> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      op->set_quantum_ladder()["((DC)D)"] = dc_d_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(D(CD))"] = d_cd_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((DC)(D))"] = dc_d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((D)(CD))"] = d_cd_quantum_ladder.at(q);
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
 
@@ -709,6 +774,14 @@ void Op_component<DesCreDes>::build_iterators(SpinBlock& b)
 template<> 
 string Op_component<DesDesCre>::get_op_string() const {
   return "DesDesCre";
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+
+template<>
+void Op_component<DesDesCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile)
+{
+  Three_index_ops::build_3index_ops( DES_DES_CRE, big, DES, DES_DES, CRE, DES_CRE );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -775,8 +848,8 @@ void Op_component<DesDesCre>::build_iterators(SpinBlock& b)
       boost::shared_ptr<DesDesCre> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      op->set_quantum_ladder()["((DD)C)"] = dd_c_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(D(DC))"] = d_dc_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((DD)(C))"] = dd_c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((D)(DC))"] = d_dc_quantum_ladder.at(q);
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
 
@@ -791,6 +864,14 @@ void Op_component<DesDesCre>::build_iterators(SpinBlock& b)
 template<> 
 string Op_component<DesCreCre>::get_op_string() const {
   return "DesCreCre";
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+
+template<>
+void Op_component<DesCreCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile)
+{
+  Three_index_ops::build_3index_ops( DES_CRE_CRE, big, DES, DES_CRE, CRE, CRE_CRE );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -857,8 +938,8 @@ void Op_component<DesCreCre>::build_iterators(SpinBlock& b)
       boost::shared_ptr<DesCreCre> op = spin_ops.back();
       op->set_orbs() = orbs;
       op->set_initialised() = true;
-      op->set_quantum_ladder()["((DC)C)"] = dc_c_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(D(CC))"] = d_cc_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((DC)(C))"] = dc_c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((D)(CC))"] = d_cc_quantum_ladder.at(q);
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(1);
     }
 

@@ -21,8 +21,7 @@ class RI4index: public SpinAdapted::SparseMatrix
 class CreCreDesDes: public SpinAdapted::SparseMatrix
 {
   public:
-//    CreCreDesDes() { orbs.resize(4); fermion = false; build_pattern = "((CC)(DD))";} // default build_pattern
-    CreCreDesDes() { orbs.resize(4); fermion = false; build_pattern = "(((CC)D)(D))";} // default build_pattern
+    CreCreDesDes() { orbs.resize(4); fermion = false; build_pattern = "(((CC)(D))(D))";} // default build_pattern
     void build(const SpinBlock& b) ;
     void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
@@ -34,7 +33,7 @@ class CreCreDesDes: public SpinAdapted::SparseMatrix
 class CreDesCreDes: public SpinAdapted::SparseMatrix
 {
   public:
-    CreDesCreDes() { orbs.resize(4); fermion = false; build_pattern = "(((CD)C)(D))";} // default build_pattern
+    CreDesCreDes() { orbs.resize(4); fermion = false; build_pattern = "(((CD)(C))(D))";} // default build_pattern
     void build(const SpinBlock& b);
     void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
@@ -46,7 +45,7 @@ class CreDesCreDes: public SpinAdapted::SparseMatrix
 class CreDesDesCre: public SpinAdapted::SparseMatrix
 {
   public:
-    CreDesDesCre() { orbs.resize(4); fermion = false; build_pattern = "(((CD)D)(C))";} // default build_pattern
+    CreDesDesCre() { orbs.resize(4); fermion = false; build_pattern = "(((CD)(D))(C))";} // default build_pattern
     void build(const SpinBlock& b);
     void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
@@ -58,7 +57,7 @@ class CreDesDesCre: public SpinAdapted::SparseMatrix
 class CreDesDesDes: public SpinAdapted::SparseMatrix
 {
   public:
-    CreDesDesDes() { orbs.resize(4); fermion = false; build_pattern = "(((CD)D)(D))";} // default build_pattern
+    CreDesDesDes() { orbs.resize(4); fermion = false; build_pattern = "(((CD)(D))(D))";} // default build_pattern
     void build(const SpinBlock& b);
     void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
@@ -70,7 +69,7 @@ class CreDesDesDes: public SpinAdapted::SparseMatrix
 class CreCreCreDes: public SpinAdapted::SparseMatrix
 {
   public:
-    CreCreCreDes() { orbs.resize(4); fermion = false; build_pattern = "(((CC)C)(D))";} // default build_pattern
+    CreCreCreDes() { orbs.resize(4); fermion = false; build_pattern = "(((CC)(C))(D))";} // default build_pattern
     void build(const SpinBlock& b);
     void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
@@ -82,7 +81,7 @@ class CreCreCreDes: public SpinAdapted::SparseMatrix
 class CreCreDesCre: public SpinAdapted::SparseMatrix
 {
   public:
-    CreCreDesCre() { orbs.resize(4); fermion = false; build_pattern = "(((CC)D)(C))";} // default build_pattern
+    CreCreDesCre() { orbs.resize(4); fermion = false; build_pattern = "(((CC)(D))(C))";} // default build_pattern
     void build(const SpinBlock& b);
     void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
@@ -94,7 +93,7 @@ class CreCreDesCre: public SpinAdapted::SparseMatrix
 class CreDesCreCre: public SpinAdapted::SparseMatrix
 {
   public:
-    CreDesCreCre() { orbs.resize(4); fermion = false; build_pattern = "(((CD)C)(C))";} // default build_pattern
+    CreDesCreCre() { orbs.resize(4); fermion = false; build_pattern = "(((CD)(C))(C))";} // default build_pattern
     void build(const SpinBlock& b);
     void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
@@ -106,7 +105,7 @@ class CreDesCreCre: public SpinAdapted::SparseMatrix
 class CreCreCreCre: public SpinAdapted::SparseMatrix
 {
   public:
-    CreCreCreCre() { orbs.resize(4); fermion = false; build_pattern = "(((CC)C)(C))";} // default build_pattern
+    CreCreCreCre() { orbs.resize(4); fermion = false; build_pattern = "(((CC)(C))(C))";} // default build_pattern
     void build(const SpinBlock& b);
     void build_from_disk(SpinBlock& b, std::ifstream& sysfs, std::ifstream& dotfs) { assert(false); }
     boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);

@@ -21,17 +21,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "spinblock.h"
 #include "op_components.h"
 //#include "screen.h"
-//#include "build_4index_ops.h"
+#include "build_4index_ops.h"
 
 namespace SpinAdapted {
 
-//===========================================================================================================================================================
-
-// Forward declaration
-void build_4index_ops( const opTypes& optype, SpinBlock& big,
-                       const opTypes& lhsType1, const opTypes& lhsType2, const opTypes& lhsType3,
-                       const opTypes& rhsType1, const opTypes& rhsType2, const opTypes& rhsType3 );
-  
 //===========================================================================================================================================================
 // Choose 4-index tuples on this MPI process such that 2-index are available to build them
 // FIXME IMPLEMENT FOR NON-PARALLEL VERSION FIRST
@@ -133,7 +126,7 @@ string Op_component<CreCreDesDes>::get_op_string() const {
 template<> 
 void Op_component<CreCreDesDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
 {
-  build_4index_ops( CRE_CRE_DES_DES, big, CRE, CRE_CRE, CRE_CRE_DES, DES, DES_DES, CRE_DES_DES );
+  Four_index_ops::build_4index_ops( CRE_CRE_DES_DES, big, CRE, CRE_CRE, CRE_CRE_DES, DES, DES_DES, CRE_DES_DES );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -279,10 +272,10 @@ void Op_component<CreCreDesDes>::build_iterators(SpinBlock& b)
       op->set_orbs() = orbs;
       op->set_initialised() = true;
       op->set_quantum_ladder()["((CC)(DD))"] = cc_dd_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)((CD)D))"] = c__cd_d_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)(C(DD)))"] = c__c_dd_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(((CC)D)(D))"] = cc_d__d_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C(CD))(D))"] = c_cd__d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((CD)(D)))"] = c__cd_d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((C)(DD)))"] = c__c_dd_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((CC)(D))(D))"] = cc_d__d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((C)(CD))(D))"] = c_cd__d_quantum_ladder.at(q);
       // Set default value, which is changed according to current build_pattern // FIXME .at(2) is brittle here!  
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(2);
     }
@@ -304,7 +297,7 @@ string Op_component<CreDesCreDes>::get_op_string() const {
 template<> 
 void Op_component<CreDesCreDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
 {
-  build_4index_ops( CRE_DES_CRE_DES, big, CRE, CRE_DES, CRE_DES_CRE, DES, CRE_DES, DES_CRE_DES );
+  Four_index_ops::build_4index_ops( CRE_DES_CRE_DES, big, CRE, CRE_DES, CRE_DES_CRE, DES, CRE_DES, DES_CRE_DES );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -440,10 +433,10 @@ void Op_component<CreDesCreDes>::build_iterators(SpinBlock& b)
       op->set_orbs() = orbs;
       op->set_initialised() = true;
       op->set_quantum_ladder()["((CD)(CD))"] = cd_cd_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)((DC)D))"] = c__dc_d_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)(D(CD)))"] = c__d_cd_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(((CD)C)(D))"] = cd_c__d_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C(DC))(D))"] = c_dc__d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((DC)(D)))"] = c__dc_d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((D)(CD)))"] = c__d_cd_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((CD)(C))(D))"] = cd_c__d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((C)(DC))(D))"] = c_dc__d_quantum_ladder.at(q);
       // Set default value, which is changed according to current build_pattern // FIXME .at(2) is brittle here!  
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(2);
     }
@@ -466,7 +459,7 @@ string Op_component<CreDesDesCre>::get_op_string() const {
 template<> 
 void Op_component<CreDesDesCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
 {
-  build_4index_ops( CRE_DES_DES_CRE, big, CRE, CRE_DES, CRE_DES_DES, CRE, DES_CRE, DES_DES_CRE );
+  Four_index_ops::build_4index_ops( CRE_DES_DES_CRE, big, CRE, CRE_DES, CRE_DES_DES, CRE, DES_CRE, DES_DES_CRE );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -603,10 +596,10 @@ void Op_component<CreDesDesCre>::build_iterators(SpinBlock& b)
       op->set_orbs() = orbs;
       op->set_initialised() = true;
       op->set_quantum_ladder()["((CD)(DC))"] = cd_dc_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)((DD)C))"] = c__dd_c_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)(D(DC)))"] = c__d_dc_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(((CD)D)(C))"] = cd_d__c_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C(DD))(C))"] = c_dd__c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((DD)(C)))"] = c__dd_c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((D)(DC)))"] = c__d_dc_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((CD)(D))(C))"] = cd_d__c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((C)(DD))(C))"] = c_dd__c_quantum_ladder.at(q);
       // Set default value, which is changed according to current build_pattern // FIXME .at(2) is brittle here!  
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(2);
     }
@@ -629,7 +622,7 @@ string Op_component<CreDesDesDes>::get_op_string() const {
 template<> 
 void Op_component<CreDesDesDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
 {
-  build_4index_ops( CRE_DES_DES_DES, big, CRE, CRE_DES, CRE_DES_DES, DES, DES_DES, DES_DES_DES );
+  Four_index_ops::build_4index_ops( CRE_DES_DES_DES, big, CRE, CRE_DES, CRE_DES_DES, DES, DES_DES, DES_DES_DES );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -766,10 +759,10 @@ void Op_component<CreDesDesDes>::build_iterators(SpinBlock& b)
       op->set_orbs() = orbs;
       op->set_initialised() = true;
       op->set_quantum_ladder()["((CD)(DD))"] = cd_dd_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)((DD)D))"] = c__dd_d_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)(D(DD)))"] = c__d_dd_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(((CD)D)(D))"] = cd_d__d_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C(DD))(D))"] = c_dd__d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((DD)(D)))"] = c__dd_d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((D)(DD)))"] = c__d_dd_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((CD)(D))(D))"] = cd_d__d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((C)(DD))(D))"] = c_dd__d_quantum_ladder.at(q);
       // Set default value, which is changed according to current build_pattern // FIXME .at(2) is brittle here!  
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(2);
     }
@@ -792,7 +785,7 @@ string Op_component<CreCreCreDes>::get_op_string() const {
 template<> 
 void Op_component<CreCreCreDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
 {
-  build_4index_ops( CRE_CRE_CRE_DES, big, CRE, CRE_CRE, CRE_CRE_CRE, DES, CRE_DES, CRE_CRE_DES );
+  Four_index_ops::build_4index_ops( CRE_CRE_CRE_DES, big, CRE, CRE_CRE, CRE_CRE_CRE, DES, CRE_DES, CRE_CRE_DES );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -928,10 +921,10 @@ void Op_component<CreCreCreDes>::build_iterators(SpinBlock& b)
       op->set_orbs() = orbs;
       op->set_initialised() = true;
       op->set_quantum_ladder()["((CC)(CD))"] = cc_cd_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)((CC)D))"] = c__cc_d_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)(C(CD)))"] = c__c_cd_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(((CC)C)(D))"] = cc_c__d_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C(CC))(D))"] = c_cc__d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((CC)(D)))"] = c__cc_d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((C)(CD)))"] = c__c_cd_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((CC)(C))(D))"] = cc_c__d_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((C)(CC))(D))"] = c_cc__d_quantum_ladder.at(q);
       // Set default value, which is changed according to current build_pattern // FIXME .at(2) is brittle here!  
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(2);
     }
@@ -954,7 +947,7 @@ string Op_component<CreCreDesCre>::get_op_string() const {
 template<> 
 void Op_component<CreCreDesCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
 {
-  build_4index_ops( CRE_CRE_DES_CRE, big, CRE, CRE_CRE, CRE_CRE_DES, CRE, DES_CRE, CRE_DES_CRE );
+  Four_index_ops::build_4index_ops( CRE_CRE_DES_CRE, big, CRE, CRE_CRE, CRE_CRE_DES, CRE, DES_CRE, CRE_DES_CRE );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -1090,10 +1083,10 @@ void Op_component<CreCreDesCre>::build_iterators(SpinBlock& b)
       op->set_orbs() = orbs;
       op->set_initialised() = true;
       op->set_quantum_ladder()["((CC)(DC))"] = cc_dc_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)((CD)C))"] = c__cd_c_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)(C(DC)))"] = c__c_dc_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(((CC)D)(C))"] = cc_d__c_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C(CD))(C))"] = c_cd__c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((CD)(C)))"] = c__cd_c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((C)(DC)))"] = c__c_dc_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((CC)(D))(C))"] = cc_d__c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((C)(CD))(C))"] = c_cd__c_quantum_ladder.at(q);
       // Set default value, which is changed according to current build_pattern // FIXME .at(2) is brittle here!  
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(2);
     }
@@ -1116,9 +1109,8 @@ string Op_component<CreDesCreCre>::get_op_string() const {
 template<> 
 void Op_component<CreDesCreCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
 {
-  build_4index_ops( CRE_DES_CRE_CRE, big, CRE, CRE_DES, CRE_DES_CRE, CRE, CRE_CRE, DES_CRE_CRE );
+  Four_index_ops::build_4index_ops( CRE_DES_CRE_CRE, big, CRE, CRE_DES, CRE_DES_CRE, CRE, CRE_CRE, DES_CRE_CRE );
 }
-
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
@@ -1253,10 +1245,10 @@ void Op_component<CreDesCreCre>::build_iterators(SpinBlock& b)
       op->set_orbs() = orbs;
       op->set_initialised() = true;
       op->set_quantum_ladder()["((CD)(CC))"] = cd_cc_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)((DC)C))"] = c__dc_c_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)(D(CC)))"] = c__d_cc_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(((CD)C)(C))"] = cd_d__c_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C(DC))(C))"] = c_dc__c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((DC)(C)))"] = c__dc_c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((D)(CC)))"] = c__d_cc_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((CD)(C))(C))"] = cd_d__c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((C)(DC))(C))"] = c_dc__c_quantum_ladder.at(q);
       // Set default value, which is changed according to current build_pattern // FIXME .at(2) is brittle here!  
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(2);
     }
@@ -1279,7 +1271,7 @@ string Op_component<CreCreCreCre>::get_op_string() const {
 template<> 
 void Op_component<CreCreCreCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
 {
-  build_4index_ops( CRE_CRE_CRE_CRE, big, CRE, CRE_CRE, CRE_CRE_CRE, CRE, CRE_CRE, CRE_CRE_CRE );
+  Four_index_ops::build_4index_ops( CRE_CRE_CRE_CRE, big, CRE, CRE_CRE, CRE_CRE_CRE, CRE, CRE_CRE, CRE_CRE_CRE );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -1415,10 +1407,10 @@ void Op_component<CreCreCreCre>::build_iterators(SpinBlock& b)
       op->set_orbs() = orbs;
       op->set_initialised() = true;
       op->set_quantum_ladder()["((CC)(CC))"] = cc_cc_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)((CC)C))"] = c__cc_c_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C)(C(CC)))"] = c__c_cc_quantum_ladder.at(q);
-      op->set_quantum_ladder()["(((CC)C)(C))"] = cc_c__c_quantum_ladder.at(q);
-      op->set_quantum_ladder()["((C(CC))(C))"] = c_cc__c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((CC)(C)))"] = c__cc_c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["((C)((C)(CC)))"] = c__c_cc_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((CC)(C))(C))"] = cc_c__c_quantum_ladder.at(q);
+      op->set_quantum_ladder()["(((C)(CC))(C))"] = c_cc__c_quantum_ladder.at(q);
       // Set default value, which is changed according to current build_pattern // FIXME .at(2) is brittle here!  
       op->set_deltaQuantum() = op->get_quantum_ladder().at( op->get_build_pattern() ).at(2);
     }

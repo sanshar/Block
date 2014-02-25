@@ -9,6 +9,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef NPDM_SPIN_OPS_H
 #define NPDM_SPIN_OPS_H
 
+//FIXME SERIAL
 #include <boost/mpi.hpp>
 #include "BaseOperator.h"
 #include "operatorfunctions.h"

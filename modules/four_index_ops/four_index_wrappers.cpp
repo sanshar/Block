@@ -11,6 +11,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "npdm_operator_wrappers.h"
 
 //FIXME streamline code and reuse??  functions are almost identical here
+//template these???
 namespace SpinAdapted{
 
 //===========================================================================================================================================================

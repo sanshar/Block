@@ -206,7 +206,7 @@ double SpinAdapted::CreCreDesDes::redMatrixElement(Csf c1, vector<Csf>& ladder, 
 ////  TensorOp CCDD = CC.product(DD, spin1234, irrep1234);
 
 
-  assert( build_pattern == "(((CC)D)(D))" );
+  assert( build_pattern == "(((CC)(D))(D))" );
   double element = 0.0;
   int I = get_orbs()[0]; 
   int J = get_orbs()[1];
@@ -214,7 +214,7 @@ double SpinAdapted::CreCreDesDes::redMatrixElement(Csf c1, vector<Csf>& ladder, 
   int L = get_orbs()[3];
 
   // Must take into account how the 4-index is built from a combination of the 2-index ops
-  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CC)D)(D))");
+  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CC)(D))(D))");
   assert( quantum_ladder.size() == 3 );
 
   SpinQuantum deltaQuantum12 = quantum_ladder.at(0);
@@ -418,7 +418,7 @@ assert(false);
 
 double SpinAdapted::CreDesCreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
-  assert( build_pattern == "(((CD)C)(D))" );
+  assert( build_pattern == "(((CD)(C))(D))" );
   double element = 0.0;
   int I = get_orbs()[0]; 
   int J = get_orbs()[1];
@@ -426,7 +426,7 @@ double SpinAdapted::CreDesCreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, 
   int L = get_orbs()[3];
 
   // Must take into account how the 4-index is built from a combination of the 2-index ops
-  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CD)C)(D))");
+  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CD)(C))(D))");
   assert( quantum_ladder.size() == 3 );
 
   SpinQuantum deltaQuantum12 = quantum_ladder.at(0);
@@ -630,7 +630,7 @@ assert(false);
 
 double SpinAdapted::CreDesDesCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
-  assert( build_pattern == "(((CD)D)(C))" );
+  assert( build_pattern == "(((CD)(D))(C))" );
   double element = 0.0;
   int I = get_orbs()[0]; 
   int J = get_orbs()[1];
@@ -638,7 +638,7 @@ double SpinAdapted::CreDesDesCre::redMatrixElement(Csf c1, vector<Csf>& ladder, 
   int L = get_orbs()[3];
 
   // Must take into account how the 4-index is built from a combination of the 2-index ops
-  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CD)D)(C))");
+  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CD)(D))(C))");
   assert( quantum_ladder.size() == 3 );
 
   SpinQuantum deltaQuantum12 = quantum_ladder.at(0);
@@ -842,7 +842,7 @@ assert(false);
 
 double SpinAdapted::CreDesDesDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
-  assert( build_pattern == "(((CD)D)(D))" );
+  assert( build_pattern == "(((CD)(D))(D))" );
   double element = 0.0;
   int I = get_orbs()[0]; 
   int J = get_orbs()[1];
@@ -850,7 +850,7 @@ double SpinAdapted::CreDesDesDes::redMatrixElement(Csf c1, vector<Csf>& ladder, 
   int L = get_orbs()[3];
 
   // Must take into account how the 4-index is built from a combination of the 2-index ops
-  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CD)D)(D))");
+  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CD)(D))(D))");
   assert( quantum_ladder.size() == 3 );
 
   SpinQuantum deltaQuantum12 = quantum_ladder.at(0);
@@ -1069,7 +1069,7 @@ assert(false);
 
 double SpinAdapted::CreCreCreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
-  assert( build_pattern == "(((CC)C)(D))" );
+  assert( build_pattern == "(((CC)(C))(D))" );
   double element = 0.0;
   int I = get_orbs()[0]; 
   int J = get_orbs()[1];
@@ -1077,7 +1077,7 @@ double SpinAdapted::CreCreCreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, 
   int L = get_orbs()[3];
 
   // Must take into account how the 4-index is built from a combination of the 2-index ops
-  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CC)C)(D))");
+  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CC)(C))(D))");
   assert( quantum_ladder.size() == 3 );
 
   SpinQuantum deltaQuantum12 = quantum_ladder.at(0);
@@ -1295,7 +1295,7 @@ assert(false);
 
 double SpinAdapted::CreCreDesCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
-  assert( build_pattern == "(((CC)D)(C))" );
+  assert( build_pattern == "(((CC)(D))(C))" );
   double element = 0.0;
   int I = get_orbs()[0]; 
   int J = get_orbs()[1];
@@ -1303,7 +1303,7 @@ double SpinAdapted::CreCreDesCre::redMatrixElement(Csf c1, vector<Csf>& ladder, 
   int L = get_orbs()[3];
 
   // Must take into account how the 4-index is built from a combination of the 2-index ops
-  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CC)D)(C))");
+  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CC)(D))(C))");
   assert( quantum_ladder.size() == 3 );
 
   SpinQuantum deltaQuantum12 = quantum_ladder.at(0);
@@ -1521,7 +1521,7 @@ assert(false);
 
 double SpinAdapted::CreDesCreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
-  assert( build_pattern == "(((CD)C)(C))" );
+  assert( build_pattern == "(((CD)(C))(C))" );
   double element = 0.0;
   int I = get_orbs()[0]; 
   int J = get_orbs()[1];
@@ -1529,7 +1529,7 @@ double SpinAdapted::CreDesCreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, 
   int L = get_orbs()[3];
 
   // Must take into account how the 4-index is built from a combination of the 2-index ops
-  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CD)C)(C))");
+  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CD)(C))(C))");
   assert( quantum_ladder.size() == 3 );
 
   SpinQuantum deltaQuantum12 = quantum_ladder.at(0);
@@ -1747,7 +1747,7 @@ assert(false);
 
 double SpinAdapted::CreCreCreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
-  assert( build_pattern == "(((CC)C)(C))" );
+  assert( build_pattern == "(((CC)(C))(C))" );
   double element = 0.0;
   int I = get_orbs()[0]; 
   int J = get_orbs()[1];
@@ -1755,7 +1755,7 @@ double SpinAdapted::CreCreCreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, 
   int L = get_orbs()[3];
 
   // Must take into account how the 4-index is built from a combination of the 2-index ops
-  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CC)C)(C))");
+  std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("(((CC)(C))(C))");
   assert( quantum_ladder.size() == 3 );
 
   SpinQuantum deltaQuantum12 = quantum_ladder.at(0);

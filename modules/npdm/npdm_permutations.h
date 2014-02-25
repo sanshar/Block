@@ -9,7 +9,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef NPDM_PERMUTATIONS_H
 #define NPDM_PERMUTATIONS_H
 
-#include <boost/mpi.hpp>
 #include <vector>
 #include <multiarray.h>
 #include "spinblock.h"

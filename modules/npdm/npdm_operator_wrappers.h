@@ -9,7 +9,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef NPDM_OP_WRAPPERS_H
 #define NPDM_OP_WRAPPERS_H
 
-#include <boost/mpi.hpp>
 #include "BaseOperator.h"
 #include "operatorfunctions.h"
 #include "npdm_spin_ops.h"

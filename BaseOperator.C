@@ -336,31 +336,31 @@ void SparseMatrix::OperatorMatrixReference (ObjectMatrix<Matrix*>& m, const std:
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //MAW
-void SparseMatrix::renormalise_transform_on_disk(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo, std::ifstream& ifs) 
-{
-  // Retrieve operator from disk
-  assert( built_on_disk );
-  if (false) {
-    boost::archive::binary_iarchive load_op(ifs);
-    load_op >> *this;
-  } 
-  else {
-//FIXME MEMORY?? why two allocations here???
-    // DEBUG option
-    boost::shared_ptr<SparseMatrix> op (new Cre);
-    boost::archive::binary_iarchive load_op(ifs);
-    load_op >> *op;
-    // Assume this is the operator we want, and expand it to the big block
-    assert( this->get_orbs().at(0) == op->get_orbs().at(0) );
-    assert( this->get_orbs().at(1) == op->get_orbs().at(1) );
-    assert( this->get_orbs().at(2) == op->get_orbs().at(2) );
-    *this = *op;
-  }
-
-  // Renormalize
-  renormalise_transform(rotate_matrix, stateinfo);
-}
-
+//void SparseMatrix::renormalise_transform_on_disk(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo, std::ifstream& ifs) 
+//{
+//  // Retrieve operator from disk
+//  assert( built_on_disk );
+//  if (false) {
+//    boost::archive::binary_iarchive load_op(ifs);
+//    load_op >> *this;
+//  } 
+//  else {
+////FIXME MEMORY?? why two allocations here???
+//    // DEBUG option
+//    boost::shared_ptr<SparseMatrix> op (new Cre);
+//    boost::archive::binary_iarchive load_op(ifs);
+//    load_op >> *op;
+//    // Assume this is the operator we want, and expand it to the big block
+//    assert( this->get_orbs().at(0) == op->get_orbs().at(0) );
+//    assert( this->get_orbs().at(1) == op->get_orbs().at(1) );
+//    assert( this->get_orbs().at(2) == op->get_orbs().at(2) );
+//    *this = *op;
+//  }
+//
+//  // Renormalize
+//  renormalise_transform(rotate_matrix, stateinfo);
+//}
+//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //Renormalization functions for core and virtual operators                                                                                
@@ -368,9 +368,6 @@ void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matri
 {
   // Cannot instantiate a SparseMatrix and so instantiating a Cre
   ObjectMatrix<Matrix> tmp = operatorMatrix; 
-//FIXME
-//cout << "tmp operator_matrix:\n";
-//cout << tmp << endl;
 
   //FIXME
   // new allocations (actually reallocate?)

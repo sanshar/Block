@@ -20,7 +20,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "sweeponepdm.h"
 
 //FIXME
-#include <boost/mpi.hpp>
 #include <vector>
 #include <multiarray.h>
 #include "spinblock.h"
