@@ -731,14 +731,31 @@ void SpinAdapted::CreDesComp_No_Symm::build(const SpinBlock& b)
         CK = TensorOp(k, 1);
         TensorOp CC2_commute = CL.product(CK, spin, sym.getirrep(), k==l);
         double scaleV2 = calcCompfactor(CD1, CC2_commute, CD, v_cccd);
-
         if (leftBlock->get_op_array(CRE).has(k) && rightBlock->get_op_array(CRE).has(l) &&  fabs(scaleV2)+fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
-          boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(k), k); // FIXME is getSpinQuantum() proper?
+          boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(k), k);
           boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(l), l);
           double parity = getCommuteParity(op1->get_deltaQuantum()[0], op2->get_deltaQuantum()[0], get_deltaQuantum()[1]);
           scaleV += parity * scaleV2;
 	      if (fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
             SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, scaleV);
+          }
+        }
+      }
+      TensorOp DK(k, -1), DL(l, -1);
+      TensorOp DD2 = DK.product(DL, spin, sym.getirrep(), k==l);
+      if (!DD2.empty) {
+        double scaleV = calcCompfactor(CD1, DD2, CD, v_cccd);
+        DL = TensorOp(l, -1);
+        DK = TensorOp(k, -1);
+        TensorOp DD2_commute = DL.product(DK, spin, sym.getirrep(), k==l);
+        double scaleV2 = calcCompfactor(CD1, DD2_commute, CD, v_cccd);
+        if (leftBlock->get_op_array(CRE).has(k) && rightBlock->get_op_array(CRE).has(l) &&  fabs(scaleV2)+fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
+          boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(k), k);
+          boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(l), l);
+          double parity = getCommuteParity(op1->get_deltaQuantum()[0], op2->get_deltaQuantum()[0], get_deltaQuantum()[1]);
+          scaleV += parity * scaleV2;
+	      if (fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
+            SpinAdapted::operatorfunctions::TensorProduct(leftBlock, Transposeview(*op1), Transposeview(*op2), &b, &(b.get_stateInfo()), *this, scaleV);            
           }
         }
       }

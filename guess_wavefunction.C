@@ -232,14 +232,7 @@ void GuessWave::basic_guess_wavefunction(DiagonalMatrix& e, Wavefunction& trial,
   RowVector trialvector(states);
   trialvector = 0.;
 
-  for (multimap<double, int>::reverse_iterator e_iter = e_sort.rbegin(); e_iter != e_sort.rend(); ++e_iter)
-    if (find(initialised_ns.begin(), initialised_ns.end(), ns[e_iter->second-1]) == initialised_ns.end()) {
-      trialvector(e_iter->second) = 1.;
-      initialised_ns.push_back(ns[e_iter->second-1]);
-    } else {
-      trialvector(e_iter->second) = double(rand()/1000) / RAND_MAX;
-    }
-
+  trialvector(e_sort.begin()->second) = 1.;
   trial.CollectFrom(trialvector);
 }
 
