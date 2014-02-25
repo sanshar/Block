@@ -6,22 +6,31 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //
 //  This is an extension of op_components.C (i.e. used with op_components.h header file)
+//FIXME There is a lot of similarity between these routines that should be possible to abstract out in a general way
+//FIXME IDEALLY DONT NEED 4-index para array????
 //
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 
 #include <boost/format.hpp>
 #include <fstream>
 #include <stdio.h>
+#include "BaseOperator.h"
 #include "spinblock.h"
 #include "op_components.h"
 //#include "screen.h"
-
-//FIXME There is a lot of similarity between these routines that should be possible to abstract out in a general way
+//#include "build_4index_ops.h"
 
 namespace SpinAdapted {
+
+//===========================================================================================================================================================
+
+// Forward declaration
+void build_4index_ops( const opTypes& optype, SpinBlock& big,
+                       const opTypes& lhsType1, const opTypes& lhsType2, const opTypes& lhsType3,
+                       const opTypes& rhsType1, const opTypes& rhsType2, const opTypes& rhsType3 );
   
 //===========================================================================================================================================================
 // Choose 4-index tuples on this MPI process such that 2-index are available to build them
@@ -78,7 +87,22 @@ string Op_component<RI4index>::get_op_string() const {
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+template<> 
+void Op_component<RI4index>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+{
+  // This is only a skeleton class, so actual operators should never be built
+  return; 
+}
 
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+template<> 
+void Op_component<RI4index>::renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo* s)
+{
+  // This is only a skeleton class, so actual operators should never be built
+  return; 
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<>
 void Op_component<RI4index>::build_iterators(SpinBlock& b)
 {
@@ -103,6 +127,13 @@ void Op_component<RI4index>::build_iterators(SpinBlock& b)
 template<> 
 string Op_component<CreCreDesDes>::get_op_string() const {
   return "CreCreDesDes";
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+template<> 
+void Op_component<CreCreDesDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+{
+  build_4index_ops( CRE_CRE_DES_DES, big, CRE, CRE_CRE, CRE_CRE_DES, DES, DES_DES, CRE_DES_DES );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -271,6 +302,13 @@ string Op_component<CreDesCreDes>::get_op_string() const {
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
+void Op_component<CreDesCreDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+{
+  build_4index_ops( CRE_DES_CRE_DES, big, CRE, CRE_DES, CRE_DES_CRE, DES, CRE_DES, DES_CRE_DES );
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+template<> 
 void Op_component<CreDesCreDes>::build_iterators(SpinBlock& b)
 {
   // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
@@ -422,6 +460,13 @@ void Op_component<CreDesCreDes>::build_iterators(SpinBlock& b)
 template<> 
 string Op_component<CreDesDesCre>::get_op_string() const {
   return "CreDesDesCre";
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+template<> 
+void Op_component<CreDesDesCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+{
+  build_4index_ops( CRE_DES_DES_CRE, big, CRE, CRE_DES, CRE_DES_DES, CRE, DES_CRE, DES_DES_CRE );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -582,6 +627,13 @@ string Op_component<CreDesDesDes>::get_op_string() const {
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
+void Op_component<CreDesDesDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+{
+  build_4index_ops( CRE_DES_DES_DES, big, CRE, CRE_DES, CRE_DES_DES, DES, DES_DES, DES_DES_DES );
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+template<> 
 void Op_component<CreDesDesDes>::build_iterators(SpinBlock& b)
 {
   // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
@@ -734,6 +786,13 @@ void Op_component<CreDesDesDes>::build_iterators(SpinBlock& b)
 template<> 
 string Op_component<CreCreCreDes>::get_op_string() const {
   return "CreCreCreDes";
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+template<> 
+void Op_component<CreCreCreDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+{
+  build_4index_ops( CRE_CRE_CRE_DES, big, CRE, CRE_CRE, CRE_CRE_CRE, DES, CRE_DES, CRE_CRE_DES );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -893,6 +952,13 @@ string Op_component<CreCreDesCre>::get_op_string() const {
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
+void Op_component<CreCreDesCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+{
+  build_4index_ops( CRE_CRE_DES_CRE, big, CRE, CRE_CRE, CRE_CRE_DES, CRE, DES_CRE, CRE_DES_CRE );
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+template<> 
 void Op_component<CreCreDesCre>::build_iterators(SpinBlock& b)
 {
   // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
@@ -1048,6 +1114,14 @@ string Op_component<CreDesCreCre>::get_op_string() const {
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
+void Op_component<CreDesCreCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+{
+  build_4index_ops( CRE_DES_CRE_CRE, big, CRE, CRE_DES, CRE_DES_CRE, CRE, CRE_CRE, DES_CRE_CRE );
+}
+
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+template<> 
 void Op_component<CreDesCreCre>::build_iterators(SpinBlock& b)
 {
   // Blank construction (used in unset_initialised() Block copy construction, for use with STL)
@@ -1199,6 +1273,13 @@ void Op_component<CreDesCreCre>::build_iterators(SpinBlock& b)
 template<> 
 string Op_component<CreCreCreCre>::get_op_string() const {
   return "CreCreCreCre";
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------  
+template<> 
+void Op_component<CreCreCreCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+{
+  build_4index_ops( CRE_CRE_CRE_CRE, big, CRE, CRE_CRE, CRE_CRE_CRE, CRE, CRE_CRE, CRE_CRE_CRE );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  

@@ -178,9 +178,10 @@ template<typename T2, class A> void for_all_operators_on_disk(A& array, const St
       boost::archive::binary_oarchive save_op(ofs);
       save_op << *(vec.at(j));
            
-//FIXME      // Deallocate memory for operator representation
-//FIXME      vec.at(j)->set_built() = false;
-//FIXME      vec.at(j)->deallocate(stateinfo);
+//FIXME
+//      // Deallocate memory for operator representation
+//      vec.at(j)->set_built() = false;
+//      vec.at(j)->deallocate(stateinfo);
     }
   }
 }

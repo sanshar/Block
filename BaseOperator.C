@@ -88,7 +88,7 @@ void SparseMatrix::allocate(const StateInfo& sr, const StateInfo& sc)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//FIXME this duplication is related to the shitty mess of being able to call get_stateInfo() method or not earlier on...
+
 void SparseMatrix::deallocate(const SpinBlock& b)
 {
   StateInfo stateinfo = b.get_stateInfo();
@@ -99,7 +99,7 @@ void SparseMatrix::deallocate(const SpinBlock& b)
 
 }
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//MAW
+
 void SparseMatrix::deallocate(const StateInfo& stateinfo)
 {
 //  Clear();
@@ -351,10 +351,9 @@ void SparseMatrix::renormalise_transform_on_disk(const std::vector<Matrix>& rota
     boost::archive::binary_iarchive load_op(ifs);
     load_op >> *op;
     // Assume this is the operator we want, and expand it to the big block
-//Care of order with 4-index driver??
-//FIXME    assert( this->get_orbs()[0] == op->get_orbs()[0] );
-//FIXME    assert( this->get_orbs()[1] == op->get_orbs()[1] );
-//FIXME    assert( this->get_orbs()[2] == op->get_orbs()[2] );
+    assert( this->get_orbs().at(0) == op->get_orbs().at(0) );
+    assert( this->get_orbs().at(1) == op->get_orbs().at(1) );
+    assert( this->get_orbs().at(2) == op->get_orbs().at(2) );
     *this = *op;
   }
 

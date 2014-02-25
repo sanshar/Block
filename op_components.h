@@ -22,7 +22,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "Operators.h"
 #include "operatorloops.h"
 #include <string>
-//MAW
+//FIXME
 #include "two_index_ops.h"
 #include "three_index_ops.h"
 #include "four_index_ops.h"
@@ -146,9 +146,9 @@ class Op_component_base
   bool m_deriv;
  public:
   virtual void build_iterators(SpinBlock& b)=0;
-  virtual void build_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::string& sysfile, std::string& dotfile) = 0;
-  virtual void build_csf_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) = 0;
-  virtual void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) =0;
+  virtual void build_operators(SpinBlock& b, std::string& ofile, std::string& sysfile, std::string& dotfile) = 0;
+  virtual void build_csf_operators(SpinBlock& b, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) = 0;
+  virtual void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo* s) =0;
   //virtual string type_name() = 0;
   virtual int get_size() const =0;
   virtual int size() const=0;
@@ -176,6 +176,11 @@ class Op_component_base
   virtual std::string get_filename() const = 0;
   virtual ~Op_component_base() {}  
 };
+
+//===========================================================================================================================================================
+
+// Forward declaration
+void renormalize_4index_ops( Op_component_base& ops_array, const std::vector<Matrix>& rotateMatrix, const StateInfo* s);
 
 //===========================================================================================================================================================
 
@@ -228,14 +233,12 @@ template <class Op> class Op_component : public Op_component_base
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//FIXME MAW for 3-index operators (or larger) we specialize these functions to build/modify operators out of core (on disk)
 
-  void build_csf_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) 
+  void build_csf_operators(SpinBlock& b, std::vector< Csf >& c, std::vector< std::vector<Csf> >& ladders) 
   { 
-//FIXME
-    if ( ((m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) || (ot == CRE_CRE_DES_DES) ) {
-cout << "building csf on disk... " << ofile << endl;
+    if ( (m_op.num_indices() > 2) && ( ! dmrginp.do_npdm_in_core()) ) {
       // Build on disk (assume we are building from scratch)
+      std::string ofile = get_filename();
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
       for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::buildUsingCsf, _1,boost::ref(b), boost::ref(ladders), boost::ref(c)) );
       ofs.close();
@@ -253,17 +256,14 @@ cout << "building csf on disk... " << ofile << endl;
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//FIXME unify disk-based build for 3 and 4 index operators
 
-  void build_operators(SpinBlock& b, opTypes& ot, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+  void build_operators(SpinBlock& b, std::string& ofile, std::string& sysfile, std::string& dotfile) 
   { 
-//FIXME
-//    if ( m_op.num_indices() > 3) {
-//      // Use alternative driver to build n-index operators for n>3
-//      assert(false);
-//    }
+    // Use alternative driver to build n-index operators for n>3
+    if ( m_op.num_indices() > 3 ) assert(false);
     if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
       // Build on disk (reading from disk, as necessary)
-cout << "building on disk... " << ofile << endl;
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
       std::ifstream sysfs(sysfile.c_str(), std::ios::binary);
       std::ifstream dotfs(dotfile.c_str(), std::ios::binary);
@@ -285,18 +285,18 @@ cout << "building on disk... " << ofile << endl;
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//FIXME unify disk-based renormalization for 3 and 4 index operators
 
-  void renormalise_transform(const opTypes& ot, const std::vector<Matrix>& rotateMatrix, const StateInfo* s) 
+  void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo* s) 
   {
-//FIXME
-//cout << "renormalize transform: opType = " << ot << endl;
-//    if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
-//FIXME
-    if ( ((m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) || (ot == CRE_CRE_DES_DES) ) {
+    if ( m_op.num_indices() == 4 ) {
+      renormalize_4index_ops( *this, rotateMatrix, s );
+    }
+    else if ( (m_op.num_indices() == 3) && ( ! dmrginp.do_npdm_in_core()) ) {
       // Build on disk (load, renormalize, save)
       std::string ifile = get_filename();
+cout << "renormalizing 3-index operators, ofile = " << ifile << endl;
       std::string ofile = get_filename() + ".renorm";
-cout << "renomalizing on disk... " << ifile << endl;
       std::ifstream ifs(ifile.c_str(), std::ios::binary);
       std::ofstream ofs(ofile.c_str(), std::ios::binary);
       for_all_operators_on_disk( *this, *s, ofs, bind(&SparseMatrix::renormalise_transform_on_disk, _1, boost::ref(rotateMatrix), s, boost::ref(ifs)) );
@@ -313,8 +313,6 @@ cout << "renomalizing on disk... " << ifile << endl;
     }
     else {
       // Build in core
-//FIXME
-//cout << "in core renormalize\n";
       for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );
     }
   }

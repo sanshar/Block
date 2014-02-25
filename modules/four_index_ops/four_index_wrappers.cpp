@@ -39,43 +39,28 @@ cout << "getting CCDD operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
-//  if ( dmrginp.do_npdm_in_core() ) {
-  if ( false ) {
+  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_CRE_DES_DES).get_local_element(idx);
-    build_pattern_ = opReps_.at(0)->get_build_pattern();
   }
   else {
 cout << "...from disk...\n";
-    // Get first operator of spin set
     assert( check_file_open( idx ) );
-    boost::shared_ptr<SparseMatrix> op (new CreCreDesDes);
-    boost::archive::binary_iarchive load_op(ifs_);
-    load_op >> *op;
-    build_pattern_ = op->get_build_pattern();
-    // Get order of spin components
-    ix = op->get_orbs(0); jx = op->get_orbs(1); kx = op->get_orbs(2); lx = op->get_orbs(3);
-    opReps_ = spinBlock_->get_op_array(CRE_CRE_DES_DES).get_element(ix,jx,kx,lx);
-    // Store spin components in correct order
-    for (int j = 0; j < opReps_.size(); j++) {
-      if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-//FIXME break
-        opReps_[j] = op; break;
-      }
-    }
-    // Read in remaining spin-set from disk 
-    for (int i = 1; i < opReps_.size(); i++) {
-      boost::shared_ptr<SparseMatrix> op (new CreCreDesDes);
+//FIXME combine 3-index and 4-indexx read from disk.... UNIFY......
+    int size = spinBlock_->get_op_array(CRE_CRE_DES_DES).get_local_element(idx).size();
+    assert( size == 6 );
+    opReps_.clear();
+    // Read in all spin components for this set of spatial indices (note order matters)
+    for ( int i=0; i<size; i++) {
+      boost::shared_ptr<SparseMatrix> op (new Cre);
       boost::archive::binary_iarchive load_op(ifs_);
       load_op >> *op;
-      for (int j = 0; j < opReps_.size(); j++) {
-        // Store spin components in correct order
-        if ( opReps_[j]->get_quantum_ladder().at(build_pattern_) == op->get_quantum_ladder().at(build_pattern_) ) {
-          opReps_[j] = op; break;
-        }
-      }
+      assert( op->get_built_on_disk() );
+      opReps_.push_back(op);
     }
     assert( check_file_close( idx ) );
   }
+
+  build_pattern_ = opReps_.at(0)->get_build_pattern();
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -101,6 +86,8 @@ Npdm_op_wrapper_CDCD::Npdm_op_wrapper_CDCD( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
+  // For disk-based storage
+  ifile_ = spinBlock_->get_op_array(CRE_DES_CRE_DES).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -113,8 +100,28 @@ cout << "getting CDCD operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_DES_CRE_DES).get_local_element(idx);
-    build_pattern_ = opReps_.at(0)->get_build_pattern();
+  }
+  else {
+cout << "...from disk...\n";
+    assert( check_file_open( idx ) );
+//FIXME
+    int size = spinBlock_->get_op_array(CRE_DES_CRE_DES).get_local_element(idx).size();
+    assert( size == 6 );
+    opReps_.clear();
+    // Read in all spin components for this set of spatial indices (note order matters)
+    for ( int i=0; i<size; i++) {
+      boost::shared_ptr<SparseMatrix> op (new Cre);
+      boost::archive::binary_iarchive load_op(ifs_);
+      load_op >> *op;
+      assert( op->get_built_on_disk() );
+      opReps_.push_back(op);
+    }
+    assert( check_file_close( idx ) );
+  }
+
+  build_pattern_ = opReps_.at(0)->get_build_pattern();
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -143,6 +150,8 @@ Npdm_op_wrapper_CDDC::Npdm_op_wrapper_CDDC( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
+  // For disk-based storage
+  ifile_ = spinBlock_->get_op_array(CRE_DES_DES_CRE).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -155,8 +164,28 @@ cout << "getting CDDC operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_DES_DES_CRE).get_local_element(idx);
-    build_pattern_ = opReps_.at(0)->get_build_pattern();
+  }
+  else {
+cout << "...from disk...\n";
+    assert( check_file_open( idx ) );
+//FIXME
+    int size = spinBlock_->get_op_array(CRE_DES_DES_CRE).get_local_element(idx).size();
+    assert( size == 6 );
+    opReps_.clear();
+    // Read in all spin components for this set of spatial indices (note order matters)
+    for ( int i=0; i<size; i++) {
+      boost::shared_ptr<SparseMatrix> op (new Cre);
+      boost::archive::binary_iarchive load_op(ifs_);
+      load_op >> *op;
+      assert( op->get_built_on_disk() );
+      opReps_.push_back(op);
+    }
+    assert( check_file_close( idx ) );
+  }
+
+  build_pattern_ = opReps_.at(0)->get_build_pattern();
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -185,6 +214,8 @@ Npdm_op_wrapper_CDDD::Npdm_op_wrapper_CDDD( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
+  // For disk-based storage
+  ifile_ = spinBlock_->get_op_array(CRE_DES_DES_DES).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -197,8 +228,28 @@ cout << "getting CDDD operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_DES_DES_DES).get_local_element(idx);
-    build_pattern_ = opReps_.at(0)->get_build_pattern();
+  }
+  else {
+cout << "...from disk...\n";
+    assert( check_file_open( idx ) );
+//FIXME
+    int size = spinBlock_->get_op_array(CRE_DES_DES_DES).get_local_element(idx).size();
+    assert( size == 6 );
+    opReps_.clear();
+    // Read in all spin components for this set of spatial indices (note order matters)
+    for ( int i=0; i<size; i++) {
+      boost::shared_ptr<SparseMatrix> op (new Cre);
+      boost::archive::binary_iarchive load_op(ifs_);
+      load_op >> *op;
+      assert( op->get_built_on_disk() );
+      opReps_.push_back(op);
+    }
+    assert( check_file_close( idx ) );
+  }
+
+  build_pattern_ = opReps_.at(0)->get_build_pattern();
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -227,6 +278,8 @@ Npdm_op_wrapper_CCCD::Npdm_op_wrapper_CCCD( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
+  // For disk-based storage
+  ifile_ = spinBlock_->get_op_array(CRE_CRE_CRE_DES).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -239,8 +292,28 @@ cout << "getting CCCD operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE_DES).get_local_element(idx);
-    build_pattern_ = opReps_.at(0)->get_build_pattern();
+  }
+  else {
+cout << "...from disk...\n";
+    assert( check_file_open( idx ) );
+//FIXME
+    int size = spinBlock_->get_op_array(CRE_CRE_CRE_DES).get_local_element(idx).size();
+    assert( size == 6 );
+    opReps_.clear();
+    // Read in all spin components for this set of spatial indices (note order matters)
+    for ( int i=0; i<size; i++) {
+      boost::shared_ptr<SparseMatrix> op (new Cre);
+      boost::archive::binary_iarchive load_op(ifs_);
+      load_op >> *op;
+      assert( op->get_built_on_disk() );
+      opReps_.push_back(op);
+    }
+    assert( check_file_close( idx ) );
+  }
+
+  build_pattern_ = opReps_.at(0)->get_build_pattern();
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -269,6 +342,8 @@ Npdm_op_wrapper_CCDC::Npdm_op_wrapper_CCDC( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
+  // For disk-based storage
+  ifile_ = spinBlock_->get_op_array(CRE_CRE_DES_CRE).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -281,8 +356,28 @@ cout << "getting CCDC operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_CRE_DES_CRE).get_local_element(idx);
-    build_pattern_ = opReps_.at(0)->get_build_pattern();
+  }
+  else {
+cout << "...from disk...\n";
+    assert( check_file_open( idx ) );
+//FIXME
+    int size = spinBlock_->get_op_array(CRE_CRE_DES_CRE).get_local_element(idx).size();
+    assert( size == 6 );
+    opReps_.clear();
+    // Read in all spin components for this set of spatial indices (note order matters)
+    for ( int i=0; i<size; i++) {
+      boost::shared_ptr<SparseMatrix> op (new Cre);
+      boost::archive::binary_iarchive load_op(ifs_);
+      load_op >> *op;
+      assert( op->get_built_on_disk() );
+      opReps_.push_back(op);
+    }
+    assert( check_file_close( idx ) );
+  }
+
+  build_pattern_ = opReps_.at(0)->get_build_pattern();
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -311,6 +406,8 @@ Npdm_op_wrapper_CDCC::Npdm_op_wrapper_CDCC( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
+  // For disk-based storage
+  ifile_ = spinBlock_->get_op_array(CRE_DES_CRE_CRE).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -323,8 +420,28 @@ cout << "getting CDCC operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_DES_CRE_CRE).get_local_element(idx);
-    build_pattern_ = opReps_.at(0)->get_build_pattern();
+  }
+  else {
+cout << "...from disk...\n";
+    assert( check_file_open( idx ) );
+//FIXME
+    int size = spinBlock_->get_op_array(CRE_DES_CRE_CRE).get_local_element(idx).size();
+    assert( size == 6 );
+    opReps_.clear();
+    // Read in all spin components for this set of spatial indices (note order matters)
+    for ( int i=0; i<size; i++) {
+      boost::shared_ptr<SparseMatrix> op (new Cre);
+      boost::archive::binary_iarchive load_op(ifs_);
+      load_op >> *op;
+      assert( op->get_built_on_disk() );
+      opReps_.push_back(op);
+    }
+    assert( check_file_close( idx ) );
+  }
+
+  build_pattern_ = opReps_.at(0)->get_build_pattern();
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
@@ -353,6 +470,8 @@ Npdm_op_wrapper_CCCC::Npdm_op_wrapper_CCCC( SpinBlock * spinBlock )
   factor_ = 1.0;
   transpose_ = false;
   build_pattern_ = "0";
+  // For disk-based storage
+  ifile_ = spinBlock_->get_op_array(CRE_CRE_CRE_CRE).get_filename();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -365,8 +484,28 @@ cout << "getting CCCC operator...\n";
   int ix, jx, kx, lx;
 
   // Read in operator representations from disk or memory
+  if ( dmrginp.do_npdm_in_core() ) {
     opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE_CRE).get_local_element(idx);
-    build_pattern_ = opReps_.at(0)->get_build_pattern();
+  }
+  else {
+cout << "...from disk...\n";
+    assert( check_file_open( idx ) );
+//FIXME combine 3-index and 4-indexx read from disk.... UNIFY......
+    int size = spinBlock_->get_op_array(CRE_CRE_CRE_CRE).get_local_element(idx).size();
+    assert( size == 6 );
+    opReps_.clear();
+    // Read in all spin components for this set of spatial indices (note order matters)
+    for ( int i=0; i<size; i++) {
+      boost::shared_ptr<SparseMatrix> op (new Cre);
+      boost::archive::binary_iarchive load_op(ifs_);
+      load_op >> *op;
+      assert( op->get_built_on_disk() );
+      opReps_.push_back(op);
+    }
+    assert( check_file_close( idx ) );
+  }
+
+  build_pattern_ = opReps_.at(0)->get_build_pattern();
 
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);

@@ -32,7 +32,6 @@ namespace SpinAdapted {
   }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
-
   template<> void Op_component<DesDes>::build_iterators(SpinBlock& b)
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
