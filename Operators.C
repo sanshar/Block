@@ -934,12 +934,12 @@ double SpinAdapted::DesDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder, co
   int I = get_orbs()[0], 
     J = get_orbs()[1]; //convert spatial id to spin id because slaters need that
   IrrepSpace sym = deltaQuantum[0].get_symm();
-  int spin = (-deltaQuantum[0].get_s()).getirrep();
+  int spin = deltaQuantum[0].get_s().getirrep();
   bool finish = false;
   int dn = c1.n_is() - ladder[0].n_is();
 
   TensorOp C(I,1), C2(J,1);
-  TensorOp CC1 = C.product(C2, (-deltaQuantum[0].get_s()).getirrep(), (-sym).getirrep(), I==J);
+  TensorOp CC1 = C.product(C2, -spin, (-sym).getirrep(), I==J);
  
   for (int j = 0; j < deltaQuantum.size(); ++j) {
     for (int i=0; i<ladder.size(); i++) {
