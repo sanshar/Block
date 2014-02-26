@@ -216,8 +216,9 @@ void GuessWave::onedot_threeindex_to_twoindex_wavefunction(const StateInfo& twos
 	      }
 	      scale *= Symmetry::spatial_sixj(Al, Bl, ABl, Cl, Jl, CBl);
 
-	      if (threewavefunction(a, b, c)[insertionNum].Nrows() != 0) 
+	      if (threewavefunction(a, b, c)[insertionNum].Nrows() != 0)  {
 		MatrixScaleAdd(scale, threewavefunction (a, b, c)[insertionNum], twowavefunction.operator_element (ab, c));
+	      }
 	    }
 	  }
 
@@ -301,7 +302,7 @@ void GuessWave::guess_wavefunctions(std::vector<Wavefunction>& solution, Diagona
   const int nroots = solution.size();
 
   for(int i=0;i<nroots;++i) {
-    int state = nroots==1 ? currentState : i;
+    int state = currentState!=-1 ? currentState : i;
     guess_wavefunctions(solution[i], e, big, guesswavetype, onedot, state, transpose_guess_wave, additional_noise);
   }
 }
@@ -568,7 +569,6 @@ void GuessWave::onedot_transform_wavefunction(const StateInfo& oldstateinfo, con
   Timer transform;
   int oldASz = oldstateinfo.leftStateInfo->quanta.size ();
   int oldCSz = oldstateinfo.rightStateInfo->quanta.size ();
-
   // Old wavefunction is in [s.][e] configuration
   // Then [s.] -> [s'], and [.e'] -> [e]
   // Make wavefunction in [s'][.e'] configuration 
@@ -649,6 +649,7 @@ void GuessWave::onedot_transform_wavefunction(const StateInfo& oldstateinfo, con
   TensorProduct (*(newstateinfo.leftStateInfo->leftStateInfo), newenvstateinfo, tempoldStateInfo,
 		 PARTICLE_SPIN_NUMBER_CONSTRAINT);
   tempoldStateInfo.CollectQuanta();
+
 
   onedot_shufflesysdot(  tempoldStateInfo, newstateinfo, tmpwavefunction, newwavefunction);
 }

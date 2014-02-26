@@ -6,7 +6,7 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-
+#include "guess_wavefunction.h"
 #include "sweep.h"
 #include "global.h"
 #include "solver.h"
@@ -83,12 +83,12 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
       dmrginp.datatransfer -> start();
       system.addAdditionalCompOps();
       dmrginp.datatransfer -> stop();
-      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), 
+      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), 
       			     DISTRIBUTED_STORAGE, dot_with_sys, true);
       if (dmrginp.outputlevel() > 0)
          mcheck("");
 
-      InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot,
+      InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, sweepParams.current_root(), sweepParams.current_root(),
 					  sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 					  sweepParams.get_onedot(), nexact, useSlater, !dot_with_sys, true, dot_with_sys);
       if (dmrginp.outputlevel() > 0)
@@ -99,10 +99,10 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     system.addAdditionalCompOps();
     dmrginp.datatransfer -> stop();
     if (dot_with_sys) {
-      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, dot_with_sys, true);
+      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, dot_with_sys, true);
 
     }
-    InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
+    InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, sweepParams.current_root(), sweepParams.current_root(),
 					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 					sweepParams.get_onedot(), nexact, useSlater, !dot_with_sys, true, dot_with_sys);
   }
@@ -151,11 +151,43 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 
   std::vector<Wavefunction> lowerStates;
 #ifdef USE_BTAS
-  if(sweepParams.current_root() != 0 && sweepParams.get_guesstype() != BASIC) {
-    if (dot_with_sys) 
-      getLowerStatesBlockRow(sweepParams.current_root(), newSystem.get_sites(), newEnvironment.get_sites(), lowerStates, newSystem.get_stateInfo(), newEnvironment.get_stateInfo());
+  if(mpigetrank() == 0 && sweepParams.current_root() >= 0 ) {
+    lowerStates.resize(sweepParams.current_root());
+
+    vector<StateInfo> stateInfow(sweepParams.current_root());
+    vector<int> newSysSites;
+    if (!dot_with_sys) {
+      newSysSites = system.get_sites();
+      newSysSites.push_back(systemDotStart);
+      sort(newSysSites.begin(), newSysSites.end());
+    }
     else
-      getLowerStatesBlockCol(sweepParams.current_root(), system.get_sites(), newEnvironment.get_sites(), lowerStates, system.get_stateInfo(), newEnvironment.get_stateInfo());
+      newSysSites = newSystem.get_sites();
+    for (int i=0; i<sweepParams.current_root(); i++)  {
+      lowerStates[i].LoadWavefunctionInfo(stateInfow[i], newSysSites, i);
+
+      if (sweepParams.get_block_iter() == 0)
+	GuessWave::transpose_previous_wavefunction(lowerStates[i], stateInfow[i], newSystem.get_complementary_sites(), spindotsites, i, sweepParams.get_onedot(), true);
+      else 
+	GuessWave::transform_previous_wavefunction(lowerStates[i], stateInfow[i], system.get_sites(), system.get_complementary_sites(), i, sweepParams.get_onedot(), true);
+
+      lowerStates[i].SaveWavefunctionInfo(stateInfow[i], newSysSites, i);
+
+      std::vector<Matrix> rotateMatrix;
+      DensityMatrix tracedMatrix;
+      tracedMatrix.allocate(*stateInfow[i].leftStateInfo);
+      operatorfunctions::MultiplyProduct(lowerStates[i], Transpose(const_cast<Wavefunction&> (lowerStates[i])), tracedMatrix, 1.0);
+      rotateMatrix.clear();
+      if (!mpigetrank())
+	double error = makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
+      SaveRotationMatrix (newSysSites, rotateMatrix, i);
+
+    }
+      
+    if (dot_with_sys) 
+      getLowerStatesBlockRow(sweepParams.current_root(), newSystem.get_sites(), newEnvironment.get_sites(), lowerStates, newSystem.get_stateInfo(), newEnvironment.get_stateInfo(), stateInfow);
+    else
+      getLowerStatesBlockCol(sweepParams.current_root(), system.get_sites(), newEnvironment.get_sites(), lowerStates, system.get_stateInfo(), newEnvironment.get_stateInfo(), stateInfow);
   }
 #endif
 
@@ -188,7 +220,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   dmrginp.operrotT -> stop();
 
 #ifdef USE_BTAS
-  saveOverlapMatrices(sweepParams.current_root(), newSystem.get_sites(), storeStates[0], storeStates[2]);
+  saveUpdatedLocalOverlapMatrix(sweepParams.current_root(), newSystem.get_sites(), storeStates[0], storeStates[2]);
 #endif
 
   if (dmrginp.outputlevel() > 0)
@@ -230,7 +262,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
-  InitBlocks::InitStartingBlock (system,forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+  InitBlocks::InitStartingBlock (system,forward, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
   if(!restart)
     sweepParams.set_block_iter() = 0;
 
@@ -238,7 +270,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   if (dmrginp.outputlevel() > 0)
     pout << "\t\t\t Starting block is :: " << endl << system << endl;
 
-  SpinBlock::store (forward, system.get_sites(), system); // if restart, just restoring an existing block --
+  SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root()); // if restart, just restoring an existing block --
   sweepParams.savestate(forward, system.get_sites().size());
   bool dot_with_sys = true;
   vector<int> syssites;
@@ -329,7 +361,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       if (!forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
 	dot_with_sys = false;
 
-      SpinBlock::store (forward, system.get_sites(), system);	 	
+      SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root());	 	
       syssites = system.get_sites();
       if (dmrginp.outputlevel() > 0)
          pout << "\t\t\t saving state " << syssites.size() << endl;
@@ -412,7 +444,7 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   dmrginp.datatransfer -> start();
   system.addAdditionalCompOps();
   dmrginp.datatransfer -> stop();
-  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), 
+  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), 
 				 DISTRIBUTED_STORAGE, true, true);
 
 

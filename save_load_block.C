@@ -20,29 +20,32 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 
 
-std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBlock& b)
+std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char* name)
 {
   Timer disktimer;
   std::string file;
 
+  //we only every save one set of spin blocks because they take up so much memory, so the spin block names are not indexed with states
   if (forward)
-    file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/SpinBlock-forward-" % sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
+    file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
   else
-    file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
+    file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
   
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Restoring block file :: " << file << endl;
 
   std::ifstream ifs(file.c_str(), std::ios::binary);
-  //coutbuf = &ifs;
+
+  int lstate =  left;
+  int rstate =  right;
+  StateInfo::restore(forward, sites, b.stateInfo, lstate, rstate);
   b.Load (ifs);
   ifs.close();
   //coutbuf = 0;
   return file;
 }
 
-
-void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b)
+void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char *name)
 {
   Timer disktimer;
   std::string file;
@@ -58,12 +61,17 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b)
     else
       file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % mpigetrank() % ".tmp" );
   }
-
+  
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Saving block file :: " << file << endl;
 
 
   std::ofstream ofs(file.c_str(), std::ios::binary);
+
+  int lstate =  left;
+  int rstate =  right;
+  StateInfo::store(forward, sites, b.stateInfo, lstate, rstate);
+
   b.Save (ofs);
   ofs.close();
   //pout << "\t\t\t block save disk time " << disktimer.elapsedwalltime() << " " << disktimer.elapsedcputime() << endl;

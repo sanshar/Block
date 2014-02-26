@@ -268,6 +268,7 @@ class Input {
   const noiseTypes &noise_type() const {return m_noise_type;}
   const bool &set_Sz() const {return m_set_Sz;}
   const algorithmTypes &algorithm_method() const { return m_algorithm_type; }
+  algorithmTypes &set_algorithm_method() { return m_algorithm_type; }
   int twodot_to_onedot_iter() const { return m_twodot_to_onedot_iter; }
   std::vector< std::map<SpinQuantum, int> >& get_quantaToKeep() { return m_quantaToKeep;}
   const std::vector<int> &hf_occupancy() const { return m_hf_occupancy; }

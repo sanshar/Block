@@ -29,7 +29,7 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   sweepParams.set_sweep_parameters();
 
   SpinBlock system;
-  InitBlocks::InitStartingBlock(system, true, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
+  InitBlocks::InitStartingBlock(system, true, 0, 0, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
   int numsites = dmrginp.spinAdapted() ? dmrginp.last_site() : dmrginp.last_site()/2;
   int forwardsites = numsites/2+numsites%2;
   int backwardsites = numsites - forwardsites;
@@ -49,7 +49,7 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
 
 
   SpinBlock environment;
-  InitBlocks::InitStartingBlock(environment, false, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
+  InitBlocks::InitStartingBlock(environment, false, 0, 0, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
   cout << environment<<endl;
   for (int i=0;i <backwardsites-1; i++) {
     SpinBlock envdot(numsites-2-i, numsites-2-i);

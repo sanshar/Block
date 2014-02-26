@@ -59,7 +59,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 
   if (onedot && !dot_with_sys)
   {
-    InitBlocks::InitNewSystemBlock(System, sysDot, newsystem, sysDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true);
+    InitBlocks::InitNewSystemBlock(System, sysDot, newsystem, currentRoot, currentRoot, sysDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true);
     InitBlocks::InitBigBlock(newsystem, environment, newbig); 
     for (int i=0; i<nroots&& mpigetrank()==0; i++) 
     {
@@ -110,7 +110,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 
   SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix);
   for (int i=0; i<nroots; i++) {
-    int state = nroots==1 ? currentRoot : i;
+    int state = currentRoot!=-1 ? currentRoot : i;
     SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix, state);
     wave_solutions[i].SaveWavefunctionInfo (newbig.stateInfo, newbig.leftBlock->sites, state);
   }
@@ -119,18 +119,18 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
     mcheck("after noise and calculation of density matrix");
 }
 
-double SpinBlock::makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates)
+double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates)
 {
   // find and sort weight info
-  DensityMatrix transformmatrix;
-  transformmatrix.allocate(stateInfo);
+  DensityMatrix transformmatrix = tracedMatrix;
+
   std::vector<DiagonalMatrix> eigenMatrix;
   diagonalise_dm(tracedMatrix, transformmatrix, eigenMatrix);
 
   vector<pair<int, int> > inorderwts;
   vector<vector<int> > wtsbyquanta;
   
-  int sys_dot_size = *get_sites().rbegin ()+1 ;
+
   sort_weights(eigenMatrix, inorderwts, wtsbyquanta);
   
   
@@ -143,7 +143,7 @@ double SpinBlock::makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& 
     pout << "\t\t\t total states using dm and quanta " << totalstatesbydm << " " << totalstatesbyquanta << endl;
   
   return assign_matrix_by_dm(rotateMatrix, eigenMatrix, transformmatrix, inorderwts, wtsbyquanta, totalstatesbydm, 
-			      totalstatesbyquanta, size(), dmrginp.last_site()-size());
+			     totalstatesbyquanta, 0, 0);
 }
 
 }

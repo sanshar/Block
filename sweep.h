@@ -22,10 +22,15 @@ namespace Sweep
   void fullci(double sweep_tol);
   void tiny(double sweep_tol);
 
+  void CanonicalizeWavefunction(SweepParams &sweepParams, const bool &forward, int currentstate);
+  void InitializeStateInfo(SweepParams &sweepParams, const bool &forward, int currentstate);
+  void InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward, int currentstate);
+
 #ifdef USE_BTAS
-  void saveOverlapMatrices(int currentState, const std::vector<int>& sites, StateInfo& leftState, StateInfo& rightState);
-  void getLowerStatesBlockRow(int currentState, const std::vector<int>& sites, const std::vector<int>& complementSites, std::vector<Wavefunction>& lowerStates, const StateInfo& leftState, const StateInfo& rightState);
-  void getLowerStatesBlockCol(int currentState, const std::vector<int>& sites, const std::vector<int>& complementSites, std::vector<Wavefunction>& lowerStates, const StateInfo& leftState, const StateInfo& rightState);
+  void CalculateOverlaps(SweepParams &sweepParams, const bool &forward, int i, int j);
+  void saveUpdatedLocalOverlapMatrix(int currentState, const std::vector<int>& sites, StateInfo& leftState, StateInfo& rightState);
+  void getLowerStatesBlockRow(int currentState, const std::vector<int>& sites, const std::vector<int>& complementSites, std::vector<Wavefunction>& lowerStates, const StateInfo& leftState, const StateInfo& rightState, const vector<StateInfo>& stateInfoi);
+  void getLowerStatesBlockCol(int currentState, const std::vector<int>& sites, const std::vector<int>& complementSites, std::vector<Wavefunction>& lowerStates, const StateInfo& leftState, const StateInfo& rightState, const vector<StateInfo>& stateInfoi);
 #endif
 };
 }

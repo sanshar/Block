@@ -68,20 +68,15 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
       solution.resize(nroots);
       multiply_h davidson_f(big, onedot);
       GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise, currentRoot); 
-      //cout << solution[0]<<endl<<endl;
-      //cout << lowerStates[0]<<endl<<endl;
-      if(lowerStates.size() != 0)
-	cout << "overlap in "<<DotProduct(solution[0], lowerStates[0])<<"  "<<DotProduct(solution[0], solution[0])<<"  "<<DotProduct(lowerStates[0], lowerStates[0])<<endl;
-      /*
-	Wavefunction sigma=solution[0];
-	sigma.Clear();
-	davidson_f(solution[0], sigma);
-	cout <<"energy "<<DotProduct(sigma, solution[0])<<endl;
-      */
+
+      for (int istate=0; istate<lowerStates.size(); istate++) 
+      for (int jstate=istate+1; jstate<lowerStates.size(); jstate++) {
+	double overlap = DotProduct(lowerStates[istate], lowerStates[jstate]);
+	ScaleAdd(-overlap/DotProduct(lowerStates[istate], lowerStates[istate]), lowerStates[istate], lowerStates[jstate]);
+      }
+	
       Linear::block_davidson(solution, e, tol, warmUp, davidson_f, useprecond, currentRoot, lowerStates);
-      if(lowerStates.size() != 0)
-	cout << "overlap out "<<DotProduct(solution[0], lowerStates[0])<<"  "<<DotProduct(solution[0], solution[0])<<"  "<<DotProduct(lowerStates[0], lowerStates[0])<<endl;
-      
+
     }
     else {
       solution.resize(1);

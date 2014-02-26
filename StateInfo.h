@@ -100,8 +100,8 @@ class StateInfo
   int getquantastates(int i) {return quantaStates.at(i);}
   int getquantastates(int i) const {return quantaStates.at(i);}
   void UnMapQuantumState (const int QS, const int secondQSTotal, int& firstQS, int& secondQS) const;
-  static void store(bool forward, const vector<int>& sites, const vector<StateInfo>& states);
-  static void restore(bool forward, const vector<int>& sites, vector<StateInfo>& states);
+  static void restore(bool forward, const vector<int>& sites, StateInfo& states, int left, int right);
+  static void store(bool forward, const vector<int>& sites, StateInfo& states, int left, int right);
 
 };
 }
