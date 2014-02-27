@@ -49,6 +49,18 @@ void makeStateInfo(StateInfo& s, int site)
       ladders.push_back(std::vector<Csf>(1,dets[j]));
   }
   s = StateInfo(dets);
+
+  if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0 && dmrginp.spinAdapted() && site == 0)
+  {
+    SpinQuantum sq = dmrginp.molecule_quantum();
+    sq = SpinQuantum(sq.get_s().getirrep(), sq.get_s(), IrrepSpace(0));
+    int qs = 1, ns = 1;
+    StateInfo addstate(ns, &sq, &qs), newstate; 
+
+    TensorProduct(s, addstate, newstate, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
+    s = newstate;
+  }
+
 }
 
 
@@ -64,6 +76,7 @@ void getComplementarySites(std::vector<int> &sites, std::vector<int> &complement
 //reads the overlap matrix 
 void readOverlap(const std::vector<int>& sites, btas::STArray<double, 2>& Overlap, int iState, int currentState)
 {
+  /*
     if (sites.size() == 1) {
       btas::TVector<btas::Dshapes,2>overlapShape; 		     
       overlapShape[0]=std::vector<int>(3,1); overlapShape[1] = std::vector<int>(3,1);
@@ -74,8 +87,9 @@ void readOverlap(const std::vector<int>& sites, btas::STArray<double, 2>& Overla
       }
     }
     else {    
+  */
       LoadOverlapTensor(sites, Overlap, iState, currentState);
-    }
+      //}
 
 }
 
@@ -281,7 +295,7 @@ void SpinAdapted::Sweep::CanonicalizeWavefunction(SweepParams &sweepParams, cons
 
     TensorProduct(newState1, envstate, bigstate, PARTICLE_SPIN_NUMBER_CONSTRAINT);
 
-    if (sweepParams.get_block_iter() == 0)
+    if (sweepParams.get_block_iter() == 0) 
       GuessWave::transpose_previous_wavefunction(w, bigstate, complementarySites, spindotsites, currentstate, true, true);
     else 
       GuessWave::transform_previous_wavefunction(w, bigstate, oldsites, oldcomplement, currentstate, true, true);
@@ -393,7 +407,7 @@ void Sweep::InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward,
     btas::TVector<btas::Dshapes, 2> overlapShape; overlapShape[0]=stateInfo1.quantaStates; overlapShape[1] = stateInfo2.quantaStates;
     btas::STArray<double, 2> Overlap(overlapShape, false); //O(ni, mi) matrix
     
-    for (int i=0; i<3; i++) {
+    for (int i=0; i<stateInfo1.quanta.size(); i++) {
       Overlap.reserve(btas::make_array(i,i));
       Overlap.find(btas::make_array(i,i))->second->operator()(0,0) = 1;
     }

@@ -53,9 +53,9 @@ cd ../
 echo "testing state specific excited states..."
 cd hubbard_stateSpecific
 mpirun -np 2 ../../block.spin_adapted dmrg.conf >dmrg.out
-python ../test_energy.py 4  1.0e-6 -6.5681921602  -6.1249350013  -5.8263112792  -4.9646364598
+python ../test_energy.py 4  1.0e-6 -6.40967756746  -5.41250077836  -5.41250066326  -5.28833492183
 mpirun -np 2 ../../block.spin_adapted dmrg_statespecific.conf >dmrg.out
-python ../test_energy.py 4  1.0e-6 -6.5681921602  -6.1249350013  -5.8263112792  -4.9646364598
+python ../test_energy.py 4  1.0e-6 -6.40967756746  -5.41250077836  -5.41250066326  -5.28833492183
 cd ../
 
 
