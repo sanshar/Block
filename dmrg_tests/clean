@@ -8,4 +8,5 @@ find . -name "onepdm.*" |xargs rm >/dev/null 2>&1
 find . -name "twopdm.*" |xargs rm >/dev/null 2>&1
 find . -name "Restart*" |xargs rm >/dev/null 2>&1
 find . -name "onepdm_fromtpdm" |xargs rm >/dev/null 2>&1
+find . -name "pairmat.*" |xargs rm >/dev/null 2>&1
 find . -name "dmrg.out" |xargs rm >/dev/null 2>&1

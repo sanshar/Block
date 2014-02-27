@@ -239,7 +239,7 @@ void SpinBlock::build_operators()
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core()) {
-	it->second->build_operators(*this);
+	    it->second->build_operators(*this);
       }
     }
 }

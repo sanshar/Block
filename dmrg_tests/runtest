@@ -46,5 +46,15 @@ python test_twopdm_withe.py
 python test_onepdm_withtwopdm.py 
 cd ../
 
+# this test is for non-particle number conserving BCS calculations
+# check the ground state energy, onepdm, and pairing matrix
+echo "testing energy for bcs calculation..."
+cd bcs
+ ../../block.spin_adapted dmrg.conf >dmrg.out
+python ../test_energy.py 1  1.0e-6 -1.4816808342
+echo "testing onepdm and pairing matrix for bcs calculation..."
+python ../test_onepdm.py onepdm.0.0 ref_onepdm.0.0 1e-7
+python ../test_onepdm.py spatial_pairmat.0.0 spat_pairmat.0.0 1e-7
+cd ../
 
 ./clean
