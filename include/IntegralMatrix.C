@@ -718,7 +718,6 @@ double SpinAdapted::CCCDArray::operator()(int i, int j, int k, int l) const {
   if (zero) {
     return 0.;
   }
-
   i=i/2;
   j=j/2;
   k=k/2;
@@ -745,10 +744,10 @@ double SpinAdapted::CCCDArray::operator()(int i, int j, int k, int l) const {
     return factor * repA(abs(n), m);
   } else {
     factor *= (n>0) ? 1:-1;
-    if (spin_i == -1) {
-      return factor * repB(abs(n), m);
-    } else {
+    if (spin == -1) {
       return factor * repA(abs(n), m);
+    } else {
+      return factor * repB(abs(n), m);
     }
   }
 }
