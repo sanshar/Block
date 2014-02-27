@@ -51,7 +51,6 @@ class Input {
   SpinQuantum m_molecule_quantum;
   int m_total_spin;
   int m_guess_permutations;
-  bool m_doStateSpecific;
   bool m_stateSpecific; //when targetting excited states we switch from state 
   //average to statespecific 
 
@@ -138,7 +137,7 @@ class Input {
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & m_thrds_per_node & m_spinAdapted & m_stateSpecific & m_doStateSpecific;
+    ar & m_thrds_per_node & m_spinAdapted & m_stateSpecific ;
     ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz;
     ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occ_user & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule & m_reorder;
@@ -234,8 +233,8 @@ class Input {
   boost::shared_ptr<cumulTimer> s1time; 
   boost::shared_ptr<cumulTimer> s2time; 
 
-  const bool& doStateSpecific() const {return m_doStateSpecific;}
-  bool& doStateSpecific() {return m_doStateSpecific;}
+  //const bool& doStateSpecific() const {return m_doStateSpecific;}
+  //bool& doStateSpecific() {return m_doStateSpecific;}
   const bool& setStateSpecific() const {return m_stateSpecific;}
   bool& setStateSpecific() {return m_stateSpecific;}
   const orbitalFormat& orbformat() const {return m_orbformat;}

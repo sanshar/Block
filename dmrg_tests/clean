@@ -1,6 +1,7 @@
 find . -name "Spin*" |xargs rm >/dev/null 2>&1
 find . -name "StateInfo*" |xargs rm >/dev/null 2>&1
 find . -name "wave*" |xargs rm >/dev/null 2>&1
+find . -name "Overlap*" |xargs rm >/dev/null 2>&1
 find . -name "dmrg.e" |xargs rm >/dev/null 2>&1
 find . -name "spatial*" |xargs rm >/dev/null 2>&1
 find . -name "Rotation*" |xargs rm >/dev/null 2>&1

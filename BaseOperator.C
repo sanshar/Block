@@ -237,7 +237,7 @@ void SparseMatrix::Normalise (int* success)
   if(normalisation > NUMERICAL_ZERO)
     Scale(1./sqrt(normalisation), *this);
   else {
-    pout << "\t\t\t Warning :: Didn't Normalise, because norm is too small" << endl;
+    pout << "\t\t\t Warning :: Didn't Normalise, because norm is " << normalisation<<endl;
     *success = 1; //not successful in normlaising                                                                                  
   }
 }

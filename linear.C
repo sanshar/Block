@@ -304,7 +304,8 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
           double rnorm = DotProduct(r,r);
           if (rnorm > normtol) {
             converged_roots = i;
-            cout << "\t\t\t going back to converged root "<<i<<"  "<<rnorm<<" > "<<normtol<<endl;
+	    if (dmrginp.outputlevel() > 0)
+	      pout << "\t\t\t going back to converged root "<<i<<"  "<<rnorm<<" > "<<normtol<<endl;
             continue;
           }
         }

@@ -165,7 +165,6 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
       newSysSites = newSystem.get_sites();
     for (int i=0; i<sweepParams.current_root(); i++)  {
       lowerStates[i].LoadWavefunctionInfo(stateInfow[i], newSysSites, i);
-
       if (sweepParams.get_block_iter() == 0)
 	GuessWave::transpose_previous_wavefunction(lowerStates[i], stateInfow[i], newSystem.get_complementary_sites(), spindotsites, i, sweepParams.get_onedot(), true);
       else 
@@ -179,7 +178,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
       operatorfunctions::MultiplyProduct(lowerStates[i], Transpose(const_cast<Wavefunction&> (lowerStates[i])), tracedMatrix, 1.0);
       rotateMatrix.clear();
       if (!mpigetrank())
-	double error = makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
+	double error = makeRotateMatrix(tracedMatrix, rotateMatrix, stateInfow[i].rightStateInfo->totalStates, sweepParams.get_keep_qstates());
       SaveRotationMatrix (newSysSites, rotateMatrix, i);
 
     }
@@ -220,7 +219,8 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   dmrginp.operrotT -> stop();
 
 #ifdef USE_BTAS
-  saveUpdatedLocalOverlapMatrix(sweepParams.current_root(), newSystem.get_sites(), storeStates[0], storeStates[2]);
+  if (mpigetrank() == 0)
+    saveUpdatedLocalOverlapMatrix(sweepParams.current_root(), newSystem.get_sites(), storeStates[0], storeStates[2]);
 #endif
 
   if (dmrginp.outputlevel() > 0)
@@ -244,6 +244,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 
   SpinBlock system;
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
+
   std::vector<double> finalEnergy(nroots,1.0e10);
   std::vector<double> finalEnergy_spins(nroots,0.);
   double finalError = 0.;
@@ -329,24 +330,26 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       
       //Need to substitute by?
       if (!(warmUp && (sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG))){
-      for(int j=0;j<nroots;++j)
-      {
+	for(int j=0;j<nroots;++j)
+	{
+	  int istate = dmrginp.setStateSpecific() ? sweepParams.current_root() : j;
+	  
 #ifndef MOLPRO
-	pout << "\t\t\t Total block energy for State [ " << j << 
-	  " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+	  pout << "\t\t\t Total block energy for State [ " << istate << 
+	    " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
 #else 
-	//We might want to relax the output restrictions here, so it prints out with outputlevel=0
-	if (dmrginp.outputlevel() < 0) {
-	  pout << "\t\t\t Total block energy for State [ " << j << 
-	    " ] with " << sweepParams.get_keep_states()<<" States :: " << fixed << setprecision(10) << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
-	}
+	  //We might want to relax the output restrictions here, so it prints out with outputlevel=0
+	  if (dmrginp.outputlevel() < 0) {
+	    pout << "\t\t\t Total block energy for State [ " << istate << 
+	      " ] with " << sweepParams.get_keep_states()<<" States :: " << fixed << setprecision(10) << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+	  }
 #endif
-      }
-      
-      finalEnergy_spins = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy_spins() : finalEnergy_spins);
-      finalEnergy = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy() : finalEnergy);
-      finalError = max(sweepParams.get_lowest_error(),finalError);
-      pout << endl;
+	}
+	
+	//this criteria should work for state average or state specific because the lowest sweep energy is always the lowest of the average
+	finalEnergy_spins = ( (std::accumulate(sweepParams.get_lowest_energy().begin(), sweepParams.get_lowest_energy().end(),0.0) < std::accumulate(finalEnergy.begin(), finalEnergy.end(),0.0)) ? sweepParams.get_lowest_energy_spins() : finalEnergy_spins);
+	finalEnergy = ((std::accumulate(sweepParams.get_lowest_energy().begin(), sweepParams.get_lowest_energy().end(),0.0) < std::accumulate(finalEnergy.begin(), finalEnergy.end(),0.0)) ? sweepParams.get_lowest_energy() : finalEnergy);
+	finalError = max(sweepParams.get_lowest_error(),finalError);
       }
       
       system = newSystem;
@@ -360,11 +363,11 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 	dot_with_sys = false;
       if (!forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
 	dot_with_sys = false;
-
+      
       SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root());	 	
       syssites = system.get_sites();
       if (dmrginp.outputlevel() > 0)
-         pout << "\t\t\t saving state " << syssites.size() << endl;
+	pout << "\t\t\t saving state " << syssites.size() << endl;
       ++sweepParams.set_block_iter();
       
 #ifndef SERIAL
@@ -375,15 +378,21 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       if (dmrginp.outputlevel() > 0)
          mcheck("at the end of sweep iteration");
     }
-  for(int j=0;j<nroots;++j)
-    pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
+
+  for(int j=0;j<nroots;++j) {
+    int istate = dmrginp.setStateSpecific() ? sweepParams.current_root() : j;
+    pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << istate 
 	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
+  }
+
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
   sweepParams.set_largest_dw() = finalError;
+
   for(int j=0;j<nroots;++j){
+    int istate = dmrginp.setStateSpecific() ? sweepParams.current_root() : j;
     if (mpigetrank() == 0) {
 #ifndef MOLPRO
-      printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
+      printf("\t\t\t M = %6i  state = %4i  Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), istate, finalError, finalEnergy[j]+dmrginp.get_coreenergy());
 #else 
       //printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
       xout << "\t\t\t M = " <<  setw(6) << sweepParams.get_keep_states() ; 
@@ -402,10 +411,23 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     {
       std::string efile;
       efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
-      FILE* f = fopen(efile.c_str(), "wb");
-      
-      for(int j=0;j<nroots;++j) {
-	//double e = finalEnergy[j]+dmrginp.get_coreenergy(); 
+
+      //if state specific only write back the current energy to the dmrg.e file and leave the rest unchanged
+      if (dmrginp.setStateSpecific() ) {
+	sweepParams.set_lowest_energy().resize(dmrginp.nroots());
+	sweepParams.set_lowest_energy()[sweepParams.current_root()] = sweepParams.get_lowest_energy()[0];
+	FILE* fin = fopen(efile.c_str(), "rb");
+	for(int j=0;j<dmrginp.nroots();++j) {
+	  double e;
+	  fread( &e, 1, sizeof(double), fin);
+	  if (j != sweepParams.current_root())
+	    sweepParams.set_lowest_energy()[j] = e - dmrginp.get_coreenergy();
+	}
+	fclose(fin);
+      }
+
+      FILE* f = fopen(efile.c_str(), "wb");      
+      for(int j=0;j<dmrginp.nroots();++j) {
 	double e = sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy(); //instead of the lowest energy of the sweep, we record the last energy of the sweep
 	fwrite( &e, 1, sizeof(double), f);
       }
@@ -413,7 +435,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     }
   }
 
-  return finalEnergy[0];
+  return std::accumulate(finalEnergy.begin(), finalEnergy.end(),0.0)/dmrginp.nroots(sweepParams.get_sweep_iter());
 }
 
 void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem)

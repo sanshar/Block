@@ -265,6 +265,23 @@ void SpinAdapted::StateInfo::UnMapQuantumState (const int QS, const int secondQS
   secondQS = QS % secondQSTotal;
 }
 
+//takes the old state and a rotaition matrix and gives back a rotated renormalized state
+void SpinAdapted::StateInfo::transform_state(std::vector<Matrix>& rotateMatrix, StateInfo& stateInfo, StateInfo& newStateInfo)
+{
+  std::vector<SpinQuantum> newQuanta;
+  std::vector<int> newQuantaStates;
+  std::vector<int> newQuantaMap;
+  for (int Q = 0; Q < rotateMatrix.size (); ++Q)
+    {
+      if (rotateMatrix [Q].Ncols () != 0)
+        {
+          newQuanta.push_back (stateInfo.quanta [Q]);
+          newQuantaStates.push_back (rotateMatrix [Q].Ncols ());
+          newQuantaMap.push_back (Q);
+        }
+    }
+  newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
+}
 
 void SpinAdapted::StateInfo::restore(bool forward, const vector<int>& sites, StateInfo& stateInfo, int left, int right)
 {
@@ -289,6 +306,7 @@ void SpinAdapted::StateInfo::restore(bool forward, const vector<int>& sites, Sta
 
 void SpinAdapted::StateInfo::store(bool forward, const vector<int>& sites, StateInfo& stateInfo, int left, int right)
 {
+  
   std::string file;
   int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
   if (dmrginp.spinAdapted()) {

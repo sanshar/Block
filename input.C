@@ -71,7 +71,6 @@ void SpinAdapted::Input::initialize_defaults()
   m_calc_type = DMRG;
   m_solve_type = DAVIDSON;
   m_stateSpecific = false;
-  m_doStateSpecific = false;
 
   m_spinAdapted = true;
   m_sys_add = 1;
@@ -241,8 +240,13 @@ SpinAdapted::Input::Input(const string& config_name)
 	}	
 	  
       }
-      else if (boost::iequals(keyword, "statespecific"))
-	m_doStateSpecific = true;
+      else if (boost::iequals(keyword, "statespecific")) {
+	pout<<"--------------------------------------------------------------------"<<endl;
+	pout << "WARNING: THIS OPTION IMPLIES THAT A PREVIOUS DMRG CALCULATION HAS ALREADY BEEN PERFORMED"<<endl;
+	pout << "THIS CALCULATION WILL TAKE THE PREVIOUS WAVEFUNCTIONS AND REFINE THEM"<<endl;
+	pout<<"--------------------------------------------------------------------"<<endl;
+	m_stateSpecific = true;
+      }
       else if (boost::iequals(keyword, "lastM")) {
 	if(usedkey[LASTM] == 0) 
 	  usedkey_error(keyword, msg);
@@ -1447,6 +1451,10 @@ void SpinAdapted::Input::performSanityTest()
   if (m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter >= m_maxiter) {
     pout << "Switch from twodot to onedot algorithm cannot happen after maxiter"<<endl;
     pout << m_twodot_to_onedot_iter <<" < "<<m_maxiter<<endl;
+    abort();
+  }
+  if (m_algorithm_type != ONEDOT && m_stateSpecific == true) {
+    pout << "Only onedot algorithm is allowed with state specific calculation."<<endl;
     abort();
   }
 

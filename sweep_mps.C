@@ -52,23 +52,6 @@ void makeStateInfo(StateInfo& s, int site)
 }
 
 
-//takes the old state and a rotaition matrix and gives back a rotated renormalized state
-void transform_state(std::vector<Matrix>& rotateMatrix, StateInfo& stateInfo, StateInfo& newStateInfo)
-{
-  std::vector<SpinQuantum> newQuanta;
-  std::vector<int> newQuantaStates;
-  std::vector<int> newQuantaMap;
-  for (int Q = 0; Q < rotateMatrix.size (); ++Q)
-    {
-      if (rotateMatrix [Q].Ncols () != 0)
-        {
-          newQuanta.push_back (stateInfo.quanta [Q]);
-          newQuantaStates.push_back (rotateMatrix [Q].Ncols ());
-          newQuantaMap.push_back (Q);
-        }
-    }
-  newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
-}
 
 void getComplementarySites(std::vector<int> &sites, std::vector<int> &complementarySites) 
 {
@@ -208,8 +191,8 @@ void SpinAdapted::Sweep::saveUpdatedLocalOverlapMatrix(int currentState, const s
     }
     StateInfo leftStatei = *stateInfoi.leftStateInfo;
     StateInfo renormState1, renormState2;
-    transform_state(rotation1, *stateInfoi.leftStateInfo, renormState1);
-    transform_state(rotation2, leftState, renormState2);
+    SpinAdapted::StateInfo::transform_state(rotation1, *stateInfoi.leftStateInfo, renormState1);
+    SpinAdapted::StateInfo::transform_state(rotation2, leftState, renormState2);
 
     btas::TVector<btas::Dshapes, 2> overlapShape;
     btas::TVector<btas::Dshapes, 3> shape1, shape2, interShape;
@@ -292,7 +275,6 @@ void SpinAdapted::Sweep::CanonicalizeWavefunction(SweepParams &sweepParams, cons
     TensorProduct(stateInfo1, siteState, newState1, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
     newState1.CollectQuanta();
 
-    cout << newState1<<endl;
     Wavefunction w; w.set_deltaQuantum() = dmrginp.effective_molecule_quantum();
     w.set_onedot(true);
     StateInfo::restore(!forward, complementarySites, envstate, currentstate, currentstate);
@@ -315,14 +297,13 @@ void SpinAdapted::Sweep::CanonicalizeWavefunction(SweepParams &sweepParams, cons
     tracedMatrix.allocate(*bigstate.leftStateInfo);
     operatorfunctions::MultiplyProduct(w, Transpose(const_cast<Wavefunction&> (w)), tracedMatrix, 1.0);
     if (!mpigetrank())
-      double error = makeRotateMatrix(tracedMatrix, rotation1, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
+      double error = makeRotateMatrix(tracedMatrix, rotation1, envstate.totalStates, sweepParams.get_keep_qstates());
     SaveRotationMatrix (sites, rotation1, currentstate);
     
     StateInfo renormState1;
-    transform_state(rotation1, newState1, renormState1);
+    SpinAdapted::StateInfo::transform_state(rotation1, newState1, renormState1);
     StateInfo::store(forward, sites, renormState1, currentstate, currentstate);
     stateInfo1 = renormState1;
-    cout << stateInfo1<<endl;
     ++sweepParams.set_block_iter();
   }
   
@@ -370,7 +351,7 @@ void SpinAdapted::Sweep::InitializeStateInfo(SweepParams &sweepParams, const boo
     LoadRotationMatrix (sites, rotation1, currentstate);
     
     StateInfo renormState1;
-    transform_state(rotation1, newState1, renormState1);
+    SpinAdapted::StateInfo::transform_state(rotation1, newState1, renormState1);
     StateInfo::store(forward, sites, renormState1, currentstate, currentstate);
     stateInfo1 = renormState1;
     ++sweepParams.set_block_iter();
@@ -449,8 +430,8 @@ void Sweep::InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward,
       LoadRotationMatrix(sites, rotation2, istate);
       
       StateInfo renormState1, renormState2;
-      transform_state(rotation1, newState1, renormState1);
-      transform_state(rotation2, newState2, renormState2);
+      SpinAdapted::StateInfo::transform_state(rotation1, newState1, renormState1);
+      SpinAdapted::StateInfo::transform_state(rotation2, newState2, renormState2);
 
       btas::TVector<btas::Dshapes, 3> shape1, shape2, interShape;
       shape1[0] = stateInfo1.quantaStates; shape1[1] = siteState.quantaStates; shape1[2] = renormState1.quantaStates;

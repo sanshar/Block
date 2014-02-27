@@ -302,7 +302,7 @@ void GuessWave::guess_wavefunctions(std::vector<Wavefunction>& solution, Diagona
   const int nroots = solution.size();
 
   for(int i=0;i<nroots;++i) {
-    int state = currentState!=-1 ? currentState : i;
+    int state = dmrginp.setStateSpecific() ? currentState : i;
     guess_wavefunctions(solution[i], e, big, guesswavetype, onedot, state, transpose_guess_wave, additional_noise);
   }
 }

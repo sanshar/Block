@@ -102,7 +102,7 @@ class StateInfo
   void UnMapQuantumState (const int QS, const int secondQSTotal, int& firstQS, int& secondQS) const;
   static void restore(bool forward, const vector<int>& sites, StateInfo& states, int left, int right);
   static void store(bool forward, const vector<int>& sites, StateInfo& states, int left, int right);
-
+  static void transform_state(std::vector<Matrix>& rotateMatrix, StateInfo& stateInfo, StateInfo& newStateInfo);
 };
 }
 

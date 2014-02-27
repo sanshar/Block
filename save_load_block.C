@@ -38,7 +38,16 @@ std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBloc
 
   int lstate =  left;
   int rstate =  right;
-  StateInfo::restore(forward, sites, b.stateInfo, lstate, rstate);
+
+  if (mpigetrank() == 0) 
+    StateInfo::restore(forward, sites, b.stateInfo, lstate, rstate);
+
+#ifndef SERIAL
+    mpi::communicator world;
+    mpi::broadcast(world, b.stateInfo, 0);
+#endif
+
+
   b.Load (ifs);
   ifs.close();
   //coutbuf = 0;
@@ -70,7 +79,9 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b, int
 
   int lstate =  left;
   int rstate =  right;
-  StateInfo::store(forward, sites, b.stateInfo, lstate, rstate);
+
+  if (mpigetrank()==0) 
+    StateInfo::store(forward, sites, b.stateInfo, lstate, rstate);
 
   b.Save (ofs);
   ofs.close();
