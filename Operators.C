@@ -114,7 +114,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 	    		 + v_2(Ind2[0], Ind1[0], Ind2[1], Ind1[1]) + v_2(Ind1[0], Ind2[0], Ind1[1], Ind2[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
 	    }
 	    else if (comp == DD) {
-	      factor += 0.5*(v_2(Ind1[0], Ind1[1], Ind2[1], Ind2[0]) )*iSz1.at(i1)*iSz2.at(i2)/cleb;	  
+	      factor += 0.5*v_2(Ind1[0], Ind1[1], Ind2[1], Ind2[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;	  
 	    }
 	    else if (comp == CCD) {
 	      factor += 0.5*(v_2(Ind1[0], Ind1[1], Ind2[0], Ind1[2]) - v_2(Ind1[1], Ind1[0], Ind2[0], Ind1[2]) )*iSz1.at(i1)*iSz2.at(i2)/cleb;
@@ -129,7 +129,6 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 	    }
       }
   }
-  
   return factor;
 }
 
@@ -172,7 +171,9 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 	    }
 	    else if (comp == C) {
 	      factor += 0.5*v_1(Ind1[0], Ind2[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;
-	    }
+	    } else {
+          abort();
+        }
       }
   }
   return factor;

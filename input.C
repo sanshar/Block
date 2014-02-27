@@ -1114,7 +1114,6 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     } 
     else {
       int I = reorder.at(i);int J = reorder.at(j);int K = reorder.at(k);int L = reorder.at(l);
-      //v2(2*I+AOrbOffset,2*K+BOrbOffset,2*J+AOrbOffset,2*L+BOrbOffset) = value;
       v2(2*I+BOrbOffset,2*K+AOrbOffset,2*J+BOrbOffset,2*L+AOrbOffset) = value;
     }
     msg.resize(0);
