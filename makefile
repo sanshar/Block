@@ -6,11 +6,11 @@
 
 
 #specify boost include file
-BOOSTINCLUDE = /usr/include/boost
+BOOSTINCLUDE = /home/boxiao/usr/include
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/usr/lib/ -lboost_serialization -lboost_system -lboost_filesystem
-LAPACKBLAS = -L/opt/intel/mkl/lib/intel64/ -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+BOOSTLIB = -L/home/boxiao/usr/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+LAPACKBLAS = -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
@@ -74,7 +74,7 @@ OPT+=$(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) -DFAST_MTP $(MOLPRO_BLO
 
 ifeq ($(USE_MPI), yes)
 	MPI_OPT = 
-	MPI_LIB = -L$(BOOSTINCLUDE)/lib/ -lboost_mpi
+	MPI_LIB = -lboost_mpi
    LIBS += $(MPI_LIB)
 	CXX = $(MPICXX)
 endif
@@ -111,7 +111,7 @@ libqcdmrg.a : $(OBJ_spin_library)
 	$(RANLIB) $@
 
 $(EXECUTABLE) : $(OBJ_spin_adapted) $(NEWMATLIB)/libnewmat.a
-	$(CXX)   $(FLAGS) $(OPT) -o  $(EXECUTABLE) $(OBJ_spin_adapted) $(LIBS) -lnewmat
+	$(CXX)   $(FLAGS) $(OPT) -o  $(EXECUTABLE) $(OBJ_spin_adapted) $(LIBS)
 
 $(NEWMATLIB)/libnewmat.a : 
 	cd $(NEWMATLIB) && $(MAKE) -f makefile libnewmat.a
