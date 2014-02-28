@@ -205,21 +205,17 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
           vector<int>& Ind1 = op1.opindices[i1], Ind2 = op2.opindices[i2]; 
           if (comp == CD) {
             if (op2.dn() == 2) {
-              factor += (1./6)*(vcccd(Ind1[0],Ind2[0],Ind2[1],Ind1[1]) - vcccd(Ind2[0],Ind1[0],Ind2[1],Ind1[1])
-                  +vcccd(Ind2[0],Ind2[1],Ind1[0],Ind1[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
+              factor += 0.5*vcccd(Ind1[0],Ind2[0],Ind2[1],Ind1[1])*iSz1.at(i1)*iSz2.at(i2)/cleb;
             } else {
-              factor += (1./6)*(vcccd(Ind2[1],Ind2[0],Ind1[1],Ind1[0])-vcccd(Ind2[1],Ind1[1],Ind2[0],Ind1[0])+vcccd(Ind1[1],Ind2[1],Ind2[0],Ind1[0]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
+              factor += 0.5*vcccd(Ind2[1],Ind2[0],Ind1[1],Ind1[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;
             }
           } else if (comp == DD) {
-            factor += (1./6)*(vcccd(Ind1[0],Ind1[1],Ind2[0],Ind2[1]) - vcccd(Ind1[0],Ind2[0],Ind1[1],Ind2[1])
-                +vcccd(Ind2[0],Ind1[0],Ind1[1],Ind2[1]))*iSz1.at(i1)*iSz2.at(i2)/cleb;
+            factor += 0.5*vcccd(Ind1[0],Ind1[1],Ind2[0],Ind2[1])*iSz1.at(i1)*iSz2.at(i2)/cleb;
           } else if (comp == CCD) { // two cases CDD and CCC
             if (op1.dn() == 3) { // CCC
               factor += (1./6) * vcccd(Ind1[0], Ind1[1], Ind1[2], Ind2[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;
             } else { // CDD
-              factor += (1./6) * (vcccd(Ind2[0], Ind1[2], Ind1[1], Ind1[0]) - vcccd(Ind1[2], Ind2[0], Ind1[1], Ind1[0]) 
-              + vcccd(Ind1[2], Ind1[1], Ind2[0], Ind1[0])) *iSz1.at(i1)*iSz2.at(i2)/cleb;
-              //factor += 0.5 * vcccd(Ind2[0], Ind1[2], Ind1[1], Ind1[0]) *iSz1.at(i1)*iSz2.at(i2)/cleb; // FIXME is this right?
+              factor += 0.5 * vcccd(Ind2[0], Ind1[2], Ind1[1], Ind1[0]) *iSz1.at(i1)*iSz2.at(i2)/cleb;
             }
           } else {
             abort();
@@ -263,15 +259,8 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
           vector<int>& Ind1 = op1.opindices[i1], Ind2 = op2.opindices[i2]; 
           if (comp == DD) {
             factor += 0.25 * vcccc(Ind1[0], Ind1[1], Ind2[0], Ind2[1]) *iSz1.at(i1)*iSz2.at(i2)/cleb;
-            //factor += (1./24) * (vcccc(Ind1[0], Ind1[1], Ind2[0], Ind2[1]) 
-            //    - vcccc(Ind1[0], Ind2[0], Ind1[1], Ind2[1]) + vcccc(Ind1[0], Ind2[0], Ind2[1], Ind1[1])
-            //    + vcccc(Ind2[0], Ind1[0], Ind1[1], Ind2[1]) - vcccc(Ind2[0], Ind1[0], Ind2[1], Ind1[1])
-            //    + vcccc(Ind2[0], Ind2[1], Ind1[0], Ind1[1]))* iSz1.at(i1)*iSz2.at(i2)/cleb;
           } else if (comp == CCD) {
             factor += (1./6) * vcccc(Ind2[0], Ind1[2], Ind1[1], Ind1[0]) * iSz1.at(i1)*iSz2.at(i2)/cleb;
-            //factor += (1./24) * (vcccc(Ind2[0], Ind1[2], Ind1[1], Ind1[0])
-            //    - vcccc(Ind1[2], Ind2[0], Ind1[1], Ind1[0]) + vcccc(Ind1[2], Ind1[1], Ind2[0], Ind1[0])
-            //    - vcccc(Ind1[2], Ind1[1], Ind1[0], Ind2[0]))* iSz1.at(i1)*iSz2.at(i2)/cleb;
           } else {
             abort();
           }
@@ -1426,18 +1415,16 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
 	      int cK = cv[2];
 	      int dL = dv[0];
 	      int parity = s1.trace(s2.d(dL).c(cK).c(cJ).c(cI));
-	      double factor = parity*d1*d2/6;
-          matrixE += factor*(v_cccd(cI,cJ,cK,dL)-v_cccd(cI,cK,cJ,dL)+v_cccd(cK,cI,cJ,dL)
-              -v_cccd(cJ,cI,cK,dL)+v_cccd(cJ,cK,cI,dL)-v_cccd(cK,cJ,cI,dL));
+	      double factor = parity*d1*d2;
+          matrixE += factor*v_cccd(cI,cJ,cK,dL);
         } else if (dmrginp.hamiltonian() == BCS && cv.size() == 1 && dv.size() == 3) {
           int cI = cv[0];
 	      int dJ = dv[0];
 	      int dK = dv[1];
 	      int dL = dv[2];
 	      int parity = s1.trace(s2.d(dL).d(dK).d(dJ).c(cI));
-	      double factor = parity*d1*d2/6;
-          matrixE += factor*(v_cccd(dL,dK,dJ,cI)-v_cccd(dL,dJ,dK,cI)+v_cccd(dJ,dL,dK,cI)
-              -v_cccd(dK,dL,dJ,cI)+v_cccd(dK,dJ,dL,cI)-v_cccd(dJ,dK,dL,cI));
+	      double factor = parity*d1*d2;
+          matrixE += factor*v_cccd(dL,dK,dJ,cI);
         } else if (dmrginp.hamiltonian() == BCS && cv.size() == 2 && dv.size() == 0) {
           // from v_cc pairing
           int cI = cv[0];
@@ -1454,9 +1441,8 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
               int K = b->get_sites()[kl];
               s1 = it1->first; s2 = it2->first;
               parity = s1.trace(s2.d(K).c(K).c(cJ).c(cI));
-              factor = parity*d1*d2/6;
-              matrixE += factor*(v_cccd(cI,cJ,K,K)-v_cccd(cI,K,cJ,K)+v_cccd(K,cI,cJ,K)
-                  -v_cccd(cJ,cI,K,K)+v_cccd(cJ,K,cI,K)-v_cccd(K,cJ,cI,K));
+              factor = parity*d1*d2;
+              matrixE += factor*v_cccd(cI,cJ,K,K);
             }
           }
         } else if (dmrginp.hamiltonian() == BCS && cv.size() == 0 && dv.size() == 2) {
@@ -1476,8 +1462,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
               s1 = it1->first; s2 = it2->first;
               parity = s1.trace(s2.d(dI).d(dJ).d(K).c(K));
               factor = parity*d1*d2/6;
-              matrixE += factor*(v_cccd(dI,dJ,K,K)-v_cccd(dI,K,dJ,K)+v_cccd(K,dI,dJ,K)
-                  -v_cccd(dJ,dI,K,K)+v_cccd(dJ,K,dI,K)-v_cccd(K,dJ,dI,K));
+              matrixE += factor*v_cccd(dI,dJ,K,K);;
             }
           }
         }
