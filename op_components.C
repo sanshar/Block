@@ -71,7 +71,21 @@ namespace SpinAdapted {
   }
   
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// -------------------- C_S1 ---------------------------  
+  
+  template<> std::vector< std::vector<int> > Op_component<Des>::get_array() const 
+    {
+      std::vector<int> orbs(1);
+      std::vector< std::vector<int> > ret_val(m_op.local_nnz());
+      for (int i=0; i<m_op.local_nnz(); i++)
+	{
+	  orbs[0] = m_op.get_local_indices()[i];
+	  ret_val[i] = orbs;
+	}
+      return ret_val;
+    }
+  
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// -------------------- D_S1 ---------------------------  
 
   template<> string Op_component<Des>::get_op_string() const {
     return "DES";

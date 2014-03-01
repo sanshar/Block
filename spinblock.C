@@ -227,6 +227,10 @@ void SpinBlock::build_virtual_operators()
         // Input file for operators written to disk on dotblock
         std::string dotfile = get_rightBlock()->ops[ot]->get_filename();
         // Build operators
+//FIXME
+//if (ot == CRE) cout << "Is CRE local? " << ops[CRE]->is_local() << "; rank = " << mpigetrank() << endl;
+//if (ot == CRE) cout << "Build C operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
+//if (ot == DES) cout << "Build D operators on p" << mpigetrank() << " = " << ops[DES]->get_size() << " local, " << ops[DES]->size() << " global\n";
         it->second->build_operators(*this, ofile, sysfile, dotfile);
       }
     }
@@ -247,6 +251,10 @@ void SpinBlock::build_operators()
         // Input file for operators written to disk on dotblock
         std::string dotfile = get_rightBlock()->ops[ot]->get_filename();
         // Build operators
+//FIXME
+//if (ot == CRE) cout << "Is CRE local? " << ops[CRE]->is_local() << "; rank = " << mpigetrank() << endl;
+//if (ot == CRE) cout << "Build C operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
+//if (ot == DES) cout << "Build D operators on p" << mpigetrank() << " = " << ops[DES]->get_size() << " local, " << ops[DES]->size() << " global\n";
         it->second->build_operators(*this, ofile, sysfile, dotfile);
       }
     }
@@ -260,9 +268,10 @@ void SpinBlock::renormalise_transform(const std::vector<Matrix>& rotateMatrix, c
     {
       if(it->second->is_core()) {
 //FIXME
-//opTypes ot = it->first;
 //if (ot == CRE) cout << "Is CRE local? " << ops[CRE]->is_local() << "; rank = " << mpigetrank() << endl;
 //if (ot == CRE) cout << "Renormalize C operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
+//if (ot == DES) cout << "Is DES local? " << ops[DES]->is_local() << "; rank = " << mpigetrank() << endl;
+//if (ot == DES) cout << "Renormalize D operators on p" << mpigetrank() << " = " << ops[DES]->get_size() << " local, " << ops[DES]->size() << " global\n";
         it->second->renormalise_transform(rotateMatrix, stateinfo);
       }
     }

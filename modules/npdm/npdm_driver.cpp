@@ -271,6 +271,7 @@ void Npdm_driver::loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Np
     boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, dot_cd_type );
 
     // Only one spatial combination on the dot block (including NULL)
+//cout << "dotOps->size() = " << dotOps->size() << endl;
     assert( dotOps->size() == 1 );
     bool skip = dotOps->set_local_ops( 0 );
     if ( ! skip ) {

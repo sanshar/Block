@@ -75,17 +75,38 @@ std::map< std::tuple<int,int,int>, int > get_local_3index_tuples(SpinBlock& b)
   bool forward = true;
   if ( sysBlock->get_sites()[0] > dotBlock->get_sites()[0] ) forward = false;
   int dot = dotBlock->get_sites()[0];
+pout << "dot = " << dot << endl;
 
   // 3 on dot (the -1 means there's no constraint on which MPI process the tuple is assigned to)
+  //----------
   tuples[ std::make_tuple(dot, dot, dot) ] = -1;
+
   // 2 on dot
-  for (auto i = sysBlock->get_sites().begin(); i != sysBlock->get_sites().end(); ++i) {
-    if ( forward )
-      tuples[ std::make_tuple(dot, dot, *i) ] = -1;
-    else
-      tuples[ std::make_tuple(*i, dot, dot) ] = -1;
+  //----------
+//FIXME assume CRE and DES same (THEY'RE NOT, CRE is duplicated sometimes in save_load_block.C so use DES)
+  std::vector< std::vector<int> > op_array = sysBlock->get_op_array(DES).get_array();
+  for (auto op = op_array.begin(); op != op_array.end(); ++op) {
+    int i = (*op)[0];
+    if ( forward ) {
+      if ( sysBlock->get_op_array(DES).is_local() )
+        // When 1-index is duplicated on all ranks we don't want 3-index being duplicated too
+        tuples[ std::make_tuple( dot, dot, i) ] = -1; 
+//        assert(false);
+      else
+        tuples[ std::make_tuple( dot, dot, i) ] = mpigetrank();
+    } 
+    else {
+      if ( sysBlock->get_op_array(DES).is_local() )
+        // When 1-index is duplicated on all ranks we don't want 3-index being duplicated too
+        tuples[ std::make_tuple( i, dot, dot) ] = -1;
+//        assert(false);
+      else
+        tuples[ std::make_tuple( i, dot, dot) ] = mpigetrank();
+    }
   }
+
   // 1 on dot
+  //----------
 //FIXME we assume CRE_CRE is representative of all 2-index ops (pass opType in general???)
   std::vector< std::vector<int> > ij_array = sysBlock->get_op_array(CRE_CRE).get_array();
   for (auto ij = ij_array.begin(); ij != ij_array.end(); ++ij) {
@@ -108,12 +129,21 @@ std::map< std::tuple<int,int,int>, int > get_local_3index_tuples(SpinBlock& b)
         tuples[ std::make_tuple( i, j, dot) ] = mpigetrank();
     }
   }
+
   // 0 on dot
+  //----------
   std::vector< std::vector<int> > ijk_array = sysBlock->get_op_array(RI_3INDEX).get_array();
   for (auto ijk = ijk_array.begin(); ijk != ijk_array.end(); ++ijk) {
-    assert( (*ijk)[0] >= (*ijk)[1] );
-    assert( (*ijk)[1] >= (*ijk)[2] );
-    tuples[ std::make_tuple((*ijk)[0], (*ijk)[1], (*ijk)[2]) ] = mpigetrank();
+    int i = (*ijk)[0];
+    int j = (*ijk)[1];
+    int k = (*ijk)[2];
+    assert( i >= j );
+    assert( j >= k );
+    if ( sysBlock->get_op_array(RI_3INDEX).is_local() )
+      // When 1-site block 3-index is duplicated on all ranks we don't want multi-block 3-index being duplicated too
+      tuples[ std::make_tuple( i, j, k) ] = -1;
+    else
+      tuples[ std::make_tuple( i, j, k) ] = mpigetrank();
   }
 
   return tuples;
@@ -326,18 +356,19 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
   assert( dmrginp.screen_tol() == 0 ); //FIXME otherwise some 1 or 2-index ops will be absent when we try to build the 3-index guy
 //  std::vector< std::tuple<int,int,int> > tuples = screened_ccd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
   std::map< std::tuple<int,int,int>, int > tuples = get_3index_tuples(b);
-//cout << "CCC indices\n";
+//pout << "CCC indices\n";
 //for (auto it = tuples.begin(); it != tuples.end(); ++it) {
-//  cout << "p" << mpigetrank() << ": " << std::get<0>(it->first) << "," << std::get<1>(it->first) << "," << std::get<2>(it->first) << " ; mode = " << it->second << endl;
+//cout << "p" << mpigetrank() << ": " << std::get<0>(it->first) << "," << std::get<1>(it->first) << "," << std::get<2>(it->first) << " ; mode = " << it->second << endl;
 //}
   m_op.set_tuple_indices( tuples, dmrginp.last_site() );
 
   // Allocate new set of operators for each set of spatial orbitals
-  //cout << "New set of CCC operators: p" << mpigetrank() << "; local size = " << m_op.local_nnz() << "; global size = " << m_op.global_nnz() << std::endl;
+//FIXME remove this
+//cout << "New set of CCC operators: p" << mpigetrank() << "; local size = " << m_op.local_nnz() << "; global size = " << m_op.global_nnz() << "; is local " << m_op.is_local() << std::endl;
   std::vector<int> orbs(3);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
-    //cout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << std::endl;
+cout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << std::endl;
     std::vector<boost::shared_ptr<CreCreCre> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));

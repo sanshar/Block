@@ -35,23 +35,22 @@ Threepdm_container::Threepdm_container( int sites )
 
 void Threepdm_container::save_npdms(const int& i, const int& j)
 {
+  boost::mpi::communicator world;
+  world.barrier();
+  Timer timer;
+  if ( store_full_spin_array_ ) {
+    accumulate_npdm();
+    save_npdm_text(i, j);
+    save_npdm_binary(i, j);
+  }
+  if ( store_full_spatial_array_ ) {
+    accumulate_spatial_npdm();
+    save_spatial_npdm_text(i, j);
+    save_spatial_npdm_binary(i, j);
+  }
 
-//FIXME parallel    
-boost::mpi::communicator world;
-world.barrier();
-    Timer timer;
-    // accumulate_npdm();
-    if ( store_full_spin_array_ ) {
-      save_npdm_text(i, j);
-      save_npdm_binary(i, j);
-    }
-    if ( store_full_spatial_array_ ) {
-      save_spatial_npdm_text(i, j);
-      save_spatial_npdm_binary(i, j);
-    }
-
-world.barrier();
-    pout << "3PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+  world.barrier();
+  pout << "3PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 
 }
 
@@ -152,14 +151,9 @@ void Threepdm_container::accumulate_npdm()
 #ifndef SERIAL
   array_6d<double> tmp_recv;
   mpi::communicator world;
-//cout << "threepdm size = " << threepdm.get_size() << " ; rank = " << mpigetrank() << endl;
-//cout.flush();
-//threepdm.resize(26,26,26,26,26,26);
   if( mpigetrank() == 0)
   {
     for(int p=1; p<world.size(); ++p) {
-//FIXME
-//assert(false); // MEMORY USE LARGE HERE!!!  Is this why it crashes sometimes????
       world.recv(p, p, tmp_recv);
       for(int i=0; i<threepdm.dim1(); ++i)
         for(int j=0; j<threepdm.dim2(); ++j)
@@ -173,6 +167,33 @@ void Threepdm_container::accumulate_npdm()
   else 
   {
     world.send(0, mpigetrank(), threepdm);
+  }
+#endif
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Threepdm_container::accumulate_spatial_npdm()
+{
+#ifndef SERIAL
+  array_6d<double> tmp_recv;
+  mpi::communicator world;
+  if( mpigetrank() == 0)
+  {
+    for(int p=1; p<world.size(); ++p) {
+      world.recv(p, p, tmp_recv);
+      for(int i=0; i<spatial_threepdm.dim1(); ++i)
+        for(int j=0; j<spatial_threepdm.dim2(); ++j)
+          for(int k=0; k<spatial_threepdm.dim3(); ++k)
+            for(int l=0; l<spatial_threepdm.dim4(); ++l)
+              for(int m=0; m<spatial_threepdm.dim5(); ++m)
+                for(int n=0; n<spatial_threepdm.dim6(); ++n) 
+                  if(tmp_recv(i,j,k,l,m,n) != 0.0) spatial_threepdm(i,j,k,l,m,n) = tmp_recv(i,j,k,l,m,n);
+    }
+  }
+  else 
+  {
+    world.send(0, mpigetrank(), spatial_threepdm);
   }
 #endif
 }
@@ -251,7 +272,7 @@ void Threepdm_container::build_spatial_elements( std::map< std::vector<int>, dou
     }
     // Store significant elements only
     if ( abs(val) > 1e-14 ) {
-      cout << "i,j,k,l,m,n = " << i << "," << j << "," << k << "," << l << "," << m << "," << n << endl;
+      //cout << "i,j,k,l,m,n = " << i << "," << j << "," << k << "," << l << "," << m << "," << n << "\t\t" << val << endl;
       if ( store_sparse_spatial_array_ ) sparse_spatial_pdm[ it->first ] = factor * val;
       if ( store_full_spatial_array_ ) {
         if ( abs( spatial_threepdm(i,j,k,l,m,n) ) > 1e-14 ) {

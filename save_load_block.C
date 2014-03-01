@@ -139,6 +139,7 @@ void SpinBlock::addAdditionalCompOps()
         mpi::broadcast(world, *(ops[CRE]->get_element(sites[i])[0]), processorindex(sites[i]));
         //FIXME MAW this line seemed to be missing, but correct
         ops[CRE]->set_local() = true;
+cout << "Duplicating CRE across procs\n";
       }
     }
   }

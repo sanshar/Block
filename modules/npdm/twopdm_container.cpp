@@ -33,24 +33,22 @@ Twopdm_container::Twopdm_container( int sites )
   
 void Twopdm_container::save_npdms(const int& i, const int& j)
 {
+  boost::mpi::communicator world;
+  world.barrier();
+  Timer timer;
+  if ( store_full_spin_array_ ) {
+    accumulate_npdm();
+    save_npdm_text(i, j);
+    save_npdm_binary(i, j);
+  }
+  if ( store_full_spatial_array_ ) {
+    accumulate_spatial_npdm();
+    save_spatial_npdm_text(i, j);
+    save_spatial_npdm_binary(i, j);
+  }
 
-//FIXME parallel    
-boost::mpi::communicator world;
-world.barrier();
-    Timer timer;
-    // accumulate_npdm();
-    if ( store_full_spin_array_ ) {
-      save_npdm_text(i, j);
-      save_npdm_binary(i, j);
-    }
-    if ( store_full_spatial_array_ ) {
-      save_spatial_npdm_text(i, j);
-      save_spatial_npdm_binary(i, j);
-    }
-
-world.barrier();
-    pout << "2PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
-//  }
+  world.barrier();
+  pout << "2PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -130,28 +128,28 @@ void Twopdm_container::save_spatial_npdm_binary(const int &i, const int &j)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Twopdm_container::load_npdm_binary(const int &i, const int &j)
-{
-assert(false); // <<<< CAN WE RETHINK USE OF DISK FOR NPDM?
-  if( mpigetrank() == 0)
-  {
-    char file[5000];
-    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/twopdm.", i, j,".bin");
-    std::ifstream ifs(file, std::ios::binary);
-    boost::archive::binary_iarchive load(ifs);
-    load >> twopdm;
-    ifs.close();
-  }
-//#ifndef SERIAL
-//  mpi::communicator world;
-//  mpi::broadcast(world,twopdm,0);
-//FIXME this is a contradiction --- BUT IS IT GOOD TO CLEAR TO SAVE MEMORY???
-//  if( mpigetrank() != 0)
-//    twopdm.Clear();
-//#endif
-}
-
+//
+//void Twopdm_container::load_npdm_binary(const int &i, const int &j)
+//{
+//assert(false); // <<<< CAN WE RETHINK USE OF DISK FOR NPDM?
+//  if( mpigetrank() == 0)
+//  {
+//    char file[5000];
+//    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/twopdm.", i, j,".bin");
+//    std::ifstream ifs(file, std::ios::binary);
+//    boost::archive::binary_iarchive load(ifs);
+//    load >> twopdm;
+//    ifs.close();
+//  }
+////#ifndef SERIAL
+////  mpi::communicator world;
+////  mpi::broadcast(world,twopdm,0);
+////FIXME this is a contradiction --- BUT IS IT GOOD TO CLEAR TO SAVE MEMORY???
+////  if( mpigetrank() != 0)
+////    twopdm.Clear();
+////#endif
+//}
+//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Twopdm_container::accumulate_npdm()
@@ -171,6 +169,29 @@ void Twopdm_container::accumulate_npdm()
   }
   else {
     world.send(0, mpigetrank(), twopdm);
+  }
+#endif
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Twopdm_container::accumulate_spatial_npdm()
+{
+#ifndef SERIAL
+  array_4d<double> tmp_recv;
+  mpi::communicator world;
+  if( mpigetrank() == 0) {
+    for(int i=1;i<world.size();++i) {
+      world.recv(i, i, tmp_recv);
+      for(int k=0;k<spatial_twopdm.dim1();++k)
+        for(int l=0;l<spatial_twopdm.dim2();++l)
+          for(int m=0;m<spatial_twopdm.dim3();++m)
+            for(int n=0;n<spatial_twopdm.dim4();++n)
+              if(tmp_recv(k,l,m,n) != 0.) spatial_twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
+	 }
+  }
+  else {
+    world.send(0, mpigetrank(), spatial_twopdm);
   }
 #endif
 }

@@ -102,6 +102,7 @@ void do_3index_tensor_trace( const opTypes& optype, SpinBlock& big, SpinBlock* s
 //FIXME need reference?  don't want to copy?
   // Loop over all operator indices
   std::vector<boost::shared_ptr<SparseMatrix> > sysdot_ops;
+//pout << "trace array.size = " << sysdot_array.get_size() << endl;
   for (int idx = 0; idx < sysdot_array.get_size(); ++idx) {
     if ( dmrginp.do_npdm_in_core() ) 
       sysdot_ops = sysdot_array.get_local_element(idx);
@@ -111,6 +112,9 @@ void do_3index_tensor_trace( const opTypes& optype, SpinBlock& big, SpinBlock* s
 
     // Loop over spin-op components
     int i = sysdot_ops[0]->get_orbs()[0]; int j = sysdot_ops[0]->get_orbs()[1]; int k = sysdot_ops[0]->get_orbs()[2];
+//pout << "i,j,k = " << i << "," << j << "," << k << endl;
+    // In parallel calculations not all operators are built on each proc
+    if ( ! big.get_op_array(optype).has_local_index(i,j,k) ) continue;
     std::vector<boost::shared_ptr<SparseMatrix> > new_ops = big.get_op_array(optype).get_element(i,j,k);
     for (int jdx=0; jdx < sysdot_ops.size(); jdx++) {
       boost::shared_ptr<SparseMatrix>& sysdot_op = sysdot_ops[jdx];
@@ -145,6 +149,8 @@ void do_3index_1_2_tensor_products( bool forwards, const opTypes& optype, const 
   Op_component_base& rhs_array = rhsBlock->get_op_array(rhsType);
   Op_component_base& lhs_array = lhsBlock->get_op_array(lhsType);
   assert ( (rhs_array.get_size() == 1) || (lhs_array.get_size() == 1) );
+//pout << "tensor_1_2: rhs_size = " << rhs_array.get_size() << "; op = " << rhs_array.get_op_string() << endl;
+//pout << "tensor_1_2: lhs_size = " << lhs_array.get_size() << "; op = " << lhs_array.get_op_string() << endl;
 
   // Initialize filesystem
   std::ifstream lhsifs;
@@ -161,6 +167,11 @@ void do_3index_1_2_tensor_products( bool forwards, const opTypes& optype, const 
       std::vector<boost::shared_ptr<SparseMatrix> > rhs_ops = rhs_array.get_local_element(iidx);
       int i = rhs_ops[0]->get_orbs()[0];
       int j = lhs_ops[0]->get_orbs()[0]; int k = lhs_ops[0]->get_orbs()[1];
+//pout << "i = " << i << endl;
+//pout << "j,k = " << j << "," << k << endl;
+      // In parallel calculations not all operators are built on each proc
+      if ( ! big.get_op_array(optype).has_local_index(i,j,k) ) continue;
+//pout << "building i,j,k = " << i << "," << j << "," << k << endl;
       std::vector<boost::shared_ptr<SparseMatrix> > vec = big.get_op_array(optype).get_element(i,j,k);
 
       // Loop over lhs spin-op components
@@ -207,6 +218,8 @@ void do_3index_2_1_tensor_products( bool forwards, const opTypes& optype, const 
   // Initialize filesystem
   std::ifstream rhsifs;
   if ( ! dmrginp.do_npdm_in_core() ) rhsifs.open( rhs_array.get_filename().c_str(), std::ios::binary );
+//pout << "tensor_2_1: rhs_size = " << rhs_array.get_size() << "; op = " << rhs_array.get_op_string() << endl;
+//pout << "tensor_2_1: lhs_size = " << lhs_array.get_size() << "; op = " << lhs_array.get_op_string() << endl;
 
   // Loop over all rhs operator indices
   for (int idx = 0; idx < rhs_array.get_size(); ++idx) {
@@ -219,6 +232,11 @@ void do_3index_2_1_tensor_products( bool forwards, const opTypes& optype, const 
       std::vector<boost::shared_ptr<SparseMatrix> > lhs_ops = lhs_array.get_local_element(iidx);
       int i = rhs_ops[0]->get_orbs()[0]; int j = rhs_ops[0]->get_orbs()[1];
       int k = lhs_ops[0]->get_orbs()[0];
+//pout << "i,j = " << i << "," << j << endl;
+//pout << "k = " << k << endl;
+      // In parallel calculations not all operators are built on each proc
+      if ( ! big.get_op_array(optype).has_local_index(i,j,k) ) continue;
+//pout << "building i,j,k = " << i << "," << j << "," << k << endl;
       std::vector<boost::shared_ptr<SparseMatrix> > vec = big.get_op_array(optype).get_element(i,j,k);
 
       // Loop over rhs spin-op components
@@ -265,9 +283,18 @@ cout << "build_3index_op, ofs =" <<  big.get_op_array(optype).get_filename() << 
 
   SpinBlock* sysBlock = big.get_leftBlock();
   SpinBlock* dotBlock = big.get_rightBlock();
+assert( dotBlock->get_op_array(CRE).is_local() );
+assert( dotBlock->get_op_array(DES).is_local() );
+assert( dotBlock->get_op_array(CRE_CRE).is_local() );
+if ( sysBlock->get_op_array(CRE).size() == 1 ) assert( sysBlock->get_op_array(CRE).is_local() );
+if ( sysBlock->get_op_array(DES).size() == 1 ) assert( sysBlock->get_op_array(DES).is_local() );
+if ( sysBlock->get_op_array(CRE_CRE).size() == 1 ) assert( sysBlock->get_op_array(CRE_CRE).is_local() );
+if ( sysBlock->get_op_array(CRE_CRE_CRE).size() == 1 ) assert( sysBlock->get_op_array(CRE_CRE_CRE).is_local() );
 
   // All 3 orbitals on sys or dot block
+//cout << "sys trace\n";
   do_3index_tensor_trace( optype, big, sysBlock, ofs );
+//cout << "dot trace\n";
   do_3index_tensor_trace( optype, big, dotBlock, ofs );
 
   bool forwards = ! ( sysBlock->get_sites().at(0) > dotBlock->get_sites().at(0) );
