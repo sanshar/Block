@@ -109,6 +109,9 @@ void do_4index_tensor_trace( const opTypes& optype, SpinBlock& big, SpinBlock* s
     // Loop over spin-op components
     int i = sysdot_ops[0]->get_orbs()[0]; int j = sysdot_ops[0]->get_orbs()[1]; 
     int k = sysdot_ops[0]->get_orbs()[2]; int l = sysdot_ops[0]->get_orbs()[3];
+    // In parallel calculations not all operators are built on each proc
+    if ( ! big.get_op_array(optype).has_local_index(i,j,k,l) ) continue;
+//cout << "p" << mpigetrank() << "; i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
     std::vector<boost::shared_ptr<SparseMatrix> > new_ops = big.get_op_array(optype).get_element(i,j,k,l);
     for (int jdx=0; jdx < sysdot_ops.size(); jdx++) {
       boost::shared_ptr<SparseMatrix>& sysdot_op = sysdot_ops[jdx];
@@ -153,6 +156,9 @@ void do_4index_2_2_tensor_products( bool forwards, const opTypes& optype, const 
       lhs_ops = lhs_array.get_local_element(idx);
       int i = rhs_ops[0]->get_orbs()[0]; int j = rhs_ops[0]->get_orbs()[1];
       int k = lhs_ops[0]->get_orbs()[0]; int l = lhs_ops[0]->get_orbs()[1];
+      // In parallel calculations not all operators are built on each proc
+      if ( ! big.get_op_array(optype).has_local_index(i,j,k,l) ) continue;
+//cout << "p" << mpigetrank() << "; i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
       std::vector<boost::shared_ptr<SparseMatrix> > vec = big.get_op_array(optype).get_element(i,j,k,l);
 
       // Loop over rhs spin-op components
@@ -216,6 +222,9 @@ void do_4index_1_3_tensor_products( bool forwards, const opTypes& optype, const 
       std::vector<boost::shared_ptr<SparseMatrix> > rhs_ops = rhs_array.get_local_element(iidx);
       int i = rhs_ops[0]->get_orbs()[0];
       int j = lhs_ops[0]->get_orbs()[0]; int k = lhs_ops[0]->get_orbs()[1]; int l = lhs_ops[0]->get_orbs()[2];
+      // In parallel calculations not all operators are built on each proc
+      if ( ! big.get_op_array(optype).has_local_index(i,j,k,l) ) continue;
+//cout << "p" << mpigetrank() << "; i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
       std::vector<boost::shared_ptr<SparseMatrix> > vec = big.get_op_array(optype).get_element(i,j,k,l);
 
       // Loop over lhs spin-op components
@@ -236,7 +245,6 @@ void do_4index_1_3_tensor_products( bool forwards, const opTypes& optype, const 
           for (int sx=0; sx < vec.size(); sx++) {
             boost::shared_ptr<SparseMatrix>& op = vec[sx];
             // Select relevant spin components
-cout << "build = " << build_pattern << endl;
             std::vector<SpinQuantum> s = { op->get_quantum_ladder().at(build_pattern).at(0), op->get_quantum_ladder().at(build_pattern).at(1) };
             if ( s == spin_234 ) finish_tensor_product( big, rhsBlock, *rhs_op, *lhs_op, *op, forwards, build_pattern );
           }
@@ -277,6 +285,9 @@ void do_4index_3_1_tensor_products( bool forwards, const opTypes& optype, const 
       std::vector<boost::shared_ptr<SparseMatrix> > lhs_ops = lhs_array.get_local_element(iidx);
       int i = rhs_ops[0]->get_orbs()[0]; int j = rhs_ops[0]->get_orbs()[1]; int k = rhs_ops[0]->get_orbs()[2];
       int l = lhs_ops[0]->get_orbs()[0];
+      // In parallel calculations not all operators are built on each proc
+      if ( ! big.get_op_array(optype).has_local_index(i,j,k,l) ) continue;
+//cout << "p" << mpigetrank() << "; i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
       std::vector<boost::shared_ptr<SparseMatrix> > vec = big.get_op_array(optype).get_element(i,j,k,l);
 
       // Loop over rhs spin-op components
@@ -317,7 +328,7 @@ void build_4index_ops( const opTypes& optype, SpinBlock& big,
                        const opTypes& rhsType1, const opTypes& rhsType2, const opTypes& rhsType3 )
 {
   // 4-index output file
-cout << "build_4index_op, ofs =" <<  big.get_op_array(optype).get_filename() << endl;
+//cout << "build_4index_op, ofs =" <<  big.get_op_array(optype).get_filename() << endl;
   std::ofstream ofs;
   if ( ! dmrginp.do_npdm_in_core() ) ofs.open( big.get_op_array(optype).get_filename().c_str(), std::ios::binary );
 
@@ -330,7 +341,6 @@ cout << "build_4index_op, ofs =" <<  big.get_op_array(optype).get_filename() << 
 
   bool forwards = ! ( sysBlock->get_sites().at(0) > dotBlock->get_sites().at(0) );
 
-//FIXME DUPLICATES??  Are all possible combinations needed??
   // 2,2 partitioning
   if ( forwards ) {
     do_4index_2_2_tensor_products( forwards, optype, lhsType2, rhsType2, big, dotBlock, sysBlock, ofs );
@@ -351,52 +361,6 @@ cout << "build_4index_op, ofs =" <<  big.get_op_array(optype).get_filename() << 
 
 }
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//void renormalize_4index_ops( Op_component_base& ops_array, const std::vector<Matrix>& rotateMatrix, const StateInfo* stateinfo)
-//{
-//  // Open filesystem if necessary
-//  std::ifstream ifs;
-//  std::ofstream ofs;
-//  std::string ifile = ops_array.get_filename();
-//cout << "renormalize 4-index; ofile = " << ifile << endl;
-//  std::string ofile = ifile + ".renorm";
-//  if ( ! dmrginp.do_npdm_in_core() ) {
-//    ifs.open( ifile.c_str(), std::ios::binary );
-//    ofs.open( ofile.c_str(), std::ios::binary );
-//  }
-//
-//  // Loop over all operator indices
-//  std::vector<boost::shared_ptr<SparseMatrix> > spin_ops;
-//  for (int idx = 0; idx < ops_array.get_size(); ++idx) {
-//    if ( dmrginp.do_npdm_in_core() )
-//      spin_ops = ops_array.get_local_element(idx);
-//    else
-//      spin_ops = get_ops_from_disk( ifs, ops_array.get_local_element(0).size() );
-//
-//    // Loop over spin-op components
-//    for (int jdx=0; jdx < spin_ops.size(); jdx++) {
-//      assert( spin_ops[jdx]->get_built() );
-//      // Renormalize
-//      spin_ops[jdx]->renormalise_transform( rotateMatrix, stateinfo );
-//      // Move back to disk if necessary
-//      if ( ! dmrginp.do_npdm_in_core() ) {
-//        spin_ops[jdx]->set_built_on_disk() = true;
-//        boost::archive::binary_oarchive save_op(ofs);
-//        save_op << *spin_ops[jdx];
-//      }
-//    }
-//  }
-//
-//  // Close filesystem if necessary
-//  if ( ! dmrginp.do_npdm_in_core() ) {
-//    ifs.close();
-//    ofs.close();
-//    int result = rename( ofile.c_str(), ifile.c_str() );
-//    assert( result == 0 );
-//  }
-//}
-//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 }

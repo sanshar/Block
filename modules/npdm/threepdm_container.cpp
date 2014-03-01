@@ -160,8 +160,12 @@ void Threepdm_container::accumulate_npdm()
           for(int k=0; k<threepdm.dim3(); ++k)
             for(int l=0; l<threepdm.dim4(); ++l)
               for(int m=0; m<threepdm.dim5(); ++m)
-                for(int n=0; n<threepdm.dim6(); ++n) 
-                  if(tmp_recv(i,j,k,l,m,n) != 0.0) threepdm(i,j,k,l,m,n) = tmp_recv(i,j,k,l,m,n);
+                for(int n=0; n<threepdm.dim6(); ++n) {
+                  if ( abs(tmp_recv(i,j,k,l,m,n)) > 1e-15 ) {
+                    if ( abs(threepdm(i,j,k,l,m,n)) > 1e-14 ) assert(false);
+                    threepdm(i,j,k,l,m,n) = tmp_recv(i,j,k,l,m,n);
+                  }
+                }
     }
   }
   else 
@@ -187,8 +191,13 @@ void Threepdm_container::accumulate_spatial_npdm()
           for(int k=0; k<spatial_threepdm.dim3(); ++k)
             for(int l=0; l<spatial_threepdm.dim4(); ++l)
               for(int m=0; m<spatial_threepdm.dim5(); ++m)
-                for(int n=0; n<spatial_threepdm.dim6(); ++n) 
-                  if(tmp_recv(i,j,k,l,m,n) != 0.0) spatial_threepdm(i,j,k,l,m,n) = tmp_recv(i,j,k,l,m,n);
+                for(int n=0; n<spatial_threepdm.dim6(); ++n) {
+                  if( abs(tmp_recv(i,j,k,l,m,n)) > 1e-15 ) {
+                    // Test if any duplicate elements built on different processors
+                    if ( abs(spatial_threepdm(i,j,k,l,m,n)) > 1e-14 ) assert(false);
+                    spatial_threepdm(i,j,k,l,m,n) = tmp_recv(i,j,k,l,m,n);
+                  }
+                }
     }
   }
   else 

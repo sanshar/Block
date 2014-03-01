@@ -277,24 +277,15 @@ void build_3index_ops( const opTypes& optype, SpinBlock& big,
                        const opTypes& rhsType1, const opTypes& rhsType2 )
 {
   // 3-index output file
-cout << "build_3index_op, ofs =" <<  big.get_op_array(optype).get_filename() << endl;
+//cout << "build_3index_op, ofs =" <<  big.get_op_array(optype).get_filename() << endl;
   std::ofstream ofs;
   if ( ! dmrginp.do_npdm_in_core() ) ofs.open( big.get_op_array(optype).get_filename().c_str(), std::ios::binary );
 
   SpinBlock* sysBlock = big.get_leftBlock();
   SpinBlock* dotBlock = big.get_rightBlock();
-assert( dotBlock->get_op_array(CRE).is_local() );
-assert( dotBlock->get_op_array(DES).is_local() );
-assert( dotBlock->get_op_array(CRE_CRE).is_local() );
-if ( sysBlock->get_op_array(CRE).size() == 1 ) assert( sysBlock->get_op_array(CRE).is_local() );
-if ( sysBlock->get_op_array(DES).size() == 1 ) assert( sysBlock->get_op_array(DES).is_local() );
-if ( sysBlock->get_op_array(CRE_CRE).size() == 1 ) assert( sysBlock->get_op_array(CRE_CRE).is_local() );
-if ( sysBlock->get_op_array(CRE_CRE_CRE).size() == 1 ) assert( sysBlock->get_op_array(CRE_CRE_CRE).is_local() );
 
   // All 3 orbitals on sys or dot block
-//cout << "sys trace\n";
   do_3index_tensor_trace( optype, big, sysBlock, ofs );
-//cout << "dot trace\n";
   do_3index_tensor_trace( optype, big, dotBlock, ofs );
 
   bool forwards = ! ( sysBlock->get_sites().at(0) > dotBlock->get_sites().at(0) );

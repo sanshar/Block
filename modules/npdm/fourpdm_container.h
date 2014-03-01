@@ -47,6 +47,7 @@ class Fourpdm_container : public Npdm_container {
     void save_spatial_npdm_binary(const int &i, const int &j);
     void load_npdm_binary(const int &i, const int &j);
     void accumulate_npdm();
+    void accumulate_spatial_npdm();
   
     void update_full_spin_array( std::map< std::vector<int>, double >& spin_batch );
     void build_spatial_elements( std::map< std::vector<int>, double >& spin_batch, std::map< std::vector<int>, double >& spatial_batch );

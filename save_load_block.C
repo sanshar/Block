@@ -137,9 +137,9 @@ void SpinBlock::addAdditionalCompOps()
       if (ops[CRE]->has(sites[i])) {
         if (processorindex(sites[i]) != mpigetrank()) ops[CRE]->add_local_indices(sites[i]);
         mpi::broadcast(world, *(ops[CRE]->get_element(sites[i])[0]), processorindex(sites[i]));
-        //FIXME MAW this line seemed to be missing, but correct
+        //FIXME MAW this line seemed to be missing, but seems correct
         ops[CRE]->set_local() = true;
-cout << "Duplicating CRE across procs\n";
+        //cout << "Duplicating CRE across procs\n";
       }
     }
   }

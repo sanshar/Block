@@ -13,7 +13,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 //FIXME IDEALLY DONT NEED 4-index para array????
 //
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
-
 #include <boost/format.hpp>
 #include <fstream>
 #include <stdio.h>
@@ -26,50 +25,201 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted {
 
 //===========================================================================================================================================================
-// Choose 4-index tuples on this MPI process such that 2-index are available to build them
-// FIXME IMPLEMENT FOR NON-PARALLEL VERSION FIRST
-// There are several cases????
+// Choose 4-index tuples on this MPI process such that lower-index ops are available to build them
+
+std::map< std::tuple<int,int,int,int>, int > get_local_4index_tuples(SpinBlock& b)
+{
+  std::map< std::tuple<int,int,int,int>, int > tuples;
+
+  SpinBlock* sysBlock = b.get_leftBlock();
+  SpinBlock* dotBlock = b.get_rightBlock();
+  
+  assert( dotBlock != NULL );
+  assert( dotBlock->get_sites().size() == 1 );
+
+  bool forward = true;
+  if ( sysBlock->get_sites()[0] > dotBlock->get_sites()[0] ) forward = false;
+  int dot = dotBlock->get_sites()[0];
+//pout << "dot = " << dot << endl;
+
+  // 4 on dot (the -1 means there's no constraint on which MPI process the tuple is assigned to)
+  //----------
+  tuples[ std::make_tuple(dot, dot, dot, dot) ] = -1;
+
+  // 3 on dot
+  //----------
+//FIXME assume CRE and DES same (THEY'RE NOT, CRE is duplicated sometimes in save_load_block.C so use DES)
+  std::vector< std::vector<int> > op_array = sysBlock->get_op_array(DES).get_array();
+  for (auto op = op_array.begin(); op != op_array.end(); ++op) {
+    int i = (*op)[0];
+    if ( forward ) {
+      if ( sysBlock->get_op_array(DES).is_local() )
+        // When 1-index is duplicated on all ranks we don't want 4-index being duplicated too
+        tuples[ std::make_tuple( dot, dot, dot, i) ] = -1; 
+      else
+        tuples[ std::make_tuple( dot, dot, dot, i) ] = mpigetrank();
+    } 
+    else {
+      if ( sysBlock->get_op_array(DES).is_local() )
+        // When 1-index is duplicated on all ranks we don't want 4-index being duplicated too
+        tuples[ std::make_tuple( i, dot, dot, dot) ] = -1;
+      else
+        tuples[ std::make_tuple( i, dot, dot, dot) ] = mpigetrank();
+    }
+  }
+
+  // 2 on dot
+  //----------
+  std::vector< std::vector<int> > ij_array = sysBlock->get_op_array(CRE_CRE).get_array();
+  for (auto ij = ij_array.begin(); ij != ij_array.end(); ++ij) {
+    int i = (*ij)[0];
+    int j = (*ij)[1];
+    assert( i >= j );
+    if ( forward ) {
+      if ( sysBlock->get_op_array(CRE_CRE).is_local() )
+        // When 2-index is duplicated on all ranks we don't want 4-index being duplicated too
+        tuples[ std::make_tuple( dot, dot, i, j) ] = -1; 
+      else
+        tuples[ std::make_tuple( dot, dot, i, j) ] = mpigetrank();
+    } 
+    else {
+      if ( sysBlock->get_op_array(CRE_CRE).is_local() )
+        // When 2-index is duplicated on all ranks we don't want 4-index being duplicated too
+        tuples[ std::make_tuple( i, j, dot, dot) ] = -1;
+      else
+        tuples[ std::make_tuple( i, j, dot, dot) ] = mpigetrank();
+    }
+  }
+
+  // 1 on dot
+  //----------
+  std::vector< std::vector<int> > ijk_array = sysBlock->get_op_array(RI_3INDEX).get_array();
+  for (auto ijk = ijk_array.begin(); ijk != ijk_array.end(); ++ijk) {
+    int i = (*ijk)[0];
+    int j = (*ijk)[1];
+    int k = (*ijk)[2];
+    assert( i >= j );
+    assert( j >= k );
+    if ( forward ) {
+      if ( sysBlock->get_op_array(RI_3INDEX).is_local() )
+        // When 3-index is duplicated on all ranks we don't want 4-index being duplicated too
+        tuples[ std::make_tuple( dot, i, j, k) ] = -1; 
+      else
+        tuples[ std::make_tuple( dot, i, j, k) ] = mpigetrank();
+    } 
+    else {
+      if ( sysBlock->get_op_array(RI_3INDEX).is_local() )
+        // When 3-index is duplicated on all ranks we don't want 4-index being duplicated too
+        tuples[ std::make_tuple( i, j, k, dot) ] = -1;
+      else
+        tuples[ std::make_tuple( i, j, k, dot) ] = mpigetrank();
+    }
+  }
+
+  // 0 on dot
+  //----------
+  std::vector< std::vector<int> > ijkl_array = sysBlock->get_op_array(RI_4INDEX).get_array();
+  for (auto ijkl = ijkl_array.begin(); ijkl != ijkl_array.end(); ++ijkl) {
+    int i = (*ijkl)[0];
+    int j = (*ijkl)[1];
+    int k = (*ijkl)[2];
+    int l = (*ijkl)[3];
+    assert( i >= j );
+    assert( j >= k );
+    assert( k >= l );
+    if ( sysBlock->get_op_array(RI_4INDEX).is_local() )
+      // When 1-site 4-index is duplicated on all ranks we don't want multi-site 4-index being duplicated too
+      tuples[ std::make_tuple( i, j, k, l) ] = -1;
+    else
+      tuples[ std::make_tuple( i, j, k, l) ] = mpigetrank();
+  }
+
+  return tuples;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------ 
+// Choose 4-index tuples on this MPI process such that lower-index ops are available to build them
+//
+// There are three cases:
+//   (1) 4-index must be done on this thread  (e.g. built from 3-index on this thread)
+//   (2) 4-index could be done on this thread if load-balancing wants it 
+//   (3) 4-index must not be done on this thread (it has to be done on another and we don't want duplicates)
 
 //FIXME screening?
 std::map< std::tuple<int,int,int,int>, int > get_4index_tuples(SpinBlock& b)
 {
   std::map< std::tuple<int,int,int,int>, int > tuples;
 
-//FIXME
-//  if ( b.get_leftBlock() != NULL ) {
-//    // Generate only mpi local tuples for compound block, consistent with existing operators on sys and dot
-//    tuples = get_local_3index_tuples(b);    
-//  }
-
-//FIXME DEBUG ONLY
-//  // (l == k == j == i)
-//  std::vector<int> sites = b.get_sites();
-//  for (int i = 0; i < sites.size(); ++i)
-//    for (int j = i; j <= i; ++j)
-//      for (int k = i; k <= i; ++k)
-//        for (int l = i; l <= i; ++l)
-//          tuples[ std::make_tuple(sites[i], sites[j], sites[k], sites[l]) ] = -1;
-
+  if ( b.get_leftBlock() != NULL ) {
+    // Generate only mpi local tuples for compound block, consistent with existing operators on sys and dot
+    tuples = get_local_4index_tuples(b);    
+  }
 
   // Generate all tuples such that (l <= k <= j <= i) and let para_array assign them to local processes as necessary
   std::vector<int> sites = b.get_sites();
   for (int i = 0; i < sites.size(); ++i)
     for (int j = 0; j <= i; ++j)
-      for (int k = 0; k <= j; ++k) {
+      for (int k = 0; k <= j; ++k) 
         for (int l = 0; l <= k; ++l) {
-//          if ( b.get_leftBlock() != NULL ) {
-//            // The -2 here means that this should be assigned to global_indices only (i.e. shouldn't be on this MPI thread)
-//            if ( tuples.find(std::make_tuple(sites[i], sites[j], sites[k], sites[l])) == tuples.end() )
-//              tuples[ std::make_tuple(sites[i], sites[j], sites[k], sites[l]) ] = -2;
-//          }
-          // The -1 here means there's no constraint on which MPI process (i.e. let para_array choose if it should belong to this one)
-          tuples[ std::make_tuple(sites[i], sites[j], sites[k], sites[l]) ] = -1;
+          if ( b.get_leftBlock() != NULL ) {
+            // The -2 here means that this should be assigned to global_indices only (i.e. shouldn't be on this MPI thread)
+            if ( tuples.find(std::make_tuple(sites[i], sites[j], sites[k], sites[l])) == tuples.end() )
+              tuples[ std::make_tuple(sites[i], sites[j], sites[k], sites[l]) ] = -2;
+          }
+          else {
+            // The -1 here means there's no constraint on which MPI process (i.e. let para_array choose if it should belong to this one)
+            tuples[ std::make_tuple(sites[i], sites[j], sites[k], sites[l]) ] = -1;
+          } 
         }
-      }
 
   return tuples;
 }
 
+//===========================================================================================================================================================
+////// Choose 4-index tuples on this MPI process such that 2-index are available to build them
+////// FIXME IMPLEMENT FOR NON-PARALLEL VERSION FIRST
+////// There are several cases????
+////
+//////FIXME screening?
+////std::map< std::tuple<int,int,int,int>, int > get_4index_tuples(SpinBlock& b)
+////{
+////  std::map< std::tuple<int,int,int,int>, int > tuples;
+////
+//////FIXME
+//////  if ( b.get_leftBlock() != NULL ) {
+//////    // Generate only mpi local tuples for compound block, consistent with existing operators on sys and dot
+//////    tuples = get_local_3index_tuples(b);    
+//////  }
+////
+//////FIXME DEBUG ONLY
+//////  // (l == k == j == i)
+//////  std::vector<int> sites = b.get_sites();
+//////  for (int i = 0; i < sites.size(); ++i)
+//////    for (int j = i; j <= i; ++j)
+//////      for (int k = i; k <= i; ++k)
+//////        for (int l = i; l <= i; ++l)
+//////          tuples[ std::make_tuple(sites[i], sites[j], sites[k], sites[l]) ] = -1;
+////
+////
+////  // Generate all tuples such that (l <= k <= j <= i) and let para_array assign them to local processes as necessary
+////  std::vector<int> sites = b.get_sites();
+////  for (int i = 0; i < sites.size(); ++i)
+////    for (int j = 0; j <= i; ++j)
+////      for (int k = 0; k <= j; ++k) {
+////        for (int l = 0; l <= k; ++l) {
+//////          if ( b.get_leftBlock() != NULL ) {
+//////            // The -2 here means that this should be assigned to global_indices only (i.e. shouldn't be on this MPI thread)
+//////            if ( tuples.find(std::make_tuple(sites[i], sites[j], sites[k], sites[l])) == tuples.end() )
+//////              tuples[ std::make_tuple(sites[i], sites[j], sites[k], sites[l]) ] = -2;
+//////          }
+////          // The -1 here means there's no constraint on which MPI process (i.e. let para_array choose if it should belong to this one)
+////          tuples[ std::make_tuple(sites[i], sites[j], sites[k], sites[l]) ] = -1;
+////        }
+////      }
+////
+////  return tuples;
+////}
+////
 //===========================================================================================================================================================
 // RI_4_INDEX skeleton class
 //----------------------------
@@ -145,7 +295,7 @@ void Op_component<CreCreDesDes>::build_iterators(SpinBlock& b)
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
 //pout << "New set of CCDD operators:  " << i << std::endl;
-//pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
+//cout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
     std::vector<boost::shared_ptr<CreCreDesDes> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
@@ -316,7 +466,7 @@ void Op_component<CreDesCreDes>::build_iterators(SpinBlock& b)
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
 //pout << "New set of CDCD operators:  " << i << std::endl;
-//pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
+//cout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
     std::vector<boost::shared_ptr<CreDesCreDes> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
@@ -1129,6 +1279,7 @@ void Op_component<CreDesCreCre>::build_iterators(SpinBlock& b)
     orbs = m_op.unmap_local_index(i);
 //pout << "New set of CDCC operators:  " << i << std::endl;
 //pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
+//cout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
     std::vector<boost::shared_ptr<CreDesCreCre> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
@@ -1422,3 +1573,4 @@ void Op_component<CreCreCreCre>::build_iterators(SpinBlock& b)
 //===========================================================================================================================================================
 
 }
+

@@ -34,22 +34,22 @@ Fourpdm_container::Fourpdm_container( int sites )
 
 void Fourpdm_container::save_npdms(const int& i, const int& j)
 {
-//FIXME parallel    
-boost::mpi::communicator world;
-world.barrier();
-    Timer timer;
-    // accumulate_npdm();
-    if ( store_full_spin_array_ ) {
-      save_npdm_text(i, j);
-      save_npdm_binary(i, j);
-    } 
-    if ( store_full_spatial_array_ ) {
-      save_spatial_npdm_text(i, j);
-      save_spatial_npdm_binary(i, j);
-    } 
+  boost::mpi::communicator world;
+  world.barrier();
+  Timer timer;
+  if ( store_full_spin_array_ ) {
+    accumulate_npdm();
+    save_npdm_text(i, j);
+    save_npdm_binary(i, j);
+  } 
+  if ( store_full_spatial_array_ ) {
+    accumulate_spatial_npdm();
+    save_spatial_npdm_text(i, j);
+    save_spatial_npdm_binary(i, j);
+  } 
     
-world.barrier();
-    pout << "4PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+  world.barrier();
+  pout << "4PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 
 }
 
@@ -165,8 +165,12 @@ void Fourpdm_container::accumulate_npdm()
               for(int m=0; m<fourpdm.dim5(); ++m)
                 for(int n=0; n<fourpdm.dim6(); ++n) 
                   for(int p=0; p<fourpdm.dim7(); ++p) 
-                    for(int q=0; q<fourpdm.dim8(); ++q) 
-                      if ( tmp_recv(i,j,k,l,m,n,p,q) != 0.0 ) fourpdm(i,j,k,l,m,n,p,q) = tmp_recv(i,j,k,l,m,n,p,q);
+                    for(int q=0; q<fourpdm.dim8(); ++q) {
+                      if ( abs(tmp_recv(i,j,k,l,m,n,p,q)) > 1e-15 ) {
+                        if ( abs(fourpdm(i,j,k,l,m,n,p,q)) > 1e-14 ) assert(false);
+                        fourpdm(i,j,k,l,m,n,p,q) = tmp_recv(i,j,k,l,m,n,p,q);
+                      }
+                    }
     }
   }
   else 
@@ -175,6 +179,40 @@ void Fourpdm_container::accumulate_npdm()
   }
 #endif
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Fourpdm_container::accumulate_spatial_npdm()
+{
+#ifndef SERIAL
+  array_8d<double> tmp_recv;
+  mpi::communicator world;
+  if( mpigetrank() == 0)
+  {
+    for(int u=1; u<world.size(); ++u) {
+      world.recv(u, u, tmp_recv);
+      for(int i=0; i<spatial_fourpdm.dim1(); ++i)
+        for(int j=0; j<spatial_fourpdm.dim2(); ++j)
+          for(int k=0; k<spatial_fourpdm.dim3(); ++k)
+            for(int l=0; l<spatial_fourpdm.dim4(); ++l)
+              for(int m=0; m<spatial_fourpdm.dim5(); ++m)
+                for(int n=0; n<spatial_fourpdm.dim6(); ++n) 
+                  for(int p=0; p<spatial_fourpdm.dim7(); ++p) 
+                    for(int q=0; q<spatial_fourpdm.dim8(); ++q) {
+                      if ( abs(tmp_recv(i,j,k,l,m,n,p,q)) > 1e-15 ) {
+                        if ( abs(spatial_fourpdm(i,j,k,l,m,n,p,q)) > 1e-14 ) assert(false);
+                        spatial_fourpdm(i,j,k,l,m,n,p,q) = tmp_recv(i,j,k,l,m,n,p,q);
+                      }
+                    }
+    }
+  }
+  else 
+  {
+    world.send(0, mpigetrank(), spatial_fourpdm);
+  }
+#endif
+}
+
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Fourpdm_container::update_full_spin_array( std::map< std::vector<int>, double >& spin_batch )

@@ -321,7 +321,8 @@ pout << "renormalize on disk; ofile = " << ifile << endl;
 int i = spin_ops[jdx]->get_orbs()[0];
 int j = spin_ops[jdx]->get_orbs()[1];
 int k = spin_ops[jdx]->get_orbs()[2];
-pout << "i,j,k = " << i << "," << j << "," << k << endl;
+int l = spin_ops[jdx]->get_orbs()[3];
+pout << "i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
         assert( spin_ops[jdx]->get_built() );
         // Renormalize
         spin_ops[jdx]->renormalise_transform( rotateMatrix, stateinfo );

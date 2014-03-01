@@ -75,7 +75,6 @@ std::map< std::tuple<int,int,int>, int > get_local_3index_tuples(SpinBlock& b)
   bool forward = true;
   if ( sysBlock->get_sites()[0] > dotBlock->get_sites()[0] ) forward = false;
   int dot = dotBlock->get_sites()[0];
-pout << "dot = " << dot << endl;
 
   // 3 on dot (the -1 means there's no constraint on which MPI process the tuple is assigned to)
   //----------
@@ -91,7 +90,6 @@ pout << "dot = " << dot << endl;
       if ( sysBlock->get_op_array(DES).is_local() )
         // When 1-index is duplicated on all ranks we don't want 3-index being duplicated too
         tuples[ std::make_tuple( dot, dot, i) ] = -1; 
-//        assert(false);
       else
         tuples[ std::make_tuple( dot, dot, i) ] = mpigetrank();
     } 
@@ -99,7 +97,6 @@ pout << "dot = " << dot << endl;
       if ( sysBlock->get_op_array(DES).is_local() )
         // When 1-index is duplicated on all ranks we don't want 3-index being duplicated too
         tuples[ std::make_tuple( i, dot, dot) ] = -1;
-//        assert(false);
       else
         tuples[ std::make_tuple( i, dot, dot) ] = mpigetrank();
     }
@@ -140,7 +137,7 @@ pout << "dot = " << dot << endl;
     assert( i >= j );
     assert( j >= k );
     if ( sysBlock->get_op_array(RI_3INDEX).is_local() )
-      // When 1-site block 3-index is duplicated on all ranks we don't want multi-block 3-index being duplicated too
+      // When 1-site 3-index is duplicated on all ranks we don't want multi-site 3-index being duplicated too
       tuples[ std::make_tuple( i, j, k) ] = -1;
     else
       tuples[ std::make_tuple( i, j, k) ] = mpigetrank();
@@ -368,7 +365,7 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
   std::vector<int> orbs(3);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
-cout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << std::endl;
+//cout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << std::endl;
     std::vector<boost::shared_ptr<CreCreCre> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));

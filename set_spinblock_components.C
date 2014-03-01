@@ -13,11 +13,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
+// FIXME make sure all ops are accounted for here!  what a mess...
 void SpinBlock::setstoragetype(Storagetype st)
 {
   if (st == LOCAL_STORAGE)
-//  if (true)
   {
     localstorage = true;
     if (has(CRE))
@@ -61,6 +60,24 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(DES_CRE_DES).set_local() = true;
     if (has(DES_DES_CRE))
       set_op_array(DES_DES_CRE).set_local() = true;
+    if (has(DES_CRE_CRE))
+      set_op_array(DES_CRE_CRE).set_local() = true;
+    if (has(CRE_CRE_DES_DES))
+      set_op_array(CRE_CRE_DES_DES).set_local() = true;
+    if (has(CRE_DES_CRE_DES))
+      set_op_array(CRE_DES_CRE_DES).set_local() = true;
+    if (has(CRE_DES_DES_CRE))
+      set_op_array(CRE_DES_DES_CRE).set_local() = true;
+    if (has(CRE_DES_DES_DES))
+      set_op_array(CRE_DES_DES_DES).set_local() = true;
+    if (has(CRE_CRE_CRE_DES))
+      set_op_array(CRE_CRE_CRE_DES).set_local() = true;
+    if (has(CRE_CRE_DES_CRE))
+      set_op_array(CRE_CRE_DES_CRE).set_local() = true;
+    if (has(CRE_DES_CRE_CRE))
+      set_op_array(CRE_DES_CRE_CRE).set_local() = true;
+    if (has(CRE_CRE_CRE_CRE))
+      set_op_array(CRE_CRE_CRE_CRE).set_local() = true;
   }
   else if (st == DISTRIBUTED_STORAGE)
   {
@@ -105,6 +122,8 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(DES_CRE_DES).set_local() = false;
     if (has(DES_DES_CRE))
       set_op_array(DES_DES_CRE).set_local() = false;
+    if (has(DES_CRE_CRE))
+      set_op_array(DES_CRE_CRE).set_local() = false;
     if (has(CRE_CRE_DES_DES))
       set_op_array(CRE_CRE_DES_DES).set_local() = false;
     if (has(CRE_DES_CRE_DES))
