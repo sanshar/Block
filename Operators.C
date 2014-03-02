@@ -954,26 +954,26 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
   if (rightBlock->get_op_array(CRE_CRE_DESCOMP).has(k)) {
     const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_CRE_DESCOMP, deltaQuantum, k);
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
-  }  
+  }
 
   if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY || dmrginp.hamiltonian() == BCS) {
     if (loopBlock->has(CRE_DESCOMP)) {
 
-	  Functor f = boost::bind(&opxop::cxcdcomp, otherBlock, _1, &b, k, this, 1.0); 
-	  for_all_singlethread(loopBlock->get_op_array(CRE), f);
-	  
-      f = boost::bind(&opxop::dxcccomp, otherBlock, _1, &b, k, this, 2.0); // factor of 2.0 because CCcomp_{ij} = -CCcomp_{ji}
-	  for_all_singlethread(loopBlock->get_op_array(CRE), f);
-          
-	  f = boost::bind(&opxop::cxcdcomp, loopBlock, _1, &b, k, this, 1.0); 
-	  for_all_singlethread(otherBlock->get_op_array(CRE), f);
+      Functor f = boost::bind(&opxop::cxcdcomp, otherBlock, _1, &b, k, this, 1.0); 
+      for_all_singlethread(loopBlock->get_op_array(CRE), f);
 
-	  f = boost::bind(&opxop::dxcccomp, loopBlock, _1, &b, k, this, 2.0);
-	  for_all_singlethread(otherBlock->get_op_array(CRE), f);
-	
+      f = boost::bind(&opxop::dxcccomp, otherBlock, _1, &b, k, this, 2.0); // factor of 2.0 because CCcomp_{ij} = -CCcomp_{ji}
+      for_all_singlethread(loopBlock->get_op_array(CRE), f);
+
+      f = boost::bind(&opxop::cxcdcomp, loopBlock, _1, &b, k, this, 1.0); 
+      for_all_singlethread(otherBlock->get_op_array(CRE), f);
+
+      f = boost::bind(&opxop::dxcccomp, loopBlock, _1, &b, k, this, 2.0);
+      for_all_singlethread(otherBlock->get_op_array(CRE), f);
+
     } else if (otherBlock->has(CRE_DESCOMP)) {
-	  cout << "I should not be here"<<endl;exit(0);
-    }
+      cout << "I should not be here"<<endl;exit(0);
+    } 
   }
 
   dmrginp.makeopsT -> stop();

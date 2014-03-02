@@ -381,7 +381,7 @@ void SpinAdapted::opxop::dxcccomp(const SpinBlock* otherBlock, std::vector<boost
     SpinQuantum iq = getSpinQuantum(i), kq = getSpinQuantum(k);
     
     if (!otherBlock->get_op_array(DES_DESCOMP).has_local_index(k,i))
-	  return;
+      return;
 
     const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherBlock->get_op_array(DES_DESCOMP).get_element(k,i); // P_{ki}
     for (int opind2 = 0; opind2<opvec2.size(); opind2++) {

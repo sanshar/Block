@@ -50,9 +50,6 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
     //newSystem.printOperatorSummary();
     system = newSystem;
   }
-  cout << system<<endl;
-
-
 
   SpinBlock environment;
   InitBlocks::InitStartingBlock(environment, false, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
