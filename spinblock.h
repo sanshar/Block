@@ -33,7 +33,6 @@ class SpinBlock
       ar.register_type(static_cast<Op_component<CreDes> *>(NULL));
       ar.register_type(static_cast<Op_component<CreCre> *>(NULL));
       ar.register_type(static_cast<Op_component<CreDesComp> *>(NULL));
-      ar.register_type(static_cast<Op_component<CreDesComp_No_Symm> *>(NULL));      
       ar.register_type(static_cast<Op_component<DesDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<CreCreDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<Ham> *>(NULL));

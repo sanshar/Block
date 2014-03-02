@@ -129,7 +129,7 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
   for (int i=0; i < sites.size(); i++)
       sites[i] = lower + i;
 
-  BuildTensorProductBlock(sites);   
+  BuildTensorProductBlock(sites);
 }
 
 SpinBlock::SpinBlock (const SpinBlock& b) { *this = b; }
@@ -200,7 +200,6 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
     dmrginp.twoindex_screen_tol() = twoindex_ScreenTol;
     dmrginp.oneindex_screen_tol() = oneindex_ScreenTol;
   }
-
   build_operators(dets, ladders);
 }
 
@@ -228,7 +227,6 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core()) {
-	//cout << it->second->get_op_string()<<endl;
         it->second->build_csf_operators(dets, ladders, *this);      
       }
     }
@@ -387,14 +385,6 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
     dmrginp.s0time -> stop();
   }
   
-  if (dmrginp.hamiltonian() == BCS) {
-    dmrginp.s0time -> start();
-    v_add = otherBlock->get_op_array(CRE_DESCOMP_No_Symm).is_local() ? v_array : v_distributed;
-    f = boost::bind(&opxop::cdxcdcomp_no_symm, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
-    for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
-    dmrginp.s0time -> stop();    
-  }
-
   dmrginp.twoelecT -> stop();
 
   accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
@@ -440,12 +430,6 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
     for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);  //not needed in diagonal
   }
 
-  if ( dmrginp.hamiltonian() == BCS) {
-    e_add =  otherBlock->get_op_array(CRE_DESCOMP_No_Symm).is_local() ? e_array : e_distributed;
-    f = boost::bind(&opxop::cdxcdcomp_no_symm_d, otherBlock, _1, this, e_add);
-    for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
-  }
-  
   accumulateMultiThread(&e, e_array, e_distributed, MAX_THRD);
 
 }

@@ -25,8 +25,6 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(DES_DESCOMP).set_local() = true;
     if (has(CRE_DESCOMP))
       set_op_array(CRE_DESCOMP).set_local() = true;
-    if (has(CRE_DESCOMP_No_Symm))
-      set_op_array(CRE_DESCOMP_No_Symm).set_local() = true;
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = true;
 
@@ -44,8 +42,6 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(DES_DESCOMP).set_local() = false;
     if (has(CRE_DESCOMP))
       set_op_array(CRE_DESCOMP).set_local() = false;
-    if (has(CRE_DESCOMP_No_Symm))
-      set_op_array(CRE_DESCOMP_No_Symm).set_local() = false;
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = false;
   }
@@ -66,8 +62,6 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(DES_DESCOMP).set_local() = false;
     if (has(CRE_DESCOMP))
       set_op_array(CRE_DESCOMP).set_local() = false;
-    if (has(CRE_DESCOMP_No_Symm))
-      set_op_array(CRE_DESCOMP_No_Symm).set_local() = false;
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = false;
   }
@@ -91,9 +85,6 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
       break;
     case CRE_DESCOMP:
       ret = boost::shared_ptr<Op_component<CreDesComp> >(new Op_component<CreDesComp>(is_core));
-      break;
-    case CRE_DESCOMP_No_Symm:
-      ret = boost::shared_ptr<Op_component<CreDesComp_No_Symm> >(new Op_component<CreDesComp_No_Symm>(is_core));
       break;
     case DES_DESCOMP:
       ret = boost::shared_ptr<Op_component<DesDesComp> >(new Op_component<DesDesComp>(is_core));
@@ -128,10 +119,6 @@ void SpinBlock::default_op_components(bool complementary_)
   ops[CRE_CRE] = make_new_op(CRE_CRE, true);
   ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
   ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
-
-  if (dmrginp.hamiltonian() == BCS) {
-    ops[CRE_DESCOMP_No_Symm] = make_new_op(CRE_DESCOMP_No_Symm, true);
-  }
 
   this->loopblock = true;
 
@@ -169,8 +156,6 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
       if (haveCompops) {
 	    ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
 	    ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
-        if (dmrginp.hamiltonian() == BCS)
-	      ops[CRE_DESCOMP_No_Symm] = make_new_op(CRE_DESCOMP_No_Symm, true);
       }
     }
     if (haveNormops)
@@ -193,8 +178,6 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
       if (haveCompops) {
 	    ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, false);
 	    ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, false);
-        if (dmrginp.hamiltonian() == BCS)
-	      ops[CRE_DESCOMP_No_Symm] = make_new_op(CRE_DESCOMP_No_Symm, false);
       }
     }
     if (haveNormops)

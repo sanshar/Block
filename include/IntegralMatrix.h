@@ -132,6 +132,7 @@ class TwoElectronArray // 2e integral, notation (12|12), symmetric matrix
       ar & indexMap;
       ar & rhf;
       ar & bin;
+      ar & permSymm;
     }
 
 
@@ -251,6 +252,8 @@ class PairArray {
       ar & rep;
       ar & srep;
       ar & dim;
+      ar & rhf;
+      ar & bin;
     }
     Matrix rep;
     SymmetricMatrix srep;
@@ -335,6 +338,8 @@ class CCCCArray {
       ar & rep;
       ar & dim;
       ar & indexMap;
+      ar & rhf;
+      ar & bin;
     }
 
   public:
@@ -418,6 +423,8 @@ class CCCDArray {
       ar & repB;
       ar & dim;
       ar & indexMap;
+      ar & rhf;
+      ar & bin;
     }
   
   public:

@@ -73,9 +73,9 @@ std::vector<int, std::allocator<int> > screened_d_indices(const std::vector<int,
 
 bool screen_d_interaction(int index, const std::vector<int, std::allocator<int> >& interactingix, const OneElectronArray& onee, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh);
 
-std::vector<std::pair<int, int> > screened_cd_indices(const std::vector<int, std::allocator<int> >& indices, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh, bool symm = true, bool comp = true);
+std::vector<std::pair<int, int> > screened_cd_indices(const std::vector<int, std::allocator<int> >& indices, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh);
 
-bool screen_cd_interaction(int ci, int dj, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh, bool symm = true, bool comp = true);
+bool screen_cd_interaction(int ci, int dj, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh);
 
 std::vector<std::pair<int, int> > screened_dd_indices(const std::vector<int, std::allocator<int> >& indices, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh);
 

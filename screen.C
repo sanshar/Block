@@ -308,19 +308,18 @@ bool screen_d_interaction(int index, const std::vector<int, std::allocator<int> 
   }
 }
 
-std::vector<std::pair<int, int> > screened_cd_indices(const std::vector<int, std::allocator<int> >& indices, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh, bool symm, bool comp) {
+std::vector<std::pair<int, int> > screened_cd_indices(const std::vector<int, std::allocator<int> >& indices, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh) {
   vector<pair<int, int> > screened_indices;
 
   for (int i = 0; i < indices.size(); ++i) {
-    int max_j = symm ? i: indices.size()-1;
-    for (int j = 0; j <= max_j; ++j)
-      if (dmrginp.use_partial_two_integrals() || screen_cd_interaction(indices[i], indices[j], interactingix, twoe, vcc, vcccc, vcccd, thresh, symm, comp))
+    for (int j = 0; j <= i; ++j)
+      if (dmrginp.use_partial_two_integrals() || screen_cd_interaction(indices[i], indices[j], interactingix, twoe, vcc, vcccc, vcccd, thresh))
 	    screened_indices.push_back(make_pair(indices[i], indices[j]));
   }
   return screened_indices;
 }
 
-bool screen_cd_interaction(int ci, int dj, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh, bool symm, bool comp) {
+bool screen_cd_interaction(int ci, int dj, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh) {
   if (dmrginp.spinAdapted()) {
     cout << "BCS with spin adaption not implemented!" << endl;
     abort();
@@ -330,16 +329,8 @@ bool screen_cd_interaction(int ci, int dj, const std::vector<int, std::allocator
     for (int l = 0; l < ninter; ++l) {
       int kx = interactingix[k];
 	  int lx = interactingix[l];
-      if (symm && !comp) {
-	    if (fabs(twoe(ci, kx, lx, dj))>= thresh || fabs(twoe(kx, ci, lx, dj)) >= thresh || fabs(v_cccd(ci, kx, lx, dj)) >= thresh || fabs(v_cccd(dj, kx, lx, ci)) >= thresh)
-          return true;
-      } else if (symm && comp) {
-        if (fabs(twoe(ci, kx, lx, dj))>=thresh || fabs(twoe(kx, ci, lx, dj)) >= thresh)
-          return true;
-      } else { // !symm
-        if (fabs(v_cccd(ci, kx, lx, dj)) >= thresh || fabs(v_cccd(dj, kx, lx, ci)) >= thresh)
-          return true;
-      }
+	  if (fabs(twoe(ci, kx, lx, dj))>= thresh || fabs(twoe(kx, ci, lx, dj)) >= thresh || fabs(v_cccd(ci, kx, lx, dj)) >= thresh || fabs(v_cccd(dj, kx, lx, ci)) >= thresh)
+        return true;
     }
     return (ninter == 0);
   }

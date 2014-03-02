@@ -105,14 +105,8 @@ void SpinBlock::recvcompOps(Op_component_base& opcomp, int I, int J, int optype)
 #ifndef SERIAL
   boost::mpi::communicator world;
   std::vector<boost::shared_ptr<SparseMatrix> > oparray = opcomp.get_element(I,J);
-  if (optype == CRE_DESCOMP_No_Symm) {
-    for(int i=0; i<oparray.size(); i++) {
-      world.recv(processorindex(squaremap(I, J, dmrginp.last_site())), optype+i*10+1000*J+100000*I, *oparray[i]);
-    }
-  } else {
-    for(int i=0; i<oparray.size(); i++) {
-      world.recv(processorindex(trimap(I, J, dmrginp.last_site())), optype+i*10+1000*J+100000*I, *oparray[i]);
-    }
+  for(int i=0; i<oparray.size(); i++) {
+    world.recv(processorindex(trimap(I, J, dmrginp.last_site())), optype+i*10+1000*J+100000*I, *oparray[i]);
   }
 #endif
 }
@@ -173,35 +167,7 @@ void SpinBlock::addAdditionalCompOps()
     //dmrginp.datatransfer.stop();
     //dmrginp.datatransfer -> stop(); //ROA
       
-  }
-  if (dmrginp.hamiltonian() == BCS)
-  for (int i=0; i<complementary_sites.size(); i++) {
-    int compsite = complementary_sites[i];
-    int I = compsite;
-    int J = dotopindex;
-    if (processorindex(compsite) == processorindex(squaremap(I, J, length)))
-      continue;
-    if (processorindex(compsite) == mpigetrank())
-    {
-      bool other_proc_has_ops = true;
-      world.recv(processorindex(squaremap(I, J, length)), 0, other_proc_has_ops);
-      //this will potentially receive some ops
-      if (other_proc_has_ops) {
-	    ops[CRE_DESCOMP_No_Symm]->add_local_indices(I, J);
-	    recvcompOps(*ops[CRE_DESCOMP_No_Symm], I, J, CRE_DESCOMP_No_Symm);
-      }
-    } else {
-      //this will potentially send some ops
-      if (processorindex(squaremap(I, J, length)) == mpigetrank()) {
-	    bool this_proc_has_ops = ops[CRE_DESCOMP_No_Symm]->has_local_index(I, J);
-	    world.send(processorindex(compsite), 0, this_proc_has_ops);
-	    if (this_proc_has_ops) {
-	      sendcompOps(*ops[CRE_DESCOMP_No_Symm], I, J, CRE_DESCOMP_No_Symm, compsite);      
-        } else 
-	      continue;
-      }
-    }
-  }  
+  } 
 #endif
 }
 

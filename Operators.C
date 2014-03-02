@@ -578,8 +578,7 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
   }  
   // build CDcomp explicitely
   for (int kx = 0; kx < leftBlock->get_sites().size(); ++kx)
-    for (int lx = 0; lx < rightBlock->get_sites().size(); ++lx)
-    {
+    for (int lx = 0; lx < rightBlock->get_sites().size(); ++lx) {
       int k = leftBlock->get_sites()[kx];
       int l = rightBlock->get_sites()[lx];
 
@@ -605,6 +604,47 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
 	        double parity = getCommuteParity(op1->get_deltaQuantum()[0], top2.get_deltaQuantum()[0], get_deltaQuantum()[0]);
 	        SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV*parity);
 	      }
+      }
+
+      if (dmrginp.hamiltonian() == BCS) {
+        CK = TensorOp(k, 1);
+        TensorOp CL(l, 1);
+        TensorOp CC2 = CK.product(CL, spin, sym.getirrep(), k==l); // k cannot equal to l
+        if (!CC2.empty) {
+          double scaleV = calcCompfactor(CD1, CC2, CD, v_cccd);
+          CL = TensorOp(l, 1);
+          CK = TensorOp(k, 1);
+          TensorOp CC2_commute = CL.product(CK, spin, sym.getirrep(), k==l);
+          double scaleV2 = calcCompfactor(CD1, CC2_commute, CD, v_cccd);
+          if (leftBlock->get_op_array(CRE).has(k) && rightBlock->get_op_array(CRE).has(l) &&  fabs(scaleV2)+fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
+            boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(k), k);
+            boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(l), l);
+            double parity = getCommuteParity(op1->get_deltaQuantum()[0], op2->get_deltaQuantum()[0], get_deltaQuantum()[1]);
+            scaleV += parity * scaleV2;
+	        if (fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
+              SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, scaleV);
+            }
+          }
+        }
+        TensorOp DK(k, -1);
+        DL = TensorOp(l, -1);
+        TensorOp DD2 = DK.product(DL, spin, sym.getirrep(), k==l);
+        if (!DD2.empty) {
+          double scaleV = calcCompfactor(CD1, DD2, CD, v_cccd);
+          DL = TensorOp(l, -1);
+          DK = TensorOp(k, -1);
+          TensorOp DD2_commute = DL.product(DK, spin, sym.getirrep(), k==l);
+          double scaleV2 = calcCompfactor(CD1, DD2_commute, CD, v_cccd);
+          if (leftBlock->get_op_array(CRE).has(k) && rightBlock->get_op_array(CRE).has(l) &&  fabs(scaleV2)+fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
+            boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(k), k);
+            boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(l), l);
+            double parity = getCommuteParity(op1->get_deltaQuantum()[0], op2->get_deltaQuantum()[0], get_deltaQuantum()[1]);
+            scaleV += parity * scaleV2;
+	        if (fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
+              SpinAdapted::operatorfunctions::TensorProduct(leftBlock, Transposeview(*op1), Transposeview(*op2), &b, &(b.get_stateInfo()), *this, scaleV);            
+            }
+          }
+        }
       }
     }
   dmrginp.makeopsT -> stop();
@@ -636,12 +676,30 @@ double SpinAdapted::CreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder, co
             int k = b->get_sites()[kk];
             int l = b->get_sites()[kl];
             
-            TensorOp CK(k,1), DL(l,-1);
-            TensorOp CD2 = CK.product(DL, spin, sym.getirrep());
-            if (!CD2.empty) {
-              std::vector<double> MatElements = calcMatrixElements(c1, CD2, ladder[i]);
-              double factor = calcCompfactor(CD1, CD2, CD, *(b->get_twoInt()));
-              element += MatElements[index]*factor/cleb;
+            if (dmrginp.hamiltonian() == BCS && dn == 2) {
+              TensorOp CK(k,1), CL(l,1);
+              TensorOp CC2 = CK.product(CL, spin, sym.getirrep(), k==l);
+              if (!CC2.empty) {
+                std::vector<double> MatElements = calcMatrixElements(c1, CC2, ladder[i]);
+                double factor = calcCompfactor(CD1, CC2, CD, v_cccd);
+                element += MatElements[index]*factor/cleb;
+              }
+            } else if (dmrginp.hamiltonian() == BCS && dn == -2) {
+              TensorOp DK(k,-1), DL(l,-1);
+              TensorOp DD2 = DK.product(DL, spin, sym.getirrep(), k==l);
+              if (!DD2.empty) {
+                std::vector<double> MatElements = calcMatrixElements(c1, DD2, ladder[i]);
+                double factor = calcCompfactor(CD1, DD2, CD, v_cccd);
+                element += MatElements[index]*factor/cleb; // FIXME a factor of half?
+              }
+            } else {
+              TensorOp CK(k,1), DL(l,-1);
+              TensorOp CD2 = CK.product(DL, spin, sym.getirrep());
+              if (!CD2.empty) {
+                std::vector<double> MatElements = calcMatrixElements(c1, CD2, ladder[i]);
+                double factor = calcCompfactor(CD1, CD2, CD, *(b->get_twoInt()));
+                element += MatElements[index]*factor/cleb;  // FIXME a factor of half?
+              }
             }
           }
         break;
@@ -664,156 +722,6 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesComp::getworking
   else
     {
       boost::shared_ptr<SparseMatrix> rep(new CreDesComp);
-      *rep = *this;
-
-      rep->build(*block);
-      return rep;
-    }
-
-}
-
-//******************CREDESCOMP-No-Symm, used for BCS part **********
-
-
-void SpinAdapted::CreDesComp_No_Symm::build(const SpinBlock& b)
-{
-  dmrginp.makeopsT -> start();
-  built = true;
-  allocate(b.get_stateInfo());
-  IrrepSpace sym = deltaQuantum[0].get_symm();  // sym and spin are the same for all dn part
-  int spin = deltaQuantum[0].get_s().getirrep();
-
-  const int i = get_orbs()[0];
-  const int j = get_orbs()[1];
-
-  TensorOp C(i,1), D(j,-1);
-  TensorOp CD1 = C.product(D, (-deltaQuantum[0].get_s()).getirrep(), (-sym).getirrep()); // the operator to be complimentaried
-
-  SpinBlock* leftBlock = b.get_leftBlock();
-  SpinBlock* rightBlock = b.get_rightBlock();
-
-  if (leftBlock->get_op_array(CRE_DESCOMP_No_Symm).has(i, j))
-  { 
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DESCOMP_No_Symm, deltaQuantum, i,j);
-    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
-  }
-  if (rightBlock->get_sites().size() == 0) {
-    //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
-    return;
-  }
-  if (rightBlock->get_op_array(CRE_DESCOMP_No_Symm).has(i, j))
-  {
-    const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_DESCOMP_No_Symm, deltaQuantum, i,j);
-    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
-  }  
-  // build CDcomp explicitely
-  for (int kx = 0; kx < leftBlock->get_sites().size(); ++kx)
-    for (int lx = 0; lx < rightBlock->get_sites().size(); ++lx)
-    {
-      int k = leftBlock->get_sites()[kx];
-      int l = rightBlock->get_sites()[lx];
-
-      TensorOp CK(k,1), CL(l,1);
-      TensorOp CC2 = CK.product(CL, spin, sym.getirrep(), k==l); // k cannot equal to l
-      if (!CC2.empty) {
-        double scaleV = calcCompfactor(CD1, CC2, CD, v_cccd);
-        CL = TensorOp(l, 1);
-        CK = TensorOp(k, 1);
-        TensorOp CC2_commute = CL.product(CK, spin, sym.getirrep(), k==l);
-        double scaleV2 = calcCompfactor(CD1, CC2_commute, CD, v_cccd);
-        if (leftBlock->get_op_array(CRE).has(k) && rightBlock->get_op_array(CRE).has(l) &&  fabs(scaleV2)+fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
-          boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(k), k);
-          boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(l), l);
-          double parity = getCommuteParity(op1->get_deltaQuantum()[0], op2->get_deltaQuantum()[0], get_deltaQuantum()[1]);
-          scaleV += parity * scaleV2;
-	      if (fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
-            SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, scaleV);
-          }
-        }
-      }
-      TensorOp DK(k, -1), DL(l, -1);
-      TensorOp DD2 = DK.product(DL, spin, sym.getirrep(), k==l);
-      if (!DD2.empty) {
-        double scaleV = calcCompfactor(CD1, DD2, CD, v_cccd);
-        DL = TensorOp(l, -1);
-        DK = TensorOp(k, -1);
-        TensorOp DD2_commute = DL.product(DK, spin, sym.getirrep(), k==l);
-        double scaleV2 = calcCompfactor(CD1, DD2_commute, CD, v_cccd);
-        if (leftBlock->get_op_array(CRE).has(k) && rightBlock->get_op_array(CRE).has(l) &&  fabs(scaleV2)+fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
-          boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(CRE, getSpinQuantum(k), k);
-          boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(l), l);
-          double parity = getCommuteParity(op1->get_deltaQuantum()[0], op2->get_deltaQuantum()[0], get_deltaQuantum()[1]);
-          scaleV += parity * scaleV2;
-	      if (fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
-            SpinAdapted::operatorfunctions::TensorProduct(leftBlock, Transposeview(*op1), Transposeview(*op2), &b, &(b.get_stateInfo()), *this, scaleV);            
-          }
-        }
-      }
-    }
-  dmrginp.makeopsT -> stop();
-}
-
-
-double SpinAdapted::CreDesComp_No_Symm::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
-{
-  double element = 0.0;
-  int I = get_orbs()[0], 
-    J = get_orbs()[1]; //convert spatial id to spin id because slaters need that
-  IrrepSpace sym = deltaQuantum[0].get_symm();
-  int spin = deltaQuantum[0].get_s().getirrep();
-  bool finish = false;
-  int dn = c1.n_is() - ladder[0].n_is(); // classify whether we calculate CC or CD
-  
-  TensorOp C(I, 1), D(J, -1);
-  TensorOp CD1 = C.product(D, -spin, (-deltaQuantum[0].get_symm()).getirrep());
-
-  for (int j = 0; j < deltaQuantum.size(); ++j) {
-    for (int i=0; i<ladder.size(); i++)
-    {
-      int index = 0; double cleb=0.0;
-      if (nonZeroTensorComponent(c1, deltaQuantum[j], ladder[i], index, cleb)) {
-        for (int kl =0; kl<b->get_sites().size(); kl++) 
-          for (int kk =0; kk<b->get_sites().size(); kk++) {
-            int k = b->get_sites()[kk];
-            int l = b->get_sites()[kl];
-            if (dn == 2) {
-              TensorOp CK(k,1), CL(l,1);
-              TensorOp CC2 = CK.product(CL, spin, sym.getirrep(), k==l);
-              if (!CC2.empty) {
-                std::vector<double> MatElements = calcMatrixElements(c1, CC2, ladder[i]);
-                double factor = calcCompfactor(CD1, CC2, CD, v_cccd);
-                element += MatElements[index]*factor/cleb;
-              }
-            } else { // dn = -2
-              TensorOp DK(k,-1), DL(l,-1);
-              TensorOp DD2 = DK.product(DL, spin, sym.getirrep(), k==l);
-              if (!DD2.empty) {
-                std::vector<double> MatElements = calcMatrixElements(c1, DD2, ladder[i]);
-                double factor = calcCompfactor(CD1, DD2, CD, v_cccd);
-                element += MatElements[index]*factor/cleb;
-              }
-            }
-          }
-        break;
-      }
-      else
-        continue;
-    }
-  }
-  return element;
-}
-
-
-boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesComp_No_Symm::getworkingrepresentation(const SpinBlock* block)
-{
-  //assert(this->get_initialised());
-  if (this->get_built())
-    {
-      return boost::shared_ptr<CreDesComp_No_Symm>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
-    }
-  else
-    {
-      boost::shared_ptr<SparseMatrix> rep(new CreDesComp_No_Symm);
       *rep = *this;
 
       rep->build(*block);
@@ -1068,13 +976,6 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
     }
   }
 
-  if (dmrginp.hamiltonian() == BCS) {
-    Functor f = boost::bind(&opxop::cxcdcomp_no_symm, otherBlock, _1, &b, k, this, 1.0); 
-	for_all_singlethread(loopBlock->get_op_array(CRE), f);
-	f = boost::bind(&opxop::cxcdcomp_no_symm, loopBlock, _1, &b, k, this, 1.0);
-	for_all_singlethread(otherBlock->get_op_array(CRE), f);
-  }
-
   dmrginp.makeopsT -> stop();
 }
 
@@ -1280,12 +1181,6 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
     f = boost::bind(&opxop::ddxcccomp, otherBlock, _1, &b, op_add);
     for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);
   }
-
-  if (dmrginp.hamiltonian() == BCS) {
-    op_add = (otherBlock->get_op_array(CRE_DESCOMP_No_Symm).is_local() && loopBlock->get_op_array(CRE_DES).is_local())? op_array : op_distributed;
-    f = boost::bind(&opxop::cdxcdcomp_no_symm, otherBlock, _1, &b, op_add);
-    for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
-  }
   //accumulateMultiThread(this, op_array, op_distributed, maxt);
   accumulateMultiThread(this, op_array, op_distributed, MAX_THRD);
 
@@ -1461,7 +1356,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
               int K = b->get_sites()[kl];
               s1 = it1->first; s2 = it2->first;
               parity = s1.trace(s2.d(dI).d(dJ).d(K).c(K));
-              factor = parity*d1*d2/6;
+              factor = parity*d1*d2;
               matrixE += factor*v_cccd(dI,dJ,K,K);;
             }
           }

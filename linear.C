@@ -237,6 +237,10 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	  }
 
       h_multiply(*bptr, *sigmaptr);
+      //if (mpigetrank() == 0) {
+      //  cout << *bptr << endl;
+      //  cout << *sigmaptr << endl;
+      //}
 	}
     dmrginp.hmultiply -> stop();
 

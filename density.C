@@ -275,10 +275,6 @@ void DensityMatrix::add_onedot_noise(const std::vector<Wavefunction>& wave_solut
         onedot_noise.set_opType(CRE_DESCOMP);
         for_all_multithread(leftBlock->get_op_array(CRE_DESCOMP), onedot_noise);
 
-        if (dmrginp.hamiltonian() == BCS) {
-          onedot_noise.set_opType(CRE_DESCOMP_No_Symm);
-          for_all_multithread(leftBlock->get_op_array(CRE_DESCOMP_No_Symm), onedot_noise);
-        }
       }
     }
 
