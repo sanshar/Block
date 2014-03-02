@@ -20,29 +20,41 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 
 
-std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBlock& b)
+std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char* name)
 {
   Timer disktimer;
   std::string file;
 
+  //we only every save one set of spin blocks because they take up so much memory, so the spin block names are not indexed with states
   if (forward)
-    file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/SpinBlock-forward-" % sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
+    file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
   else
-    file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
+    file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
   
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Restoring block file :: " << file << endl;
 
   std::ifstream ifs(file.c_str(), std::ios::binary);
-  //coutbuf = &ifs;
+
+  int lstate =  left;
+  int rstate =  right;
+
+  if (mpigetrank() == 0) 
+    StateInfo::restore(forward, sites, b.stateInfo, lstate, rstate);
+
+#ifndef SERIAL
+    mpi::communicator world;
+    mpi::broadcast(world, b.stateInfo, 0);
+#endif
+
+
   b.Load (ifs);
   ifs.close();
   //coutbuf = 0;
   return file;
 }
 
-
-void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b)
+void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char *name)
 {
   Timer disktimer;
   std::string file;
@@ -58,12 +70,19 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b)
     else
       file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % mpigetrank() % ".tmp" );
   }
-
+  
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Saving block file :: " << file << endl;
 
 
   std::ofstream ofs(file.c_str(), std::ios::binary);
+
+  int lstate =  left;
+  int rstate =  right;
+
+  if (mpigetrank()==0) 
+    StateInfo::store(forward, sites, b.stateInfo, lstate, rstate);
+
   b.Save (ofs);
   ofs.close();
   //pout << "\t\t\t block save disk time " << disktimer.elapsedwalltime() << " " << disktimer.elapsedcputime() << endl;
@@ -201,8 +220,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if (! it->second->is_core())
       for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
-		  ref(rotateMatrix) , &newStateInfo));
-
+						       boost::ref(rotateMatrix) , &newStateInfo));
   stateInfo = newStateInfo;
   stateInfo.AllocatePreviousStateInfo ();
   *stateInfo.previousStateInfo = oldStateInfo;
@@ -219,7 +237,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if ( it->second->is_core())
-      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, ref(rotateMatrix), (&this->stateInfo)));
+      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), (&this->stateInfo)));
 
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)

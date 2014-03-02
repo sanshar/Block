@@ -176,7 +176,7 @@ void SpinAdapted::Linear::Lanczos(vector<Wavefunction>& b, DiagonalMatrix& e, do
 }
 
 
-void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix& h_diag, double normtol, const bool &warmUp, Davidson_functor& h_multiply, bool& useprecond)
+void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix& h_diag, double normtol, const bool &warmUp, Davidson_functor& h_multiply, bool& useprecond, int currentRoot, std::vector<Wavefunction> &lowerStates)
 {
 
   pout.precision (12);
@@ -188,19 +188,34 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
   int nroots = b.size();
   //normalise all the guess roots
   if(mpigetrank() == 0) {
-    for(int i=0;i<nroots;++i) {
-      for(int j=0;j<i;++j) {
-        double overlap = DotProduct(b[j], b[i]);
-        ScaleAdd(-overlap, b[j], b[i]);
+    for(int i=0;i<nroots;++i)
+      {
+	for(int j=0;j<i;++j)
+	  {
+	    double overlap = DotProduct(b[j], b[i]);
+	    ScaleAdd(-overlap, b[j], b[i]);
+	  }
+	Normalise(b[i]);
       }
-      Normalise(b[i]);
+  
+  
+    //if we are doing state specific, lowerstates has lower energy states
+    if (lowerStates.size() != 0) {
+      for (int i=0; i<lowerStates.size(); i++) {
+	double overlap = DotProduct(b[0], lowerStates[i]);
+	ScaleAdd(-overlap/DotProduct(lowerStates[i], lowerStates[i]), lowerStates[i], b[0]);
+      }
+      Normalise(b[0]);
     }
+
   }
   vector<Wavefunction> sigma;
   int converged_roots = 0;
-  while(true) {
-    if (dmrginp.outputlevel() > 0)
-	  pout << "\t\t\t Davidson Iteration :: " << iter << endl;
+  int maxiter = h_diag.Ncols() - lowerStates.size();
+  while(true)
+    {
+      if (dmrginp.outputlevel() > 0)
+	pout << "\t\t\t Davidson Iteration :: " << iter << endl;
 
     ++iter;
     dmrginp.hmultiply -> start();
@@ -220,7 +235,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
     for(int i=sigmasize;i<bsize;++i) {
 	  Wavefunction sigmai, bi;
 	  Wavefunction* sigmaptr=&sigmai, *bptr = &bi;
-
+	  
 	  if (mpigetrank() == 0) {
 	    sigma.push_back(b[i]);
 	    sigma[i].Clear();
@@ -280,20 +295,30 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 		  ScaleAdd(alpha.element(i, j), sigmatmp[i], sigma[j]);
 		}
 	    }
+
 	
-	// build residual                                                                                                              
+	// build residual 
         for (int i=0; i<converged_roots; i++) {
           r = sigma[i];
           ScaleAdd(-subspace_eigenvalues(i+1), b[i], r);
           double rnorm = DotProduct(r,r);
           if (rnorm > normtol) {
             converged_roots = i;
-            cout << "\t\t\t going back to converged root "<<i<<"  "<<rnorm<<" > "<<normtol<<endl;
+	    if (dmrginp.outputlevel() > 0)
+	      pout << "\t\t\t going back to converged root "<<i<<"  "<<rnorm<<" > "<<normtol<<endl;
             continue;
           }
         }
         r = sigma[converged_roots];
         ScaleAdd(-subspace_eigenvalues(converged_roots+1), b[converged_roots], r);
+
+	if (lowerStates.size() != 0) {
+	  for (int i=0; i<lowerStates.size(); i++) {
+	    double overlap = DotProduct(r, lowerStates[i]);
+	    ScaleAdd(-overlap/DotProduct(lowerStates[i], lowerStates[i]), lowerStates[i], r);
+	    //ScaleAdd(-overlap, lowerStates[i], r);
+	  }
+	}
       }
 
 
@@ -346,6 +371,15 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	      double overlap = DotProduct(r, b[j]);
 	      ScaleAdd(-overlap, b[j], r);
 	    }
+
+	  //if we are doing state specific, lowerstates has lower energy states
+	  if (lowerStates.size() != 0) {
+	    for (int i=0; i<lowerStates.size(); i++) {
+	      double overlap = DotProduct(r, lowerStates[i]);
+	      ScaleAdd(-overlap/DotProduct(lowerStates[i], lowerStates[i]), lowerStates[i], r);
+	      //ScaleAdd(-overlap, lowerStates[i], r);
+	    }
+	  }
 	  //double tau2 = DotProduct(r,r);
 
 	  Normalise(r);

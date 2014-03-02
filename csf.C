@@ -336,9 +336,21 @@ std::vector<SpinAdapted::Csf > SpinAdapted::CSFUTIL::spinfockstrings(const std::
     occ_rep2[dmrginp.spatial_to_spin()[I]+2*irrepsize-2] = 1;
     Slater s1(occ_rep1, 1), s2(occ_rep2, 1); map<Slater, double > m1, m2;
     m1[s1]= 1.0; m2[s2] = 1.0;
+
+    if(dmrginp.hamiltonian() == HEISENBERG) {
+      thisSiteCsf.push_back( Csf(m2, 1, SpinSpace(1), 1, IrrepVector(Irrep.getirrep(), irrepsize-1))); //1,1,L    
+      for (int i=tensorops[0].Szops.size(); i> 0; i--)
+	ladderentry.push_back(applyTensorOp(tensorops[0], i-1));
+      singleSiteLadder.push_back(ladderentry);
+
+      numcsfs.push_back(thisSiteCsf.size());    
+      for (int i=0; i<thisSiteCsf.size(); i++)
+	singleSiteCsf.push_back( thisSiteCsf[i]);
+      continue;
+    }
+
     thisSiteCsf.push_back( Csf(m1, 0, SpinSpace(0), 0, IrrepVector(0,0))); //0,0,0
-    thisSiteCsf.push_back( Csf(m2, 1, SpinSpace(1), 1, IrrepVector(Irrep.getirrep(), irrepsize-1))); //1,1,L
-    
+    thisSiteCsf.push_back( Csf(m2, 1, SpinSpace(1), 1, IrrepVector(Irrep.getirrep(), irrepsize-1))); //1,1,L    
     ladderentry.push_back(Csf(m1, 0, SpinSpace(0), 0, IrrepVector(0,0))); singleSiteLadder.push_back(ladderentry);
     ladderentry.clear();
     
@@ -525,13 +537,15 @@ std::vector< SpinAdapted::Csf > SpinAdapted::Csf::distribute (const int n, const
   na = (n + sp) / 2;
   nb = (n - sp) / 2;
 
+  if(dmrginp.hamiltonian() == HEISENBERG && nb != 0) return s;
   // let's count how many left and right orbitals there actually are                                                                      
   int actualOrbs = dmrginp.spatial_to_spin()[right] - dmrginp.spatial_to_spin()[left];
   int actualNA, actualNB;
   actualNA = actualOrbs/2;
   actualNB = actualOrbs/2;
 
-  // cannot form this combination                                                                                                         
+  // cannot form this combination 
+
   if (na > actualNA || nb > actualNB || na < 0 || nb < 0)
     {
       return s;

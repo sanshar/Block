@@ -17,6 +17,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 using namespace boost;
 using namespace std;
 
+
 void SpinAdapted::SaveRotationMatrix (const std::vector<int>& sites, const std::vector<Matrix>& m1, int state)
 {
   Timer disktimer;
@@ -25,10 +26,11 @@ void SpinAdapted::SaveRotationMatrix (const std::vector<int>& sites, const std::
     {
 
       char file [5000];
+      int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
       if (state == -1)
-	sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(),".state_average.tmp");
+	sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", first, "-", last, ".", mpigetrank(),".state_average.tmp");
       else
-	sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(),".state",state, ".tmp");
+	sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", first, "-", last, ".", mpigetrank(),".state",state, ".tmp");
       if (dmrginp.outputlevel() > 0) 
 	pout << "\t\t\t Saving Rotation Matrix :: " << file << endl;
       std::ofstream ofs(file, std::ios::binary);
@@ -45,11 +47,11 @@ void SpinAdapted::LoadRotationMatrix (const std::vector<int>& sites, std::vector
   if (rank == 0)
   {
     char file [5000];
-    //sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.load_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(), ".tmp");
+    int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
     if(state == -1)
-      sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(),".state_average.tmp");
+      sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", first, "-", last, ".", mpigetrank(),".state_average.tmp");
     else
-      sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(),".state",state, ".tmp");
+      sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", first, "-", last, ".", mpigetrank(),".state",state, ".tmp");
     if (dmrginp.outputlevel() > 0) 
       pout << "\t\t\t Loading Rotation Matrix :: " << file << endl;
     std::ifstream ifs(file, std::ios::binary);
@@ -58,6 +60,21 @@ void SpinAdapted::LoadRotationMatrix (const std::vector<int>& sites, std::vector
     ifs.close();
   }
 }
+
+void SpinAdapted::allocate(const StateInfo& row, const StateInfo& col, std::vector<Matrix>& rotations)
+{
+  rotations.resize(row.quanta.size());
+  for (int i=0; i<row.quanta.size(); i++) {
+    int nrows = row.quantaStates[i];
+    int ncols = 0;
+    for (int j=0; j<col.quanta.size(); j++) 
+      if (col.quanta[j] == row.quanta[i])
+	ncols += col.quantaStates[j];
+
+    rotations[i].ReSize(nrows, ncols);
+  }
+}
+
 
 bool SpinAdapted::can_connect(int n, int spin, int right_block_size)
 {

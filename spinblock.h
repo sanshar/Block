@@ -27,7 +27,7 @@ class SpinBlock
     void serialize(Archive & ar, const unsigned int version)
     {
       ar & localstorage & name & complementary & hasMemoryAllocated & normal & direct & loopblock
-	& sites & complementary_sites & stateInfo;
+	& sites & complementary_sites ;
       //FIX ME!! remove register_type stuff and add BOOST_CLASS_EXPORT to op_components.h (will take longer to compile)                     
       ar.register_type(static_cast<Op_component<Cre> *>(NULL));
       ar.register_type(static_cast<Op_component<CreDes> *>(NULL));
@@ -64,8 +64,8 @@ class SpinBlock
   SpinBlock (int start, int finish, bool is_complement = false);
   void BuildTensorProductBlock (std::vector<int>& new_sites);
   
-  static std::string  restore (bool forward, const vector<int>& sites, SpinBlock& b);
-  static void store (bool forward, const vector<int>& sites, SpinBlock& b);
+  static std::string  restore (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char* name=0);//left and right are the states and the name is the type of the MPO (currently only H)
+  static void store (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char* name=0);//left and right are the states and the name is the type of the MPO (currently only H) 
   void Save (std::ofstream &ofs);
   void Load (std::ifstream &ifs);
 
@@ -73,7 +73,7 @@ class SpinBlock
   double memoryUsed();
   void addAdditionalCompOps();
   const StateInfo& get_stateInfo() const {return stateInfo;}
-  std::vector<int> make_complement(const std::vector<int>& sites);
+  static std::vector<int> make_complement(const std::vector<int>& sites);
   void setstoragetype(Storagetype st);
   void default_op_components(bool complementary_);
   void default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops);
@@ -84,6 +84,7 @@ class SpinBlock
   //void build_comp_remove_normal_ops();
   void remove_normal_ops();
   int get_name() const {return name;}
+  std::vector<int>& set_sites() {return sites;}
   const std::vector<int>& get_sites() const {return sites;}
   const std::vector<int>& get_complementary_sites() const {return complementary_sites;}
   bool is_normal() const {return normal;}
@@ -149,10 +150,11 @@ class SpinBlock
   void RenormaliseFrom (std::vector<double> &energies, std::vector<double> &spins, double &error, std::vector<Matrix>& rotateMatrix,
                         const int keptstates, const int keptqstates, const double tol, SpinBlock& big,
                         const guessWaveTypes &guesswavetype, const double noise, const double additional_noise, const bool &onedot, SpinBlock& system, 
-			SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, const bool& warmUp, int sweepiter);
+			SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, const bool& warmUp, int sweepiter, int currenroot, std::vector<Wavefunction>& lowerStates);
 
-  double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates);
   void transform_operators(std::vector<Matrix>& rotateMatrix);
 };
+
+ double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates);
 }
 #endif

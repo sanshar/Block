@@ -148,10 +148,12 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
     ops[HAM] = make_new_op(HAM, true);
     //for hubbard model if we want to calculate twopdm we still need cd operators
-    if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY || dmrginp.hamiltonian() == BCS || dmrginp.do_cd()) {
-      if (haveNormops) {
-	    ops[CRE_DES] = make_new_op(CRE_DES, true);
-	    ops[CRE_CRE] = make_new_op(CRE_CRE, true);
+    if (dmrginp.hamiltonian() != HUBBARD || dmrginp.do_cd()) {
+      
+      if (haveNormops)
+      {
+	ops[CRE_DES] = make_new_op(CRE_DES, true);
+	ops[CRE_CRE] = make_new_op(CRE_CRE, true);
       }
       if (haveCompops) {
 	    ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
@@ -170,10 +172,12 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     ops[HAM] = make_new_op(HAM, true);
     
     //for hubbard model if we want to calculate twopdm we still need cd operators
-    if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY || dmrginp.hamiltonian() == BCS || dmrginp.do_cd()) {
-      if (haveNormops || dmrginp.do_cd()) {
-	    ops[CRE_DES] = make_new_op(CRE_DES, false);
-	    ops[CRE_CRE] = make_new_op(CRE_CRE, false);
+    if (dmrginp.hamiltonian() != HUBBARD || dmrginp.do_cd()) {
+      
+      if (haveNormops || dmrginp.do_cd())
+      {
+	ops[CRE_DES] = make_new_op(CRE_DES, false);
+	ops[CRE_CRE] = make_new_op(CRE_CRE, false);
       }
       if (haveCompops) {
 	    ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, false);

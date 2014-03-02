@@ -70,6 +70,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_noise_type = RANDOM;
   m_calc_type = DMRG;
   m_solve_type = DAVIDSON;
+  m_stateSpecific = false;
 
   m_spinAdapted = true;
   m_Bogoliubov = false;
@@ -251,6 +252,13 @@ SpinAdapted::Input::Input(const string& config_name)
 	  abort();
 	}	
 	  
+      }
+      else if (boost::iequals(keyword, "statespecific")) {
+	pout<<"--------------------------------------------------------------------"<<endl;
+	pout << "WARNING: THIS OPTION IMPLIES THAT A PREVIOUS DMRG CALCULATION HAS ALREADY BEEN PERFORMED"<<endl;
+	pout << "THIS CALCULATION WILL TAKE THE PREVIOUS WAVEFUNCTIONS AND REFINE THEM"<<endl;
+	pout<<"--------------------------------------------------------------------"<<endl;
+	m_stateSpecific = true;
       }
       else if (boost::iequals(keyword, "lastM")) {
 	if(usedkey[LASTM] == 0) 
@@ -459,6 +467,8 @@ SpinAdapted::Input::Input(const string& config_name)
       }
       else if (boost::iequals(keyword,  "hubbard"))
 	m_ham_type = HUBBARD;
+      else if (boost::iequals(keyword,  "heisenberg"))
+	m_ham_type = HEISENBERG;
       else if (boost::iequals(keyword,  "dmrg"))
 	m_calc_type = DMRG;
       else if (boost::iequals(keyword,  "maxj")) {
@@ -1800,6 +1810,10 @@ void SpinAdapted::Input::performSanityTest()
     pout << m_twodot_to_onedot_iter <<" < "<<m_maxiter<<endl;
     abort();
   }
+  if (m_algorithm_type != ONEDOT && m_stateSpecific == true) {
+    pout << "Only onedot algorithm is allowed with state specific calculation."<<endl;
+    abort();
+  }
 
   if (m_maxiter < m_sweep_iter_schedule.back()) {
     pout << "maximum iterations allowed is less than the last sweep iteration in your schedule."<<endl;
@@ -1913,6 +1927,10 @@ int SpinAdapted::Input::nroots(int sweep_iter) const
   int nroots = m_nroots;
   if (m_noise_type == EXCITEDSTATE && m_sweep_additional_noise_schedule[current] != 0.0 && nroots == 1)
     nroots++;
+
+  if (setStateSpecific())
+    return 1;
+
   return nroots;
 }
 
@@ -1927,6 +1945,9 @@ std::vector<double> SpinAdapted::Input::weights(int sweep_iter) const
      
   }
 
+  if (setStateSpecific())
+    return std::vector<double>(1,1.0);
+  
   int nroots = this->nroots(sweep_iter);
   std::vector<double> weights(nroots);
   for (int i=0; i< m_nroots; i++)

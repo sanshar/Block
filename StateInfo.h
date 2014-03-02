@@ -64,14 +64,20 @@ class StateInfo
 
   std::vector<SpinQuantum> quanta; //the quantas present
   std::vector<int> quantaStates;  //the number of each quanta
-  ObjectMatrix<char> allowedQuanta; //
-  ObjectMatrix< std::vector<int> > quantaMap;
-  std::vector<int> leftUnMapQuanta;
+  ObjectMatrix<char> allowedQuanta; //tensor product of left and right stateinfo states
+
+  //takes i and j quanta of the left and the right state and gives a vector of all resulting quantas. (for abelian symmetry the vector would be of length 1)
+  ObjectMatrix< std::vector<int> > quantaMap; 
+
+  //for the uncollectedstateinfo each quanta is made up of a left and a right quanta, these two vectors unmap an uncollected quata back to the left and the right quanta.
+  std::vector<int> leftUnMapQuanta;  
   std::vector<int> rightUnMapQuanta;
 
   int totalStates;
+
+  //the next three are concerned with blocking and unblocking the states
   std::vector<int> unBlockedIndex;
-  std::vector< std::vector<int> > oldToNewState;
+  std::vector< std::vector<int> > oldToNewState; //quanta[I] is the same as quanta[Ij] where Ij are the indices inside the Ith vector.
   std::vector<int> newQuantaMap;
   bool initialised;
  public:
@@ -96,9 +102,9 @@ class StateInfo
   int getquantastates(int i) {return quantaStates.at(i);}
   int getquantastates(int i) const {return quantaStates.at(i);}
   void UnMapQuantumState (const int QS, const int secondQSTotal, int& firstQS, int& secondQS) const;
-  static void store(bool forward, const vector<int>& sites, const vector<StateInfo>& states);
-  static void restore(bool forward, const vector<int>& sites, vector<StateInfo>& states);
-
+  static void restore(bool forward, const vector<int>& sites, StateInfo& states, int left, int right);
+  static void store(bool forward, const vector<int>& sites, StateInfo& states, int left, int right);
+  static void transform_state(std::vector<Matrix>& rotateMatrix, StateInfo& stateInfo, StateInfo& newStateInfo);
 };
 }
 

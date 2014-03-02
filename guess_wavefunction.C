@@ -91,6 +91,19 @@ void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const SpinB
 
 }
 
+void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const StateInfo& stateInfo, const std::vector<int>& rightsites, const std::vector<int> &dotsites, const int state, const bool &onedot, const bool& transpose_guess_wave)
+{
+  StateInfo oldStateInfo;
+  Wavefunction oldWave;
+
+  vector<int> wfsites = rightsites;
+  wfsites.insert(wfsites.end(), dotsites.begin(), dotsites.end());
+  sort(wfsites.begin(), wfsites.end());
+  oldWave.LoadWavefunctionInfo(oldStateInfo, wfsites, state);
+  onedot_transpose_wavefunction(oldStateInfo, stateInfo, oldWave, trial);
+}
+
+
 /*!                                                                                                                                       
   @brief Transpose wavefunction from [s.][e] to [e.][s] form.                                                                             
 */
@@ -203,8 +216,9 @@ void GuessWave::onedot_threeindex_to_twoindex_wavefunction(const StateInfo& twos
 	      }
 	      scale *= Symmetry::spatial_sixj(Al, Bl, ABl, Cl, Jl, CBl);
 
-	      if (threewavefunction(a, b, c)[insertionNum].Nrows() != 0) 
+	      if (threewavefunction(a, b, c)[insertionNum].Nrows() != 0)  {
 		MatrixScaleAdd(scale, threewavefunction (a, b, c)[insertionNum], twowavefunction.operator_element (ab, c));
+	      }
 	    }
 	  }
 
@@ -262,21 +276,16 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
     }
 
     double norm = DotProduct(solution, solution);
-    /*
-    if (additional_noise >1e-14) {
+
+    if (guesswavetype == BASIC) {
       Wavefunction noiseMatrix = solution;
       noiseMatrix.Randomise();
-      double overlap = DotProduct(noiseMatrix, solution);
-      ScaleAdd(-overlap, solution, noiseMatrix);
       double norm = DotProduct(noiseMatrix, noiseMatrix);
       if (abs(norm) >= 1e-14) {
-	if (dmrginp.outputlevel() > 0) 
-	  pout << "\t\t\t Norm is "<<norm<<". Adding noise of "<<additional_noise<<" to wavefunction "<<endl;
-	ScaleAdd(additional_noise/sqrt(norm), noiseMatrix, solution);
+	ScaleAdd(1e-6/sqrt(norm), noiseMatrix, solution);
       }
-      Normalise(solution);
     }
-    */
+
     Normalise(solution);
     norm = DotProduct(solution, solution);
     if (dmrginp.outputlevel() > 0) 
@@ -293,13 +302,14 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
 
 
 void GuessWave::guess_wavefunctions(std::vector<Wavefunction>& solution, DiagonalMatrix& e, const SpinBlock &big, 
-				    const guessWaveTypes &guesswavetype, const bool &onedot, const bool &transpose_guess_wave, double additional_noise)
+				    const guessWaveTypes &guesswavetype, const bool &onedot, const bool &transpose_guess_wave, double additional_noise, int currentState)
 {
   const int nroots = solution.size();
 
-  for(int i=0;i<nroots;++i) 
-    guess_wavefunctions(solution[i], e, big, guesswavetype, onedot, i, transpose_guess_wave, additional_noise);
-
+  for(int i=0;i<nroots;++i) {
+    int state = dmrginp.setStateSpecific() ? currentState : i;
+    guess_wavefunctions(solution[i], e, big, guesswavetype, onedot, state, transpose_guess_wave, additional_noise);
+  }
 }
 
 /*!  
@@ -398,6 +408,42 @@ void GuessWave::onedot_twoindex_to_threeindex_shufflesysdot(const StateInfo& sta
 
         }
 }
+
+
+void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const StateInfo& stateInfo, const std::vector<int> &leftsites, const std::vector<int> &rightsites, const int state, const bool &onedot, const bool& transpose_guess_wave)
+{
+  if (dmrginp.outputlevel() > 0) 
+    pout << "\t\t\t Transforming previous wavefunction " << endl;
+  
+  ObjectMatrix3D< vector<Matrix> > oldTrialWavefunction;
+  ObjectMatrix3D< vector<Matrix> > newTrialWavefunction;
+  StateInfo oldStateInfo;
+  Wavefunction oldWave;
+  DiagonalMatrix D;
+  Matrix U;
+  Matrix V;
+  std::vector<Matrix> leftRotationMatrix;
+
+  oldWave.LoadWavefunctionInfo (oldStateInfo, leftsites, state);
+  LoadRotationMatrix (leftsites, leftRotationMatrix, state);
+
+
+  for (int q = 0; q < leftRotationMatrix.size (); ++q)
+  {
+    if (leftRotationMatrix [q].Nrows () > 0)
+    {
+      leftRotationMatrix[q] = leftRotationMatrix[q].t();
+    }
+  }
+
+  std::vector<Matrix> rightRotationMatrix;
+  LoadRotationMatrix(rightsites, rightRotationMatrix, state);
+    
+  onedot_transform_wavefunction(oldStateInfo, stateInfo, oldWave, leftRotationMatrix, rightRotationMatrix, trial, transpose_guess_wave);
+
+  double norm = DotProduct(trial, trial);
+}
+
 
 
 void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state, const bool &onedot, const bool& transpose_guess_wave)
@@ -536,7 +582,6 @@ void GuessWave::onedot_transform_wavefunction(const StateInfo& oldstateinfo, con
   Timer transform;
   int oldASz = oldstateinfo.leftStateInfo->quanta.size ();
   int oldCSz = oldstateinfo.rightStateInfo->quanta.size ();
-
   // Old wavefunction is in [s.][e] configuration
   // Then [s.] -> [s'], and [.e'] -> [e]
   // Make wavefunction in [s'][.e'] configuration 
@@ -621,6 +666,7 @@ void GuessWave::onedot_transform_wavefunction(const StateInfo& oldstateinfo, con
     TensorProduct (*(newstateinfo.leftStateInfo->leftStateInfo), newenvstateinfo, tempoldStateInfo,
 		 PARTICLE_SPIN_NUMBER_CONSTRAINT);
   tempoldStateInfo.CollectQuanta();
+
 
   onedot_shufflesysdot(  tempoldStateInfo, newstateinfo, tmpwavefunction, newwavefunction);
 }

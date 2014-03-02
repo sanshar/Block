@@ -11,7 +11,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "initblocks.h"
 #include "pario.h"
 
-void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const bool &forward, 
+void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const bool &forward, int leftState, int rightState,
                                     const int & forward_starting_size, const int &backward_starting_size,
                                     const int& restartSize, const bool &restart, const bool& warmUp)
 {
@@ -27,9 +27,9 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
 	sites[i] = dmrginp.last_site() - len +i ;
     
     if (restart)
-      SpinBlock::restore (forward, sites, startingBlock);
+      SpinBlock::restore (forward, sites, startingBlock, leftState, rightState);
     else
-      SpinBlock::restore (true, sites, startingBlock);
+      SpinBlock::restore (true, sites, startingBlock, leftState, rightState);
   }
   else if (forward)
   {
@@ -67,7 +67,7 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
 }
 
 
-void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &systemDot, SpinBlock &newSystem, const int &sys_add, const bool &direct, const Storagetype &storage, bool haveNormops, bool haveCompops)
+void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &systemDot, SpinBlock &newSystem, int leftState, int rightState, const int &sys_add, const bool &direct, const Storagetype &storage, bool haveNormops, bool haveCompops)
 {
 
   newSystem.default_op_components(direct, system, systemDot, haveNormops, haveCompops);
@@ -81,8 +81,9 @@ void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &s
 }
 
 void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, SpinBlock& environmentDot, SpinBlock &newEnvironment, 
-                                          const SpinBlock &system, SpinBlock &systemDot,
-					 const int &sys_add, const int &env_add, const bool &forward, const bool &direct, const bool &onedot, const bool &nexact, const bool &useSlater, bool haveNormops, bool haveCompops, const bool& dot_with_sys)
+						      const SpinBlock &system, SpinBlock &systemDot, int leftState, int rightState,
+						      const int &sys_add, const int &env_add, const bool &forward, const bool &direct, 
+						      const bool &onedot, const bool &nexact, const bool &useSlater, bool haveNormops, bool haveCompops, const bool& dot_with_sys)
 {
   // now initialise environment Dot
   int systemDotStart, systemDotEnd, environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
@@ -128,14 +129,14 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 	environment.default_op_components(!forward);
 	environment.setstoragetype(DISTRIBUTED_STORAGE);
 	environment.BuildTensorProductBlock(environmentSites);
-	SpinBlock::store (true, environmentSites, environment);	
+	SpinBlock::store (true, environmentSites, environment, leftState, rightState);	
       }
       else
       {
 	newEnvironment.default_op_components(!forward);
 	newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
 	newEnvironment.BuildTensorProductBlock(environmentSites);
-	SpinBlock::store (true, environmentSites, newEnvironment);	
+	SpinBlock::store (true, environmentSites, newEnvironment, leftState, rightState);	
       }
 
     }
@@ -208,9 +209,9 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
     if (dmrginp.outputlevel() > 0)
       pout << "\t\t\t Restoring block of size " << environmentSites.size () << " from previous iteration" << endl;
     if(dot_with_sys && onedot) 
-      SpinBlock::restore (!forward, environmentSites, newEnvironment);
+      SpinBlock::restore (!forward, environmentSites, newEnvironment, leftState, rightState);
     else
-      SpinBlock::restore (!forward, environmentSites, environment);
+      SpinBlock::restore (!forward, environmentSites, environment, leftState, rightState);
     if (dmrginp.outputlevel() > 0)
       mcheck("");
   }

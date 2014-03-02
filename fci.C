@@ -29,7 +29,7 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   sweepParams.set_sweep_parameters();
 
   SpinBlock system;
-  InitBlocks::InitStartingBlock(system, true, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
+  InitBlocks::InitStartingBlock(system, true, 0, 0, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
   int numsites = dmrginp.spinAdapted() ? dmrginp.last_site() : dmrginp.last_site()/2;
   int forwardsites = numsites/2+numsites%2;
   int backwardsites = numsites - forwardsites;
@@ -52,7 +52,7 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   }
 
   SpinBlock environment;
-  InitBlocks::InitStartingBlock(environment, false, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
+  InitBlocks::InitStartingBlock(environment, false, 0, 0, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
   cout << environment<<endl;
   for (int i=0;i <backwardsites-1; i++) {
     SpinBlock envdot(numsites-2-i, numsites-2-i);
@@ -78,7 +78,9 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   double tol = sweepParams.get_davidson_tol();
 
   pout << "\t\t\t Solving the Wavefunction "<<endl;
-  Solver::solve_wavefunction(solution, energies, big, tol, BASIC, false, true, false, sweepParams.get_additional_noise());
+  int currentState = 0;
+  std::vector<Wavefunction> lowerStates;
+  Solver::solve_wavefunction(solution, energies, big, tol, BASIC, false, true, false, sweepParams.get_additional_noise(), currentState, lowerStates);
   for (int i=0; i<nroots; i++) {
     pout << "fullci energy "<< energies[i]+dmrginp.get_coreenergy()<<endl;
   }

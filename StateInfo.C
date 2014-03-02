@@ -273,48 +273,72 @@ void SpinAdapted::StateInfo::UnMapQuantumState (const int QS, const int secondQS
   secondQS = QS % secondQSTotal;
 }
 
-void SpinAdapted::StateInfo::store(bool forward, const vector<int>& sites, const std::vector<StateInfo>& stateInfos)
+//takes the old state and a rotaition matrix and gives back a rotated renormalized state
+void SpinAdapted::StateInfo::transform_state(std::vector<Matrix>& rotateMatrix, StateInfo& stateInfo, StateInfo& newStateInfo)
 {
-  std::string file;
-  if (forward)
-    file = str(boost::format("%s%s%d%s%d%s") % dmrginp.load_prefix() % "/SpinState-forward-" % sites[0] % "-" % sites[sites.size()-1] % ".tmp" );
-  else
-    file = str(boost::format("%s%s%d%s%d%s") % dmrginp.load_prefix() % "/SpinState-backward-"% sites[0] % "-" % sites[sites.size()-1] % ".tmp" );
-
-  pout << "\t\t\t Storing stateinfo :: " << file << endl;
-
-  std::ofstream ofs(file.c_str(), std::ios::binary);
-  boost::archive::binary_oarchive save_state(ofs);
-  int size = stateInfos.size();
-  save_state << size;
-  for (int i=0; i<stateInfos.size(); i++)
-    save_state << stateInfos[i];
-
-  ofs.close();
-  //coutbuf = 0;
-  //return;
+  std::vector<SpinQuantum> newQuanta;
+  std::vector<int> newQuantaStates;
+  std::vector<int> newQuantaMap;
+  for (int Q = 0; Q < rotateMatrix.size (); ++Q)
+    {
+      if (rotateMatrix [Q].Ncols () != 0)
+        {
+          newQuanta.push_back (stateInfo.quanta [Q]);
+          newQuantaStates.push_back (rotateMatrix [Q].Ncols ());
+          newQuantaMap.push_back (Q);
+        }
+    }
+  newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
 }
 
-void SpinAdapted::StateInfo::restore(bool forward, const vector<int>& sites, std::vector<StateInfo>& states)
+void SpinAdapted::StateInfo::restore(bool forward, const vector<int>& sites, StateInfo& stateInfo, int left, int right)
 {
   std::string file;
+  int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
   if (forward)
-    file = str(boost::format("%s%s%d%s%d%s") % dmrginp.load_prefix() % "/SpinState-forward-" % sites[0] % "-" % sites[sites.size()-1] % ".tmp" );
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-forward-" % first % "-" % last % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
   else
-    file = str(boost::format("%s%s%d%s%d%s") % dmrginp.load_prefix() % "/SpinState-backward-"% sites[0] % "-" % sites[sites.size()-1] % ".tmp" );
-  
-  pout << "\t\t\t Restoring stateinfo :: " << file << endl;
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % first % "-" % last % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
   
   std::ifstream ifs(file.c_str(), std::ios::binary);
   boost::archive::binary_iarchive load_state(ifs);
-  int statesize;
-  load_state >> statesize;
-  states.resize(statesize);
-  for (int i=0; i<statesize; i++)
-    load_state >> states[i];
+
+  if (dmrginp.outputlevel() > 0) 
+    pout << "\t\t\t Loading state file :: " << file << endl;
+
+  load_state >> stateInfo;
   
   ifs.close();
-  //coutbuf = 0;
-  //return;
+
+}
+
+void SpinAdapted::StateInfo::store(bool forward, const vector<int>& sites, StateInfo& stateInfo, int left, int right)
+{
+  
+  std::string file;
+  int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
+  if (dmrginp.spinAdapted()) {
+    if (forward)
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-forward-" % first % "-" % last % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+    else
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % first % "-" % last % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+  }
+  else {
+    if (forward)
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-forward-" % (first/2) % "-" % (last/2) % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+    else
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % (first/2) % "-" % (last/2) % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+  }
+  
+  if (dmrginp.outputlevel() > 0) 
+    pout << "\t\t\t Saving state file :: " << file << endl;
+
+  std::ofstream ofs(file.c_str(), std::ios::binary);
+  boost::archive::binary_oarchive save_state(ofs);
+
+  save_state << stateInfo;
+  
+  ofs.close();
+
 }
 

@@ -956,8 +956,9 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
     SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
   }
 
-  if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY || dmrginp.hamiltonian() == BCS) {
-    if (loopBlock->has(CRE_DESCOMP)) {
+  if (dmrginp.hamiltonian() != HUBBARD){
+    if (loopBlock->has(CRE_DESCOMP))
+      {
 
       Functor f = boost::bind(&opxop::cxcdcomp, otherBlock, _1, &b, k, this, 1.0); 
       for_all_singlethread(loopBlock->get_op_array(CRE), f);
@@ -1172,7 +1173,7 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
   f = boost::bind(&opxop::cxcddcomp, rightBlock, _1, &b, op_add); 
   for_all_multithread(leftBlock->get_op_array(CRE), f);  
 
-  if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY || dmrginp.hamiltonian() == BCS) {    
+  if (dmrginp.hamiltonian() != HUBBARD) {    
     op_add =  (otherBlock->get_op_array(CRE_DESCOMP).is_local() && loopBlock->get_op_array(CRE_DES).is_local())? op_array : op_distributed;
     f = boost::bind(&opxop::cdxcdcomp, otherBlock, _1, &b, op_add);
     for_all_multithread(loopBlock->get_op_array(CRE_DES), f);

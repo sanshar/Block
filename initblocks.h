@@ -16,13 +16,13 @@ namespace SpinAdapted{
 
 namespace InitBlocks
 {
-  void InitStartingBlock (SpinBlock& startingBlock, const bool &forward,
+  void InitStartingBlock (SpinBlock& startingBlock, const bool &forward, int leftState, int rightState,
                           const int & forward_starting_size, const int &backward_starting_size,
                           const int& restartSize, const bool &restart, const bool& warmUp);
-  void InitNewSystemBlock(SpinBlock &system, SpinBlock &systemDot, SpinBlock &newSystem, const int &sys_add, const bool &direct, const Storagetype &storage= DISTRIBUTED_STORAGE, bool haveNormops = true, bool haveCompops = true);
+  void InitNewSystemBlock(SpinBlock &system, SpinBlock &systemDot, SpinBlock &newSystem, int leftState, int rightState, const int &sys_add, const bool &direct, const Storagetype &storage= DISTRIBUTED_STORAGE, bool haveNormops = true, bool haveCompops = true);
 
   void InitNewEnvironmentBlock(SpinBlock &environment, SpinBlock& environmentDot, SpinBlock &newEnvironment,
-                               const SpinBlock &system, SpinBlock &systemDot,
+                               const SpinBlock &system, SpinBlock &systemDot, int leftState, int rightState,
                                const int &sys_add, const int &env_add, const bool &forward, const bool &direct, const bool &onedot, 
 			       const bool &nexact, const bool &useSlater, 
 			       bool haveNormops = true, bool haveCompops = true, const bool& dot_with_sys = true);

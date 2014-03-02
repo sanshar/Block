@@ -16,7 +16,7 @@ namespace SpinAdapted{
 namespace Solver
 {
   void solve_wavefunction(vector<Wavefunction>& solution, std::vector<double>& energies, SpinBlock& big, const double tol, 
-			  const guessWaveTypes& guesswavetype, const bool &onedot, const bool& dot_with_sys, const bool& warmUp, double additional_noise=0.0);
+			  const guessWaveTypes& guesswavetype, const bool &onedot, const bool& dot_with_sys, const bool& warmUp, double additional_noise, int currentRoot, std::vector<Wavefunction>& lowerStates);
 };
 }
 #endif
