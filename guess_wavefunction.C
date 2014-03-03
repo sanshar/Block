@@ -231,17 +231,17 @@ void GuessWave::basic_guess_wavefunction(DiagonalMatrix& e, Wavefunction& trial,
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t No trial vector" << endl;
   multimap<double, int> e_sort;
-  for (int i = 0; i < e.Nrows (); ++i)
+  for (int i = 0; i < e.Nrows (); ++i) {
     e_sort.insert (pair<double, int> (e (i+1), i+1));
+  }
 
   multimap<double, int>::iterator e_iter = e_sort.begin ();
 
   int states = stateinfo->totalStates;
   RowVector trialvector(states);
   trialvector = 0.;
-  for(int i=0;i<state;++i)
-    ++e_iter;
-  trialvector(e_iter->second) = 1.;
+
+  trialvector( e_sort.begin()->second) = 1.;
   trial.CollectFrom(trialvector);
 }
 
@@ -254,7 +254,7 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
   mpi::communicator world;
 #endif
   solution.initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
-  
+
   if (!mpigetrank())
   {
     switch(guesswavetype)

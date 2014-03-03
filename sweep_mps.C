@@ -174,25 +174,15 @@ void SpinAdapted::Sweep::saveUpdatedLocalOverlapMatrix(int currentState, const s
     
     btas::STArray<double, 2> Overlap;
 
-    if (sites.size() == 2) {
-      btas::TVector<btas::Dshapes,2>overlapShape; 		     
-      overlapShape[0]=std::vector<int>(3,1); overlapShape[1] = std::vector<int>(3,1);
-      Overlap = btas::STArray<double, 2>(overlapShape, false); //O(ni, mi) matrix
-      for (int i=0; i<3; i++) {
-	Overlap.reserve(btas::make_array(i,i));
-	Overlap.find(btas::make_array(i,i))->second->operator()(0,0) = 1;
-      }
+    if (sites[0] == 0) {
+      std::vector<int> prevSites = sites; prevSites.pop_back();
+      LoadOverlapTensor(prevSites, Overlap, istate, currentState);
     }
-    else {    
-      if (sites[0] == 0) {
-	std::vector<int> prevSites = sites; prevSites.pop_back();
-	LoadOverlapTensor(prevSites, Overlap, istate, currentState);
-      }
-      else {
-	std::vector<int> prevSites((++sites.begin()), sites.end());
-	LoadOverlapTensor(prevSites, Overlap, istate, currentState);
-      }
+    else {
+      std::vector<int> prevSites((++sites.begin()), sites.end());
+      LoadOverlapTensor(prevSites, Overlap, istate, currentState);
     }
+
 
     std::vector<Matrix> rotation2, rotation1;
     LoadRotationMatrix(sites, rotation2, currentState);
@@ -375,114 +365,114 @@ void SpinAdapted::Sweep::InitializeStateInfo(SweepParams &sweepParams, const boo
 
 
 //before you start optimizing each state you want to initalize all the overlap matrices
-void Sweep::InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward, int currentstate)
+void Sweep::InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward, int stateA, int stateB)
 {
-  for (int istate=currentstate+1; istate<dmrginp.nroots(); istate++) {
-    sweepParams.set_sweep_parameters();
-    sweepParams.set_block_iter() = 0;
+  int lowerState = stateA < stateB ? stateA : stateB ;
+  int higherState = stateA < stateB ? stateB : stateA ;
 
-    std::vector<int> sites;
-    int new_site, wave_site;
+  sweepParams.set_sweep_parameters();
+  sweepParams.set_block_iter() = 0;
+  
+  std::vector<int> sites;
+  int new_site, wave_site;
+  if (forward) {
+    pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in forwards direction"<<endl;
+    new_site = 0;
+  }
+  else {
+    pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
+    new_site = dmrginp.last_site()-1;
+  }
+  pout << "\t\t\t ============================================================================ " << 
+    endl;
+  sites.push_back(new_site);
+  
+  
+  //only need statinfos
+  StateInfo stateInfo1; makeStateInfo(stateInfo1, new_site);
+  StateInfo stateInfo2; makeStateInfo(stateInfo2, new_site);
+  
+  
+  
+  btas::TVector<btas::Dshapes, 2> overlapShape; overlapShape[0]=stateInfo1.quantaStates; overlapShape[1] = stateInfo2.quantaStates;
+  btas::STArray<double, 2> Overlap(overlapShape, false); //O(ni, mi) matrix
+  
+  for (int i=0; i<stateInfo1.quanta.size(); i++) {
+    Overlap.reserve(btas::make_array(i,i));
+    Overlap.find(btas::make_array(i,i))->second->operator()(0,0) = 1;
+  }
+  SaveOverlapTensor(sites, Overlap, lowerState, higherState);
+  
+  for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) {
+    
+    pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+    pout << "\t\t\t ----------------------------" << endl;
+    
     if (forward) {
-      pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in forwards direction"<<endl;
-      new_site = 0;
+      new_site++;
+      wave_site = new_site+1;
+      pout << "\t\t\t Current direction is :: Forwards " << endl;
     }
     else {
-      pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
-      new_site = dmrginp.last_site()-1;
+      new_site--;
+      wave_site = new_site-1;
+      pout << "\t\t\t Current direction is :: Backwards " << endl;
     }
-    pout << "\t\t\t ============================================================================ " << 
-      endl;
-    pout << new_site<<endl;
     sites.push_back(new_site);
+    StateInfo siteState, newState1, newState2; makeStateInfo(siteState, new_site);
+    
+    //make the newstate
+    TensorProduct(stateInfo1, siteState, newState1, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
+    newState1.CollectQuanta();
+    
+    TensorProduct(stateInfo2, siteState, newState2, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
+    newState2.CollectQuanta();
     
     
-    //only need statinfos
-    StateInfo stateInfo1; makeStateInfo(stateInfo1, new_site);
-    StateInfo stateInfo2; makeStateInfo(stateInfo2, new_site);
+    std::vector<Matrix> rotation1, rotation2; 
+    LoadRotationMatrix(sites, rotation1, lowerState);
+    LoadRotationMatrix(sites, rotation2, higherState);
+    
+    StateInfo renormState1, renormState2;
+    SpinAdapted::StateInfo::transform_state(rotation1, newState1, renormState1);
+    SpinAdapted::StateInfo::transform_state(rotation2, newState2, renormState2);
+    
+    btas::TVector<btas::Dshapes, 3> shape1, shape2, interShape;
+    shape1[0] = stateInfo1.quantaStates; shape1[1] = siteState.quantaStates; shape1[2] = renormState1.quantaStates;
+    shape2[0] = stateInfo2.quantaStates; shape2[1] = siteState.quantaStates; shape2[2] = renormState2.quantaStates;
+    overlapShape[0] = renormState1.quantaStates; overlapShape[1] = renormState2.quantaStates;
+    interShape[0] = stateInfo2.quantaStates; interShape[1] = siteState.quantaStates; interShape[2] = renormState1.quantaStates;
     
     
-    Matrix m; m.ReSize(1,1); m(1,1) = 1.0;
+    btas::STArray<double, 3> SiteTensor1(shape1,false), 
+      SiteTensor2(shape2,false), 
+      intermediate(interShape, false);
+    btas::STArray<double, 2>  newOverlap(overlapShape,false); //O(ni, mi) matrix
     
-    btas::TVector<btas::Dshapes, 2> overlapShape; overlapShape[0]=stateInfo1.quantaStates; overlapShape[1] = stateInfo2.quantaStates;
-    btas::STArray<double, 2> Overlap(overlapShape, false); //O(ni, mi) matrix
+    UnCollectQuantaAlongRows(newState1, renormState1, rotation1, SiteTensor1);
+    UnCollectQuantaAlongRows(newState2, renormState2, rotation2, SiteTensor2);
     
-    for (int i=0; i<stateInfo1.quanta.size(); i++) {
-      Overlap.reserve(btas::make_array(i,i));
-      Overlap.find(btas::make_array(i,i))->second->operator()(0,0) = 1;
-    }
-    SaveOverlapTensor(sites, Overlap, currentstate, istate);
+    btas::SDcontract(1.0, Overlap, btas::shape(0), SiteTensor1, btas::shape(0), 0.0, intermediate);
+    btas::SDcontract(1.0, intermediate, btas::shape(0,1), SiteTensor2, btas::shape(0,1), 0.0, newOverlap);
     
-    for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) {
-      
-      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
-      pout << "\t\t\t ----------------------------" << endl;
-      
-      if (forward) {
-	new_site++;
-	wave_site = new_site+1;
-	pout << "\t\t\t Current direction is :: Forwards " << endl;
-      }
-      else {
-	new_site--;
-	wave_site = new_site-1;
-	pout << "\t\t\t Current direction is :: Backwards " << endl;
-      }
-      sites.push_back(new_site);
-      StateInfo siteState, newState1, newState2; makeStateInfo(siteState, new_site);
-      
-      //make the newstate
-      TensorProduct(stateInfo1, siteState, newState1, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
-      newState1.CollectQuanta();
-      
-      TensorProduct(stateInfo2, siteState, newState2, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
-      newState2.CollectQuanta();
-      
-      
-      std::vector<Matrix> rotation1, rotation2; 
-      LoadRotationMatrix(sites, rotation1, currentstate);
-      LoadRotationMatrix(sites, rotation2, istate);
-      
-      StateInfo renormState1, renormState2;
-      SpinAdapted::StateInfo::transform_state(rotation1, newState1, renormState1);
-      SpinAdapted::StateInfo::transform_state(rotation2, newState2, renormState2);
-
-      btas::TVector<btas::Dshapes, 3> shape1, shape2, interShape;
-      shape1[0] = stateInfo1.quantaStates; shape1[1] = siteState.quantaStates; shape1[2] = renormState1.quantaStates;
-      shape2[0] = stateInfo2.quantaStates; shape2[1] = siteState.quantaStates; shape2[2] = renormState2.quantaStates;
-      overlapShape[0] = renormState1.quantaStates; overlapShape[1] = renormState2.quantaStates;
-      interShape[0] = stateInfo2.quantaStates; interShape[1] = siteState.quantaStates; interShape[2] = renormState1.quantaStates;
-      
-      
-      btas::STArray<double, 3> SiteTensor1(shape1,false), 
-	SiteTensor2(shape2,false), 
-	intermediate(interShape, false);
-      btas::STArray<double, 2>  newOverlap(overlapShape,false); //O(ni, mi) matrix
-      
-      UnCollectQuantaAlongRows(newState1, renormState1, rotation1, SiteTensor1);
-      UnCollectQuantaAlongRows(newState2, renormState2, rotation2, SiteTensor2);
-      
-      btas::SDcontract(1.0, Overlap, btas::shape(0), SiteTensor1, btas::shape(0), 0.0, intermediate);
-      btas::SDcontract(1.0, intermediate, btas::shape(0,1), SiteTensor2, btas::shape(0,1), 0.0, newOverlap);
-      
-      
-      for (int i=0; i<renormState1.quanta.size(); i++)
-	for (int k=0; k<renormState2.quanta.size(); k++) 
-	  if (renormState2.quanta[k] != renormState1.quanta[i]) 
-	    newOverlap.erase(btas::make_array(i,k));
-      
-      SaveOverlapTensor(sites, newOverlap, currentstate, istate);
-      
-
-      stateInfo1 = renormState1;
-      stateInfo2 = renormState2;
-      Overlap.copy(newOverlap);
-      
-      
-      ++sweepParams.set_block_iter();
-    }
+    
+    for (int i=0; i<renormState1.quanta.size(); i++)
+      for (int k=0; k<renormState2.quanta.size(); k++) 
+	if (renormState2.quanta[k] != renormState1.quanta[i]) 
+	  newOverlap.erase(btas::make_array(i,k));
+    
+    SaveOverlapTensor(sites, newOverlap, lowerState, higherState);
+    
+    
+    stateInfo1 = renormState1;
+    stateInfo2 = renormState2;
+    Overlap.copy(newOverlap);
+    
+    
+    ++sweepParams.set_block_iter();
   }
-
+  
+  
 }
 
 

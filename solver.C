@@ -43,7 +43,8 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
   else 
     e.ReSize(0);
 
-  bool haveEnoughStates = e.Ncols()<= nroots ? false : true;
+  //bool haveEnoughStates = (e.Ncols()<= nroots || e.Ncols() <= currentRoot) ? false : true;
+  bool haveEnoughStates = (e.Ncols()<= nroots) ? false : true;
 #ifndef SERIAL
   mpi::communicator world;
   broadcast(world, haveEnoughStates, 0);
@@ -55,7 +56,7 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
     //enough to support all the roots
 
     solution.resize(nroots);
-    
+
     for (int i=0; i<nroots; i++) {
       solution[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
       solution[i].Randomise();
@@ -74,6 +75,9 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
 	double overlap = DotProduct(lowerStates[istate], lowerStates[jstate]);
 	ScaleAdd(-overlap/DotProduct(lowerStates[istate], lowerStates[istate]), lowerStates[istate], lowerStates[jstate]);
       }
+
+      if (nroots == 1 && currentRoot >= e.Ncols()) //state specific calculation
+	lowerStates.resize(0);
 	
       Linear::block_davidson(solution, e, tol, warmUp, davidson_f, useprecond, currentRoot, lowerStates);
 
@@ -88,7 +92,7 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
 
   solution.resize(nroots);
   energies.resize(nroots);
-  if (e.Ncols() > nroots) {
+  if (haveEnoughStates) {
     for (int i=0; i<nroots&& mpigetrank() == 0;i++) {
       energies[i] = e(i+1);
       //pout << "\t\t\t Energy of wavefunction "<<i<<"  =  "<<e(i+1)<<endl;
