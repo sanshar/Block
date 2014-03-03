@@ -10,7 +10,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #define NEVPT2_NPDM_DRIVER_H
 
 #include "npdm_driver.h"
-#include "nevpt2_A16_matrix.h"
+#include "nevpt2_A16_container.h"
 
 namespace SpinAdapted{
 

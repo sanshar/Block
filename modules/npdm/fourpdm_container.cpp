@@ -14,10 +14,9 @@ namespace SpinAdapted{
 
 Fourpdm_container::Fourpdm_container( int sites )
 {
+  store_nonredundant_spin_elements_ = true;
   store_full_spin_array_ = false;
   store_full_spatial_array_ = true;
-  store_sparse_spin_array_ = false;
-  store_sparse_spatial_array_ = true;
 
   if ( store_full_spin_array_ ) {
     fourpdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);
@@ -215,10 +214,14 @@ void Fourpdm_container::accumulate_spatial_npdm()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Fourpdm_container::update_full_spin_array( std::map< std::vector<int>, double >& spin_batch )
+void Fourpdm_container::update_full_spin_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
 {
   for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
+    double val = it->second;
+    if ( abs(val) < 1e-15 ) continue;
+
     assert( (it->first).size() == 8 );
+    // Spin indices
     int i = (it->first)[0];
     int j = (it->first)[1];
     int k = (it->first)[2];
@@ -228,114 +231,142 @@ void Fourpdm_container::update_full_spin_array( std::map< std::vector<int>, doub
     int p = (it->first)[6];
     int q = (it->first)[7];
 
-    double val = it->second;
-
-//if ( abs(val) > 1e-8 ) {
-//  pout << "so-fourpdm val: i,j,k,l,m,n,p,q = " 
-//       << i << "," << j << "," << k << "," << l << "," << m << "," << n << "," << p << "," << q
-//       << "\t\t" << val << endl;
-//}
+    //if ( abs(val) > 1e-8 ) {
+    //  pout << "so-fourpdm val: i,j,k,l,m,n,p,q = " 
+    //       << i << "," << j << "," << k << "," << l << "," << m << "," << n << "," << p << "," << q
+    //      << "\t\t" << val << endl;
+    //}
 
     // Test for duplicates
-    if ( fourpdm(i,j,k,l,m,n,p,q) != 0.0 && abs(fourpdm(i,j,k,l,m,n,p,q)-val) > 1e-6) {
-      void *array[10];
-      size_t size;
-      size = backtrace(array, 10);
+    if ( abs(fourpdm(i,j,k,l,m,n,p,q)) != 0.0 ) {
       cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<" "<<p<<" "<<q<<endl;
-      //backtrace_symbols_fd(array, size, 2);
       cout << "earlier value: " << fourpdm(i,j,k,l,m,n,p,q) << endl << "new value:     " <<val<<endl;
-      cout.flush();
       assert( false );
     }
-  
-    if ( abs(val) < 1e-14 ) continue;
-  
-    // If indices are not all unique, then all elements should be zero (and next_even_permutation fails)
-    std::vector<int> v = {i,j,k,l};
-    std::sort( v.begin(), v.end() );
-    if ( (v[0]==v[1]) || (v[1]==v[2]) || (v[2]==v[3]) ) { if (abs(val) > 1e-15) { std::cout << abs(val) << std::endl; assert(false); } }
-    std::vector<int> w = {m,n,p,q};
-    std::sort( w.begin(), w.end() );
-    if ( (w[0]==w[1]) || (w[1]==w[2]) || (w[2]==w[3]) ) { if (abs(val) > 1e-15) { std::cout << abs(val) << std::endl; assert(false); } }
-
     fourpdm(i,j,k,l,m,n,p,q) = val;
   }
 
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// This routine assumes that no spin-orbital indices are generated more than once
 
-void Fourpdm_container::build_spatial_elements( std::map< std::vector<int>, double >& spin_batch, 
-                                                std::map< std::vector<int>, double >& spatial_batch )
+void Fourpdm_container::update_full_spatial_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
 {
-  double factor = 1.0;
-
-  for (auto it = spatial_batch.begin(); it != spatial_batch.end(); ++it) {
+  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
     assert( (it->first).size() == 8 );
-    int i = (it->first)[0];
-    int j = (it->first)[1];
-    int k = (it->first)[2];
-    int l = (it->first)[3];
-    int m = (it->first)[4];
-    int n = (it->first)[5];
-    int p = (it->first)[6];
-    int q = (it->first)[7];
-    // Sum over spin indices
-    double val = 0.0;
-    for (int s=0; s<2; s++) {
-      for (int t=0; t<2; t++) {
-        for (int u=0; u<2; u++) {
-          for (int v=0; v<2; v++) {
-            std::vector<int> idx = { 2*i+s, 2*j+t, 2*k+u, 2*l+v, 2*m+v, 2*n+u, 2*p+t, 2*q+s };
-            val += spin_batch[ idx ];
-          }
-        }
-      }
-    }
+
     // Store significant elements only
-    if ( abs(val) > 1e-14 ) {
-      if ( store_sparse_spatial_array_ ) sparse_spatial_pdm[ it->first ] = factor * val;
-      if ( store_full_spatial_array_ ) {
-        if ( abs( spatial_fourpdm(i,j,k,l,m,n,p,q) ) > 1e-14 ) {
-          cout << "repeated spatial indices!\n";
-          assert(false);
-        }
-        spatial_fourpdm(i,j,k,l,m,n,p,q) = factor * val;
-      }
+    if ( abs(it->second) > 1e-14 ) {
+      // Spin indices
+      int i = (it->first)[0];
+      int j = (it->first)[1];
+      int k = (it->first)[2];
+      int l = (it->first)[3];
+      int m = (it->first)[4];
+      int n = (it->first)[5];
+      int p = (it->first)[6];
+      int q = (it->first)[7];
+  
+      if ( i%2 != q%2 ) continue;
+      if ( j%2 != p%2 ) continue;
+      if ( k%2 != n%2 ) continue;
+      if ( l%2 != m%2 ) continue;
+
+      spatial_fourpdm(i/2,j/2,k/2,l/2,m/2,n/2,p/2,q/2) += it->second;
     }
   }
-
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//void Fourpdm_container::build_spatial_elements( std::map< std::vector<int>, double >& spin_batch, 
+//                                                std::map< std::vector<int>, double >& spatial_batch )
+//{
+//  double factor = 1.0;
+//
+//  for (auto it = spatial_batch.begin(); it != spatial_batch.end(); ++it) {
+//    assert( (it->first).size() == 8 );
+//    int i = (it->first)[0];
+//    int j = (it->first)[1];
+//    int k = (it->first)[2];
+//    int l = (it->first)[3];
+//    int m = (it->first)[4];
+//    int n = (it->first)[5];
+//    int p = (it->first)[6];
+//    int q = (it->first)[7];
+//    // Sum over spin indices
+//    double val = 0.0;
+//    for (int s=0; s<2; s++) {
+//      for (int t=0; t<2; t++) {
+//        for (int u=0; u<2; u++) {
+//          for (int v=0; v<2; v++) {
+//            std::vector<int> idx = { 2*i+s, 2*j+t, 2*k+u, 2*l+v, 2*m+v, 2*n+u, 2*p+t, 2*q+s };
+//            val += spin_batch[ idx ];
+//          }
+//        }
+//      }
+//    }
+//    // Store significant elements only
+//    if ( abs(val) > 1e-14 ) {
+//      if ( store_sparse_spatial_array_ ) sparse_spatial_pdm[ it->first ] = factor * val;
+//      if ( store_full_spatial_array_ ) {
+//        if ( abs( spatial_fourpdm(i,j,k,l,m,n,p,q) ) > 1e-14 ) {
+//          cout << "repeated spatial indices!\n";
+//          assert(false);
+//        }
+//        spatial_fourpdm(i,j,k,l,m,n,p,q) = factor * val;
+//      }
+//    }
+//  }
+//
+//}
+//
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+//
+//void Fourpdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
+//{
+//  assert( new_spin_orbital_elements.size() == 70 );
+//  // Temporary batches of npdm elements
+//  std::map< std::vector<int>, double > spin_batch;
+//  std::map< std::vector<int>, double > spatial_batch;
+//
+//  for (int idx=0; idx < new_spin_orbital_elements.size(); ++idx) {
+//    // Get all spin-index permutations
+//    Fourpdm_permutations p;
+//    std::map< std::vector<int>, int > spin_indices = p.get_spin_permutations( new_spin_orbital_elements[idx].first );
+//    double val = new_spin_orbital_elements[idx].second;
+//    for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
+//      // Initialize spatial indices
+//      std::vector<int> vec;
+//      for (int i=0; i < (it->first).size(); ++i)
+//        vec.push_back( (it->first)[i]/2 );
+//      spatial_batch[ vec ] = 0.0;
+//      // Assign temporary batch of spin-orbital elements
+//      spin_batch[ it->first ] = it->second * val;
+//      if ( store_sparse_spin_array_ && (abs(val) > 1e-14) ) sparse_spin_pdm[ it->first ] = it->second * val;
+//    }
+//  }
+//
+//  // Build and store new spatial elements
+//  build_spatial_elements( spin_batch, spatial_batch );
+//  if ( store_full_spin_array_ ) update_full_spin_array( spin_batch );
+//}
+//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Fourpdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
   assert( new_spin_orbital_elements.size() == 70 );
-  // Temporary batches of npdm elements
-  std::map< std::vector<int>, double > spin_batch;
-  std::map< std::vector<int>, double > spatial_batch;
+  Fourpdm_permutations perm;
+  std::vector< std::pair< std::vector<int>, double > > spin_batch;
+  // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
+  perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
 
-  for (int idx=0; idx < new_spin_orbital_elements.size(); ++idx) {
-    // Get all spin-index permutations
-    Fourpdm_permutations p;
-    std::map< std::vector<int>, int > spin_indices = p.get_spin_permutations( new_spin_orbital_elements[idx].first );
-    double val = new_spin_orbital_elements[idx].second;
-    for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
-      // Initialize spatial indices
-      std::vector<int> vec;
-      for (int i=0; i < (it->first).size(); ++i)
-        vec.push_back( (it->first)[i]/2 );
-      spatial_batch[ vec ] = 0.0;
-      // Assign temporary batch of spin-orbital elements
-      spin_batch[ it->first ] = it->second * val;
-      if ( store_sparse_spin_array_ && (abs(val) > 1e-14) ) sparse_spin_pdm[ it->first ] = it->second * val;
-    }
-  }
-
-  // Build and store new spatial elements
-  build_spatial_elements( spin_batch, spatial_batch );
+  //FIXME add options to dump to disk if memory becomes bottleneck
+  if ( ! store_nonredundant_spin_elements_ ) nonredundant_elements.clear();
   if ( store_full_spin_array_ ) update_full_spin_array( spin_batch );
+  if ( store_full_spatial_array_ ) update_full_spatial_array( spin_batch );
 }
 
 //===========================================================================================================================================================

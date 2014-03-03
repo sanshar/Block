@@ -1,6 +1,6 @@
 /*                                                                           
 Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
-Copyright (c) 2012, Garnet K.-L. Chan                                        
+Copyright (c) 2012 Garnet K.-L. Chan                                        
                                                                              
 This program is integrated in Molpro with the permission of 
 Sandeep Sharma and Garnet K.-L. Chan
@@ -12,54 +12,105 @@ namespace SpinAdapted{
 
 //===========================================================================================================================================================
 
-std::map< std::vector<int>, int > Onepdm_permutations::get_spin_permutations( const std::vector<int>& indices )
+void Npdm_permutations::process_new_elements( const std::vector< std::pair< std::vector<int>, double > >& in, 
+                                              std::vector< std::pair< std::vector<int>, double > >& nonredundant_elements,
+                                              std::vector< std::pair< std::vector<int>, double > >& spin_perms )
 {
-  assert( indices.size() == 2 );
-  std::map< std::vector<int>, int > perms;
-  std::vector<int> idx;
-  int i = indices[0];
-  int j = indices[1];
+  spin_perms.clear();
+  int count = 0;
+   
+  // Loop over all input spin indices
+  for (int i=0; i<in.size(); i++) {
+    // Get all permutations of each set of spin indices
+    std::vector< std::pair< std::vector<int>, double > > tmp;
+    get_spin_permutations( tmp, in[i].first, in[i].second );
+    // If permutations do not generate any of the following input indices, save the non-redundant original
+    bool keep = true;
+    for ( int j=0; j<tmp.size(); j++) {
+      // Loop over remaining original indices
+      for (int k=i+1; k<in.size(); k++) {
+        if ( tmp[j].first == in[k].first ) {
+          keep = false;
+          break;
+        }
+      }
+      if (!keep) break;
+    }
+    if (keep) {
+       count++;
+       nonredundant_elements.push_back( in[i] );
+       spin_perms.insert( spin_perms.end(), tmp.begin(), tmp.end() );
+    }
+  }
 
-  idx = { i, j }; perms[ idx ] =  1;
-  // Transpose is same 
-  idx = { j, i }; perms[ idx ] =  1; 
+  assert( count <= in.size() );
+cout << "nonredundant elements = " << count << endl;
 
-  return perms;
 }
 
 //===========================================================================================================================================================
 
-std::map< std::vector<int>, int > Twopdm_permutations::get_spin_permutations( const std::vector<int>& indices )
+void Onepdm_permutations::get_spin_permutations( std::vector<std::pair<std::vector<int>,double> >& spin_batch, 
+                                                 const std::vector<int>& indices, const double& val )
+{
+  assert( indices.size() == 2 );
+  std::vector<int> idx;
+  int i = indices[0];
+  int j = indices[1];
+
+  idx = { i, j };
+  spin_batch.push_back( std::make_pair( idx, val ) );
+  // Transpose is same 
+  if ( i != j ) {
+    idx = { j, i };
+    spin_batch.push_back( std::make_pair( idx, val ) );
+  }
+
+}
+
+//===========================================================================================================================================================
+
+void Twopdm_permutations::get_spin_permutations( std::vector<std::pair<std::vector<int>,double> >& spin_batch, 
+                                                 const std::vector<int>& indices, const double& val )
 {
   assert( indices.size() == 4 );
-  std::map< std::vector<int>, int > perms;
   std::vector<int> idx;
   int i = indices[0];
   int j = indices[1];
   int k = indices[2];
   int l = indices[3];
 
+  // If indices are not all unique, then all elements should be zero (and next_even_permutation fails)
+  std::vector<int> v = {i,j};
+  std::sort( v.begin(), v.end() );
+  if ( (v[0]==v[1]) ) return;
+  std::vector<int> w = {k,l};
+  std::sort( w.begin(), w.end() );
+  if ( (w[0]==w[1]) ) return;
+  bool skip_transpose = ( v == w );
+
   // 8 permutations
   //--------------------------
-  idx = { i, j, k, l }; perms[ idx ] =  1;
-  idx = { i, j, l, k }; perms[ idx ] =  -1;
-  idx = { j, i, k, l }; perms[ idx ] =  -1;
-  idx = { j, i, l, k }; perms[ idx ] =  1;
+  idx = { i, j, k, l }; spin_batch.push_back( std::make_pair( idx, val ) );
+  idx = { i, j, l, k }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { j, i, k, l }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { j, i, l, k }; spin_batch.push_back( std::make_pair( idx, val ) );
                     
-  idx = { l, k, j, i }; perms[ idx ] =  1;
-  idx = { k, l, j, i }; perms[ idx ] =  -1;
-  idx = { l, k, i, j }; perms[ idx ] =  -1;
-  idx = { k, l, i, j }; perms[ idx ] =  1;
+  if ( !skip_transpose ) {
+    idx = { l, k, j, i }; spin_batch.push_back( std::make_pair( idx, val ) );
+    idx = { k, l, j, i }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { l, k, i, j }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { k, l, i, j }; spin_batch.push_back( std::make_pair( idx, val ) );
+  }
 
-  return perms;
 }
 
 //===========================================================================================================================================================
 
-std::map< std::vector<int>, int > Threepdm_permutations::get_spin_permutations( const std::vector<int>& indices )
+void Threepdm_permutations::get_spin_permutations( std::vector<std::pair<std::vector<int>,double> >& spin_batch, 
+                                                   const std::vector<int>& indices, const double& val )
 {
   assert( indices.size() == 6 );
-  std::map< std::vector<int>, int > perms;
   std::vector<int> idx;
   int i = indices[0];
   int j = indices[1];
@@ -68,65 +119,103 @@ std::map< std::vector<int>, int > Threepdm_permutations::get_spin_permutations( 
   int m = indices[4];
   int n = indices[5];
 
-  // The number of possible permutations is (3!)**2
-  //------------------------------------------------
+  // If indices are not all unique, then all elements should be zero (and next_even_permutation fails)
+  std::vector<int> v = {i,j,k};
+  std::sort( v.begin(), v.end() );
+  if ( (v[0]==v[1]) || (v[1]==v[2]) ) return;
+  std::vector<int> w = {l,m,n};
+  std::sort( w.begin(), w.end() );
+  if ( (w[0]==w[1]) || (w[1]==w[2]) ) return;
+  bool skip_transpose = ( v == w );
 
-  idx = { i, j, k, l, m, n }; perms[ idx ] =  1;
-  idx = { i, j, k, l, n, m }; perms[ idx ] = -1;
-  idx = { i, j, k, n, m, l }; perms[ idx ] = -1;
-  idx = { i, j, k, n, l, m }; perms[ idx ] =  1;
-  idx = { i, j, k, m, l, n }; perms[ idx ] = -1;
-  idx = { i, j, k, m, n, l }; perms[ idx ] =  1;
+  // The number of possible permutations is (3!)**2 twice
+  idx = { i, j, k, l, m, n }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { i, j, k, l, n, m }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { i, j, k, n, m, l }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { i, j, k, n, l, m }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { i, j, k, m, l, n }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { i, j, k, m, n, l }; spin_batch.push_back( std::make_pair( idx,  val ) );
 
-  idx = { i, k, j, l, m, n }; perms[ idx ] = -1;
-  idx = { i, k, j, l, n, m }; perms[ idx ] =  1;
-  idx = { i, k, j, n, m, l }; perms[ idx ] =  1;
-  idx = { i, k, j, n, l, m }; perms[ idx ] = -1;
-  idx = { i, k, j, m, l, n }; perms[ idx ] =  1;
-  idx = { i, k, j, m, n, l }; perms[ idx ] = -1;
+  idx = { i, k, j, l, m, n }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { i, k, j, l, n, m }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { i, k, j, n, m, l }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { i, k, j, n, l, m }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { i, k, j, m, l, n }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { i, k, j, m, n, l }; spin_batch.push_back( std::make_pair( idx, -val ) );
 
-  idx = { j, i, k, l, m, n }; perms[ idx ] = -1;
-  idx = { j, i, k, l, n, m }; perms[ idx ] =  1;
-  idx = { j, i, k, n, m, l }; perms[ idx ] =  1;
-  idx = { j, i, k, n, l, m }; perms[ idx ] = -1;
-  idx = { j, i, k, m, l, n }; perms[ idx ] =  1;
-  idx = { j, i, k, m, n, l }; perms[ idx ] = -1;
+  idx = { j, i, k, l, m, n }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { j, i, k, l, n, m }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { j, i, k, n, m, l }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { j, i, k, n, l, m }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { j, i, k, m, l, n }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { j, i, k, m, n, l }; spin_batch.push_back( std::make_pair( idx, -val ) );
 
-  idx = { j, k, i, l, m, n }; perms[ idx ] =  1;
-  idx = { j, k, i, l, n, m }; perms[ idx ] = -1;
-  idx = { j, k, i, n, m, l }; perms[ idx ] = -1;
-  idx = { j, k, i, n, l, m }; perms[ idx ] =  1;
-  idx = { j, k, i, m, l, n }; perms[ idx ] = -1;
-  idx = { j, k, i, m, n, l }; perms[ idx ] =  1;
+  idx = { j, k, i, l, m, n }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { j, k, i, l, n, m }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { j, k, i, n, m, l }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { j, k, i, n, l, m }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { j, k, i, m, l, n }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { j, k, i, m, n, l }; spin_batch.push_back( std::make_pair( idx,  val ) );
 
-  idx = { k, j, i, l, m, n }; perms[ idx ] = -1;
-  idx = { k, j, i, l, n, m }; perms[ idx ] =  1;
-  idx = { k, j, i, n, m, l }; perms[ idx ] =  1;
-  idx = { k, j, i, n, l, m }; perms[ idx ] = -1;
-  idx = { k, j, i, m, l, n }; perms[ idx ] =  1;
-  idx = { k, j, i, m, n, l }; perms[ idx ] = -1;
+  idx = { k, j, i, l, m, n }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { k, j, i, l, n, m }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { k, j, i, n, m, l }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { k, j, i, n, l, m }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { k, j, i, m, l, n }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { k, j, i, m, n, l }; spin_batch.push_back( std::make_pair( idx, -val ) );
 
-  idx = { k, i, j, l, m, n }; perms[ idx ] =  1;
-  idx = { k, i, j, l, n, m }; perms[ idx ] = -1;
-  idx = { k, i, j, n, m, l }; perms[ idx ] = -1;
-  idx = { k, i, j, n, l, m }; perms[ idx ] =  1;
-  idx = { k, i, j, m, l, n }; perms[ idx ] = -1;
-  idx = { k, i, j, m, n, l }; perms[ idx ] =  1;
+  idx = { k, i, j, l, m, n }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { k, i, j, l, n, m }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { k, i, j, n, m, l }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { k, i, j, n, l, m }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  idx = { k, i, j, m, l, n }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  idx = { k, i, j, m, n, l }; spin_batch.push_back( std::make_pair( idx,  val ) );
 
-  // Get transpose elements with same parity factors
-  std::map< std::vector<int>, int > trans_perms;
-  for (auto it = perms.begin(); it != perms.end(); ++it) {
-    std::vector<int> indices = it->first;
-    std::reverse( indices.begin(), indices.end() );
-    trans_perms[ indices ] = it->second;
+  // Get transpose elements with same parity factors, hardcoded for speed
+  if ( !skip_transpose ) {
+    idx = { n, m, l, k, j, i }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { n, m, l, k, i, j }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { n, m, l, i, j, k }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { n, m, l, i, k, j }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { n, m, l, j, k, i }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { n, m, l, j, i, k }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  
+    idx = { n, l, m, k, j, i }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { n, l, m, k, i, j }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { n, l, m, i, j, k }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { n, l, m, i, k, j }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { n, l, m, j, k, i }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { n, l, m, j, i, k }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  
+    idx = { m, n, l, k, j, i }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { m, n, l, k, i, j }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { m, n, l, i, j, k }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { m, n, l, i, k, j }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { m, n, l, j, k, i }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { m, n, l, j, i, k }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  
+    idx = { m, l, n, k, j, i }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { m, l, n, k, i, j }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { m, l, n, i, j, k }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { m, l, n, i, k, j }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { m, l, n, j, k, i }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { m, l, n, j, i, k }; spin_batch.push_back( std::make_pair( idx,  val ) );
+  
+    idx = { l, m, n, k, j, i }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { l, m, n, k, i, j }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { l, m, n, i, j, k }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { l, m, n, i, k, j }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { l, m, n, j, k, i }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { l, m, n, j, i, k }; spin_batch.push_back( std::make_pair( idx, -val ) );
+  
+    idx = { l, n, m, k, j, i }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { l, n, m, k, i, j }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { l, n, m, i, j, k }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { l, n, m, i, k, j }; spin_batch.push_back( std::make_pair( idx,  val ) );
+    idx = { l, n, m, j, k, i }; spin_batch.push_back( std::make_pair( idx, -val ) );
+    idx = { l, n, m, j, i, k }; spin_batch.push_back( std::make_pair( idx,  val ) );
   }
 
-  // Now bundle them togther
-  for (auto it = trans_perms.begin(); it != trans_perms.end(); ++it) {
-    perms[ it->first ] = it->second;
-  }
-
-  return perms;
 }
 
 //===========================================================================================================================================================
@@ -169,10 +258,10 @@ void Fourpdm_permutations::get_even_and_odd_perms( const std::vector<int> mnpq,
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-std::map< std::vector<int>, int > Fourpdm_permutations::get_spin_permutations( const std::vector<int>& indices )
+void Fourpdm_permutations::get_spin_permutations( std::vector<std::pair<std::vector<int>,double> >& spin_batch, 
+                                                  const std::vector<int>& indices, const double& val )
 {
   assert( indices.size() == 8 );
-  std::map< std::vector<int>, int > perms;
   std::vector<int> idx;
   int i = indices[0];
   int j = indices[1];
@@ -186,10 +275,11 @@ std::map< std::vector<int>, int > Fourpdm_permutations::get_spin_permutations( c
   // If indices are not all unique, then all elements should be zero (and next_even_permutation fails)
   std::vector<int> v = {i,j,k,l};
   std::sort( v.begin(), v.end() );
-  if ( (v[0]==v[1]) || (v[1]==v[2]) || (v[2]==v[3]) ) return perms;
+  if ( (v[0]==v[1]) || (v[1]==v[2]) || (v[2]==v[3]) ) return;
   std::vector<int> w = {m,n,p,q};
   std::sort( w.begin(), w.end() );
-  if ( (w[0]==w[1]) || (w[1]==w[2]) || (w[2]==w[3]) ) return perms;
+  if ( (w[0]==w[1]) || (w[1]==w[2]) || (w[2]==w[3]) ) return;
+  bool skip_transpose = ( v == w );
 
   // The number of possible combinations is (4!)**2 
   //------------------------------------------------
@@ -208,42 +298,52 @@ std::map< std::vector<int>, int > Fourpdm_permutations::get_spin_permutations( c
   // Even-Even terms
   for ( auto u = ijkl_even.begin(); u != ijkl_even.end(); ++u ) {
     for ( auto v = mnpq_even.begin(); v != mnpq_even.end(); ++v ) {
-      idx = { (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] }; perms[ idx ] = 1;
+      idx = { (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] };
+      spin_batch.push_back( std::make_pair( idx, val ) );
+      if ( !skip_transpose ) {
+        // Include transpose
+        std::reverse( idx.begin(), idx.end() );
+        spin_batch.push_back( std::make_pair( idx, val ) );
+      }
     }
   }
   // Even-Odd terms
   for ( auto u = ijkl_even.begin(); u != ijkl_even.end(); ++u ) {
     for ( auto v = mnpq_odd.begin(); v != mnpq_odd.end(); ++v ) {
-      idx = { (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] }; perms[ idx ] = -1;
+      idx = { (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] };
+      spin_batch.push_back( std::make_pair( idx, -val ) );
+      if ( !skip_transpose ) {
+        // Include transpose
+        std::reverse( idx.begin(), idx.end() );
+        spin_batch.push_back( std::make_pair( idx, -val ) );
+      }
     }
   }
   // Odd-Even terms
   for ( auto u = ijkl_odd.begin(); u != ijkl_odd.end(); ++u ) {
     for ( auto v = mnpq_even.begin(); v != mnpq_even.end(); ++v ) {
-      idx = { (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] }; perms[ idx ] = -1;
+      idx = { (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] }; 
+      spin_batch.push_back( std::make_pair( idx, -val ) );
+      if ( !skip_transpose ) {
+        // Include transpose
+        std::reverse( idx.begin(), idx.end() );
+        spin_batch.push_back( std::make_pair( idx, -val ) );
+      }
     }
   }
   // Odd-Odd terms
   for ( auto u = ijkl_odd.begin(); u != ijkl_odd.end(); ++u ) {
     for ( auto v = mnpq_odd.begin(); v != mnpq_odd.end(); ++v ) {
-      idx = { (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] }; perms[ idx ] = 1;
+      idx = { (*u)[0],(*u)[1],(*u)[2],(*u)[3], (*v)[0],(*v)[1],(*v)[2],(*v)[3] };
+      spin_batch.push_back( std::make_pair( idx, val ) );
+      if ( !skip_transpose ) {
+        // Include transpose
+        std::reverse( idx.begin(), idx.end() );
+        spin_batch.push_back( std::make_pair( idx, val ) );
+      }
     }
   }
 
-  // Get transpose elements with same parity factors
-  std::map< std::vector<int>, int > trans_perms;
-  for (auto it = perms.begin(); it != perms.end(); ++it) {
-    std::vector<int> indices = it->first;
-    std::reverse( indices.begin(), indices.end() );
-    trans_perms[ indices ] = it->second;
-  }
-
-  // Now bundle them togther
-  for (auto it = trans_perms.begin(); it != trans_perms.end(); ++it) {
-    perms[ it->first ] = it->second;
-  }
-
-  return perms;
 }
 
 //===========================================================================================================================================================

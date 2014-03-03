@@ -27,9 +27,7 @@ class Npdm_container {
     virtual ~Npdm_container() {}
   
     virtual void store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements ) = 0;
-    virtual void clear_sparse_arrays() = 0;
     virtual void save_npdms(const int &i, const int &j) = 0;
-
 };
 
 //===========================================================================================================================================================

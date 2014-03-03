@@ -287,7 +287,7 @@ template <class Op> class Op_component : public Op_component_base
     std::ifstream ifs;
     std::ofstream ofs;
     std::string ifile = get_filename();
-pout << "renormalize on disk; ofile = " << ifile << endl;
+//pout << "renormalize on disk; ofile = " << ifile << endl;
     std::string ofile = ifile + ".renorm";
     if ( ! dmrginp.do_npdm_in_core() ) {
       ifs.open( ifile.c_str(), std::ios::binary );
@@ -318,11 +318,12 @@ pout << "renormalize on disk; ofile = " << ifile << endl;
   
       // Loop over spin-op components
       for (int jdx=0; jdx < spin_ops.size(); jdx++) {
-int i = spin_ops[jdx]->get_orbs()[0];
-int j = spin_ops[jdx]->get_orbs()[1];
-int k = spin_ops[jdx]->get_orbs()[2];
-int l = spin_ops[jdx]->get_orbs()[3];
-pout << "i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
+//FIXME
+//int i = spin_ops[jdx]->get_orbs()[0];
+//int j = spin_ops[jdx]->get_orbs()[1];
+//int k = spin_ops[jdx]->get_orbs()[2];
+//int l = spin_ops[jdx]->get_orbs()[3];
+//pout << "i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
         assert( spin_ops[jdx]->get_built() );
         // Renormalize
         spin_ops[jdx]->renormalise_transform( rotateMatrix, stateinfo );

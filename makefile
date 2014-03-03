@@ -83,7 +83,7 @@ ifeq ($(notdir $(firstword $(CXX))),g++)
 endif
 
 ifeq ($(USE_MPI), yes)
-	MPI_OPT = -g
+	MPI_OPT =
 	MPI_LIB = -L$(BOOSTINCLUDE)/lib/ -lboost_mpi
    LIBS += $(MPI_LIB)
 	CXX = $(MPICXX)
@@ -98,7 +98,7 @@ endif
 
 SRC_genetic = genetic/CrossOver.C genetic/Evaluate.C genetic/GAInput.C genetic/GAOptimize.C genetic/Generation.C genetic/Mutation.C genetic/RandomGenerator.C genetic/ReadIntegral.C
 
-SRC_npdm = modules/npdm/npdm.cpp modules/npdm/npdm_driver.cpp modules/npdm/npdm_patterns.cpp modules/npdm/npdm_expectations.cpp modules/npdm/npdm_wrapper_selector.cpp modules/npdm/npdm_spin_adaptation.cpp modules/npdm/npdm_expectations_engine.cpp modules/npdm/npdm_spin_ops.cpp  modules/two_index_ops/two_index_op_components.cpp modules/two_index_ops/two_index_ops.cpp modules/two_index_ops/two_index_wrappers.cpp  modules/three_index_ops/three_index_op_components.cpp modules/three_index_ops/three_index_compound_ops.cpp modules/three_index_ops/three_index_ops.cpp modules/three_index_ops/three_index_wrappers.cpp modules/three_index_ops/build_3index_ops.cpp modules/four_index_ops/four_index_op_components.cpp modules/four_index_ops/four_index_compound_ops.cpp modules/four_index_ops/four_index_ops.cpp modules/four_index_ops/four_index_wrappers.cpp modules/four_index_ops/build_4index_ops.cpp modules/npdm/onepdm_container.cpp modules/npdm/twopdm_container.cpp modules/npdm/threepdm_container.cpp modules/npdm/fourpdm_container.cpp modules/npdm/npdm_permutations.cpp modules/npdm/nevpt2_npdm_driver.cpp modules/npdm/nevpt2_A16_matrix.cpp modules/npdm/nevpt2_npdm.cpp
+SRC_npdm = modules/npdm/npdm.cpp modules/npdm/npdm_driver.cpp modules/npdm/npdm_patterns.cpp modules/npdm/npdm_expectations.cpp modules/npdm/npdm_wrapper_selector.cpp modules/npdm/npdm_spin_adaptation.cpp modules/npdm/npdm_expectations_engine.cpp modules/npdm/npdm_spin_ops.cpp  modules/two_index_ops/two_index_op_components.cpp modules/two_index_ops/two_index_ops.cpp modules/two_index_ops/two_index_wrappers.cpp  modules/three_index_ops/three_index_op_components.cpp modules/three_index_ops/three_index_compound_ops.cpp modules/three_index_ops/three_index_ops.cpp modules/three_index_ops/three_index_wrappers.cpp modules/three_index_ops/build_3index_ops.cpp modules/four_index_ops/four_index_op_components.cpp modules/four_index_ops/four_index_compound_ops.cpp modules/four_index_ops/four_index_ops.cpp modules/four_index_ops/four_index_wrappers.cpp modules/four_index_ops/build_4index_ops.cpp modules/npdm/onepdm_container.cpp modules/npdm/twopdm_container.cpp modules/npdm/threepdm_container.cpp modules/npdm/fourpdm_container.cpp modules/npdm/npdm_permutations.cpp modules/npdm/nevpt2_npdm_driver.cpp modules/npdm/nevpt2_A16_container.cpp modules/npdm/nevpt2_npdm.cpp
 
 SRC_spin_adapted =  dmrg.C least_squares.C set_spinblock_components.C linear.C main.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C anglib.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm_old/sweep.C modules/twopdm_old/twopdm_old.C modules/twopdm_old/twopdm_2.C $(SRC_genetic) $(SRC_npdm)
 

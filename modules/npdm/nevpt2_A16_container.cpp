@@ -6,7 +6,7 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#include "nevpt2_A16_matrix.h"
+#include "nevpt2_A16_container.h"
 
 namespace SpinAdapted{
 
@@ -292,34 +292,34 @@ void Nevpt2_A16_matrix::build_spatial_2pdm_elements( std::map< std::vector<int>,
 void Nevpt2_A16_matrix::build_npdm_batch( Npdm_permutations& p, const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements,
                                           std::map< std::vector<int>, double >& spatial_batch )
 {
-  std::map< std::vector<int>, double > spin_batch;
-
-  for (int idx=0; idx < new_spin_orbital_elements.size(); ++idx) {
-    // Get all spin-index permutations
-    std::map< std::vector<int>, int > spin_indices = p.get_spin_permutations( new_spin_orbital_elements[idx].first );
-    double val = new_spin_orbital_elements[idx].second;
-    for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
-      // Initialize spatial indices
-      std::vector<int> vec;
-      for (int i=0; i < (it->first).size(); ++i)
-        vec.push_back( (it->first)[i]/2 );
-      spatial_batch[ vec ] = 0.0;
-      // Assign temporary batch of spin-orbital elements
-      spin_batch[ it->first ] = it->second * val;
-    }
-  }
-
-  // Build spatial elements
-  if ( new_spin_orbital_elements[0].first.size() == 4 ) {
-    build_spatial_2pdm_elements( spin_batch, spatial_batch );
-  }
-  else if ( new_spin_orbital_elements[0].first.size() == 6 ) {
-    build_spatial_3pdm_elements( spin_batch, spatial_batch );
-  }
-  else if ( new_spin_orbital_elements[0].first.size() == 8 ) {
-    build_spatial_4pdm_elements( spin_batch, spatial_batch );
-  }
-  else assert(false);
+//  std::map< std::vector<int>, double > spin_batch;
+//
+//  for (int idx=0; idx < new_spin_orbital_elements.size(); ++idx) {
+//    // Get all spin-index permutations
+//    std::map< std::vector<int>, int > spin_indices = p.get_spin_permutations( new_spin_orbital_elements[idx].first );
+//    double val = new_spin_orbital_elements[idx].second;
+//    for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
+//      // Initialize spatial indices
+//      std::vector<int> vec;
+//      for (int i=0; i < (it->first).size(); ++i)
+//        vec.push_back( (it->first)[i]/2 );
+//      spatial_batch[ vec ] = 0.0;
+//      // Assign temporary batch of spin-orbital elements
+//      spin_batch[ it->first ] = it->second * val;
+//    }
+//  }
+//
+//  // Build spatial elements
+//  if ( new_spin_orbital_elements[0].first.size() == 4 ) {
+//    build_spatial_2pdm_elements( spin_batch, spatial_batch );
+//  }
+//  else if ( new_spin_orbital_elements[0].first.size() == 6 ) {
+//    build_spatial_3pdm_elements( spin_batch, spatial_batch );
+//  }
+//  else if ( new_spin_orbital_elements[0].first.size() == 8 ) {
+//    build_spatial_4pdm_elements( spin_batch, spatial_batch );
+//  }
+//  else assert(false);
 
 }
 
@@ -327,31 +327,31 @@ void Nevpt2_A16_matrix::build_npdm_batch( Npdm_permutations& p, const std::vecto
 
 void Nevpt2_A16_matrix::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
-  // Temporary batch of spatial npdm elements
-  std::map< std::vector<int>, double > spatial_batch;
-  
-  // 2PDM elements
-  if ( new_spin_orbital_elements[0].first.size() == 4 ) {
-    assert( new_spin_orbital_elements.size() == 6 );
-    Twopdm_permutations p;
-    build_npdm_batch( p, new_spin_orbital_elements, spatial_batch );
-    store_A16_2pdm_contribution( spatial_batch );
-  }
-  // 3PDM elements
-  else if ( new_spin_orbital_elements[0].first.size() == 6 ) {
-    assert( new_spin_orbital_elements.size() == 20 );
-    Threepdm_permutations p;
-    build_npdm_batch( p, new_spin_orbital_elements, spatial_batch );
-    store_A16_3pdm_contribution( spatial_batch );
-  }
-  // 4PDM elements
-  else if ( new_spin_orbital_elements[0].first.size() == 8 ) {
-    assert( new_spin_orbital_elements.size() == 70 );
-    Fourpdm_permutations p;
-    build_npdm_batch( p, new_spin_orbital_elements, spatial_batch );
-    store_A16_4pdm_contribution( spatial_batch );
-  }
-  else assert(false);
+//  // Temporary batch of spatial npdm elements
+//  std::map< std::vector<int>, double > spatial_batch;
+//  
+//  // 2PDM elements
+//  if ( new_spin_orbital_elements[0].first.size() == 4 ) {
+//    assert( new_spin_orbital_elements.size() == 6 );
+//    Twopdm_permutations p;
+//    build_npdm_batch( p, new_spin_orbital_elements, spatial_batch );
+//    store_A16_2pdm_contribution( spatial_batch );
+//  }
+//  // 3PDM elements
+//  else if ( new_spin_orbital_elements[0].first.size() == 6 ) {
+//    assert( new_spin_orbital_elements.size() == 20 );
+//    Threepdm_permutations p;
+//    build_npdm_batch( p, new_spin_orbital_elements, spatial_batch );
+//    store_A16_3pdm_contribution( spatial_batch );
+//  }
+//  // 4PDM elements
+//  else if ( new_spin_orbital_elements[0].first.size() == 8 ) {
+//    assert( new_spin_orbital_elements.size() == 70 );
+//    Fourpdm_permutations p;
+//    build_npdm_batch( p, new_spin_orbital_elements, spatial_batch );
+//    store_A16_4pdm_contribution( spatial_batch );
+//  }
+//  else assert(false);
 }
 
 //===========================================================================================================================================================

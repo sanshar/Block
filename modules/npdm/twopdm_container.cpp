@@ -14,10 +14,9 @@ namespace SpinAdapted{
 
 Twopdm_container::Twopdm_container( int sites )
 {
-  store_full_spin_array_ = false;
+  store_nonredundant_spin_elements_ = true;
+  store_full_spin_array_ = true;
   store_full_spatial_array_ = true;
-  store_sparse_spin_array_ = false;
-  store_sparse_spatial_array_ = false;
 
   if ( store_full_spin_array_ ) {
     twopdm.resize(2*sites,2*sites,2*sites,2*sites);
@@ -198,66 +197,54 @@ void Twopdm_container::accumulate_spatial_npdm()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_container::update_full_spin_array( std::map< std::vector<int>, double >& spin_batch ) 
+void Twopdm_container::update_full_spin_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
 {
   for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
+    double val = it->second;
+    if ( abs(val) < 1e-15 ) continue;
     int i = (it->first)[0];
     int j = (it->first)[1];
     int k = (it->first)[2];
     int l = (it->first)[3];
 
-    double val = it->second;
     //if ( abs(val) > 1e-8 ) pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
     //pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
 
     // Test for duplicates
-    if ( twopdm(i, j, k, l) != 0.0 && abs(twopdm(i,j,k,l)-val) > 1e-6) {
-      void *array[10];
-      size_t size;
-      size = backtrace(array, 10);
+    if ( abs(twopdm(i, j, k, l)) != 0.0 ) {
       cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<endl;
-      //backtrace_symbols_fd(array, size, 2);
       cout << "earlier value: "<<twopdm(i,j,k,l)<<endl<< "new value:     "<<val<<endl;
       assert( false );
     }
-    if ( abs(val) > 1e-14 ) twopdm(i,j,k,l) = val;
+    twopdm(i,j,k,l) = val;
   }
 
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// This routine assumes that no spin-orbital indices are generated more than once
 
-void Twopdm_container::build_spatial_elements( std::map< std::vector<int>, double >& spin_batch, std::map< std::vector<int>, double >& spatial_batch )
+void Twopdm_container::update_full_spatial_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
 {
-  //Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
+  // Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
   double factor = 0.5;
+  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
+    assert( (it->first).size() == 4 );
 
-  for (auto it = spatial_batch.begin(); it != spatial_batch.end(); ++it) {
-    int i = (it->first)[0];
-    int j = (it->first)[1];
-    int k = (it->first)[2];
-    int l = (it->first)[3];
-    // Sum over spin indices 
-    double val = 0.0;
-    for (int s=0; s<2; s++) {
-      for (int t =0; t<2; t++) {
-        std::vector<int> idx = { 2*i+s, 2*j+t, 2*k+t, 2*l+s };
-        val += spin_batch[ idx ];
-      }
-    }
     // Store significant elements only
-    if ( abs(val) > 1e-14 ) {
-      if ( store_sparse_spatial_array_ ) sparse_spatial_pdm[ it->first ] = factor * val;
-      if ( store_full_spatial_array_ ) {
-        if ( abs( spatial_twopdm(i,j,k,l) ) > 1e-14 ) { 
-          cout << "repeated spatial indices!\n";
-          assert(false);
-        }
-        spatial_twopdm(i,j,k,l) = factor * val;
-      }
+    if ( abs(it->second) > 1e-14 ) {
+      // Spin indices
+      int i = (it->first)[0];
+      int j = (it->first)[1];
+      int k = (it->first)[2];
+      int l = (it->first)[3];
+
+      if ( i%2 != l%2 ) continue;
+      if ( j%2 != k%2 ) continue;
+
+      spatial_twopdm(i/2,j/2,k/2,l/2) += factor * (it->second);
     }
   }
-
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -265,31 +252,15 @@ void Twopdm_container::build_spatial_elements( std::map< std::vector<int>, doubl
 void Twopdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
   assert( new_spin_orbital_elements.size() == 6 );
-  // Temporary batches of npdm elements
-  std::map< std::vector<int>, double > spin_batch;
-  std::map< std::vector<int>, double > spatial_batch;
+  Twopdm_permutations perm;
+  std::vector< std::pair< std::vector<int>, double > > spin_batch;
+  // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
+  perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
 
-  for (int idx=0; idx < new_spin_orbital_elements.size(); ++idx) {
-    // Get all spin-index permutations
-    Twopdm_permutations p;
-    std::map< std::vector<int>, int > spin_indices = p.get_spin_permutations( new_spin_orbital_elements[idx].first );
-    double val = new_spin_orbital_elements[idx].second;
-    for (auto it = spin_indices.begin(); it != spin_indices.end(); ++it) {
-      // Initialize spatial indices
-      std::vector<int> vec;
-      for (int i=0; i < (it->first).size(); ++i)
-        vec.push_back( (it->first)[i]/2 );
-      spatial_batch[ vec ] = 0.0;
-      // Assign temporary batch of spin-orbital elements
-      spin_batch[ it->first ] = it->second * val;
-      if ( store_sparse_spin_array_ && (abs(val) > 1e-14) ) sparse_spin_pdm[ it->first ] = it->second * val;
-    }
-  }
-
-  // Build and store new spatial elements
-  build_spatial_elements( spin_batch, spatial_batch );
+  //FIXME add options to dump to disk if memory becomes bottleneck
+  if ( ! store_nonredundant_spin_elements_ ) nonredundant_elements.clear();
   if ( store_full_spin_array_ ) update_full_spin_array( spin_batch );
-
+  if ( store_full_spatial_array_ ) update_full_spatial_array( spin_batch );
 }
 
 //===========================================================================================================================================================

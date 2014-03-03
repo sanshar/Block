@@ -300,10 +300,6 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
   pout << "===========================================================================================\n";
   pout << "Current NPDM sweep position = "<< sweepPos+1 << " of " << endPos+1 << "\n";
 
-  // Clear sparse arrays of NPDM elements built at single sweep position
-//FIXME clear here or elsewhere?
-  container_.clear_sparse_arrays();
-
   // Loop over NPDM operator patterns
   Npdm::Npdm_patterns npdm_patterns( npdm_order_, sweepPos, endPos );
   Npdm::Npdm_expectations npdm_expectations( npdm_patterns, npdm_order_, wavefunctions.at(0), big );

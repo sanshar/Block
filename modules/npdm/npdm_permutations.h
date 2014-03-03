@@ -25,36 +25,43 @@ class Npdm_permutations {
   public:
     Npdm_permutations() {}
     virtual ~Npdm_permutations() {}
-    virtual std::map< std::vector<int>, int > get_spin_permutations( const std::vector<int>& indices ) = 0;
+
+    void process_new_elements( const std::vector< std::pair< std::vector<int>, double > >& in, 
+                               std::vector< std::pair< std::vector<int>, double > >& nonredundant_elements,
+                               std::vector< std::pair< std::vector<int>, double > >& spin_batch );
+//FIXME
+//  protected:
+    virtual void get_spin_permutations( std::vector<std::pair<std::vector<int>,double> >& spin_batch, 
+                                        const std::vector<int>& indices, const double& val ) = 0;
 };
 
 //===========================================================================================================================================================
 
 class Onepdm_permutations : public Npdm_permutations {
-  public:
-    std::map< std::vector<int>, int > get_spin_permutations( const std::vector<int>& indices );
+  private:
+    void get_spin_permutations( std::vector<std::pair<std::vector<int>,double> >& spin_batch, const std::vector<int>& indices, const double& val );
 };
 
 //===========================================================================================================================================================
 
 class Twopdm_permutations : public Npdm_permutations {
-  public:
-    std::map< std::vector<int>, int > get_spin_permutations( const std::vector<int>& indices );
+  private:
+    void get_spin_permutations( std::vector<std::pair<std::vector<int>,double> >& spin_batch, const std::vector<int>& indices, const double& val );
 };
 
 //===========================================================================================================================================================
 
 class Threepdm_permutations : public Npdm_permutations {
-  public:
-    std::map< std::vector<int>, int > get_spin_permutations( const std::vector<int>& indices );
+  private:
+    void get_spin_permutations( std::vector<std::pair<std::vector<int>,double> >& spin_batch, const std::vector<int>& indices, const double& val );
 };
 
 //===========================================================================================================================================================
 
 class Fourpdm_permutations : public Npdm_permutations {
-  public:
-    std::map< std::vector<int>, int > get_spin_permutations( const std::vector<int>& indices );
-    void get_even_and_odd_perms(const std::vector<int> mnpq, std::vector< std::vector<int> > & even_perms, std::vector< std::vector<int> > & odd_perms);
+  private:
+    void get_spin_permutations( std::vector<std::pair<std::vector<int>,double> >& spin_batch, const std::vector<int>& indices, const double& val );
+    void get_even_and_odd_perms( const std::vector<int> mnpq, std::vector<std::vector<int> > & even_perms, std::vector<std::vector<int> > & odd_perms );
 };
 
 //===========================================================================================================================================================
