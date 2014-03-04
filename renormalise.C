@@ -50,8 +50,8 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 
   dmrginp.solvewf -> start();
   Solver::solve_wavefunction(wave_solutions, energies, big, tol, guesswavetype, onedot, dot_with_sys, warmUp, additional_noise, currentRoot, lowerStates);
-
   dmrginp.solvewf -> stop();
+
   SpinBlock newsystem;
   SpinBlock newenvironment;
   SpinBlock newbig;
@@ -84,7 +84,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   dmrginp.davidsonT -> stop();
 
   dmrginp.rotmatrixT -> start();
-  DensityMatrix tracedMatrix;
+  DensityMatrix tracedMatrix(stateInfo);
   tracedMatrix.allocate(stateInfo);
 
   bool normalnoise = warmUp;
@@ -125,7 +125,11 @@ double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatri
   DensityMatrix transformmatrix = tracedMatrix;
 
   std::vector<DiagonalMatrix> eigenMatrix;
-  diagonalise_dm(tracedMatrix, transformmatrix, eigenMatrix);
+
+  if (dmrginp.hamiltonian() == BCS)
+    svd_densitymat(tracedMatrix, transformmatrix, eigenMatrix);
+  else
+    diagonalise_dm(tracedMatrix, transformmatrix, eigenMatrix);
 
   vector<pair<int, int> > inorderwts;
   vector<vector<int> > wtsbyquanta;

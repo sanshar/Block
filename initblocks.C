@@ -34,7 +34,6 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
   else if (forward)
   {
     startingBlock = SpinBlock(0, forward_starting_size - 1, true);
-    
     if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0 && dmrginp.spinAdapted())
     {
       SpinQuantum s = dmrginp.molecule_quantum();
@@ -216,7 +215,6 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
     if (dmrginp.outputlevel() > 0)
       mcheck("");
   }
-
   // now initialise newEnvironment
   if (!dot_with_sys || !onedot)
   {
@@ -247,5 +245,9 @@ void SpinAdapted::InitBlocks::InitBigBlock(SpinBlock &leftBlock, SpinBlock &righ
   //set big block components
   big.set_big_components(); 
   // build the big block
-  big.BuildSumBlock(PARTICLE_SPIN_NUMBER_CONSTRAINT, leftBlock, rightBlock);
+  if (dmrginp.hamiltonian() == BCS) {
+    big.BuildSumBlock(SPIN_NUMBER_CONSTRAINT, leftBlock, rightBlock);
+  } else {
+    big.BuildSumBlock(PARTICLE_SPIN_NUMBER_CONSTRAINT, leftBlock, rightBlock);
+  }
 }

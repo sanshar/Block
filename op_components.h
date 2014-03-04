@@ -30,7 +30,7 @@ template <class T> struct ChooseArray {
   typedef para_array_1d<std::vector<boost::shared_ptr<SparseMatrix> > > ArrayType;
 };
 template <> struct ChooseArray<Cre> {
-  typedef para_array_1d<std::vector<boost::shared_ptr<Cre> > > ArrayType;
+  typedef para_array_1d<std::vector<boost::shared_ptr<Cre> > > ArrayType; // Cre, CreDes, etc. are sparse matrices: <a|a_i^\dagger|b>
 };
 template <> struct ChooseArray<CreDes> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<CreDes> > > ArrayType;
@@ -39,7 +39,7 @@ template <> struct ChooseArray<CreCre> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<CreCre> > > ArrayType;
 };
 template <> struct ChooseArray<CreDesComp> {
-  typedef para_array_triang_2d<std::vector<boost::shared_ptr<CreDesComp> > > ArrayType;
+    typedef para_array_triang_2d<std::vector<boost::shared_ptr<CreDesComp> > > ArrayType;
 };
 template <> struct ChooseArray<DesDesComp> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<DesDesComp> > > ArrayType;
@@ -85,8 +85,8 @@ class Op_component_base
   virtual bool has(int i, int j = -1, int k = -1) const = 0;
   virtual bool has_local_index(int i, int j=-1, int k=-1) const = 0;
   virtual std::vector< std::vector<int> > get_array() const =0;
-  virtual boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1) = 0;
-  virtual const boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1) const = 0;
+  virtual boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1) = 0;
+  virtual const boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1) const = 0;
   virtual std::string get_op_string() const = 0;
   virtual ~Op_component_base() {}  
 };
@@ -162,22 +162,23 @@ template <class Op> class Op_component : public Op_component_base
       vec[l] = m_op(i,j,k)[l]; 
     return vec;
   }
-  boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1)
+  boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1)
   {
     Op* o = 0;
     std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
-    for (int l=0; l<vec.size(); l++)
+    for (int l=0; l<vec.size(); l++) {
       if (s == vec[l]->get_deltaQuantum())
-	return m_op(i,j,k)[l];
+	    return m_op(i,j,k)[l];
+    }
     return boost::shared_ptr<Op>(o);
   }
-  const boost::shared_ptr<SparseMatrix> get_op_rep(const SpinQuantum& s, int i=-1, int j=-1, int k=-1) const
+  const boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1) const
   {
     Op* o = 0;
     const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k);
     for (int l=0; l<vec.size(); l++)
       if (s == vec[l]->get_deltaQuantum())
-	return m_op(i,j,k)[l];
+	    return m_op(i,j,k)[l];
     return boost::shared_ptr<Op>(o);
   }
   std::string get_op_string() const;

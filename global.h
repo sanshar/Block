@@ -43,6 +43,9 @@ using namespace std;
 namespace SpinAdapted{
 class OneElectronArray;
 class TwoElectronArray;
+class PairArray;
+class CCCCArray;
+class CCCDArray;
 
 extern int MAX_THRD;
 
@@ -50,6 +53,9 @@ extern Timer globaltimer;
 
 extern OneElectronArray v_1;
 extern TwoElectronArray v_2;
+extern PairArray v_cc;
+extern CCCCArray v_cccc;
+extern CCCDArray v_cccd;
 
 extern Input dmrginp;
 

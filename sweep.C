@@ -106,7 +106,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 					sweepParams.get_onedot(), nexact, useSlater, !dot_with_sys, true, dot_with_sys);
   }
-  SpinBlock big;
+  SpinBlock big;  // new_sys = sys+sys_dot; new_env = env+env_dot; big = new_sys + new_env then renormalize to find new_sys(new)
   if (dot_with_sys) {
     newSystem.set_loopblock(true);
     system.set_loopblock(false);
@@ -209,11 +209,10 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   newEnvironment.clear();
 
   pout <<"\t\t\t Performing Renormalization "<<endl;
-  pout << "\t\t\t Total discarded weight "<<sweepParams.set_lowest_error()<<endl<<endl;
+  pout << "\t\t\t Total discarded weight "<<sweepParams.get_lowest_error()<<endl<<endl;
 
   dmrginp.multiplierT -> stop();
   dmrginp.operrotT -> start();
-
   newSystem.transform_operators(rotatematrix);
   storeStates[2] = newSystem.get_stateInfo();
   dmrginp.operrotT -> stop();
@@ -274,10 +273,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root()); // if restart, just restoring an existing block --
   sweepParams.savestate(forward, system.get_sites().size());
   bool dot_with_sys = true;
-  vector<int> syssites;
-  {
-    syssites = system.get_sites();
-  }
+  vector<int> syssites = system.get_sites();
 
   if (restart)
   {
@@ -287,19 +283,17 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       dot_with_sys = false;
   }
   if (dmrginp.outputlevel() > 0)
-    mcheck("at the very start of sweep");
+    mcheck("at the very start of sweep");  // just timer
 
-  for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
+  for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) // get_n_iters() returns the number of blocking iterations needed in one sweep
     {
-      
       pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
       if (dmrginp.outputlevel() > 0) {
-	
-	if (forward)
-	  pout << "\t\t\t Current direction is :: Forwards " << endl;
-	else
-	  pout << "\t\t\t Current direction is :: Backwards " << endl;
+	    if (forward)
+	      pout << "\t\t\t Current direction is :: Forwards " << endl;
+	    else
+	      pout << "\t\t\t Current direction is :: Backwards " << endl;
       }
 
       if (dmrginp.no_transform() || (sweepParams.get_sweep_iter()-sweepParams.get_restart_iter() == 0 && sweepParams.get_block_iter() == 0))
@@ -317,7 +311,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       if (dmrginp.outputlevel() > 0)
          pout << "\t\t\t Blocking and Decimating " << endl;
 	  
-      SpinBlock newSystem;
+      SpinBlock newSystem; // new system after blocking and decimating
 
       //Need to substitute by:
       if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG))
@@ -329,6 +323,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       }
       
       //Need to substitute by?
+
       if (!(warmUp && (sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG))){
 	for(int j=0;j<nroots;++j)
 	{
@@ -354,16 +349,16 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       
       system = newSystem;
       if (dmrginp.outputlevel() > 0){
-	pout << system<<endl;
-	system.printOperatorSummary();
+	    pout << system<<endl;
+	    system.printOperatorSummary();
       }
       
       //system size is going to be less than environment size
       if (forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)
-	dot_with_sys = false;
+	    dot_with_sys = false;
       if (!forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
-	dot_with_sys = false;
-      
+	    dot_with_sys = false;
+
       SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root());	 	
       syssites = system.get_sites();
       if (dmrginp.outputlevel() > 0)
@@ -441,9 +436,10 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem)
 {
   mcheck("at the start of block and decimate");
-  dmrginp.guessgenT -> start();
-  bool forward = (system.get_sites() [0] == 0);
+  dmrginp.guessgenT -> start();  // timer starts
+  bool forward = (system.get_sites() [0] == 0); // if first site is 0, then it's forward sweep
   SpinBlock systemDot;
+  // define the sites of "systemDot"
   int systemDotStart, systemDotEnd;
   int systemDotSize = sweepParams.get_sys_add() - 1;
   if (forward)
@@ -456,24 +452,24 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
     systemDotStart = system.get_sites() [0] - 1;
     systemDotEnd = systemDotStart - systemDotSize;
   }
+
   vector<int> spindotsites(2); 
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
-  systemDot = SpinBlock(systemDotStart, systemDotEnd);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd); // default is_complement=false
   
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
   dmrginp.datatransfer -> start();
-  system.addAdditionalCompOps();
+  system.addAdditionalCompOps(); // communicate between different processors, broadcast operators from system block
   dmrginp.datatransfer -> stop();
   InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), 
 				 DISTRIBUTED_STORAGE, true, true);
 
-
   int nquanta = newSystem.get_stateInfo().quanta.size();
   std::vector<DiagonalMatrix > energies(nquanta);
   std::vector<Matrix> rotateMatrix(nquanta);
-  DensityMatrix transformmatrix; 
+  DensityMatrix transformmatrix; // FIXME pay attention to this: density matrix with certain quantum
   transformmatrix.allocate(newSystem.get_stateInfo());
   SpinQuantum q(0,SpinSpace(0),IrrepSpace(0));
 

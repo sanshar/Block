@@ -31,7 +31,9 @@ public:
  Wavefunction() : onedot(false), SparseMatrix(){}
   Wavefunction(const Wavefunction& wf) : SparseMatrix(wf), onedot(wf.onedot) {}
   Wavefunction(const SpinQuantum dQ, const SpinBlock* b, const bool onedot_) : onedot(onedot_) { initialise(dQ, b, onedot_); }
+  Wavefunction(const vector<SpinQuantum>& dQ, const SpinBlock* b, const bool onedot_) : onedot(onedot_) { initialise(dQ, b, onedot_); }  
   void initialise(const SpinQuantum dQ, const SpinBlock* b, const bool &onedot_);
+  void initialise(const vector<SpinQuantum>& dQ, const SpinBlock* b, const bool &onedot_);  
   const bool &get_onedot() const {return onedot;}
   void set_onedot(bool p_onedot) {onedot = p_onedot;}
 
@@ -45,15 +47,16 @@ public:
   void SaveWavefunctionInfo (const StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num);
   
 #ifdef USE_BTAS
-  void CollectQuantaAlongRows (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const SpinQuantum dQ);
+  void CollectQuantaAlongRows (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const vector<SpinQuantum> dQ);
   void UnCollectQuantaAlongRows(const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave);
-  void CollectQuantaAlongColumns (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const SpinQuantum dQ);
+  void CollectQuantaAlongColumns (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const vector<SpinQuantum> dQ);
   void UnCollectQuantaAlongColumns(const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave);
 #endif
 
   void UnCollectQuantaAlongRows(const StateInfo& sRow, const StateInfo& sCol);
-  void AllowQuantaFor(const StateInfo& sRow, const StateInfo& sCol, const SpinQuantum q);
-  void CollectQuantaAlongRows(const StateInfo& sRow, const StateInfo& sCol);
+  //void AllowQuantaFor(const StateInfo& sRow, const StateInfo& sCol, const SpinQuantum q);
+  void AllowQuantaFor(const StateInfo& sRow, const StateInfo& sCol, const vector<SpinQuantum>& q);  
+  void CollectQuantaAlongRows(const StateInfo& sRow, const StateInfo& sCol); // FIXME what does this function do?
   void CollectQuantaAlongColumns(const StateInfo& sRow, const StateInfo& sCol);
   void UnCollectQuantaAlongColumns(const StateInfo& sRow, const StateInfo& sCol);
   Wavefunction& operator+=(const Wavefunction& other);

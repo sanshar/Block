@@ -24,12 +24,23 @@ void compute_one_pdm_0_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 void compute_one_pdm_1_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm);
 void compute_one_pdm_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm);
 
+void compute_pair_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm);
+void compute_pair_2_0_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm);
+void compute_pair_0_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm);
+void compute_pair_1_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm);
+void compute_pair_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm);
+
 void save_onepdm_spatial_text(const Matrix& onepdm, const int &i, const int &j);
 void save_onepdm_spatial_binary(const Matrix& onepdm, const int &i, const int &j);
 void save_onepdm_binary(const Matrix& onepdm, const int &i, const int &j);
 void load_onepdm_binary(Matrix& onepdm, const int &i, const int &j);
 void save_onepdm_text(const Matrix& onepdm, const int &i, const int &j);
 void accumulate_onepdm(Matrix& onepdm);
+
+void save_pairmat_binary(const Matrix& pairmat, const int &i, const int &j);
+void load_pairmat_binary(Matrix& pairmat, const int &i, const int &j);
+void save_pairmat_text(const Matrix& onepdm, const int &i, const int &j);
+
 std::vector<int> distribute_procs(const int numprocs, const int numjobs);
 }
 #endif

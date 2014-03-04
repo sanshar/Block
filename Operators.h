@@ -43,12 +43,10 @@ class CreDesComp: public SpinAdapted::SparseMatrix
 {
  public:
   CreDesComp() { orbs.resize(2); fermion = false;}
-  void build_fromcd(SpinBlock& b);
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
 };
-
 
 class DesDesComp: public SpinAdapted::SparseMatrix
 {
@@ -78,6 +76,8 @@ class Ham: public SpinAdapted::SparseMatrix
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
 };
+
+double vcccc_4idx_asymm(int i, int j, int k, int l);
 
 }
 

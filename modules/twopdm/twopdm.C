@@ -149,7 +149,7 @@ void compute_two_pdm_0_4_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   dotop.set_orbs() = dotop0->get_orbs(); dotop.set_orbs().push_back(dotindex); dotop.set_orbs().push_back(dotindex);
   dotop.set_initialised() = true;
   dotop.set_fermion() = false;
-  dotop.set_deltaQuantum() = ( dotop0->get_deltaQuantum() - dotop0->get_deltaQuantum() )[0];
+  dotop.set_deltaQuantum(1, (dotop0->get_deltaQuantum(0) - dotop0->get_deltaQuantum(0))[0]);
   dotop.allocate(dotBlock->get_stateInfo());
   operatorfunctions::Product(dotBlock, *dotop0, Transposeview(*dotop0), dotop, 1.0);
 
@@ -175,7 +175,7 @@ void compute_two_pdm_4_0_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   leftop.set_orbs() = leftop0->get_orbs(); leftop.set_orbs().push_back(leftindex); leftop.set_orbs().push_back(leftindex);
   leftop.set_initialised() = true;
   leftop.set_fermion() = false;
-  leftop.set_deltaQuantum() = ( leftop0->get_deltaQuantum() - leftop0->get_deltaQuantum() )[0];
+  leftop.set_deltaQuantum(1, (leftop0->get_deltaQuantum(0) - leftop0->get_deltaQuantum(0))[0]);
   leftop.allocate(leftBlock->get_stateInfo());
   operatorfunctions::Product(leftBlock, *leftop0, Transposeview(*leftop0), leftop, 1.0);
 
@@ -202,7 +202,7 @@ void compute_two_pdm_0_0_4(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   rightop.set_orbs() = rightop0->get_orbs(); rightop.set_orbs().push_back(rightindex); rightop.set_orbs().push_back(rightindex);
   rightop.set_initialised() = true;
   rightop.set_fermion() = false;
-  rightop.set_deltaQuantum() = ( rightop0->get_deltaQuantum() - rightop0->get_deltaQuantum() )[0];
+  rightop.set_deltaQuantum(1, (rightop0->get_deltaQuantum(0) - rightop0->get_deltaQuantum(0))[0]);
   rightop.allocate(rightBlock->get_stateInfo());
   operatorfunctions::Product(rightBlock, *rightop0, Transposeview(*rightop0), rightop, 1.0);
 
@@ -679,14 +679,14 @@ void compute_two_pdm_0_3_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   Dotop1.set_orbs() = dotop0->get_orbs(); Dotop1.set_orbs().push_back(dotindex); Dotop1.set_orbs().push_back(dotindex);
   Dotop1.set_initialised() = true;
   Dotop1.set_fermion() = true;
-  Dotop1.set_deltaQuantum() = ( dotop1->get_deltaQuantum() - dotop0->get_deltaQuantum() )[0];
+  Dotop1.set_deltaQuantum(1, (dotop1->get_deltaQuantum(0) - dotop0->get_deltaQuantum(0))[0]);
   Dotop1.allocate(dotBlock->get_stateInfo());
   operatorfunctions::Product(dotBlock, *dotop1, Transposeview(*dotop0), Dotop1, 1.0);
 
   Dotop2.set_orbs() = dotop0->get_orbs(); Dotop2.set_orbs().push_back(dotindex); Dotop2.set_orbs().push_back(dotindex);
   Dotop2.set_initialised() = true;
   Dotop2.set_fermion() = true;
-  Dotop2.set_deltaQuantum() = ( dotop2->get_deltaQuantum() - dotop0->get_deltaQuantum() )[0];
+  Dotop2.set_deltaQuantum(1, (dotop2->get_deltaQuantum(0) - dotop0->get_deltaQuantum(0))[0]);
   Dotop2.allocate(dotBlock->get_stateInfo());
   operatorfunctions::Product(dotBlock, *dotop2, Transposeview(*dotop0), Dotop2, 1.0);
         
@@ -765,14 +765,14 @@ void compute_two_pdm_3_0_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   Leftop1.set_orbs() = leftop0->get_orbs(); Leftop1.set_orbs().push_back(leftindex); Leftop1.set_orbs().push_back(leftindex);
   Leftop1.set_initialised() = true;
   Leftop1.set_fermion() = true;
-  Leftop1.set_deltaQuantum() = ( leftop1->get_deltaQuantum() - leftop0->get_deltaQuantum() )[0];
+  Leftop1.set_deltaQuantum(1, (leftop1->get_deltaQuantum(0) - leftop0->get_deltaQuantum(0))[0]);
   Leftop1.allocate(leftBlock->get_stateInfo());
   operatorfunctions::Product(leftBlock, *leftop1, Transposeview(*leftop0), Leftop1, 1.0);
 
   Leftop2.set_orbs() = leftop0->get_orbs(); Leftop2.set_orbs().push_back(leftindex); Leftop2.set_orbs().push_back(leftindex);
   Leftop2.set_initialised() = true;
   Leftop2.set_fermion() = true;
-  Leftop2.set_deltaQuantum() = ( leftop2->get_deltaQuantum() - leftop0->get_deltaQuantum() )[0];
+  Leftop2.set_deltaQuantum(1, (leftop2->get_deltaQuantum(0) - leftop0->get_deltaQuantum(0))[0]);
   Leftop2.allocate(leftBlock->get_stateInfo());
   operatorfunctions::Product(leftBlock, *leftop2, Transposeview(*leftop0), Leftop2, 1.0);
         
@@ -820,14 +820,14 @@ void compute_two_pdm_3_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   Leftop1.set_orbs() = leftop0->get_orbs(); Leftop1.set_orbs().push_back(leftindex); Leftop1.set_orbs().push_back(leftindex);
   Leftop1.set_initialised() = true;
   Leftop1.set_fermion() = true;
-  Leftop1.set_deltaQuantum() = ( leftop1->get_deltaQuantum() - leftop0->get_deltaQuantum() )[0];
+  Leftop1.set_deltaQuantum(1, (leftop1->get_deltaQuantum(0) - leftop0->get_deltaQuantum(0))[0]);
   Leftop1.allocate(leftBlock->get_stateInfo());
   operatorfunctions::Product(leftBlock, *leftop1, Transposeview(*leftop0), Leftop1, 1.0);
 
   Leftop2.set_orbs() = leftop0->get_orbs(); Leftop2.set_orbs().push_back(leftindex); Leftop2.set_orbs().push_back(leftindex);
   Leftop2.set_initialised() = true;
   Leftop2.set_fermion() = true;
-  Leftop2.set_deltaQuantum() = ( leftop2->get_deltaQuantum() - leftop0->get_deltaQuantum() )[0];
+  Leftop2.set_deltaQuantum(1, (leftop2->get_deltaQuantum(0) - leftop0->get_deltaQuantum(0))[0]);
   Leftop2.allocate(leftBlock->get_stateInfo());
   operatorfunctions::Product(leftBlock, *leftop2, Transposeview(*leftop0), Leftop2, 1.0);
 
@@ -898,14 +898,14 @@ void compute_two_pdm_1_3_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   Dotop1.set_orbs() = dotop0->get_orbs(); Dotop1.set_orbs().push_back(dotindex); Dotop1.set_orbs().push_back(dotindex);
   Dotop1.set_initialised() = true;
   Dotop1.set_fermion() = true;
-  Dotop1.set_deltaQuantum() = ( dotop1->get_deltaQuantum() - dotop0->get_deltaQuantum() )[0];
+  Dotop1.set_deltaQuantum(1, (dotop1->get_deltaQuantum(0) - dotop0->get_deltaQuantum(0))[0]);
   Dotop1.allocate(dotBlock->get_stateInfo());
   operatorfunctions::Product(dotBlock, *dotop1, Transposeview(*dotop0), Dotop1, 1.0);
 
   Dotop2.set_orbs() = dotop0->get_orbs(); Dotop2.set_orbs().push_back(dotindex); Dotop2.set_orbs().push_back(dotindex);
   Dotop2.set_initialised() = true;
   Dotop2.set_fermion() = true;
-  Dotop2.set_deltaQuantum() = ( dotop2->get_deltaQuantum() - dotop0->get_deltaQuantum() )[0];
+  Dotop2.set_deltaQuantum(1, (dotop2->get_deltaQuantum(0) - dotop0->get_deltaQuantum(0))[0]);
   Dotop2.allocate(dotBlock->get_stateInfo());
   operatorfunctions::Product(dotBlock, *dotop2, Transposeview(*dotop0), Dotop2, 1.0);
         
@@ -977,14 +977,14 @@ void compute_two_pdm_1_3(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
   Rightop1.set_orbs() = rightop0->get_orbs(); Rightop1.set_orbs().push_back(rightindex); Rightop1.set_orbs().push_back(rightindex);
   Rightop1.set_initialised() = true;
   Rightop1.set_fermion() = true;
-  Rightop1.set_deltaQuantum() = ( rightop1->get_deltaQuantum() - rightop0->get_deltaQuantum() )[0];
+  Rightop1.set_deltaQuantum(1, (rightop1->get_deltaQuantum(0) - rightop0->get_deltaQuantum(0))[0]);
   Rightop1.allocate(rightBlock->get_stateInfo());
   operatorfunctions::Product(rightBlock, *rightop1, Transposeview(*rightop0), Rightop1, 1.0);
 
   Rightop2.set_orbs() = rightop0->get_orbs(); Rightop2.set_orbs().push_back(rightindex); Rightop2.set_orbs().push_back(rightindex);
   Rightop2.set_initialised() = true;
   Rightop2.set_fermion() = true;
-  Rightop2.set_deltaQuantum() = ( rightop2->get_deltaQuantum() - rightop0->get_deltaQuantum() )[0];
+  Rightop2.set_deltaQuantum(1, (rightop2->get_deltaQuantum(0) - rightop0->get_deltaQuantum(0))[0]);
   Rightop2.allocate(rightBlock->get_stateInfo());
   operatorfunctions::Product(rightBlock, *rightop2, Transposeview(*rightop0), Rightop2, 1.0);
         

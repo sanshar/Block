@@ -129,7 +129,7 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 #endif
 
   std::vector<Matrix> rotateMatrix;
-  DensityMatrix tracedMatrix;
+  DensityMatrix tracedMatrix(newSystem.get_stateInfo());
   tracedMatrix.allocate(newSystem.get_stateInfo());
   tracedMatrix.makedensitymatrix(solution, big, std::vector<double>(1,1.0), 0.0, 0.0, false);
   rotateMatrix.clear();
@@ -165,6 +165,10 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 
 double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state)
 {
+  if (dmrginp.hamiltonian() == BCS) {
+    cout << "Two PDM with BCS calculations is not implemented" << endl;
+    exit(0);
+  }
   cout.precision(12);
   SpinBlock system;
   const int nroots = dmrginp.nroots();

@@ -42,11 +42,14 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
     newSystem.default_op_components(false, system, sysdot, false, true);
     newSystem.setstoragetype(DISTRIBUTED_STORAGE);
     newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, sysdot);
+    //cout << "System " << system.get_stateInfo() << endl;
+    //system.printOperatorSummary();
+    //cout << "Sysdot " << sysdot.get_stateInfo() << endl;
+    //sysdot.printOperatorSummary();
+    //cout << "Newsystem " << newSystem.get_stateInfo() << endl;
+    //newSystem.printOperatorSummary();
     system = newSystem;
   }
-  cout << system<<endl;
-
-
 
   SpinBlock environment;
   InitBlocks::InitStartingBlock(environment, false, 0, 0, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
