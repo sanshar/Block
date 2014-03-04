@@ -26,11 +26,11 @@ void Onepdm_container::save_npdms(const int& i, const int& j)
   world.barrier();
   Timer timer;
   accumulate_npdm();
-  save_npdm_text(i, j);
   save_npdm_binary(i, j);
+  save_npdm_text(i, j);
   accumulate_spatial_npdm();
-  save_spatial_npdm_text(i, j);
   save_spatial_npdm_binary(i, j);
+  save_spatial_npdm_text(i, j);
   world.barrier();
   pout << "1PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 }
