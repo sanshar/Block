@@ -14,7 +14,7 @@ LAPACKBLAS =  -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
-USE_BTAS = no
+USE_BTAS = yes
 
 AR=ar
 ARFLAGS=-qs

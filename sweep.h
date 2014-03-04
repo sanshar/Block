@@ -24,7 +24,7 @@ namespace Sweep
 
   void CanonicalizeWavefunction(SweepParams &sweepParams, const bool &forward, int currentstate);
   void InitializeStateInfo(SweepParams &sweepParams, const bool &forward, int currentstate);
-  void InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward, int currentstate);
+  void InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward, int stateA, int stateB);
 
 #ifdef USE_BTAS
   void CalculateOverlaps(SweepParams &sweepParams, const bool &forward, int i, int j);

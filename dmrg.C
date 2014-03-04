@@ -477,8 +477,10 @@ void restart(double sweep_tol, bool reset_iter)
     for (int i=0; i<currentRoot; i++) {
       sweepParams.current_root() = i;
       if (mpigetrank()==0) {
-	Sweep::InitializeAllOverlaps(sweepParams, !direction, i);
-	Sweep::InitializeAllOverlaps(sweepParams, direction, i);
+	for (int j=0; j<i; j++) {
+	  Sweep::InitializeAllOverlaps(sweepParams, !direction, i, j);
+	  Sweep::InitializeAllOverlaps(sweepParams, direction, i, j);
+	}
       }
     }
     sweepParams.current_root() = currentRoot;
@@ -505,6 +507,10 @@ void restart(double sweep_tol, bool reset_iter)
 	Sweep::CanonicalizeWavefunction(sweepParams, direction, i);
 	Sweep::CanonicalizeWavefunction(sweepParams, !direction, i);
 	Sweep::CanonicalizeWavefunction(sweepParams, direction, i);
+	for (int j=0; j<i ; j++) {
+	  Sweep::InitializeAllOverlaps(sweepParams, direction, j, i);
+	  Sweep::InitializeAllOverlaps(sweepParams, !direction, j, i);
+	}
       }
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, i);
       
@@ -615,6 +621,11 @@ void dmrg(double sweep_tol)
 	Sweep::CanonicalizeWavefunction(sweepParams, direction, i);
 	Sweep::CanonicalizeWavefunction(sweepParams, !direction, i);
 	Sweep::CanonicalizeWavefunction(sweepParams, direction, i);
+
+	for (int j=0; j<i ; j++) {
+	  Sweep::InitializeAllOverlaps(sweepParams, direction, j, i);
+	  Sweep::InitializeAllOverlaps(sweepParams, !direction, j, i);
+	}
       }
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, i);
       sweepParams.set_sweep_iter() = 0;
@@ -696,8 +707,6 @@ void dmrg_stateSpecific(double sweep_tol, int targetState)
     Sweep::CanonicalizeWavefunction(sweepParams, direction, targetState);
     Sweep::CanonicalizeWavefunction(sweepParams, !direction, targetState);
     
-    Sweep::InitializeAllOverlaps(sweepParams, direction, targetState);
-    Sweep::InitializeAllOverlaps(sweepParams, !direction, targetState);
   }
 
 }
@@ -722,8 +731,8 @@ void calculateOverlap()
   btas::TVector<btas::Dshapes, 2> overlapShape; overlapShape[0]=quanta; overlapShape[1] = quanta;
   btas::STArray<double, 2>  output(overlapShape, false); //O(ni, mi) matrix
   for (int i=0; i<dmrginp.nroots(); i++) {
-    Sweep::InitializeAllOverlaps(sweepParams, true, i);
     for (int j=i+1; j<dmrginp.nroots(); j++) { 
+      Sweep::InitializeAllOverlaps(sweepParams, true, i, j);
 
       w1.LoadWavefunctionInfo(statew1, wavesites, i);
       w2.LoadWavefunctionInfo(statew2, wavesites, j);

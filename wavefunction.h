@@ -47,9 +47,9 @@ public:
   void SaveWavefunctionInfo (const StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num);
   
 #ifdef USE_BTAS
-  void CollectQuantaAlongRows (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const SpinQuantum dQ);
+  void CollectQuantaAlongRows (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const vector<SpinQuantum> dQ);
   void UnCollectQuantaAlongRows(const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave);
-  void CollectQuantaAlongColumns (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const SpinQuantum dQ);
+  void CollectQuantaAlongColumns (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const vector<SpinQuantum> dQ);
   void UnCollectQuantaAlongColumns(const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave);
 #endif
 
