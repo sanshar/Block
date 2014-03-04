@@ -35,8 +35,8 @@ void SpinBlock::printOperatorSummary()
   else {
     for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
     {
-      if(it->second->is_core()) 
-         cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
+      if(it->second->is_core())
+         cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";
       else
          cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
       
@@ -49,6 +49,18 @@ void SpinBlock::printOperatorSummary()
          cout <<numops[proc]<<"  ";
       }
       cout << endl;
+      /*
+      if(it->second->is_core()) { 
+        for (int i = 0; i < it->second->size(); ++i) {
+           std::vector<boost::shared_ptr<SparseMatrix> > global_element = it->second->get_global_element(i);
+           cout << "Element " << i  << " has " << global_element.size() << " operators" << endl;
+           for (int j = 0; j < global_element.size(); ++j) {
+             cout << "Operator " << j << endl; 
+             cout << *(global_element[j]) << endl;
+           }
+        }
+      }
+      */
     }
   }
 #else
@@ -90,8 +102,6 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
   hasMemoryAllocated (false), 
   direct(false), leftBlock(0), rightBlock(0)
 {
-  complementary = is_complement;
-  normal = !is_complement;
   default_op_components(is_complement);
   std::vector<int> sites; 
   if (dmrginp.use_partial_two_integrals()) {
@@ -119,7 +129,7 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
   for (int i=0; i < sites.size(); i++)
       sites[i] = lower + i;
 
-  BuildTensorProductBlock(sites);   
+  BuildTensorProductBlock(sites);
 }
 
 SpinBlock::SpinBlock (const SpinBlock& b) { *this = b; }
@@ -190,10 +200,7 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
     dmrginp.twoindex_screen_tol() = twoindex_ScreenTol;
     dmrginp.oneindex_screen_tol() = oneindex_ScreenTol;
   }
-
-
   build_operators(dets, ladders);
-
 }
 
 std::vector<int> SpinBlock::make_complement(const std::vector<int>& sites)
@@ -220,7 +227,6 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core()) {
-	//cout << it->second->get_op_string()<<endl;
         it->second->build_csf_operators(dets, ladders, *this);      
       }
     }
@@ -231,7 +237,7 @@ void SpinBlock::build_operators()
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core()) {
-	it->second->build_operators(*this);
+	    it->second->build_operators(*this);
       }
     }
 }
@@ -287,7 +293,7 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
   }
 
   TensorProduct (lBlock.stateInfo, rBlock.stateInfo, stateInfo, condition, compState);
-  if (condition != PARTICLE_SPIN_NUMBER_CONSTRAINT)
+  if (condition != PARTICLE_SPIN_NUMBER_CONSTRAINT && condition != SPIN_NUMBER_CONSTRAINT)
     stateInfo.CollectQuanta();
 }
 
@@ -333,14 +339,14 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   SpinBlock* otherBlock = loopBlock == leftBlock ? rightBlock : leftBlock;
 
   Wavefunction *v_array=0, *v_distributed=0, *v_add=0;
-  
+
   int maxt = 1;
   initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
   dmrginp.oneelecT -> start();
   dmrginp.s0time -> start();
 
   boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0];
-  TensorMultiply(leftBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);
+  TensorMultiply(leftBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
 
   op = rightBlock->get_op_array(HAM).get_local_element(0)[0];
   TensorMultiply(rightBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum(), 1.0, MAX_THRD);  
@@ -378,6 +384,7 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
     for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);
     dmrginp.s0time -> stop();
   }
+  
   dmrginp.twoelecT -> stop();
 
   accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
@@ -389,7 +396,7 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 {
   SpinBlock* loopBlock=(leftBlock->is_loopblock()) ? leftBlock : rightBlock;
   SpinBlock* otherBlock = loopBlock == leftBlock ? rightBlock : leftBlock;
-
+  
   DiagonalMatrix *e_array=0, *e_distributed=0, *e_add=0;
 
   initiateMultiThread(&e, e_array, e_distributed, MAX_THRD);
@@ -399,40 +406,28 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 
   op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(this);
   TensorTrace(rightBlock, *op, this, &(get_stateInfo()), e, 1.0);  
-
-
 #ifndef SERIAL
   boost::mpi::communicator world;
   int size = world.size();
 #endif
 
-  std::vector< std::vector<int> > indices;
   e_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? e_array : e_distributed;
-  indices = rightBlock->get_op_array(CRE).get_array();
   Functor f = boost::bind(&opxop::cxcddcomp_d, leftBlock, _1, this, e_add); 
   for_all_multithread(rightBlock->get_op_array(CRE), f); //not needed in diagonal
-
-
+  
   e_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? e_array : e_distributed;
-  indices = leftBlock->get_op_array(CRE).get_array();
   f = boost::bind(&opxop::cxcddcomp_d, rightBlock, _1, this, e_add); 
   for_all_multithread(leftBlock->get_op_array(CRE), f);  //not needed in diagonal
-
-
 
   if (dmrginp.hamiltonian() != HUBBARD) {
     
     e_add =  otherBlock->get_op_array(CRE_DESCOMP).is_local() ? e_array : e_distributed;
-    indices = loopBlock->get_op_array(CRE_DES).get_array();
     f = boost::bind(&opxop::cdxcdcomp_d, otherBlock, _1, this, e_add);
     for_all_multithread(loopBlock->get_op_array(CRE_DES), f);  
-
     
     e_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? e_array : e_distributed;
-    indices = loopBlock->get_op_array(CRE_CRE).get_array();
     f = boost::bind(&opxop::ddxcccomp_d, otherBlock, _1, this, e_add);
-    for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);  //not needed in diagonal 
-
+    for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);  //not needed in diagonal
   }
 
   accumulateMultiThread(&e, e_array, e_distributed, MAX_THRD);

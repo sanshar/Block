@@ -75,7 +75,7 @@ void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const SpinB
 	  trial(i, j) = tmp;
 	  int parity = getCommuteParity(s->leftStateInfo->quanta[i],
 					s->rightStateInfo->quanta[j],
-					oldWave.get_deltaQuantum());
+					oldWave.get_deltaQuantum(0));
 	  if (parity == -1)
 	    trial(i,j) *= -1.0;
         }
@@ -144,7 +144,7 @@ void GuessWave::onedot_transpose_wavefunction(const StateInfo& guessstateinfo, c
 	      int parity1 = getCommuteParity(Aq, Bq, ABq);		
 
 	      // next, |.se> -> |e.s>
-	      int parity = parity1*getCommuteParity(ABq, Cq, transposewf.get_deltaQuantum());
+	      int parity = parity1*getCommuteParity(ABq, Cq, transposewf.get_deltaQuantum(0));
 
 	      if (parity == -1) 
 		threewavetranspose(c, b, a)[i] *= -1.;
@@ -195,14 +195,14 @@ void GuessWave::onedot_threeindex_to_twoindex_wavefunction(const StateInfo& twos
 	    B = twostateinfo.leftStateInfo->rightStateInfo->quanta[b].get_s().getirrep();
 	    AB = uncollectedstateinfo.quanta[ab].get_s().getirrep();
 	    C =  twostateinfo.rightStateInfo->quanta[c].get_s().getirrep(); 
-	    J = twowavefunction.get_deltaQuantum().get_s().getirrep(); 
+	    J = twowavefunction.get_deltaQuantum(0).get_s().getirrep(); 
 
 	    int Al, Bl, ABl, Cl, Jl, CBl;
 	    Al = twostateinfo.leftStateInfo->leftStateInfo->quanta[a].get_symm().getirrep(); 
 	    Bl = twostateinfo.leftStateInfo->rightStateInfo->quanta[b].get_symm().getirrep();
 	    ABl = uncollectedstateinfo.quanta[ab].get_symm().getirrep();
 	    Cl =  twostateinfo.rightStateInfo->quanta[c].get_symm().getirrep(); 
-	    Jl = twowavefunction.get_deltaQuantum().get_symm().getirrep(); 
+	    Jl = twowavefunction.get_deltaQuantum(0).get_symm().getirrep(); 
 
 	    for (int j=0; j<prevUnCollectedSI.quantaMap(c, b).size(); j++) {
 	      int cb = prevUnCollectedSI.quantaMap(c,b)[j];
@@ -235,13 +235,11 @@ void GuessWave::basic_guess_wavefunction(DiagonalMatrix& e, Wavefunction& trial,
     e_sort.insert (pair<double, int> (e (i+1), i+1));
   }
 
-  multimap<double, int>::iterator e_iter = e_sort.begin ();
-
   int states = stateinfo->totalStates;
   RowVector trialvector(states);
   trialvector = 0.;
 
-  trialvector( e_sort.begin()->second) = 1.;
+  trialvector(e_sort.begin()->second) = 1.;
   trial.CollectFrom(trialvector);
 }
 
@@ -253,19 +251,19 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
 #ifndef SERIAL
   mpi::communicator world;
 #endif
-  solution.initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
+  solution.initialise(dmrginp.effective_molecule_quantum_vec(), &big, onedot);
 
   if (!mpigetrank())
   {
     switch(guesswavetype)
     {
-    case TRANSFORM: 
+    case TRANSFORM:
       transform_previous_wavefunction(solution, big, state, onedot, transpose_guess_wave);
       break;
-    case BASIC: 
+    case BASIC:
       basic_guess_wavefunction(e, solution, &big.get_stateInfo(), state);
       break;
-    case TRANSPOSE: 
+    case TRANSPOSE:
       transpose_previous_wavefunction(solution, big, state, onedot, transpose_guess_wave);
       break;
     }
@@ -505,16 +503,24 @@ it's not necessary to take the pseudo inverse of right rotation matrix.
     TransformLeftBlock(oldWave, big.get_stateInfo(), leftRotationMatrix, tempoldWave);
 
     StateInfo tempoldStateInfo;
-    TensorProduct (*(big.get_stateInfo().leftStateInfo->leftStateInfo), *oldStateInfo.rightStateInfo, tempoldStateInfo,
+    if (dmrginp.hamiltonian() == BCS)
+      TensorProduct (*(big.get_stateInfo().leftStateInfo->leftStateInfo), *oldStateInfo.rightStateInfo, tempoldStateInfo,
+		   SPIN_NUMBER_CONSTRAINT);
+    else
+      TensorProduct (*(big.get_stateInfo().leftStateInfo->leftStateInfo), *oldStateInfo.rightStateInfo, tempoldStateInfo,
 		   PARTICLE_SPIN_NUMBER_CONSTRAINT);
+
     tempoldStateInfo.CollectQuanta();
 
     Wavefunction tempnewWave;
     tempnewWave.AllowQuantaFor(*big.get_stateInfo().leftStateInfo, *oldStateInfo.rightStateInfo->leftStateInfo, oldWave.get_deltaQuantum()); 
     StateInfo tempnewStateInfo;
-    TensorProduct (*(big.get_stateInfo().leftStateInfo), *oldStateInfo.rightStateInfo->leftStateInfo, tempnewStateInfo,
+    if (dmrginp.hamiltonian() == BCS)
+      TensorProduct (*(big.get_stateInfo().leftStateInfo), *oldStateInfo.rightStateInfo->leftStateInfo, tempnewStateInfo,
+		   SPIN_NUMBER_CONSTRAINT);
+    else
+      TensorProduct (*(big.get_stateInfo().leftStateInfo), *oldStateInfo.rightStateInfo->leftStateInfo, tempnewStateInfo,
 		   PARTICLE_SPIN_NUMBER_CONSTRAINT);
-
 
     
     tempnewStateInfo.CollectQuanta();
@@ -646,7 +652,11 @@ void GuessWave::onedot_transform_wavefunction(const StateInfo& oldstateinfo, con
 
   // Now, wavefunction is in [s'][e'.] config, change to [s'.][e'] config.
   StateInfo tempoldStateInfo;
-  TensorProduct (*(newstateinfo.leftStateInfo->leftStateInfo), newenvstateinfo, tempoldStateInfo,
+  if (dmrginp.hamiltonian() == BCS)
+    TensorProduct (*(newstateinfo.leftStateInfo->leftStateInfo), newenvstateinfo, tempoldStateInfo,
+		SPIN_NUMBER_CONSTRAINT);
+  else
+    TensorProduct (*(newstateinfo.leftStateInfo->leftStateInfo), newenvstateinfo, tempoldStateInfo,
 		 PARTICLE_SPIN_NUMBER_CONSTRAINT);
   tempoldStateInfo.CollectQuanta();
 

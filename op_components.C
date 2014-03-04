@@ -21,7 +21,9 @@ namespace SpinAdapted {
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.oneindex_screen_tol();
-      std::vector<int> screened_c_ix = screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1, *b.get_twoInt(), screen_tol); 
+      std::vector<int> screened_c_ix = (dmrginp.hamiltonian() == BCS) ? 
+        screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1, *b.get_twoInt(), v_cc, v_cccc, v_cccd, screen_tol) : 
+        screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1, *b.get_twoInt(), screen_tol);
       m_op.set_indices(screened_c_ix, dmrginp.last_site());  
       std::vector<int> orbs(1);
       
@@ -34,7 +36,7 @@ namespace SpinAdapted {
 	  op.set_orbs() = orbs;
 	  op.set_initialised() = true;
 	  op.set_fermion() = true;
-	  op.set_deltaQuantum() = getSpinQuantum(orbs[0]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));      
+	  op.set_deltaQuantum(1, getSpinQuantum(orbs[0]));//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));      
 	  //op.set_deltaQuantum() = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOf(orbs[0]));      
 	}
       
@@ -74,7 +76,9 @@ namespace SpinAdapted {
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.twoindex_screen_tol();
-      vector< pair<int, int> > screened_cd_ix = screened_cd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
+      vector< pair<int, int> > screened_cd_ix = (dmrginp.hamiltonian() == BCS) ? 
+        screened_cd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), v_cc, v_cccc, v_cccd, screen_tol) :
+        screened_cd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
       m_op.set_pair_indices(screened_cd_ix, dmrginp.last_site());      
       std::vector<int> orbs(2);
       for (int i = 0; i < m_op.local_nnz(); ++i)
@@ -92,7 +96,7 @@ namespace SpinAdapted {
 	    op.set_orbs() = orbs;
 	    op.set_initialised() = true;
 	    op.set_fermion() = false;
-	    op.set_deltaQuantum() = spinvec[j];      
+	    op.set_deltaQuantum(1, spinvec[j]);      
 	  }
 	}
     }
@@ -108,7 +112,9 @@ namespace SpinAdapted {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.twoindex_screen_tol();
       
-      vector< pair<int, int> > screened_dd_ix = screened_dd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
+      vector< pair<int, int> > screened_dd_ix = (dmrginp.hamiltonian() == BCS) ?
+        screened_dd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), v_cc, v_cccc, v_cccd, screen_tol) :        
+        screened_dd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
       m_op.set_pair_indices(screened_dd_ix, dmrginp.last_site());      
       std::vector<int> orbs(2);
       for (int i = 0; i < m_op.local_nnz(); ++i)
@@ -126,7 +132,7 @@ namespace SpinAdapted {
 	    op.set_orbs() = orbs;
 	    op.set_initialised() = true;
 	    op.set_fermion() = false;
-	    op.set_deltaQuantum() = spinvec[j];      
+	    op.set_deltaQuantum(1, spinvec[j]);      
 	  }
 	}
     }
@@ -137,14 +143,16 @@ namespace SpinAdapted {
     return "CREDES_COMP";
   }
   template<> void Op_component<CreDesComp>::build_iterators(SpinBlock& b)
-    {
-      if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
-      const double screen_tol = dmrginp.twoindex_screen_tol();
-      vector< pair<int, int> > screened_cd_ix = screened_cd_indices( b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), screen_tol);
-      m_op.set_pair_indices(screened_cd_ix, dmrginp.last_site());      
-      
-      std::vector<int> orbs(2);
-      for (int i = 0; i < m_op.local_nnz(); ++i)
+  {
+    if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
+    const double screen_tol = dmrginp.twoindex_screen_tol();
+    vector< pair<int, int> > screened_cd_ix = (dmrginp.hamiltonian() == BCS) ?
+      screened_cd_indices( b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), v_cc, v_cccc, v_cccd, screen_tol) :
+      screened_cd_indices( b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), screen_tol);
+    m_op.set_pair_indices(screened_cd_ix, dmrginp.last_site());      
+    
+    std::vector<int> orbs(2);
+    for (int i = 0; i < m_op.local_nnz(); ++i)
 	{
 	  pair<int, int> opair = m_op.unmap_local_index(i);
 	  orbs[0] = opair.first; orbs[1] = opair.second;
@@ -159,10 +167,17 @@ namespace SpinAdapted {
 	    op.set_orbs() = orbs;
 	    op.set_initialised() = true;
 	    op.set_fermion() = false;
-	    op.set_deltaQuantum() = spinvec[j];      
-	  }
+        if (dmrginp.hamiltonian() == BCS) {
+          op.resize_deltaQuantum(3);
+          op.set_deltaQuantum(0) = spinvec[j];
+          op.set_deltaQuantum(1) = SpinQuantum(2, spinvec[j].get_s(), spinvec[j].get_symm());
+          op.set_deltaQuantum(2) = SpinQuantum(-2, spinvec[j].get_s(), spinvec[j].get_symm());
+        } else {
+          op.set_deltaQuantum(1, spinvec[j]);
+        }
+      }
 	}
-    }
+  }
   
   template<> void Op_component<CreDesComp>::add_local_indices(int i, int j , int k)
     {
@@ -177,8 +192,6 @@ namespace SpinAdapted {
 	vec[j]=boost::shared_ptr<CreDesComp>(new CreDesComp);
     }
   
-  
-  
   // -------------------- Ddcomp_ ---------------------------  
   template<> string Op_component<DesDesComp>::get_op_string() const {
     return "DESDES_COMP";
@@ -187,7 +200,9 @@ namespace SpinAdapted {
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.twoindex_screen_tol();
-      vector< pair<int, int> > screened_dd_ix = screened_dd_indices(b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), screen_tol);
+      vector< pair<int, int> > screened_dd_ix = (dmrginp.hamiltonian() == BCS) ?
+        screened_dd_indices(b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), v_cc, v_cccc, v_cccd, screen_tol) :
+        screened_dd_indices(b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), screen_tol);
       m_op.set_pair_indices(screened_dd_ix, dmrginp.last_site());      
       
       std::vector<int> orbs(2);
@@ -206,7 +221,15 @@ namespace SpinAdapted {
 	    op.set_orbs() = orbs;
 	    op.set_initialised() = true;
 	    op.set_fermion() = false;
-	    op.set_deltaQuantum() = -spinvec[j];      
+        
+        if (dmrginp.hamiltonian() == BCS) {
+          op.resize_deltaQuantum(3);          
+          op.set_deltaQuantum(0) = -spinvec[j];
+          op.set_deltaQuantum(1) = -SpinQuantum(0, spinvec[j].get_s(), spinvec[j].get_symm());
+          op.set_deltaQuantum(2) = -SpinQuantum(-2, spinvec[j].get_s(), spinvec[j].get_symm());
+        } else {
+	      op.set_deltaQuantum(1, -spinvec[j]);
+        }  
 	  }
 	}
       
@@ -222,7 +245,7 @@ namespace SpinAdapted {
       std::vector<SpinQuantum> spinvec = spin1+spin2;
       vec.resize(spinvec.size());
       for (int j=0; j<spinvec.size(); j++) 
-	vec[j]=boost::shared_ptr<DesDesComp>(new DesDesComp);
+	    vec[j]=boost::shared_ptr<DesDesComp>(new DesDesComp);
     }
   
   
@@ -234,7 +257,9 @@ namespace SpinAdapted {
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.oneindex_screen_tol();
-      vector< int > screened_cdd_ix = screened_cddcomp_indices(b.get_complementary_sites(), b.get_sites(), v_1, *b.get_twoInt(), screen_tol);
+      vector< int > screened_cdd_ix = (dmrginp.hamiltonian() == BCS) ?
+        screened_cddcomp_indices(b.get_complementary_sites(), b.get_sites(), v_1, *b.get_twoInt(), v_cc, v_cccc, v_cccd, screen_tol) :
+        screened_cddcomp_indices(b.get_complementary_sites(), b.get_sites(), v_1, *b.get_twoInt(), screen_tol);
       m_op.set_indices(screened_cdd_ix, dmrginp.last_site());      
       std::vector<int> orbs(1);
       for (int i = 0; i < m_op.local_nnz(); ++i)
@@ -246,8 +271,17 @@ namespace SpinAdapted {
 	  op.set_orbs() = orbs;
 	  op.set_initialised() = true;
 	  op.set_fermion() = true;
-	  //op.set_deltaQuantum() = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOfSpatialOrb(orbs[0]) );      
-	  op.set_deltaQuantum() = getSpinQuantum(orbs[0]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]) );      
+	  //op.set_deltaQuantum() = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOfSpatialOrb(orbs[0]) );
+      if (dmrginp.hamiltonian() == BCS) {
+        op.resize_deltaQuantum(4);
+        SpinQuantum qorb = getSpinQuantum(orbs[0]);
+        op.set_deltaQuantum(0) = qorb;
+        op.set_deltaQuantum(1) = SpinQuantum(3, qorb.get_s(), qorb.get_symm());
+        op.set_deltaQuantum(2) = SpinQuantum(-1, qorb.get_s(), qorb.get_symm());
+        op.set_deltaQuantum(3) = SpinQuantum(-3, qorb.get_s(), qorb.get_symm());
+      } else {
+	    op.set_deltaQuantum(1, getSpinQuantum(orbs[0]));
+      }
 	}
     }
   
@@ -276,7 +310,14 @@ namespace SpinAdapted {
       m_op(0)[0]->set_orbs() = std::vector<int>();
       m_op(0)[0]->set_initialised() = true;
       m_op(0)[0]->set_fermion() = false;
-      m_op(0)[0]->set_deltaQuantum() = SpinQuantum(0, SpinSpace(0), IrrepSpace(0) );      
+      if (dmrginp.hamiltonian() == BCS) {
+        m_op(0)[0]->resize_deltaQuantum(5);
+        for (int i = 0; i <5; ++i) {
+          m_op(0)[0]->set_deltaQuantum(i) = SpinQuantum(2*(i-2), SpinSpace(0), IrrepSpace(0) );
+        }    
+      } else {
+        m_op(0)[0]->set_deltaQuantum(1, SpinQuantum(0, SpinSpace(0), IrrepSpace(0)));
+      }      
     }
   
   template<> std::vector<std::vector<int> > Op_component<Ham>::get_array() const 

@@ -50,6 +50,17 @@ mpirun -np 2 ../../block.spin_adapted dmrg_fullrestart.conf >dmrg.out
 python test_onepdm_withtwopdm.py 
 cd ../
 
+# this test is for non-particle number conserving BCS calculations
+# check the ground state energy, onepdm, and pairing matrix
+echo "testing energy for bcs calculation..."
+cd bcs
+mpirun -np 2 ../../block.spin_adapted dmrg.conf >dmrg.out
+python ../test_energy.py 1  1.0e-6 -1.4816808342
+echo "testing onepdm and pairing matrix for bcs calculation..."
+python ../test_onepdm.py onepdm.0.0 ref_onepdm.0.0 1e-7
+python ../test_onepdm.py spatial_pairmat.0.0 spat_pairmat.0.0 1e-7
+cd ../
+
 echo "testing state specific excited states..."
 cd hubbard_stateSpecific
 mpirun -np 2 ../../block.spin_adapted dmrg.conf >dmrg.out
@@ -57,6 +68,5 @@ python ../test_energy.py 20  1.0e-6 -2.5065432138	-2.1684123422	-2.1684123422	-1
 mpirun -np 2 ../../block.spin_adapted dmrg_statespecific.conf >dmrg.out
 python ../test_energy.py 20  1.0e-6 -2.5065432138	      -2.1684123422	-2.1684123422	-1.4755687956	-1.4755687956 -1.4142135624 -1.4142135624 -1.2897006828 -0.8284271247 -0.5180081887 -0.5180081887 -0.4079274397 -0.4079274397 0 0 0.1224001196 0.1224001196 0.5857864376 0.5857864376 0.5857864376 0.5857864376 1.0754964003
 cd ../
-
 
 ./clean

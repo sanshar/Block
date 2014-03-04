@@ -30,7 +30,7 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
   e.ReSize(big.get_stateInfo().totalStates); e= 0;
   if (dmrginp.outputlevel() > 0)
     pout << "\t\t\t Building Diagonal Hamiltonian " << endl;
-  big.diagonalH ( e);
+  big.diagonalH(e);
   if (dmrginp.outputlevel() > 0)
     pout << "\t\t\t Done building diagonal hamiltonian "<<endl;
   FORTINT m, n=1, nsize=e.Storage();
@@ -58,7 +58,7 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
     solution.resize(nroots);
 
     for (int i=0; i<nroots; i++) {
-      solution[i].initialise(dmrginp.effective_molecule_quantum(), &big, onedot);
+      solution[i].initialise(dmrginp.effective_molecule_quantum_vec(), &big, onedot);
       solution[i].Randomise();
       Normalise(solution[i]);
     }

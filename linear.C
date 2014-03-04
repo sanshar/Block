@@ -209,7 +209,6 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
     }
 
   }
-
   vector<Wavefunction> sigma;
   int converged_roots = 0;
   int maxiter = h_diag.Ncols() - lowerStates.size();
@@ -218,23 +217,22 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
       if (dmrginp.outputlevel() > 0)
 	pout << "\t\t\t Davidson Iteration :: " << iter << endl;
 
-      ++iter;
-      dmrginp.hmultiply -> start();
+    ++iter;
+    dmrginp.hmultiply -> start();
 
-      int sigmasize, bsize;
+    int sigmasize, bsize;
 
-      if (mpigetrank() == 0) {
-	sigmasize = sigma.size();
-	bsize = b.size();
-      }
+    if (mpigetrank() == 0) {
+	  sigmasize = sigma.size();
+	  bsize = b.size();
+    }
 #ifndef SERIAL
-      mpi::broadcast(world, sigmasize, 0);
-      mpi::broadcast(world, bsize, 0);
+    mpi::broadcast(world, sigmasize, 0);
+    mpi::broadcast(world, bsize, 0);
 #endif
-      //multiply all guess vectors with hamiltonian c = Hv
+    //multiply all guess vectors with hamiltonian c = Hv
 
-      for(int i=sigmasize;i<bsize;++i)
-	{
+    for(int i=sigmasize;i<bsize;++i) {
 	  Wavefunction sigmai, bi;
 	  Wavefunction* sigmaptr=&sigmai, *bptr = &bi;
 	  
@@ -253,19 +251,21 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	    sigmai.Clear();
 	  }
 
-	  h_multiply(*bptr, *sigmaptr);
-	  
+      h_multiply(*bptr, *sigmaptr);
+      //if (mpigetrank() == 0) {
+      //  cout << *bptr << endl;
+      //  cout << *sigmaptr << endl;
+      //}
 	}
-      dmrginp.hmultiply -> stop();
+    dmrginp.hmultiply -> stop();
 
-      Wavefunction r;
-      DiagonalMatrix subspace_eigenvalues;
+    Wavefunction r;
+    DiagonalMatrix subspace_eigenvalues;
 
-      if (mpigetrank() == 0) {
-	Matrix subspace_h(b.size(), b.size());
-	for (int i = 0; i < b.size(); ++i)
-	  for (int j = 0; j <= i; ++j)
-	    {
+    if (mpigetrank() == 0) {
+	  Matrix subspace_h(b.size(), b.size());
+	  for (int i = 0; i < b.size(); ++i)
+	    for (int j = 0; j <= i; ++j) {
 	      subspace_h.element(i, j) = DotProduct(b[i], sigma[j]);
 	      subspace_h.element(j, i) = subspace_h.element(i, j);
 	    }
@@ -342,7 +342,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	  if (dmrginp.outputlevel() > 0)
 	    pout << "\t\t\t Converged root " << converged_roots << endl;
 
-	  ++converged_roots;	  
+	  ++converged_roots;
 	  if (converged_roots == nroots)
 	    {
 	      if (mpigetrank() == 0) {

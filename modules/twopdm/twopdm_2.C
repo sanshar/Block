@@ -35,7 +35,7 @@ void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& lef
   Bindices = rightindices;
 
   Wavefunction opw2;
-  SpinQuantum dQ = wave1.get_deltaQuantum();
+  vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
   opw2.initialise(dQ, &big, true);
 
   SpinBlock* leftBlock = big.get_leftBlock();
@@ -50,22 +50,22 @@ void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& lef
   //different cases
   if (Aindices == 0 && Bindices == 4)
   {
-    operatorfunctions::TensorMultiply(rightBlock, rightOp, &big, wave2, opw2, dQ, 1.0);
+    operatorfunctions::TensorMultiply(rightBlock, rightOp, &big, wave2, opw2, dQ[0], 1.0);
     expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
   }
   else if (Aindices == 4&& Bindices == 0)
   { 
-    operatorfunctions::TensorMultiply(leftBlock, AOp, &big, wave2, opw2, dQ, 1.0);
+    operatorfunctions::TensorMultiply(leftBlock, AOp, &big, wave2, opw2, dQ[0], 1.0);
     expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
   }
   else if (Aindices != 0 && Bindices != 0)
   { 
-    operatorfunctions::TensorMultiply(leftBlock, AOp, rightOp, &big, wave2, opw2, dQ, 1.0);
+    operatorfunctions::TensorMultiply(leftBlock, AOp, rightOp, &big, wave2, opw2, dQ[0], 1.0);
     expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );    
     if (doTranspose)
     {
       opw2.Clear();
-      operatorfunctions::TensorMultiply(leftBlock, Transposeview(AOp), rightOp, &big, wave2, opw2, dQ, 1.0);
+      operatorfunctions::TensorMultiply(leftBlock, Transposeview(AOp), rightOp, &big, wave2, opw2, dQ[0], 1.0);
       expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );    
     }
   }
@@ -90,7 +90,7 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
     {
       Aop.set_fermion() = false;
       Aop.set_orbs() = leftOp.get_orbs();
-      Aop.set_deltaQuantum() = leftOp.get_deltaQuantum();
+      Aop.set_deltaQuantum(1, leftOp.get_deltaQuantum(0)); // FIXME does leftOp always has only one dQ?
       Aop.allocate(leftBlock->get_stateInfo());
       operatorfunctions::TensorTrace(leftBlock->get_leftBlock(), leftOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
     }
@@ -98,7 +98,7 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
     {
       Aop.set_fermion() = false;
       Aop.set_orbs() = dotOp.get_orbs();
-      Aop.set_deltaQuantum() = dotOp.get_deltaQuantum();
+      Aop.set_deltaQuantum(1, dotOp.get_deltaQuantum(0));
       Aop.allocate(leftBlock->get_stateInfo());
       operatorfunctions::TensorTrace(leftBlock->get_rightBlock(), dotOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
     }
@@ -106,12 +106,12 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
     {
       Aop.set_orbs() = leftOp.get_orbs(); copy(dotOp.get_orbs().begin(), dotOp.get_orbs().end(), back_inserter(Aop.set_orbs()));
       Aop.set_fermion() = Aop.set_orbs().size() == 2 ? true : false;
-      vector<SpinQuantum> spins = (dotOp.get_deltaQuantum() + leftOp.get_deltaQuantum());
+      vector<SpinQuantum> spins = (dotOp.get_deltaQuantum(0) + leftOp.get_deltaQuantum(0));
       SpinQuantum dQ;
       for (int i=0; i< spins.size(); i++) {
 	if (spins[i].get_s().getirrep() == totalspin) { dQ = spins[i]; break; }
       }
-      Aop.set_deltaQuantum() = dQ;
+      Aop.set_deltaQuantum(1, dQ);
       Aop.allocate(leftBlock->get_stateInfo());
       operatorfunctions::TensorProduct(leftBlock->get_leftBlock(), leftOp, dotOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);      
     }

@@ -279,7 +279,7 @@ void SpinAdapted::Sweep::CanonicalizeWavefunction(SweepParams &sweepParams, cons
     TensorProduct(stateInfo1, siteState, newState1, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
     newState1.CollectQuanta();
 
-    Wavefunction w; w.set_deltaQuantum() = dmrginp.effective_molecule_quantum();
+    Wavefunction w; w.set_deltaQuantum() = dmrginp.effective_molecule_quantum_vec();
     w.set_onedot(true);
     StateInfo::restore(!forward, complementarySites, envstate, currentstate, currentstate);
 
@@ -477,7 +477,7 @@ void Sweep::InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward,
 
 
 
-void SpinAdapted::Wavefunction::CollectQuantaAlongRows (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const SpinQuantum dQ)
+void SpinAdapted::Wavefunction::CollectQuantaAlongRows (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const vector<SpinQuantum> dQ)
 {
   //mdebugcheck("before collectquantaalongrows");
   try
@@ -488,16 +488,15 @@ void SpinAdapted::Wavefunction::CollectQuantaAlongRows (const StateInfo& sRow, c
       AllowQuantaFor (sRow, sCol, deltaQuantum);
 
       for (int i=0; i<sRow.quanta.size(); i++)
-	for (int k=0; k<sCol.quanta.size(); k++) {
-	  int ileft = sRow.leftUnMapQuanta[i], iright = sRow.rightUnMapQuanta[i];
-	  if (deltaQuantum.allow(sCol.quanta[k], sRow.quanta[i])) {
-
-	    if( siteWave.find(btas::make_array(ileft,iright,k)) == siteWave.end()) continue;
-
-	    DCOPY(operator_element(i,k).Storage(), &siteWave.find(btas::make_array(ileft,iright,k))->second->operator()(0, 0, 0), 1, operator_element(i,k).Store(), 1);
-
-	  }
-	}
+	    for (int k=0; k<sCol.quanta.size(); k++) {
+	      int ileft = sRow.leftUnMapQuanta[i], iright = sRow.rightUnMapQuanta[i];
+          for (int j = 0; j < deltaQuantum.size(); ++j) {
+	        if (deltaQuantum[j].allow(sCol.quanta[k], sRow.quanta[i])) {
+	          if( siteWave.find(btas::make_array(ileft,iright,k)) == siteWave.end()) continue;
+	          DCOPY(operator_element(i,k).Storage(), &siteWave.find(btas::make_array(ileft,iright,k))->second->operator()(0, 0, 0), 1, operator_element(i,k).Store(), 1);
+	        }
+          }
+	    }
       
       
       //now collect the wavefunction
@@ -556,11 +555,13 @@ void SpinAdapted::Wavefunction::UnCollectQuantaAlongRows (const StateInfo& sRow,
       for (int i=0; i<unCollected->quanta.size(); i++)
 	for (int k=0; k<sCol.quanta.size(); k++) {
 	  int ileft = sRow.leftUnMapQuanta[i], iright = sRow.rightUnMapQuanta[i];
-	  if (deltaQuantum.allow(sCol.quanta[k], unCollected->quanta[i])) {
-	    siteWave.reserve(btas::make_array(ileft,iright,k));
+	  for (int j = 0; j < deltaQuantum.size(); ++j) {
+        if (deltaQuantum[j].allow(sCol.quanta[k], unCollected->quanta[i])) {
+	      siteWave.reserve(btas::make_array(ileft,iright,k));
 	    
-	    DCOPY(tmpOper.operator_element(i,k).Storage(), tmpOper.operator_element(i,k).Store(), 1, &siteWave.find(btas::make_array(ileft,iright,k))->second->operator()(0, 0, 0), 1);
-	  }
+	      DCOPY(tmpOper.operator_element(i,k).Storage(), tmpOper.operator_element(i,k).Store(), 1, &siteWave.find(btas::make_array(ileft,iright,k))->second->operator()(0, 0, 0), 1);
+	    }
+      }
 	}
       
       
@@ -572,7 +573,7 @@ void SpinAdapted::Wavefunction::UnCollectQuantaAlongRows (const StateInfo& sRow,
     }
 }
 
-void SpinAdapted::Wavefunction::CollectQuantaAlongColumns (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const SpinQuantum dQ)
+void SpinAdapted::Wavefunction::CollectQuantaAlongColumns (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const vector<SpinQuantum> dQ)
 {
   //mdebugcheck("before collectquantaalongrows");
   try
@@ -585,20 +586,22 @@ void SpinAdapted::Wavefunction::CollectQuantaAlongColumns (const StateInfo& sRow
       for (int i=0; i<sRow.quanta.size(); i++)
 	for (int k=0; k<sCol.quanta.size(); k++) {
 	  int kleft = sCol.leftUnMapQuanta[k], kright = sCol.rightUnMapQuanta[k];
-	  if (deltaQuantum.allow(sCol.quanta[k], sRow.quanta[i])) {
+	  for (int j = 0; j < deltaQuantum.size(); ++j) {
+        if (deltaQuantum[j].allow(sCol.quanta[k], sRow.quanta[i])) {
 
 
-	    if( siteWave.find(btas::make_array(i,kright,kleft)) == siteWave.end()) continue;
-	    //s.e --> se.
-	    SpinQuantum Bq = sCol.leftStateInfo->quanta[kleft];
-	    SpinQuantum Cq = sCol.rightStateInfo->quanta[kright];
-	    SpinQuantum CBq = sCol.quanta[k];
-	    int parity1 = getCommuteParity(Cq, Bq, CBq);		
-	    DSCAL(operator_element(i,k).Storage(), parity1*1.0, &siteWave.find(btas::make_array(i,kright,kleft))->second->operator()(0, 0, 0), 1); 
-	    
-	    DCOPY(operator_element(i,k).Storage(), &siteWave.find(btas::make_array(i,kright,kleft))->second->operator()(0, 0, 0), 1, operator_element(i,k).Store(), 1);
+	      if( siteWave.find(btas::make_array(i,kright,kleft)) == siteWave.end()) continue;
+	      //s.e --> se.
+	      SpinQuantum Bq = sCol.leftStateInfo->quanta[kleft];
+	      SpinQuantum Cq = sCol.rightStateInfo->quanta[kright];
+	      SpinQuantum CBq = sCol.quanta[k];
+	      int parity1 = getCommuteParity(Cq, Bq, CBq);		
+	      DSCAL(operator_element(i,k).Storage(), parity1*1.0, &siteWave.find(btas::make_array(i,kright,kleft))->second->operator()(0, 0, 0), 1); 
+	      
+	      DCOPY(operator_element(i,k).Storage(), &siteWave.find(btas::make_array(i,kright,kleft))->second->operator()(0, 0, 0), 1, operator_element(i,k).Store(), 1);
 
-	  }
+	    }
+      }
 	}
       
       
@@ -658,11 +661,13 @@ void SpinAdapted::Wavefunction::UnCollectQuantaAlongColumns (const StateInfo& sR
       for (int i=0; i<sRow.quanta.size(); i++) {
 	for (int k=0; k<unCollected->quanta.size(); k++) {
 	  int kleft = sCol.leftUnMapQuanta[i], kright = sCol.rightUnMapQuanta[i];
-	  if (deltaQuantum.allow(sRow.quanta[i], unCollected->quanta[k])) {
-	    siteWave.reserve(btas::make_array(i, kleft, kright));
-	    
-	    DCOPY(tmpOper.operator_element(i,k).Storage(), tmpOper.operator_element(i,k).Store(), 1, &siteWave.find(btas::make_array(i, kleft, kright))->second->operator()(0, 0, 0), 1);
-	  }
+	  for (int j = 0; j < deltaQuantum.size(); ++j) {
+        if (deltaQuantum[j].allow(sRow.quanta[i], unCollected->quanta[k])) {
+	      siteWave.reserve(btas::make_array(i, kleft, kright));
+	      
+	      DCOPY(tmpOper.operator_element(i,k).Storage(), tmpOper.operator_element(i,k).Store(), 1, &siteWave.find(btas::make_array(i, kleft, kright))->second->operator()(0, 0, 0), 1);
+	    }
+      }
 	}
       }
       

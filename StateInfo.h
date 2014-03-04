@@ -20,13 +20,15 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 enum {
   NO_PARTICLE_SPIN_NUMBER_CONSTRAINT,
-  PARTICLE_SPIN_NUMBER_CONSTRAINT
+  PARTICLE_SPIN_NUMBER_CONSTRAINT,
+  SPIN_NUMBER_CONSTRAINT
 };
 
 enum {
   AnyQ,  
   LessThanQ, 
-  EqualQ, 
+  EqualQ,
+  EqualS,
   WITH_LIST /*< states are added together if the are allowed by the quantaList */
 };
 

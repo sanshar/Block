@@ -76,15 +76,14 @@ void compute_one_pdm_2_0_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     leftop1.set_orbs() = op->get_orbs(); 
     leftop1.set_initialised() = true;
     leftop1.set_fermion() = false;
-    leftop1.set_deltaQuantum() = op->get_deltaQuantum();
+    leftop1.set_deltaQuantum(1, op->get_deltaQuantum(0));
     leftop1.allocate(big.get_leftBlock()->get_stateInfo());
     operatorfunctions::TensorTrace(leftBlock, *op, big.get_leftBlock(), &(big.get_leftBlock()->get_stateInfo()), leftop1);
 
-
     Wavefunction opw2;
-    SpinQuantum dQ = wave1.get_deltaQuantum();
+    vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
     opw2.initialise(dQ, &big, true);
-    operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ, 1.0);
+    operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ[0], 1.0); // FIXME dQ is actually never used
     double sum = sqrt(2.0)*DotProduct(wave1, opw2);
 
     if(dmrginp.spinAdapted()) {
@@ -98,6 +97,41 @@ void compute_one_pdm_2_0_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       onepdm(jx+1, ix+1) = sum/sqrt(2.0);
     }
   }      
+}
+
+void compute_pair_2_0_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm) {
+  SpinBlock* leftBlock = big.get_leftBlock()->get_leftBlock();
+  SpinBlock* rightBlock = big.get_rightBlock();
+  SpinBlock* dotBlock = big.get_leftBlock()->get_rightBlock();
+
+  for (int ij = 0; ij < leftBlock->get_op_array(CRE_CRE).get_size(); ++ij) {
+    boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(CRE_CRE).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);//spin 0
+    int ix = op->get_orbs(0);
+    int jx = op->get_orbs(1);
+
+    Transposeview top(op);
+    Cre leftop1;
+    leftop1.set_orbs() = top.get_orbs(); 
+    leftop1.set_initialised() = true;
+    leftop1.set_fermion() = false;
+    leftop1.set_deltaQuantum(1, top.get_deltaQuantum(0));
+    leftop1.allocate(big.get_leftBlock()->get_stateInfo());
+    operatorfunctions::TensorTrace(leftBlock, top, big.get_leftBlock(), &(big.get_leftBlock()->get_stateInfo()), leftop1);
+
+    Wavefunction opw2;
+    vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
+    opw2.initialise(dQ, &big, true);
+    operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ[0], 1.0);
+    double sum = sqrt(2.0)*DotProduct(wave1, opw2);
+
+    if(dmrginp.spinAdapted()) {
+      cout << "BCS with spin adaption not implemented yet." << endl;
+    }
+    else {
+      onepdm(ix+1, jx+1) = -sum/sqrt(2.0);
+      onepdm(jx+1, ix+1) = sum/sqrt(2.0);
+    }
+  }
 }
 
 void compute_one_pdm_0_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm)
@@ -118,15 +152,14 @@ void compute_one_pdm_0_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     leftop1.set_orbs() = op->get_orbs(); 
     leftop1.set_initialised() = true;
     leftop1.set_fermion() = false;
-    leftop1.set_deltaQuantum() = op->get_deltaQuantum();
+    leftop1.set_deltaQuantum(1, op->get_deltaQuantum(0));
     leftop1.allocate(big.get_leftBlock()->get_stateInfo());
     operatorfunctions::TensorTrace(dotBlock, *op, big.get_leftBlock(), &(big.get_leftBlock()->get_stateInfo()), leftop1);
 
-
     Wavefunction opw2;
-    SpinQuantum dQ = wave1.get_deltaQuantum();
+    vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
     opw2.initialise(dQ, &big, true);
-    operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ, 1.0);
+    operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ[0], 1.0);
     double sum = sqrt(2.0)*DotProduct(wave1, opw2);
 
     double difference = 0.0;
@@ -142,9 +175,43 @@ void compute_one_pdm_0_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       onepdm(jx+1, ix+1) = sum/sqrt(2.0);
     }
   }      
-
-
 }
+
+void compute_pair_0_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm) {
+  SpinBlock* leftBlock = big.get_leftBlock()->get_leftBlock();
+  SpinBlock* rightBlock = big.get_rightBlock();
+  SpinBlock* dotBlock = big.get_leftBlock()->get_rightBlock();
+
+  for (int ij = 0; ij < dotBlock->get_op_array(CRE_CRE).get_size(); ++ij) {
+    boost::shared_ptr<SparseMatrix> op = dotBlock->get_op_array(CRE_CRE).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);//spin 0
+    int ix = op->get_orbs(0);
+    int jx = op->get_orbs(1);
+    
+    Transposeview top(op);
+    Cre leftop1;
+    leftop1.set_orbs() = top.get_orbs(); 
+    leftop1.set_initialised() = true;
+    leftop1.set_fermion() = false;
+    leftop1.set_deltaQuantum(1, top.get_deltaQuantum(0));
+    leftop1.allocate(big.get_leftBlock()->get_stateInfo());
+    operatorfunctions::TensorTrace(dotBlock, top, big.get_leftBlock(), &(big.get_leftBlock()->get_stateInfo()), leftop1);
+
+    Wavefunction opw2;
+    vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
+    opw2.initialise(dQ, &big, true);
+    operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ[0], 1.0);
+    double sum = sqrt(2.0)*DotProduct(wave1, opw2);
+
+    if(dmrginp.spinAdapted()) {
+      cout << "BCS with spin adaption not implemented yet." << endl;      
+    }
+    else {
+      onepdm(ix+1, jx+1) = -sum/sqrt(2.0);
+      onepdm(jx+1, ix+1) = sum/sqrt(2.0);
+    }
+  }      
+}
+
 
 void compute_one_pdm_1_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm)
 {
@@ -166,18 +233,17 @@ void compute_one_pdm_1_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     leftop1.set_orbs() = op1->get_orbs(); leftop1.set_orbs().push_back(op2->get_orbs(0));
     leftop1.set_initialised() = true;
     leftop1.set_fermion() = false;
-    leftop1.set_deltaQuantum() = (op1->get_deltaQuantum()-op2->get_deltaQuantum())[0];
+    leftop1.set_deltaQuantum(1, (op1->get_deltaQuantum(0)-op2->get_deltaQuantum(0))[0]);
     leftop1.allocate(big.get_leftBlock()->get_stateInfo());
     operatorfunctions::TensorProduct(leftBlock, *op1, Transposeview(op2), big.get_leftBlock(), &(big.get_leftBlock()->get_stateInfo()), leftop1, 1.0);
 
-
     Wavefunction opw2;
-    SpinQuantum dQ = wave1.get_deltaQuantum();
+    vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
     opw2.initialise(dQ, &big, true);
-    operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ, 1.0);
+    operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ[0], 1.0);
     double sum = sqrt(2.0)*DotProduct(wave1, opw2);
-
     double difference = 0.0;
+
     if(dmrginp.spinAdapted()) {
       onepdm(2*ix+1, 2*jx+1) = (sum+difference)/2.0;
       onepdm(2*ix+2, 2*jx+2) = (sum-difference)/2.0;
@@ -189,10 +255,45 @@ void compute_one_pdm_1_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       onepdm(jx+1, ix+1) = sum/sqrt(2.0);
     }
   }      
-
-
 }
 
+void compute_pair_1_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm) {
+  SpinBlock* leftBlock = big.get_leftBlock()->get_leftBlock();
+  SpinBlock* rightBlock = big.get_rightBlock();
+  SpinBlock* dotBlock = big.get_leftBlock()->get_rightBlock();
+
+  for (int i = 0; i < leftBlock->get_op_array(CRE).get_size(); ++i)
+  for (int j = 0; j < dotBlock->get_op_array(CRE).get_size(); ++j)
+  {
+    boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_array(CRE).get_local_element(i)[0]->getworkingrepresentation(leftBlock);//spin 0
+    boost::shared_ptr<SparseMatrix> op2 = dotBlock->get_op_array(CRE).get_local_element(j)[0]->getworkingrepresentation(dotBlock);//spin 0
+    int ix = op1->get_orbs(0);
+    int jx = op2->get_orbs(0);
+
+    //now for a leftop that sits on the system block, this is done by tensortrace function
+    Cre leftop1;
+    leftop1.set_orbs() = op1->get_orbs(); leftop1.set_orbs().push_back(op2->get_orbs(0));
+    leftop1.set_initialised() = true;
+    leftop1.set_fermion() = false;
+    leftop1.set_deltaQuantum(1, (-op1->get_deltaQuantum(0)-op2->get_deltaQuantum(0))[0]);
+    leftop1.allocate(big.get_leftBlock()->get_stateInfo());
+    operatorfunctions::TensorProduct(leftBlock, Transposeview(op1), Transposeview(op2), big.get_leftBlock(), &(big.get_leftBlock()->get_stateInfo()), leftop1, 1.0);
+
+    Wavefunction opw2;
+    vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
+    opw2.initialise(dQ, &big, true);
+    operatorfunctions::TensorMultiply(big.get_leftBlock(), leftop1, &big, wave2, opw2, dQ[0], 1.0);
+    double sum = sqrt(2.0)*DotProduct(wave1, opw2);
+
+    if(dmrginp.spinAdapted()) {
+      cout << "BCS with spin adaption not implemented yet." << endl;
+    }
+    else {
+      onepdm(ix+1, jx+1) = sum/sqrt(2.0);
+      onepdm(jx+1, ix+1) = -sum/sqrt(2.0);
+    }
+  }
+}
 
 void compute_one_pdm_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm)
 {
@@ -207,9 +308,9 @@ void compute_one_pdm_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
     int jx = op->get_orbs(1);
 
     Wavefunction opw2;
-    SpinQuantum dQ = wave1.get_deltaQuantum();
+    vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
     opw2.initialise(dQ, &big, true);
-    operatorfunctions::TensorMultiply(rightBlock, *op, &big, wave2, opw2, dQ, 1.0);
+    operatorfunctions::TensorMultiply(rightBlock, *op, &big, wave2, opw2, dQ[0], 1.0);
     double sum = sqrt(2.0)*DotProduct(wave1, opw2);
 
     double difference = 0.0;
@@ -224,8 +325,35 @@ void compute_one_pdm_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
       onepdm(ix+1, jx+1) = sum/sqrt(2.0);
       onepdm(jx+1, ix+1) = sum/sqrt(2.0);
     }
-    
+  }      
+  }
+}
 
+void compute_pair_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm)
+{
+  if(mpigetrank() == 0) {
+  SpinBlock* leftBlock = big.get_leftBlock();
+  SpinBlock* rightBlock = big.get_rightBlock();
+
+  for (int ij = 0; ij < rightBlock->get_op_array(CRE_CRE).get_size(); ++ij) {
+    boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_array(CRE_CRE).get_local_element(ij)[0]->getworkingrepresentation(rightBlock);
+    int ix = op->get_orbs(0);
+    int jx = op->get_orbs(1);
+
+    Transposeview top(op);
+    Wavefunction opw2;
+    vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
+    opw2.initialise(dQ, &big, true);
+    operatorfunctions::TensorMultiply(rightBlock, top, &big, wave2, opw2, dQ[0], 1.0);
+    double sum = sqrt(2.0)*DotProduct(wave1, opw2);
+
+    if(dmrginp.spinAdapted()) {
+      cout << "BCS with spin adaption not implemented yet." << endl;
+    }
+    else {
+      onepdm(ix+1, jx+1) = -sum/sqrt(2.0);
+      onepdm(jx+1, ix+1) = sum/sqrt(2.0);
+    }
   }      
   }
 }
@@ -244,9 +372,9 @@ void compute_one_pdm_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
       boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_array(CRE).get_local_element(i)[0]->getworkingrepresentation(leftBlock);
       int ix = op1->get_orbs(0);
 
-      vector<SpinQuantum> opQ = op1->get_deltaQuantum()+op2->get_deltaQuantum();
+      vector<SpinQuantum> opQ = op1->get_deltaQuantum(0)-op2->get_deltaQuantum(0);
       Wavefunction opw2;
-      SpinQuantum dQ = wave1.get_deltaQuantum();
+      vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
       opw2.initialise(dQ, &big, true);
       operatorfunctions::TensorMultiply(leftBlock, *op1, Transposeview(*op2), &big, wave2, opw2, opQ[0], 1.0);
       double sum = sqrt(2.0)*DotProduct(wave1, opw2);
@@ -265,6 +393,35 @@ void compute_one_pdm_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
     }
     }
   }      
+}
+
+void compute_pair_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, Matrix& onepdm) {
+  SpinBlock* leftBlock = big.get_leftBlock();
+  SpinBlock* rightBlock = big.get_rightBlock();
+
+  for (int j = 0; j < rightBlock->get_op_array(CRE).get_size(); ++j) {
+    boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_array(CRE).get_local_element(j)[0]->getworkingrepresentation(rightBlock);
+    int jx = op2->get_orbs(0);
+    for (int i = 0; i < leftBlock->get_op_array(CRE).get_size(); ++i) {
+      boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_array(CRE).get_local_element(i)[0]->getworkingrepresentation(leftBlock);
+      int ix = op1->get_orbs(0);
+
+      vector<SpinQuantum> opQ = -op1->get_deltaQuantum(0)-op2->get_deltaQuantum(0);
+      Wavefunction opw2;
+      vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
+      opw2.initialise(dQ, &big, true);
+      operatorfunctions::TensorMultiply(leftBlock, Transposeview(op1), Transposeview(op2), &big, wave2, opw2, opQ[0], 1.0);
+      double sum = sqrt(2.0)*DotProduct(wave1, opw2);
+
+      if(dmrginp.spinAdapted()) {
+        cout << "BCS with spin adaption not implemented yet." << endl;
+      }
+      else {
+        onepdm(ix+1, jx+1) = sum/sqrt(2.0);
+        onepdm(jx+1, ix+1) = -sum/sqrt(2.0);
+      }
+    }
+  }
 }
 
 void accumulate_onepdm(Matrix& onepdm)
@@ -322,6 +479,28 @@ void save_onepdm_text(const Matrix& onepdm, const int &i, const int &j)
 	ofs << boost::format("%d %d %20.14e\n") % (2*k+1) % (2*l+1) % opdm;
       }
 
+    ofs.close();
+  }
+}
+
+void save_pairmat_text(const Matrix& pairmat, const int &i, const int &j) {
+  if(!mpigetrank()) {
+    std::vector<int> reorder;
+    reorder.resize(pairmat.Nrows()/2);
+    for (int k=0; k<pairmat.Nrows()/2; k++) {
+      reorder.at(dmrginp.reorder_vector()[k]) = k;
+    }
+
+    char file[5000];
+    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_pairmat.", i, j);
+    ofstream ofs(file);
+    ofs << pairmat.Nrows()/2 << endl;
+    for(int k=0;k<pairmat.Nrows()/2;++k)
+      for(int l=0;l<pairmat.Ncols()/2;++l) {
+	    int K = reorder.at(k), L = reorder.at(l);
+	    double pair = pairmat(2*K+1, 2*L+2);
+	    ofs << boost::format("%d %d %20.14e\n") % k % l % pair;
+      }
     ofs.close();
   }
 }
@@ -404,4 +583,40 @@ void load_onepdm_binary(Matrix& onepdm, const int &i, const int &j)
 #endif
 
 }
+
+
+void save_pairmat_binary(const Matrix& pairmat, const int &i, const int &j)
+{
+  if(!mpigetrank())
+  {
+    char file[5000];
+    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/pairmat.", i, j);
+    std::ofstream ofs(file, std::ios::binary);
+    boost::archive::binary_oarchive save(ofs);
+    save << pairmat;
+    ofs.close();
+  }
+}
+
+void load_pairmat_binary(Matrix& pairmat, const int &i, const int &j)
+{
+  if(!mpigetrank())
+  {
+    char file[5000];
+    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(), "/pairmat.", i, j);
+    std::ifstream ifs(file, std::ios::binary);
+    boost::archive::binary_iarchive load(ifs);
+    load >> pairmat;
+    ifs.close();
+  }
+#ifndef SERIAL
+  mpi::communicator world;
+  mpi::broadcast(world,pairmat,0);
+  if(mpigetrank())
+    pairmat = 0;
+#endif
+
+}
+
+
 }

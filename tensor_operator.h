@@ -38,6 +38,14 @@ class TensorOp {
   std::vector< std::vector<int> > opindices; //instead of chars it stores the index order of operators
   std::vector<int> optypes; //cre corresponds to 1 and des corresponds to -1
  public:
+  int dn() {
+    int sum = 0;
+    for (int i = 0; i < optypes.size(); ++i) {
+      sum += optypes[i];
+    }
+    return sum;
+  }
+
   const std::vector< std::vector<double> >& get_Szops() const {return Szops;}
   TensorOp():Spin(0), irrep(0), empty(true) {}
 

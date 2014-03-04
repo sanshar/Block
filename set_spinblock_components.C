@@ -102,16 +102,9 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
 //this is used for the dot block
 void SpinBlock::default_op_components(bool complementary_)
 {
-  if (complementary_)
-  {
-    this->complementary = true;
-    this->normal = false;
-  }
-  else
-  {
-    this->complementary = false;
-    this->normal = true;
-  }
+  complementary = complementary_;
+  normal = !complementary_;
+
   this->direct = false;
 
   //for a dot operator generate all possible operators
@@ -126,7 +119,6 @@ void SpinBlock::default_op_components(bool complementary_)
   ops[CRE_CRE] = make_new_op(CRE_CRE, true);
   ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
   ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
-
 
   this->loopblock = true;
 
@@ -143,19 +135,15 @@ void SpinBlock::set_big_components()
 void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops)
 {
   this->direct = direct;
-  if (lBlock.is_complementary() || rBlock.is_complementary())
-  {
+  if (lBlock.is_complementary() || rBlock.is_complementary()) {
     this->complementary = true;
     this->normal = false;
-  }
-  else
-  {
+  } else {
     this->complementary = false;
     this->normal = true;
   }
 
-  if (!is_direct() )
-  {
+  if (!is_direct()) {
     ops[CRE] = make_new_op(CRE, true);
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
     ops[HAM] = make_new_op(HAM, true);
@@ -167,19 +155,16 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
 	ops[CRE_DES] = make_new_op(CRE_DES, true);
 	ops[CRE_CRE] = make_new_op(CRE_CRE, true);
       }
-      if (haveCompops)
-      {
-	ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
-	ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
+      if (haveCompops) {
+	    ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
+	    ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
       }
     }
     if (haveNormops)
       this->loopblock = true;
     else
       this->loopblock = false;
-  }
-  else
-  {
+  } else {
     //we need CCDcomp to be on core, the rest of them can be generated very quickly
     //and dont really required incore storage
     ops[CRE] = make_new_op(CRE, false); 
@@ -194,10 +179,9 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
 	ops[CRE_DES] = make_new_op(CRE_DES, false);
 	ops[CRE_CRE] = make_new_op(CRE_CRE, false);
       }
-      if (haveCompops)
-      {
-	ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, false);
-	ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, false);
+      if (haveCompops) {
+	    ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, false);
+	    ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, false);
       }
     }
     if (haveNormops)

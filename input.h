@@ -25,8 +25,11 @@ namespace SpinAdapted{
 class SpinBlock;
 class OneElectronArray;
 class TwoElectronArray;
+class PairArray;
+class CCCCArray;
+class CCCDArray;
 
-enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD, HEISENBERG};
+enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD, BCS, HEISENBERG};
 enum solveTypes {LANCZOS, DAVIDSON};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
@@ -35,7 +38,7 @@ enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
 	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, 
-	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, NUMKEYWORDS};
+	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, BOGOLIUBOV, NUMKEYWORDS};
 
 class Input {
 
@@ -46,6 +49,7 @@ class Input {
   int m_beta;
   int m_Sz;
   bool m_spinAdapted;
+  bool m_Bogoliubov;
 
   IrrepSpace m_total_symmetry_number;
   SpinQuantum m_molecule_quantum;
@@ -137,7 +141,7 @@ class Input {
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & m_thrds_per_node & m_spinAdapted & m_stateSpecific ;
+    ar & m_thrds_per_node & m_spinAdapted & m_Bogoliubov & m_stateSpecific ;
     ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz;
     ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occ_user & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule & m_reorder;
@@ -197,9 +201,11 @@ class Input {
 #endif
   void performSanityTest();
   void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
+  void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, PairArray& vcc, CCCCArray& vcccc, CCCDArray& vcccd);  
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
   std::vector<int> getgaorder(ifstream& gaconfFile, string& orbitalfile, std::vector<int>& fiedlerorder);
   std::vector<int> get_fiedler(string& dumpname);
+  std::vector<int> get_fiedler_bcs(string& dumpname);  
   void usedkey_error(string& key, string& line);
   void makeInitialHFGuess();
   static void ReadMeaningfulLine(ifstream&, string&, int);
@@ -315,7 +321,22 @@ class Input {
   const std::vector<int> &spin_vector() const { return m_spin_vector; }
   const std::string &save_prefix() const { return m_save_prefix; }
   const std::string &load_prefix() const { return m_load_prefix; }
-  SpinQuantum effective_molecule_quantum() {if (!m_add_noninteracting_orbs) return m_molecule_quantum; else return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), total_symmetry_number());}  
+  SpinQuantum effective_molecule_quantum() {
+    if (!m_add_noninteracting_orbs) 
+      return m_molecule_quantum;
+    else 
+      return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), total_symmetry_number());
+  }
+  vector<SpinQuantum> effective_molecule_quantum_vec() {
+    vector<SpinQuantum> q;
+    if (!m_Bogoliubov)
+      q.push_back(effective_molecule_quantum());
+    else
+      for (int i = 0; i <= m_norbs/2; ++i) {
+        q.push_back(SpinQuantum(i*2, SpinSpace(0), total_symmetry_number()));
+      }
+    return q;
+  }
   std::vector<double>& get_orbenergies() {return m_orbenergies;}
   int getHFQuanta(const SpinBlock& b) const;
   const bool &do_cd() const {return m_do_cd;}
