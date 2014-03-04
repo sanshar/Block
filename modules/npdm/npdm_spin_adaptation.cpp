@@ -1,19 +1,18 @@
-#include <algorithm>
-#include <string>
-#include <set>
-#include <Eigen/Dense>
+//#include <algorithm>
+//#include <string>
+//#include <set>
+//#include <Eigen/Dense>
 #include "pario.h"
 #include "npdm_spin_adaptation.h"
 #include "MatrixBLAS.h"
+#include "npdm_spin_transformation.h"
 
 namespace SpinAdapted {
 namespace Npdm {
 
-const expression::grammar< std::vector<TensorOp>, std::string::const_iterator > eg;
+//===========================================================================================================================================================
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-std::map< std::vector<int>, double > get_matrix_row ( const TensorOp& op, bool & is_singlet )
+std::map< std::vector<int>, double > Npdm_spin_adaptation::get_matrix_row ( const TensorOp& op, bool & is_singlet )
 {
   std::map< std::vector<int>, double > matrix_row;
   double coeff;
@@ -69,7 +68,7 @@ std::map< std::vector<int>, double > get_matrix_row ( const TensorOp& op, bool &
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-std::map< std::vector<int>, int > get_map_to_int( std::vector< std::map< std::vector<int>, double > > & matrix_rows )
+std::map< std::vector<int>, int > Npdm_spin_adaptation::get_map_to_int( std::vector< std::map< std::vector<int>, double > > & matrix_rows )
 {
   std::map< std::vector<int>, int > map_to_int;
   std::set< std::vector<int> > indices_set;
@@ -96,8 +95,8 @@ std::map< std::vector<int>, int > get_map_to_int( std::vector< std::map< std::ve
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
    
-void parse_result_into_matrix( const std::vector<TensorOp>& tensor_ops, 
-                               Matrix& matrix, std::vector< std::vector<int> >& so_indices, std::vector<int>& singlet_rows)
+void Npdm_spin_adaptation::parse_result_into_matrix( const std::vector<TensorOp>& tensor_ops, 
+                                                     Matrix& matrix, std::vector< std::vector<int> >& so_indices, std::vector<int>& singlet_rows)
 {
 
   // Note the indices in the matrix/vector notation start at 1 not 0
@@ -139,7 +138,7 @@ void parse_result_into_matrix( const std::vector<TensorOp>& tensor_ops,
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void apply_permutation( Eigen::MatrixXi & perm_mat, std::vector< std::vector<int> >& so_indices)
+void Npdm_spin_adaptation::apply_permutation( Eigen::MatrixXi & perm_mat, std::vector< std::vector<int> >& so_indices)
 {
   int cols = so_indices.size();
   int rows = so_indices[0].size();
@@ -169,7 +168,7 @@ void apply_permutation( Eigen::MatrixXi & perm_mat, std::vector< std::vector<int
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-int commute_so_indices_to_pdm_order( std::string& s, std::vector< std::vector<int> >& so_indices)
+int Npdm_spin_adaptation::commute_so_indices_to_pdm_order( const std::string& s, std::vector< std::vector<int> >& so_indices)
 {
   // Trim op string to just get ordering of creations and destructions (cre<0, des>0)
   std::vector<int> cd_order;
@@ -200,13 +199,10 @@ int commute_so_indices_to_pdm_order( std::string& s, std::vector< std::vector<in
 
   // Back out permutation matrix as explicit matrix type
   Eigen::MatrixXi perm_mat(dim,dim);
-//pout << "perm_mat(i,j)\n";
   for (int i=0; i<dim; i++) {
     for (int j=0; j<dim; j++) {
       perm_mat(i,j) = perm_mat_pair[i].second[j];
-//pout << perm_mat(i,j) << " ";
     }
-//pout << std::endl;
   }
 
   // Re-order so_indices
@@ -222,35 +218,115 @@ int commute_so_indices_to_pdm_order( std::string& s, std::vector< std::vector<in
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matrix& A, ColumnVector& b, std::vector< std::vector<int> >& so_indices)
+void Npdm_spin_adaptation::store_new_A_mat( const int so_dim, const int order, const std::string& cd_string )
 {
+  // Build an operator string with consecutive spatial indices
+  std::vector<int> indices(order);
+  for (int i=0; i<order; ++i) {
+    indices[i] = i+1;
+  }
+
+  // Combine indices and build_pattern into one string
+  std::string op_string;
+  for (auto it = cd_string.begin(); it != cd_string.end(); ++it) {
+    op_string.push_back(*it);
+    if ( (*it == 'C') || (*it == 'D') ) {
+      std::string index = boost::lexical_cast<std::string>( indices.at(0) );
+      op_string.append(index);
+      indices.erase( indices.begin() );
+    }
+  }
+
+  // Parse op_string to build everything we want to store
+  Matrix A(so_dim,so_dim);
+  std::vector<int> singlet_rows; 
+  std::vector<std::vector<int> > so_indices(so_dim);
+  build_new_A_mat( op_string, A, singlet_rows, so_indices );
+
+  // Store for later reuse
+  stored_A_mats_[ cd_string ] = A;
+  stored_singlet_rows_[ cd_string ] = singlet_rows;
+  stored_so_indices_[ cd_string ] = so_indices;
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_spin_adaptation::build_new_A_mat( const std::string& op_string, Matrix& A, std::vector<int>& singlet_rows, 
+                                            std::vector<std::vector<int> >& so_indices)
+{
+  const expression::grammar< std::vector<TensorOp>, std::string::const_iterator > eg;
+
   // Parse string of form (((C1C2)(D3))(D4)) etc
-  std::string::const_iterator iter = s.begin();        
-  std::string::const_iterator end  = s.end();          
+  std::string op = op_string;
+  std::string::const_iterator iter = op.begin();        
+  std::string::const_iterator end  = op.end();          
   std::vector<TensorOp> result;                                       
   bool success = parse(iter, end, eg, result) ;		 
-  //FIXME
-  // Edge case: ()((CxCx)... (Arises when LHS and Dot blocks are empty)
+  // Edge case: ()((CxCx)... Arises when LHS and Dot blocks are empty.
   if ( not success ) {
-    cout << "WARNING: something wasn't quite perfect in parsing the operator string!\n";
-    s.erase( s.begin() );   
-    s.erase( s.begin() );   
+    op.erase( op.begin() );   
+    op.erase( op.begin() );   
     success = parse(iter, end, eg, result) ;		 
   }
-  assert(success);
-//  cout << "Setting up linear equations for spin-adaptation transformation...\n";
-//  cout << "Number of compounded tensor operators = " << result.size() << std::endl;
+  assert( success );
   assert( result.size() == so_indices.size() );
-  assert( result.size() == b.Nrows() );
 
+  // Get transformation matrix A and relevant spin-orbital indices from tensor operators
+  parse_result_into_matrix( result, A, so_indices, singlet_rows ); 
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_spin_adaptation::get_so_indices( std::string& cd_string, const std::vector<int>& indices, std::vector< std::vector<int> >& so_indices )
+{
+  // Assume all the stored spin-indices were generated from spatial indices of the form 1,2,3,4,5,6...
+  so_indices.resize(0);
+  std::vector< std::vector<int> > stored_so_indices = stored_so_indices_.at( cd_string );
+  // Loop over stored spin-orbital elements
+  for (auto vec = stored_so_indices.begin(); vec != stored_so_indices.end(); ++vec) {
+    std::vector<int> new_element;
+    // Loop over stored spin-indices for one element
+    for (auto it = vec->begin(); it != vec->end(); ++it) {
+      int i = (*it)/2;
+      int j = (*it)%2;
+      // Generate new spin indices from spatial indices
+      new_element.push_back( 2*indices.at(i-1) + j ); 
+    }
+    so_indices.push_back( new_element );
+  }
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_spin_adaptation::npdm_set_up_linear_equations( const int dim, const std::string& op_string, const std::vector<int>& indices,
+                                                         const std::vector<double>& b0, Matrix& A, 
+                                                         ColumnVector& b, std::vector< std::vector<int> >& so_indices )
+{
+  // Separate cre-des pattern and numerical indices
+  std::string cd_string;
+  for (auto it = op_string.begin(); it != op_string.end(); ++it) {
+    if ( (*it == '(') || (*it == ')') || (*it == 'C') || (*it == 'D') ) cd_string.push_back(*it); 
+  }
+  
   // RHS indices (i.e. rows of A) corresponding to singlet expectations
   std::vector<int> singlet_rows;
 
-  // Recover transformation matrix A and relevant spin-orbital indices from tensor operators
-  parse_result_into_matrix( result, A, so_indices, singlet_rows ); 
+  if ( stored_A_mats_.find(cd_string) != stored_A_mats_.end() ) {
+    A = stored_A_mats_.at( cd_string );
+    singlet_rows = stored_singlet_rows_.at( cd_string );
+    get_so_indices( cd_string, indices, so_indices );
+  }
+  else {
+cout << "building new A matrix\n";
+    build_new_A_mat( op_string, A, singlet_rows, so_indices );
+    store_new_A_mat( dim, indices.size(), cd_string );
+  }
 
   // Get permutation parity and commute so_indices into NPDM order (i.e. cre,cre..,des,des..)
-  int parity = commute_so_indices_to_pdm_order( s, so_indices );  
+  int parity = commute_so_indices_to_pdm_order( op_string, so_indices );  
 
   // Set up RHS of linear equations (note we assume the ordering of the singlets is consistent with earlier)
   assert( b0.size() == singlet_rows.size() );
@@ -258,56 +334,11 @@ void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matri
   for (int i=0; i < b0.size(); ++i) {
     assert( singlet_rows[i] <= b.Nrows() );
     b( singlet_rows[i] ) = parity*b0[i];
-//pout << singlet_rows[i] << "\t\t" << parity*b0[i] << std::endl;
   }
 
-
-///////////////////////
-//DEBUG
-//
-//  //int dim = 20;
-//  int dim = 2;
-//  Eigen::MatrixXd Amat(dim,dim);
-//  Eigen::VectorXd xvec(dim);
-//  Eigen::VectorXd bvec(dim);
-//
-//  for (int i=0; i < dim; ++i) {
-//    for (int j=0; j < dim; ++j) {
-//      Amat(i,j) = A(i+1,j+1);
-//    }
-//  }
-//  pout << "Amat\n";
-//  pout << Amat << std::endl;
-//
-////xvec(0  )=   1.89959055084e-21 ;
-////xvec(1  )=   2.75934014869e-22 ;
-////xvec(2  )=   3.11219777415e-21 ;
-////xvec(3  )=   1.58313329369e-05 ;
-////xvec(4  )=   -1.58313329369e-05 ;
-////xvec(5  )=   -6.2735506193e-22 ;
-////xvec(6  )=   -1.58313329369e-05 ;
-////xvec(7  )=   1.58313329369e-05 ;
-////xvec(8  )=   2.14466425391e-22 ;
-////xvec(9 )=    -1.18199994563e-21 ;
-////xvec(10 )=   1.72761681302e-37 ;
-////xvec(11 )=   3.11219777415e-21 ;
-////xvec(12 )=   1.58313329369e-05 ;
-////xvec(13 )=   -1.58313329369e-05 ;
-////xvec(14 )=   -4.45652529234e-21 ;
-////xvec(15 )=   -1.58313329369e-05 ;
-////xvec(16 )=   1.58313329369e-05 ;
-////xvec(17 )=   -1.99286234306e-21 ;
-////xvec(18 )=   7.73535678409e-22 ;
-////xvec(19 )=   -1.64090499098e-21 ;
-////
-////  bvec = Amat*xvec;
-////  pout << "model b vector =\n";
-////  pout << bvec << std::endl;
-////
 }
-
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+  
+//===========================================================================================================================================================
 
 }
 }

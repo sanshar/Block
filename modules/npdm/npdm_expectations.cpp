@@ -10,21 +10,18 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/lexical_cast.hpp>
 #include "MatrixBLAS.h"
 #include "pario.h"
-//FIXME use forward declaration for spinExpectation
 #include "npdm_expectations_engine.h"
 #include "npdm_expectations.h"
-#include "npdm_patterns.h"
 
 namespace SpinAdapted{
 namespace Npdm{
 
-// Forward declaration
-void npdm_set_up_linear_equations(std::string& s, std::vector<double>& b0, Matrix& A, ColumnVector& b, std::vector< std::vector<int> >& so_indices);
-
 //===========================================================================================================================================================
 
-Npdm_expectations::Npdm_expectations( Npdm_patterns& npdm_patterns, const int order, Wavefunction & wavefunction, const SpinBlock & big )
-: npdm_patterns_(npdm_patterns),
+Npdm_expectations::Npdm_expectations( Npdm_spin_adaptation& spin_adaptation, Npdm_patterns& npdm_patterns, 
+                                      const int order, Wavefunction & wavefunction, const SpinBlock & big )
+: spin_adaptation_(spin_adaptation),
+  npdm_patterns_(npdm_patterns),
   npdm_order_(order),
   wavefunction_(wavefunction),
   big_(big)
@@ -34,14 +31,11 @@ Npdm_expectations::Npdm_expectations( Npdm_patterns& npdm_patterns, const int or
 // The pattern generator for the non-redundant NPDM elements leads to duplicates if indices are repeated, so some can be skipped explicitly.
 // If the normal-ordered string is not of non-redundant form, then the original string produces duplicates when permutations are applied.
 
-bool Npdm_expectations::screen_op_string_for_duplicates( std::string& op )
+bool Npdm_expectations::screen_op_string_for_duplicates( const std::string& op, const std::vector<int>& indices )
 {
-  std::vector<int> indices;  
   std::string CD;
   for (auto it = op.begin(); it != op.end(); ++it) {
-    if ( (*it == '(') || (*it == ')') ) { continue; }
-    else if ( (*it == 'C') || (*it == 'D') ) { CD.push_back(*it); }
-    else { indices.push_back(*it); }
+    if ( (*it == 'C') || (*it == 'D') ) CD.push_back(*it);
   }
 
   if ( indices.size() == 2 ) {
@@ -66,12 +60,12 @@ bool Npdm_expectations::screen_op_string_for_duplicates( std::string& op )
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-std::string Npdm_expectations::get_full_op_string( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps )
+void Npdm_expectations::get_full_op_string( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps, 
+                                            std::string& op_string, std::vector<int>& indices )
 {
 
   // Set up npdm element indices
-  std::vector<int> indices;
-  indices.reserve( lhsOps.indices_.size() + dotOps.indices_.size() + rhsOps.indices_.size() );
+  indices.clear();
   indices.insert( indices.end(), lhsOps.indices_.begin(), lhsOps.indices_.end() );
   indices.insert( indices.end(), dotOps.indices_.begin(), dotOps.indices_.end() );
   indices.insert( indices.end(), rhsOps.indices_.begin(), rhsOps.indices_.end() );
@@ -80,7 +74,7 @@ std::string Npdm_expectations::get_full_op_string( NpdmSpinOps_base & lhsOps, Np
   //cout << "rhs indices = "; for (auto it = rhsOps.indices_.begin(); it != rhsOps.indices_.end(); ++it) { cout << *it << " "; } cout << std::endl;
   //cout << "spatial indices = "; for (auto it = indices.begin(); it != indices.end(); ++it) { cout << *it << " "; } cout << std::endl;
 
-  // Set up how tensor operator is constructed from (compound) block operators
+  // Record how tensor operator is constructed from (compound) block operators
   std::string build_pattern = "(";
   build_pattern.reserve( lhsOps.build_pattern_.size() + dotOps.build_pattern_.size() + rhsOps.build_pattern_.size() + 2 );
   build_pattern.insert( build_pattern.end(), lhsOps.build_pattern_.begin(), lhsOps.build_pattern_.end() );
@@ -89,18 +83,18 @@ std::string Npdm_expectations::get_full_op_string( NpdmSpinOps_base & lhsOps, Np
   build_pattern.insert( build_pattern.end(), rhsOps.build_pattern_.begin(), rhsOps.build_pattern_.end() );
 
   // Combine indices and build_pattern into one string
-  std::string op_string;
+  op_string.clear();
+  std::vector<int> idx = indices;
   for (auto it = build_pattern.begin(); it != build_pattern.end(); ++it) {
     op_string.push_back(*it);
     if ( (*it == 'C') || (*it == 'D') ) {
-      string index = boost::lexical_cast<string>( indices.at(0) );
+      std::string index = boost::lexical_cast<string>( idx.at(0) );
       op_string.append(index);
-      indices.erase( indices.begin() );  
+      idx.erase( idx.begin() );  
     }
   }
-  cout << op_string << std::endl;
+//cout << op_string << std::endl;
 
-  return op_string;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -256,10 +250,12 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
   std::vector< std::pair< std::vector<int>, double > > new_pdm_elements;
 
   // Get operator build string. e.g. (C2C4)(D5D6)
-  std::string op_string = get_full_op_string( lhsOps, rhsOps, dotOps );
+  std::string op_string;
+  std::vector<int> indices;
+  get_full_op_string( lhsOps, rhsOps, dotOps, op_string, indices );
 
   // Screen away unwanted strings (e.g. those that produce duplicate NPDM elements)
-  if ( screen_op_string_for_duplicates(op_string) ) return new_pdm_elements;
+  if ( screen_op_string_for_duplicates( op_string, indices ) ) return new_pdm_elements;
 
   // Contract spin-adapted spatial operators and build singlet expectation values
   build_spin_adapted_singlet_expectations( lhsOps, rhsOps, dotOps );
@@ -277,7 +273,7 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
   std::vector< std::vector<int> > so_indices(dim);
 
   // Parse operator string and set up linear equations
-  npdm_set_up_linear_equations(op_string, expectations_, A, b, so_indices );
+  spin_adaptation_.npdm_set_up_linear_equations(dim, op_string, indices, expectations_, A, b, so_indices );
 
   // Solve A.x = b to get non-spin-adapted expectations in x
   xsolve_AxeqB(A, b, x);

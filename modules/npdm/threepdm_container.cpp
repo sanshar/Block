@@ -16,7 +16,7 @@ namespace SpinAdapted{
 Threepdm_container::Threepdm_container( int sites )
 {
   store_nonredundant_spin_elements_ = true;
-  store_full_spin_array_ = true;
+  store_full_spin_array_ = false;
   store_full_spatial_array_ = true;
 
   if ( store_full_spin_array_ ) {

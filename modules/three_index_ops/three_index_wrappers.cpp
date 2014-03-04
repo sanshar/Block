@@ -477,7 +477,7 @@ Npdm_op_wrapper_DCC::Npdm_op_wrapper_DCC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
 {
-cout << "getting DCC operator...\n";
+//cout << "getting DCC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;

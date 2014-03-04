@@ -29,8 +29,7 @@ class Npdm_permutations {
     void process_new_elements( const std::vector< std::pair< std::vector<int>, double > >& in, 
                                std::vector< std::pair< std::vector<int>, double > >& nonredundant_elements,
                                std::vector< std::pair< std::vector<int>, double > >& spin_batch );
-//FIXME
-//  protected:
+  private:
     virtual void get_spin_permutations( std::vector<std::pair<std::vector<int>,double> >& spin_batch, 
                                         const std::vector<int>& indices, const double& val ) = 0;
 };

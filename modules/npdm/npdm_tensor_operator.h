@@ -6,22 +6,23 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-
 #ifndef NPDM_TENSOR_OPERATOR_H
 #define NPDM_TENSOR_OPERATOR_H
+
 #include <vector>
 #include <utility>
 #include <string>
 #include <iostream>
 #include <stdio.h>
-//#include "anglib.h"
+//#include "Symmetry.h"
 #include "new_anglib.h"
 #include <stdlib.h>
 #include <cmath>
-//#include "Symmetry.h"
 
 namespace SpinAdapted {
 namespace Npdm {
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 using namespace std;
 //using namespace SpinAdapted;
@@ -38,9 +39,15 @@ IrrepSpace() : irrep(0) {};
   }
 };
 
-namespace Symmetry {
-  int sizeofIrrep(int i) {return 1;}
-};
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//FIXME
+//namespace NpdmSymmetry {
+//  int sizeofIrrep(int i) {return 1;}
+//};
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 class TensorOp {
 
@@ -56,6 +63,8 @@ class TensorOp {
   std::vector< std::vector<int> > opindices; //instead of chars it stores the index order of operators
   std::vector<int> optypes; //cre corresponds to 1 and des corresponds to -1
  public:
+//FIXME
+  int npdm_sizeofIrrep(int i) {return 1;}
   const std::vector< std::vector<double> >& get_Szops() const {return Szops;}
   TensorOp():Spin(0), irrep(0), empty(true) {}
   TensorOp(int k, int sign) :empty(false) 
@@ -63,15 +72,15 @@ class TensorOp {
     int K = 2*k; //convert spatial id to spin id because slaters need that
     int Kirrep = 0;
 
-    if (Symmetry::sizeofIrrep(Kirrep)>1 && sign <0) {
+    if (npdm_sizeofIrrep(Kirrep)>1 && sign <0) {
       int ind1[] = {K+3, K+2, K+1, K+0};
       *this = TensorOp(-1, Kirrep, vector<int>(ind1, ind1+4));
     }
-    else if (Symmetry::sizeofIrrep(Kirrep)==1 && sign <0){
+    else if (npdm_sizeofIrrep(Kirrep)==1 && sign <0){
       int ind1[] = {K+1, K+0};
       *this = TensorOp(-1, Kirrep, vector<int>(ind1, ind1+2));
     }
-    else if (Symmetry::sizeofIrrep(Kirrep)>1 && sign > 0) {
+    else if (npdm_sizeofIrrep(Kirrep)>1 && sign > 0) {
       int ind1[] = {K+0, K+1, K+2, K+3};
       *this = TensorOp(1, Kirrep, vector<int>(ind1, ind1+4));
     }
@@ -92,7 +101,7 @@ class TensorOp {
     else
       irrep = pirrep;
     optypes.push_back(sgn);
-    if ( Symmetry::sizeofIrrep(irrep) == 1) {
+    if ( npdm_sizeofIrrep(irrep) == 1) {
       std::vector<double> vec1(2,0);
       std::vector<double> vec2(2,0);
       vec1[0] = sgn*1.0; vec2[1] = 1.0;
@@ -148,7 +157,7 @@ class TensorOp {
     
     copy(op1.optypes.begin(), op1.optypes.end(), back_inserter(optypes));
 
-    int newrows = Symmetry::sizeofIrrep(pirrep);
+    int newrows = npdm_sizeofIrrep(pirrep);
     
     int length = identical? opindices.size()*(op1.opindices.size()+1)/2 : opindices.size()*(op1.opindices.size());
     std::vector< std::vector<int> > tempopindices(length);
@@ -179,7 +188,7 @@ class TensorOp {
 
 	//double cleb = cleb_(Spin, sz1, op1.Spin, sz2, pspin, sz);
 	double cleb = clebsch(Spin, sz1, op1.Spin, sz2, pspin, sz);
-	double clebdinfh = 1.0;//Symmetry::spatial_cg(irrep, op1.irrep, pirrep, ilz1, ilz2, ilz);
+	double clebdinfh = 1.0;//npdm_spatial_cg(irrep, op1.irrep, pirrep, ilz1, ilz2, ilz);
 	if (fabs(cleb) <= 1.0e-14 || fabs(clebdinfh) <= 1.0e-14)
 	  continue;
 

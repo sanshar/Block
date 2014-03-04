@@ -29,7 +29,7 @@ Npdm_patterns::Npdm_patterns( int pdm_order, int sweep_pos, int end_pos )
 // If the normal-ordered string is not of non-redundant form, then the original string produces duplicates when permutations are applied.
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-bool Npdm_patterns::screen_2pdm_strings( std::vector<int>& indices, std::string& CD )
+bool Npdm_patterns::screen_2pdm_strings( const std::vector<int>& indices, const std::string& CD )
 {
   if ( indices[0] == indices[1] ) {
     std::string foo = { 'C', 'D', 'D', 'C' };
@@ -40,7 +40,7 @@ bool Npdm_patterns::screen_2pdm_strings( std::vector<int>& indices, std::string&
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-bool Npdm_patterns::screen_3pdm_strings( std::vector<int>& indices, std::string& CD )
+bool Npdm_patterns::screen_3pdm_strings( const std::vector<int>& indices, const std::string& CD )
 {
   if ( (indices[0] == indices[2]) && (indices[1] == indices[3]) ) {
     std::string foo = { 'C', 'C', 'D', 'D', 'D', 'C' }; if ( CD == foo ) return true;
@@ -62,7 +62,7 @@ bool Npdm_patterns::screen_3pdm_strings( std::vector<int>& indices, std::string&
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-bool Npdm_patterns::screen_4pdm_strings( std::vector<int>& indices, std::string& CD )
+bool Npdm_patterns::screen_4pdm_strings( const std::vector<int>& indices, const std::string& CD )
 {
   if ( (indices[0] == indices[1]) 
     && (indices[2] == indices[4])

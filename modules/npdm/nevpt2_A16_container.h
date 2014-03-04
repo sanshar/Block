@@ -22,7 +22,6 @@ class Nevpt2_A16_matrix : public Npdm_container {
     ~Nevpt2_A16_matrix() {};
   
     void save_npdms(const int &i, const int &j);
-    void clear_sparse_arrays() { };
     void store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements );
 
   private:

@@ -23,6 +23,8 @@ class Npdm_patterns
   public:
     Npdm_patterns() { pdm_order_=0; };
     Npdm_patterns( int pdm_order, int sweep_pos, int end_pos );
+
+    const int size() { return ldr_cd_types_.size(); };
     std::set< std::map< char, std::vector<CD> > >::const_iterator ldr_cd_begin() { return ldr_cd_types_.begin(); };
     std::set< std::map< char, std::vector<CD> > >::const_iterator ldr_cd_end() { return ldr_cd_types_.end(); };
 
@@ -35,9 +37,9 @@ class Npdm_patterns
     void print_cd_string( const std::vector<CD> & );
 
     // Screening of duplications
-    bool screen_2pdm_strings( std::vector<int>& indices, std::string& CD );
-    bool screen_3pdm_strings( std::vector<int>& indices, std::string& CD );
-    bool screen_4pdm_strings( std::vector<int>& indices, std::string& CD );
+    bool screen_2pdm_strings( const std::vector<int>& indices, const std::string& CD );
+    bool screen_3pdm_strings( const std::vector<int>& indices, const std::string& CD );
+    bool screen_4pdm_strings( const std::vector<int>& indices, const std::string& CD );
 
   private:
     int pdm_order_;

@@ -15,6 +15,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "spinblock.h"
 #include "wavefunction.h"
 #include "BaseOperator.h"
+#include "npdm_spin_adaptation.h"
 #include "npdm_expectations.h"
 #include "npdm_operator_wrappers.h"
 #include "onepdm_container.h"
@@ -47,6 +48,8 @@ class Npdm_driver : public Npdm_driver_base {
   private:
     int npdm_order_;
     Npdm_container& container_;
+//FIXME namespaces!!
+    Npdm::Npdm_spin_adaptation spin_adaptation_;
 
     void loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Npdm::Npdm_expectations& expectations, const SpinBlock& big );
 

@@ -44,7 +44,7 @@ void Npdm_permutations::process_new_elements( const std::vector< std::pair< std:
   }
 
   assert( count <= in.size() );
-cout << "nonredundant elements = " << count << endl;
+//cout << "nonredundant elements = " << count << endl;
 
 }
 

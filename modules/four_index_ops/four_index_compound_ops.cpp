@@ -30,7 +30,7 @@ Npdm_op_wrapper_compound_CCDD::Npdm_op_wrapper_compound_CCDD( SpinBlock * spinBl
 
 bool Npdm_op_wrapper_compound_CCDD::set_local_ops( int idx )
 {
-cout << "getting RI CCDD operator...\n";
+//cout << "getting RI CCDD operator...\n";
   // Spatial orbital indices
 //FIXME don't need to keep reconstructing whole array!
   indices_ = spinBlock_->get_op_array(RI_4INDEX).get_array().at(idx);
@@ -141,7 +141,7 @@ Npdm_op_wrapper_compound_CCCD::Npdm_op_wrapper_compound_CCCD( SpinBlock * spinBl
 
 bool Npdm_op_wrapper_compound_CCCD::set_local_ops( int idx )
 {
-cout << "getting RI CCCD operator...\n";
+//cout << "getting RI CCCD operator...\n";
   // Spatial orbital indices
 //FIXME don't need to keep reconstructing whole array!
   indices_ = spinBlock_->get_op_array(RI_4INDEX).get_array().at(idx);
@@ -192,7 +192,7 @@ Npdm_op_wrapper_compound_CCDC::Npdm_op_wrapper_compound_CCDC( SpinBlock * spinBl
 
 bool Npdm_op_wrapper_compound_CCDC::set_local_ops( int idx )
 {
-cout << "getting RI CCDC operator...\n";
+//cout << "getting RI CCDC operator...\n";
   // Spatial orbital indices
 //FIXME don't need to keep reconstructing whole array!
   indices_ = spinBlock_->get_op_array(RI_4INDEX).get_array().at(idx);
@@ -246,7 +246,7 @@ Npdm_op_wrapper_compound_CDCC::Npdm_op_wrapper_compound_CDCC( SpinBlock * spinBl
 
 bool Npdm_op_wrapper_compound_CDCC::set_local_ops( int idx )
 {
-cout << "getting RI CDCC operator...\n";
+//cout << "getting RI CDCC operator...\n";
   // Spatial orbital indices
 //FIXME don't need to keep reconstructing whole array!
   indices_ = spinBlock_->get_op_array(RI_4INDEX).get_array().at(idx);
@@ -300,7 +300,7 @@ Npdm_op_wrapper_compound_CDCD::Npdm_op_wrapper_compound_CDCD( SpinBlock * spinBl
 
 bool Npdm_op_wrapper_compound_CDCD::set_local_ops( int idx )
 {
-cout << "getting RI CDCD operator...\n";
+//cout << "getting RI CDCD operator...\n";
   // Spatial orbital indices
 //FIXME don't need to keep reconstructing whole array!
   indices_ = spinBlock_->get_op_array(RI_4INDEX).get_array().at(idx);
@@ -354,7 +354,7 @@ Npdm_op_wrapper_compound_CDDC::Npdm_op_wrapper_compound_CDDC( SpinBlock * spinBl
 
 bool Npdm_op_wrapper_compound_CDDC::set_local_ops( int idx )
 {
-cout << "getting RI CDDC operator...\n";
+//cout << "getting RI CDDC operator...\n";
   // Spatial orbital indices
 //FIXME don't need to keep reconstructing whole array!
   indices_ = spinBlock_->get_op_array(RI_4INDEX).get_array().at(idx);
@@ -408,7 +408,7 @@ Npdm_op_wrapper_compound_CDDD::Npdm_op_wrapper_compound_CDDD( SpinBlock * spinBl
 
 bool Npdm_op_wrapper_compound_CDDD::set_local_ops( int idx )
 {
-cout << "getting RI CDDD operator...\n";
+//cout << "getting RI CDDD operator...\n";
   // Spatial orbital indices
 //FIXME don't need to keep reconstructing whole array!
   indices_ = spinBlock_->get_op_array(RI_4INDEX).get_array().at(idx);
@@ -459,7 +459,7 @@ Npdm_op_wrapper_compound_CCCC::Npdm_op_wrapper_compound_CCCC( SpinBlock * spinBl
 
 bool Npdm_op_wrapper_compound_CCCC::set_local_ops( int idx )
 {
-cout << "getting RI CCCC operator...\n";
+//cout << "getting RI CCCC operator...\n";
   // Spatial orbital indices
 //FIXME don't need to keep reconstructing whole array!
   indices_ = spinBlock_->get_op_array(RI_4INDEX).get_array().at(idx);

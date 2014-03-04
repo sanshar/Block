@@ -197,7 +197,6 @@ void Npdm_driver::loop_over_block_operators( const char inner, Npdm::Npdm_expect
       if ( ! skip_op ) do_inner_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps );
     }
     else {
-assert(false);  //4PDM debug
       // Parallelize by broadcasting LHS ops
       do_parallel_lhs_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps, skip_op );
     }
@@ -246,19 +245,20 @@ void Npdm_driver::loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Np
   SpinBlock* lhsBlock = lhsdotBlock->get_leftBlock();
   SpinBlock* dotBlock = lhsdotBlock->get_rightBlock();
 
+  int count = 0;
   for (auto pattern = patterns.ldr_cd_begin(); pattern != patterns.ldr_cd_end(); ++pattern) {
+    count++;
     DEBUG_CALL_GET_EXPECT[mpigetrank()] = 0;
 
     // MPI threads must be synchronised here so they all work on same operator pattern simultaneously
     std::cout.flush();
     world.barrier();
-
     //pout << "-------------------------------------------------------------------------------------------\n";
-    pout << "Doing pattern:  ";
-    patterns.print_cd_string( pattern->at('l') );
-    patterns.print_cd_string( pattern->at('d') );
-    patterns.print_cd_string( pattern->at('r') );
-    pout << std::endl;
+    pout << "Doing pattern " << count << " of " << patterns.size() << endl;
+//    patterns.print_cd_string( pattern->at('l') );
+//    patterns.print_cd_string( pattern->at('d') );
+//    patterns.print_cd_string( pattern->at('r') );
+//    pout << std::endl;
 
     // Choice of read from disk or not done inside the wrapper
     std::vector<Npdm::CD> lhs_cd_type = pattern->at('l');
@@ -302,7 +302,7 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
 
   // Loop over NPDM operator patterns
   Npdm::Npdm_patterns npdm_patterns( npdm_order_, sweepPos, endPos );
-  Npdm::Npdm_expectations npdm_expectations( npdm_patterns, npdm_order_, wavefunctions.at(0), big );
+  Npdm::Npdm_expectations npdm_expectations( spin_adaptation_, npdm_patterns, npdm_order_, wavefunctions.at(0), big );
   loop_over_operator_patterns( npdm_patterns, npdm_expectations, big );
 
   // Print outs

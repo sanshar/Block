@@ -14,7 +14,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "spinblock.h"
 #include "wavefunction.h"
 #include "BaseOperator.h"
-//#include "npdm_patterns.h"
 
 namespace SpinAdapted{
 
