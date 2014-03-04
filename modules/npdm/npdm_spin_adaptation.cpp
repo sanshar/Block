@@ -320,7 +320,6 @@ void Npdm_spin_adaptation::npdm_set_up_linear_equations( const int dim, const st
     get_so_indices( cd_string, indices, so_indices );
   }
   else {
-cout << "building new A matrix\n";
     build_new_A_mat( op_string, A, singlet_rows, so_indices );
     store_new_A_mat( dim, indices.size(), cd_string );
   }

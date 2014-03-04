@@ -16,7 +16,7 @@ Fourpdm_container::Fourpdm_container( int sites )
 {
   store_nonredundant_spin_elements_ = true;
   store_full_spin_array_ = false;
-  store_full_spatial_array_ = true;
+  store_full_spatial_array_ = false;
 
   if ( store_full_spin_array_ ) {
     fourpdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);
@@ -44,7 +44,7 @@ void Fourpdm_container::save_npdms(const int& i, const int& j)
   if ( store_full_spatial_array_ ) {
     accumulate_spatial_npdm();
     save_spatial_npdm_binary(i, j);
-//FIXME    save_spatial_npdm_text(i, j);
+    save_spatial_npdm_text(i, j);
   } 
     
   world.barrier();

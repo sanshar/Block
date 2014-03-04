@@ -59,8 +59,9 @@ class Threepdm_permutations : public Npdm_permutations {
 
 class Fourpdm_permutations : public Npdm_permutations {
   private:
-    void get_spin_permutations( std::vector<std::pair<std::vector<int>,double> >& spin_batch, const std::vector<int>& indices, const double& val );
     void get_even_and_odd_perms( const std::vector<int> mnpq, std::vector<std::vector<int> > & even_perms, std::vector<std::vector<int> > & odd_perms );
+    void get_spin_permutations( std::vector<std::pair<std::vector<int>,double> >& spin_batch, const std::vector<int>& indices, const double& val );
+    void get_spin_permutations_general(std::vector<std::pair<std::vector<int>,double> >& spin_batch, const std::vector<int>& indices, const double& val);
 };
 
 //===========================================================================================================================================================
