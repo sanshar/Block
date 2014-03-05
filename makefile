@@ -83,7 +83,7 @@ ifeq ($(notdir $(firstword $(CXX))),g++)
 endif
 
 ifeq ($(USE_MPI), yes)
-	MPI_OPT = -g
+	MPI_OPT = 
 	MPI_LIB = -L$(BOOSTINCLUDE)/lib/ -lboost_mpi
    LIBS += $(MPI_LIB)
 	CXX = $(MPICXX)

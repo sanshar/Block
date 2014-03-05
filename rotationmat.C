@@ -141,9 +141,9 @@ double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::
       int qs = inorderwts[i].second;
 
       //if(i < min_states && eigenmatrix[q].element(qs, qs) > 1.e-12)
-//      if( eigenmatrix[q].element(qs, qs) > 1.e-13)
+      if( eigenmatrix[q].element(qs, qs) > 1.e-13)
 //FIXME MAW changed to agree with Michel's RI-NPDM results
-      if( eigenmatrix[q].element(qs, qs) > -0.1)//1.e-13)
+//      if( eigenmatrix[q].element(qs, qs) > -0.1)//1.e-13)
       {
         if (rotatematrix[q].Ncols() == 0)
         {
