@@ -202,18 +202,19 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
     }
   StateInfo newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
 
-//MAW >>>>>>>
-//FIXME Note  (! it->second->is_core()) which prevents use of spinblock functions
-  build_virtual_operators();
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
-    if (! it->second->is_core()) {
-//      it->second->build_operators( *this );
-      it->second->renormalise_transform( rotateMatrix, &newStateInfo );
-//MAW      it->second->build_and_renormalise_transform( this, it->first, rotateMatrix, &newStateInfo );
-//MAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, boost::ref(rotateMatrix) , &newStateInfo));
-    }
-  }
-//MAW <<<<<<<
+  build_and_renormalise_operators( rotateMatrix, &newStateInfo );
+//////MAW >>>>>>>
+//////FIXME Note  (! it->second->is_core()) which prevents use of spinblock functions
+////  build_virtual_operators();
+////  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+////    if (! it->second->is_core()) {
+//////      it->second->build_operators( *this );
+////      it->second->renormalise_transform( rotateMatrix, &newStateInfo );
+//////MAW      it->second->build_and_renormalise_transform( this, it->first, rotateMatrix, &newStateInfo );
+//////MAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, boost::ref(rotateMatrix) , &newStateInfo));
+////    }
+////  }
+//////MAW <<<<<<<
 
   stateInfo = newStateInfo;
   stateInfo.AllocatePreviousStateInfo ();
@@ -230,7 +231,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   Timer transformtimer;
 
 //MAW
-  renormalise_transform( rotateMatrix, &newStateInfo );
+  renormalise_transform( rotateMatrix, &this->stateInfo );
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if (! it->second->is_core())

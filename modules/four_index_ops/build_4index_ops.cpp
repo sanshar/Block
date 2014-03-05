@@ -88,7 +88,8 @@ void finish_tensor_product( SpinBlock& b, SpinBlock* sysdot,
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void do_4index_tensor_trace( const opTypes& optype, SpinBlock& big, SpinBlock* sysdot, std::ofstream& ofs ) 
+void do_4index_tensor_trace( const opTypes& optype, SpinBlock& big, SpinBlock* sysdot, std::ofstream& ofs,
+                             const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo )
 {
   // Get pointer to sparse operator array
   Op_component_base& sysdot_array = sysdot->get_op_array(optype);
@@ -124,7 +125,11 @@ void do_4index_tensor_trace( const opTypes& optype, SpinBlock& big, SpinBlock* s
         std::vector<SpinQuantum> s1 = sysdot_op->get_quantum_ladder().at(build_pattern);
         std::vector<SpinQuantum> s2 = op->get_quantum_ladder().at(build_pattern);
         // Store spin component in correct location
-        if ( s1 == s2 ) finish_tensor_trace( big, sysdot, *sysdot_op, *op, build_pattern );
+        if ( s1 == s2 ) {
+          finish_tensor_trace( big, sysdot, *sysdot_op, *op, build_pattern );
+          // Renormalise operator
+          op->renormalise_transform( rotateMatrix, stateinfo );
+        }
       }
     }
     // Store spin-batch on disk 
@@ -139,7 +144,8 @@ void do_4index_tensor_trace( const opTypes& optype, SpinBlock& big, SpinBlock* s
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void do_4index_2_2_tensor_products( bool forwards, const opTypes& optype, const opTypes& rhsType, const opTypes& lhsType,
-                                    SpinBlock& big, SpinBlock* rhsBlock, SpinBlock* lhsBlock, std::ofstream& ofs ) 
+                                    SpinBlock& big, SpinBlock* rhsBlock, SpinBlock* lhsBlock, std::ofstream& ofs,
+                                    const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo )
 {
   Op_component_base& rhs_array = rhsBlock->get_op_array(rhsType);
   Op_component_base& lhs_array = lhsBlock->get_op_array(lhsType);
@@ -182,9 +188,12 @@ void do_4index_2_2_tensor_products( bool forwards, const opTypes& optype, const 
             std::vector<SpinQuantum> s1 = { op->get_quantum_ladder().at(build_pattern).at(0), op->get_quantum_ladder().at(build_pattern).at(1) };
             std::vector<SpinQuantum> s2 = { spin_12, spin_34 };
             // Select relevant spin components
-            if ( s1 == s2 ) finish_tensor_product( big, rhsBlock, *rhs_op, *lhs_op, *op, forwards, build_pattern );
+            if ( s1 == s2 ) {
+              finish_tensor_product( big, rhsBlock, *rhs_op, *lhs_op, *op, forwards, build_pattern );
+              // Renormalise operator
+              op->renormalise_transform( rotateMatrix, stateinfo );
+            }
           }
-
         }
       }
       // Store spin-batch on disk 
@@ -197,7 +206,8 @@ void do_4index_2_2_tensor_products( bool forwards, const opTypes& optype, const 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void do_4index_1_3_tensor_products( bool forwards, const opTypes& optype, const opTypes& rhsType, const opTypes& lhsType,
-                                    SpinBlock& big, SpinBlock* rhsBlock, SpinBlock* lhsBlock, std::ofstream& ofs ) 
+                                    SpinBlock& big, SpinBlock* rhsBlock, SpinBlock* lhsBlock, std::ofstream& ofs,
+                                    const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo )
 {
   // (i | j,k,l ) partition
   //-------------------------
@@ -246,7 +256,11 @@ void do_4index_1_3_tensor_products( bool forwards, const opTypes& optype, const 
             boost::shared_ptr<SparseMatrix>& op = vec[sx];
             // Select relevant spin components
             std::vector<SpinQuantum> s = { op->get_quantum_ladder().at(build_pattern).at(0), op->get_quantum_ladder().at(build_pattern).at(1) };
-            if ( s == spin_234 ) finish_tensor_product( big, rhsBlock, *rhs_op, *lhs_op, *op, forwards, build_pattern );
+            if ( s == spin_234 ) {
+              finish_tensor_product( big, rhsBlock, *rhs_op, *lhs_op, *op, forwards, build_pattern );
+              // Renormalise operator
+              op->renormalise_transform( rotateMatrix, stateinfo );
+            }
           }
         }
       }
@@ -260,7 +274,8 @@ void do_4index_1_3_tensor_products( bool forwards, const opTypes& optype, const 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void do_4index_3_1_tensor_products( bool forwards, const opTypes& optype, const opTypes& rhsType, const opTypes& lhsType,
-                                    SpinBlock& big, SpinBlock* rhsBlock, SpinBlock* lhsBlock, std::ofstream& ofs ) 
+                                    SpinBlock& big, SpinBlock* rhsBlock, SpinBlock* lhsBlock, std::ofstream& ofs,
+                                    const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo )
 {
   // (i,j,k | l ) partition
   //-------------------------
@@ -310,7 +325,11 @@ void do_4index_3_1_tensor_products( bool forwards, const opTypes& optype, const 
             // Select relevant spin components
             std::vector<SpinQuantum> s = { op->get_quantum_ladder().at(build_pattern).at(0), op->get_quantum_ladder().at(build_pattern).at(1) };
 //            if ( s == spin_123 ) finish_tensor_product( big, rhsBlock, *rhs_op, Transposeview(lhs_op), *op, forwards, build_pattern );
-            if ( s == spin_123 ) finish_tensor_product( big, rhsBlock, *rhs_op, *lhs_op, *op, forwards, build_pattern );
+            if ( s == spin_123 ) {
+              finish_tensor_product( big, rhsBlock, *rhs_op, *lhs_op, *op, forwards, build_pattern );
+              // Renormalise operator
+              op->renormalise_transform( rotateMatrix, stateinfo );
+            }
           }
         }
       }
@@ -322,10 +341,12 @@ void do_4index_3_1_tensor_products( bool forwards, const opTypes& optype, const 
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// Build and renormalize operators on (big) compound spin blocks
 
 void build_4index_ops( const opTypes& optype, SpinBlock& big, 
                        const opTypes& lhsType1, const opTypes& lhsType2, const opTypes& lhsType3, 
-                       const opTypes& rhsType1, const opTypes& rhsType2, const opTypes& rhsType3 )
+                       const opTypes& rhsType1, const opTypes& rhsType2, const opTypes& rhsType3,
+                       const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo )
 {
   // 4-index output file
 //cout << "build_4index_op, ofs =" <<  big.get_op_array(optype).get_filename() << endl;
@@ -336,25 +357,25 @@ void build_4index_ops( const opTypes& optype, SpinBlock& big,
   SpinBlock* dotBlock = big.get_rightBlock();
 
   // All 4 orbitals on sys or dot block
-  do_4index_tensor_trace( optype, big, sysBlock, ofs );
-  do_4index_tensor_trace( optype, big, dotBlock, ofs );
+  do_4index_tensor_trace( optype, big, sysBlock, ofs, rotateMatrix, stateinfo );
+  do_4index_tensor_trace( optype, big, dotBlock, ofs, rotateMatrix, stateinfo );
 
   bool forwards = ! ( sysBlock->get_sites().at(0) > dotBlock->get_sites().at(0) );
 
   // 2,2 partitioning
   if ( forwards ) {
-    do_4index_2_2_tensor_products( forwards, optype, lhsType2, rhsType2, big, dotBlock, sysBlock, ofs );
+    do_4index_2_2_tensor_products( forwards, optype, lhsType2, rhsType2, big, dotBlock, sysBlock, ofs, rotateMatrix, stateinfo );
   } else {
-    do_4index_2_2_tensor_products( forwards, optype, lhsType2, rhsType2, big, sysBlock, dotBlock, ofs );
+    do_4index_2_2_tensor_products( forwards, optype, lhsType2, rhsType2, big, sysBlock, dotBlock, ofs, rotateMatrix, stateinfo );
   }
 
   // 3,1 partitioning
   if ( forwards ) {
-    do_4index_1_3_tensor_products( forwards, optype, lhsType1, rhsType3, big, dotBlock, sysBlock, ofs );
-    do_4index_3_1_tensor_products( forwards, optype, lhsType3, rhsType1, big, dotBlock, sysBlock, ofs );
+    do_4index_1_3_tensor_products( forwards, optype, lhsType1, rhsType3, big, dotBlock, sysBlock, ofs, rotateMatrix, stateinfo );
+    do_4index_3_1_tensor_products( forwards, optype, lhsType3, rhsType1, big, dotBlock, sysBlock, ofs, rotateMatrix, stateinfo );
   } else {
-    do_4index_1_3_tensor_products( forwards, optype, lhsType1, rhsType3, big, sysBlock, dotBlock, ofs );
-    do_4index_3_1_tensor_products( forwards, optype, lhsType3, rhsType1, big, sysBlock, dotBlock, ofs );
+    do_4index_1_3_tensor_products( forwards, optype, lhsType1, rhsType3, big, sysBlock, dotBlock, ofs, rotateMatrix, stateinfo );
+    do_4index_3_1_tensor_products( forwards, optype, lhsType3, rhsType1, big, sysBlock, dotBlock, ofs, rotateMatrix, stateinfo );
   }
 
   if ( ofs.is_open() ) ofs.close();

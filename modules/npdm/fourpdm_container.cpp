@@ -16,7 +16,7 @@ Fourpdm_container::Fourpdm_container( int sites )
 {
   store_nonredundant_spin_elements_ = true;
   store_full_spin_array_ = false;
-  store_full_spatial_array_ = false;
+  store_full_spatial_array_ = true;
 
   if ( store_full_spin_array_ ) {
     fourpdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);

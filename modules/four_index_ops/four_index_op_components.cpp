@@ -231,7 +231,7 @@ string Op_component<RI4index>::get_op_string() const {
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
-void Op_component<RI4index>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+void Op_component<RI4index>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) 
 {
   // This is only a skeleton class, so actual operators should never be built
   return; 
@@ -274,9 +274,9 @@ string Op_component<CreCreDesDes>::get_op_string() const {
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
-void Op_component<CreCreDesDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+void Op_component<CreCreDesDes>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) 
 {
-  Four_index_ops::build_4index_ops( CRE_CRE_DES_DES, big, CRE, CRE_CRE, CRE_CRE_DES, DES, DES_DES, CRE_DES_DES );
+  Four_index_ops::build_4index_ops( CRE_CRE_DES_DES, b, CRE, CRE_CRE, CRE_CRE_DES, DES, DES_DES, CRE_DES_DES, rotateMatrix, stateinfo );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -445,9 +445,9 @@ string Op_component<CreDesCreDes>::get_op_string() const {
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
-void Op_component<CreDesCreDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+void Op_component<CreDesCreDes>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) 
 {
-  Four_index_ops::build_4index_ops( CRE_DES_CRE_DES, big, CRE, CRE_DES, CRE_DES_CRE, DES, CRE_DES, DES_CRE_DES );
+  Four_index_ops::build_4index_ops( CRE_DES_CRE_DES, b, CRE, CRE_DES, CRE_DES_CRE, DES, CRE_DES, DES_CRE_DES, rotateMatrix, stateinfo );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -607,9 +607,9 @@ string Op_component<CreDesDesCre>::get_op_string() const {
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
-void Op_component<CreDesDesCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+void Op_component<CreDesDesCre>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) 
 {
-  Four_index_ops::build_4index_ops( CRE_DES_DES_CRE, big, CRE, CRE_DES, CRE_DES_DES, CRE, DES_CRE, DES_DES_CRE );
+  Four_index_ops::build_4index_ops( CRE_DES_DES_CRE, b, CRE, CRE_DES, CRE_DES_DES, CRE, DES_CRE, DES_DES_CRE, rotateMatrix, stateinfo );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -770,9 +770,9 @@ string Op_component<CreDesDesDes>::get_op_string() const {
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
-void Op_component<CreDesDesDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+void Op_component<CreDesDesDes>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) 
 {
-  Four_index_ops::build_4index_ops( CRE_DES_DES_DES, big, CRE, CRE_DES, CRE_DES_DES, DES, DES_DES, DES_DES_DES );
+  Four_index_ops::build_4index_ops( CRE_DES_DES_DES, b, CRE, CRE_DES, CRE_DES_DES, DES, DES_DES, DES_DES_DES, rotateMatrix, stateinfo );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -933,9 +933,9 @@ string Op_component<CreCreCreDes>::get_op_string() const {
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
-void Op_component<CreCreCreDes>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+void Op_component<CreCreCreDes>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) 
 {
-  Four_index_ops::build_4index_ops( CRE_CRE_CRE_DES, big, CRE, CRE_CRE, CRE_CRE_CRE, DES, CRE_DES, CRE_CRE_DES );
+  Four_index_ops::build_4index_ops( CRE_CRE_CRE_DES, b, CRE, CRE_CRE, CRE_CRE_CRE, DES, CRE_DES, CRE_CRE_DES, rotateMatrix, stateinfo );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -1095,9 +1095,9 @@ string Op_component<CreCreDesCre>::get_op_string() const {
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
-void Op_component<CreCreDesCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+void Op_component<CreCreDesCre>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) 
 {
-  Four_index_ops::build_4index_ops( CRE_CRE_DES_CRE, big, CRE, CRE_CRE, CRE_CRE_DES, CRE, DES_CRE, CRE_DES_CRE );
+  Four_index_ops::build_4index_ops( CRE_CRE_DES_CRE, b, CRE, CRE_CRE, CRE_CRE_DES, CRE, DES_CRE, CRE_DES_CRE, rotateMatrix, stateinfo );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -1257,9 +1257,9 @@ string Op_component<CreDesCreCre>::get_op_string() const {
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
-void Op_component<CreDesCreCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+void Op_component<CreDesCreCre>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) 
 {
-  Four_index_ops::build_4index_ops( CRE_DES_CRE_CRE, big, CRE, CRE_DES, CRE_DES_CRE, CRE, CRE_CRE, DES_CRE_CRE );
+  Four_index_ops::build_4index_ops( CRE_DES_CRE_CRE, b, CRE, CRE_DES, CRE_DES_CRE, CRE, CRE_CRE, DES_CRE_CRE, rotateMatrix, stateinfo );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
@@ -1420,9 +1420,9 @@ string Op_component<CreCreCreCre>::get_op_string() const {
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
-void Op_component<CreCreCreCre>::build_operators(SpinBlock& big, std::string& ofile, std::string& sysfile, std::string& dotfile) 
+void Op_component<CreCreCreCre>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) 
 {
-  Four_index_ops::build_4index_ops( CRE_CRE_CRE_CRE, big, CRE, CRE_CRE, CRE_CRE_CRE, CRE, CRE_CRE, CRE_CRE_CRE );
+  Four_index_ops::build_4index_ops( CRE_CRE_CRE_CRE, b, CRE, CRE_CRE, CRE_CRE_CRE, CRE, CRE_CRE, CRE_CRE_CRE, rotateMatrix, stateinfo );
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  

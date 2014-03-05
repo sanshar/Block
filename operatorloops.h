@@ -121,11 +121,6 @@ template<typename T2, class A> void for_all_operators_multithread(A& array, cons
     for (i = 0; i < array.get_size(); ++i) {
       std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
       for (int j=0; j<vec.size(); j++){
-//FIXME
-//std::vector<int> orbs = vec.at(j)->get_orbs();
-//cout << "indices: ";
-//for (int idx=0; idx<orbs.size(); ++idx) { cout << orbs[idx] << ", "; }
-//cout << "\n";
         func( *(vec.at(j)) );
       }
     }
@@ -158,32 +153,6 @@ template<typename T2, class A> void for_all_operators_to_disk(A& array, const Sp
   }
 }
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-////FIXME duplication with above function
-//// Used with functions designed to build operators in core, but here we actually write to disk instead
-//template<typename T2, class A> void for_all_operators_on_disk(A& array, const StateInfo& stateinfo, std::ofstream& ofs, const T2& func)
-//{
-//  for (int i = 0; i < array.get_size(); ++i) {
-//    std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
-//    for (int j=0; j<vec.size(); j++){
-//      // Only use this if operators already on disk
-//      assert( vec.at(j)->get_built_on_disk() );
-//
-//      // Apply function to operator
-//      func( *(vec.at(j)) );
-//
-//      // Store on disk
-//      vec.at(j)->set_built_on_disk() = true;
-//      boost::archive::binary_oarchive save_op(ofs);
-//      save_op << *(vec.at(j));
-//           
-//      // Deallocate memory for operator representation
-//      vec.at(j)->set_built() = false;
-//      vec.at(j)->deallocate(stateinfo);
-//    }
-//  }
-//}
-//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 }

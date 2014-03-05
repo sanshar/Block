@@ -168,26 +168,6 @@ void SparseMatrix::read_from_disk(std::ifstream& ifs)
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//MAW
-//void SparseMatrix::buildUsingCsfOnDisk(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s, std::ofstream& ofs) 
-//{
-//  buildUsingCsf(b, ladders, s);
-////  pout << "memory used before = " << memoryUsed(b) << std::endl;
-//
-//  // Store on disk
-//  boost::archive::binary_oarchive save_op(ofs);
-//  save_op << *this;
-//
-//  // Deallocate memory for operator representation
-//  built_on_disk = true;
-////FIXME
-//  built = false;
-//  deallocate(b);
-////  pout << "memory used after = " << memoryUsed(b) << std::endl;
-//
-//}
-//
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
   
 void SparseMatrix::buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s) 
 {
@@ -380,10 +360,6 @@ void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matri
       for (int QPrime = 0; QPrime < rotate_matrix.size (); ++QPrime) {
         if (rotate_matrix[QPrime].Ncols () != 0) {
           if (this->allowedQuantaMatrix (newQ, newQPrime)) {
-//FIXME
-//cout << "tmp(Q,QPrime).Ncols = " << tmp(Q,QPrime).Ncols() << endl;
-//cout << "rotate_matrix[QPrime].Nrows = " << rotate_matrix[QPrime].Nrows() << endl;
-//cout << "this->operatorMatrix(newQ, newQPrime).Nrows = " << this->operatorMatrix (newQ, newQPrime).Nrows() << endl;
             MatrixRotate (rotate_matrix[Q], tmp(Q, QPrime), rotate_matrix[QPrime],this->operatorMatrix (newQ, newQPrime) );
           }
           ++newQPrime;
@@ -395,68 +371,52 @@ void SparseMatrix::renormalise_transform(const std::vector<Matrix>& rotate_matri
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//void SparseMatrix::build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& rotate_matrix,
-//                                                   const StateInfo *newStateInfo)
-//{
-////pout << "\nmaw hello SparseMatrix::build_and_renormalise_transform\n";  
-//
-//  boost::shared_ptr<SparseMatrix> tmp;
-//  if (orbs.size() == 0) {
-////pout << "hello 0op\n";
-//    tmp = big->get_op_rep(ot, deltaQuantum);
-//  }
-//  else if (orbs.size() == 1) {
-////pout << "hello 1op  " << orbs[0] << std::endl;
-//    tmp = big->get_op_rep(ot, deltaQuantum, orbs[0]);
-//  }
-//  else if (orbs.size() == 2) {
-////pout << "hello 2op  " << orbs[0] << "  " << orbs[1] << std::endl;
-//    tmp = big->get_op_rep(ot, deltaQuantum, orbs[0], orbs[1]);
-//  }
+
+void SparseMatrix::build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& rotate_matrix,
+                                                   const StateInfo *newStateInfo)
+{
+  boost::shared_ptr<SparseMatrix> tmp;
+  if (orbs.size() == 0) {
+    tmp = big->get_op_rep(ot, deltaQuantum);
+  }
+  else if (orbs.size() == 1) {
+    tmp = big->get_op_rep(ot, deltaQuantum, orbs[0]);
+  }
+  else if (orbs.size() == 2) {
+    tmp = big->get_op_rep(ot, deltaQuantum, orbs[0], orbs[1]);
+  }
+//FIXME use new alternative driver for 3PDM
 //  else if (orbs.size() == 3) {
-////pout << "hello 3op  " << orbs[0] << "  " << orbs[1] << "  " << orbs[2] << std::endl;
-////pout << "opType = " << ot << std::endl;
 //    std::string build_pattern_tmp = big->get_op_array(ot).get_element(orbs[0],orbs[1],orbs[2]).at(0)->get_build_pattern();
-////pout << "build_pattern_tmp = " << build_pattern_tmp << std::endl;
 //    tmp = big->get_op_rep(ot, quantum_ladder.at(build_pattern_tmp), orbs[0], orbs[1], orbs[2]);
 //  }
-//  else
-//    assert (false);
-//
-//  tmp->built = true;
-////MAW
-////if (orbs.size() ==3) {
-////pout << tmp->get_build_pattern() << std::endl;
-////pout << tmp->get_orbs()[0] << " " << tmp->get_orbs()[1] << " " << tmp->get_orbs()[2] << std::endl;
-////pout << "OpRep:\n";
-////pout << *tmp;
-////}
-//
-//  this->allocate(*newStateInfo);
-//  this->built = true;
-////MAW 3PDM
-//  this->build_pattern = tmp->get_build_pattern();
-//
-//  int newQ = 0;
-//  for (int Q = 0; Q < rotate_matrix.size (); ++Q) {
-//    if (rotate_matrix[Q].Ncols () != 0) {
-//      int newQPrime = 0;
-//      for (int QPrime = 0; QPrime < rotate_matrix.size (); ++QPrime) {
-//        if (rotate_matrix[QPrime].Ncols () != 0) {
-//          if (this->allowedQuantaMatrix (newQ, newQPrime)) {
-//            MatrixRotate (rotate_matrix[Q], tmp->operatorMatrix(Q, QPrime), rotate_matrix[QPrime], this->operatorMatrix (newQ, newQPrime) );
-//          }
-//          ++newQPrime;
-//        }
-//      }
-//      ++newQ;
-//    }
-//  }
-////pout << "maw done SparseMatrix::build_and_renormalise_transform\n\n";  
-//
-//}
-//
+  else
+    assert (false);
+
+  tmp->built = true;
+
+  this->allocate(*newStateInfo);
+  this->built = true;
+  this->build_pattern = tmp->get_build_pattern();
+
+  int newQ = 0;
+  for (int Q = 0; Q < rotate_matrix.size (); ++Q) {
+    if (rotate_matrix[Q].Ncols () != 0) {
+      int newQPrime = 0;
+      for (int QPrime = 0; QPrime < rotate_matrix.size (); ++QPrime) {
+        if (rotate_matrix[QPrime].Ncols () != 0) {
+          if (this->allowedQuantaMatrix (newQ, newQPrime)) {
+            MatrixRotate (rotate_matrix[Q], tmp->operatorMatrix(Q, QPrime), rotate_matrix[QPrime], this->operatorMatrix (newQ, newQPrime) );
+          }
+          ++newQPrime;
+        }
+      }
+      ++newQ;
+    }
+  }
+
+}
+
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 SparseMatrix& SparseMatrix::operator+=(const SparseMatrix& other)

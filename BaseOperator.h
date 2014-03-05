@@ -194,9 +194,7 @@ class SparseMatrix : public Baseoperator<Matrix>
   void OperatorMatrixReference(ObjectMatrix<Matrix*>& m, const std::vector<int>& oldToNewStateI, const std::vector<int>& oldToNewStateJ);
 
   void renormalise_transform(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo);
-//MAW
-  void renormalise_transform_on_disk(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo, std::ifstream& ifs);
-//MAW  void build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& rotate_matrix, const StateInfo *newStateInfo);
+  void build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& rotate_matrix, const StateInfo *newStateInfo);
   SparseMatrix& operator+=(const SparseMatrix& other);
 };
 

@@ -197,84 +197,48 @@ void SpinBlock::build_iterators()
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
+// Build operators from CSFs
 void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vector<Csf> >& ladders)
 {
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    {
-      opTypes ot = it->first;
-      if(it->second->is_core()) {
-//        // Output file for operators written to disk
-//        std::string ofile = it->second->get_filename();
-        // Build operators from CSFs
-        it->second->build_csf_operators(*this, dets, ladders);
-      }
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    if(it->second->is_core()) {
+      it->second->build_csf_operators(*this, dets, ladders);
     }
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SpinBlock::build_virtual_operators()
+void SpinBlock::build_and_renormalise_operators(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) 
 {
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    {
-      opTypes ot = it->first;
-      if(! it->second->is_core()) {
-        // Output file for operators written to disk
-        std::string ofile = it->second->get_filename();
-        // Input file for operators written to disk on sysblock
-        std::string sysfile = get_leftBlock()->ops[ot]->get_filename();
-        // Input file for operators written to disk on dotblock
-        std::string dotfile = get_rightBlock()->ops[ot]->get_filename();
-        // Build operators
-//FIXME
-//if (ot == CRE) cout << "Is CRE local? " << ops[CRE]->is_local() << "; rank = " << mpigetrank() << endl;
-//if (ot == CRE) cout << "Build C operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
-//if (ot == DES) cout << "Build D operators on p" << mpigetrank() << " = " << ops[DES]->get_size() << " local, " << ops[DES]->size() << " global\n";
-        it->second->build_operators(*this, ofile, sysfile, dotfile);
-      }
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    opTypes ot = it->first;
+    if(! it->second->is_core()) {
+      it->second->build_and_renormalise_operators(*this, ot, rotateMatrix, stateinfo);
     }
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::build_operators()
 {
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    {
-      opTypes ot = it->first;
-      if(it->second->is_core()) {
-        // Output file for operators written to disk
-        std::string ofile = it->second->get_filename();
-        // Input file for operators written to disk on sysblock
-        std::string sysfile = get_leftBlock()->ops[ot]->get_filename();
-        // Input file for operators written to disk on dotblock
-        std::string dotfile = get_rightBlock()->ops[ot]->get_filename();
-        // Build operators
-//FIXME
-//if (ot == CRE) cout << "Is CRE local? " << ops[CRE]->is_local() << "; rank = " << mpigetrank() << endl;
-//if (ot == CRE) cout << "Build C operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
-//if (ot == DES) cout << "Build D operators on p" << mpigetrank() << " = " << ops[DES]->get_size() << " local, " << ops[DES]->size() << " global\n";
-        it->second->build_operators(*this, ofile, sysfile, dotfile);
-      }
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    if(it->second->is_core()) {
+      it->second->build_operators(*this);
     }
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) 
 {
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    {
-      if(it->second->is_core()) {
-//FIXME
-//if (ot == CRE) cout << "Is CRE local? " << ops[CRE]->is_local() << "; rank = " << mpigetrank() << endl;
-//if (ot == CRE) cout << "Renormalize C operators on p" << mpigetrank() << " = " << ops[CRE]->get_size() << " local, " << ops[CRE]->size() << " global\n";
-//if (ot == DES) cout << "Is DES local? " << ops[DES]->is_local() << "; rank = " << mpigetrank() << endl;
-//if (ot == DES) cout << "Renormalize D operators on p" << mpigetrank() << " = " << ops[DES]->get_size() << " local, " << ops[DES]->size() << " global\n";
-        it->second->renormalise_transform(rotateMatrix, stateinfo);
-      }
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    if(it->second->is_core()) {
+      it->second->renormalise_transform(rotateMatrix, stateinfo);
     }
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
