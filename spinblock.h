@@ -164,7 +164,7 @@ class SpinBlock
   void build_operators(std::vector<Csf >& s, std::vector< std::vector<Csf> >& ladders);
   void build_operators();
 //MAW
-  void build_and_renormalise_operators(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo);
+  void build_and_renormalise_operators(const std::vector<Matrix>& rotateMatrix, const StateInfo *newStateInfo);
   void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo);
   void BuildSumBlock(int condition, SpinBlock& b_1, SpinBlock& b_2, StateInfo* compState=0);
   void BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState=0);

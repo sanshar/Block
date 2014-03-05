@@ -209,12 +209,12 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SpinBlock::build_and_renormalise_operators(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) 
+void SpinBlock::build_and_renormalise_operators(const std::vector<Matrix>& rotateMatrix, const StateInfo *newStateInfo) 
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
     opTypes ot = it->first;
     if(! it->second->is_core()) {
-      it->second->build_and_renormalise_operators(*this, ot, rotateMatrix, stateinfo);
+      it->second->build_and_renormalise_operators(*this, ot, rotateMatrix, newStateInfo);
     }
   }
 }

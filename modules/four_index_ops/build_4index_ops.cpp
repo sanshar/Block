@@ -35,7 +35,7 @@ std::vector<boost::shared_ptr<SparseMatrix> > get_ops_from_disk( std::ifstream& 
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void store_ops_on_disk( SpinBlock& block, std::ofstream& ofs, std::vector<boost::shared_ptr<SparseMatrix> > spin_ops )
+void store_ops_on_disk( const StateInfo *stateinfo, std::ofstream& ofs, std::vector<boost::shared_ptr<SparseMatrix> > spin_ops )
 {
   // Only 4-index ops saved here
   assert( spin_ops.size() == 6 );
@@ -48,7 +48,7 @@ void store_ops_on_disk( SpinBlock& block, std::ofstream& ofs, std::vector<boost:
     save_op << *op;
     // Deallocate memory for operator representation
     op->set_built() = false;
-    op->deallocate(block);
+    op->deallocate( *stateinfo );
   } 
 }
 
@@ -133,7 +133,7 @@ void do_4index_tensor_trace( const opTypes& optype, SpinBlock& big, SpinBlock* s
       }
     }
     // Store spin-batch on disk 
-    if ( ! dmrginp.do_npdm_in_core() ) store_ops_on_disk( big, ofs, new_ops );
+    if ( ! dmrginp.do_npdm_in_core() ) store_ops_on_disk( stateinfo, ofs, new_ops );
   }
 
   // Close filesystem if necessary
@@ -197,7 +197,7 @@ void do_4index_2_2_tensor_products( bool forwards, const opTypes& optype, const 
         }
       }
       // Store spin-batch on disk 
-      if ( ! dmrginp.do_npdm_in_core() ) store_ops_on_disk( big, ofs, vec );
+      if ( ! dmrginp.do_npdm_in_core() ) store_ops_on_disk( stateinfo, ofs, vec );
     }
   }
 
@@ -265,7 +265,7 @@ void do_4index_1_3_tensor_products( bool forwards, const opTypes& optype, const 
         }
       }
       // Store spin-batch on disk 
-      if ( ! dmrginp.do_npdm_in_core() ) store_ops_on_disk( big, ofs, vec );
+      if ( ! dmrginp.do_npdm_in_core() ) store_ops_on_disk( stateinfo, ofs, vec );
     }
   }
   if ( lhsifs.is_open() ) lhsifs.close();
@@ -334,7 +334,7 @@ void do_4index_3_1_tensor_products( bool forwards, const opTypes& optype, const 
         }
       }
       // Store spin-batch on disk 
-      if ( ! dmrginp.do_npdm_in_core() ) store_ops_on_disk( big, ofs, vec );
+      if ( ! dmrginp.do_npdm_in_core() ) store_ops_on_disk( stateinfo, ofs, vec );
     }
   }
   if ( rhsifs.is_open() ) rhsifs.close();
