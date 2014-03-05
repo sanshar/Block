@@ -9,7 +9,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "npdm.h"
 #include "npdm_driver.h"
 #include "nevpt2_npdm_driver.h"
-#include "sweeptwopdm.h"  // For old version of 2pdm
+// For previous version of 2pdm
+#include "sweeptwopdm.h"  
 
 void dmrg(double sweep_tol);
 void restart(double sweep_tol, bool reset_iter);
@@ -263,8 +264,7 @@ void npdm( int npdm_order )
 
 //FIXME need this?      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
 
-  switch (npdm_order) {
-  case (1):
+  if (npdm_order == 1) {
     // Compute onepdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
       if (false) {
@@ -277,8 +277,8 @@ void npdm( int npdm_order )
         npdm_do_one_sweep(onepdm_driver, sweepParams, false, direction, false, 0, state);
       }
     }
-    break;
-  case (2):
+  }
+  else if (npdm_order == 2) {
     // Compute twopdm elements
     for (int state=0; state<dmrginp.nroots(); state++) {
       if (false) {
@@ -291,28 +291,31 @@ void npdm( int npdm_order )
         npdm_do_one_sweep(twopdm_driver, sweepParams, false, direction, false, 0, state);
       }
     }
-    break;
-  case (3):
+  }
+  else if (npdm_order == 3) {
     // Compute threepdm elements
+    Timer timer3;
     for (int state=0; state<dmrginp.nroots(); state++) {
       Threepdm_driver threepdm_driver( dmrginp.last_site() );
       npdm_do_one_sweep(threepdm_driver, sweepParams, false, direction, false, 0, state);
     }
-    break;
-  case (4):
+    pout << "3PDM total build time " << timer3.elapsedwalltime() << " " << timer3.elapsedcputime() << endl;
+  }
+  else if (npdm_order == 4) {
     // Compute fourpdm elements
+    Timer timer4;
     for (int state=0; state<dmrginp.nroots(); state++) {
       Fourpdm_driver fourpdm_driver( dmrginp.last_site() );
       npdm_do_one_sweep(fourpdm_driver, sweepParams, false, direction, false, 0, state);
     }
-    break;
-  case (0):
+    pout << "4PDM total build time " << timer4.elapsedwalltime() << " " << timer4.elapsedcputime() << endl;
+  }
+  else if (npdm_order == 0) {
     for (int state=0; state<dmrginp.nroots(); state++) {
       // Compute NEVPT2 NPDM matrix elements incrementally along the sweep
       Nevpt2_npdm_driver nevpt2_npdm_driver( dmrginp.last_site() );
       npdm_do_one_sweep(nevpt2_npdm_driver, sweepParams, false, direction, false, 0, state);
     }
-    break;
   }
   sweep_copy.savestate(direction_copy, restartsize_copy);
 
