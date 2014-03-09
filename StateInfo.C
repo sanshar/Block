@@ -219,24 +219,21 @@ void SpinAdapted::StateInfo::quanta_distribution (std::vector<SpinQuantum>& qnum
   qnumbers.resize (0);
   distribution.resize (0);
 
-  for (int i = 0; i < nosymquanta.size (); ++i)
-    {
-      if (complement)
-        if (SpinQuantum::can_complement (nosymquanta [i]))
-          {
-	    std::vector<SpinQuantum> complements = nosymquanta[i].get_complement();
-	    for (int j=0; j<complements.size(); j++) {
-	      qnumbers.push_back (complements[j]);
-	      distribution.push_back (nosymquantastates [i]);
-	    }
-	    //qnumbers.rbegin ()->complementize ();
-          }
-        else
-          {
-            qnumbers.push_back (nosymquanta [i]);
-            distribution.push_back (nosymquantastates [i]);
-          }
+  for (int i = 0; i < nosymquanta.size (); ++i) {
+    if (complement) {
+      if (SpinQuantum::can_complement (nosymquanta [i])) {
+        std::vector<SpinQuantum> complements = nosymquanta[i].get_complement();
+        for (int j=0; j<complements.size(); j++) {
+          qnumbers.push_back (complements[j]);
+          distribution.push_back (nosymquantastates [i]);
+        }
+        //qnumbers.rbegin ()->complementize ();
+      }
+    } else {
+      qnumbers.push_back (nosymquanta [i]);
+      distribution.push_back (nosymquantastates [i]);
     }
+  }
 }
 
 void SpinAdapted::StateInfo::Allocate ()

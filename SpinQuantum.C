@@ -112,7 +112,12 @@ ostream& operator<< (ostream& os, const SpinQuantum q)
 
 bool SpinQuantum::can_complement (SpinQuantum q)
 {
-  int q_try = dmrginp.total_particle_number() - q.get_n();
+  int q_try = 0;
+  if (dmrginp.hamiltonian() == BCS) {
+    q_try = dmrginp.slater_size();
+  } else {
+    q_try = dmrginp.total_particle_number() - q.get_n();
+  }
   int s_try = abs(dmrginp.total_spin_number().getirrep() - q.get_s().getirrep());
   return (abs (s_try) <= q_try);
 }
@@ -120,13 +125,24 @@ bool SpinQuantum::can_complement (SpinQuantum q)
 vector<SpinQuantum> SpinQuantum::get_complement () const
 {
   vector<SpinQuantum> quanta;
-  int n = dmrginp.total_particle_number() - particleNumber;
+  vector<int> ns;
+  if (dmrginp.hamiltonian() == BCS) {
+    for (int i = 0; i <= dmrginp.slater_size(); i+=2) {
+      if (i-particleNumber < 0) continue;
+      ns.push_back(i-particleNumber);
+    }
+  } else {
+    ns.push_back(dmrginp.total_particle_number() - particleNumber);
+  }
   vector<SpinSpace> spins = dmrginp.total_spin_number() + (- totalSpin);
   vector<IrrepSpace> vec = dmrginp.total_symmetry_number() + (- orbitalSymmetry);
-  for (int i=0; i< spins.size(); i++) {
-    if (abs(i) <= n) {
-      for (int j=0; j<vec.size(); j++)
-	quanta.push_back(SpinQuantum(n, spins[i], vec[j]));
+  for (int n_idx = 0; n_idx < ns.size(); ++n_idx) {
+    int n = ns[n_idx];
+    for (int i=0; i< spins.size(); i++) {
+      if (abs(i) <= n) {
+        for (int j=0; j<vec.size(); j++)
+      quanta.push_back(SpinQuantum(n, spins[i], vec[j]));
+      }
     }
   }
   return quanta;

@@ -151,45 +151,44 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 
 
       if (onedot)// || useSlater)
-	tmp.quanta_distribution (quantumNumbers, distribution, true);
-      else 
-      {
+	    tmp.quanta_distribution (quantumNumbers, distribution, true);
+      else {
         StateInfo environmentdot_stateinfo = environmentDot.get_stateInfo();
         TensorProduct (tmp, environmentdot_stateinfo, tmp2, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
         tmp2.CollectQuanta ();
         tmp2.quanta_distribution (quantumNumbers, distribution, true);
-	//tmp.quanta_distribution (quantumNumbers, distribution, true);
-      }
+	    //tmp.quanta_distribution (quantumNumbers, distribution, true);
 
-      for (int i = 0; i < distribution.size (); ++i)
-      {
-	quantaIterator = quantaDist.find(quantumNumbers[i]);
-	if (quantaIterator != quantaDist.end())
-	  distribution[i] += quantaIterator->second;
+      }
+      for (int i = 0; i < distribution.size (); ++i) {
+	    quantaIterator = quantaDist.find(quantumNumbers[i]);
+	    if (quantaIterator != quantaDist.end())
+	      distribution[i] += quantaIterator->second;
 
         distribution [i] /= 4; distribution [i] += 1;
         if (distribution [i] > dmrginp.nquanta()){
-	  distribution [i] = dmrginp.nquanta();
-	}
+	      distribution [i] = dmrginp.nquanta();
+	    }
 	
-	if(quantaIterator != quantaDist.end())
-	  quantaIterator->second = distribution[i];
-	else
-	  quantaDist[quantumNumbers[i]] = distribution[i];
+	    if(quantaIterator != quantaDist.end())
+	      quantaIterator->second = distribution[i];
+	    else
+	      quantaDist[quantumNumbers[i]] = distribution[i];
       }
+
       if (dmrginp.outputlevel() > 0)
-	pout << "\t\t\t Quantum numbers and states used for warm up :: " << endl << "\t\t\t ";
+	    pout << "\t\t\t Quantum numbers and states used for warm up :: " << endl << "\t\t\t ";
+      
       quantumNumbers.clear(); quantumNumbers.reserve(distribution.size());
       distribution.clear();distribution.reserve(quantumNumbers.size());
       std::map<SpinQuantum, int>::iterator qit = quantaDist.begin();
 
-      for (; qit != quantaDist.end(); qit++)
-      {
-	quantumNumbers.push_back( qit->first); distribution.push_back(qit->second); 
-	if (dmrginp.outputlevel() > 0) {
-	  pout << quantumNumbers.back() << " = " << distribution.back() << ", ";
-	  if (! (quantumNumbers.size() - 6) % 6) pout << endl << "\t\t\t ";
-	}
+      for (; qit != quantaDist.end(); qit++) {
+	    quantumNumbers.push_back( qit->first); distribution.push_back(qit->second); 
+	    if (dmrginp.outputlevel() > 0) {
+	      pout << quantumNumbers.back() << " = " << distribution.back() << ", ";
+	      if (! (quantumNumbers.size() - 6) % 6) pout << endl << "\t\t\t ";
+	    }
       }
       pout << endl;
 
