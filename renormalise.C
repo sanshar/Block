@@ -85,7 +85,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 
   dmrginp.rotmatrixT -> start();
   DensityMatrix tracedMatrix;
-  tracedMatrix.allocate(stateInfo);
+  tracedMatrix.allocate(braStateInfo);
 
   bool normalnoise = warmUp;
   if (newbig.get_rightBlock()->size() < 2)
@@ -112,7 +112,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   for (int i=0; i<nroots; i++) {
     int state = dmrginp.setStateSpecific() ? currentRoot : i;
     SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix, state);
-    wave_solutions[i].SaveWavefunctionInfo (newbig.stateInfo, newbig.leftBlock->sites, state);
+    wave_solutions[i].SaveWavefunctionInfo (newbig.braStateInfo, newbig.leftBlock->sites, state);
   }
   dmrginp.rotmatrixT -> stop();
   if (dmrginp.outputlevel() > 0)

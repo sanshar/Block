@@ -56,6 +56,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   systemDot = SpinBlock(systemDotStart, systemDotEnd);
   SpinBlock environment, environmentDot, newEnvironment;
 
+
   int environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
   int environmentDotSize = sweepParams.get_env_add() -1;
   if (environmentDotSize <0) environmentDotSize = 0 ; 
@@ -83,14 +84,16 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
       dmrginp.datatransfer -> start();
       system.addAdditionalCompOps();
       dmrginp.datatransfer -> stop();
+
+      bool haveNormOps = dot_with_sys, haveCompOps = true;
       InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), 
-      			     DISTRIBUTED_STORAGE, dot_with_sys, true);
+      			     DISTRIBUTED_STORAGE, haveNormOps, haveCompOps);
       if (dmrginp.outputlevel() > 0)
          mcheck("");
 
       InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, sweepParams.current_root(), sweepParams.current_root(),
 					  sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-					  sweepParams.get_onedot(), nexact, useSlater, !dot_with_sys, true, dot_with_sys);
+					  sweepParams.get_onedot(), nexact, useSlater, !haveNormOps, haveCompOps, dot_with_sys);
       if (dmrginp.outputlevel() > 0)
          mcheck("");
   }
@@ -98,13 +101,15 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     dmrginp.datatransfer -> start();
     system.addAdditionalCompOps();
     dmrginp.datatransfer -> stop();
+
+    bool haveNormOps = dot_with_sys, haveCompOps = true;
     if (dot_with_sys) {
-      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, dot_with_sys, true);
+      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, haveNormOps, haveCompOps);
 
     }
     InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, sweepParams.current_root(), sweepParams.current_root(),
 					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-					sweepParams.get_onedot(), nexact, useSlater, !dot_with_sys, true, dot_with_sys);
+					sweepParams.get_onedot(), nexact, useSlater, !haveNormOps, haveCompOps, dot_with_sys);
   }
   SpinBlock big;
   if (dot_with_sys) {

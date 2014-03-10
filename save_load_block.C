@@ -6,7 +6,7 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-
+#include "sweep.h"
 #include "spinblock.h"
 #include "wavefunction.h"
 #include <boost/format.hpp>
@@ -39,21 +39,32 @@ std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBloc
   int lstate =  left;
   int rstate =  right;
 
-  if (mpigetrank() == 0) 
-    StateInfo::restore(forward, sites, b.stateInfo, lstate, rstate);
-
+  if (mpigetrank() == 0) {
+    StateInfo::restore(forward, sites, b.braStateInfo, lstate);
+    StateInfo::restore(forward, sites, b.ketStateInfo, rstate);
+  }
+  
 #ifndef SERIAL
-    mpi::communicator world;
-    mpi::broadcast(world, b.stateInfo, 0);
+  mpi::communicator world;
+  mpi::broadcast(world, b.braStateInfo, 0);
+  mpi::broadcast(world, b.ketStateInfo, 0);
 #endif
-
-
+  
+  
   b.Load (ifs);
   ifs.close();
-  //coutbuf = 0;
+
+  //this block is make with csfs and has the same bra and ket states
+  //overlap is an identity matrix
+  b.Overlap = boost::shared_ptr<SparseMatrix>(new Ham);
+  if ( left == right)
+    b.Overlap->makeIdentity(b.braStateInfo);
+  else 
+    SpinAdapted::Sweep::makeDMRGOverlapFromBTASOverlap(*b.Overlap, sites, left, right);
+
   return file;
 }
-
+  
 void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char *name)
 {
   Timer disktimer;
@@ -73,15 +84,17 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b, int
   
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Saving block file :: " << file << endl;
-
-
+  
+  
   std::ofstream ofs(file.c_str(), std::ios::binary);
-
+  
   int lstate =  left;
   int rstate =  right;
-
-  if (mpigetrank()==0) 
-    StateInfo::store(forward, sites, b.stateInfo, lstate, rstate);
+  
+  if (mpigetrank()==0) {
+    StateInfo::store(forward, sites, b.braStateInfo, lstate);
+    StateInfo::store(forward, sites, b.ketStateInfo, rstate);
+  }
 
   b.Save (ofs);
   ofs.close();
@@ -193,7 +206,11 @@ void SpinBlock::addAdditionalCompOps()
 
 void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
 {
-  StateInfo oldStateInfo = stateInfo;
+  //here the bra and ket are the same
+  Overlap = Sweep::updateLocalOverlapMatrix(*leftBlock->Overlap, rotateMatrix, rotateMatrix, braStateInfo, ketStateInfo);
+
+
+  StateInfo oldStateInfo = braStateInfo;
   std::vector<SpinQuantum> newQuanta;
   std::vector<int> newQuantaStates;
   std::vector<int> newQuantaMap;
@@ -201,7 +218,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
     {
       if (rotateMatrix [Q].Ncols () != 0)
         {
-          newQuanta.push_back (stateInfo.quanta [Q]);
+          newQuanta.push_back (braStateInfo.quanta [Q]);
           newQuantaStates.push_back (rotateMatrix [Q].Ncols ());
           newQuantaMap.push_back (Q);
         }
@@ -212,12 +229,15 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
     if (! it->second->is_core())
       for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
 						       boost::ref(rotateMatrix) , &newStateInfo));
-  stateInfo = newStateInfo;
-  stateInfo.AllocatePreviousStateInfo ();
-  *stateInfo.previousStateInfo = oldStateInfo;
+  braStateInfo = newStateInfo;
+  braStateInfo.AllocatePreviousStateInfo ();
+  *braStateInfo.previousStateInfo = oldStateInfo;
+  ketStateInfo = braStateInfo;
 
-  for (int i = 0; i < newQuantaMap.size (); ++i)
-    assert (stateInfo.quanta [i] == oldStateInfo.quanta [newQuantaMap [i]]);
+  for (int i = 0; i < newQuantaMap.size (); ++i) {
+    assert (braStateInfo.quanta [i] == oldStateInfo.quanta [newQuantaMap [i]]);
+    assert (ketStateInfo.quanta [i] == oldStateInfo.quanta [newQuantaMap [i]]);
+  }
 
   if (dmrginp.outputlevel() > 0) {
     pout << "\t\t\t total elapsed time " << globaltimer.totalwalltime() << " " << globaltimer.totalcputime() << " ... " 
@@ -228,7 +248,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if ( it->second->is_core())
-      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), (&this->stateInfo)));
+      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), (&this->braStateInfo)));
 
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
@@ -246,4 +266,62 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
 
 
 }
+
+void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix)
+{
+  //here the bra and ket are the same
+  Overlap = Sweep::updateLocalOverlapMatrix(*leftBlock->Overlap, leftrotateMatrix, rightrotateMatrix, braStateInfo, ketStateInfo);
+
+  StateInfo oldbraStateInfo=braStateInfo, oldketStateInfo=ketStateInfo;
+  StateInfo newbraStateInfo, newketStateInfo;
+  StateInfo::transform_state(leftrotateMatrix, braStateInfo, newbraStateInfo);
+  StateInfo::transform_state(rightrotateMatrix, ketStateInfo, newketStateInfo);
+
+
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
+    if (! it->second->is_core())
+      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
+						      boost::ref(leftrotateMatrix) , &newbraStateInfo, boost::ref(rightrotateMatrix), &newketStateInfo));
+
+  braStateInfo = newbraStateInfo;
+  braStateInfo.AllocatePreviousStateInfo ();
+  *braStateInfo.previousStateInfo = oldbraStateInfo;
+
+  ketStateInfo = newketStateInfo;
+  ketStateInfo.AllocatePreviousStateInfo ();
+  *ketStateInfo.previousStateInfo = oldketStateInfo;
+
+
+
+  if (dmrginp.outputlevel() > 0) {
+    pout << "\t\t\t total elapsed time " << globaltimer.totalwalltime() << " " << globaltimer.totalcputime() << " ... " 
+	 << globaltimer.elapsedwalltime() << " " << globaltimer.elapsedcputime() << endl;
+    pout << "\t\t\t Transforming to new basis " << endl;
+  }
+  Timer transformtimer;
+
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
+    if ( it->second->is_core())
+      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, 
+						      boost::ref(leftrotateMatrix), &this->braStateInfo, 
+						      boost::ref(rightrotateMatrix), &this->ketStateInfo ));
+
+
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
+    if (! it->second->is_core())
+      ops[it->first]->set_core(true);
+
+  this->direct = false;
+  if (dmrginp.outputlevel() > 0)
+    pout << "\t\t\t transform time " << transformtimer.elapsedwalltime() << " " << transformtimer.elapsedcputime() << endl;
+
+  if (leftBlock)
+    leftBlock->clear();
+  if (rightBlock)
+    rightBlock->clear();
+
+
+}
+
+
 }

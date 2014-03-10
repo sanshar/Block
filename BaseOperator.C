@@ -89,21 +89,25 @@ void SparseMatrix::allocate(const SpinBlock& b)
   allocate(b.get_stateInfo());
 }
 
-void SparseMatrix::allocate(const StateInfo& s)
+void SparseMatrix::makeIdentity(const StateInfo& s) 
 {
-  resize(s.quanta.size(), s.quanta.size());
-  long totalmemory = 0;
+  deltaQuantum = SpinQuantum (0, SpinSpace(0), IrrepSpace(0));
+  allocate(s);
+  built = true;
+  initialised = true;
   for (int i = 0; i < allowedQuantaMatrix.Nrows (); ++i)
     for (int j = 0; j < allowedQuantaMatrix.Ncols (); ++j)
-    {
-      allowedQuantaMatrix (i,j) = s.quanta[i].allow(deltaQuantum, s.quanta[j]);
-      if (allowedQuantaMatrix (i,j)) 
-	{
-	  operatorMatrix (i,j).ReSize (s.quantaStates.at(i), s.quantaStates.at(j));//, largeArray+usedindex);
-	  SpinAdapted::Clear (operatorMatrix (i,j));
-	}
+      if (allowedQuantaMatrix (i,j)) {
+	operatorMatrix(i,j) = 0.0;
+	for (int k=0; k<s.quantaStates.at(i); k++)
+	  operatorMatrix(i,j)(k+1, k+1) = 1.0;
+      }
+}
 
-    }     
+
+void SparseMatrix::allocate(const StateInfo& s)
+{
+  allocate(s, s);
 }
 
 void SparseMatrix::allocate(const StateInfo& sr, const StateInfo& sc)
@@ -352,6 +356,67 @@ void SparseMatrix::build_and_renormalise_transform(SpinBlock *big, const opTypes
       }
 
 }
+
+//Renormalization functions for core and virtual operators                                                                                
+void SparseMatrix::renormalise_transform(const std::vector<Matrix>& leftrotate_matrix, const StateInfo *leftstateinfo, const std::vector<Matrix>& rightrotate_matrix, const StateInfo *rightstateinfo)
+{
+  ObjectMatrix<Matrix> tmp = operatorMatrix; //cannot instantiate a SparseMatrix and so instantiating a Cre
+
+  this->allocate(*leftstateinfo, *rightstateinfo); // new allocations                                                                                           
+
+  int lQPrime = 0;
+  for (int lQ = 0; lQ < leftrotate_matrix.size (); ++lQ)
+    if (leftrotate_matrix[lQ].Ncols () != 0)
+    {
+      int rQPrime = 0;
+      for (int rQ = 0; rQ < rightrotate_matrix.size (); ++rQ)
+	if (rightrotate_matrix[rQ].Ncols () != 0)
+	{
+	  if (this->allowedQuantaMatrix (lQPrime, rQPrime))
+	    MatrixRotate (leftrotate_matrix[lQ], tmp(lQ, rQ), rightrotate_matrix[rQ],
+			  this->operatorMatrix (lQPrime, rQPrime) );
+	  ++rQPrime;
+	}
+      ++lQPrime;
+    }
+  
+}
+
+void SparseMatrix::build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& leftrotate_matrix, const StateInfo *newleftStateInfo, 
+						   const std::vector<Matrix>& rightrotate_matrix, const StateInfo *newrightStateInfo)
+{
+  
+  boost::shared_ptr<SparseMatrix> tmp;
+  if (orbs.size() == 0)
+    tmp =   big->get_op_rep(ot, deltaQuantum);
+  if (orbs.size() == 1)
+    tmp =   big->get_op_rep(ot, deltaQuantum, orbs[0]);
+  if (orbs.size() == 2)
+    tmp =   big->get_op_rep(ot, deltaQuantum, orbs[0], orbs[1]);
+
+  tmp->built = true;
+
+  this->allocate(*newleftStateInfo, *newrightStateInfo);
+  this->built = true;
+
+  int lQPrime = 0;
+  for (int lQ = 0; lQ < leftrotate_matrix.size (); ++lQ)
+    if (leftrotate_matrix[lQ].Ncols () != 0)
+    {
+      int rQPrime = 0;
+      for (int rQ = 0; rQ < rightrotate_matrix.size (); ++rQ)
+	if (rightrotate_matrix[rQ].Ncols () != 0)
+	{
+	  if (this->allowedQuantaMatrix (lQPrime, rQPrime))
+	    MatrixRotate (leftrotate_matrix[lQ], tmp->operator_element(lQ, rQ), rightrotate_matrix[rQ],
+			  this->operatorMatrix (lQPrime, rQPrime) );
+	  ++rQPrime;
+	}
+      ++lQPrime;
+    }
+
+}
+
 
 SparseMatrix& SparseMatrix::operator+=(const SparseMatrix& other)
 {

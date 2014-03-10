@@ -32,6 +32,9 @@ template <class T> struct ChooseArray {
 template <> struct ChooseArray<Cre> {
   typedef para_array_1d<std::vector<boost::shared_ptr<Cre> > > ArrayType;
 };
+template <> struct ChooseArray<Des> {
+  typedef para_array_1d<std::vector<boost::shared_ptr<Des> > > ArrayType;
+};
 template <> struct ChooseArray<CreDes> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<CreDes> > > ArrayType;
 };
@@ -46,6 +49,9 @@ template <> struct ChooseArray<DesDesComp> {
 };
 template <> struct ChooseArray<CreCreDesComp> {
   typedef para_array_1d<std::vector<boost::shared_ptr<CreCreDesComp> > > ArrayType;
+};
+template <> struct ChooseArray<CreDesDesComp> {
+  typedef para_array_1d<std::vector<boost::shared_ptr<CreDesDesComp> > > ArrayType;
 };
 template <> struct ChooseArray<Ham> {
   typedef para_array_0d<std::vector<boost::shared_ptr<Ham> > > ArrayType;

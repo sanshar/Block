@@ -121,8 +121,14 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 	else if (comp == CCD) {
 	  factor += 0.5*(v_2(Ind1[0], Ind1[1], Ind2[0], Ind1[2]) - v_2(Ind1[1], Ind1[0], Ind2[0], Ind1[2]) )*iSz1.at(i1)*iSz2.at(i2)/cleb;
 	}
+	else if (comp == CDD) {
+	  factor += 0.5*(v_2(Ind1[0], Ind2[0], Ind1[1], Ind1[2]) - v_2(Ind1[0], Ind2[0], Ind1[2], Ind1[1]) )*iSz1.at(i1)*iSz2.at(i2)/cleb;
+	}
 	else if (comp == C) {
 	  factor += 0.5*v_1(Ind1[0], Ind2[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;
+	}
+	else if (comp == D) {
+	  factor += 0.5*v_1(Ind2[0], Ind1[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;
 	}
       }
   }
@@ -183,7 +189,7 @@ void SpinAdapted::Cre::build(const SpinBlock& b)
 {
   dmrginp.makeopsT -> start();
   built = true;
-  allocate(b.get_stateInfo());
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
 
   const int i = get_orbs()[0];
   SpinBlock* leftBlock = b.get_leftBlock();
@@ -192,14 +198,20 @@ void SpinAdapted::Cre::build(const SpinBlock& b)
   if (leftBlock->get_op_array(CRE).has(i))
   {      
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE, deltaQuantum, i);
-    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    if (rightBlock->get_sites().size() == 0) 
+      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    else {
+      const boost::shared_ptr<SparseMatrix> Overlap = rightBlock->getOverlap();
+      SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op, *Overlap, &b, &(b.get_stateInfo()), *this, 1.0);
+    }
     dmrginp.makeopsT -> stop();
     return;
   }
   if (rightBlock->get_op_array(CRE).has(i))
   {
     const boost::shared_ptr<SparseMatrix>& op = rightBlock->get_op_rep(CRE, deltaQuantum, i);
-    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
+    const boost::shared_ptr<SparseMatrix> Overlap = leftBlock->getOverlap();
+    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *Overlap, *op, &b, &(b.get_stateInfo()), *this, 1.0);
     dmrginp.makeopsT -> stop();
     return;
   }  
@@ -253,6 +265,88 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Cre::getworkingreprese
 
 }
 
+//******************DES*****************
+
+void SpinAdapted::Des::build(const SpinBlock& b)
+{
+  dmrginp.makeopsT -> start();
+  built = true;
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
+
+  const int i = get_orbs()[0];
+  SpinBlock* leftBlock = b.get_leftBlock();
+  SpinBlock* rightBlock = b.get_rightBlock();
+
+  if (leftBlock->get_op_array(DES).has(i))
+  {      
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(DES, deltaQuantum, i);
+    if (rightBlock->get_sites().size() == 0) 
+      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    else {
+      const boost::shared_ptr<SparseMatrix> Overlap = rightBlock->getOverlap();
+      SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op, *Overlap, &b, &(b.get_stateInfo()), *this, 1.0);
+    }
+    dmrginp.makeopsT -> stop();
+    return;
+  }
+  if (rightBlock->get_op_array(DES).has(i))
+  {
+    const boost::shared_ptr<SparseMatrix>& op = rightBlock->get_op_rep(DES, deltaQuantum, i);
+    const boost::shared_ptr<SparseMatrix> Overlap = leftBlock->getOverlap();
+    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *Overlap, *op, &b, &(b.get_stateInfo()), *this, 1.0);
+    dmrginp.makeopsT -> stop();
+    return;
+  }  
+  else
+    abort();  
+
+}
+
+
+double SpinAdapted::DES::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
+{
+  double element = 0.0;
+  int Iirrep = SymmetryOfOrb(get_orbs()[0]).getirrep();;
+  IrrepSpace sym = deltaQuantum.get_symm();
+  bool finish = false;
+  bool write = false;
+  int Sign = 1;
+
+  TensorOp D(get_orbs()[0], -1);
+
+  for (int i=0; i<ladder.size(); i++)
+  {
+    int index = 0; double cleb=0.0;
+    if (nonZeroTensorComponent(c1, deltaQuantum, ladder[i], index, cleb)) {
+      std::vector<double> MatElements = calcMatrixElements(c1, D, ladder[i]) ;
+      element = MatElements[index]/cleb;
+      break;
+    }
+    else
+      continue;
+    
+  }
+
+  return element;
+}
+
+boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::Des::getworkingrepresentation(const SpinBlock* block)
+{
+  //assert(this->get_initialised());
+  if (this->get_built())
+    {
+      return boost::shared_ptr<Cre>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
+    }
+  else
+    {
+      boost::shared_ptr<SparseMatrix> rep(new Des);
+      *rep = *this;
+      rep->build(*block);
+      return rep;
+    }
+
+}
+
 
 //******************CREDES*****************
 
@@ -260,7 +354,7 @@ void SpinAdapted::CreDes::build(const SpinBlock& b)
 {
   dmrginp.makeopsT -> start();
   built = true;
-  allocate(b.get_stateInfo());
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
   Sign = 1;
 
   const int i = get_orbs()[0];
@@ -272,14 +366,21 @@ void SpinAdapted::CreDes::build(const SpinBlock& b)
   if (leftBlock->get_op_array(CRE_DES).has(i, j))
   {      
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES, deltaQuantum, i,j);
-    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    if (rightBlock->get_sites().size() == 0) 
+      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    else {
+      const boost::shared_ptr<SparseMatrix> Overlap = rightBlock->getOverlap();
+      SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op, *Overlap, &b, &(b.get_stateInfo()), *this, 1.0);
+    }
+
     dmrginp.makeopsT -> stop();
     return;
   }
   if (rightBlock->get_op_array(CRE_DES).has(i, j))
   {
     const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_DES, deltaQuantum, i,j);
-    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
+    const boost::shared_ptr<SparseMatrix> Overlap = leftBlock->getOverlap();
+    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op, *Overlap, &b, &(b.get_stateInfo()), *this, 1.0);
     dmrginp.makeopsT -> stop();
     return;
   }  
@@ -351,7 +452,7 @@ void SpinAdapted::CreCre::build(const SpinBlock& b)
 {
   dmrginp.makeopsT -> start();
   built = true;
-  allocate(b.get_stateInfo());
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
   Sign = 1;
 
   const int i = get_orbs()[0];
@@ -363,14 +464,20 @@ void SpinAdapted::CreCre::build(const SpinBlock& b)
   if (leftBlock->get_op_array(CRE_CRE).has(i, j))
   {      
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE, deltaQuantum, i,j);
-    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    if (rightBlock->get_sites().size() == 0) 
+      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    else {
+      const boost::shared_ptr<SparseMatrix> Overlap = rightBlock->getOverlap();
+      SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op, *Overlap, &b, &(b.get_stateInfo()), *this, 1.0);
+    }
     dmrginp.makeopsT -> stop();
     return;
   }
   if (rightBlock->get_op_array(CRE_CRE).has(i, j))
   {
     const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_CRE, deltaQuantum, i,j);
-    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
+    const boost::shared_ptr<SparseMatrix> Overlap = leftBlock->getOverlap();
+    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *Overlap, *op, &b, &(b.get_stateInfo()), *this, 1.0);
     dmrginp.makeopsT -> stop();
     return;
   }  
@@ -447,7 +554,7 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
 {
   dmrginp.makeopsT -> start();
   built = true;
-  allocate(b.get_stateInfo());
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
   IrrepSpace sym = deltaQuantum.get_symm();
   int spin = deltaQuantum.get_s().getirrep();
 
@@ -464,7 +571,13 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
   if (leftBlock->get_op_array(CRE_DESCOMP).has(i, j))
   {      
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DESCOMP, deltaQuantum, i,j);
-    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    if (rightBlock->get_sites().size() == 0) 
+      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    else {
+      const boost::shared_ptr<SparseMatrix> Overlap = rightBlock->getOverlap();
+      SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op, *Overlap, &b, &(b.get_stateInfo()), *this, 1.0);
+    }
+
   }
   if (rightBlock->get_sites().size() == 0) {
     //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
@@ -473,7 +586,8 @@ void SpinAdapted::CreDesComp::build(const SpinBlock& b)
   if (rightBlock->get_op_array(CRE_DESCOMP).has(i, j))
   {
     const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_DESCOMP, deltaQuantum, i,j);
-    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
+    const boost::shared_ptr<SparseMatrix> Overlap = leftBlock->getOverlap();
+    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *Overlap, *op, &b, &(b.get_stateInfo()), *this, 1.0);
   }  
 
   for (int kx = 0; kx < leftBlock->get_sites().size(); ++kx)
@@ -581,7 +695,7 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
 {
   dmrginp.makeopsT -> start();
   built = true;
-  allocate(b.get_stateInfo());
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
   int spin = deltaQuantum.get_s().getirrep();
   IrrepSpace sym = deltaQuantum.get_symm();
 
@@ -597,7 +711,12 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
   if (leftBlock->get_op_array(DES_DESCOMP).has(i, j))
   {      
     const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(DES_DESCOMP, deltaQuantum, i,j);
-    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    if (rightBlock->get_sites().size() == 0) 
+      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    else {
+      const boost::shared_ptr<SparseMatrix> Overlap = rightBlock->getOverlap();
+      SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op, *Overlap, &b, &(b.get_stateInfo()), *this, 1.0);
+    }
   }
   if (rightBlock->get_sites().size() == 0) {
     //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
@@ -606,7 +725,8 @@ void SpinAdapted::DesDesComp::build(const SpinBlock& b)
   if (rightBlock->get_op_array(DES_DESCOMP).has(i, j))
   {
     const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(DES_DESCOMP, deltaQuantum, i,j);
-    SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);
+    const boost::shared_ptr<SparseMatrix> Overlap = leftBlock->getOverlap();
+    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *Overlap, *op, &b, &(b.get_stateInfo()), *this, 1.0);
   }  
   for (int kx = 0; kx < leftBlock->get_sites().size(); ++kx)
     for (int lx = 0; lx < rightBlock->get_sites().size(); ++lx)
@@ -713,7 +833,7 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
 {
   dmrginp.makeopsT -> start();
   built = true;
-  allocate(b.get_stateInfo());
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
 
   const int k = get_orbs()[0];
 
@@ -727,7 +847,12 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
   if (leftBlock->get_op_array(CRE_CRE_DESCOMP).has(k))
     {      
       const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DESCOMP, deltaQuantum, k);
+    if (rightBlock->get_sites().size() == 0) 
       SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
+      else {
+	const boost::shared_ptr<SparseMatrix> Overlap = rightBlock->getOverlap();
+	SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op, *Overlap, &b, &(b.get_stateInfo()), *this, 1.0);
+      }
     }
   if (rightBlock->get_sites().size() == 0) {
     //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
@@ -736,7 +861,8 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
   if (rightBlock->get_op_array(CRE_CRE_DESCOMP).has(k))
     {
       const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_CRE_DESCOMP, deltaQuantum, k);
-      SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
+      const boost::shared_ptr<SparseMatrix> Overlap = leftBlock->getOverlap();
+      SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *Overlap, *op, &b, &(b.get_stateInfo()), *this, 1.0);
     }  
 
   if (dmrginp.hamiltonian() != HUBBARD){
@@ -854,13 +980,167 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreDesComp::getwork
 }
 
 
+//******************CRECREDESCOMP*****************
+
+
+void SpinAdapted::CreDesDesComp::build(const SpinBlock& b)
+{
+  dmrginp.makeopsT -> start();
+  built = true;
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
+
+  const int k = get_orbs()[0];
+
+
+  SpinBlock* leftBlock = b.get_leftBlock();
+  SpinBlock* rightBlock = b.get_rightBlock();
+
+  SpinBlock* loopBlock, *otherBlock;
+  assignloopblock(loopBlock, otherBlock, leftBlock, rightBlock);
+
+  if (leftBlock->get_op_array(CRE_DES_DESCOMP).has(k))
+    {      
+      const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES_DESCOMP, deltaQuantum, k);
+    if (rightBlock->get_sites().size() == 0) 
+      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this, 1.0);
+      else {
+	const boost::shared_ptr<SparseMatrix> Overlap = rightBlock->getOverlap();
+	SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op, *Overlap, &b, &(b.get_stateInfo()), *this, 1.0);
+      }
+    }
+  if (rightBlock->get_sites().size() == 0) {
+    //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
+    return;
+  }
+  if (rightBlock->get_op_array(CRE_DES_DESCOMP).has(k))
+    {
+      const boost::shared_ptr<SparseMatrix> op = rightBlock->get_op_rep(CRE_DES_DESCOMP, deltaQuantum, k);
+      const boost::shared_ptr<SparseMatrix> Overlap = leftBlock->getOverlap();
+      SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *Overlap, *op, &b, &(b.get_stateInfo()), *this, 1.0);
+    }  
+
+  if (dmrginp.hamiltonian() != HUBBARD){
+    if (loopBlock->has(CRE_DESCOMP))
+      {
+	/*
+	Functor f = boost::bind(&opxop::cxcdcomp, otherBlock, _1, &b, k, this, 1.0); 
+	for_all_singlethread(loopBlock->get_op_array(CRE), f);
+	
+	f = boost::bind(&opxop::dxcccomp, otherBlock, _1, &b, k, this, 2.0);
+	for_all_singlethread(loopBlock->get_op_array(CRE), f);
+        
+	f = boost::bind(&opxop::cxcdcomp, loopBlock, _1, &b, k, this, 1.0); 
+	for_all_singlethread(otherBlock->get_op_array(CRE), f);
+
+	f = boost::bind(&opxop::dxcccomp, loopBlock, _1, &b, k, this, 2.0);
+	for_all_singlethread(otherBlock->get_op_array(CRE), f);
+	*/
+      }
+    else if (otherBlock->has(CRE_DESCOMP))
+      {
+	cout << "I should not be here"<<endl;exit(0);
+      }
+  }
+  dmrginp.makeopsT -> stop();
+
+
+}
+
+
+double SpinAdapted::CreDesDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
+{
+  double element = 0.0;
+  int K = get_orbs()[0]; //convert spatial id to spin id because slaters need that
+  IrrepSpace sym = deltaQuantum.get_symm();
+  int spin = deltaQuantum.get_s().getirrep();
+  bool finish = false;
+
+  TensorOp C(K, 1);
+  std::vector<double> values(4,0.0);
+  for (int i=0; i<ladder.size(); i++)
+  {
+
+    int index = 0; double cleb=0.0;
+    if (nonZeroTensorComponent(c1, deltaQuantum, ladder[i], index, cleb)) {
+      for (int ki =0; ki<b->get_sites().size(); ki++) 
+      for (int kj =0; kj<b->get_sites().size(); kj++) 
+      for (int kl =0; kl<b->get_sites().size(); kl++) {
+
+	int _i = b->get_sites()[ki];
+	int _j = b->get_sites()[kj];
+	int _l = b->get_sites()[kl];
+	
+	
+	SpinQuantum si=getSpinQuantum(_i), sj=-getSpinQuantum(_j), sl=-getSpinQuantum(_l);
+
+	std::vector<SpinQuantum> sij = si+sj;
+	for (int ij=0; ij<sij.size(); ij++) {
+	  SpinQuantum symij = sij[ij];
+	  std::vector<SpinQuantum> sijk = symij+sl;
+	  for (int ijk=0; ijk<sijk.size(); ijk++) {
+	    SpinQuantum symijk = sijk[ijk];
+	    if (symijk != deltaQuantum) continue;
+	    
+	    TensorOp CI(_i, 1), DJ(_j, -1), DL(_l, -1);
+	    
+	    TensorOp CDIJ = CI.product(DJ, symij.get_s().getirrep(), symij.get_symm().getirrep());
+
+	    TensorOp CDDIJL = CDIJ.product(DL, symijk.get_s().getirrep(), symijk.get_symm().getirrep());
+	    if (CDDIJL.empty) continue;
+	    
+	    std::vector<double> MatElements = calcMatrixElements(c1, CDDIJL, ladder[i]);
+	    double scale = calcCompfactor(CDDIJL, C, CDD, *(b->get_twoInt()));
+
+	    if (fabs(scale) > dmrginp.oneindex_screen_tol())
+	      element += MatElements[index]*scale/cleb;
+
+
+	  }
+	}
+      }
+      for (int ki =0; ki<b->get_sites().size(); ki++) {
+	int _i = b->get_sites()[ki];
+	TensorOp DI(_i, -1);
+	std::vector<double> MatElements = calcMatrixElements(c1, DI, ladder[i]);
+	double factor = calcCompfactor(DI, C, D, *(b->get_twoInt()));
+	
+	if (fabs(factor) > dmrginp.oneindex_screen_tol())
+	  element += factor*MatElements[index]/cleb;
+      }
+      break;
+    }
+    else
+      continue;
+ 
+  }
+  return element;
+}
+
+boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesDesComp::getworkingrepresentation(const SpinBlock* block)
+{
+  //assert(this->get_initialised());
+  if (this->get_built())
+    {
+      return boost::shared_ptr<CreDesDesComp>(this, boostutils::null_deleter()); // boost::shared_ptr does not own op
+    }
+  else
+    {
+      boost::shared_ptr<SparseMatrix> rep(new CreDesDesComp);
+      *rep = *this;
+      rep->build(*block);
+      return rep;
+    }
+
+}
+
+
 //******************HAM*****************
 
 void SpinAdapted::Ham::build(const SpinBlock& b)
 {
   dmrginp.makeopsT -> start();
   built = true;
-  allocate(b.get_stateInfo());
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
 
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
@@ -883,8 +1163,15 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
 
 
   boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_rep(HAM, deltaQuantum);
-  
-  SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+
+  cout << b.get_braStateInfo()<<endl;
+  cout << b.get_ketStateInfo()<<endl;
+  if (rightBlock->get_sites().size() == 0) 
+    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+  else {
+    const boost::shared_ptr<SparseMatrix> Overlap = rightBlock->getOverlap();
+    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op, *Overlap, &b, &(b.get_stateInfo()), *this, 1.0);
+  }
 
   if (rightBlock->get_sites().size() == 0) {
     //this is a special case where the right block is just a dummy block to make the effective wavefunction have spin 0
@@ -894,7 +1181,9 @@ void SpinAdapted::Ham::build(const SpinBlock& b)
   }
 
   op = rightBlock->get_op_rep(HAM, deltaQuantum);
-  SpinAdapted::operatorfunctions::TensorTrace(rightBlock, *op, &b, &(b.get_stateInfo()), *this);  
+  const boost::shared_ptr<SparseMatrix> Overlap = leftBlock->getOverlap();
+  SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *Overlap, *op, &b, &(b.get_stateInfo()), *this, 1.0);
+
 
   op_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? op_array : op_distributed;
   Functor f = boost::bind(&opxop::cxcddcomp, leftBlock, _1, &b, op_add); 

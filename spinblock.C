@@ -70,10 +70,10 @@ ostream& operator<< (ostream& os, const SpinBlock& b)
   
   if (dmrginp.outputlevel() > 0) {
     os << endl;
-    os << b.stateInfo;
+    os << b.braStateInfo;
   }
   else {
-    os <<"    # states: "<<b.stateInfo.totalStates<<endl;
+    os <<"    # states: "<<b.braStateInfo.totalStates<<endl;
   }
   return os;
 }
@@ -92,7 +92,11 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
 {
   complementary = is_complement;
   normal = !is_complement;
-  default_op_components(is_complement);
+
+  //this is used to make dot block and we make the 
+  //additional operators by default because they are cheap
+  default_op_components(is_complement, false);
+
   std::vector<int> sites; 
   if (dmrginp.use_partial_two_integrals()) {
     if (start != finish) {
@@ -126,7 +130,8 @@ SpinBlock::SpinBlock (const SpinBlock& b) { *this = b; }
 
 SpinBlock::SpinBlock(const StateInfo& s)
 {
-  stateInfo = s;
+  braStateInfo = s;
+  ketStateInfo = s;
   sites.resize(0);
 }
 
@@ -171,7 +176,8 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
       ladders.push_back(std::vector<Csf>(1,dets[j]));
   }
 
-  stateInfo = StateInfo(dets);
+  braStateInfo = StateInfo(dets);
+  ketStateInfo = StateInfo(dets);
 
   setstoragetype(LOCAL_STORAGE);
   complementary_sites = make_complement(sites);
@@ -194,6 +200,10 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
 
   build_operators(dets, ladders);
 
+  //this block is make with csfs and has the same bra and ket states
+  //overlap is an identity matrix
+  Overlap = boost::shared_ptr<SparseMatrix>(new Ham);
+  Overlap->makeIdentity(braStateInfo);
 }
 
 std::vector<int> SpinBlock::make_complement(const std::vector<int>& sites)
@@ -225,6 +235,8 @@ void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vect
       }
     }
 }
+  
+
 
 void SpinBlock::build_operators()
 {
@@ -286,9 +298,12 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
     pout << endl;
   }
 
-  TensorProduct (lBlock.stateInfo, rBlock.stateInfo, stateInfo, condition, compState);
-  if (condition != PARTICLE_SPIN_NUMBER_CONSTRAINT)
-    stateInfo.CollectQuanta();
+  TensorProduct (lBlock.braStateInfo, rBlock.braStateInfo, braStateInfo, condition, compState);
+  TensorProduct (lBlock.ketStateInfo, rBlock.ketStateInfo, ketStateInfo, condition, compState);
+  if (condition != PARTICLE_SPIN_NUMBER_CONSTRAINT) {
+    braStateInfo.CollectQuanta();
+    ketStateInfo.CollectQuanta();
+  }
 }
 
 void SpinBlock::BuildSumBlock(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState)
@@ -319,11 +334,13 @@ void SpinBlock::operator= (const SpinBlock& b)
 
   direct = b.is_direct();
 
-  stateInfo = b.stateInfo;
+  braStateInfo = b.braStateInfo;
+  ketStateInfo = b.ketStateInfo;
   leftBlock = b.leftBlock;
   rightBlock = b.rightBlock;
   twoInt = b.twoInt;
   ops = b.ops;
+  Overlap = b.Overlap;
 }
 
 void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) const
@@ -459,7 +476,8 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   assert (sites.size () > 0);
   sort (sites.begin (), sites.end ());
 
-  default_op_components(!haveNormops);
+  //always have implicit transpose in this case
+  default_op_components(!haveNormops, true);
   
   setstoragetype(DISTRIBUTED_STORAGE);
 
@@ -509,7 +527,9 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
     tmpiter++;
   }
 
-  stateInfo = StateInfo (dets);
+  braStateInfo = StateInfo (dets);
+  ketStateInfo = StateInfo (dets);
+
   twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
   build_iterators();
 
@@ -524,6 +544,12 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   build_operators(dets, ladders);
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t time in slater operator build " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
+
+  //this block is make with csfs and has the same bra and ket states
+  //overlap is an identity matrix
+  Overlap = boost::shared_ptr<SparseMatrix>(new Ham);
+  Overlap->makeIdentity(braStateInfo);
+
 }
 
 }
