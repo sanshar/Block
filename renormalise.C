@@ -68,8 +68,6 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
       wave_solutions[i] = tempwave;
     }
     *this = newsystem;
-    if (dmrginp.outputlevel() > 0)
-       cout << newsystem.get_twoInt().get()<<"  "<<get_twoInt().get()<<"  Ints "<<endl;
     envDot.clear();
     big.get_rightBlock()->clear();
     big.clear();
@@ -84,8 +82,10 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   dmrginp.davidsonT -> stop();
 
   dmrginp.rotmatrixT -> start();
-  DensityMatrix tracedMatrix(stateInfo);
-  tracedMatrix.allocate(stateInfo);
+
+  DensityMatrix tracedMatrix(braStateInfo);
+  tracedMatrix.allocate(braStateInfo);
+
 
   bool normalnoise = warmUp;
   if (newbig.get_rightBlock()->size() < 2)
@@ -112,7 +112,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   for (int i=0; i<nroots; i++) {
     int state = dmrginp.setStateSpecific() ? currentRoot : i;
     SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix, state);
-    wave_solutions[i].SaveWavefunctionInfo (newbig.stateInfo, newbig.leftBlock->sites, state);
+    wave_solutions[i].SaveWavefunctionInfo (newbig.braStateInfo, newbig.leftBlock->sites, state);
   }
   dmrginp.rotmatrixT -> stop();
   if (dmrginp.outputlevel() > 0)

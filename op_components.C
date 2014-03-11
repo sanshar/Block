@@ -66,6 +66,61 @@ namespace SpinAdapted {
       vec[0]=boost::shared_ptr<Cre>(new Cre);
     }
 
+
+  //usually not needed, because it can be calculated as a transpose of C, but
+  //when the bra and ket state in the block are different than transpose cannot be used
+  // -------------------- D_S1 ---------------------------  
+  template<> string Op_component<Des>::get_op_string() const {
+    return "DES";
+  }
+
+  template<> void Op_component<Des>::build_iterators(SpinBlock& b)
+    {
+      if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
+      const double screen_tol = dmrginp.oneindex_screen_tol();
+      std::vector<int> screened_d_ix = screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1, *b.get_twoInt(), screen_tol); 
+      m_op.set_indices(screened_d_ix, dmrginp.last_site());  
+      std::vector<int> orbs(1);
+      
+      for (int i = 0; i < m_op.local_nnz(); ++i)
+	{
+	  orbs[0] = m_op.get_local_indices()[i];
+	  m_op.get_local_element(i).resize(1);
+	  m_op.get_local_element(i)[0]=boost::shared_ptr<Des>(new Des);
+	  SparseMatrix& op = *m_op.get_local_element(i)[0];
+	  op.set_orbs() = orbs;
+	  op.set_initialised() = true;
+	  op.set_fermion() = true;
+	  op.set_deltaQuantum(1, -getSpinQuantum(orbs[0]));//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));      
+	}
+      
+    }
+  
+  
+  
+  template<> std::vector< std::vector<int> > Op_component<Des>::get_array() const 
+    {
+      std::vector<int> orbs(1);
+      std::vector< std::vector<int> > ret_val(m_op.local_nnz());
+      for (int i=0; i<m_op.local_nnz(); i++)
+	{
+	  orbs[0] = m_op.get_local_indices()[i];
+	  ret_val[i] = orbs;
+	}
+      return ret_val;
+    }
+  
+
+  template<> void Op_component<Des>::add_local_indices(int i, int j , int k)
+    {
+      m_op.add_local_index(i);
+      
+      std::vector<boost::shared_ptr<Des> >& vec = m_op(i);
+      vec.resize(1);
+      vec[0]=boost::shared_ptr<Des>(new Des);
+    }
+
+
   
   // -------------------- Cd_ ---------------------------  
   template<> string Op_component<CreDes>::get_op_string() const {
@@ -287,6 +342,46 @@ namespace SpinAdapted {
   
   
   template<> std::vector<std::vector<int> > Op_component<CreCreDesComp>::get_array() const 
+    {
+      std::vector<int> orbs(1);
+      std::vector< std::vector<int> > ret_val(m_op.local_nnz());
+      for (int i=0; i<m_op.local_nnz(); i++)
+	{
+	  orbs[0] = m_op.get_local_indices()[i];
+	  ret_val[i] = orbs;
+	}
+      return ret_val;
+    }
+
+  //usually not needed, because it can be calculated as a transpose of CCDcomp, but
+  //when the bra and ket state in the block are different than transpose cannot be used
+  // -------------------- Cddcomp_ ---------------------------  
+  template<> string Op_component<CreDesDesComp>::get_op_string() const {
+    return "CREDESDES_COMP";
+  }
+  template<> void Op_component<CreDesDesComp>::build_iterators(SpinBlock& b)
+    {
+      if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
+      const double screen_tol = dmrginp.oneindex_screen_tol();
+      vector< int > screened_cdd_ix = screened_cddcomp_indices(b.get_complementary_sites(), b.get_sites(), v_1, *b.get_twoInt(), screen_tol);
+      m_op.set_indices(screened_cdd_ix, dmrginp.last_site());      
+      std::vector<int> orbs(1);
+      for (int i = 0; i < m_op.local_nnz(); ++i)
+	{
+	  orbs[0] = m_op.get_local_indices()[i];
+	  m_op.get_local_element(i).resize(1);
+	  m_op.get_local_element(i)[0]=boost::shared_ptr<CreDesDesComp>(new CreDesDesComp);
+	  SparseMatrix& op = *m_op.get_local_element(i)[0];
+	  op.set_orbs() = orbs;
+	  op.set_initialised() = true;
+	  op.set_fermion() = true;
+	  //op.set_deltaQuantum() = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOfSpatialOrb(orbs[0]) );      
+	  op.set_deltaQuantum(1, -getSpinQuantum(orbs[0]));//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]) );      
+	}
+    }
+  
+  
+  template<> std::vector<std::vector<int> > Op_component<CreDesDesComp>::get_array() const 
     {
       std::vector<int> orbs(1);
       std::vector< std::vector<int> > ret_val(m_op.local_nnz());

@@ -39,7 +39,7 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
     SpinBlock sysdot(i+1, i+1);
     SpinBlock newSystem;
     system.addAdditionalCompOps();
-    newSystem.default_op_components(false, system, sysdot, false, true);
+    newSystem.default_op_components(false, system, sysdot, false, true, true);
     newSystem.setstoragetype(DISTRIBUTED_STORAGE);
     newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, sysdot);
     //cout << "System " << system.get_stateInfo() << endl;
@@ -58,7 +58,7 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
     SpinBlock envdot(numsites-2-i, numsites-2-i);
     SpinBlock newEnvironment;
     environment.addAdditionalCompOps();
-    newEnvironment.default_op_components(false, environment, envdot, true, true);
+    newEnvironment.default_op_components(false, environment, envdot, true, true, true);
     newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
     newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, envdot);
     environment = newEnvironment;

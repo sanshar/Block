@@ -42,12 +42,14 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
       StateInfo addstate(ns, &s, &qs); 
       SpinBlock dummyblock(addstate);
       SpinBlock newstartingBlock;
-      newstartingBlock.default_op_components(false, startingBlock, dummyblock, true, true);
+      newstartingBlock.default_op_components(false, startingBlock, dummyblock, true, true, leftState==rightState);
       newstartingBlock.setstoragetype(LOCAL_STORAGE);
       newstartingBlock.BuildSumBlock(NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, startingBlock, dummyblock);
       startingBlock.clear();
       startingBlock = newstartingBlock;
-    }
+      startingBlock.setOverlap() = boost::shared_ptr<SparseMatrix>(new Ham);
+      startingBlock.setOverlap()->makeIdentity(startingBlock.get_stateInfo());
+  }
   }
   else
   {
@@ -61,16 +63,16 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
 	backwardSites.push_back (dmrginp.last_site()/2 - i - 1);
     }
     sort (backwardSites.begin (), backwardSites.end ());
-	  startingBlock.default_op_components(false);
+    startingBlock.default_op_components(false, leftState==rightState);
     startingBlock.BuildTensorProductBlock (backwardSites);
   }
 }
 
 
-void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &systemDot, SpinBlock &newSystem, int leftState, int rightState, const int &sys_add, const bool &direct, const Storagetype &storage, bool haveNormops, bool haveCompops)
+void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &systemDot, SpinBlock &newSystem, int leftState, int rightState, const int& sys_add, const bool &direct, const Storagetype &storage, bool haveNormops, bool haveCompops)
 {
 
-  newSystem.default_op_components(direct, system, systemDot, haveNormops, haveCompops);
+  newSystem.default_op_components(direct, system, systemDot, haveNormops, haveCompops, leftState==rightState);
   newSystem.setstoragetype(storage);
   newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, systemDot);
 
@@ -126,14 +128,14 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
     {
       if ((!dot_with_sys && onedot) || !onedot)
       {
-	environment.default_op_components(!forward);
+	environment.default_op_components(!forward, leftState==rightState);
 	environment.setstoragetype(DISTRIBUTED_STORAGE);
 	environment.BuildTensorProductBlock(environmentSites);
 	SpinBlock::store (true, environmentSites, environment, leftState, rightState);	
       }
       else
       {
-	newEnvironment.default_op_components(!forward);
+	newEnvironment.default_op_components(!forward, leftState==rightState);
 	newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
 	newEnvironment.BuildTensorProductBlock(environmentSites);
 	SpinBlock::store (true, environmentSites, newEnvironment, leftState, rightState);	
@@ -221,7 +223,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
     environment.addAdditionalCompOps();
     dmrginp.datatransfer -> stop();
 
-      newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops);
+    newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops, leftState==rightState);
       newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
       
       newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, environmentDot);

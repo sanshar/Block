@@ -17,6 +17,8 @@ void SpinBlock::setstoragetype(Storagetype st)
     localstorage = true;
     if (has(CRE))
       set_op_array(CRE).set_local() = true;
+    if (has(DES))
+      set_op_array(DES).set_local() = true;
     if (has(CRE_DES))
       set_op_array(CRE_DES).set_local() = true;
     if (has(CRE_CRE))
@@ -27,6 +29,8 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_DESCOMP).set_local() = true;
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = true;
+    if (has(CRE_DES_DESCOMP))
+      set_op_array(CRE_DES_DESCOMP).set_local() = true;
 
   }
   else if (st == DISTRIBUTED_STORAGE)
@@ -34,6 +38,8 @@ void SpinBlock::setstoragetype(Storagetype st)
     localstorage = false;
     if (has(CRE))
       set_op_array(CRE).set_local() = false;
+    if (has(DES))
+      set_op_array(DES).set_local() = false;
     if (has(CRE_DES))
       set_op_array(CRE_DES).set_local() = false;
     if (has(CRE_CRE))
@@ -44,6 +50,8 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_DESCOMP).set_local() = false;
     if (has(CRE_CRE_DESCOMP))
       set_op_array(CRE_CRE_DESCOMP).set_local() = false;
+    if (has(CRE_DES_DESCOMP))
+      set_op_array(CRE_DES_DESCOMP).set_local() = false;
   }
   //this is needed for onepdm generation, the system block all the cre are local
   //and on the environment block all the cre are distributed, this way in multiple
@@ -77,6 +85,9 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
     case CRE:
       ret = boost::shared_ptr<Op_component<Cre> >(new Op_component<Cre>(is_core));
       break;
+    case DES:
+      ret = boost::shared_ptr<Op_component<Des> >(new Op_component<Des>(is_core));
+      break;
     case CRE_DES:
       ret = boost::shared_ptr<Op_component<CreDes> >(new Op_component<CreDes>(is_core));
       break;
@@ -92,6 +103,9 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
     case CRE_CRE_DESCOMP:
       ret = boost::shared_ptr<Op_component<CreCreDesComp> >(new Op_component<CreCreDesComp>(is_core));
       break;
+    case CRE_DES_DESCOMP:
+      ret = boost::shared_ptr<Op_component<CreDesDesComp> >(new Op_component<CreDesDesComp>(is_core));
+      break;
     case HAM:
       ret = boost::shared_ptr<Op_component<Ham> >(new Op_component<Ham>(is_core));
       break;
@@ -100,7 +114,7 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
 }
 
 //this is used for the dot block
-void SpinBlock::default_op_components(bool complementary_)
+  void SpinBlock::default_op_components(bool complementary_, bool implicitTranspose)
 {
   complementary = complementary_;
   normal = !complementary_;
@@ -113,6 +127,12 @@ void SpinBlock::default_op_components(bool complementary_)
   //cases
   ops[CRE] = make_new_op(CRE, true);
   ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
+
+  if (!implicitTranspose) {
+    ops[DES] = make_new_op(DES, true);
+    ops[CRE_DES_DESCOMP] = make_new_op(CRE_DES_DESCOMP, true);
+  }
+
   ops[HAM] = make_new_op(HAM, true);
 
   ops[CRE_DES] = make_new_op(CRE_DES, true);
@@ -132,7 +152,7 @@ void SpinBlock::set_big_components()
   ops[HAM] = make_new_op(HAM, false);
 }
 
-void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops)
+void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops, bool implicitTranspose)
 {
   this->direct = direct;
   if (lBlock.is_complementary() || rBlock.is_complementary()) {
@@ -147,6 +167,13 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     ops[CRE] = make_new_op(CRE, true);
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
     ops[HAM] = make_new_op(HAM, true);
+
+    //this option is used when bra and ket states are different
+    if (!implicitTranspose) {
+      ops[DES] = make_new_op(DES, true);
+      ops[CRE_DES_DESCOMP] = make_new_op(CRE_DES_DESCOMP, true);
+    }
+
     //for hubbard model if we want to calculate twopdm we still need cd operators
     if (dmrginp.hamiltonian() != HUBBARD || dmrginp.do_cd()) {
       
@@ -154,6 +181,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
       {
 	ops[CRE_DES] = make_new_op(CRE_DES, true);
 	ops[CRE_CRE] = make_new_op(CRE_CRE, true);
+
       }
       if (haveCompops) {
 	    ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
@@ -170,6 +198,12 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     ops[CRE] = make_new_op(CRE, false); 
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
     ops[HAM] = make_new_op(HAM, true);
+
+    //this option is used when bra and ket states are different
+    if (!implicitTranspose) {
+      ops[DES] = make_new_op(DES, false);
+      ops[CRE_DES_DESCOMP] = make_new_op(CRE_DES_DESCOMP, true);
+    }
     
     //for hubbard model if we want to calculate twopdm we still need cd operators
     if (dmrginp.hamiltonian() != HUBBARD || dmrginp.do_cd()) {

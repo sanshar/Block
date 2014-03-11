@@ -30,11 +30,13 @@ class SpinBlock
 	& sites & complementary_sites ;
       //FIX ME!! remove register_type stuff and add BOOST_CLASS_EXPORT to op_components.h (will take longer to compile)                     
       ar.register_type(static_cast<Op_component<Cre> *>(NULL));
+      ar.register_type(static_cast<Op_component<Des> *>(NULL));
       ar.register_type(static_cast<Op_component<CreDes> *>(NULL));
       ar.register_type(static_cast<Op_component<CreCre> *>(NULL));
       ar.register_type(static_cast<Op_component<CreDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<DesDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<CreCreDesComp> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<Ham> *>(NULL));
       ar & ops;
     }
@@ -42,7 +44,7 @@ class SpinBlock
  private:
 
   std::map<opTypes, boost::shared_ptr<Op_component_base> > ops;
-
+  boost::shared_ptr<SparseMatrix> Overlap;
   bool complementary;
   bool normal;
   bool loopblock;
@@ -54,7 +56,8 @@ class SpinBlock
   SpinBlock* rightBlock;
   boost::shared_ptr<TwoElectronArray> twoInt;
   
-  StateInfo stateInfo;
+  StateInfo braStateInfo;
+  StateInfo ketStateInfo;
   std::vector<int> sites;
   std::vector<int> complementary_sites;
  public: 
@@ -64,19 +67,21 @@ class SpinBlock
   SpinBlock (int start, int finish, bool is_complement = false);
   void BuildTensorProductBlock (std::vector<int>& new_sites);
   
-  static std::string  restore (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char* name=0);//left and right are the states and the name is the type of the MPO (currently only H)
-  static void store (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char* name=0);//left and right are the states and the name is the type of the MPO (currently only H) 
+  static std::string  restore (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char* name=0);//left and right are the bra and ket states and the name is the type of the MPO (currently only H)
+  static void store (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char* name=0);//left and right are the bra and ket states and the name is the type of the MPO (currently only H) 
   void Save (std::ofstream &ofs);
   void Load (std::ifstream &ifs);
 
   const boost::shared_ptr<TwoElectronArray> get_twoInt() const {return twoInt;}
   double memoryUsed();
   void addAdditionalCompOps();
-  const StateInfo& get_stateInfo() const {return stateInfo;}
+  const StateInfo& get_stateInfo() const {return braStateInfo;}
+  const StateInfo& get_braStateInfo() const {return braStateInfo;}
+  const StateInfo& get_ketStateInfo() const {return ketStateInfo;}
   static std::vector<int> make_complement(const std::vector<int>& sites);
   void setstoragetype(Storagetype st);
-  void default_op_components(bool complementary_);
-  void default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops);
+  void default_op_components(bool complementary_, bool implicitTranspose);
+  void default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops, bool implicitTranspose);
   void set_big_components();
   void printOperatorSummary();
 
@@ -108,6 +113,9 @@ class SpinBlock
   Op_component_base& get_op_array(opTypes optype){assert(has(optype));return *(ops.find(optype)->second);}
   const Op_component_base& get_op_array(opTypes optype) const {assert(has(optype));return *(ops.find(optype)->second);}
   
+  boost::shared_ptr<SparseMatrix> getOverlap() {return Overlap;}
+  boost::shared_ptr<SparseMatrix>& setOverlap() {return Overlap;}
+
   boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const SpinQuantum& s, int i=-1, int j=-1, int k=-1) {
     assert(has(optypes));
     Op_component_base& opbase = *ops.find(optypes)->second;
@@ -150,9 +158,11 @@ class SpinBlock
   void RenormaliseFrom (std::vector<double> &energies, std::vector<double> &spins, double &error, std::vector<Matrix>& rotateMatrix,
                         const int keptstates, const int keptqstates, const double tol, SpinBlock& big,
                         const guessWaveTypes &guesswavetype, const double noise, const double additional_noise, const bool &onedot, SpinBlock& system, 
-			SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, const bool& warmUp, int sweepiter, int currenroot, std::vector<Wavefunction>& lowerStates);
+			SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, const bool& warmUp, int sweepiter, 
+			int currenroot, std::vector<Wavefunction>& lowerStates);
 
   void transform_operators(std::vector<Matrix>& rotateMatrix);
+  void transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix);
 };
 
  double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates);

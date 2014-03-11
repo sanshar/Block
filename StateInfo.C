@@ -271,7 +271,7 @@ void SpinAdapted::StateInfo::UnMapQuantumState (const int QS, const int secondQS
 }
 
 //takes the old state and a rotaition matrix and gives back a rotated renormalized state
-void SpinAdapted::StateInfo::transform_state(std::vector<Matrix>& rotateMatrix, StateInfo& stateInfo, StateInfo& newStateInfo)
+void SpinAdapted::StateInfo::transform_state(const std::vector<Matrix>& rotateMatrix, const StateInfo& stateInfo, StateInfo& newStateInfo)
 {
   std::vector<SpinQuantum> newQuanta;
   std::vector<int> newQuantaStates;
@@ -288,14 +288,14 @@ void SpinAdapted::StateInfo::transform_state(std::vector<Matrix>& rotateMatrix, 
   newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
 }
 
-void SpinAdapted::StateInfo::restore(bool forward, const vector<int>& sites, StateInfo& stateInfo, int left, int right)
+void SpinAdapted::StateInfo::restore(bool forward, const vector<int>& sites, StateInfo& stateInfo, int left)
 {
   std::string file;
   int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
   if (forward)
-    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-forward-" % first % "-" % last % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-forward-" % first % "-" % last % "." % left % "." % mpigetrank() % ".tmp" );
   else
-    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % first % "-" % last % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % first % "-" % last % "." % left % "." % mpigetrank() % ".tmp" );
   
   std::ifstream ifs(file.c_str(), std::ios::binary);
   boost::archive::binary_iarchive load_state(ifs);
@@ -309,22 +309,22 @@ void SpinAdapted::StateInfo::restore(bool forward, const vector<int>& sites, Sta
 
 }
 
-void SpinAdapted::StateInfo::store(bool forward, const vector<int>& sites, StateInfo& stateInfo, int left, int right)
+void SpinAdapted::StateInfo::store(bool forward, const vector<int>& sites, StateInfo& stateInfo, int left)
 {
   
   std::string file;
   int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
   if (dmrginp.spinAdapted()) {
     if (forward)
-      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-forward-" % first % "-" % last % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-forward-" % first % "-" % last % "." % left % "." % mpigetrank() % ".tmp" );
     else
-      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % first % "-" % last % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % first % "-" % last % "." % left % "." % mpigetrank() % ".tmp" );
   }
   else {
     if (forward)
-      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-forward-" % (first/2) % "-" % (last/2) % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-forward-" % (first/2) % "-" % (last/2) % "." % left % "." % mpigetrank() % ".tmp" );
     else
-      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % (first/2) % "-" % (last/2) % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % (first/2) % "-" % (last/2) % "." % left % "." % mpigetrank() % ".tmp" );
   }
   
   if (dmrginp.outputlevel() > 0) 

@@ -26,9 +26,12 @@ class TensorOp;
 namespace SpinAdapted{
 class SpinBlock;
 
-enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP};
+//when bra and ket states are different then DES cannot be made by just taking the transpose of
+//CRE. In such a case we need to explicitly make the operators in the second row. 
+enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP, 
+	      DES, DES_DES, CRE_CRECOMP, DES_CRE, DES_CRECOMP, CRE_DES_DESCOMP};
 
-enum CompType{CD, DD, CCD, C};
+ enum CompType{CD, DD, CCD, C, CDD, D};
 
 
 template<class T> class Baseoperator  // The abstract class of an operator
@@ -129,6 +132,7 @@ class SparseMatrix : public Baseoperator<Matrix>  // the sparse matrix represent
   void allocate(const StateInfo& s);
   void allocate(const StateInfo& sr, const StateInfo& sc);
   void allocate(const SpinBlock& b);
+  void makeIdentity(const StateInfo& s); 
   virtual boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) =0;
   virtual void build(const SpinBlock& b) =0;
   void buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladders, std::vector< Csf >& s) ;
@@ -162,6 +166,9 @@ class SparseMatrix : public Baseoperator<Matrix>  // the sparse matrix represent
   void renormalise_transform(const std::vector<Matrix>& rotate_matrix, const StateInfo *stateinfo);
   void build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& rotate_matrix, 
 				       const StateInfo *newStateInfo);
+  void renormalise_transform(const std::vector<Matrix>& leftrotate_matrix, const StateInfo* leftstateinfo, const std::vector<Matrix>& rightrotate_matrix, const StateInfo *rightstateinfo);
+  void build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& leftrotate_matrix, const StateInfo *leftstateinfo, 
+				       const std::vector<Matrix>& rightrotate_matrix,  const StateInfo *newStateInfo);
   SparseMatrix& operator+=(const SparseMatrix& other);
 };
 

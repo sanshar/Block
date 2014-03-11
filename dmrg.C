@@ -122,7 +122,23 @@ int calldmrg(char* input, char* output)
   SweepParams sweep_copy;
   bool direction_copy; int restartsize_copy;
 
-  
+
+  /*
+  for (int istate = 0; istate<dmrginp.nroots(); istate++) {
+    bool direction;
+    int restartsize;
+    sweepParams.restorestate(direction, restartsize);
+    Sweep::InitializeStateInfo(sweepParams, !direction, istate);
+    Sweep::InitializeStateInfo(sweepParams, direction, istate);
+    Sweep::CanonicalizeWavefunction(sweepParams, !direction, istate);
+    Sweep::CanonicalizeWavefunction(sweepParams, direction, istate);
+    Sweep::CanonicalizeWavefunction(sweepParams, !direction, istate);
+  }
+  //Sweep::calculateAllOverlap();
+  Sweep::calculateHMatrixElements();
+  exit(0);
+  */
+
   switch(dmrginp.calc_type()) {
     
   case (DMRG):
@@ -183,7 +199,7 @@ int calldmrg(char* input, char* output)
     if(!dmrginp.setStateSpecific()) {
       dmrginp.set_fullrestart() = true;
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1); //this will generate the cd operators                               
+      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
       dmrginp.set_fullrestart() = false;
 
       for (int state=0; state<dmrginp.nroots(); state++) {
@@ -205,7 +221,7 @@ int calldmrg(char* input, char* output)
 	  Sweep::CanonicalizeWavefunction(sweepParams, !direction, state);
 	  Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
 	}
-	SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state); //this will generate the cd operators
+	SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
 	dmrginp.set_fullrestart() = false;    
 	
 	SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);
@@ -247,7 +263,7 @@ int calldmrg(char* input, char* output)
     if(!dmrginp.setStateSpecific()) {
       dmrginp.set_fullrestart() = true;
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1); //this will generate the cd operators                               
+      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
       dmrginp.set_fullrestart() = false;
 
       for (int state=0; state<dmrginp.nroots(); state++) {
@@ -269,7 +285,7 @@ int calldmrg(char* input, char* output)
 	  Sweep::CanonicalizeWavefunction(sweepParams, !direction, state);
 	  Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
 	}
-	SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state); //this will generate the cd operators
+	SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
 	dmrginp.set_fullrestart() = false;    
 	
 	SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);
@@ -298,7 +314,7 @@ int calldmrg(char* input, char* output)
     if(!dmrginp.setStateSpecific()) {
       dmrginp.set_fullrestart() = true;
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1); //this will generate the cd operators                               
+      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
       dmrginp.set_fullrestart() = false;
 
       for (int state=0; state<dmrginp.nroots(); state++) {
@@ -320,7 +336,7 @@ int calldmrg(char* input, char* output)
 	  Sweep::CanonicalizeWavefunction(sweepParams, !direction, state);
 	  Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
 	}
-	SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state); //this will generate the cd operators
+	SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
 	dmrginp.set_fullrestart() = false;    
 	
 	SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);
@@ -352,7 +368,7 @@ int calldmrg(char* input, char* output)
     if(!dmrginp.setStateSpecific()) {
       dmrginp.set_fullrestart() = true;
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1); //this will generate the cd operators                               
+      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
       dmrginp.set_fullrestart() = false;
 
       for (int state=0; state<dmrginp.nroots(); state++) {
@@ -374,7 +390,7 @@ int calldmrg(char* input, char* output)
 	  Sweep::CanonicalizeWavefunction(sweepParams, !direction, state);
 	  Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
 	}
-	SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state); //this will generate the cd operators
+	SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
 	dmrginp.set_fullrestart() = false;    
 	
 	SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
@@ -401,7 +417,7 @@ void fullrestartGenblock() {
   sweepParams.set_sweep_iter() = 0;
   restartsize = 0;
 
-  SweepGenblock::do_one(sweepParams, false, !direction, RESTART, restartsize, -1);
+  SweepGenblock::do_one(sweepParams, false, !direction, RESTART, restartsize, -1, -1);
   
   sweepParams.restorestate(direction, restartsize);
   sweepParams.set_sweep_iter()=0;
@@ -512,7 +528,7 @@ void restart(double sweep_tol, bool reset_iter)
 	  Sweep::InitializeAllOverlaps(sweepParams, !direction, j, i);
 	}
       }
-      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, i);
+      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, i, i);
       
       
       if (dmrginp.outputlevel() > 0)
@@ -627,7 +643,7 @@ void dmrg(double sweep_tol)
 	  Sweep::InitializeAllOverlaps(sweepParams, !direction, j, i);
 	}
       }
-      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, i);
+      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, i, i);
       sweepParams.set_sweep_iter() = 0;
       sweepParams.set_restart_iter() = 0;
       sweepParams.savestate(!direction, restartsize);
@@ -711,58 +727,4 @@ void dmrg_stateSpecific(double sweep_tol, int targetState)
 
 }
 
-#ifdef USE_BTAS
-void calculateOverlap()
-{
-  bool direction;
-  int restartsize;
-  SweepParams sweepParams;
-  sweepParams.restorestate(direction, restartsize);
-  sweepParams.current_root() = 0;
 
-  std::vector<int> sites(6,0), wavesites(7,0), quanta(3,1);
-  for (int i=0; i<6; i++)
-    sites[i] = i;
-  for (int i=0; i<7; i++)
-    wavesites[i] = i;
-
-  Wavefunction w1, w2;
-  StateInfo statew1, statew2;
-  btas::TVector<btas::Dshapes, 2> overlapShape; overlapShape[0]=quanta; overlapShape[1] = quanta;
-  btas::STArray<double, 2>  output(overlapShape, false); //O(ni, mi) matrix
-  for (int i=0; i<dmrginp.nroots(); i++) {
-    for (int j=i+1; j<dmrginp.nroots(); j++) { 
-      Sweep::InitializeAllOverlaps(sweepParams, true, i, j);
-
-      w1.LoadWavefunctionInfo(statew1, wavesites, i);
-      w2.LoadWavefunctionInfo(statew2, wavesites, j);
-
-      btas::TVector<btas::Dshapes,3> w1shape, w2shape, inter;
-      w1shape[0] = statew1.leftStateInfo->leftStateInfo->quantaStates;w1shape[1] = statew1.leftStateInfo->rightStateInfo->quantaStates;w1shape[2] = statew1.rightStateInfo->quantaStates;
-      w2shape[0] = statew2.leftStateInfo->leftStateInfo->quantaStates;w2shape[1] = statew2.leftStateInfo->rightStateInfo->quantaStates;w2shape[2] = statew2.rightStateInfo->quantaStates;
-      inter[0] = statew2.leftStateInfo->leftStateInfo->quantaStates;inter[1] = statew1.leftStateInfo->rightStateInfo->quantaStates;inter[2] = statew1.rightStateInfo->quantaStates;
-      overlapShape[0] = statew1.leftStateInfo->leftStateInfo->quantaStates;overlapShape[1] = statew2.leftStateInfo->leftStateInfo->quantaStates;
-
-      btas::STArray<double, 3> w1Tensor(w1shape, false), w2Tensor(w2shape, false), intermediate(inter, false);
-      btas::STArray<double, 2> Overlap(overlapShape, false);
-      LoadOverlapTensor(sites, Overlap, i, j);
-
-      w1.UnCollectQuantaAlongRows(*statew1.leftStateInfo, *statew1.rightStateInfo, w1Tensor);
-      w2.UnCollectQuantaAlongRows(*statew2.leftStateInfo, *statew2.rightStateInfo, w2Tensor);
-      //cout << Overlap<<endl;
-      //cout << w1Tensor<<endl;
-      //cout << w2Tensor<<endl;
-      
-      btas::SDcontract(1.0, Overlap, btas::shape(0), w1Tensor, btas::shape(0), 0.0, intermediate);
-      btas::SDcontract(1.0, intermediate, btas::shape(0,1), w2Tensor, btas::shape(0,1), 0.0, output);
-
-      //cout << output<<endl;
-      double o = 0.0;
-      for (int i=0; i<3; i++)
-	o += output.find(btas::make_array(i,i))->second->operator()(0,0);
-      cout << "overlap between "<<i<<"  and "<<j<<"  =  "<<o<<endl;
-    }
-  }
-  
-}
-#endif
