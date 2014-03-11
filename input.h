@@ -246,7 +246,7 @@ class Input {
   const orbitalFormat& orbformat() const {return m_orbformat;}
   const int& outputlevel() const {return m_outputlevel;}
   const vector<int>& spatial_to_spin() const {return m_spatial_to_spin;}
-  int spatial_to_spin(int i) const {return m_spatial_to_spin[i];}
+  int spatial_to_spin(int i) const {return m_spatial_to_spin.at(i);}
   const vector<int>& spin_to_spatial() const {return m_spin_to_spatial;}
   const double& diis_error_tol() const {return m_diis_error_tol;}
   const bool& do_diis() const {return m_do_diis;}

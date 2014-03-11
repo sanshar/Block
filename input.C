@@ -1051,12 +1051,13 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
   
   if(sym == "dinfh" ) {
     m_spatial_to_spin.clear();
-    for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) {
+    for (int i=0; i<m_spin_orbs_symmetry.size();) {
       int ir = m_spin_orbs_symmetry[i];
-      if (ir < -1 || ir == 0 || ir == 1) 
-	m_spatial_to_spin.push_back(i);
+      m_spatial_to_spin.push_back(i);
+      i += 2*Symmetry::sizeofIrrep(ir); 
     }
   }
+
 
   m_spatial_to_spin.push_back(m_norbs);
   m_spin_to_spatial.push_back(m_norbs);
@@ -1214,8 +1215,9 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
 	ReorderFileInput >> m_reorder[i];
       ReorderFileInput.close();
     }
-  }
-  } else {
+    }
+  } 
+  else {
     if (mpigetrank() == 0) {
       ReorderFileOutput.open(ReorderFileName);
     }

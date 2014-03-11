@@ -183,9 +183,13 @@ void Symmetry::InitialiseTable(string psym)
 
 bool Symmetry::irrepAllowed(int irrep)
 {
-  if ( (sym == "dinfh"|| sym == "dinfh_abelian") && ((irrep<0 && irrep >-4) || irrep == 2 || irrep == 3)) {
-    pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with dinfh symmetry"<<endl;
-    abort();
+  if ( (sym == "dinfh"|| sym == "dinfh_abelian")) {
+    if ((irrep<0 && irrep >-4) || irrep == 2 || irrep == 3) {
+      pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with dinfh symmetry"<<endl;
+      abort();
+    }
+    else
+      return true;
   }
   if (sym == "d2h" && (irrep<0 || irrep >= 8)) {
     pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
