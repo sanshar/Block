@@ -100,7 +100,7 @@ python ../test_energy.py 2 1e-6 -55.5836757776 -55.3816201164
 
 echo "testing c5v irrep4 state..."
 mpirun -np 2 ../../block.spin_adapted dmrg_irrep4.conf >dmrg.out
-python ../test_energy.py 2 1e-6 -55.8015784472 -55.5836757776
+python ../test_energy.py 2 1e-6 -55.8015784472 -55.4362910647
 cd ../
 
 ./clean

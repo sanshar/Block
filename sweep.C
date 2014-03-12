@@ -222,6 +222,16 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   storeStates[2] = newSystem.get_stateInfo();
   dmrginp.operrotT -> stop();
 
+  /*
+  SpinQuantum s = SpinQuantum(0,SpinSpace(0), IrrepSpace(0));
+  pout << *newSystem.get_op_rep(CRE_DES, s, 1, 0)<<endl;
+  pout << *newSystem.get_op_rep(DES_CRE, s, 1, 0)<<endl;
+  pout << *newSystem.get_op_rep(CRE_DESCOMP, s, 3, 2)<<endl;
+  pout << *newSystem.get_op_rep(DES_CRECOMP, s, 3, 2)<<endl;
+  exit(0);
+  */
+
+
 #ifdef USE_BTAS
   if (mpigetrank() == 0)
     saveUpdatedLocalOverlapMatrix(sweepParams.current_root(), newSystem.get_sites(), storeStates[0], storeStates[2]);
