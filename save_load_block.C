@@ -162,6 +162,18 @@ void SpinBlock::addAdditionalCompOps()
     }
   }
 
+  if (has(DES)) {
+    if (!ops[DES]->is_local()) {
+      for(int i=0; i<get_sites().size(); i++) {
+	if (ops[DES]->has(sites[i])) {
+	  if (processorindex(sites[i]) != mpigetrank()) 
+	    ops[DES]->add_local_indices(sites[i]);
+	  mpi::broadcast(world, *(ops[DES]->get_element(sites[i])[0]), processorindex(sites[i]));
+	}
+      }
+    }
+  }
+
   vector<int> dotindice;
   dotindice.push_back((sites[0] == 0) ? complementary_sites[0] : complementary_sites[complementary_sites.size()-1]);
   if (!dmrginp.spinAdapted()) { // when non-spinadapted, sites are spin orbitals

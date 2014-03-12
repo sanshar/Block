@@ -42,12 +42,9 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
     newSystem.default_op_components(false, system, sysdot, false, true, true);
     newSystem.setstoragetype(DISTRIBUTED_STORAGE);
     newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, sysdot);
-    //cout << "System " << system.get_stateInfo() << endl;
-    //system.printOperatorSummary();
-    //cout << "Sysdot " << sysdot.get_stateInfo() << endl;
-    //sysdot.printOperatorSummary();
-    //cout << "Newsystem " << newSystem.get_stateInfo() << endl;
-    //newSystem.printOperatorSummary();
+    newSystem.setOverlap() = boost::shared_ptr<SparseMatrix>(new Ham);
+    newSystem.setOverlap()->makeIdentity(newSystem.get_braStateInfo());
+
     system = newSystem;
   }
 
@@ -61,6 +58,9 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
     newEnvironment.default_op_components(false, environment, envdot, true, true, true);
     newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
     newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, envdot);
+    newEnvironment.setOverlap() = boost::shared_ptr<SparseMatrix>(new Ham);
+    newEnvironment.setOverlap()->makeIdentity(newEnvironment.get_braStateInfo());
+
     environment = newEnvironment;
   }
 

@@ -156,6 +156,41 @@ namespace SpinAdapted {
 	}
     }
   
+
+  // -------------------- dC_ ---------------------------  
+  template<> string Op_component<DesCre>::get_op_string() const {
+    return "DESCRE";
+  }
+
+  template<> void Op_component<DesCre>::build_iterators(SpinBlock& b)
+    {
+      if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
+      const double screen_tol = dmrginp.twoindex_screen_tol();
+      vector< pair<int, int> > screened_cd_ix = (dmrginp.hamiltonian() == BCS) ? 
+        screened_cd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), v_cc, v_cccc, v_cccd, screen_tol) :
+        screened_cd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
+      m_op.set_pair_indices(screened_cd_ix, dmrginp.last_site());      
+      std::vector<int> orbs(2);
+      for (int i = 0; i < m_op.local_nnz(); ++i)
+	{
+	  pair<int, int> opair = m_op.unmap_local_index(i);
+	  orbs[0] = opair.first; orbs[1] = opair.second;
+	  std::vector<boost::shared_ptr<DesCre> >& vec = m_op.get_local_element(i);
+	  SpinQuantum spin1 = getSpinQuantum(orbs[0]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
+	  SpinQuantum spin2 = getSpinQuantum(orbs[1]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
+	  std::vector<SpinQuantum> spinvec = spin2-spin1;
+	  vec.resize(spinvec.size());
+	  for (int j=0; j<spinvec.size(); j++) {
+	    vec[j]=boost::shared_ptr<DesCre>(new DesCre);
+	    SparseMatrix& op = *vec[j];
+	    op.set_orbs() = orbs;
+	    op.set_initialised() = true;
+	    op.set_fermion() = false;
+	    op.set_deltaQuantum(1, spinvec[j]);      
+	  }
+	}
+    }
+  
   
   
   // -------------------- Cc_ ---------------------------  
@@ -183,6 +218,41 @@ namespace SpinAdapted {
 	  vec.resize(spinvec.size());
 	  for (int j=0; j<spinvec.size(); j++) {
 	    vec[j]=boost::shared_ptr<CreCre>(new CreCre);
+	    SparseMatrix& op = *vec[j];
+	    op.set_orbs() = orbs;
+	    op.set_initialised() = true;
+	    op.set_fermion() = false;
+	    op.set_deltaQuantum(1, spinvec[j]);      
+	  }
+	}
+    }
+  
+  
+  // -------------------- Dd_ ---------------------------  
+  template<> string Op_component<DesDes>::get_op_string() const {
+    return "DESDES";
+  }
+  template<> void Op_component<DesDes>::build_iterators(SpinBlock& b)
+    {
+      if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
+      const double screen_tol = dmrginp.twoindex_screen_tol();
+      
+      vector< pair<int, int> > screened_dd_ix = (dmrginp.hamiltonian() == BCS) ?
+        screened_dd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), v_cc, v_cccc, v_cccd, screen_tol) :        
+        screened_dd_indices(b.get_sites(), b.get_complementary_sites(), *b.get_twoInt(), screen_tol);
+      m_op.set_pair_indices(screened_dd_ix, dmrginp.last_site());      
+      std::vector<int> orbs(2);
+      for (int i = 0; i < m_op.local_nnz(); ++i)
+	{
+	  pair<int, int> opair = m_op.unmap_local_index(i);
+	  orbs[0] = opair.first; orbs[1] = opair.second;
+	  std::vector<boost::shared_ptr<DesDes> >& vec = m_op.get_local_element(i);
+	  SpinQuantum spin1 = -getSpinQuantum(orbs[0]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
+	  SpinQuantum spin2 = -getSpinQuantum(orbs[1]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
+	  std::vector<SpinQuantum> spinvec = spin1+spin2;
+	  vec.resize(spinvec.size());
+	  for (int j=0; j<spinvec.size(); j++) {
+	    vec[j]=boost::shared_ptr<DesDes>(new DesDes);
 	    SparseMatrix& op = *vec[j];
 	    op.set_orbs() = orbs;
 	    op.set_initialised() = true;
@@ -247,6 +317,54 @@ namespace SpinAdapted {
 	vec[j]=boost::shared_ptr<CreDesComp>(new CreDesComp);
     }
   
+  // -------------------- dCcomp_ ---------------------------  
+  template<> string Op_component<DesCreComp>::get_op_string() const {
+    return "DESCRE_COMP";
+  }
+  template<> void Op_component<DesCreComp>::build_iterators(SpinBlock& b)
+  {
+    if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
+    const double screen_tol = dmrginp.twoindex_screen_tol();
+    vector< pair<int, int> > screened_cd_ix = (dmrginp.hamiltonian() == BCS) ?
+      screened_cd_indices( b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), v_cc, v_cccc, v_cccd, screen_tol) :
+      screened_cd_indices( b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), screen_tol);
+    m_op.set_pair_indices(screened_cd_ix, dmrginp.last_site());      
+    
+    std::vector<int> orbs(2);
+    for (int i = 0; i < m_op.local_nnz(); ++i)
+    {
+      pair<int, int> opair = m_op.unmap_local_index(i);
+      orbs[0] = opair.first; orbs[1] = opair.second;
+      std::vector<boost::shared_ptr<DesCreComp> >& vec = m_op.get_local_element(i);
+      SpinQuantum spin1 = getSpinQuantum(orbs[0]);
+      SpinQuantum spin2 = getSpinQuantum(orbs[1]);
+      std::vector<SpinQuantum> spinvec = spin1-spin2;
+      vec.resize(spinvec.size());
+      for (int j=0; j<spinvec.size(); j++) {
+	vec[j]=boost::shared_ptr<DesCreComp>(new DesCreComp);
+	SparseMatrix& op = *vec[j];
+	op.set_orbs() = orbs;
+	op.set_initialised() = true;
+	op.set_fermion() = false;
+	op.set_deltaQuantum(1, spinvec[j]);
+      }
+    }
+  }
+  
+  
+  template<> void Op_component<DesCreComp>::add_local_indices(int i, int j , int k)
+    {
+      m_op.add_local_indices(i,j);
+      
+      std::vector<boost::shared_ptr<DesCreComp> >& vec = m_op(i,j);
+      SpinQuantum spin1 = getSpinQuantum(i);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(i));
+      SpinQuantum spin2 = getSpinQuantum(j);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(j));
+      std::vector<SpinQuantum> spinvec = spin1-spin2;
+      vec.resize(spinvec.size());
+      for (int j=0; j<spinvec.size(); j++) 
+	vec[j]=boost::shared_ptr<DesCreComp>(new DesCreComp);
+    }
+  
   // -------------------- Ddcomp_ ---------------------------  
   template<> string Op_component<DesDesComp>::get_op_string() const {
     return "DESDES_COMP";
@@ -301,6 +419,57 @@ namespace SpinAdapted {
       vec.resize(spinvec.size());
       for (int j=0; j<spinvec.size(); j++) 
 	    vec[j]=boost::shared_ptr<DesDesComp>(new DesDesComp);
+    }
+  
+  
+  // -------------------- CCcomp_ ---------------------------  
+  template<> string Op_component<CreCreComp>::get_op_string() const {
+    return "CRECRE_COMP";
+  }
+  template<> void Op_component<CreCreComp>::build_iterators(SpinBlock& b)
+    {
+      if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
+      const double screen_tol = dmrginp.twoindex_screen_tol();
+      vector< pair<int, int> > screened_dd_ix = (dmrginp.hamiltonian() == BCS) ?
+        screened_dd_indices(b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), v_cc, v_cccc, v_cccd, screen_tol) :
+        screened_dd_indices(b.get_complementary_sites(), b.get_sites(), *b.get_twoInt(), screen_tol);
+      m_op.set_pair_indices(screened_dd_ix, dmrginp.last_site());      
+      
+      std::vector<int> orbs(2);
+      for (int i = 0; i < m_op.local_nnz(); ++i)
+	{
+	  pair<int, int> opair = m_op.unmap_local_index(i);
+	  orbs[0] = opair.first; orbs[1] = opair.second;
+	  std::vector<boost::shared_ptr<CreCreComp> >& vec = m_op.get_local_element(i);
+	  SpinQuantum spin1 = getSpinQuantum(orbs[0]);
+	  SpinQuantum spin2 = getSpinQuantum(orbs[1]);
+	  std::vector<SpinQuantum> spinvec = spin1+spin2;
+	  vec.resize(spinvec.size());
+	  for (int j=0; j<spinvec.size(); j++) {
+	    vec[j]=boost::shared_ptr<CreCreComp>(new CreCreComp);
+	    SparseMatrix& op = *vec[j];
+	    op.set_orbs() = orbs;
+	    op.set_initialised() = true;
+	    op.set_fermion() = false;
+        
+	      op.set_deltaQuantum(1, spinvec[j]);
+
+	  }
+	}
+      
+    }
+  
+  template<> void Op_component<CreCreComp>::add_local_indices(int i, int j , int k)
+    {
+      m_op.add_local_indices(i,j);
+      
+      std::vector<boost::shared_ptr<CreCreComp> >& vec = m_op(i,j);
+      SpinQuantum spin1 = getSpinQuantum(i);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(i));
+      SpinQuantum spin2 = getSpinQuantum(j);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(j));
+      std::vector<SpinQuantum> spinvec = spin1+spin2;
+      vec.resize(spinvec.size());
+      for (int j=0; j<spinvec.size(); j++) 
+	vec[j]=boost::shared_ptr<CreCreComp>(new CreCreComp);
     }
   
   

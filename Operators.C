@@ -589,16 +589,15 @@ void SpinAdapted::DesCre::build(const SpinBlock& b)
   if (leftBlock->get_op_array(DES).has(i))
   {
     const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(DES, -getSpinQuantum(i), i);
-    Transposeview top2 = Transposeview(rightBlock->get_op_rep(DES, -getSpinQuantum(j), j));
-    SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, 1.0);
+    const boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(j), j);
+    double parity = getCommuteParity(op1->get_deltaQuantum()[0], op2->get_deltaQuantum()[0], get_deltaQuantum()[0]);
+    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op2, *op1, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   else if (rightBlock->get_op_array(DES).has(i))
   {
     const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(DES, -getSpinQuantum(i), i);
-    Transposeview top2 = Transposeview(leftBlock->get_op_rep(DES, -getSpinQuantum(j), j));
-    double parity = getCommuteParity(op1->get_deltaQuantum()[0], top2.get_deltaQuantum()[0], get_deltaQuantum()[0]);
-    // getCommuteParity doesn't depend on deltaQuantum.get_n()
-    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
+    const boost::shared_ptr<SparseMatrix> op2 = leftBlock->get_op_rep(CRE, getSpinQuantum(j), j);
+    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   else
     abort();  
@@ -616,14 +615,14 @@ double SpinAdapted::DesCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const 
   int spin = deltaQuantum[0].get_s().getirrep();
 
   TensorOp D(I, -1), C(J, 1);
-  TensorOp DC = D.product(C, spin, irrep);
+  TensorOp CD = C.product(D, spin, irrep);
 
   for (int j = 0; j < deltaQuantum.size(); ++j) {
     for (int i=0; i<ladder.size(); i++)
     {
       int index = 0; double cleb=0.0;
       if (nonZeroTensorComponent(c1, deltaQuantum[j], ladder[i], index, cleb)) {
-        std::vector<double> MatElements = calcMatrixElements(c1, DC, ladder[i]) ;
+        std::vector<double> MatElements = calcMatrixElements(c1, CD, ladder[i]) ;
         element += MatElements[index]/cleb;
         break;
       }
@@ -1098,27 +1097,28 @@ void SpinAdapted::DesCreComp::build(const SpinBlock& b)
       int k = leftBlock->get_sites()[kx];
       int l = rightBlock->get_sites()[lx];
 
-      TensorOp DK(k, -1), CL(l, 1);      
-      TensorOp CD2 = CL.product(DK, spin, sym.getirrep());
+
+      TensorOp CK(k, 1), DL(l, -1);      
+      TensorOp CD2 = CK.product(DL, spin, sym.getirrep());
       if (!CD2.empty) {
 	double scaleV = calcCompfactor(CD1, CD2, CD,*(b.get_twoInt()));
 	if (leftBlock->get_op_array(DES).has(k) && rightBlock->get_op_array(DES).has(l) && fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
-	  boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(DES, -getSpinQuantum(k), k);
-	  Transposeview top2 = Transposeview(rightBlock->get_op_rep(DES, -getSpinQuantum(l), l));
-	  SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV);
+	  Transposeview top1 = Transposeview(leftBlock->get_op_rep(DES, -getSpinQuantum(k), k));
+	  boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(DES, -getSpinQuantum(l), l);
+	  SpinAdapted::operatorfunctions::TensorProduct(leftBlock, top1, *op2, &b, &(b.get_stateInfo()), *this, scaleV);
 	}
       }
 
-      DK=TensorOp(l,-1); CL=TensorOp(k,1);      
-      CD2 = CL.product(DK, spin, sym.getirrep());
+      CK=TensorOp(l,1); DL=TensorOp(k,-1);      
+      CD2 = CK.product(DL, spin, sym.getirrep());
       if (!CD2.empty) {
       	double scaleV = calcCompfactor(CD1, CD2, CD,*(b.get_twoInt()));
 
       	if (leftBlock->get_op_array(DES).has(k) && rightBlock->get_op_array(DES).has(l) && fabs(scaleV) > dmrginp.twoindex_screen_tol()) {
-	  boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(DES, -getSpinQuantum(l), l);
-	  Transposeview top2 = Transposeview(leftBlock->get_op_rep(DES, -getSpinQuantum(k), k));
-	  double parity = getCommuteParity(op1->get_deltaQuantum()[0], top2.get_deltaQuantum()[0], get_deltaQuantum()[0]);
-	  SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, top2, &b, &(b.get_stateInfo()), *this, scaleV*parity);
+	  Transposeview top1 = Transposeview(rightBlock->get_op_rep(DES, -getSpinQuantum(l), l));
+	  boost::shared_ptr<SparseMatrix> op2 = leftBlock->get_op_rep(DES, -getSpinQuantum(k), k);
+	  double parity = getCommuteParity(top1.get_deltaQuantum()[0], op2->get_deltaQuantum()[0], get_deltaQuantum()[0]);
+	  SpinAdapted::operatorfunctions::TensorProduct(rightBlock, top1, *op2, &b, &(b.get_stateInfo()), *this, scaleV*parity);
 	}
       }
 
@@ -1153,8 +1153,8 @@ double SpinAdapted::DesCreComp::redMatrixElement(Csf c1, vector<Csf>& ladder, co
             int k = b->get_sites()[kk];
             int l = b->get_sites()[kl];
             
-	    TensorOp DK(k,-1), CL(l,1);
-	    TensorOp CD2 = CL.product(DK, spin, sym.getirrep());
+	    TensorOp CK(k, 1), DL(l, -1);
+	    TensorOp CD2 = CK.product(DL, spin, sym.getirrep());
 	    if (!CD2.empty) {
 	      std::vector<double> MatElements = calcMatrixElements(c1, CD2, ladder[i]);
 	      double factor = calcCompfactor(CD1, CD2, CD, *(b->get_twoInt()));

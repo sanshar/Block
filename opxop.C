@@ -37,19 +37,22 @@ void SpinAdapted::opxop::cdxcdcomp(const SpinBlock* otherblock, std::vector<boos
     SpinAdapted::operatorfunctions::TensorProduct(otherblock, *op2, *op1, b, &(b->get_stateInfo()), o[ilock], factor, numthrds);
 
     if (i != j) {
-      factor = 1.0;
-      if (otherblock == b->get_rightBlock())
-	factor = getCommuteParity(-op1->get_deltaQuantum(0), -op2->get_deltaQuantum(0), o->get_deltaQuantum(0));
-
-      /*
+      
       if (otherblock->has(DES_CRECOMP)) {
-	boost::shared_ptr<SparseMatrix> top1 = loopblock->get_op_array(DES_CRE).get_element(i,j).at(opind)->getworkingrepresentation(loopblock);
-	boost::shared_ptr<SparseMatrix> top2 = otherblock->get_op_array(DES_CRECOMP).get_element(i,j).at(opind)->getworkingrepresentation(otherblock);
-	SpinAdapted::operatorfunctions::TensorProduct(otherblock, *top2, *top1, b, &(b->get_stateInfo()), o[ilock], factor, numthrds);
+	factor = 1.0;
+	boost::shared_ptr<SparseMatrix> op1 = loopblock->get_op_array(DES_CRE).get_element(i,j).at(opind)->getworkingrepresentation(loopblock);
+	boost::shared_ptr<SparseMatrix> op2 = otherblock->get_op_array(DES_CRECOMP).get_element(i,j).at(opind)->getworkingrepresentation(otherblock);
+	if (otherblock == b->get_rightBlock())
+	  factor = getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), o->get_deltaQuantum(0));
+	SpinAdapted::operatorfunctions::TensorProduct(otherblock, *op2, *op1, b, &(b->get_stateInfo()), o[ilock], factor, numthrds);
       }
-      else
-      */
+      else {
+      
+	factor = 1.0;
+	if (otherblock == b->get_rightBlock())
+	  factor = getCommuteParity(-op1->get_deltaQuantum(0), -op2->get_deltaQuantum(0), o->get_deltaQuantum(0));	
 	SpinAdapted::operatorfunctions::TensorProduct(otherblock, Transposeview(*op2), Transposeview(*op1), b, &(b->get_stateInfo()), o[ilock], factor, numthrds);
+	}
     }
   }
 }
