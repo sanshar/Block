@@ -31,7 +31,7 @@ class SpinBlock;
 enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP, 
 	      DES, DES_DES, CRE_CRECOMP, DES_CRE, DES_CRECOMP, CRE_DES_DESCOMP};
 
- enum CompType{CD, DD, CCD, C, CDD, D};
+enum CompType{CD, DD, CCD, C};
 
 
 template<class T> class Baseoperator  // The abstract class of an operator

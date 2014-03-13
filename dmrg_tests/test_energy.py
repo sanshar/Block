@@ -16,7 +16,7 @@ def run(args):
   for i in range(int(args[1])):
     calc_e = struct.unpack('d', file1.read(8))[0]
     given_e = float(args[3+index])
-    if given_e-calc_e > tol:
+    if abs(given_e-calc_e) > tol:
       print given_e,"-", calc_e, " > ", tol
       print "FAILED ...."
     else:

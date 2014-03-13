@@ -38,10 +38,28 @@ class CreDes: public SpinAdapted::SparseMatrix
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
 };
 
+class DesCre: public SpinAdapted::SparseMatrix
+{
+ public:
+  DesCre() { orbs.resize(2); fermion = false;}
+  void build(const SpinBlock& b) ;
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+  double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
 class CreCre: public SpinAdapted::SparseMatrix
 {
  public:
   CreCre() { orbs.resize(2); fermion = false;}
+  void build(const SpinBlock& b) ;
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+  double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+class DesDes: public SpinAdapted::SparseMatrix
+{
+ public:
+  DesDes() { orbs.resize(2); fermion = false;}
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
@@ -57,11 +75,30 @@ class CreDesComp: public SpinAdapted::SparseMatrix
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
 };
 
+class DesCreComp: public SpinAdapted::SparseMatrix
+{
+ public:
+  DesCreComp() { orbs.resize(2); fermion = false;}
+  void build(const SpinBlock& b) ;
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+  double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+
 class DesDesComp: public SpinAdapted::SparseMatrix
 {
  public:
   DesDesComp() { orbs.resize(2); fermion = false;}
   void build_fromcc(SpinBlock& b);
+  void build(const SpinBlock& b) ;
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+  double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+class CreCreComp: public SpinAdapted::SparseMatrix
+{
+ public:
+  CreCreComp() { orbs.resize(2); fermion = false;}
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
