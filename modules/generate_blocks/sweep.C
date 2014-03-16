@@ -12,6 +12,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "density.h"
 #include "davidson.h"
 #include "pario.h"
+#include "overlaptensor.h"
+#include "sweep.h"
 
 namespace SpinAdapted{
 void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys, int stateA, int stateB)
@@ -38,7 +40,7 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
   vector<int> spindotsites(2); 
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
-  systemDot = SpinBlock(systemDotStart, systemDotEnd);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, stateA==stateB);
 
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
@@ -66,6 +68,7 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
     newSystem.transform_operators(leftrotateMatrix);
   else
     newSystem.transform_operators(leftrotateMatrix, rightrotateMatrix);
+
 
   if (dmrginp.outputlevel() > 0) 
     //mcheck("after rotation and transformation of block");
@@ -179,7 +182,6 @@ void SweepGenblock::do_one(SweepParams &sweepParams, const bool &forward, int st
   
   InitBlocks::InitStartingBlock (system,forward, stateA, stateB, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), 0, false, false);
 
-  
   sweepParams.set_block_iter() = 0;
 
   if (dmrginp.outputlevel() > 0) 
@@ -215,7 +217,6 @@ void SweepGenblock::do_one(SweepParams &sweepParams, const bool &forward, int st
 
       BlockAndDecimate (sweepParams, system, newSystem, false, dot_with_sys, stateA, stateB);
 
-      
       system = newSystem;
 
       SpinBlock::store(forward, system.get_sites(), system, stateA, stateB);

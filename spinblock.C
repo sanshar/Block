@@ -97,7 +97,7 @@ SpinBlock::SpinBlock () :
   hasMemoryAllocated (false),
   direct(false), complementary(false), normal(true), leftBlock(0), rightBlock(0) { }
 
-SpinBlock::SpinBlock(int start, int finish, bool is_complement) :  
+SpinBlock::SpinBlock(int start, int finish, bool implicitTranspose, bool is_complement) :  
   name (rand()), 
   hasMemoryAllocated (false), 
   direct(false), leftBlock(0), rightBlock(0)
@@ -107,7 +107,7 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
 
   //this is used to make dot block and we make the 
   //additional operators by default because they are cheap
-  default_op_components(is_complement, false);
+  default_op_components(is_complement, implicitTranspose);
 
   std::vector<int> sites; 
   if (dmrginp.use_partial_two_integrals()) {
@@ -210,10 +210,6 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
   }
   build_operators(dets, ladders);
 
-  //this block is make with csfs and has the same bra and ket states
-  //overlap is an identity matrix
-  Overlap = boost::shared_ptr<SparseMatrix>(new Ham);
-  Overlap->makeIdentity(braStateInfo);
 }
 
 std::vector<int> SpinBlock::make_complement(const std::vector<int>& sites)
@@ -352,7 +348,6 @@ void SpinBlock::operator= (const SpinBlock& b)
   rightBlock = b.rightBlock;
   twoInt = b.twoInt;
   ops = b.ops;
-  Overlap = b.Overlap;
 }
 
 void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) const
@@ -368,11 +363,14 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   dmrginp.oneelecT -> start();
   dmrginp.s0time -> start();
 
-  boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0];
-  TensorMultiply(leftBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
 
+  boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0];
+  boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+  TensorMultiply(leftBlock, *op, *overlap, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
+
+  overlap = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
   op = rightBlock->get_op_array(HAM).get_local_element(0)[0];
-  TensorMultiply(rightBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum(), 1.0, MAX_THRD);  
+  TensorMultiply(rightBlock, *op, *overlap, this, c, *v, dmrginp.effective_molecule_quantum(), 1.0);  
 
   dmrginp.s0time -> stop();
 #ifndef SERIAL
@@ -546,10 +544,6 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t time in slater operator build " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
 
-  //this block is make with csfs and has the same bra and ket states
-  //overlap is an identity matrix
-  Overlap = boost::shared_ptr<SparseMatrix>(new Ham);
-  Overlap->makeIdentity(braStateInfo);
 
 }
 

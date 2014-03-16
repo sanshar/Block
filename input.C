@@ -471,6 +471,10 @@ SpinAdapted::Input::Input(const string& config_name)
 	m_ham_type = HEISENBERG;
       else if (boost::iequals(keyword,  "dmrg"))
 	m_calc_type = DMRG;
+      else if (boost::iequals(keyword,  "calcoverlap"))
+	m_calc_type = CALCOVERLAP;
+      else if (boost::iequals(keyword,  "calchamiltonian"))
+	m_calc_type = CALCHAMILTONIAN;
       else if (boost::iequals(keyword,  "maxj")) {
 	if (tok.size() !=  2) {
 	  pout << "keyword maxj should be followed by a single integer and then an end line."<<endl;
@@ -755,6 +759,7 @@ SpinAdapted::Input::Input(const string& config_name)
 #ifndef SERIAL
   boost::mpi::communicator world;
   mpi::broadcast(world, sym, 0);
+  mpi::broadcast(world, m_Bogoliubov, 0);
 #endif
     
   if (sym != "c1")

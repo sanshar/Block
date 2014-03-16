@@ -132,6 +132,15 @@ class Ham: public SpinAdapted::SparseMatrix
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
 };
 
+class Overlap: public SpinAdapted::SparseMatrix
+{
+ public:
+  Overlap() { fermion = false;}
+  void build(const SpinBlock& b) ;
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+  double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
 double vcccc_4idx_asymm(int i, int j, int k, int l);
 
 }

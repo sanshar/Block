@@ -539,7 +539,7 @@ void Sweep::InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward,
 }
 
 //generate all the overlap elements between all the mps wavefunction stored on disk. 
-void SpinAdapted::Sweep::calculateAllOverlap()
+void SpinAdapted::Sweep::calculateAllOverlap(Matrix& O)
 {
   bool direction;
   int restartsize;
@@ -557,12 +557,11 @@ void SpinAdapted::Sweep::calculateAllOverlap()
   StateInfo statew1, statew2;
   btas::TVector<btas::Dshapes, 2> overlapShape; overlapShape[0]=quanta; overlapShape[1] = quanta;
   btas::STArray<double, 2>  output(overlapShape, false); //O(ni, mi) matrix
-  Matrix O(dmrginp.nroots(), dmrginp.nroots()); O = 0.0;
+  O.ReSize(dmrginp.nroots(), dmrginp.nroots()); O = 0.0;
 
   for (int i=0; i<dmrginp.nroots(); i++) {
-    O(i+1,i+1) = 1.0;
-    for (int j=i+1; j<dmrginp.nroots(); j++) { 
-      Sweep::InitializeAllOverlaps(sweepParams, true, i, j);
+    for (int j=i; j<dmrginp.nroots(); j++) { 
+      //Sweep::InitializeAllOverlaps(sweepParams, true, i, j);
 
       w1.LoadWavefunctionInfo(statew1, wavesites, i);
       w2.LoadWavefunctionInfo(statew2, wavesites, j);
@@ -576,7 +575,10 @@ void SpinAdapted::Sweep::calculateAllOverlap()
       btas::STArray<double, 3> w1Tensor(w1shape, false), w2Tensor(w2shape, false), intermediate(inter, false);
       btas::STArray<double, 2> Overlap(overlapShape, false);
       LoadOverlapTensor(sites, Overlap, i, j);
+      ::operator<<(cout, Overlap)<<endl;
 
+      pout << w1<<endl;
+      pout << w2<<endl;
       w1.UnCollectQuantaAlongRows(*statew1.leftStateInfo, *statew1.rightStateInfo, w1Tensor);
       w2.UnCollectQuantaAlongRows(*statew2.leftStateInfo, *statew2.rightStateInfo, w2Tensor);
       
@@ -589,14 +591,97 @@ void SpinAdapted::Sweep::calculateAllOverlap()
 	o += output.find(btas::make_array(k,k))->second->operator()(0,0);
       cout << "overlap between "<<i<<"  and "<<j<<"  =  "<<o<<endl;
       O(i+1, j+1) = o;
-      O(j+1, i+1) = o;
 
     }
   }
-  cout << O<<endl;
 }
 
-void SpinAdapted::Sweep::calculateHMatrixElements()
+void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H)
+{
+  bool direction, restoredirection;
+  int restartsize;
+  SweepParams sweepParams;
+  sweepParams.restorestate(restoredirection, restartsize);
+  sweepParams.current_root() = 0;
+
+  direction = !restoredirection;
+
+  int sysdotsite, envsite, envsize=1;
+  std::vector<int> sites(dmrginp.last_site()-envsize-1,0), wavesites(dmrginp.last_site()-envsize,0), envsites(envsize,0);
+  if (direction) {
+    sysdotsite = dmrginp.last_site()-envsize-1;
+    envsite = dmrginp.last_site()-envsize;
+    for (int i=0; i<dmrginp.last_site()-envsize-1; i++)
+      sites[i] = i;
+    for (int i=0; i<dmrginp.last_site()-envsize; i++)
+      wavesites[i] = i;
+    for (int i=dmrginp.last_site()-envsize; i<dmrginp.last_site(); i++) 
+      envsites[-dmrginp.last_site()+envsize+i] = i;
+  }
+  else {
+    sysdotsite = envsize;
+    envsite = 0;
+    for (int i=0; i<dmrginp.last_site()-envsize-1; i++)
+      sites[i] = envsize+1+i;
+    for (int i=0; i<dmrginp.last_site()-envsize; i++)
+      wavesites[i] = envsize+i;
+    for (int i=0; i<envsize; i++)
+      envsites[i] = i;
+  }
+
+  pout.precision(12);
+  Wavefunction w1, w2;
+  StateInfo statew1, statew2;
+  H.ReSize(dmrginp.nroots(), dmrginp.nroots()); H = 0.0;
+  for (int i=0; i<dmrginp.nroots(); i++) {
+    for (int j=0; j<dmrginp.nroots(); j++) { 
+      SpinAdapted::SweepGenblock::do_one(sweepParams, direction, i, j);
+
+      w1.LoadWavefunctionInfo(statew1, wavesites, i);
+      w2.LoadWavefunctionInfo(statew2, wavesites, j);
+
+#ifndef SERIAL
+      mpi::communicator world;
+      broadcast(world, w1, 0);
+      broadcast(world, w2, 0);
+#endif
+
+      Wavefunction Hw1 = w2; Hw1.Clear();
+      SpinBlock newSystem, system, systemDot, env, big;
+      SpinBlock::restore(direction, sites, system, i, j);
+      systemDot = SpinBlock(sysdotsite, sysdotsite, i==j);
+
+      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, i, j, 1, direction, 
+				     DISTRIBUTED_STORAGE, false, true);
+
+      if (envsize == 1) {
+	int dotsize = 1, restartsize = 0;
+	int restart = false, warmup = false;
+	InitBlocks::InitStartingBlock(env, !direction, i, j, dotsize, dotsize, restartsize, restart, warmup);
+      }
+      else 
+	SpinBlock::restore(!direction, envsites, env, i, j);
+
+
+      newSystem.set_loopblock(false);
+      system.set_loopblock(false);
+      env.set_loopblock(true);
+      
+      InitBlocks::InitBigBlock(newSystem, env, big); 
+
+      big.multiplyH(w2, &Hw1, MAX_THRD);
+      double o = DotProduct(w1, Hw1);
+
+      if (i==j) o += dmrginp.get_coreenergy();
+      H(i+1, j+1) = o;
+      //H(j+1, i+1) = o;
+   
+    }
+  }
+}
+
+/*
+void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H)
 {
   bool direction;
   int restartsize;
@@ -604,51 +689,65 @@ void SpinAdapted::Sweep::calculateHMatrixElements()
   sweepParams.restorestate(direction, restartsize);
   sweepParams.current_root() = 0;
 
+  /*
   std::vector<int> sites(dmrginp.last_site()-2,0), wavesites(dmrginp.last_site()-1,0), quanta(3,1);
   for (int i=0; i<dmrginp.last_site()-2; i++)
     sites[i] = i;
   for (int i=0; i<dmrginp.last_site()-1; i++)
     wavesites[i] = i;
 
+  pout.precision(12);
   Wavefunction w1, w2;
   StateInfo statew1, statew2;
-  btas::TVector<btas::Dshapes, 2> overlapShape; overlapShape[0]=quanta; overlapShape[1] = quanta;
-  btas::STArray<double, 2>  output(overlapShape, false); //O(ni, mi) matrix
-  Matrix H(dmrginp.nroots(), dmrginp.nroots()); H = 0.0;
+  H.ReSize(dmrginp.nroots(), dmrginp.nroots()); H = 0.0;
   for (int i=0; i<dmrginp.nroots(); i++) {
     for (int j=i; j<dmrginp.nroots(); j++) { 
       SpinAdapted::SweepGenblock::do_one(sweepParams, true, i, j);
+      SpinAdapted::SweepGenblock::do_one(sweepParams, false, i, j);
 
-      w1.LoadWavefunctionInfo(statew1, wavesites, i);
-      w2.LoadWavefunctionInfo(statew2, wavesites, j);
+      std::vector<int> sites(1,0), wavesites(1,0); wavesites.push_back(1);
+      for (int k=0; k<5; k++) {
+	w1.LoadWavefunctionInfo(statew1, wavesites, i);
+	w2.LoadWavefunctionInfo(statew2, wavesites, j);
 
-      Wavefunction Hw1 = w1; Hw1.Clear();
-      SpinBlock newSystem, system, systemDot, env, big;
-      SpinBlock::restore(true, sites, system, i, j);
-      systemDot = SpinBlock(dmrginp.last_site()-2, dmrginp.last_site()-2);
-      env = SpinBlock(dmrginp.last_site()-1, dmrginp.last_site()-1);
-      
-      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, i, j, 1, true, 
-      			     DISTRIBUTED_STORAGE, false, true);
+	Wavefunction Hw1 = w2; Hw1.Clear();
+	SpinBlock newSystem, system, systemDot, env, big;
+	SpinBlock::restore(true, sites, system, i, j);
+	systemDot = SpinBlock(k+1, k+1, i==j);
+	
+	InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, i, j, 1, true, 
+				       DISTRIBUTED_STORAGE, true, true);
+	
+	SpinBlock::restore(false, newSystem.get_complementary_sites(), env, i, j);
+	//cout << env<<endl;
+	//env.printOperatorSummary();
 
-      newSystem.set_loopblock(false);
-      system.set_loopblock(false);
-      env.set_loopblock(true);
-      InitBlocks::InitBigBlock(newSystem, env, big); 
-
-
-      big.multiplyH(w1, &Hw1, MAX_THRD);
-
-      double o = DotProduct(w2, Hw1);
-
-      H(i+1, j+1) = o;
-      H(j+1, i+1) = o;
-      cout << "Matrix element between "<<i<<" and  "<<j<<" = "<<o<<endl;
+	newSystem.set_loopblock(true);
+	system.set_loopblock(false);
+	env.set_loopblock(false);
+	InitBlocks::InitBigBlock(newSystem, env, big); 
+	
+	//cout << *env.getOverlap()<<endl;
+	cout << DotProduct(w1, w2)<<endl;
+	cout << DotProduct(w1, w1)<<endl;
+	cout << DotProduct(w2, w2)<<endl;
+	cout << DotProduct(Hw1, Hw1)<<endl;
+	
+	big.multiplyH(w1, &Hw1, MAX_THRD);
+	cout <<i<<"  "<<j<<" ****************MAT ELEMENT "<< DotProduct(w2, Hw1)<<endl;
+	cout << DotProduct(Hw1, Hw1)<<endl;
+	double o = DotProduct(w2, Hw1);
+	
+	sites.push_back(k+1);
+	wavesites.push_back(k+2);
+	H(i+1, j+1) = 0;
+	H(j+1, i+1) = 0;
+      }
+      cout << "Matrix element between "<<i<<" and  "<<j<<" = "<<H(i+1, j+1)<<endl;
     }
   }
-  
 }
-
+*/
 
 void SpinAdapted::Wavefunction::CollectQuantaAlongRows (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const vector<SpinQuantum> dQ)
 {

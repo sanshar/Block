@@ -53,7 +53,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   vector<int> spindotsites(2); 
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
-  systemDot = SpinBlock(systemDotStart, systemDotEnd);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
   SpinBlock environment, environmentDot, newEnvironment;
 
 
@@ -75,7 +75,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   envdotsites[1] = environmentDotEnd;
 
   if (!sweepParams.get_onedot())
-    environmentDot = SpinBlock(environmentDotStart, environmentDotEnd);
+    environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, true);
 
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
@@ -221,15 +221,6 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   newSystem.transform_operators(rotatematrix);
   storeStates[2] = newSystem.get_stateInfo();
   dmrginp.operrotT -> stop();
-
-  /*
-  SpinQuantum s = SpinQuantum(0,SpinSpace(0), IrrepSpace(0));
-  pout << *newSystem.get_op_rep(CRE_DES, s, 1, 0)<<endl;
-  pout << *newSystem.get_op_rep(DES_CRE, s, 1, 0)<<endl;
-  pout << *newSystem.get_op_rep(CRE_DESCOMP, s, 3, 2)<<endl;
-  pout << *newSystem.get_op_rep(DES_CRECOMP, s, 3, 2)<<endl;
-  exit(0);
-  */
 
 
 #ifdef USE_BTAS
@@ -471,7 +462,7 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   vector<int> spindotsites(2); 
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
-  systemDot = SpinBlock(systemDotStart, systemDotEnd); // default is_complement=false
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, true); // default is_complement=false
   
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 

@@ -31,22 +31,30 @@ class SpinBlock
       //FIX ME!! remove register_type stuff and add BOOST_CLASS_EXPORT to op_components.h (will take longer to compile)                     
       ar.register_type(static_cast<Op_component<Cre> *>(NULL));
       ar.register_type(static_cast<Op_component<Des> *>(NULL));
+
       ar.register_type(static_cast<Op_component<CreDes> *>(NULL));
       ar.register_type(static_cast<Op_component<DesCre> *>(NULL));
+
       ar.register_type(static_cast<Op_component<CreCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<DesDes> *>(NULL));
+
       ar.register_type(static_cast<Op_component<CreDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<DesCreComp> *>(NULL));
+
       ar.register_type(static_cast<Op_component<DesDesComp> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreComp> *>(NULL));
+
       ar.register_type(static_cast<Op_component<CreCreDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<CreDesDesComp> *>(NULL));
+
       ar.register_type(static_cast<Op_component<Ham> *>(NULL));
+      ar.register_type(static_cast<Op_component<Overlap> *>(NULL));
       ar & ops;
     }
 
  private:
 
   std::map<opTypes, boost::shared_ptr<Op_component_base> > ops;
-  boost::shared_ptr<SparseMatrix> Overlap;
   bool complementary;
   bool normal;
   bool loopblock;
@@ -66,7 +74,7 @@ class SpinBlock
   SpinBlock();
   SpinBlock (const StateInfo& s);
   SpinBlock (const SpinBlock& b);
-  SpinBlock (int start, int finish, bool is_complement = false);
+  SpinBlock (int start, int finish, bool implicitTranspose, bool is_complement = false);
   void BuildTensorProductBlock (std::vector<int>& new_sites);
   
   static std::string  restore (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char* name=0);//left and right are the bra and ket states and the name is the type of the MPO (currently only H)
@@ -115,8 +123,6 @@ class SpinBlock
   Op_component_base& get_op_array(opTypes optype){assert(has(optype));return *(ops.find(optype)->second);}
   const Op_component_base& get_op_array(opTypes optype) const {assert(has(optype));return *(ops.find(optype)->second);}
   
-  boost::shared_ptr<SparseMatrix> getOverlap() {return Overlap;}
-  boost::shared_ptr<SparseMatrix>& setOverlap() {return Overlap;}
 
   boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const SpinQuantum& s, int i=-1, int j=-1, int k=-1) {
     assert(has(optypes));

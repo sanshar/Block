@@ -35,38 +35,47 @@ template <> struct ChooseArray<Cre> {
 template <> struct ChooseArray<Des> {
   typedef para_array_1d<std::vector<boost::shared_ptr<Des> > > ArrayType;
 };
+
 template <> struct ChooseArray<CreDes> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<CreDes> > > ArrayType;
 };
 template <> struct ChooseArray<DesCre> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<DesCre> > > ArrayType;
 };
+
 template <> struct ChooseArray<CreCre> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<CreCre> > > ArrayType;
 };
 template <> struct ChooseArray<DesDes> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<DesDes> > > ArrayType;
 };
+
 template <> struct ChooseArray<CreDesComp> {
     typedef para_array_triang_2d<std::vector<boost::shared_ptr<CreDesComp> > > ArrayType;
 };
 template <> struct ChooseArray<DesCreComp> {
     typedef para_array_triang_2d<std::vector<boost::shared_ptr<DesCreComp> > > ArrayType;
 };
+
 template <> struct ChooseArray<DesDesComp> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<DesDesComp> > > ArrayType;
 };
 template <> struct ChooseArray<CreCreComp> {
   typedef para_array_triang_2d<std::vector<boost::shared_ptr<CreCreComp> > > ArrayType;
 };
+
 template <> struct ChooseArray<CreCreDesComp> {
   typedef para_array_1d<std::vector<boost::shared_ptr<CreCreDesComp> > > ArrayType;
 };
 template <> struct ChooseArray<CreDesDesComp> {
   typedef para_array_1d<std::vector<boost::shared_ptr<CreDesDesComp> > > ArrayType;
 };
+
 template <> struct ChooseArray<Ham> {
   typedef para_array_0d<std::vector<boost::shared_ptr<Ham> > > ArrayType;
+};
+template <> struct ChooseArray<Overlap> {
+  typedef para_array_0d<std::vector<boost::shared_ptr<Overlap> > > ArrayType;
 };
 //*************************************
 class Op_component_base

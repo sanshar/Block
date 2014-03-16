@@ -590,6 +590,29 @@ namespace SpinAdapted {
       return ret_val;
     }
   
+  // -------------------- Overlap ---------------------------  
+  template<> string Op_component<Overlap>::get_op_string() const {
+    return "OVERLAP";
+  }
+  template<> void Op_component<Overlap>::build_iterators(SpinBlock& b)
+    {
+      m_op.set_indices();
+      m_op(0).resize(1);
+      m_op(0)[0]=boost::shared_ptr<Overlap>(new Overlap);
+      m_op(0)[0]->set_orbs() = std::vector<int>();
+      m_op(0)[0]->set_initialised() = true;
+      m_op(0)[0]->set_fermion() = false;
+
+      m_op(0)[0]->set_deltaQuantum(1, SpinQuantum(0, SpinSpace(0), IrrepSpace(0)));
+            
+    }
+  
+  template<> std::vector<std::vector<int> > Op_component<Overlap>::get_array() const 
+    {
+      std::vector< std::vector<int> > ret_val(m_op.local_nnz());
+      return ret_val;
+    }
+  
 
 
 }

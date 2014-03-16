@@ -121,26 +121,59 @@ int calldmrg(char* input, char* output)
 
   SweepParams sweep_copy;
   bool direction_copy; int restartsize_copy;
+  Matrix O, H;
 
 
-  /*
-  for (int istate = 0; istate<dmrginp.nroots(); istate++) {
-    bool direction;
-    int restartsize;
-    sweepParams.restorestate(direction, restartsize);
-    Sweep::InitializeStateInfo(sweepParams, !direction, istate);
-    Sweep::InitializeStateInfo(sweepParams, direction, istate);
-    Sweep::CanonicalizeWavefunction(sweepParams, !direction, istate);
-    Sweep::CanonicalizeWavefunction(sweepParams, direction, istate);
-    Sweep::CanonicalizeWavefunction(sweepParams, !direction, istate);
-  }
-  //Sweep::calculateAllOverlap();
-  Sweep::calculateHMatrixElements();
-  exit(0);
-  */
+
+
 
   switch(dmrginp.calc_type()) {
+
+  case (CALCOVERLAP):
+    pout.precision(12);
+    if (mpigetrank() == 0) {
+      for (int istate = 0; istate<dmrginp.nroots(); istate++) {
+	bool direction;
+	int restartsize;
+	sweepParams.restorestate(direction, restartsize);
+	Sweep::InitializeStateInfo(sweepParams, !direction, istate);
+	Sweep::InitializeStateInfo(sweepParams, direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, !direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, istate);
+      }
+      for (int istate = 0; istate<dmrginp.nroots(); istate++) 
+	for (int j=istate; j<dmrginp.nroots() ; j++) {
+	  Sweep::InitializeAllOverlaps(sweepParams, !direction, istate, j);
+	  Sweep::InitializeAllOverlaps(sweepParams, direction, istate, j);
+	}
+      Sweep::calculateAllOverlap(O);
+    }
+    cout <<"overlap"<<endl<< O <<endl;
+    break;
+
+  case (CALCHAMILTONIAN):
+    pout.precision(12);
+
+    for (int istate = 0; istate<dmrginp.nroots(); istate++) {
+      bool direction;
+      int restartsize;
+      sweepParams.restorestate(direction, restartsize);
+      
+      if (mpigetrank() == 0) {
+	Sweep::InitializeStateInfo(sweepParams, !direction, istate);
+	Sweep::InitializeStateInfo(sweepParams, direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, !direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, !direction, istate);
+      }
+    }
     
+    Sweep::calculateHMatrixElements(H);
+    pout << "overlap "<<endl<<O<<endl;
+    pout << "hamiltonian "<<endl<<H<<endl;
+    break;
+
   case (DMRG):
     if (RESTART && !FULLRESTART)
       restart(sweep_tol, reset_iter);
@@ -689,14 +722,15 @@ void dmrg_stateSpecific(double sweep_tol, int targetState)
     {
       old_fe = last_fe;
       old_be = last_be;
-      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter()) //CHANGE THIS TO SOME INPUT PARAMETER
+      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter()) 
 	break;
+
       last_be = Sweep::do_one(sweepParams, false, !direction, false, 0);
       if (dmrginp.outputlevel() > 0) 
          pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
 
-      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
-         break;
+      //if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+      //break;
 
 
       last_fe = Sweep::do_one(sweepParams, false, direction, false, 0);

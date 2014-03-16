@@ -33,7 +33,7 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
   }
   else if (forward)
   {
-    startingBlock = SpinBlock(0, forward_starting_size - 1, true);
+    startingBlock = SpinBlock(0, forward_starting_size - 1, leftState==rightState, true);
     if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0 && dmrginp.spinAdapted())
     {
       SpinQuantum s = dmrginp.molecule_quantum();
@@ -47,8 +47,6 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
       newstartingBlock.BuildSumBlock(NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, startingBlock, dummyblock);
       startingBlock.clear();
       startingBlock = newstartingBlock;
-      startingBlock.setOverlap() = boost::shared_ptr<SparseMatrix>(new Ham);
-      startingBlock.setOverlap()->makeIdentity(startingBlock.get_stateInfo());
   }
   }
   else

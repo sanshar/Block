@@ -111,6 +111,15 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix);
   for (int i=0; i<nroots; i++) {
     int state = dmrginp.setStateSpecific() ? currentRoot : i;
+    /*
+    DensityMatrix tracedMatrix_i(braStateInfo);
+    std::vector<Matrix> rotateMatrixi;
+    std::vector<double> weights(nroots, 0.0); weights[i] = 1.0;
+
+    tracedMatrix_i.allocate(braStateInfo);
+    tracedMatrix_i.makedensitymatrix(wave_solutions, newbig, weights, 0.0, twodotnoise, normalnoise);
+    error = makeRotateMatrix(tracedMatrix_i, rotateMatrixi, keptstates, keptqstates);
+    */
     SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix, state);
     wave_solutions[i].SaveWavefunctionInfo (newbig.braStateInfo, newbig.leftBlock->sites, state);
   }

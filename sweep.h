@@ -31,8 +31,8 @@ namespace Sweep
   void InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward, int stateA, int stateB);
   
 #ifdef USE_BTAS
-  void calculateAllOverlap();
-  void calculateHMatrixElements();
+  void calculateAllOverlap(Matrix& overlap);
+  void calculateHMatrixElements(Matrix& H);
   void saveUpdatedLocalOverlapMatrix(int currentState, const std::vector<int>& sites, StateInfo& leftState, StateInfo& rightState);
   void getLowerStatesBlockRow(int currentState, const std::vector<int>& sites, const std::vector<int>& complementSites, std::vector<Wavefunction>& lowerStates, const StateInfo& leftState, const StateInfo& rightState, const vector<StateInfo>& stateInfoi);
   void getLowerStatesBlockCol(int currentState, const std::vector<int>& sites, const std::vector<int>& complementSites, std::vector<Wavefunction>& lowerStates, const StateInfo& leftState, const StateInfo& rightState, const vector<StateInfo>& stateInfoi);

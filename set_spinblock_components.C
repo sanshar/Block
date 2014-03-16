@@ -25,8 +25,12 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(DES_CRE).set_local() = true;
     if (has(CRE_CRE))
       set_op_array(CRE_CRE).set_local() = true;
+    if (has(DES_DES))
+      set_op_array(DES_DES).set_local() = true;
     if (has(DES_DESCOMP))
       set_op_array(DES_DESCOMP).set_local() = true;
+    if (has(CRE_CRECOMP))
+      set_op_array(CRE_CRECOMP).set_local() = true;
     if (has(CRE_DESCOMP))
       set_op_array(CRE_DESCOMP).set_local() = true;
     if (has(DES_CRECOMP))
@@ -50,8 +54,12 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(DES_CRE).set_local() = false;
     if (has(CRE_CRE))
       set_op_array(CRE_CRE).set_local() = false;
+    if (has(DES_DES))
+      set_op_array(DES_DES).set_local() = false;
     if (has(DES_DESCOMP))
       set_op_array(DES_DESCOMP).set_local() = false;
+    if (has(CRE_CRECOMP))
+      set_op_array(CRE_CRECOMP).set_local() = false;
     if (has(CRE_DESCOMP))
       set_op_array(CRE_DESCOMP).set_local() = false;
     if (has(DES_CRECOMP))
@@ -105,6 +113,9 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
     case CRE_CRE:
       ret = boost::shared_ptr<Op_component<CreCre> >(new Op_component<CreCre>(is_core));
       break;
+    case DES_DES:
+      ret = boost::shared_ptr<Op_component<DesDes> >(new Op_component<DesDes>(is_core));
+      break;
     case CRE_DESCOMP:
       ret = boost::shared_ptr<Op_component<CreDesComp> >(new Op_component<CreDesComp>(is_core));
       break;
@@ -113,6 +124,9 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
       break;
     case DES_DESCOMP:
       ret = boost::shared_ptr<Op_component<DesDesComp> >(new Op_component<DesDesComp>(is_core));
+      break;
+    case CRE_CRECOMP:
+      ret = boost::shared_ptr<Op_component<CreCreComp> >(new Op_component<CreCreComp>(is_core));
       break;
     case CRE_CRE_DESCOMP:
       ret = boost::shared_ptr<Op_component<CreCreDesComp> >(new Op_component<CreCreDesComp>(is_core));
@@ -123,14 +137,17 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
     case HAM:
       ret = boost::shared_ptr<Op_component<Ham> >(new Op_component<Ham>(is_core));
       break;
+    case OVERLAP:
+      ret = boost::shared_ptr<Op_component<Overlap> >(new Op_component<Overlap>(is_core));
+      break;
   }
   return ret;
 }
 
 //this is used for the dot block
-  void SpinBlock::default_op_components(bool complementary_, bool implicitTranspose)
+void SpinBlock::default_op_components(bool complementary_, bool implicitTranspose)
 {
-  implicitTranspose = false; //DELETE THIS
+  //implicitTranspose = false;
 
   complementary = complementary_;
   normal = !complementary_;
@@ -147,11 +164,16 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
   if (!implicitTranspose) {
     ops[DES] = make_new_op(DES, true);
     ops[CRE_DES_DESCOMP] = make_new_op(CRE_DES_DESCOMP, true);
+
     ops[DES_CRE] = make_new_op(DES_CRE, true);
     ops[DES_CRECOMP] = make_new_op(DES_CRECOMP, true);
+
+    ops[DES_DES] = make_new_op(DES_DES, true);
+    ops[CRE_CRECOMP] = make_new_op(CRE_CRECOMP, true);
   }
 
   ops[HAM] = make_new_op(HAM, true);
+  ops[OVERLAP] = make_new_op(OVERLAP, true);
 
   ops[CRE_DES] = make_new_op(CRE_DES, true);
   ops[CRE_CRE] = make_new_op(CRE_CRE, true);
@@ -172,7 +194,7 @@ void SpinBlock::set_big_components()
 
 void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops, bool implicitTranspose)
 {
-  implicitTranspose = false; //DELETE THIS
+  //implicitTranspose = false;
 
   this->direct = direct;
   if (lBlock.is_complementary() || rBlock.is_complementary()) {
@@ -187,6 +209,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     ops[CRE] = make_new_op(CRE, true);
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
     ops[HAM] = make_new_op(HAM, true);
+    ops[OVERLAP] = make_new_op(OVERLAP, true);
 
     //this option is used when bra and ket states are different
     if (!implicitTranspose) {
@@ -201,15 +224,18 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
       {
 	ops[CRE_DES] = make_new_op(CRE_DES, true);
 	ops[CRE_CRE] = make_new_op(CRE_CRE, true);
-	if (!implicitTranspose) 
+	if (!implicitTranspose) {
 	  ops[DES_CRE] = make_new_op(DES_CRE, true);
-
+	  ops[DES_DES] = make_new_op(DES_DES, true);
+	}
       }
       if (haveCompops) {
 	ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
 	ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
-	if (!implicitTranspose) 
+	if (!implicitTranspose) {
 	  ops[DES_CRECOMP] = make_new_op(DES_CRECOMP, true);
+	  ops[CRE_CRECOMP] = make_new_op(CRE_CRECOMP, true);
+	}
       }
     }
     if (haveNormops)
@@ -222,6 +248,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     ops[CRE] = make_new_op(CRE, false); 
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
     ops[HAM] = make_new_op(HAM, true);
+    ops[OVERLAP] = make_new_op(OVERLAP, false);
 
     //this option is used when bra and ket states are different
     if (!implicitTranspose) {
@@ -236,14 +263,18 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
       {
 	ops[CRE_DES] = make_new_op(CRE_DES, false);
 	ops[CRE_CRE] = make_new_op(CRE_CRE, false);
-	if (!implicitTranspose) 
+	if (!implicitTranspose) {
 	  ops[DES_CRE] = make_new_op(DES_CRE, false);
+	  ops[DES_DES] = make_new_op(DES_DES, false);
+	}
       }
       if (haveCompops) {
 	ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, false);
 	ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, false);
-	if (!implicitTranspose) 
+	if (!implicitTranspose) {
 	  ops[DES_CRECOMP] = make_new_op(DES_CRECOMP, false);
+	  ops[CRE_CRECOMP] = make_new_op(CRE_CRECOMP, false);
+	}
       }
     }
     if (haveNormops)

@@ -35,31 +35,29 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   int backwardsites = numsites - forwardsites;
   SpinQuantum hq(0,SpinSpace(0),IrrepSpace(0));
 
+
   for (int i=0; i<forwardsites-1; i++) {
-    SpinBlock sysdot(i+1, i+1);
+    SpinBlock sysdot(i+1, i+1, true);
     SpinBlock newSystem;
     system.addAdditionalCompOps();
     newSystem.default_op_components(false, system, sysdot, false, true, true);
     newSystem.setstoragetype(DISTRIBUTED_STORAGE);
     newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, sysdot);
-    newSystem.setOverlap() = boost::shared_ptr<SparseMatrix>(new Ham);
-    newSystem.setOverlap()->makeIdentity(newSystem.get_braStateInfo());
 
     system = newSystem;
+
   }
 
   SpinBlock environment;
   InitBlocks::InitStartingBlock(environment, false, 0, 0, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
   cout << environment<<endl;
   for (int i=0;i <backwardsites-1; i++) {
-    SpinBlock envdot(numsites-2-i, numsites-2-i);
+    SpinBlock envdot(numsites-2-i, numsites-2-i, true);
     SpinBlock newEnvironment;
     environment.addAdditionalCompOps();
     newEnvironment.default_op_components(false, environment, envdot, true, true, true);
     newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
     newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, envdot);
-    newEnvironment.setOverlap() = boost::shared_ptr<SparseMatrix>(new Ham);
-    newEnvironment.setOverlap()->makeIdentity(newEnvironment.get_braStateInfo());
 
     environment = newEnvironment;
   }
@@ -112,7 +110,7 @@ void SpinAdapted::Sweep::tiny(double sweep_tol)
   int nroots = dmrginp.nroots(0);
   SweepParams sweepParams;
   sweepParams.set_sweep_parameters();
-  SpinBlock system(0,dmrginp.last_site()-1);
+  SpinBlock system(0,dmrginp.last_site()-1, true);
   const StateInfo& sinfo = system.get_stateInfo();
   SpinQuantum hq(0,SpinSpace(0),IrrepSpace(0));
   for (int i=0; i<sinfo.totalStates; i++) {
