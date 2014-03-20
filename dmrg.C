@@ -729,8 +729,8 @@ void dmrg_stateSpecific(double sweep_tol, int targetState)
       if (dmrginp.outputlevel() > 0) 
          pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
 
-      //if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
-      //break;
+      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+	break;
 
 
       last_fe = Sweep::do_one(sweepParams, false, direction, false, 0);

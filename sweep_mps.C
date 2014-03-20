@@ -640,19 +640,25 @@ void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H)
       w1.LoadWavefunctionInfo(statew1, wavesites, i);
       w2.LoadWavefunctionInfo(statew2, wavesites, j);
 
+      cout << w1<<endl;
+      cout << w2<<endl;
+
 #ifndef SERIAL
       mpi::communicator world;
       broadcast(world, w1, 0);
       broadcast(world, w2, 0);
 #endif
 
-      Wavefunction Hw1 = w2; Hw1.Clear();
+      Wavefunction Hw2 = w1; Hw2.Clear();
       SpinBlock newSystem, system, systemDot, env, big;
       SpinBlock::restore(direction, sites, system, i, j);
       systemDot = SpinBlock(sysdotsite, sysdotsite, i==j);
 
       InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, i, j, 1, direction, 
 				     DISTRIBUTED_STORAGE, false, true);
+      pout << newSystem.get_ketStateInfo()<<endl;
+
+      pout << *newSystem.get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(&newSystem)<<endl;
 
       if (envsize == 1) {
 	int dotsize = 1, restartsize = 0;
@@ -662,6 +668,8 @@ void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H)
       else 
 	SpinBlock::restore(!direction, envsites, env, i, j);
 
+      pout << env<<endl;
+      pout << env.get_ketStateInfo()<<endl;
 
       newSystem.set_loopblock(false);
       system.set_loopblock(false);
@@ -669,8 +677,8 @@ void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H)
       
       InitBlocks::InitBigBlock(newSystem, env, big); 
 
-      big.multiplyH(w2, &Hw1, MAX_THRD);
-      double o = DotProduct(w1, Hw1);
+      big.multiplyH(w2, &Hw2, MAX_THRD);
+      double o = DotProduct(w1, Hw2);
 
       if (i==j) o += dmrginp.get_coreenergy();
       H(i+1, j+1) = o;
