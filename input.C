@@ -777,6 +777,10 @@ SpinAdapted::Input::Input(const string& config_name)
   else
     v_2.permSymm = false;
 
+#ifndef SERIAL
+mpi::broadcast(world, m_Bogoliubov,0);
+#endif
+
   if (m_Bogoliubov) {
     v_2.permSymm = false;
     v_cc.rhf = true;
