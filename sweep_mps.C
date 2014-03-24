@@ -575,10 +575,7 @@ void SpinAdapted::Sweep::calculateAllOverlap(Matrix& O)
       btas::STArray<double, 3> w1Tensor(w1shape, false), w2Tensor(w2shape, false), intermediate(inter, false);
       btas::STArray<double, 2> Overlap(overlapShape, false);
       LoadOverlapTensor(sites, Overlap, i, j);
-      ::operator<<(cout, Overlap)<<endl;
 
-      pout << w1<<endl;
-      pout << w2<<endl;
       w1.UnCollectQuantaAlongRows(*statew1.leftStateInfo, *statew1.rightStateInfo, w1Tensor);
       w2.UnCollectQuantaAlongRows(*statew2.leftStateInfo, *statew2.rightStateInfo, w2Tensor);
       
@@ -634,14 +631,12 @@ void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H)
   StateInfo statew1, statew2;
   H.ReSize(dmrginp.nroots(), dmrginp.nroots()); H = 0.0;
   for (int i=0; i<dmrginp.nroots(); i++) {
-    for (int j=0; j<dmrginp.nroots(); j++) { 
+    for (int j=i; j<dmrginp.nroots(); j++) { 
       SpinAdapted::SweepGenblock::do_one(sweepParams, direction, i, j);
 
       w1.LoadWavefunctionInfo(statew1, wavesites, i);
       w2.LoadWavefunctionInfo(statew2, wavesites, j);
 
-      cout << w1<<endl;
-      cout << w2<<endl;
 
 #ifndef SERIAL
       mpi::communicator world;
@@ -658,7 +653,6 @@ void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H)
 				     DISTRIBUTED_STORAGE, false, true);
       pout << newSystem.get_ketStateInfo()<<endl;
 
-      pout << *newSystem.get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(&newSystem)<<endl;
 
       if (envsize == 1) {
 	int dotsize = 1, restartsize = 0;
@@ -682,8 +676,9 @@ void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H)
 
       if (i==j) o += dmrginp.get_coreenergy();
       H(i+1, j+1) = o;
-      //H(j+1, i+1) = o;
-   
+      H(j+1, i+1) = o;
+
+      pout << H <<endl; 
     }
   }
 }
