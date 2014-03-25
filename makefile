@@ -5,12 +5,12 @@
 
 ##BOOSTINCLUDE = /home/sandeep/Work/Programs/boost_1_54_0/
 #specify boost include file
-BOOSTINCLUDE = /home/sandeep/apps/boost_1_55_0/
+BOOSTBASE=/home/juny/boost_1_55_0/install
+BOOSTINCLUDE = $(BOOSTBASE)/include/boost
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/home/sandeep/apps/boost_1_55_0/lib/ -lboost_serialization -lboost_system -lboost_filesystem
-LAPACKBLAS =  -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
-
+BOOSTLIB = -L$(BOOSTBASE)/lib -lboost_serialization -lboost_system -lboost_filesystem
+LAPACKBLAS = -L/opt/intel/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
@@ -47,13 +47,13 @@ EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
 CXX =  g++
-MPICXX = mpic++
+MPICXX = /usr/lib64/openmpi/bin/mpicxx
 HOME = .
 NEWMATINCLUDE = $(HOME)/newmat10/
 INCLUDE1 = $(HOME)/include/
 INCLUDE2 = $(HOME)/
 NEWMATLIB = $(HOME)/newmat10/
-BTAS = $(HOME)/btas/
+BTAS = $(HOME)/btas
 .SUFFIXES: .C .cpp
 
    
@@ -98,9 +98,7 @@ ifeq ($(USE_MPI), yes)
 	CXX = $(MPICXX)
 endif
 
-
 OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)  -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL ${MKLOPT} ${UNITTEST}
-
 
 SRC_genetic = genetic/CrossOver.C genetic/Evaluate.C genetic/GAInput.C genetic/GAOptimize.C genetic/Generation.C genetic/Mutation.C genetic/RandomGenerator.C genetic/ReadIntegral.C
 
