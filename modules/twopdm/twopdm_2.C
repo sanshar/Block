@@ -203,7 +203,7 @@ void save_twopdm_text(const array_4d<double>& twopdm, const int &i, const int &j
   if(!mpigetrank())
   {
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/twopdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/twopdm.", i, j, ".txt");
     ofstream ofs(file);
     ofs << twopdm.dim1() << endl;
     for(int k=0;k<twopdm.dim1();++k)
@@ -227,7 +227,7 @@ void save_spatial_twopdm_text(const array_4d<double>& twopdm, const int &i, cons
     }
 
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j, ".txt");
     ofstream ofs(file);
     ofs << twopdm.dim1()/2 << endl;
     for(int k=0;k<twopdm.dim1()/2;++k)
@@ -257,7 +257,7 @@ void save_spatial_twopdm_binary(const array_4d<double>& twopdm, const int &i, co
     }
 
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_binary_twopdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_binary_twopdm.", i, j, ".bin");
     FILE* f = fopen(file, "wb");
 
     int nrows = twopdm.dim1()/2;

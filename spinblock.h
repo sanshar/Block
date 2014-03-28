@@ -34,21 +34,23 @@ class SpinBlock
 
       ar.register_type(static_cast<Op_component<CreDes> *>(NULL));
       ar.register_type(static_cast<Op_component<DesCre> *>(NULL));
-
       ar.register_type(static_cast<Op_component<CreCre> *>(NULL));
       ar.register_type(static_cast<Op_component<DesDes> *>(NULL));
 
       ar.register_type(static_cast<Op_component<CreDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<DesCreComp> *>(NULL));
-
       ar.register_type(static_cast<Op_component<DesDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<CreCreComp> *>(NULL));
-
       ar.register_type(static_cast<Op_component<CreCreDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<CreDesDesComp> *>(NULL));
 
       ar.register_type(static_cast<Op_component<Ham> *>(NULL));
       ar.register_type(static_cast<Op_component<Overlap> *>(NULL));
+
+      // NPDM
+      ar.register_type(static_cast<Op_component<RI3index> *>(NULL));
+      ar.register_type(static_cast<Op_component<RI4index> *>(NULL));
+
       ar & ops;
     }
 
