@@ -3,13 +3,15 @@
 #This program is integrated in Molpro with the permission of 
 #Sandeep Sharma and Garnet K.-L. Chan
 
-
-#specify boost include file
-BOOSTINCLUDE = /home/boxiao/usr/include/
+##BOOSTINCLUDE = /home/sandeep/Work/Programs/boost_1_54_0/
+BOOSTINCLUDE = /home/mark/libs/boost_1_55_0/
+EIGENINCLUDE = /home/mark/libs/eigen/
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/home/boxiao/usr/lib/ -lboost_serialization -lboost_system -lboost_filesystem
-LAPACKBLAS =  -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+##BOOSTLIB = -L/home/sandeep/Work/Programs/boost_1_54_0/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+##LAPACKBLAS =  -lblas -llapack #-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+BOOSTLIB = -L/home/mark/libs/boost_1_55_0/stage/lib/ -lboost_serialization -lboost_system -lboost_filesystem  #maw
+LAPACKBLAS = -L/usr/lib -lblas -llapack_atlas -llapack
 
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
@@ -25,9 +27,10 @@ I8_OPT = yes
 MOLPRO = no
 OPENMP = no
 
-ifeq ($(I8_OPT), yes)
-	I8 = -DI8
-endif
+##MAW FIXME THIS BREAKS boost/spirit stuff!
+#MAWifeq ($(I8_OPT), yes)
+#MAW	I8 = -DI8
+#MAWendif
 
 EXECUTABLE = block.spin_adapted
 
@@ -48,7 +51,11 @@ ifeq ($(MOLPRO), yes)
    MOLPROINCLUDE=$(HOME)/../
    MOLPRO_BLOCK= -DMOLPRO
 endif
-FLAGS =  -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(HOME)/modules/twopdm/ -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(MOLPROINCLUDE) 
+
+FLAGS =  -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(EIGENINCLUDE) -I$(MOLPROINCLUDE) \
+         -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(HOME)/modules/twopdm/ \
+         -I$(HOME)/modules/npdm -I$(HOME)/modules/two_index_ops -I$(HOME)/modules/three_index_ops -I$(HOME)/modules/four_index_ops
+
 ifeq ($(USE_BTAS), yes)
 	FLAGS +=  -I$(BTAS)/include -std=c++0x -DUSE_BTAS
 	LIBS = -L$(BTAS)/lib -lbtas 
@@ -90,12 +97,18 @@ OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)  -DFA
 
 
 SRC_genetic = genetic/CrossOver.C genetic/Evaluate.C genetic/GAInput.C genetic/GAOptimize.C genetic/Generation.C genetic/Mutation.C genetic/RandomGenerator.C genetic/ReadIntegral.C
-SRC_npdm = modules/npdm/npdm_patterns.C modules/npdm/npdm_operator_wrappers.C modules/npdm/npdm_expectations.C modules/npdm/npdm_operators.C modules/npdm/npdm_op_components.C
 
-SRC_spin_adapted =  dmrg.C fiedler.C least_squares.C sweep_mps.C set_spinblock_components.C linear.C main.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C $(SRC_genetic) SpinSpace.C include/IntegralMatrix.C
+SRC_npdm = modules/npdm/npdm.C modules/npdm/npdm_driver.C modules/npdm/npdm_patterns.C modules/npdm/npdm_expectations.C modules/npdm/npdm_expectations_engine.C  \
+           modules/npdm/npdm_permutations.C modules/npdm/npdm_spin_adaptation.C modules/npdm/npdm_operator_selector.C modules/npdm/npdm_spin_ops.C \
+           modules/npdm/onepdm_container.C modules/npdm/twopdm_container.C  \
+           modules/two_index_ops/two_index_wrappers.C  \
+           modules/three_index_ops/three_index_compound_ops.C modules/three_index_ops/three_index_op_components.C \
+           modules/four_index_ops/four_index_compound_ops.C modules/four_index_ops/four_index_op_components.C
+
+SRC_spin_adapted =  dmrg.C fiedler.C least_squares.C sweep_mps.C set_spinblock_components.C linear.C main.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C $(SRC_genetic) SpinSpace.C include/IntegralMatrix.C $(SRC_npdm)
 
 
-SRC_spin_library =  fiedler.C IrrepSpace.C least_squares.C sweep_mps.C dmrg.C readinput.C save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C spinblock.C StateInfo.C set_spinblock_components.C op_components.C Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C linear.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C  modules/onepdm/sweep.C modules/onepdm/onepdm.C  modules/generate_blocks/sweep.C fci.C $(SRC_genetic) SpinSpace.C include/IntegralMatrix.C
+SRC_spin_library =  fiedler.C IrrepSpace.C least_squares.C sweep_mps.C dmrg.C readinput.C save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C spinblock.C StateInfo.C set_spinblock_components.C op_components.C Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C linear.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C  modules/onepdm/sweep.C modules/onepdm/onepdm.C  modules/generate_blocks/sweep.C fci.C $(SRC_genetic) SpinSpace.C include/IntegralMatrix.C $(SRC_npdm)
 
 BTAS_source = btas/lib/Dreindex.C btas/lib/clapack.C btas/lib/libbtas.C
 

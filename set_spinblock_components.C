@@ -10,6 +10,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "spinblock.h"
 
 namespace SpinAdapted{
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SpinBlock::setstoragetype(Storagetype st)
 {
   if (st == LOCAL_STORAGE)
@@ -39,7 +42,11 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_CRE_DESCOMP).set_local() = true;
     if (has(CRE_DES_DESCOMP))
       set_op_array(CRE_DES_DESCOMP).set_local() = true;
-
+    // NPDM
+    if (has(RI_3INDEX))
+      set_op_array(RI_3INDEX).set_local() = true;
+    if (has(RI_4INDEX))
+      set_op_array(RI_4INDEX).set_local() = true;
   }
   else if (st == DISTRIBUTED_STORAGE)
   {
@@ -68,7 +75,13 @@ void SpinBlock::setstoragetype(Storagetype st)
       set_op_array(CRE_CRE_DESCOMP).set_local() = false;
     if (has(CRE_DES_DESCOMP))
       set_op_array(CRE_DES_DESCOMP).set_local() = false;
+    // NPDM
+    if (has(RI_3INDEX))
+      set_op_array(RI_3INDEX).set_local() = false;
+    if (has(RI_4INDEX))
+      set_op_array(RI_4INDEX).set_local() = false;
   }
+
   //this is needed for onepdm generation, the system block all the cre are local
   //and on the environment block all the cre are distributed, this way in multiple
   //processor runs, we can generate all O_{ij} elements of onepdm where i is on 
@@ -92,6 +105,8 @@ void SpinBlock::setstoragetype(Storagetype st)
 
 
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bool &is_core)
 {
@@ -140,14 +155,24 @@ boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bo
     case OVERLAP:
       ret = boost::shared_ptr<Op_component<Overlap> >(new Op_component<Overlap>(is_core));
       break;
+    // NPDM
+    case RI_3INDEX:
+      ret = boost::shared_ptr<Op_component<RI3index> >(new Op_component<RI3index>(is_core));
+      break;
+    case RI_4INDEX:
+      ret = boost::shared_ptr<Op_component<RI4index> >(new Op_component<RI4index>(is_core));
+      break;
   }
   return ret;
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 //this is used for the dot block
 void SpinBlock::default_op_components(bool complementary_, bool implicitTranspose)
 {
-  //implicitTranspose = false;
+  // New version of NPDM code not yet working with implicit transposes
+  if ( dmrginp.new_npdm_code() ) implicitTranspose = false;
 
   complementary = complementary_;
   normal = !complementary_;
@@ -164,10 +189,8 @@ void SpinBlock::default_op_components(bool complementary_, bool implicitTranspos
   if (!implicitTranspose) {
     ops[DES] = make_new_op(DES, true);
     ops[CRE_DES_DESCOMP] = make_new_op(CRE_DES_DESCOMP, true);
-
     ops[DES_CRE] = make_new_op(DES_CRE, true);
     ops[DES_CRECOMP] = make_new_op(DES_CRECOMP, true);
-
     ops[DES_DES] = make_new_op(DES_DES, true);
     ops[CRE_CRECOMP] = make_new_op(CRE_CRECOMP, true);
   }
@@ -180,10 +203,16 @@ void SpinBlock::default_op_components(bool complementary_, bool implicitTranspos
   ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
   ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
 
+  if ( dmrginp.new_npdm_code() ) {
+    ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
+    ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
+  }
+
   this->loopblock = true;
 
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void SpinBlock::set_big_components()
 {
@@ -192,9 +221,12 @@ void SpinBlock::set_big_components()
   ops[HAM] = make_new_op(HAM, false);
 }
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops, bool implicitTranspose)
 {
-  //implicitTranspose = false;
+  // New version of NPDM code not yet working with implicit transposes
+  if ( dmrginp.new_npdm_code() ) implicitTranspose = false;
 
   this->direct = direct;
   if (lBlock.is_complementary() || rBlock.is_complementary()) {
@@ -205,7 +237,11 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     this->normal = true;
   }
 
+  // Not direct
+  //------------------
   if (!is_direct()) {
+    if ( dmrginp.new_npdm_code() ) assert(false);
+
     ops[CRE] = make_new_op(CRE, true);
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
     ops[HAM] = make_new_op(HAM, true);
@@ -218,31 +254,34 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     }
 
     //for hubbard model if we want to calculate twopdm we still need cd operators
-    if (dmrginp.hamiltonian() != HUBBARD || dmrginp.do_cd()) {
-      
-      if (haveNormops)
-      {
-	ops[CRE_DES] = make_new_op(CRE_DES, true);
-	ops[CRE_CRE] = make_new_op(CRE_CRE, true);
-	if (!implicitTranspose) {
-	  ops[DES_CRE] = make_new_op(DES_CRE, true);
-	  ops[DES_DES] = make_new_op(DES_DES, true);
-	}
+    if (dmrginp.hamiltonian() != HUBBARD || dmrginp.do_npdm_ops()) {
+      if (haveNormops) {
+        ops[CRE_DES] = make_new_op(CRE_DES, true);
+        ops[CRE_CRE] = make_new_op(CRE_CRE, true);
+        if (!implicitTranspose) {
+          ops[DES_CRE] = make_new_op(DES_CRE, true);
+          ops[DES_DES] = make_new_op(DES_DES, true);
+        }
       }
       if (haveCompops) {
-	ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
-	ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
-	if (!implicitTranspose) {
-	  ops[DES_CRECOMP] = make_new_op(DES_CRECOMP, true);
-	  ops[CRE_CRECOMP] = make_new_op(CRE_CRECOMP, true);
-	}
+        ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
+        ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
+        if (!implicitTranspose) {
+          ops[DES_CRECOMP] = make_new_op(DES_CRECOMP, true);
+          ops[CRE_CRECOMP] = make_new_op(CRE_CRECOMP, true);
+        }
       }
     }
+
     if (haveNormops)
       this->loopblock = true;
     else
       this->loopblock = false;
-  } else {
+  } 
+
+  // Is direct
+  //------------------
+  else {
     //we need CCDcomp to be on core, the rest of them can be generated very quickly
     //and dont really required incore storage
     ops[CRE] = make_new_op(CRE, false); 
@@ -257,26 +296,30 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     }
     
     //for hubbard model if we want to calculate twopdm we still need cd operators
-    if (dmrginp.hamiltonian() != HUBBARD || dmrginp.do_cd()) {
-      
-      if (haveNormops || dmrginp.do_cd())
-      {
-	ops[CRE_DES] = make_new_op(CRE_DES, false);
-	ops[CRE_CRE] = make_new_op(CRE_CRE, false);
-	if (!implicitTranspose) {
-	  ops[DES_CRE] = make_new_op(DES_CRE, false);
-	  ops[DES_DES] = make_new_op(DES_DES, false);
-	}
+    if (dmrginp.hamiltonian() != HUBBARD || dmrginp.do_npdm_ops()) {
+      if (haveNormops || dmrginp.do_npdm_ops()) {
+        ops[CRE_DES] = make_new_op(CRE_DES, false);
+        ops[CRE_CRE] = make_new_op(CRE_CRE, false);
+        if (!implicitTranspose) {
+          ops[DES_CRE] = make_new_op(DES_CRE, false);
+          ops[DES_DES] = make_new_op(DES_DES, false);
+        }
       }
       if (haveCompops) {
-	ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, false);
-	ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, false);
-	if (!implicitTranspose) {
-	  ops[DES_CRECOMP] = make_new_op(DES_CRECOMP, false);
-	  ops[CRE_CRECOMP] = make_new_op(CRE_CRECOMP, false);
-	}
+        ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, false);
+        ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, false);
+        if (!implicitTranspose) {
+          ops[DES_CRECOMP] = make_new_op(DES_CRECOMP, false);
+          ops[CRE_CRECOMP] = make_new_op(CRE_CRECOMP, false);
+        }
       }
     }
+
+    if ( dmrginp.new_npdm_code() ) {
+      ops[RI_3INDEX] = make_new_op(RI_3INDEX, false);
+      ops[RI_4INDEX] = make_new_op(RI_4INDEX, false);
+    }
+
     if (haveNormops)
       this->loopblock = true;
     else
@@ -284,4 +327,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
   }
 
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 }

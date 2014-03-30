@@ -465,7 +465,7 @@ void save_onepdm_text(const Matrix& onepdm, const int &i, const int &j)
 
 
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/onepdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/onepdm.", i, j, ".txt");
     ofstream ofs(file);
     ofs << onepdm.Nrows() << endl;
     for(int k=0;k<onepdm.Nrows()/2;++k)
@@ -492,7 +492,7 @@ void save_pairmat_text(const Matrix& pairmat, const int &i, const int &j) {
     }
 
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_pairmat.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_pairmat.", i, j, ".txt");
     ofstream ofs(file);
     ofs << pairmat.Nrows()/2 << endl;
     for(int k=0;k<pairmat.Nrows()/2;++k)
@@ -517,7 +517,7 @@ void save_onepdm_spatial_text(const Matrix& onepdm, const int &i, const int &j)
     }
 
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_onepdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_onepdm.", i, j, ".txt");
     ofstream ofs(file);
     ofs << onepdm.Nrows()/2 << endl;
     for(int k=0;k<onepdm.Nrows()/2;++k)
@@ -537,7 +537,7 @@ void save_onepdm_spatial_binary(const Matrix& onepdm, const int &i, const int &j
   if(!mpigetrank())
   {
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_onepdm_bin.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_onepdm_bin.", i, j, ".bin");
     FILE* f = fopen(file, "wb");
     int rows = onepdm.Nrows()/2;
     Matrix spatonepdm(rows, rows);
