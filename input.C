@@ -741,7 +741,7 @@ SpinAdapted::Input::Input(const string& config_name)
         pout << "number of electrons has to be specified using the keyword nelec"<<endl;
         abort();
       } else {
-        n_elec = 0;
+        n_elec = m_norbs;
       }
     }
 
@@ -799,7 +799,7 @@ mpi::broadcast(world, m_Bogoliubov,0);
     v_cccd.rhf=true;
     readorbitalsfile(orbitalfile, v_1, v_2, v_cc, v_cccc, v_cccd);
     assert(!m_add_noninteracting_orbs);
-    m_molecule_quantum = SpinQuantum(m_norbs, SpinSpace(m_alpha - m_beta), m_total_symmetry_number);
+    m_molecule_quantum = SpinQuantum(m_alpha + m_beta, SpinSpace(m_alpha - m_beta), m_total_symmetry_number);
   } else {
     readorbitalsfile(orbitalfile, v_1, v_2);
     m_molecule_quantum = SpinQuantum(m_alpha + m_beta, SpinSpace(m_alpha - m_beta), m_total_symmetry_number);      

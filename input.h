@@ -329,12 +329,13 @@ class Input {
   }
   vector<SpinQuantum> effective_molecule_quantum_vec() {
     vector<SpinQuantum> q;
-    if (!m_Bogoliubov)
-      q.push_back(effective_molecule_quantum());
-    else
-      for (int i = 0; i <= m_norbs/2; ++i) {
-        q.push_back(SpinQuantum(i*2, SpinSpace(0), total_symmetry_number()));
+    if (!m_Bogoliubov) q.push_back(effective_molecule_quantum());
+    else {
+      SpinQuantum q_max = effective_molecule_quantum();
+      for (int n = 0; n <= q_max.get_n(); n+=2) {
+        q.push_back(SpinQuantum(n, q_max.get_s(), q_max.get_symm()));
       }
+    }
     return q;
   }
   std::vector<double>& get_orbenergies() {return m_orbenergies;}

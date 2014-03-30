@@ -5,11 +5,11 @@
 
 
 #specify boost include file
-BOOSTINCLUDE = /home/sandeep/Work/Programs/boost_1_54_0/
+BOOSTINCLUDE = /home/boxiao/usr/include/
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/home/sandeep/Work/Programs/boost_1_54_0/lib/ -lboost_serialization -lboost_system -lboost_filesystem
-LAPACKBLAS =  -lblas -llapack #-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+BOOSTLIB = -L/home/boxiao/usr/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+LAPACKBLAS =  -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
@@ -80,12 +80,12 @@ endif
 
 ifeq ($(USE_MPI), yes)
 	MPI_OPT = 
-	MPI_LIB = -L$(BOOSTINCLUDE)/lib/ -lboost_mpi
+	MPI_LIB = -lboost_mpi
         LIBS += $(MPI_LIB)
 	CXX = $(MPICXX)
 endif
 
-OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)  -DFAST_MTP -D_HAS_CBLAS #-D_HAS_INTEL_MKL
+OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)  -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL
 
 
 
