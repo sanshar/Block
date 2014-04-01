@@ -409,11 +409,11 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
 
   boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0];
   boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
-  TensorMultiply(leftBlock, *op, *overlap, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
+  TensorMultiply(leftBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0) ,1.0);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
 
   overlap = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
   op = rightBlock->get_op_array(HAM).get_local_element(0)[0];
-  TensorMultiply(rightBlock, *op, *overlap, this, c, *v, dmrginp.effective_molecule_quantum(), 1.0);  
+  TensorMultiply(rightBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0), 1.0);  
 
   dmrginp.s0time -> stop();
 #ifndef SERIAL
