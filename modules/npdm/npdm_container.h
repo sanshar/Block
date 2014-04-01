@@ -9,7 +9,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef NPDM_CONTAINER_H
 #define NPDM_CONTAINER_H
 
-//#include <vector>
+#include <vector>
 //#include <multiarray.h>
 //#include "spinblock.h"
 //#include "wavefunction.h"

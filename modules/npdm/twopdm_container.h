@@ -21,7 +21,7 @@ class Twopdm_container : public Npdm_container {
 
   public:
     Twopdm_container( int sites );
-    ~Twopdm_container() {};
+//FIXME destructor?
   
     void save_npdms(const int &i, const int &j);
     void store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements );

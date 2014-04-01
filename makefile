@@ -92,7 +92,8 @@ ifeq ($(USE_MPI), yes)
 	CXX = $(MPICXX)
 endif
 
-OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)  -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL
+OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)  -DFAST_MTP -D_HAS_CBLAS 
+#-D_HAS_INTEL_MKL
 
 
 
@@ -100,10 +101,12 @@ SRC_genetic = genetic/CrossOver.C genetic/Evaluate.C genetic/GAInput.C genetic/G
 
 SRC_npdm = modules/npdm/npdm.C modules/npdm/npdm_driver.C modules/npdm/npdm_patterns.C modules/npdm/npdm_expectations.C modules/npdm/npdm_expectations_engine.C  \
            modules/npdm/npdm_permutations.C modules/npdm/npdm_spin_adaptation.C modules/npdm/npdm_operator_selector.C modules/npdm/npdm_spin_ops.C \
-           modules/npdm/onepdm_container.C modules/npdm/twopdm_container.C  \
-           modules/two_index_ops/two_index_wrappers.C  \
-           modules/three_index_ops/three_index_compound_ops.C modules/three_index_ops/three_index_op_components.C \
-           modules/four_index_ops/four_index_compound_ops.C modules/four_index_ops/four_index_op_components.C
+           modules/npdm/onepdm_container.C modules/npdm/twopdm_container.C modules/npdm/threepdm_container.C modules/npdm/fourpdm_container.C  \
+           modules/two_index_ops/two_index_wrappers.C  modules/three_index_ops/three_index_wrappers.C modules/four_index_ops/four_index_wrappers.C  \
+           modules/three_index_ops/three_index_compound_ops.C modules/four_index_ops/four_index_compound_ops.C  \
+           modules/three_index_ops/three_index_op_components.C modules/four_index_ops/four_index_op_components.C  \
+           modules/three_index_ops/three_index_ops.C modules/four_index_ops/four_index_ops.C  \
+           modules/three_index_ops/build_3index_ops.C modules/four_index_ops/build_4index_ops.C
 
 SRC_spin_adapted =  dmrg.C fiedler.C least_squares.C sweep_mps.C set_spinblock_components.C linear.C main.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C $(SRC_genetic) SpinSpace.C include/IntegralMatrix.C $(SRC_npdm)
 
@@ -143,7 +146,7 @@ $(BTAS)/lib/libbtas.a: $(BTAS_obj)
 	ar cr $(BTAS)/lib/libbtas.a $(BTAS_obj)
 
 clean:
-	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o modules/npdm/*.o $(NEWMATLIB)*.o libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a genetic/gaopt genetic/*.o btas/lib/*.o btas/lib/libbtas.a
+	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o modules/npdm/*.o $(NEWMATLIB)*.o libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a genetic/gaopt genetic/*.o btas/lib/*.o btas/lib/libbtas.a modules/two_index_ops/*.o modules/three_index_ops/*.o modules/four_index_ops/*.o
 
 # DO NOT DELETE
 

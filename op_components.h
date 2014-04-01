@@ -12,6 +12,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include <boost/function.hpp>
 #include <boost/functional.hpp>
+#include <boost/format.hpp>
 #include <para_array.h>
 #include <boost/shared_ptr.hpp>
 #include <list>
@@ -86,6 +87,56 @@ template <> struct ChooseArray<RI3index> {
 template <> struct ChooseArray<RI4index> {
   typedef para_array_4d<std::vector<boost::shared_ptr<RI4index> > > ArrayType;
 };
+// 3PDM
+template <> struct ChooseArray<CreCreDes> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<CreCreDes> > > ArrayType;
+};
+template <> struct ChooseArray<CreDesDes> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<CreDesDes> > > ArrayType;
+};
+template <> struct ChooseArray<CreDesCre> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<CreDesCre> > > ArrayType;
+};
+template <> struct ChooseArray<CreCreCre> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<CreCreCre> > > ArrayType;
+};
+// 4PDM
+template <> struct ChooseArray<DesCreDes> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<DesCreDes> > > ArrayType;
+};
+template <> struct ChooseArray<DesDesCre> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<DesDesCre> > > ArrayType;
+};
+template <> struct ChooseArray<DesCreCre> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<DesCreCre> > > ArrayType;
+};
+template <> struct ChooseArray<DesDesDes> {
+  typedef para_array_3d<std::vector<boost::shared_ptr<DesDesDes> > > ArrayType;
+};
+template <> struct ChooseArray<CreCreDesDes> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreCreDesDes> > > ArrayType;
+};
+template <> struct ChooseArray<CreDesCreDes> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreDesCreDes> > > ArrayType;
+};
+template <> struct ChooseArray<CreDesDesCre> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreDesDesCre> > > ArrayType;
+};
+template <> struct ChooseArray<CreDesDesDes> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreDesDesDes> > > ArrayType;
+};
+template <> struct ChooseArray<CreCreCreDes> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreCreCreDes> > > ArrayType;
+};
+template <> struct ChooseArray<CreCreDesCre> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreCreDesCre> > > ArrayType;
+};
+template <> struct ChooseArray<CreDesCreCre> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreDesCreCre> > > ArrayType;
+};
+template <> struct ChooseArray<CreCreCreCre> {
+  typedef para_array_4d<std::vector<boost::shared_ptr<CreCreCreCre> > > ArrayType;
+};
 
 //===========================================================================================================================================================
 
@@ -105,9 +156,14 @@ class Op_component_base
   bool m_deriv;
 
  public:
+  virtual void build_iterators(SpinBlock& b)=0;
   virtual void build_operators(SpinBlock& b)=0;
   virtual void build_csf_operators(std::vector< Csf >& dets, std::vector< std::vector<Csf> >& ladders, SpinBlock& b) = 0;
-  virtual void build_iterators(SpinBlock& b)=0;
+  virtual void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo* s) =0;
+  virtual void renormalise_transform(const std::vector<Matrix>& leftMat, const StateInfo* bra, const std::vector<Matrix>& rightMat, const StateInfo* ket) =0;
+  virtual void build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo) =0;
+  virtual void build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, const std::vector<Matrix>& rightMat, const StateInfo *ket) =0;
+
   //virtual string type_name() = 0;
   virtual int get_size() const =0;
   virtual int size() const=0;
@@ -128,6 +184,7 @@ class Op_component_base
   virtual boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1, int l=-1) = 0;
   virtual const boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1, int l=-1) const = 0;
   virtual std::string get_op_string() const = 0;
+  virtual std::string get_filename() const = 0;
   virtual ~Op_component_base() {}  
 
 };
@@ -144,17 +201,21 @@ template <class Op> class Op_component : public Op_component_base
   {
     ar & boost::serialization::base_object<Op_component_base>(*this);
     ar.register_type(static_cast<Op *>(NULL));
-    ar & m_op;
+    ar & m_op & uniqueID;
   }
 
  protected:
   typedef typename ChooseArray<Op>::ArrayType paraarray;
   typedef Op OpType; 
   paraarray m_op;
+  int uniqueID;
+  // Use for unique filename for NPDM disk-based operator storage 
+  static int nIDgenerator;
 
  public:
-  Op_component() {m_deriv=false;}
-  Op_component(bool core) {m_core=core;m_deriv=false;}
+  Op_component() { m_deriv=false; uniqueID = nIDgenerator++; }
+  Op_component(bool core) { m_core=core; m_deriv=false; uniqueID = nIDgenerator++; }
+  std::string get_op_string() const;
   bool& set_local() {return m_op.set_local();}
   bool is_local() const {return m_op.is_local();}
   int get_size() const {return m_op.local_nnz();}
@@ -163,9 +224,39 @@ template <class Op> class Op_component : public Op_component_base
   bool has_local_index(int i, int j=-1, int k=-1, int l=-1) const {return m_op.has_local_index(i, j, k, l);}
   virtual void add_local_indices(int i, int j=-1, int k=-1){};
   void clear(){m_op.clear();}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
   void build_iterators(SpinBlock& b);
-  void build_operators(SpinBlock& b) {singlethread_build(*this, b);}
+
   void build_csf_operators(std::vector< Csf >& c, vector< vector<Csf> >& ladders, SpinBlock& b) {singlethread_build(*this, b, c, ladders);}
+
+  void build_operators(SpinBlock& b) 
+    {singlethread_build(*this, b);}
+
+  void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo* s)
+    {for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );}
+
+  void renormalise_transform( const std::vector<Matrix>& leftMat, const StateInfo* bra, const std::vector<Matrix>& rightMat, const StateInfo* ket)
+    {for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(leftMat), bra, boost::ref(rightMat), ket) );}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  // Note for NPDM higher-index operators, there are template specializations for these functions
+  void build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo)
+    {for_all_operators_multithread(*this, bind(&SparseMatrix::build_and_renormalise_transform, _1, &b, boost::ref(ot), boost::ref(rotateMatrix), stateinfo));}
+
+  void build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, const std::vector<Matrix>& rightMat, const StateInfo *ket)
+    {for_all_operators_multithread(*this, bind(&SparseMatrix::build_and_renormalise_transform, _1, &b, boost::ref(ot), boost::ref(leftMat), bra, boost::ref(rightMat), ket));}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// Use for unique filename for NPDM disk-based operator storage
+  std::string get_filename() const
+  {
+    std::string file;
+    file = str( boost::format("%s%s%s%s%d%s%d%s") % dmrginp.load_prefix() % "/" % get_op_string() % "_" % uniqueID % "_p" % mpigetrank() % ".tmp" );
+    return file;
+  }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -242,13 +333,13 @@ template <class Op> class Op_component : public Op_component_base
 	    return m_op(i,j,k,l)[p];
     return boost::shared_ptr<Op>(o);
   }
-  std::string get_op_string() const;
 
 };
 
 //===========================================================================================================================================================
  
-}
+template <class Op> int Op_component<Op>::nIDgenerator = 1;
 
+}
 
 #endif

@@ -186,6 +186,9 @@ void Onepdm_container::update_full_spin_array( std::vector< std::pair< std::vect
 
 void Onepdm_container::update_full_spatial_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
 {
+  // Take into account orbital reordering
+  const std::vector<int>& ro = dmrginp.reorder_vector();
+
   for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
     assert( (it->first).size() == 2 );
 
@@ -195,7 +198,7 @@ void Onepdm_container::update_full_spatial_array( std::vector< std::pair< std::v
       int i = (it->first)[0];
       int j = (it->first)[1];
       if ( i%2 != j%2 ) continue;
-      spatial_onepdm(i/2,j/2) += it->second;
+      spatial_onepdm( ro.at(i/2), ro.at(j/2) ) += it->second;
     }
   }
 }

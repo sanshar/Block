@@ -22,8 +22,8 @@ Npdm_op_compound_CCD::Npdm_op_compound_CCD( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
 //FIXMEMAW
-//  size_ = spinBlock_->get_op_array(RI_3INDEX).get_size();
-  size_ = 1;
+//  size_ = 1;
+  size_ = spinBlock_->get_op_array(RI_3INDEX).get_size();
   is_local_ = true;
   factor_ = 1.0;
   transpose_ = false;
@@ -36,31 +36,31 @@ bool Npdm_op_compound_CCD::set_local_ops( int idx )
 {
 //cout << "getting compound CCD operator...\n";
 //cout << "size_ = " << size_ << endl;
-assert( idx == 0 );
-////  // Spatial orbital indices
-//////FIXME don't need to keep reconstructing whole array!
-////  indices_ = spinBlock_->get_op_array(RI_3INDEX).get_array().at(idx);
-////  int ix = indices_[0];
-////  int jx = indices_[1];
-////  int kx = indices_[2];
-////
-////  // Get 2-index and 1-index ops as RI building blocks
-////  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_element(ix,jx);
-////  std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_element(kx);
-
+//assert( idx == 0 );
   // Spatial orbital indices
-  indices_.clear();
-  int ix, jx, kx;
+//FIXME don't need to keep reconstructing whole array!
+  indices_ = spinBlock_->get_op_array(RI_3INDEX).get_array().at(idx);
+  int ix = indices_[0];
+  int jx = indices_[1];
+  int kx = indices_[2];
 
-  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
-  ix = twoOps.at(0)->get_orbs(0);
-  jx = twoOps.at(0)->get_orbs(1);
-  std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
-  kx = oneOp.at(0)->get_orbs(0);
-  indices_.push_back( ix );
-  indices_.push_back( jx );
-  indices_.push_back( kx );
-cout << "CCD indices = " << ix << ", " << jx << ", " << kx << endl;
+  // Get 2-index and 1-index ops as RI building blocks
+  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_element(ix,jx);
+  std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_element(kx);
+
+////  // Spatial orbital indices
+////  indices_.clear();
+////  int ix, jx, kx;
+////
+////  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
+////  ix = twoOps.at(0)->get_orbs(0);
+////  jx = twoOps.at(0)->get_orbs(1);
+////  std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
+////  kx = oneOp.at(0)->get_orbs(0);
+////  indices_.push_back( ix );
+////  indices_.push_back( jx );
+////  indices_.push_back( kx );
+////cout << "CCD indices = " << ix << ", " << jx << ", " << kx << endl;
 
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
   opReps_.clear();
@@ -81,8 +81,8 @@ Npdm_op_compound_CDD::Npdm_op_compound_CDD( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
 //FIXMEMAW
-//  size_ = spinBlock_->get_op_array(RI_3INDEX).get_size();
-  size_ = 1;
+//  size_ = 1;
+  size_ = spinBlock_->get_op_array(RI_3INDEX).get_size();
   is_local_ = true;
   factor_ = 1.0;
   transpose_ = false;
@@ -94,30 +94,30 @@ Npdm_op_compound_CDD::Npdm_op_compound_CDD( SpinBlock * spinBlock )
 bool Npdm_op_compound_CDD::set_local_ops( int idx )
 {
 //cout << "getting compound CDD operator...\n";
-assert( idx == 0 );
-////  // Spatial orbital indices
-//////FIXME don't need to keep reconstructing whole array!
-////  indices_ = spinBlock_->get_op_array(RI_3INDEX).get_array().at(idx);
-////  int ix = indices_[0];
-////  int jx = indices_[1];
-////  int kx = indices_[2];
-////
-////  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_DES).get_element(ix,jx);
-////  std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_element(kx);
-
+//assert( idx == 0 );
   // Spatial orbital indices
-  indices_.clear();
-  int ix, jx, kx;
+//FIXME don't need to keep reconstructing whole array!
+  indices_ = spinBlock_->get_op_array(RI_3INDEX).get_array().at(idx);
+  int ix = indices_[0];
+  int jx = indices_[1];
+  int kx = indices_[2];
 
-  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_DES).get_local_element(idx);
-  ix = twoOps.at(0)->get_orbs(0);
-  jx = twoOps.at(0)->get_orbs(1);
-  std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
-  kx = oneOp.at(0)->get_orbs(0);
-  indices_.push_back( ix );
-  indices_.push_back( jx );
-  indices_.push_back( kx );
-cout << "CDD indices = " << ix << ", " << jx << ", " << kx << endl;
+  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_DES).get_element(ix,jx);
+  std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_element(kx);
+
+////  // Spatial orbital indices
+////  indices_.clear();
+////  int ix, jx, kx;
+////
+////  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_DES).get_local_element(idx);
+////  ix = twoOps.at(0)->get_orbs(0);
+////  jx = twoOps.at(0)->get_orbs(1);
+////  std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
+////  kx = oneOp.at(0)->get_orbs(0);
+////  indices_.push_back( ix );
+////  indices_.push_back( jx );
+////  indices_.push_back( kx );
+////cout << "CDD indices = " << ix << ", " << jx << ", " << kx << endl;
 
   opReps_.clear();
   // S=0 (+) S=1/2  =>  S=1/2

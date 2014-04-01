@@ -47,9 +47,26 @@ class SpinBlock
       ar.register_type(static_cast<Op_component<Ham> *>(NULL));
       ar.register_type(static_cast<Op_component<Overlap> *>(NULL));
 
-      // NPDM
+      // 3PDM
       ar.register_type(static_cast<Op_component<RI3index> *>(NULL));
       ar.register_type(static_cast<Op_component<RI4index> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreCre> *>(NULL));
+      // 4PDM
+      ar.register_type(static_cast<Op_component<DesCreDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<DesDesCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<DesCreCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<DesDesDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreDesDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesCreDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesDesCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesDesDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreCreDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreDesCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesCreCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreCreCre> *>(NULL));
 
       ar & ops;
     }
@@ -153,6 +170,11 @@ class SpinBlock
   void build_iterators();
   void build_operators(std::vector<Csf >& s, std::vector< std::vector<Csf> >& ladders);
   void build_operators();
+  void build_and_renormalise_operators(const std::vector<Matrix>& rotateMatrix, const StateInfo *newStateInfo);
+  void build_and_renormalise_operators(const std::vector<Matrix>& leftMat, const StateInfo *bra, const std::vector<Matrix>& rightMat, const StateInfo *ket);
+  void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo);
+  void renormalise_transform(const std::vector<Matrix>& leftMat, const StateInfo *bra, const std::vector<Matrix>& rightMat, const StateInfo *ket);
+
   void BuildSumBlock(int condition, SpinBlock& b_1, SpinBlock& b_2, StateInfo* compState=0);
   void BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState=0);
   void BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum> qnumbers, std::vector<int> distribution, bool random, 

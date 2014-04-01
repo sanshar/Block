@@ -104,6 +104,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_no_transform = false;
   m_do_fci = false;
   m_do_npdm_ops = false;
+  m_do_npdm_in_core = false;
   m_new_npdm_code = false;
   m_maxiter = 10;
   m_oneindex_screen_tol = NUMERICAL_ZERO;
@@ -491,6 +492,12 @@ SpinAdapted::Input::Input(const string& config_name)
 	m_calc_type = ONEPDM;
       else if (boost::iequals(keyword,  "twopdm") || boost::iequals(keyword,  "twordm") || boost::iequals(keyword,  "trdm"))
 	m_calc_type = TWOPDM;
+      else if (boost::iequals(keyword,  "threepdm"))
+	m_calc_type = THREEPDM;
+      else if (boost::iequals(keyword,  "fourpdm"))
+	m_calc_type = FOURPDM;
+      else if (boost::iequals(keyword,  "nevpt2_npdm"))
+	m_calc_type = NEVPT2PDM;
       else if (boost::iequals(keyword,  "restart_onepdm") || boost::iequals(keyword,  "restart_onerdm") || boost::iequals(keyword,  "restart_ordm"))
 	m_calc_type = RESTART_ONEPDM;
       else if (boost::iequals(keyword,  "restart_twopdm") || boost::iequals(keyword,  "restart_twordm") || boost::iequals(keyword,  "restart_trdm"))
@@ -591,6 +598,10 @@ SpinAdapted::Input::Input(const string& config_name)
       else if (boost::iequals(keyword,  "docd") || boost::iequals(keyword,  "do_npdm_ops"))
       {
         m_do_npdm_ops = true;
+      }
+      else if (boost::iequals(keyword,  "do_npdm_in_core"))
+      {
+        m_do_npdm_in_core = true;
       }
 
 

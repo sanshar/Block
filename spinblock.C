@@ -231,6 +231,7 @@ void SpinBlock::build_iterators()
   }
 }
 
+
 void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vector<Csf> >& ladders)
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
@@ -251,6 +252,48 @@ void SpinBlock::build_operators()
 	    it->second->build_operators(*this);
       }
     }
+}
+
+
+void SpinBlock::renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo)
+{
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    if(it->second->is_core()) {
+      it->second->renormalise_transform(rotateMatrix, stateinfo);
+    }
+  }
+}
+
+
+void SpinBlock::renormalise_transform(const std::vector<Matrix>& leftMat, const StateInfo *bra, const std::vector<Matrix>& rightMat, const StateInfo *ket)
+{
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    if(it->second->is_core()) {
+      it->second->renormalise_transform(leftMat, bra, rightMat, ket);
+    }
+  }
+}
+
+
+void SpinBlock::build_and_renormalise_operators(const std::vector<Matrix>& rotateMatrix, const StateInfo *newStateInfo)
+{
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    opTypes ot = it->first;
+    if(! it->second->is_core()) {
+      it->second->build_and_renormalise_operators(*this, ot, rotateMatrix, newStateInfo);
+    }
+  }
+}
+
+
+void SpinBlock::build_and_renormalise_operators(const std::vector<Matrix>& leftMat, const StateInfo *bra, const std::vector<Matrix>& rightMat, const StateInfo *ket)
+{
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    opTypes ot = it->first;
+    if(! it->second->is_core()) {
+      it->second->build_and_renormalise_operators(*this, ot, leftMat, bra, rightMat, ket);
+    }
+  }
 }
 
 

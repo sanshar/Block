@@ -259,17 +259,19 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   {
     if (rotateMatrix [Q].Ncols () != 0)
       {
-	newQuanta.push_back (braStateInfo.quanta [Q]);
-	newQuantaStates.push_back (rotateMatrix [Q].Ncols ());
-	newQuantaMap.push_back (Q);
+newQuanta.push_back (braStateInfo.quanta [Q]);
+newQuantaStates.push_back (rotateMatrix [Q].Ncols ());
+newQuantaMap.push_back (Q);
       }
   }
   StateInfo newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
 
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    if (! it->second->is_core())
-      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
-						       boost::ref(rotateMatrix) , &newStateInfo));
+  build_and_renormalise_operators( rotateMatrix, &newStateInfo );
+//FIXMEMAW  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
+//FIXMEMAW    if (! it->second->is_core())
+//FIXMEMAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
+//FIXMEMAW                                    boost::ref(rotateMatrix) , &newStateInfo));
+
   braStateInfo = newStateInfo;
   braStateInfo.AllocatePreviousStateInfo ();
   *braStateInfo.previousStateInfo = oldStateInfo;
@@ -287,10 +289,10 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   }
   Timer transformtimer;
 
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    if ( it->second->is_core())
-      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), (&this->braStateInfo)));
-
+  renormalise_transform( rotateMatrix, &this->braStateInfo );
+//FIXMEMAW  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
+//FIXMEMAW    if ( it->second->is_core())
+//FIXMEMAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), (&this->braStateInfo)));
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if (! it->second->is_core())
@@ -317,10 +319,11 @@ void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::
   StateInfo::transform_state(rightrotateMatrix, ketStateInfo, newketStateInfo);
 
 
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    if (! it->second->is_core())
-      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
-						      boost::ref(leftrotateMatrix) , &newbraStateInfo, boost::ref(rightrotateMatrix), &newketStateInfo));
+  build_and_renormalise_operators( leftrotateMatrix, &newbraStateInfo, rightrotateMatrix, &newketStateInfo );
+//FIXMEMAW  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
+//FIXMEMAW    if (! it->second->is_core())
+//FIXMEMAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
+//FIXMEMAW						      boost::ref(leftrotateMatrix) , &newbraStateInfo, boost::ref(rightrotateMatrix), &newketStateInfo));
 
   braStateInfo = newbraStateInfo;
   braStateInfo.AllocatePreviousStateInfo ();
@@ -339,12 +342,12 @@ void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::
   }
   Timer transformtimer;
 
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    if ( it->second->is_core())
-      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, 
-						      boost::ref(leftrotateMatrix), &this->braStateInfo, 
-						      boost::ref(rightrotateMatrix), &this->ketStateInfo ));
-
+  renormalise_transform( leftrotateMatrix, &this->braStateInfo, rightrotateMatrix, &this->ketStateInfo );
+//FIXMEMAW  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
+//FIXMEMAW    if ( it->second->is_core())
+//FIXMEMAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, 
+//FIXMEMAW						      boost::ref(leftrotateMatrix), &this->braStateInfo, 
+//FIXMEMAW						      boost::ref(rightrotateMatrix), &this->ketStateInfo ));
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if (! it->second->is_core())

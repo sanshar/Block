@@ -7,7 +7,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include "global.h"
-#include "timer.h"
 #include <boost/format.hpp>
 #include "twopdm_container.h"
 #include "npdm_permutations.h"

@@ -35,7 +35,7 @@ enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESC
               // Extra 3PDM operators
               CRE_CRE_CRE, CRE_CRE_DES, CRE_DES_DES, CRE_DES_CRE,
               // Extra 4PDM operators
-              DES_CRE_DES, DES_DES_CRE, DES_CRE_CRE,
+              DES_CRE_DES, DES_DES_CRE, DES_CRE_CRE, DES_DES_DES,
               CRE_CRE_DES_DES, CRE_DES_CRE_DES, CRE_DES_DES_CRE, CRE_DES_DES_DES,
               CRE_CRE_CRE_DES, CRE_CRE_DES_CRE, CRE_DES_CRE_CRE, CRE_CRE_CRE_CRE };
 
@@ -84,6 +84,8 @@ class SparseMatrix : public Baseoperator<Matrix>  // the sparse matrix represent
          & built \
          & built_on_disk \
          & allowedQuantaMatrix \
+         & quantum_ladder \
+         & build_pattern \
          & operatorMatrix \
          & Sign;
     }

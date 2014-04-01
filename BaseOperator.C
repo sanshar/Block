@@ -88,11 +88,6 @@ double Transposeview::get_scaling(SpinQuantum leftq, SpinQuantum rightq) const
 }
 
 
-void SparseMatrix::allocate(const SpinBlock& b)
-{
-  allocate(b.get_stateInfo());
-}
-
 void SparseMatrix::makeIdentity(const StateInfo& s) 
 {
   set_deltaQuantum(1, SpinQuantum (0, SpinSpace(0), IrrepSpace(0)));
@@ -110,6 +105,11 @@ void SparseMatrix::makeIdentity(const StateInfo& s)
       }
 }
 
+
+void SparseMatrix::allocate(const SpinBlock& b)
+{
+  allocate(b.get_stateInfo());
+}
 
 
 void SparseMatrix::allocate(const StateInfo& s)
