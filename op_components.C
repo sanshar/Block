@@ -138,8 +138,7 @@ namespace SpinAdapted {
       std::vector<int> orbs(2);
       for (int i = 0; i < m_op.local_nnz(); ++i)
 	{
-	  pair<int, int> opair = m_op.unmap_local_index(i);
-	  orbs[0] = opair.first; orbs[1] = opair.second;
+	  orbs = m_op.unmap_local_index(i);
 	  std::vector<boost::shared_ptr<CreDes> >& vec = m_op.get_local_element(i);
 	  SpinQuantum spin1 = getSpinQuantum(orbs[0]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
 	  SpinQuantum spin2 = getSpinQuantum(orbs[1]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
@@ -173,8 +172,7 @@ namespace SpinAdapted {
       std::vector<int> orbs(2);
       for (int i = 0; i < m_op.local_nnz(); ++i)
 	{
-	  pair<int, int> opair = m_op.unmap_local_index(i);
-	  orbs[0] = opair.first; orbs[1] = opair.second;
+	  orbs = m_op.unmap_local_index(i);
 	  std::vector<boost::shared_ptr<DesCre> >& vec = m_op.get_local_element(i);
 	  SpinQuantum spin1 = getSpinQuantum(orbs[0]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
 	  SpinQuantum spin2 = getSpinQuantum(orbs[1]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
@@ -209,8 +207,7 @@ namespace SpinAdapted {
       std::vector<int> orbs(2);
       for (int i = 0; i < m_op.local_nnz(); ++i)
 	{
-	  pair<int, int> opair = m_op.unmap_local_index(i);
-	  orbs[0] = opair.first; orbs[1] = opair.second;
+	  orbs = m_op.unmap_local_index(i);
 	  std::vector<boost::shared_ptr<CreCre> >& vec = m_op.get_local_element(i);
 	  SpinQuantum spin1 = getSpinQuantum(orbs[0]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
 	  SpinQuantum spin2 = getSpinQuantum(orbs[1]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
@@ -244,8 +241,7 @@ namespace SpinAdapted {
       std::vector<int> orbs(2);
       for (int i = 0; i < m_op.local_nnz(); ++i)
 	{
-	  pair<int, int> opair = m_op.unmap_local_index(i);
-	  orbs[0] = opair.first; orbs[1] = opair.second;
+	  orbs = m_op.unmap_local_index(i);
 	  std::vector<boost::shared_ptr<DesDes> >& vec = m_op.get_local_element(i);
 	  SpinQuantum spin1 = -getSpinQuantum(orbs[0]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]));
 	  SpinQuantum spin2 = -getSpinQuantum(orbs[1]);//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[1]));
@@ -279,8 +275,7 @@ namespace SpinAdapted {
     std::vector<int> orbs(2);
     for (int i = 0; i < m_op.local_nnz(); ++i)
 	{
-	  pair<int, int> opair = m_op.unmap_local_index(i);
-	  orbs[0] = opair.first; orbs[1] = opair.second;
+	  orbs = m_op.unmap_local_index(i);
 	  std::vector<boost::shared_ptr<CreDesComp> >& vec = m_op.get_local_element(i);
 	  SpinQuantum spin1 = getSpinQuantum(orbs[0]);
 	  SpinQuantum spin2 = getSpinQuantum(orbs[1]);
@@ -333,8 +328,7 @@ namespace SpinAdapted {
     std::vector<int> orbs(2);
     for (int i = 0; i < m_op.local_nnz(); ++i)
     {
-      pair<int, int> opair = m_op.unmap_local_index(i);
-      orbs[0] = opair.first; orbs[1] = opair.second;
+	   orbs = m_op.unmap_local_index(i);
       std::vector<boost::shared_ptr<DesCreComp> >& vec = m_op.get_local_element(i);
       SpinQuantum spin1 = getSpinQuantum(orbs[0]);
       SpinQuantum spin2 = getSpinQuantum(orbs[1]);
@@ -381,8 +375,7 @@ namespace SpinAdapted {
       std::vector<int> orbs(2);
       for (int i = 0; i < m_op.local_nnz(); ++i)
 	{
-	  pair<int, int> opair = m_op.unmap_local_index(i);
-	  orbs[0] = opair.first; orbs[1] = opair.second;
+	   orbs = m_op.unmap_local_index(i);
 	  std::vector<boost::shared_ptr<DesDesComp> >& vec = m_op.get_local_element(i);
 	  SpinQuantum spin1 = getSpinQuantum(orbs[0]);
 	  SpinQuantum spin2 = getSpinQuantum(orbs[1]);
@@ -438,8 +431,7 @@ namespace SpinAdapted {
       std::vector<int> orbs(2);
       for (int i = 0; i < m_op.local_nnz(); ++i)
 	{
-	  pair<int, int> opair = m_op.unmap_local_index(i);
-	  orbs[0] = opair.first; orbs[1] = opair.second;
+	  orbs = m_op.unmap_local_index(i);
 	  std::vector<boost::shared_ptr<CreCreComp> >& vec = m_op.get_local_element(i);
 	  SpinQuantum spin1 = getSpinQuantum(orbs[0]);
 	  SpinQuantum spin2 = getSpinQuantum(orbs[1]);

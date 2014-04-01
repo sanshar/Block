@@ -131,7 +131,7 @@ void SpinBlock::recvcompOps(Op_component_base& opcomp, int I, int J, int optype)
   boost::mpi::communicator world;
   std::vector<boost::shared_ptr<SparseMatrix> > oparray = opcomp.get_element(I,J);
   for(int i=0; i<oparray.size(); i++) {
-    world.recv(processorindex(trimap(I, J, dmrginp.last_site())), optype+i*10+1000*J+100000*I, *oparray[i]);
+    world.recv(processorindex(trimap_2d(I, J, dmrginp.last_site())), optype+i*10+1000*J+100000*I, *oparray[i]);
   }
 #endif
 }
@@ -182,31 +182,31 @@ void SpinBlock::addAdditionalCompOps()
         continue;
       int I = (compsite > dotopindex) ? compsite : dotopindex;
       int J = (compsite > dotopindex) ? dotopindex : compsite;
-      if (processorindex(compsite) == processorindex(trimap(I, J, length)))
+      if (processorindex(compsite) == processorindex(trimap_2d(I, J, length)))
         continue;
       if (processorindex(compsite) == mpigetrank()) {
         //this will potentially receive some ops        
         bool other_proc_has_ops = true;
-        world.recv(processorindex(trimap(I, J, length)), 0, other_proc_has_ops);
+        world.recv(processorindex(trimap_2d(I, J, length)), 0, other_proc_has_ops);
         if (other_proc_has_ops) {
 	      ops[CRE_DESCOMP]->add_local_indices(I, J);
 	      recvcompOps(*ops[CRE_DESCOMP], I, J, CRE_DESCOMP);
         }
         other_proc_has_ops = true;
-        world.recv(processorindex(trimap(I, J, length)), 0, other_proc_has_ops);
+        world.recv(processorindex(trimap_2d(I, J, length)), 0, other_proc_has_ops);
         if (other_proc_has_ops) {
 	      ops[DES_DESCOMP]->add_local_indices(I, J);
 	      recvcompOps(*ops[DES_DESCOMP], I, J, DES_DESCOMP);
         }
 	if (has(DES)) {
 	  other_proc_has_ops = true;
-	  world.recv(processorindex(trimap(I, J, length)), 0, other_proc_has_ops);
+	  world.recv(processorindex(trimap_2d(I, J, length)), 0, other_proc_has_ops);
 	  if (other_proc_has_ops) {
 	    ops[CRE_CRECOMP]->add_local_indices(I, J);
 	    recvcompOps(*ops[CRE_CRECOMP], I, J, CRE_CRECOMP);
 	  }
 	  other_proc_has_ops = true;
-	  world.recv(processorindex(trimap(I, J, length)), 0, other_proc_has_ops);
+	  world.recv(processorindex(trimap_2d(I, J, length)), 0, other_proc_has_ops);
 	  if (other_proc_has_ops) {
 	    ops[DES_CRECOMP]->add_local_indices(I, J);
 	    recvcompOps(*ops[DES_CRECOMP], I, J, DES_CRECOMP);
@@ -215,7 +215,7 @@ void SpinBlock::addAdditionalCompOps()
       } 
       else {
         //this will potentially send some ops
-        if (processorindex(trimap(I, J, length)) == mpigetrank()) {
+        if (processorindex(trimap_2d(I, J, length)) == mpigetrank()) {
 	  bool this_proc_has_ops = ops[CRE_DESCOMP]->has_local_index(I, J);
 	  world.send(processorindex(compsite), 0, this_proc_has_ops);
 	  if (this_proc_has_ops) {
