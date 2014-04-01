@@ -160,6 +160,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 	    //tmp.quanta_distribution (quantumNumbers, distribution, true);
 
       }
+      
       for (int i = 0; i < distribution.size (); ++i) {
 	    quantaIterator = quantaDist.find(quantumNumbers[i]);
 	    if (quantaIterator != quantaDist.end())
@@ -176,9 +177,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 	      quantaDist[quantumNumbers[i]] = distribution[i];
       }
 
-      if (dmrginp.outputlevel() > 0)
-	    pout << "\t\t\t Quantum numbers and states used for warm up :: " << endl << "\t\t\t ";
-      
+      if (dmrginp.outputlevel() > 0) pout << "\t\t\t Quantum numbers and states used for warm up :: " << endl << "\t\t\t ";
       quantumNumbers.clear(); quantumNumbers.reserve(distribution.size());
       distribution.clear();distribution.reserve(quantumNumbers.size());
       std::map<SpinQuantum, int>::iterator qit = quantaDist.begin();
@@ -191,7 +190,6 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 	    }
       }
       pout << endl;
-
 
       if(dot_with_sys && onedot)
       {

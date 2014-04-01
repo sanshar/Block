@@ -157,9 +157,9 @@ void TensorProduct (StateInfo& a, StateInfo& b, StateInfo& c, const int constrai
   ObjectMatrix<char> dummy;
   assert (constraint != WITH_LIST);
 
-  if (constraint == NO_PARTICLE_SPIN_NUMBER_CONSTRAINT)
+  if (constraint == NO_PARTICLE_SPIN_NUMBER_CONSTRAINT) {
     TensorProduct (a, b, dmrginp.effective_molecule_quantum(), LessThanQ, c, compState);
-  else if (constraint == PARTICLE_SPIN_NUMBER_CONSTRAINT) {
+  } else if (constraint == PARTICLE_SPIN_NUMBER_CONSTRAINT) {
     TensorProduct (a, b, dmrginp.effective_molecule_quantum(), EqualQ, c);
   } else if (constraint == SPIN_NUMBER_CONSTRAINT) {
     TensorProduct (a, b, dmrginp.effective_molecule_quantum(), EqualS, c);
@@ -208,7 +208,8 @@ void SpinAdapted::StateInfo::AllocateUnCollectedStateInfo ()
 
 void SpinAdapted::StateInfo::quanta_distribution (std::vector<SpinQuantum>& qnumbers, std::vector<int>& distribution, const bool complement)
 {
-  // first extract the unique quantum numbers                                                                                             
+  // first extract the unique quantum numbers
+
   std::vector<SpinQuantum> nosymquanta;
   std::vector<int> nosymquantastates;
 
@@ -218,7 +219,7 @@ void SpinAdapted::StateInfo::quanta_distribution (std::vector<SpinQuantum>& qnum
 
   qnumbers.resize (0);
   distribution.resize (0);
-
+  
   for (int i = 0; i < nosymquanta.size (); ++i) {
     if (complement) {
       if (SpinQuantum::can_complement (nosymquanta [i])) {

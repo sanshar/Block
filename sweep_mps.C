@@ -561,7 +561,7 @@ void SpinAdapted::Sweep::calculateAllOverlap(Matrix& O)
 
   for (int i=0; i<dmrginp.nroots(); i++) {
     for (int j=i; j<dmrginp.nroots(); j++) { 
-      //Sweep::InitializeAllOverlaps(sweepParams, true, i, j);
+      Sweep::InitializeAllOverlaps(sweepParams, true, i, j);
 
       w1.LoadWavefunctionInfo(statew1, wavesites, i);
       w2.LoadWavefunctionInfo(statew2, wavesites, j);
@@ -601,9 +601,9 @@ void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H)
   sweepParams.restorestate(restoredirection, restartsize);
   sweepParams.current_root() = 0;
 
-  direction = !restoredirection;
+  direction = restoredirection;
 
-  int sysdotsite, envsite, envsize=1;
+  int sysdotsite, envsite, envsize=2;
   std::vector<int> sites(dmrginp.last_site()-envsize-1,0), wavesites(dmrginp.last_site()-envsize,0), envsites(envsize,0);
   if (direction) {
     sysdotsite = dmrginp.last_site()-envsize-1;
@@ -630,6 +630,7 @@ void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H)
   Wavefunction w1, w2;
   StateInfo statew1, statew2;
   H.ReSize(dmrginp.nroots(), dmrginp.nroots()); H = 0.0;
+
   for (int i=0; i<dmrginp.nroots(); i++) {
     for (int j=i; j<dmrginp.nroots(); j++) { 
       SpinAdapted::SweepGenblock::do_one(sweepParams, direction, i, j);
@@ -638,20 +639,13 @@ void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H)
       w2.LoadWavefunctionInfo(statew2, wavesites, j);
 
 
-#ifndef SERIAL
-      mpi::communicator world;
-      broadcast(world, w1, 0);
-      broadcast(world, w2, 0);
-#endif
-
-      Wavefunction Hw2 = w1; Hw2.Clear();
       SpinBlock newSystem, system, systemDot, env, big;
       SpinBlock::restore(direction, sites, system, i, j);
       systemDot = SpinBlock(sysdotsite, sysdotsite, i==j);
+      system.addAdditionalCompOps();
 
       InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, i, j, 1, direction, 
 				     DISTRIBUTED_STORAGE, false, true);
-      pout << newSystem.get_ketStateInfo()<<endl;
 
 
       if (envsize == 1) {
@@ -671,13 +665,26 @@ void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H)
       
       InitBlocks::InitBigBlock(newSystem, env, big); 
 
+      w1.LoadWavefunctionInfo(statew1, wavesites, i);
+      w2.LoadWavefunctionInfo(statew2, wavesites, j);
+
+      pout << w1<<endl;
+      pout << w2<<endl;
+
+#ifndef SERIAL
+      mpi::communicator world;
+      broadcast(world, w1, 0);
+      broadcast(world, w2, 0);
+#endif
+      Wavefunction Hw2 = w1; Hw2.Clear();
+
       big.multiplyH(w2, &Hw2, MAX_THRD);
       double o = DotProduct(w1, Hw2);
 
+      cout <<"matrix element "<<o<<endl;
       if (i==j) o += dmrginp.get_coreenergy();
       H(i+1, j+1) = o;
       H(j+1, i+1) = o;
-
       pout << H <<endl; 
     }
   }
@@ -1000,8 +1007,10 @@ void SpinAdapted::UnCollectQuantaAlongRows(const StateInfo& sRow, const StateInf
 
 #else
 
-void Sweep::InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward, int currentstate) {return;}
+void Sweep::InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward, int stateA, int stateB) {return;}
 void SpinAdapted::Sweep::CanonicalizeWavefunction(SweepParams &sweepParams, const bool &forward, int currentstate) {return;}
 void SpinAdapted::Sweep::InitializeStateInfo(SweepParams &sweepParams, const bool &forward, int currentstate) {return;}
+void SpinAdapted::Sweep::calculateAllOverlap(Matrix& O){return;}
+void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H) {return;}
 
 #endif

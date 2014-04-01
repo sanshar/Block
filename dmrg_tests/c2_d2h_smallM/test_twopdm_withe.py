@@ -38,7 +38,7 @@ def run():
   #test energy for two lowest states
   energyfile = open("dmrg.e","rb")
   for state in range(2):
-    file1 = open("spatial_twopdm.%i.%i"%(state,state),"r")
+    file1 = open("spatial_twopdm.%i.%i.txt"%(state,state),"r")
     rdm2 = N.zeros((norb,norb,norb,norb))
 
     file1.readline()
