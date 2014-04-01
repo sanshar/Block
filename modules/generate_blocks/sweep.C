@@ -12,7 +12,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "density.h"
 #include "davidson.h"
 #include "pario.h"
+#ifdef USE_BTAS
 #include "overlaptensor.h"
+#endif
 #include "sweep.h"
 
 namespace SpinAdapted{

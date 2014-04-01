@@ -29,10 +29,10 @@ namespace Sweep
   void CanonicalizeWavefunction(SweepParams &sweepParams, const bool &forward, int currentstate);
   void InitializeStateInfo(SweepParams &sweepParams, const bool &forward, int currentstate);
   void InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward, int stateA, int stateB);
-  
-#ifdef USE_BTAS
   void calculateAllOverlap(Matrix& overlap);
   void calculateHMatrixElements(Matrix& H);
+  
+#ifdef USE_BTAS
   void saveUpdatedLocalOverlapMatrix(int currentState, const std::vector<int>& sites, StateInfo& leftState, StateInfo& rightState);
   void getLowerStatesBlockRow(int currentState, const std::vector<int>& sites, const std::vector<int>& complementSites, std::vector<Wavefunction>& lowerStates, const StateInfo& leftState, const StateInfo& rightState, const vector<StateInfo>& stateInfoi);
   void getLowerStatesBlockCol(int currentState, const std::vector<int>& sites, const std::vector<int>& complementSites, std::vector<Wavefunction>& lowerStates, const StateInfo& leftState, const StateInfo& rightState, const vector<StateInfo>& stateInfoi);
