@@ -104,7 +104,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
 {
 //FIXME is null_deleter() necessary below?
   SparseMatrix* null = 0; 
-  double expectation;
+  double expectation = 0;
 
   boost::shared_ptr<SparseMatrix> lhsOp, dotOp, rhsOp;
   if ( lhsOps.opReps_.size() > 0 ) lhsOp = lhsOps.opReps_.at(ilhs);
@@ -244,7 +244,7 @@ std::vector< std::pair< std::vector<int>, double > >
 Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps )
 {
   // Initialize dimension of spin-adapted to non-spin-adapted transformation
-  int dim;
+  int dim = 0;
   if ( npdm_order_ == 1 ) dim = 2;
   else if ( npdm_order_ == 2 ) dim = 6;
   else if ( npdm_order_ == 3 ) dim = 20;

@@ -44,7 +44,7 @@ bool Npdm_op_wrapper_CCC::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
   else {
-    assert( check_file_open( idx ) );
+    if ( ! check_file_open(idx) ) abort();
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -56,7 +56,7 @@ bool Npdm_op_wrapper_CCC::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if ( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -104,7 +104,6 @@ Npdm_op_wrapper_CCD::Npdm_op_wrapper_CCD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CCD::set_local_ops( int idx )
 {
-//cout << "getting CCD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -113,7 +112,7 @@ bool Npdm_op_wrapper_CCD::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
   else {
-    assert( check_file_open( idx ) );
+    if ( ! check_file_open(idx) ) abort();
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(CRE_CRE_DES).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -125,7 +124,7 @@ bool Npdm_op_wrapper_CCD::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if ( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -177,7 +176,7 @@ bool Npdm_op_wrapper_CDD::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(CRE_DES_DES).get_local_element(idx);
   else {
-    assert( check_file_open( idx ) );
+    if ( ! check_file_open(idx) ) abort();
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(CRE_DES_DES).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -189,7 +188,7 @@ bool Npdm_op_wrapper_CDD::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if ( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -235,7 +234,7 @@ bool Npdm_op_wrapper_CDC::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(CRE_DES_CRE).get_local_element(idx);
   else {
-    assert( check_file_open( idx ) );
+    if ( ! check_file_open(idx) ) abort();
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(CRE_DES_CRE).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -247,7 +246,7 @@ bool Npdm_op_wrapper_CDC::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if ( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -298,7 +297,7 @@ bool Npdm_op_wrapper_DCD::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(DES_CRE_DES).get_local_element(idx);
   else {
-    assert( check_file_open( idx ) );
+    if ( ! check_file_open(idx) ) abort();
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(DES_CRE_DES).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -310,7 +309,7 @@ bool Npdm_op_wrapper_DCD::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if ( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -359,7 +358,7 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
   else {
-    assert( check_file_open( idx ) );
+    if ( ! check_file_open(idx) ) abort();
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(DES_DES_CRE).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -371,7 +370,7 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if ( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -490,7 +489,7 @@ bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(DES_CRE_CRE).get_local_element(idx);
   else {
-    assert( check_file_open( idx ) );
+    if ( ! check_file_open(idx) ) abort();
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(DES_CRE_CRE).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -502,7 +501,7 @@ bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if ( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -618,7 +617,7 @@ bool Npdm_op_wrapper_DDD::set_local_ops( int idx )
   if ( dmrginp.do_npdm_in_core() )
     opReps_ = spinBlock_->get_op_array(DES_DES_DES).get_local_element(idx);
   else {
-    assert( check_file_open( idx ) );
+    if ( ! check_file_open(idx) ) abort();
     std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
     opReps_tmp = spinBlock_->get_op_array(DES_DES_DES).get_local_element(idx);
     assert( opReps_tmp.at(0)->get_built_on_disk() );
@@ -630,7 +629,7 @@ bool Npdm_op_wrapper_DDD::set_local_ops( int idx )
        load_op >> *op;
        opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if ( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();

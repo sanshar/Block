@@ -271,6 +271,9 @@ void npdm( int npdm_order )
     else assert(false);
   }
 
+//FIXME
+dmrginp.new_npdm_code() = false;
+
   // Not state-specific
   //--------------------
   if ( !dmrginp.setStateSpecific() ) {
@@ -285,8 +288,7 @@ void npdm( int npdm_order )
     for (int state=0; state<dmrginp.nroots(); state++) {
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
       // Do NPDM sweep
-//      if ( (dmrginp.new_npdm_code()) && (state == 0) ) {  
-if (false) {
+      if ( (dmrginp.new_npdm_code()) && (state == 0) ) {  
         Timer timerX;
         npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state);
         pout << "NPDM sweep time " << timerX.elapsedwalltime() << " " << timerX.elapsedcputime() << endl;
@@ -318,8 +320,7 @@ if (false) {
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
       dmrginp.set_fullrestart() = false;
       // Do NPDM sweep
-//      if ( (dmrginp.new_npdm_code()) && (state == 0) )
-if (false)
+      if ( (dmrginp.new_npdm_code()) && (state == 0) )
         npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state);
       else {
         if (npdm_order == 1) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);      // Compute onepdm with the original code

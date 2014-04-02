@@ -100,6 +100,7 @@ template<class T> class para_array_0d : public para_sparse_vector<T>
 public:
 
   /// implements para_sparse_vector interface by forwarding to para_array_1d
+  const int num_indices() { return 0; }
 
   void clear() { store.clear(); }
   int local_nnz() const { return store.local_nnz(); }
@@ -163,6 +164,9 @@ template<class T> class para_array_1d : public para_sparse_vector<T>
 public:
   para_array_1d() : stored_local(true) {}
   
+  // This is designed for 1-index operators
+  const int num_indices() { return 1; }
+
   /// clears all elements
   void clear()
   {
@@ -380,6 +384,9 @@ template<class T> class para_array_triang_2d : public para_sparse_vector<T>
 {
 public:
   para_array_triang_2d() : stored_local(true), upper_triangular(false) {}
+
+  // This is designed for 2-index operators
+  const int num_indices() { return 2; }
 
   /// exposes storage
   const std::vector<T>& get_store() const { return store; }	/**< deprecated */

@@ -81,8 +81,9 @@ ifeq ($(notdir $(firstword $(CXX))),g++)
       OPENMP_FLAGS= -fopenmp -D_OPENMP 
    endif
 # GNU compiler
-	OPT = -DNDEBUG -O3 
-#	OPT = -g 
+#	OPT = -DNDEBUG -O3
+	OPT = -O3
+#	OPT = -g
 endif
 
 ifeq ($(USE_MPI), yes)
@@ -102,7 +103,8 @@ SRC_genetic = genetic/CrossOver.C genetic/Evaluate.C genetic/GAInput.C genetic/G
 SRC_npdm = modules/npdm/npdm.C modules/npdm/npdm_driver.C modules/npdm/npdm_patterns.C modules/npdm/npdm_expectations.C modules/npdm/npdm_expectations_engine.C  \
            modules/npdm/npdm_permutations.C modules/npdm/npdm_spin_adaptation.C modules/npdm/npdm_operator_selector.C modules/npdm/npdm_spin_ops.C \
            modules/npdm/onepdm_container.C modules/npdm/twopdm_container.C modules/npdm/threepdm_container.C modules/npdm/fourpdm_container.C  \
-           modules/two_index_ops/two_index_wrappers.C  modules/three_index_ops/three_index_wrappers.C modules/four_index_ops/four_index_wrappers.C  \
+           modules/npdm/nevpt2_npdm_driver.C modules/npdm/nevpt2_A16_container.C \
+           modules/two_index_ops/two_index_wrappers.C modules/three_index_ops/three_index_wrappers.C modules/four_index_ops/four_index_wrappers.C  \
            modules/three_index_ops/three_index_compound_ops.C modules/four_index_ops/four_index_compound_ops.C  \
            modules/three_index_ops/three_index_op_components.C modules/four_index_ops/four_index_op_components.C  \
            modules/three_index_ops/three_index_ops.C modules/four_index_ops/four_index_ops.C  \

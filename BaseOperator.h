@@ -19,6 +19,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "StateInfo.h"
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
+//FIXME
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/string.hpp>
+//<<
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 
@@ -100,14 +104,13 @@ class SparseMatrix : public Baseoperator<Matrix>  // the sparse matrix represent
   ObjectMatrix<Matrix> operatorMatrix;  // put the dense block in the place it should be
   std::vector<SpinQuantum> deltaQuantum;    // allowed quantum
   int Sign;
-//MAW FIXME
   // With N-index ops (N>2), there are several ways to build them...
   std::string build_pattern;
   // ...and for each way we record the spin ladder components
   std::map< std::string, std::vector<SpinQuantum> > quantum_ladder;
 
  public:
-  SparseMatrix() : orbs(2), initialised(false), built(false), built_on_disk(false), Sign(1), fermion(false){};
+  SparseMatrix() : fermion(false), orbs(2), initialised(false), built(false), built_on_disk(false), Sign(1){};
   virtual ~SparseMatrix(){};
   int nrows() const { return allowedQuantaMatrix.nrows(); }
   int ncols() const { return allowedQuantaMatrix.ncols(); }
@@ -131,7 +134,6 @@ class SparseMatrix : public Baseoperator<Matrix>  // the sparse matrix represent
   std::vector<SpinQuantum> get_deltaQuantum() const { return deltaQuantum; }
   std::map< std::string, std::vector<SpinQuantum> >  get_quantum_ladder() const { return quantum_ladder; }
   std::map< std::string, std::vector<SpinQuantum> >& set_quantum_ladder() { return quantum_ladder; }
-//MAW FIXME build_pattern should be same for all spin components so move this higher in the class
   std::string  get_build_pattern() const { return build_pattern; }
   std::string& set_build_pattern() { return build_pattern; }
   SpinQuantum get_deltaQuantum(int i) const { return deltaQuantum[i]; }
@@ -147,7 +149,6 @@ class SparseMatrix : public Baseoperator<Matrix>  // the sparse matrix represent
   std::vector<int>& set_orbs() { return orbs; }
   const bool& get_built() const { return built; }
   bool& set_built() { return built; }  
-//MAW
   const bool& get_built_on_disk() const { return built_on_disk; }
   bool& set_built_on_disk() { return built_on_disk; }
   double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const {return 1.0;}
@@ -160,9 +161,6 @@ class SparseMatrix : public Baseoperator<Matrix>  // the sparse matrix represent
   void allocate(const StateInfo& s);
   void allocate(const StateInfo& sr, const StateInfo& sc);
   void allocate(const SpinBlock& b);
-//MAW
-  void deallocate(const SpinBlock& b);
-  void deallocate(const StateInfo& stateinfo);
   void makeIdentity(const StateInfo& s); 
   virtual boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) =0;
   virtual void build(const SpinBlock& b) =0;

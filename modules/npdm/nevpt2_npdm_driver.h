@@ -20,18 +20,17 @@ namespace Npdm{
 class Nevpt2_npdm_driver : public Npdm_driver_base {
 
   public:
-    Nevpt2_npdm_driver( int sites ) {};
+    explicit Nevpt2_npdm_driver( int sites );
     ~Nevpt2_npdm_driver() {};
   
-    void save_data() {assert(false);}
-    void compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos) {assert(false);};
+    void save_data();
+    void compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos);
 
   private:
-
-////    Nevpt2_A16_matrix nevpt2_A16_matrix;
-////    Npdm_driver twopdm_driver;
-////    Npdm_driver threepdm_driver;
-////    Npdm_driver fourpdm_driver;
+    Nevpt2_A16_matrix nevpt2_A16_matrix;
+    Npdm_driver twopdm_driver;
+    Npdm_driver threepdm_driver;
+    Npdm_driver fourpdm_driver;
 
 ////    void compute_matrices();
 };

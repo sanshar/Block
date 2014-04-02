@@ -48,6 +48,7 @@ void store_ops_on_disk( std::ofstream& ofs, std::vector<boost::shared_ptr<Sparse
     save_op << *op;
     // Deallocate memory for operator representation
     op->set_built() = false;
+//FIXME is Clear sufficient to deallocate??
     op->Clear();
   } 
 }

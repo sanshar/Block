@@ -225,22 +225,9 @@ template <class Op> class Op_component : public Op_component_base
   virtual void add_local_indices(int i, int j=-1, int k=-1){};
   void clear(){m_op.clear();}
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
   void build_iterators(SpinBlock& b);
-
-  void build_csf_operators(std::vector< Csf >& c, vector< vector<Csf> >& ladders, SpinBlock& b) {singlethread_build(*this, b, c, ladders);}
-
   void build_operators(SpinBlock& b) 
-    {singlethread_build(*this, b);}
-
-  void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo* s)
-    {for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );}
-
-  void renormalise_transform( const std::vector<Matrix>& leftMat, const StateInfo* bra, const std::vector<Matrix>& rightMat, const StateInfo* ket)
-    {for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(leftMat), bra, boost::ref(rightMat), ket) );}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+    { singlethread_build(*this, b); }
 
   // Note for NPDM higher-index operators, there are template specializations for these functions
   void build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo)
@@ -256,6 +243,51 @@ template <class Op> class Op_component : public Op_component_base
     std::string file;
     file = str( boost::format("%s%s%s%s%d%s%d%s") % dmrginp.load_prefix() % "/" % get_op_string() % "_" % uniqueID % "_p" % mpigetrank() % ".tmp" );
     return file;
+  }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  void build_csf_operators(std::vector< Csf >& c, vector< vector<Csf> >& ladders, SpinBlock& b) 
+  {
+    if ( (m_op.num_indices() > 2) && ( ! dmrginp.do_npdm_in_core()) ) {
+      // Build on disk (assume we are building from scratch)
+      std::string ofile = get_filename();
+      std::ofstream ofs(ofile.c_str(), std::ios::binary);
+      for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::buildUsingCsf, _1,boost::ref(b), boost::ref(ladders), boost::ref(c)) );
+      ofs.close();
+    }
+    else {
+      // Build in core
+      for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsf, _1, boost::ref(b), boost::ref(ladders), boost::ref(c)) );
+    }
+  }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo* s)
+  {
+    if ( m_op.num_indices() > 2 ) {
+      // renormalise_transform_on_disk( rotateMatrix, s );
+      assert(false);
+    }
+    else {
+      // For operators built in core
+      for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), s) );
+    }
+  }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  void renormalise_transform( const std::vector<Matrix>& leftMat, const StateInfo* bra, const std::vector<Matrix>& rightMat, const StateInfo* ket)
+  {
+    if ( m_op.num_indices() > 2 ) {
+      // renormalise_transform_on_disk( ... )
+      assert(false);
+    }
+    else {
+      // For operators built in core
+      for_all_operators_multithread( *this, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(leftMat), bra, boost::ref(rightMat), ket) );
+    }
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

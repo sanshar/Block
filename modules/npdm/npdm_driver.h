@@ -36,15 +36,15 @@ class Npdm_driver {
     Npdm_container& container_;
     Npdm_spin_adaptation spin_adaptation_;
 
-    void loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Npdm::Npdm_expectations& expectations, const SpinBlock& big );
-    void do_inner_loop( const char inner, Npdm::Npdm_expectations & npdm_expectations, 
+    void loop_over_operator_patterns( Npdm_patterns& patterns, Npdm_expectations& expectations, const SpinBlock& big );
+    void do_inner_loop( const char inner, Npdm_expectations & npdm_expectations, 
                         NpdmSpinOps_base & outerOps, NpdmSpinOps & innerOps, NpdmSpinOps & dotOps );
-    void loop_over_block_operators( Npdm::Npdm_expectations& npdm_expectations, NpdmSpinOps& lhsOps, NpdmSpinOps& rhsOps, NpdmSpinOps& dotOps );
+    void loop_over_block_operators( Npdm_expectations& npdm_expectations, NpdmSpinOps& lhsOps, NpdmSpinOps& rhsOps, NpdmSpinOps& dotOps );
 
-    void par_loop_over_block_operators( const char inner, Npdm::Npdm_expectations & npdm_expectations, 
+    void par_loop_over_block_operators( const char inner, Npdm_expectations & npdm_expectations, 
                                         NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps, bool lhsdot );
 
-    void do_parallel_lhs_loop( const char inner, Npdm::Npdm_expectations & npdm_expectations,
+    void do_parallel_lhs_loop( const char inner, Npdm_expectations & npdm_expectations,
                                NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps, bool skip );
 
     int get_mpi_max_size( int my_size );

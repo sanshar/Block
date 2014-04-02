@@ -46,7 +46,7 @@ bool Npdm_op_wrapper_CCDD::set_local_ops( int idx )
   }
   else {
 //cout << "...from disk...\n";
-    assert( check_file_open( idx ) );
+    if( ! check_file_open(idx) ) abort();
 //FIXME combine 3-index and 4-indexx read from disk.... UNIFY......
     int size = spinBlock_->get_op_array(CRE_CRE_DES_DES).get_local_element(idx).size();
     assert( size == 6 );
@@ -59,7 +59,7 @@ bool Npdm_op_wrapper_CCDD::set_local_ops( int idx )
       assert( op->get_built_on_disk() );
       opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -107,7 +107,7 @@ bool Npdm_op_wrapper_CDCD::set_local_ops( int idx )
   }
   else {
 //cout << "...from disk...\n";
-    assert( check_file_open( idx ) );
+    if( ! check_file_open(idx) ) abort();
 //FIXME
     int size = spinBlock_->get_op_array(CRE_DES_CRE_DES).get_local_element(idx).size();
     assert( size == 6 );
@@ -120,7 +120,7 @@ bool Npdm_op_wrapper_CDCD::set_local_ops( int idx )
       assert( op->get_built_on_disk() );
       opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -171,7 +171,7 @@ bool Npdm_op_wrapper_CDDC::set_local_ops( int idx )
   }
   else {
 //cout << "...from disk...\n";
-    assert( check_file_open( idx ) );
+    if( ! check_file_open(idx) ) abort();
 //FIXME
     int size = spinBlock_->get_op_array(CRE_DES_DES_CRE).get_local_element(idx).size();
     assert( size == 6 );
@@ -184,7 +184,7 @@ bool Npdm_op_wrapper_CDDC::set_local_ops( int idx )
       assert( op->get_built_on_disk() );
       opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -235,7 +235,7 @@ bool Npdm_op_wrapper_CDDD::set_local_ops( int idx )
   }
   else {
 //cout << "...from disk...\n";
-    assert( check_file_open( idx ) );
+    if( ! check_file_open(idx) ) abort();
 //FIXME
     int size = spinBlock_->get_op_array(CRE_DES_DES_DES).get_local_element(idx).size();
     assert( size == 6 );
@@ -248,7 +248,7 @@ bool Npdm_op_wrapper_CDDD::set_local_ops( int idx )
       assert( op->get_built_on_disk() );
       opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -299,7 +299,7 @@ bool Npdm_op_wrapper_CCCD::set_local_ops( int idx )
   }
   else {
 //cout << "...from disk...\n";
-    assert( check_file_open( idx ) );
+    if( ! check_file_open(idx) ) abort();
 //FIXME
     int size = spinBlock_->get_op_array(CRE_CRE_CRE_DES).get_local_element(idx).size();
     assert( size == 6 );
@@ -312,7 +312,7 @@ bool Npdm_op_wrapper_CCCD::set_local_ops( int idx )
       assert( op->get_built_on_disk() );
       opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -363,7 +363,7 @@ bool Npdm_op_wrapper_CCDC::set_local_ops( int idx )
   }
   else {
 //cout << "...from disk...\n";
-    assert( check_file_open( idx ) );
+    if( ! check_file_open(idx) ) abort();
 //FIXME
     int size = spinBlock_->get_op_array(CRE_CRE_DES_CRE).get_local_element(idx).size();
     assert( size == 6 );
@@ -376,7 +376,7 @@ bool Npdm_op_wrapper_CCDC::set_local_ops( int idx )
       assert( op->get_built_on_disk() );
       opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -427,7 +427,7 @@ bool Npdm_op_wrapper_CDCC::set_local_ops( int idx )
   }
   else {
 //cout << "...from disk...\n";
-    assert( check_file_open( idx ) );
+    if( ! check_file_open(idx) ) abort();
 //FIXME
     int size = spinBlock_->get_op_array(CRE_DES_CRE_CRE).get_local_element(idx).size();
     assert( size == 6 );
@@ -440,7 +440,7 @@ bool Npdm_op_wrapper_CDCC::set_local_ops( int idx )
       assert( op->get_built_on_disk() );
       opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
@@ -491,7 +491,7 @@ bool Npdm_op_wrapper_CCCC::set_local_ops( int idx )
   }
   else {
 //cout << "...from disk...\n";
-    assert( check_file_open( idx ) );
+    if( ! check_file_open(idx) ) abort();
 //FIXME combine 3-index and 4-indexx read from disk.... UNIFY......
     int size = spinBlock_->get_op_array(CRE_CRE_CRE_CRE).get_local_element(idx).size();
     assert( size == 6 );
@@ -504,7 +504,7 @@ bool Npdm_op_wrapper_CCCC::set_local_ops( int idx )
       assert( op->get_built_on_disk() );
       opReps_.push_back(op);
     }
-    assert( check_file_close( idx ) );
+    if( ! check_file_close(idx) ) abort();
   }
 
   build_pattern_ = opReps_.at(0)->get_build_pattern();
