@@ -80,7 +80,7 @@ void Fourpdm_container::save_npdm_text(const int &i, const int &j)
               for(int n=0; n<fourpdm.dim6(); ++n)
                 for(int p=0; p<fourpdm.dim7(); ++p)
                   for(int q=0; q<fourpdm.dim8(); ++q) {
-                    if ( abs(fourpdm(i,j,k,l,m,n,p,q)) > 1e-14 ) {
+                    if ( abs(fourpdm(i,j,k,l,m,n,p,q)) > NUMERICAL_ZERO ) {
                       ofs << boost::format("%d %d %d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % p % q % fourpdm(i,j,k,l,m,n,p,q);
                       if ( (i==q) && (j==p) && (k==n) && (l==m) ) trace += fourpdm(i,j,k,l,m,n,p,q);
                     }
@@ -110,7 +110,7 @@ void Fourpdm_container::save_spatial_npdm_text(const int &i, const int &j)
               for(int n=0; n<spatial_fourpdm.dim6(); ++n)
                 for(int p=0; p<spatial_fourpdm.dim7(); ++p)
                   for(int q=0; q<spatial_fourpdm.dim8(); ++q) {
-                    if ( abs(spatial_fourpdm(i,j,k,l,m,n,p,q)) > 1e-14 ) {
+                    if ( abs(spatial_fourpdm(i,j,k,l,m,n,p,q)) > NUMERICAL_ZERO ) {
                       ofs << boost::format("%d %d %d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % p % q % spatial_fourpdm(i,j,k,l,m,n,p,q);
                       if ( (i==q) && (j==p) && (k==n) && (l==m) ) trace += spatial_fourpdm(i,j,k,l,m,n,p,q);
                     }
@@ -152,7 +152,7 @@ void Fourpdm_container::save_spatial_npdm_binary(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Fourpdm_container::load_npdm_binary(const int &i, const int &j) { assert(false); }
+void Fourpdm_container::load_npdm_binary(const int &i, const int &j) { abort(); }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -173,8 +173,9 @@ void Fourpdm_container::accumulate_npdm()
                 for(int n=0; n<fourpdm.dim6(); ++n) 
                   for(int p=0; p<fourpdm.dim7(); ++p) 
                     for(int q=0; q<fourpdm.dim8(); ++q) {
-                      if ( abs(tmp_recv(i,j,k,l,m,n,p,q)) > 1e-15 ) {
-                        if ( abs(fourpdm(i,j,k,l,m,n,p,q)) > 1e-14 ) assert(false);
+                      if ( abs(tmp_recv(i,j,k,l,m,n,p,q)) > NUMERICAL_ZERO ) {
+                        // Test for duplicates
+                        if ( abs(fourpdm(i,j,k,l,m,n,p,q)) > NUMERICAL_ZERO ) abort();
                         fourpdm(i,j,k,l,m,n,p,q) = tmp_recv(i,j,k,l,m,n,p,q);
                       }
                     }
@@ -206,8 +207,9 @@ void Fourpdm_container::accumulate_spatial_npdm()
                 for(int n=0; n<spatial_fourpdm.dim6(); ++n) 
                   for(int p=0; p<spatial_fourpdm.dim7(); ++p) 
                     for(int q=0; q<spatial_fourpdm.dim8(); ++q) {
-                      if ( abs(tmp_recv(i,j,k,l,m,n,p,q)) > 1e-15 ) {
-                        if ( abs(spatial_fourpdm(i,j,k,l,m,n,p,q)) > 1e-14 ) assert(false);
+                      if ( abs(tmp_recv(i,j,k,l,m,n,p,q)) > NUMERICAL_ZERO ) {
+                        // Test for duplicates
+                        if ( abs(spatial_fourpdm(i,j,k,l,m,n,p,q)) > NUMERICAL_ZERO ) abort();
                         spatial_fourpdm(i,j,k,l,m,n,p,q) = tmp_recv(i,j,k,l,m,n,p,q);
                       }
                     }
@@ -226,7 +228,7 @@ void Fourpdm_container::update_full_spin_array( std::vector< std::pair< std::vec
 {
   for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
     double val = it->second;
-    if ( abs(val) < 1e-15 ) continue;
+    if ( abs(val) < NUMERICAL_ZERO ) continue;
 
     assert( (it->first).size() == 8 );
     // Spin indices
@@ -249,7 +251,7 @@ void Fourpdm_container::update_full_spin_array( std::vector< std::pair< std::vec
     if ( abs(fourpdm(i,j,k,l,m,n,p,q)) != 0.0 ) {
       cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<" "<<p<<" "<<q<<endl;
       cout << "earlier value: " << fourpdm(i,j,k,l,m,n,p,q) << endl << "new value:     " <<val<<endl;
-      assert( false );
+      abort();
     }
     fourpdm(i,j,k,l,m,n,p,q) = val;
   }
@@ -268,7 +270,7 @@ void Fourpdm_container::update_full_spatial_array( std::vector< std::pair< std::
     assert( (it->first).size() == 8 );
 
     // Store significant elements only
-    if ( abs(it->second) > 1e-14 ) {
+    if ( abs(it->second) > NUMERICAL_ZERO ) {
       // Spin indices
       int i = (it->first)[0];
       int j = (it->first)[1];
@@ -324,7 +326,7 @@ void Fourpdm_container::update_full_spatial_array( std::vector< std::pair< std::
 //      if ( store_full_spatial_array_ ) {
 //        if ( abs( spatial_fourpdm(i,j,k,l,m,n,p,q) ) > 1e-14 ) {
 //          cout << "repeated spatial indices!\n";
-//          assert(false);
+//          abort();
 //        }
 //        spatial_fourpdm(i,j,k,l,m,n,p,q) = factor * val;
 //      }

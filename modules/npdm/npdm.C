@@ -102,7 +102,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
 
   int sweepPos = sweepParams.get_block_iter();
   int endPos = sweepParams.get_n_iters()-1;
-cout << "MAW about to compute NPDM sweep\n";
+
   npdm_driver.compute_npdm_elements(solution, big, sweepPos, endPos);
 
   SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
@@ -268,11 +268,11 @@ void npdm( int npdm_order )
     else if (npdm_order == 3) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Threepdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == 4) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Fourpdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == 0) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Nevpt2_npdm_driver( dmrginp.last_site() ) );
-    else assert(false);
+    else abort();
   }
 
-//FIXME
-dmrginp.new_npdm_code() = false;
+  //Debug
+  dmrginp.new_npdm_code() = false;
 
   // Not state-specific
   //--------------------
@@ -296,7 +296,7 @@ dmrginp.new_npdm_code() = false;
       else {
         if (npdm_order == 1) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);      // Compute onepdm with the original code
         else if (npdm_order == 2) SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state); // Compute twopdm with the original code
-        else assert(false);
+        else abort();
       }
     }
   }
@@ -325,7 +325,7 @@ dmrginp.new_npdm_code() = false;
       else {
         if (npdm_order == 1) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);      // Compute onepdm with the original code
         else if (npdm_order == 2) SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state); // Compute twopdm with the original code
-        else assert(false);
+        else abort();
       }
     }
   }
@@ -376,7 +376,7 @@ void npdm_restart( int npdm_order )
       if (npdm_order == 1) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);
       // 2PDM
       else if (npdm_order == 2) SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
-      else assert(false);
+      else abort();
     }
   } 
 
@@ -402,7 +402,7 @@ void npdm_restart( int npdm_order )
       if (npdm_order == 1) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);
       // 2PDM
       else if (npdm_order == 2) SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
-      else assert(false);
+      else abort();
     }
   }
 

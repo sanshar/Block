@@ -6,9 +6,10 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#ifndef NPDM_CONTAINER_H
-#define NPDM_CONTAINER_H
+#ifndef NPDM_SPARSE_ARRAY_HEADER_H
+#define NPDM_SPARSE_ARRAY_HEADER_H
 
+#include <map>
 #include <vector>
 
 namespace SpinAdapted{
@@ -16,19 +17,28 @@ namespace Npdm{
 
 //===========================================================================================================================================================
 
-class Npdm_container {
+class Npdm_array_buffer {
 
   public:
-    Npdm_container() {}
-    virtual ~Npdm_container() {}
-  
-    virtual void save_npdms(const int &i, const int &j) = 0;
-    virtual void store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements ) = 0;
-};
+    Npdm_array_buffer( const int num_indices, const int dim ) : bufferID_(0), dim_(dim) {};
+    ~Npdm_array_buffer() {};
 
+    double operator()(int i, int j, int k, int l, int m, int n) const;
+    double& operator()(int i, int j, int k, int l, int m, int n);
+    void close_buffer();
+    int dim1() const { return dim_; }
+
+  private:
+    int bufferID_;
+    int dim_;
+    std::map< std::vector<int>, double > data_;
+
+};
+  
 //===========================================================================================================================================================
 
 }
 }
 
 #endif
+

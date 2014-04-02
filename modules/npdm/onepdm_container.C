@@ -174,7 +174,7 @@ void Onepdm_container::update_full_spin_array( std::vector< std::pair< std::vect
     if ( onepdm(i, j) != 0.0 ) {
       cout << "WARNING: Already calculated "<<i<<" "<<j<<endl;
       cout << "earlier value: "<<onepdm(i,j)<<endl<< "new value:     "<<val<<endl;
-      assert( false );
+      abort();
     }
     if ( abs(val) > 1e-14 ) onepdm(i,j) = val;
   }
@@ -222,7 +222,7 @@ void Onepdm_container::update_full_spatial_array( std::vector< std::pair< std::v
 //    if ( abs(val) > 1e-14 ) {
 //      if ( abs( spatial_onepdm(i,j) ) > 1e-14 ) { 
 //        cout << "repeated spatial indices!\n";
-//        assert(false);
+//        abort();
 //      }
 //      spatial_onepdm(i,j) = factor * val;
 //    }

@@ -9,6 +9,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef NEVPT2_NPDM_DRIVER_H
 #define NEVPT2_NPDM_DRIVER_H
 
+//#define DEBUG_NEVPT2NPDM
+
 #include "npdm_driver.h"
 #include "nevpt2_A16_container.h"
 
@@ -24,15 +26,25 @@ class Nevpt2_npdm_driver : public Npdm_driver_base {
     ~Nevpt2_npdm_driver() {};
   
     void save_data();
-    void compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos);
+    void compute_npdm_elements( std::vector<Wavefunction>& wavefunctions, const SpinBlock& big, int sweepPos, int endPos );
 
   private:
+#ifdef DEBUG_NEVPT2NPDM
+    // Build NPDMs first, construct A-matrices later
+    Onepdm_driver onepdm_driver;
+    Twopdm_driver twopdm_driver;
+    Threepdm_driver threepdm_driver;
+    Fourpdm_driver fourpdm_driver;
+#else
+    // Build A-matrices on the fly
     Nevpt2_A16_matrix nevpt2_A16_matrix;
+    Npdm_driver onepdm_driver;
     Npdm_driver twopdm_driver;
     Npdm_driver threepdm_driver;
     Npdm_driver fourpdm_driver;
+#endif
+    void compute_matrices();
 
-////    void compute_matrices();
 };
 
 //===========================================================================================================================================================

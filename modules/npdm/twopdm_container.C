@@ -171,7 +171,11 @@ void Twopdm_container::accumulate_npdm()
         for(int l=0;l<twopdm.dim2();++l)
           for(int m=0;m<twopdm.dim3();++m)
             for(int n=0;n<twopdm.dim4();++n)
-              if(tmp_recv(k,l,m,n) != 0.) twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
+              if (tmp_recv(k,l,m,n) > NUMERICAL_ZERO) {
+                // Test for duplicates
+                if ( abs(twopdm(k,l,m,n)) > NUMERICAL_ZERO ) abort();
+                twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
+              }
 	 }
   }
   else {
@@ -194,7 +198,11 @@ void Twopdm_container::accumulate_spatial_npdm()
         for(int l=0;l<spatial_twopdm.dim2();++l)
           for(int m=0;m<spatial_twopdm.dim3();++m)
             for(int n=0;n<spatial_twopdm.dim4();++n)
-              if(tmp_recv(k,l,m,n) != 0.) spatial_twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
+              if (tmp_recv(k,l,m,n) > NUMERICAL_ZERO) {
+                // Test for duplicates
+                if ( abs(spatial_twopdm(k,l,m,n)) > NUMERICAL_ZERO ) abort();
+                spatial_twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
+              }
 	 }
   }
   else {
@@ -209,7 +217,7 @@ void Twopdm_container::update_full_spin_array( std::vector< std::pair< std::vect
 {
   for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
     double val = it->second;
-    if ( abs(val) < 1e-15 ) continue;
+    if ( abs(val) < NUMERICAL_ZERO ) continue;
     int i = (it->first)[0];
     int j = (it->first)[1];
     int k = (it->first)[2];
@@ -222,7 +230,7 @@ void Twopdm_container::update_full_spin_array( std::vector< std::pair< std::vect
     if ( abs(twopdm(i, j, k, l)) != 0.0 ) {
       cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<endl;
       cout << "earlier value: "<<twopdm(i,j,k,l)<<endl<< "new value:     "<<val<<endl;
-      assert( false );
+      abort();
     }
     twopdm(i,j,k,l) = val;
   }
@@ -243,7 +251,7 @@ void Twopdm_container::update_full_spatial_array( std::vector< std::pair< std::v
     assert( (it->first).size() == 4 );
 
     // Store significant elements only
-    if ( abs(it->second) > 1e-14 ) {
+    if ( abs(it->second) > NUMERICAL_ZERO ) {
       // Spin indices
       int i = (it->first)[0];
       int j = (it->first)[1];

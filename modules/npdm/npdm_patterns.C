@@ -6,6 +6,8 @@
 #include <tuple>
 #include <vector>
 #include <string>
+#include "global.h"
+#include "pario.h"
 #include "npdm_patterns.h"
 
 namespace SpinAdapted {
@@ -221,18 +223,18 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
     }
   }
   // I don't think higher PDM's have any edge cases since we have 4-index ops max on a 1-site block??
-  else assert(false);
+  else abort();
 
   // Print out
-  std::cout << "=================================================================\n";
-  std::cout << "Possible block partitions:\n";
-  for ( auto it = lhs_dot_rhs_types_.begin(); it != lhs_dot_rhs_types_.end(); ++it ) {
-    std::cout << std::get<0>(*it) << "," << std::get<1>(*it) << "," << std::get<2>(*it) << std::endl;
-  }
-  if ( sweep_pos == 0 )
-    std::cout << "Added extra partitions for initial sweep position\n";
-  else if ( sweep_pos == end_pos )
-    std::cout << "Added extra partitions for final sweep position\n";
+  //std::cout << "=================================================================\n";
+  //std::cout << "Possible block partitions:\n";
+  //for ( auto it = lhs_dot_rhs_types_.begin(); it != lhs_dot_rhs_types_.end(); ++it ) {
+  //  std::cout << std::get<0>(*it) << "," << std::get<1>(*it) << "," << std::get<2>(*it) << std::endl;
+  //}
+  //if ( sweep_pos == 0 )
+  //  std::cout << "Added extra partitions for initial sweep position\n";
+  //else if ( sweep_pos == end_pos )
+  //  std::cout << "Added extra partitions for final sweep position\n";
 
 }
 
@@ -281,11 +283,11 @@ void Npdm_patterns::build_cre_des_types()
   add_operator( pdm_order_-1, pdm_order_, cd_type );
 
   // Print out
-  std::cout << "=================================================================\n";
-  std::cout << "Creation/destruction patterns:\n";
-  for (auto iter = cre_des_types_.begin(); iter != cre_des_types_.end(); iter++) {
-    print_cd_string(*iter); std::cout << std::endl;
-  }
+  //std::cout << "=================================================================\n";
+  //std::cout << "Creation/destruction patterns:\n";
+  //for (auto iter = cre_des_types_.begin(); iter != cre_des_types_.end(); iter++) {
+  //  print_cd_string(*iter); std::cout << std::endl;
+  //}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -378,8 +380,8 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
 {
 
   ldr_cd_types_.clear();
-  std::cout << "=================================================================\n";
-  std::cout << "Spin-1/2 fermionic operator patterns for DMRG blocks:\n";
+  //std::cout << "=================================================================\n";
+  //std::cout << "Spin-1/2 fermionic operator patterns for DMRG blocks:\n";
 
   // Loop over LHS, Dot, RHS patterns
   for (auto ldr_iter = lhs_dot_rhs_types_.begin(); ldr_iter != lhs_dot_rhs_types_.end(); ldr_iter++) {
@@ -411,9 +413,9 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
 
       // Only allow if it's a valid full pattern
       if ( not is_valid_ldr_type( cd_pattern ) ) continue;
-      print_cd_string( lhs_cd );
-      print_cd_string( dot_cd );
-      print_cd_string( rhs_cd ); std::cout << "\n";
+      //print_cd_string( lhs_cd );
+      //print_cd_string( dot_cd );
+      //print_cd_string( rhs_cd ); std::cout << "\n";
 
       ldr_cd_types_.insert( cd_pattern );
       if ( lhs_cd.size() != 0 ) lhs_cd_types_.insert( lhs_cd );
@@ -448,11 +450,11 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
 
 void Npdm_patterns::print_int_string( const std::vector<int> & vec )
 {
-  std::cout << "(";
+  pout << "(";
   for (auto op = vec.begin(); op != vec.end(); op++) {
-     std::cout << *op;
+     pout << *op;
   }
-  std::cout << ")";
+  pout << ")";
 
 }
 
@@ -461,13 +463,13 @@ void Npdm_patterns::print_int_string( const std::vector<int> & vec )
 void Npdm_patterns::print_cd_string( const std::vector<CD> & cdvec )
 {
   char cd;
-  std::cout << "(";
+  pout << "(";
   for (auto op = cdvec.begin(); op != cdvec.end(); op++) {
      cd = '.';
      if (*op == CREATION) cd = '+';
-     std::cout << cd;
+     pout << cd;
   }
-  std::cout << ")";
+  pout << ")";
 
 }
 

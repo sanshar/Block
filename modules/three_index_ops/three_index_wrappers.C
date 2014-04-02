@@ -439,7 +439,7 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
 ////  std::string tmp = opReps_.at(0)->get_build_pattern();
 ////  if ( tmp == "((DD)C)" ) build_pattern_ = "(D(CC))"; //  <--------- seem to need minus sign here, don't know why
 ////  else if ( tmp == "(D(DC))" ) build_pattern_ = "((DC)C)";
-////  else assert( false );
+////  else abort();
 ////
 ////  ix = opReps_.at(0)->get_orbs(0);
 ////  jx = opReps_.at(0)->get_orbs(1);
@@ -552,7 +552,7 @@ bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
 ////  if ( dmrginp.do_npdm_in_core() )
 ////    opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
 ////  else {
-////assert(false);
+////abort();
 ////    assert( check_file_open( idx ) );
 ////    std::vector< boost::shared_ptr<SparseMatrix> > opReps_tmp;
 ////    opReps_tmp = spinBlock_->get_op_array(CRE_CRE_CRE).get_local_element(idx);
@@ -571,7 +571,7 @@ bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
 ////  std::string tmp = opReps_.at(0)->get_build_pattern();
 ////  if ( tmp == "((CC)C)" ) build_pattern_ = "(D(DD))";
 ////  else if ( tmp == "(C(CC))" ) build_pattern_ = "((DD)D)";
-////  else assert( false );
+////  else abort();
 ////
 ////  ix = opReps_.at(0)->get_orbs(0);
 ////  jx = opReps_.at(0)->get_orbs(1);
