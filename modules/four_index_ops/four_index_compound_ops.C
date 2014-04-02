@@ -100,7 +100,7 @@ bool Npdm_op_compound_CCDD::set_local_ops( int idx )
 ////
 ////  if ( build_pattern_3 == "((CC)D)" ) build_pattern_ = "(((CC)D)(D))";
 ////  else if ( build_pattern_3 == "(C(CD))" ) build_pattern_ = "(((C)(CD))(D))";
-////  else assert(false);
+////  else abort();
 ////  factor_ = 1.0;
 ////  multiplicities = { 1, 3, 1, 3, 3, 5 };
 ////

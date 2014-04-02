@@ -25,6 +25,7 @@ class Onepdm_container : public Npdm_container {
   
     void save_npdms(const int &i, const int &j);
     void store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements );
+    void clear() { onepdm.Clear(); spatial_onepdm.Clear(); nonredundant_elements.clear(); }
 
     array_2d<double>& get_spatial_onepdm() { return spatial_onepdm; }
 

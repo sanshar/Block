@@ -170,7 +170,7 @@ bool Npdm_op_compound_CDD::set_local_ops( int idx )
 
 Npdm_op_compound_CDC::Npdm_op_compound_CDC( SpinBlock * spinBlock )
 {
-assert(false);
+abort();
   // Assume single site block
   assert( spinBlock->size() == 1 );
   opReps_.clear();
@@ -335,7 +335,7 @@ bool Npdm_op_compound_CDC::set_local_ops( int idx )
 Npdm_op_compound_CCC::Npdm_op_compound_CCC( SpinBlock * spinBlock )
 {
   // Assume single site block
-assert(false); // << this operator should always be zero on one site!
+abort(); // << this operator should always be zero on one site!
   assert( spinBlock->size() == 1 );
   opReps_.clear();
   indices_.clear();
@@ -384,7 +384,7 @@ bool Npdm_op_compound_CCC::set_local_ops( int idx )
 
 Npdm_op_compound_DCD::Npdm_op_compound_DCD( SpinBlock * spinBlock )
 {
-assert(false);
+abort();
   // Assume single site block
   assert( spinBlock->size() == 1 );
   opReps_.clear();
@@ -441,7 +441,7 @@ bool Npdm_op_compound_DCD::set_local_ops( int idx )
 Npdm_op_compound_DDC::Npdm_op_compound_DDC( SpinBlock * spinBlock )
 {
   // Assume single site block
-assert(false);
+abort();
 //  assert( spinBlock->size() == 1 );
 //  opReps_.clear();
 //  indices_.clear();
@@ -459,7 +459,7 @@ bool Npdm_op_compound_DDC::set_local_ops( int idx )
 {
 //cout << "getting compound DDC operator...\n";
   // Spatial orbital indices
-assert(false);
+abort();
 //  indices_.clear();
 //  int ix, jx, kx;
 //

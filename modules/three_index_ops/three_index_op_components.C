@@ -208,7 +208,7 @@ void Op_component<RI3index>::build_and_renormalise_operators(SpinBlock&b, const 
 template<>
 void Op_component<RI3index>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                              const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ assert(false); }
+{ abort(); }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 
@@ -261,7 +261,7 @@ void Op_component<DesDesDes>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<DesDesDes>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ assert(false); }
+{ abort(); }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 
@@ -359,7 +359,7 @@ void Op_component<CreCreCre>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<CreCreCre>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ assert(false); }
+{ abort(); }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
@@ -470,7 +470,7 @@ void Op_component<CreCreDes>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<CreCreDes>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ assert(false); }
+{ abort(); }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 
@@ -485,6 +485,7 @@ void Op_component<CreCreDes>::build_iterators(SpinBlock& b)
   m_op.set_tuple_indices( tuples, dmrginp.last_site() );
 
   // Allocate new set of operators for each set of spatial orbitals
+//cout << "New set of CCD operators: p" << mpigetrank() << "; local size = " << m_op.local_nnz() << "; global size = " << m_op.global_nnz() << "; is local " << m_op.is_local() << std::endl;
   std::vector<int> orbs(3);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
@@ -568,7 +569,7 @@ void Op_component<CreDesDes>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<CreDesDes>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ assert(false); }
+{ abort(); }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 
@@ -667,7 +668,7 @@ void Op_component<CreDesCre>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<CreDesCre>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ assert(false); }
+{ abort(); }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 
@@ -770,7 +771,7 @@ void Op_component<DesCreDes>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<DesCreDes>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ assert(false); }
+{ abort(); }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
@@ -867,7 +868,7 @@ void Op_component<DesDesCre>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<DesDesCre>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ assert(false); }
+{ abort(); }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
@@ -964,7 +965,7 @@ void Op_component<DesCreCre>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<DesCreCre>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ assert(false); }
+{ abort(); }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 

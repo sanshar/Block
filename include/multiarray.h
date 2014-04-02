@@ -29,6 +29,11 @@ template<class T> class array_2d : public vector<T>, public multiarray<T>
  public:
   array_2d () : dim1_d (0), dim2_d (0), vector<T> () { }
   array_2d (const int d1, const int d2) : dim1_d (d1), dim2_d (d2), vector<T> (d1 * d2) { }
+  void Clear()
+  {
+    for (int i=0; i<this->size(); ++i)
+      (*this)[i]=0.;
+  }
   T& operator() (const int i, const int j) 
     { 
       assert ((0 <= i) && (i < dim1_d)); assert ((0 <= j) && (j < dim2_d));
@@ -77,6 +82,11 @@ template<class T> class array_3d : public vector<T>, public multiarray<T>
       assert((0 <= i) && (i < dim1_d)); assert((0 <= j) && (j < dim2_d)); assert((0 <= k) && (k < dim3_d));
       return vector<T>::operator[](i * dim2_times_dim3_d + j * dim3_d + k); 
     }
+  void Clear()
+  {
+    for (int i=0; i<this->size(); ++i)
+      (*this)[i]=0.;
+  }
   T operator() (const int i, const int j, const int k) const
     { 
       assert((0 <= i) && (i < dim1_d)); assert((0 <= j) && (j < dim2_d)); assert((0 <= k) && (k < dim3_d));

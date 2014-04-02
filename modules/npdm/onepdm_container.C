@@ -128,7 +128,7 @@ void Onepdm_container::accumulate_npdm()
       world.recv(i, i, tmp_recv);
       for(int k=0;k<onepdm.dim1();++k)
         for(int l=0;l<onepdm.dim2();++l)
-          if(tmp_recv(k,l) != 0.) onepdm(k,l) = tmp_recv(k,l);
+          if( abs(tmp_recv(k,l)) > NUMERICAL_ZERO ) onepdm(k,l) = tmp_recv(k,l);
     }
   }
   else {
@@ -149,7 +149,7 @@ void Onepdm_container::accumulate_spatial_npdm()
       world.recv(i, i, tmp_recv);
       for(int k=0;k<spatial_onepdm.dim1();++k)
         for(int l=0;l<spatial_onepdm.dim2();++l)
-          if(tmp_recv(k,l) != 0.) spatial_onepdm(k,l) = tmp_recv(k,l);
+          if( abs(tmp_recv(k,l)) > NUMERICAL_ZERO ) spatial_onepdm(k,l) = tmp_recv(k,l);
     }
   }
   else {
@@ -174,9 +174,9 @@ void Onepdm_container::update_full_spin_array( std::vector< std::pair< std::vect
     if ( onepdm(i, j) != 0.0 ) {
       cout << "WARNING: Already calculated "<<i<<" "<<j<<endl;
       cout << "earlier value: "<<onepdm(i,j)<<endl<< "new value:     "<<val<<endl;
-      assert( false );
+      abort();
     }
-    if ( abs(val) > 1e-14 ) onepdm(i,j) = val;
+    if ( abs(val) > NUMERICAL_ZERO ) onepdm(i,j) = val;
   }
 
 }
@@ -193,7 +193,7 @@ void Onepdm_container::update_full_spatial_array( std::vector< std::pair< std::v
     assert( (it->first).size() == 2 );
 
     // Store significant elements only
-    if ( abs(it->second) > 1e-14 ) {
+    if ( abs(it->second) > NUMERICAL_ZERO ) {
       // Spin indices
       int i = (it->first)[0];
       int j = (it->first)[1];
@@ -219,10 +219,10 @@ void Onepdm_container::update_full_spatial_array( std::vector< std::pair< std::v
 //      val += spin_batch[ idx ];
 //    }
 //    // Store significant elements only
-//    if ( abs(val) > 1e-14 ) {
-//      if ( abs( spatial_onepdm(i,j) ) > 1e-14 ) { 
+//    if ( abs(val) > NUMERICAL_ZERO ) {
+//      if ( abs( spatial_onepdm(i,j) ) > NUMERICAL_ZERO ) { 
 //        cout << "repeated spatial indices!\n";
-//        assert(false);
+//        abort();
 //      }
 //      spatial_onepdm(i,j) = factor * val;
 //    }

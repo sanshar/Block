@@ -54,7 +54,7 @@ bool Npdm_expectations::screen_op_string_for_duplicates( const std::string& op, 
     // 4PDM case
     return npdm_patterns_.screen_4pdm_strings( indices, CD ); 
   }
-  else assert(false);
+  else abort();
 
 }
 
@@ -164,7 +164,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
     if ( rhsOps.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
     expectation = spinExpectation(wavefunction_, wavefunction_, *null, *null, *rhsOp, big_);
   }
-  else assert(false);
+  else abort();
 
   // Modify new element with sign factors and return
   double factor = lhsOps.factor_ * dotOps.factor_ * rhsOps.factor_;
@@ -181,19 +181,16 @@ bool Npdm_expectations::test_for_singlet( int ilhs, int idot, int irhs, NpdmSpin
   if ( lhsOps.opReps_.size() == 0 ) 
     lhs2S = 0;
   else
-////FIXMEMAW check this!
     lhs2S = lhsOps.opReps_.at(ilhs)->get_deltaQuantum(0).get_s().getirrep();
   // RHS
   if ( rhsOps.opReps_.size() == 0 ) 
     rhs2S = 0;
   else
-////FIXMEMAW check this!
     rhs2S = rhsOps.opReps_.at(irhs)->get_deltaQuantum(0).get_s().getirrep();
   // DOT
   if ( dotOps.opReps_.size() == 0 ) 
     dot2S = 0;
   else
-////FIXMEMAW check this!
     dot2S = dotOps.opReps_.at(idot)->get_deltaQuantum(0).get_s().getirrep();
 
   // Couple LHS and Dot spin angular momenta and see if any equal RHS  
@@ -232,7 +229,7 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_bas
 //cout << "spin-adapted expectations =\n";
 ////cout << "mpirank = " << mpigetrank() << endl;
 //for (auto it = expectations_.begin(); it != expectations_.end(); ++it) {
-//  cout << *it << std::endl;
+//  cout << "p" << mpigetrank() << ":  " << *it << std::endl;
 //}
 //cout << "---------------------------------\n";
 
@@ -249,7 +246,7 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
   else if ( npdm_order_ == 2 ) dim = 6;
   else if ( npdm_order_ == 3 ) dim = 20;
   else if ( npdm_order_ == 4 ) dim = 70;
-  else assert(false);
+  else abort();
   std::vector< std::pair< std::vector<int>, double > > new_pdm_elements;
 
   // Get operator build string. e.g. (C2C4)(D5D6)

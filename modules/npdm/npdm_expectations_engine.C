@@ -64,7 +64,7 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
   { 
     operatorfunctions::TensorMultiply(leftBlock, AOp, rightOp, &big, wave2, opw2, dQ[0], 1.0);
   }
-  else assert(false);
+  else abort();
 
   return DotProduct(wave1, opw2, dmrginp.Sz(), big);
 }

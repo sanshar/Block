@@ -116,7 +116,7 @@ class NpdmSpinOps : public NpdmSpinOps_base {
 
   public:
     int size() { return size_; }
-    virtual bool set_local_ops( int idx ) { assert(false); }
+    virtual bool set_local_ops( int idx ) { abort(); }
 
 //FIXME public??
     // Input file stream for disk-based operators used to build NPDM
@@ -125,8 +125,8 @@ class NpdmSpinOps : public NpdmSpinOps_base {
     // Number of spatial orbital combinations
     int size_;
 
-    virtual std::vector< std::vector<int> > get_indices() { assert(false); }
-//    virtual const std::vector< int >& get_1d_indices() { assert(false); }
+    virtual std::vector< std::vector<int> > get_indices() { abort(); }
+//    virtual const std::vector< int >& get_1d_indices() { abort(); }
 
   protected:
     boost::shared_ptr<SparseMatrix> build_compound_operator( bool is_fermion, int sign,

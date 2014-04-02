@@ -19,7 +19,7 @@ namespace Npdm{
 Threepdm_container::Threepdm_container( int sites )
 {
   store_nonredundant_spin_elements_ = true;
-  store_full_spin_array_ = false;
+  store_full_spin_array_ = true;
   store_full_spatial_array_ = true;
 
   if ( store_full_spin_array_ ) {
@@ -78,7 +78,7 @@ void Threepdm_container::save_npdm_text(const int &i, const int &j)
           for(int l=0; l<threepdm.dim4(); ++l)
             for(int m=0; m<threepdm.dim5(); ++m)
               for(int n=0; n<threepdm.dim6(); ++n) {
-                if ( abs(threepdm(i,j,k,l,m,n)) > 1e-14 ) {
+                if ( abs(threepdm(i,j,k,l,m,n)) > NUMERICAL_ZERO ) {
                   ofs << boost::format("%d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % threepdm(i,j,k,l,m,n);
                   if ( (i==n) && (j==m) && (k==l) ) trace += threepdm(i,j,k,l,m,n);
                 }
@@ -106,7 +106,7 @@ void Threepdm_container::save_spatial_npdm_text(const int &i, const int &j)
           for(int l=0; l<spatial_threepdm.dim4(); ++l)
             for(int m=0; m<spatial_threepdm.dim5(); ++m)
               for(int n=0; n<spatial_threepdm.dim6(); ++n) {
-                if ( abs(spatial_threepdm(i,j,k,l,m,n)) > 1e-14 ) {
+                if ( abs(spatial_threepdm(i,j,k,l,m,n)) > NUMERICAL_ZERO ) {
                   ofs << boost::format("%d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % spatial_threepdm(i,j,k,l,m,n);
                   if ( (i==n) && (j==m) && (k==l) ) trace += spatial_threepdm(i,j,k,l,m,n);
                 }
@@ -148,7 +148,7 @@ void Threepdm_container::save_spatial_npdm_binary(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_container::load_npdm_binary(const int &i, const int &j) { assert(false); }
+void Threepdm_container::load_npdm_binary(const int &i, const int &j) { abort(); }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -167,8 +167,9 @@ void Threepdm_container::accumulate_npdm()
             for(int l=0; l<threepdm.dim4(); ++l)
               for(int m=0; m<threepdm.dim5(); ++m)
                 for(int n=0; n<threepdm.dim6(); ++n) {
-                  if ( abs(tmp_recv(i,j,k,l,m,n)) > 1e-15 ) {
-                    if ( abs(threepdm(i,j,k,l,m,n)) > 1e-14 ) assert(false);
+                  if ( abs(tmp_recv(i,j,k,l,m,n)) > NUMERICAL_ZERO ) {
+                    // Test if any duplicate elements built on different processors
+                    if ( abs(threepdm(i,j,k,l,m,n)) > NUMERICAL_ZERO ) abort();
                     threepdm(i,j,k,l,m,n) = tmp_recv(i,j,k,l,m,n);
                   }
                 }
@@ -198,9 +199,9 @@ void Threepdm_container::accumulate_spatial_npdm()
             for(int l=0; l<spatial_threepdm.dim4(); ++l)
               for(int m=0; m<spatial_threepdm.dim5(); ++m)
                 for(int n=0; n<spatial_threepdm.dim6(); ++n) {
-                  if( abs(tmp_recv(i,j,k,l,m,n)) > 1e-15 ) {
+                  if( abs(tmp_recv(i,j,k,l,m,n)) > NUMERICAL_ZERO ) {
                     // Test if any duplicate elements built on different processors
-                    if ( abs(spatial_threepdm(i,j,k,l,m,n)) > 1e-14 ) assert(false);
+                    if ( abs(spatial_threepdm(i,j,k,l,m,n)) > NUMERICAL_ZERO ) abort();
                     spatial_threepdm(i,j,k,l,m,n) = tmp_recv(i,j,k,l,m,n);
                   }
                 }
@@ -220,7 +221,7 @@ void Threepdm_container::update_full_spin_array( std::vector< std::pair< std::ve
 
   for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
     double val = it->second;
-    if ( abs(val) < 1e-15 ) continue;
+    if ( abs(val) < NUMERICAL_ZERO ) continue;
 
     assert( (it->first).size() == 6 );
     int i = (it->first)[0];
@@ -240,7 +241,7 @@ void Threepdm_container::update_full_spin_array( std::vector< std::pair< std::ve
     if ( abs(threepdm(i,j,k,l,m,n)) != 0.0 ) {
       cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<endl;
       cout << "earlier value: " << threepdm(i,j,k,l,m,n) << endl << "new value:     " <<val<<endl;
-      assert( false );
+      abort();
     }
     threepdm(i,j,k,l,m,n) = val;
   }
@@ -258,7 +259,7 @@ void Threepdm_container::update_full_spatial_array( std::vector< std::pair< std:
     assert( (it->first).size() == 6 );
 
     // Store significant elements only
-    if ( abs(it->second) > 1e-14 ) {
+    if ( abs(it->second) > NUMERICAL_ZERO ) {
       // Spin indices
       int i = (it->first)[0];
       int j = (it->first)[1];
@@ -276,47 +277,6 @@ void Threepdm_container::update_full_spatial_array( std::vector< std::pair< std:
   }
 }
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//void Threepdm_container::build_spatial_elements( std::map< std::vector<int>, double >& spin_batch, 
-//                                                 std::map< std::vector<int>, double >& spatial_batch )
-//{
-//  double factor = 1.0;
-//
-//  for (auto it = spatial_batch.begin(); it != spatial_batch.end(); ++it) {
-//    assert( (it->first).size() == 6 );
-//    int i = (it->first)[0];
-//    int j = (it->first)[1];
-//    int k = (it->first)[2];
-//    int l = (it->first)[3];
-//    int m = (it->first)[4];
-//    int n = (it->first)[5];
-//    // Sum over spin indices
-//    double val = 0.0;
-//    for (int s=0; s<2; s++) {
-//      for (int t=0; t<2; t++) {
-//        for (int u=0; u<2; u++) {
-//          std::vector<int> idx = { 2*i+s, 2*j+t, 2*k+u, 2*l+u, 2*m+t, 2*n+s };
-//          val += spin_batch[ idx ];
-//        }
-//      }
-//    }
-//    // Store significant elements only
-//    if ( abs(val) > 1e-14 ) {
-//      //cout << "i,j,k,l,m,n = " << i << "," << j << "," << k << "," << l << "," << m << "," << n << "\t\t" << val << endl;
-//      if ( store_sparse_spatial_array_ ) sparse_spatial_pdm[ it->first ] = factor * val;
-//      if ( store_full_spatial_array_ ) {
-//        if ( abs( spatial_threepdm(i,j,k,l,m,n) ) > 1e-14 ) {
-//          cout << "repeated spatial indices!\n";
-//          assert(false);
-//        }
-//        spatial_threepdm(i,j,k,l,m,n) = factor * val;
-//      }
-//    }
-//  }
-//
-//}
-//
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Threepdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)

@@ -166,7 +166,7 @@ public:
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-  friend std::ostream& operator<<(std::ostream& os, para_array_3d& op) { assert(false); return os; }
+  friend std::ostream& operator<<(std::ostream& os, para_array_3d& op) { abort(); return os; }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -260,7 +260,7 @@ private:
 //  {
 //    int length_1d = tristore_3d(length_);
 //    if (stored_local_) {
-//      assert(false);
+//      abort();
 ////      local_indices_ = global_indices_;
 ////      local_indices_map_ = global_indices_map_;
 ////      local_index_tuple_ = global_index_tuple_;

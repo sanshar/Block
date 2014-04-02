@@ -6,25 +6,25 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-#ifndef NPDM_CONTAINER_H
-#define NPDM_CONTAINER_H
+#ifndef NEVPT2_NPDM_HEADER
+#define NEVPT2_NPDM_HEADER
 
-#include <vector>
+#include "global.h"
+#include "multiarray.h"
 
-namespace SpinAdapted{
-namespace Npdm{
+namespace SpinAdapted {
+namespace Npdm {
 
 //===========================================================================================================================================================
 
-class Npdm_container {
+class Nevpt2_npdm {
 
   public:
-    Npdm_container() {}
-    virtual ~Npdm_container() {}
-  
-    virtual void clear() = 0;
-    virtual void save_npdms(const int &i, const int &j) = 0;
-    virtual void store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements ) = 0;
+    array_6d<double>  compute_EEE_matrix(array_2d<double>& onepdm, array_4d<double>& twopdm, array_6d<double>& threepdm );
+    array_8d<double> compute_EEEE_matrix(array_2d<double>& onepdm, array_4d<double>& twopdm, array_6d<double>& threepdm, array_8d<double>& fourpdm );
+    void compute_A16_matrix( array_8d<double>& eeee );
+    void compute_A22_matrix( array_6d<double>& eee, array_8d<double>& eeee );
+
 };
 
 //===========================================================================================================================================================

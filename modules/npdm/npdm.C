@@ -102,7 +102,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
 
   int sweepPos = sweepParams.get_block_iter();
   int endPos = sweepParams.get_n_iters()-1;
-cout << "MAW about to compute NPDM sweep\n";
+
   npdm_driver.compute_npdm_elements(solution, big, sweepPos, endPos);
 
   SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
@@ -144,62 +144,55 @@ double npdm_do_one_sweep(Npdm_driver_base& npdm_driver, SweepParams &sweepParams
   sweepParams.savestate(forward, system.get_sites().size());
   bool dot_with_sys = true;
 
-  for (int i=0; i<nroots; i++) {
-     //FIXME only tested for one root at present (actually, should be trivial to change...?)
-     assert(i==0);
+  // Loop over all block sites
+  for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) {
+    Timer timer;
 
-    // Loop over all block sites
-    for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) {
-      Timer timer;
+    pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+    pout << "\t\t\t ----------------------------" << endl;
+    if (forward) pout << "\t\t\t Current direction is :: Forwards " << endl;
+    else pout << "\t\t\t Current direction is :: Backwards " << endl;
 
-      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
-      pout << "\t\t\t ----------------------------" << endl;
-      if (forward) pout << "\t\t\t Current direction is :: Forwards " << endl;
-      else pout << "\t\t\t Current direction is :: Backwards " << endl;
+    //if (SHOW_MORE) pout << "system block" << endl << system << endl;
 
-      //if (SHOW_MORE) pout << "system block" << endl << system << endl;
-  
-      if (dmrginp.no_transform())
-	      sweepParams.set_guesstype() = BASIC;
-      else if (!warmUp && sweepParams.get_block_iter() != 0) 
-  	    sweepParams.set_guesstype() = TRANSFORM;
-      else if (!warmUp && sweepParams.get_block_iter() == 0 && 
-                ((dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter() != sweepParams.get_sweep_iter()) ||
-                  dmrginp.algorithm_method() != TWODOT_TO_ONEDOT))
-        sweepParams.set_guesstype() = TRANSPOSE;
-      else
-        sweepParams.set_guesstype() = BASIC;
-      
-      pout << "\t\t\t Blocking and Decimating " << endl;
-	  
-      SpinBlock newSystem;
+    if (dmrginp.no_transform())
+     sweepParams.set_guesstype() = BASIC;
+    else if (!warmUp && sweepParams.get_block_iter() != 0) 
+	    sweepParams.set_guesstype() = TRANSFORM;
+    else if (!warmUp && sweepParams.get_block_iter() == 0 && 
+              ((dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter() != sweepParams.get_sweep_iter()) ||
+                dmrginp.algorithm_method() != TWODOT_TO_ONEDOT))
+      sweepParams.set_guesstype() = TRANSPOSE;
+    else
+      sweepParams.set_guesstype() = BASIC;
+    
+    pout << "\t\t\t Blocking and Decimating " << endl;
+ 
+    SpinBlock newSystem;
 
-      // Build npdm elements
-      npdm_block_and_decimate(npdm_driver, sweepParams, system, newSystem, warmUp, dot_with_sys, state);
+    // Build npdm elements
+    npdm_block_and_decimate(npdm_driver, sweepParams, system, newSystem, warmUp, dot_with_sys, state);
 
-      for(int j=0;j<nroots;++j)
-        pout << "\t\t\t Total block energy for State [ " << j << 
-	  " ] with " << sweepParams.get_keep_states()<<" :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+    for(int j=0;j<nroots;++j)
+      pout << "\t\t\t Total block energy for State [ " << j << 
+ " ] with " << sweepParams.get_keep_states()<<" :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
 
-      finalEnergy_spins = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy_spins() : finalEnergy_spins);
-      finalEnergy = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy() : finalEnergy);
-      finalError = max(sweepParams.get_lowest_error(),finalError);
+    finalEnergy_spins = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy_spins() : finalEnergy_spins);
+    finalEnergy = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy() : finalEnergy);
+    finalError = max(sweepParams.get_lowest_error(),finalError);
 
-      system = newSystem;
+    system = newSystem;
 
-      pout << system<<endl;
-      
-      SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root() );
+    pout << system<<endl;
+    
+    SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root() );
 
-      pout << "\t\t\t saving state " << system.get_sites().size() << endl;
-      ++sweepParams.set_block_iter();
-      //sweepParams.savestate(forward, system.get_sites().size());
+    pout << "\t\t\t saving state " << system.get_sites().size() << endl;
+    ++sweepParams.set_block_iter();
+    //sweepParams.savestate(forward, system.get_sites().size());
 
-      pout << "NPDM do one site time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
-    }
+    pout << "NPDM do one site time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
   }
-
-  npdm_driver.save_data();
 
   //for(int j=0;j<nroots;++j)
   {int j = state;
@@ -208,6 +201,9 @@ double npdm_do_one_sweep(Npdm_driver_base& npdm_driver, SweepParams &sweepParams
   }
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
   pout << "\t\t\t ============================================================================ " << endl;
+
+  // Dump NPDM to disk if necessary
+  npdm_driver.save_data( state, state );
 
   // Update the static number of iterations
   ++sweepParams.set_sweep_iter();
@@ -268,11 +264,11 @@ void npdm( int npdm_order )
     else if (npdm_order == 3) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Threepdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == 4) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Fourpdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == 0) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Nevpt2_npdm_driver( dmrginp.last_site() ) );
-    else assert(false);
+    else abort();
   }
 
-//FIXME
-dmrginp.new_npdm_code() = false;
+  // Debug !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  dmrginp.new_npdm_code() = false;
 
   // Not state-specific
   //--------------------
@@ -288,15 +284,16 @@ dmrginp.new_npdm_code() = false;
     for (int state=0; state<dmrginp.nroots(); state++) {
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
       // Do NPDM sweep
-      if ( (dmrginp.new_npdm_code()) && (state == 0) ) {  
+      if ( dmrginp.new_npdm_code() ) {
         Timer timerX;
+        npdm_driver->clear();
         npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state);
         pout << "NPDM sweep time " << timerX.elapsedwalltime() << " " << timerX.elapsedcputime() << endl;
       } 
       else {
         if (npdm_order == 1) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);      // Compute onepdm with the original code
         else if (npdm_order == 2) SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state); // Compute twopdm with the original code
-        else assert(false);
+        else abort();
       }
     }
   }
@@ -320,12 +317,14 @@ dmrginp.new_npdm_code() = false;
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
       dmrginp.set_fullrestart() = false;
       // Do NPDM sweep
-      if ( (dmrginp.new_npdm_code()) && (state == 0) )
+      if ( dmrginp.new_npdm_code() ) {
+        npdm_driver->clear();
         npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state);
+      }
       else {
         if (npdm_order == 1) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);      // Compute onepdm with the original code
         else if (npdm_order == 2) SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state); // Compute twopdm with the original code
-        else assert(false);
+        else abort();
       }
     }
   }
@@ -376,7 +375,7 @@ void npdm_restart( int npdm_order )
       if (npdm_order == 1) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);
       // 2PDM
       else if (npdm_order == 2) SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
-      else assert(false);
+      else abort();
     }
   } 
 
@@ -402,7 +401,7 @@ void npdm_restart( int npdm_order )
       if (npdm_order == 1) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);
       // 2PDM
       else if (npdm_order == 2) SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
-      else assert(false);
+      else abort();
     }
   }
 

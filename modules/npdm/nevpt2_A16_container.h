@@ -9,14 +9,18 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef NEVPT2_A16_MATRIX_H
 #define NEVPT2_A16_MATRIX_H
 
+//#define DEBUG_A16_FULL_MATRIX
+
 #include "multiarray.h"
 #include "npdm_container.h"
 #include "npdm_permutations.h"
+#include "npdm_array_buffer.h"
 
 namespace SpinAdapted{
 namespace Npdm{
 
 //===========================================================================================================================================================
+// This class computes the 3 <EEEE> contributions to the A-matrix as given in eqn.(A16) of JCP 117, 9138 (2002)
 
 class Nevpt2_A16_matrix : public Npdm_container {
 
@@ -26,22 +30,22 @@ class Nevpt2_A16_matrix : public Npdm_container {
   
     void save_npdms(const int &i, const int &j);
     void store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements );
+    void clear() { a16_matrix_.Clear(); }
 
   private:
+#ifdef DEBUG_A16_FULL_MATRIX
     array_6d<double> a16_matrix_;
+    void accumulate_full_array();
+#else
+    Npdm_array_buffer a16_matrix_;
+    void accumulate_files();
+#endif
+    void save_full_array_text( array_6d<double>& matrix );
+    void update_1pdm_contribution( std::vector< std::pair< std::vector<int>, double > >& spin_batch );
+    void update_2pdm_contribution( std::vector< std::pair< std::vector<int>, double > >& spin_batch );
+    void update_3pdm_contribution( std::vector< std::pair< std::vector<int>, double > >& spin_batch );
+    void update_4pdm_contribution( std::vector< std::pair< std::vector<int>, double > >& spin_batch );
 
-    void save_A16_matrix_text();
-
-    void build_spatial_2pdm_elements( std::map< std::vector<int>, double >& spin_batch, std::map< std::vector<int>, double >& spatial_batch );
-    void build_spatial_3pdm_elements( std::map< std::vector<int>, double >& spin_batch, std::map< std::vector<int>, double >& spatial_batch );
-    void build_spatial_4pdm_elements( std::map< std::vector<int>, double >& spin_batch, std::map< std::vector<int>, double >& spatial_batch );
-
-    void store_A16_2pdm_contribution( std::map< std::vector<int>, double >& spatial_batch );
-    void store_A16_3pdm_contribution( std::map< std::vector<int>, double >& spatial_batch );
-    void store_A16_4pdm_contribution( std::map< std::vector<int>, double >& spatial_batch );
-
-    void build_npdm_batch( Npdm_permutations& p, const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements,
-                           std::map< std::vector<int>, double >& spatial_batch );
 };
 
 //===========================================================================================================================================================
