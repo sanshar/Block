@@ -61,7 +61,11 @@ void Nevpt2_npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavef
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+<<<<<<< HEAD
 void Nevpt2_npdm_driver::compute_matrices( const int i, const int j )
+=======
+void Nevpt2_npdm_driver::compute_matrices()
+>>>>>>> cc104259227f01f8b2bace2f7dc2537c48e95096
 {
 #ifndef SERIAL
   boost::mpi::communicator world;
@@ -70,28 +74,44 @@ void Nevpt2_npdm_driver::compute_matrices( const int i, const int j )
   // 1PDM
   char file[5000];
   array_2d<double> onepdm;
+<<<<<<< HEAD
   sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(), "/spatial_onepdm.", i, j,".bin");
+=======
+  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(), "/spatial_onepdm.", 0, 0,".bin");
+>>>>>>> cc104259227f01f8b2bace2f7dc2537c48e95096
   std::ifstream ifs1(file, std::ios::binary);
   boost::archive::binary_iarchive load1(ifs1);
   load1 >> onepdm;
   ifs1.close();
   // 2PDM
   array_4d<double> twopdm;
+<<<<<<< HEAD
   sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(), "/spatial_twopdm.", i, j,".bin");
+=======
+  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(), "/spatial_twopdm.", 0, 0,".bin");
+>>>>>>> cc104259227f01f8b2bace2f7dc2537c48e95096
   std::ifstream ifs2(file, std::ios::binary);
   boost::archive::binary_iarchive load2(ifs2);
   load2 >> twopdm;
   ifs2.close();
   // 3PDM
   array_6d<double> threepdm;
+<<<<<<< HEAD
   sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(), "/spatial_threepdm.", i, j,".bin");
+=======
+  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(), "/spatial_threepdm.", 0, 0,".bin");
+>>>>>>> cc104259227f01f8b2bace2f7dc2537c48e95096
   std::ifstream ifs3(file, std::ios::binary);
   boost::archive::binary_iarchive load3(ifs3);
   load3 >> threepdm;
   ifs3.close();
   // 4PDM
   array_8d<double> fourpdm;
+<<<<<<< HEAD
   sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(), "/spatial_fourpdm.", i, j,".bin");
+=======
+  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(), "/spatial_fourpdm.", 0, 0,".bin");
+>>>>>>> cc104259227f01f8b2bace2f7dc2537c48e95096
   std::ifstream ifs4(file, std::ios::binary);
   boost::archive::binary_iarchive load4(ifs4);
   load4 >> fourpdm;
