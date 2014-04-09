@@ -11,7 +11,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "initblocks.h"
 #include "pario.h"
 
-void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const bool &forward, 
+void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const bool &forward, int leftState, int rightState,
                                     const int & forward_starting_size, const int &backward_starting_size,
                                     const int& restartSize, const bool &restart, const bool& warmUp)
 {
@@ -27,45 +27,50 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
 	sites[i] = dmrginp.last_site() - len +i ;
     
     if (restart)
-      SpinBlock::restore (forward, sites, startingBlock);
+      SpinBlock::restore (forward, sites, startingBlock, leftState, rightState);
     else
-      SpinBlock::restore (true, sites, startingBlock);
+      SpinBlock::restore (true, sites, startingBlock, leftState, rightState);
   }
   else if (forward)
   {
-    startingBlock = SpinBlock(0, forward_starting_size - 1, true);
-    
-    if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s() != 0)
+    startingBlock = SpinBlock(0, forward_starting_size - 1, leftState==rightState, true);
+    if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0 && dmrginp.spinAdapted())
     {
       SpinQuantum s = dmrginp.molecule_quantum();
-      s = SpinQuantum(s.get_s(), s.get_s(), IrrepSpace(0));
+      s = SpinQuantum(s.get_s().getirrep(), s.get_s(), IrrepSpace(0));
       int qs = 1, ns = 1;
       StateInfo addstate(ns, &s, &qs); 
       SpinBlock dummyblock(addstate);
       SpinBlock newstartingBlock;
-      newstartingBlock.default_op_components(false, startingBlock, dummyblock, true, true);
+      newstartingBlock.default_op_components(false, startingBlock, dummyblock, true, true, leftState==rightState);
       newstartingBlock.setstoragetype(LOCAL_STORAGE);
       newstartingBlock.BuildSumBlock(NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, startingBlock, dummyblock);
       startingBlock.clear();
       startingBlock = newstartingBlock;
-    }
+  }
   }
   else
   {
     std::vector<int> backwardSites;
-    for (int i = 0; i < backward_starting_size; ++i) 
-	    backwardSites.push_back (dmrginp.last_site() - i - 1);
+    if(dmrginp.spinAdapted()) {
+      for (int i = 0; i < backward_starting_size; ++i) 
+	backwardSites.push_back (dmrginp.last_site() - i - 1);
+    }
+    else {
+      for (int i = 0; i < backward_starting_size; ++i) 
+	backwardSites.push_back (dmrginp.last_site()/2 - i - 1);
+    }
     sort (backwardSites.begin (), backwardSites.end ());
-	  startingBlock.default_op_components(false);
+    startingBlock.default_op_components(false, leftState==rightState);
     startingBlock.BuildTensorProductBlock (backwardSites);
   }
 }
 
 
-void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &systemDot, SpinBlock &newSystem, const int &sys_add, const bool &direct, const Storagetype &storage, bool haveNormops, bool haveCompops)
+void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &systemDot, SpinBlock &newSystem, int leftState, int rightState, const int& sys_add, const bool &direct, const Storagetype &storage, bool haveNormops, bool haveCompops)
 {
 
-  newSystem.default_op_components(direct, system, systemDot, haveNormops, haveCompops);
+  newSystem.default_op_components(direct, system, systemDot, haveNormops, haveCompops, leftState==rightState);
   newSystem.setstoragetype(storage);
   newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, systemDot);
 
@@ -76,8 +81,9 @@ void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &s
 }
 
 void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, SpinBlock& environmentDot, SpinBlock &newEnvironment, 
-                                          const SpinBlock &system, SpinBlock &systemDot,
-					 const int &sys_add, const int &env_add, const bool &forward, const bool &direct, const bool &onedot, const bool &nexact, const bool &useSlater, bool haveNormops, bool haveCompops, const bool& dot_with_sys)
+						      const SpinBlock &system, SpinBlock &systemDot, int leftState, int rightState,
+						      const int &sys_add, const int &env_add, const bool &forward, const bool &direct, 
+						      const bool &onedot, const bool &nexact, const bool &useSlater, bool haveNormops, bool haveCompops, const bool& dot_with_sys)
 {
   // now initialise environment Dot
   int systemDotStart, systemDotEnd, environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
@@ -85,16 +91,16 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
   int environmentDotSize = env_add - 1;
   if (forward)
   {
-    systemDotStart = *system.get_sites().rbegin () + 1;
+    systemDotStart = dmrginp.spinAdapted() ? *system.get_sites().rbegin () + 1 : (*system.get_sites().rbegin ())/2 + 1 ;
     systemDotEnd = systemDotStart + systemDotSize;
     environmentDotStart = systemDotEnd + 1;
     environmentDotEnd = environmentDotStart + environmentDotSize;
     environmentStart = environmentDotEnd + 1;
-    environmentEnd = dmrginp.last_site() - 1;
+    environmentEnd = dmrginp.spinAdapted() ? dmrginp.last_site() - 1 : dmrginp.last_site()/2 - 1;
   }
   else
   {
-    systemDotStart = system.get_sites() [0] - 1;
+    systemDotStart = dmrginp.spinAdapted() ? system.get_sites()[0] - 1 : (system.get_sites()[0])/2 - 1 ;
     systemDotEnd = systemDotStart - systemDotSize;
     environmentDotStart = systemDotEnd - 1;
     environmentDotEnd = environmentDotStart - environmentDotSize;
@@ -120,17 +126,17 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
     {
       if ((!dot_with_sys && onedot) || !onedot)
       {
-	environment.default_op_components(!forward);
+	environment.default_op_components(!forward, leftState==rightState);
 	environment.setstoragetype(DISTRIBUTED_STORAGE);
 	environment.BuildTensorProductBlock(environmentSites);
-	SpinBlock::store (true, environmentSites, environment);	
+	SpinBlock::store (true, environmentSites, environment, leftState, rightState);	
       }
       else
       {
-	newEnvironment.default_op_components(!forward);
+	newEnvironment.default_op_components(!forward, leftState==rightState);
 	newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
 	newEnvironment.BuildTensorProductBlock(environmentSites);
-	SpinBlock::store (true, environmentSites, newEnvironment);	
+	SpinBlock::store (true, environmentSites, newEnvironment, leftState, rightState);	
       }
 
     }
@@ -145,48 +151,45 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 
 
       if (onedot)// || useSlater)
-	tmp.quanta_distribution (quantumNumbers, distribution, true);
-      else 
-      {
+	    tmp.quanta_distribution (quantumNumbers, distribution, true);
+      else {
         StateInfo environmentdot_stateinfo = environmentDot.get_stateInfo();
         TensorProduct (tmp, environmentdot_stateinfo, tmp2, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
         tmp2.CollectQuanta ();
         tmp2.quanta_distribution (quantumNumbers, distribution, true);
-	//tmp.quanta_distribution (quantumNumbers, distribution, true);
-      }
+	    //tmp.quanta_distribution (quantumNumbers, distribution, true);
 
-      for (int i = 0; i < distribution.size (); ++i)
-      {
-	quantaIterator = quantaDist.find(quantumNumbers[i]);
-	if (quantaIterator != quantaDist.end())
-	  distribution[i] += quantaIterator->second;
+      }
+      
+      for (int i = 0; i < distribution.size (); ++i) {
+	    quantaIterator = quantaDist.find(quantumNumbers[i]);
+	    if (quantaIterator != quantaDist.end())
+	      distribution[i] += quantaIterator->second;
 
         distribution [i] /= 4; distribution [i] += 1;
         if (distribution [i] > dmrginp.nquanta()){
-	  distribution [i] = dmrginp.nquanta();
-	}
+	      distribution [i] = dmrginp.nquanta();
+	    }
 	
-	if(quantaIterator != quantaDist.end())
-	  quantaIterator->second = distribution[i];
-	else
-	  quantaDist[quantumNumbers[i]] = distribution[i];
+	    if(quantaIterator != quantaDist.end())
+	      quantaIterator->second = distribution[i];
+	    else
+	      quantaDist[quantumNumbers[i]] = distribution[i];
       }
-      if (dmrginp.outputlevel() > 0)
-	pout << "\t\t\t Quantum numbers and states used for warm up :: " << endl << "\t\t\t ";
+
+      if (dmrginp.outputlevel() > 0) pout << "\t\t\t Quantum numbers and states used for warm up :: " << endl << "\t\t\t ";
       quantumNumbers.clear(); quantumNumbers.reserve(distribution.size());
       distribution.clear();distribution.reserve(quantumNumbers.size());
       std::map<SpinQuantum, int>::iterator qit = quantaDist.begin();
 
-      for (; qit != quantaDist.end(); qit++)
-      {
-	quantumNumbers.push_back( qit->first); distribution.push_back(qit->second); 
-	if (dmrginp.outputlevel() > 0) {
-	  pout << quantumNumbers.back() << " = " << distribution.back() << ", ";
-	  if (! (quantumNumbers.size() - 6) % 6) pout << endl << "\t\t\t ";
-	}
+      for (; qit != quantaDist.end(); qit++) {
+	    quantumNumbers.push_back( qit->first); distribution.push_back(qit->second); 
+	    if (dmrginp.outputlevel() > 0) {
+	      pout << quantumNumbers.back() << " = " << distribution.back() << ", ";
+	      if (! (quantumNumbers.size() - 6) % 6) pout << endl << "\t\t\t ";
+	    }
       }
       pout << endl;
-
 
       if(dot_with_sys && onedot)
       {
@@ -202,14 +205,13 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
   {
     if (dmrginp.outputlevel() > 0)
       pout << "\t\t\t Restoring block of size " << environmentSites.size () << " from previous iteration" << endl;
-    if(dot_with_sys && onedot)
-      SpinBlock::restore (!forward, environmentSites, newEnvironment);
+    if(dot_with_sys && onedot) 
+      SpinBlock::restore (!forward, environmentSites, newEnvironment, leftState, rightState);
     else
-      SpinBlock::restore (!forward, environmentSites, environment);
+      SpinBlock::restore (!forward, environmentSites, environment, leftState, rightState);
     if (dmrginp.outputlevel() > 0)
       mcheck("");
   }
-
   // now initialise newEnvironment
   if (!dot_with_sys || !onedot)
   {
@@ -217,7 +219,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
     environment.addAdditionalCompOps();
     dmrginp.datatransfer -> stop();
 
-      newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops);
+    newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops, leftState==rightState);
       newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
       
       newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, environmentDot);
@@ -240,5 +242,9 @@ void SpinAdapted::InitBlocks::InitBigBlock(SpinBlock &leftBlock, SpinBlock &righ
   //set big block components
   big.set_big_components(); 
   // build the big block
-  big.BuildSumBlock(PARTICLE_SPIN_NUMBER_CONSTRAINT, leftBlock, rightBlock);
+  if (dmrginp.hamiltonian() == BCS) {
+    big.BuildSumBlock(SPIN_NUMBER_CONSTRAINT, leftBlock, rightBlock);
+  } else {
+    big.BuildSumBlock(PARTICLE_SPIN_NUMBER_CONSTRAINT, leftBlock, rightBlock);
+  }
 }

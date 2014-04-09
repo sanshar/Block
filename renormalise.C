@@ -40,7 +40,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 				const int keptstates, const int keptqstates, const double tol, SpinBlock& big, 
 				const guessWaveTypes &guesswavetype, const double noise, const double additional_noise, const bool &onedot, SpinBlock& System, 
 				SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys,
-				const bool& warmUp, int sweepiter)
+				const bool& warmUp, int sweepiter, int currentRoot, std::vector<Wavefunction>& lowerStates)
 {
   int nroots = dmrginp.nroots(sweepiter);
   vector<Wavefunction> wave_solutions(nroots);
@@ -49,9 +49,9 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
     mcheck("before davidson but after all blocks are built");
 
   dmrginp.solvewf -> start();
-  Solver::solve_wavefunction(wave_solutions, energies, big, tol, guesswavetype, onedot, dot_with_sys, warmUp, additional_noise);
-
+  Solver::solve_wavefunction(wave_solutions, energies, big, tol, guesswavetype, onedot, dot_with_sys, warmUp, additional_noise, currentRoot, lowerStates);
   dmrginp.solvewf -> stop();
+
   SpinBlock newsystem;
   SpinBlock newenvironment;
   SpinBlock newbig;
@@ -59,7 +59,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 
   if (onedot && !dot_with_sys)
   {
-    InitBlocks::InitNewSystemBlock(System, sysDot, newsystem, sysDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true);
+    InitBlocks::InitNewSystemBlock(System, sysDot, newsystem, currentRoot, currentRoot, sysDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true);
     InitBlocks::InitBigBlock(newsystem, environment, newbig); 
     for (int i=0; i<nroots&& mpigetrank()==0; i++) 
     {
@@ -68,8 +68,6 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
       wave_solutions[i] = tempwave;
     }
     *this = newsystem;
-    if (dmrginp.outputlevel() > 0)
-       cout << newsystem.get_twoInt().get()<<"  "<<get_twoInt().get()<<"  Ints "<<endl;
     envDot.clear();
     big.get_rightBlock()->clear();
     big.clear();
@@ -84,8 +82,10 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   dmrginp.davidsonT -> stop();
 
   dmrginp.rotmatrixT -> start();
-  DensityMatrix tracedMatrix;
-  tracedMatrix.allocate(stateInfo);
+
+  DensityMatrix tracedMatrix(braStateInfo);
+  tracedMatrix.allocate(braStateInfo);
+
 
   bool normalnoise = warmUp;
   if (newbig.get_rightBlock()->size() < 2)
@@ -108,27 +108,42 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   broadcast(world, rotateMatrix, 0);
 #endif
 
-  for (int i=0; i<nroots; i++)
-    SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix, i);
-  for(int i=0;i<nroots;++i)
-    wave_solutions[i].SaveWavefunctionInfo (newbig.stateInfo, newbig.leftBlock->sites, i);
+  SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix);
+  for (int i=0; i<nroots; i++) {
+    int state = dmrginp.setStateSpecific() ? currentRoot : i;
+    /*
+    DensityMatrix tracedMatrix_i(braStateInfo);
+    std::vector<Matrix> rotateMatrixi;
+    std::vector<double> weights(nroots, 0.0); weights[i] = 1.0;
+
+    tracedMatrix_i.allocate(braStateInfo);
+    tracedMatrix_i.makedensitymatrix(wave_solutions, newbig, weights, 0.0, twodotnoise, normalnoise);
+    error = makeRotateMatrix(tracedMatrix_i, rotateMatrixi, keptstates, keptqstates);
+    */
+    SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix, state);
+    wave_solutions[i].SaveWavefunctionInfo (newbig.braStateInfo, newbig.leftBlock->sites, state);
+  }
   dmrginp.rotmatrixT -> stop();
   if (dmrginp.outputlevel() > 0)
     mcheck("after noise and calculation of density matrix");
 }
 
-double SpinBlock::makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates)
+double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates)
 {
   // find and sort weight info
-  DensityMatrix transformmatrix;
-  transformmatrix.allocate(stateInfo);
+  DensityMatrix transformmatrix = tracedMatrix;
+
   std::vector<DiagonalMatrix> eigenMatrix;
-  diagonalise_dm(tracedMatrix, transformmatrix, eigenMatrix);
+
+  if (dmrginp.hamiltonian() == BCS)
+    svd_densitymat(tracedMatrix, transformmatrix, eigenMatrix);
+  else
+    diagonalise_dm(tracedMatrix, transformmatrix, eigenMatrix);
 
   vector<pair<int, int> > inorderwts;
   vector<vector<int> > wtsbyquanta;
   
-  int sys_dot_size = *get_sites().rbegin ()+1 ;
+
   sort_weights(eigenMatrix, inorderwts, wtsbyquanta);
   
   
@@ -141,7 +156,7 @@ double SpinBlock::makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& 
     pout << "\t\t\t total states using dm and quanta " << totalstatesbydm << " " << totalstatesbyquanta << endl;
   
   return assign_matrix_by_dm(rotateMatrix, eigenMatrix, transformmatrix, inorderwts, wtsbyquanta, totalstatesbydm, 
-			      totalstatesbyquanta, size(), dmrginp.last_site()-size());
+			     totalstatesbyquanta, 0, 0);
 }
 
 }

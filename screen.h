@@ -67,6 +67,23 @@ std::vector<int, std::allocator<int> > screened_cddcomp_indices(const std::vecto
 bool screen_cddcomp_interaction(int otherindex, const std::vector<int, std::allocator<int> >& selfindices,
 				const OneElectronArray& onee, 
 				const TwoElectronArray& twoe, double thresh);
+
+// used for BCS calculations
+std::vector<int, std::allocator<int> > screened_d_indices(const std::vector<int, std::allocator<int> >& indices, const std::vector<int, std::allocator<int> >& interactingix, const OneElectronArray& onee, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh);
+
+bool screen_d_interaction(int index, const std::vector<int, std::allocator<int> >& interactingix, const OneElectronArray& onee, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh);
+
+std::vector<std::pair<int, int> > screened_cd_indices(const std::vector<int, std::allocator<int> >& indices, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh);
+
+bool screen_cd_interaction(int ci, int dj, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh);
+
+std::vector<std::pair<int, int> > screened_dd_indices(const std::vector<int, std::allocator<int> >& indices, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh);
+
+bool screen_dd_interaction(int di, int dj, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh);
+
+std::vector<int, std::allocator<int> > screened_cddcomp_indices(const std::vector<int, std::allocator<int> >& otherindices, const std::vector<int, std::allocator<int> >& selfindices, const OneElectronArray& onee, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh);
+
+bool screen_cddcomp_interaction(int otherindex, const std::vector<int, std::allocator<int> >& selfindices, const OneElectronArray& onee, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh);
 }
 
 #endif

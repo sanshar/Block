@@ -31,7 +31,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 namespace SpinAdapted{
 class SpinBlock;
-//********************************************************************************************
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //loop over all local operators and build them
 // different version include multithread build, single thread build and single thread build from csf
 
@@ -44,8 +45,10 @@ template<class A> void singlethread_build(A& array, SpinBlock& b, std::vector< C
   for (int i = 0; i < array.get_size(); ++i) {
     //typedef typename A::OpType Op;
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
-    for (int j=0; j<vec.size(); j++)
+    for (int j=0; j<vec.size(); j++) {
       vec[j]->buildUsingCsf(b, ladders, s);
+      //cout << *vec[j]<<endl;
+    }
   }
 }
 
@@ -59,14 +62,14 @@ template<class A> void singlethread_build(A& array, SpinBlock& b)
     //typedef typename A::OpType Op;
     //std::vector<boost::shared_ptr<Op> >& vec = array.get_local_element(i);
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
-    for (int j=0; j<vec.size(); j++)
+    for (int j=0; j<vec.size(); j++) {
       vec[j]->build(b);
+      //cout << *vec[j]<<endl;
+    }
   }
 }
-//*****************************************************************************
 
-
-//****************************************************************************
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 //execute a function on all elements of an array
 //single thread and multithread versions of the code
 template<typename T2, class A> void for_all_singlethread(A& array, const T2& func)
@@ -111,8 +114,34 @@ template<typename T2, class A> void for_all_operators_multithread(A& array, cons
   }
 }
 
-//*****************************************************************************
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+// Used with functions designed to build operators in core, but here we actually write to disk instead
+template<typename T2, class A> void for_all_operators_to_disk(A& array, const SpinBlock& b, std::ofstream& ofs, const T2& func)
+{     
+  for (int i = 0; i < array.get_size(); ++i) {
+    std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
+    for (int j=0; j<vec.size(); j++){
+      // Don't build if already built!
+      assert( ! vec.at(j)->get_built() );
+      assert( ! vec.at(j)->get_built_on_disk() );
+        
+      // Apply function to operator
+      func( *(vec.at(j)) );
+      
+      // Store on disk
+      vec.at(j)->set_built_on_disk() = true;
+      boost::archive::binary_oarchive save_op(ofs);
+      save_op << *(vec.at(j));
+     
+      // Deallocate memory for operator representation
+      vec.at(j)->set_built() = false;
+//FIXME is Clear() sufficient to deallocate?
+      vec.at(j)->Clear();
+    }
+  }
+}   
 
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 }
 #endif

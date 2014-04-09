@@ -35,8 +35,8 @@ void SpinBlock::printOperatorSummary()
   else {
     for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
     {
-      if(it->second->is_core()) 
-         cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
+      if(it->second->is_core())
+         cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";
       else
          cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
       
@@ -49,6 +49,18 @@ void SpinBlock::printOperatorSummary()
          cout <<numops[proc]<<"  ";
       }
       cout << endl;
+      /*
+      if(it->second->is_core()) { 
+        for (int i = 0; i < it->second->size(); ++i) {
+           std::vector<boost::shared_ptr<SparseMatrix> > global_element = it->second->get_global_element(i);
+           cout << "Element " << i  << " has " << global_element.size() << " operators" << endl;
+           for (int j = 0; j < global_element.size(); ++j) {
+             cout << "Operator " << j << endl; 
+             cout << *(global_element[j]) << endl;
+           }
+        }
+      }
+      */
     }
   }
 #else
@@ -70,10 +82,10 @@ ostream& operator<< (ostream& os, const SpinBlock& b)
   
   if (dmrginp.outputlevel() > 0) {
     os << endl;
-    os << b.stateInfo;
+    os << b.braStateInfo;
   }
   else {
-    os <<"    # states: "<<b.stateInfo.totalStates<<endl;
+    os <<"    # states: "<<b.braStateInfo.totalStates<<endl;
   }
   return os;
 }
@@ -85,14 +97,18 @@ SpinBlock::SpinBlock () :
   hasMemoryAllocated (false),
   direct(false), complementary(false), normal(true), leftBlock(0), rightBlock(0) { }
 
-SpinBlock::SpinBlock(int start, int finish, bool is_complement) :  
+SpinBlock::SpinBlock(int start, int finish, bool implicitTranspose, bool is_complement) :  
   name (rand()), 
   hasMemoryAllocated (false), 
   direct(false), leftBlock(0), rightBlock(0)
 {
   complementary = is_complement;
   normal = !is_complement;
-  default_op_components(is_complement);
+
+  //this is used to make dot block and we make the 
+  //additional operators by default because they are cheap
+  default_op_components(is_complement, implicitTranspose);
+
   std::vector<int> sites; 
   if (dmrginp.use_partial_two_integrals()) {
     if (start != finish) {
@@ -119,14 +135,15 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
   for (int i=0; i < sites.size(); i++)
       sites[i] = lower + i;
 
-  BuildTensorProductBlock(sites);   
+  BuildTensorProductBlock(sites);
 }
 
 SpinBlock::SpinBlock (const SpinBlock& b) { *this = b; }
 
 SpinBlock::SpinBlock(const StateInfo& s)
 {
-  stateInfo = s;
+  braStateInfo = s;
+  ketStateInfo = s;
   sites.resize(0);
 }
 
@@ -153,16 +170,44 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
 
   name = get_name();
 
-  sites = new_sites;
-  std::vector< Csf > dets = CSFUTIL::spinfockstrings(new_sites);
 
-  stateInfo = StateInfo(dets);
+  std::vector< std::vector<Csf> > ladders;
+  std::vector< Csf > dets; 
+
+  if (dmrginp.spinAdapted()) {
+    sites = new_sites;
+    dets = CSFUTIL::spinfockstrings(new_sites, ladders);
+  }
+  else {
+    for (int i=0; i<new_sites.size(); i++) {
+      sites.push_back( dmrginp.spatial_to_spin()[new_sites[i]]   );
+      sites.push_back( dmrginp.spatial_to_spin()[new_sites[i]]+1 );
+    }
+    dets = CSFUTIL::spinfockstrings(new_sites);
+    for (int j=0; j<dets.size(); j++)
+      ladders.push_back(std::vector<Csf>(1,dets[j]));
+  }
+
+  braStateInfo = StateInfo(dets);
+  ketStateInfo = StateInfo(dets);
+
   setstoragetype(LOCAL_STORAGE);
   complementary_sites = make_complement(sites);
+
+  //this is where we are building blocks from sites
+  //currently only used for building single site blocks
+  //temporarily disable screening for single site blocks
+  double twoindex_ScreenTol = dmrginp.twoindex_screen_tol();
+  double oneindex_ScreenTol = dmrginp.oneindex_screen_tol();
+  if (new_sites.size() == 1) {
+    dmrginp.twoindex_screen_tol() = 0.0;
+    dmrginp.oneindex_screen_tol() = 0.0;
+  }
   build_iterators();
-  std::vector< std::vector<Csf> > ladders; ladders.resize(dets.size());
-  for (int i=0; i< dets.size(); i++)
-    ladders[i] = dets[i].spinLadder(min(2,dets[i].S));
+  if (new_sites.size() == 1) {
+    dmrginp.twoindex_screen_tol() = twoindex_ScreenTol;
+    dmrginp.oneindex_screen_tol() = oneindex_ScreenTol;
+  }
   build_operators(dets, ladders);
 
 }
@@ -173,7 +218,7 @@ std::vector<int> SpinBlock::make_complement(const std::vector<int>& sites)
   for (int i=0; i<dmrginp.last_site(); ++i)
     if (find(sites.begin(), sites.end(), i) == sites.end())
       complementary_sites.push_back(i);
-
+  
   return complementary_sites;
   
 }
@@ -186,23 +231,69 @@ void SpinBlock::build_iterators()
   }
 }
 
+
 void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vector<Csf> >& ladders)
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
-      if(it->second->is_core())
+      if(it->second->is_core()) {
         it->second->build_csf_operators(dets, ladders, *this);      
+      }
     }
 }
+  
+
 
 void SpinBlock::build_operators()
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core()) {
-	it->second->build_operators(*this);
+	    it->second->build_operators(*this);
       }
     }
+}
+
+
+void SpinBlock::renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo)
+{
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    if(it->second->is_core()) {
+      it->second->renormalise_transform(rotateMatrix, stateinfo);
+    }
+  }
+}
+
+
+void SpinBlock::renormalise_transform(const std::vector<Matrix>& leftMat, const StateInfo *bra, const std::vector<Matrix>& rightMat, const StateInfo *ket)
+{
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    if(it->second->is_core()) {
+      it->second->renormalise_transform(leftMat, bra, rightMat, ket);
+    }
+  }
+}
+
+
+void SpinBlock::build_and_renormalise_operators(const std::vector<Matrix>& rotateMatrix, const StateInfo *newStateInfo)
+{
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    opTypes ot = it->first;
+    if(! it->second->is_core()) {
+      it->second->build_and_renormalise_operators(*this, ot, rotateMatrix, newStateInfo);
+    }
+  }
+}
+
+
+void SpinBlock::build_and_renormalise_operators(const std::vector<Matrix>& leftMat, const StateInfo *bra, const std::vector<Matrix>& rightMat, const StateInfo *ket)
+{
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    opTypes ot = it->first;
+    if(! it->second->is_core()) {
+      it->second->build_and_renormalise_operators(*this, ot, leftMat, bra, rightMat, ket);
+    }
+  }
 }
 
 
@@ -255,9 +346,15 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
     pout << endl;
   }
 
-  TensorProduct (lBlock.stateInfo, rBlock.stateInfo, stateInfo, condition, compState);
-  if (condition != PARTICLE_SPIN_NUMBER_CONSTRAINT)
-    stateInfo.CollectQuanta();
+  TensorProduct (lBlock.braStateInfo, rBlock.braStateInfo, braStateInfo, condition, compState);
+  TensorProduct (lBlock.ketStateInfo, rBlock.ketStateInfo, ketStateInfo, condition, compState);
+
+  if (!( (dmrginp.hamiltonian() == BCS && condition == SPIN_NUMBER_CONSTRAINT)  ||
+	 (dmrginp.hamiltonian() != BCS && condition == PARTICLE_SPIN_NUMBER_CONSTRAINT))) {
+    braStateInfo.CollectQuanta();
+    ketStateInfo.CollectQuanta();
+  }
+
 }
 
 void SpinBlock::BuildSumBlock(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState)
@@ -288,7 +385,8 @@ void SpinBlock::operator= (const SpinBlock& b)
 
   direct = b.is_direct();
 
-  stateInfo = b.stateInfo;
+  braStateInfo = b.braStateInfo;
+  ketStateInfo = b.ketStateInfo;
   leftBlock = b.leftBlock;
   rightBlock = b.rightBlock;
   twoInt = b.twoInt;
@@ -302,16 +400,20 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   SpinBlock* otherBlock = loopBlock == leftBlock ? rightBlock : leftBlock;
 
   Wavefunction *v_array=0, *v_distributed=0, *v_add=0;
-  
+
   int maxt = 1;
   initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
   dmrginp.oneelecT -> start();
   dmrginp.s0time -> start();
-  boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0];
-  TensorMultiply(leftBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);
 
+
+  boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0];
+  boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+  TensorMultiply(leftBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0) ,1.0);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
+
+  overlap = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
   op = rightBlock->get_op_array(HAM).get_local_element(0)[0];
-  TensorMultiply(rightBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum(), 1.0, MAX_THRD);  
+  TensorMultiply(rightBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0), 1.0);  
 
   dmrginp.s0time -> stop();
 #ifndef SERIAL
@@ -321,11 +423,11 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
 
   dmrginp.s1time -> start();
   v_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
-  Functor f = boost::bind(&opxop::cxcddcomp, leftBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
+  Functor f = boost::bind(&opxop::cxcddcomp, leftBlock, _1, this, boost::ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
   for_all_multithread(rightBlock->get_op_array(CRE), f);
 
   v_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
-  f = boost::bind(&opxop::cxcddcomp, rightBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
+  f = boost::bind(&opxop::cxcddcomp, rightBlock, _1, this, boost::ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
   for_all_multithread(leftBlock->get_op_array(CRE), f);  
 
   dmrginp.s1time -> stop();
@@ -334,18 +436,19 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
 
   dmrginp.twoelecT -> start();
 
-  if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
+  if (dmrginp.hamiltonian() != HUBBARD) {
     
     dmrginp.s0time -> start();
     v_add =  otherBlock->get_op_array(CRE_DESCOMP).is_local() ? v_array : v_distributed;
-    f = boost::bind(&opxop::cdxcdcomp, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
+    f = boost::bind(&opxop::cdxcdcomp, otherBlock, _1, this, boost::ref(c), v_add, dmrginp.effective_molecule_quantum() );
     for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
-
+    
     v_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? v_array : v_distributed;
-    f = boost::bind(&opxop::ddxcccomp, otherBlock, _1, this, ref(c), v_add, dmrginp.effective_molecule_quantum() );
+    f = boost::bind(&opxop::ddxcccomp, otherBlock, _1, this, boost::ref(c), v_add, dmrginp.effective_molecule_quantum() );
     for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);
     dmrginp.s0time -> stop();
   }
+  
   dmrginp.twoelecT -> stop();
 
   accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
@@ -357,7 +460,7 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 {
   SpinBlock* loopBlock=(leftBlock->is_loopblock()) ? leftBlock : rightBlock;
   SpinBlock* otherBlock = loopBlock == leftBlock ? rightBlock : leftBlock;
-
+  
   DiagonalMatrix *e_array=0, *e_distributed=0, *e_add=0;
 
   initiateMultiThread(&e, e_array, e_distributed, MAX_THRD);
@@ -367,40 +470,28 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 
   op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(this);
   TensorTrace(rightBlock, *op, this, &(get_stateInfo()), e, 1.0);  
-
-
 #ifndef SERIAL
   boost::mpi::communicator world;
   int size = world.size();
 #endif
 
-  std::vector< std::vector<int> > indices;
   e_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? e_array : e_distributed;
-  indices = rightBlock->get_op_array(CRE).get_array();
   Functor f = boost::bind(&opxop::cxcddcomp_d, leftBlock, _1, this, e_add); 
-  //for_all_multithread(rightBlock->get_op_array(CRE), f); //not needed in diagonal
-
-
+  for_all_multithread(rightBlock->get_op_array(CRE), f); //not needed in diagonal
+  
   e_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? e_array : e_distributed;
-  indices = leftBlock->get_op_array(CRE).get_array();
   f = boost::bind(&opxop::cxcddcomp_d, rightBlock, _1, this, e_add); 
-  //for_all_multithread(leftBlock->get_op_array(CRE), f);  //not needed in diagonal
+  for_all_multithread(leftBlock->get_op_array(CRE), f);  //not needed in diagonal
 
-
-
-  if (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) {
+  if (dmrginp.hamiltonian() != HUBBARD) {
     
     e_add =  otherBlock->get_op_array(CRE_DESCOMP).is_local() ? e_array : e_distributed;
-    indices = loopBlock->get_op_array(CRE_DES).get_array();
     f = boost::bind(&opxop::cdxcdcomp_d, otherBlock, _1, this, e_add);
     for_all_multithread(loopBlock->get_op_array(CRE_DES), f);  
-
     
     e_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? e_array : e_distributed;
-    indices = loopBlock->get_op_array(CRE_CRE).get_array();
     f = boost::bind(&opxop::ddxcccomp_d, otherBlock, _1, this, e_add);
-    //for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);  //not needed in diagonal 
-
+    for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);  //not needed in diagonal
   }
 
   accumulateMultiThread(&e, e_array, e_distributed, MAX_THRD);
@@ -412,13 +503,23 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
 {
   name = get_name();
 
-  sites = sts;
+  if (dmrginp.spinAdapted()) {
+    sites = sts;
+  }
+  else {
+    for (int i=0; i<sts.size(); i++) {
+      sites.push_back( dmrginp.spatial_to_spin()[sts[i]]   );
+      sites.push_back( dmrginp.spatial_to_spin()[sts[i]]+1 );
+    }
+  }
+
   complementary_sites = make_complement(sites);
 
   assert (sites.size () > 0);
   sort (sites.begin (), sites.end ());
 
-  default_op_components(!haveNormops);
+  //always have implicit transpose in this case
+  default_op_components(!haveNormops, true);
   
   setstoragetype(DISTRIBUTED_STORAGE);
 
@@ -430,8 +531,13 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   for (int i = 0; i < qnumbers.size (); ++i)
     {
       if (distribution [i] == 0 || (qnumbers [i].get_n() > 2*sites.size ())) continue;
-      det_ex = Csf::distribute (qnumbers [i].get_n(), qnumbers [i].get_s(), IrrepVector(qnumbers [i].get_symm().getirrep(), 0) , sites [0],
-                                   sites [0] + sites.size (), dmrginp.last_site());
+
+      if(dmrginp.spinAdapted()) 
+	det_ex = Csf::distribute (qnumbers [i].get_n(), qnumbers [i].get_s().getirrep(), IrrepVector(qnumbers [i].get_symm().getirrep(), 0) , sites [0],
+				  sites [0] + sites.size (), dmrginp.last_site());
+      else
+	det_ex = Csf::distributeNonSpinAdapted (qnumbers [i].get_n(), qnumbers [i].get_s().getirrep(), IrrepVector(qnumbers [i].get_symm().getirrep(), 0) , sites [0],
+						sites [0] + sites.size (), dmrginp.last_site());
 
       multimap <double, Csf > slater_emap;
 
@@ -463,7 +569,9 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
     tmpiter++;
   }
 
-  stateInfo = StateInfo (dets);
+  braStateInfo = StateInfo (dets);
+  ketStateInfo = StateInfo (dets);
+
   twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
   build_iterators();
 
@@ -472,12 +580,14 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
 
   std::vector< std::vector<Csf> > ladders; ladders.resize(dets.size());
   for (int i=0; i< dets.size(); i++)
-    ladders[i] = dets[i].spinLadder(min(2, dets[i].S));
+    ladders[i] = dets[i].spinLadder(min(2, dets[i].S.getirrep()));
 
 
   build_operators(dets, ladders);
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t time in slater operator build " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
+
+
 }
 
 }

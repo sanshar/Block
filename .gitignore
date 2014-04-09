@@ -3,3 +3,4 @@ block.spin_adapted
 *.so
 *.a
 *~
+*.swp

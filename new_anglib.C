@@ -11,6 +11,7 @@ Sandeep Sharma, Garnet K.-L. Chan and Roberto Olivares-Amaya
 #include "new_anglib.h"
 #include <cmath>
 #include <algorithm>
+#include "global.h"
 
 #include <iostream>
 using namespace std;
@@ -114,6 +115,10 @@ double six_j(int na, int nb, int nc, int nd, int ne, int nf){
 //end six_j
 
 double three_j(int j1, int j2, int j3, int m1, int m2, int m3) {
+  if(!SpinAdapted::dmrginp.spinAdapted()) {
+    if(j3 != j1+j2) return 0.0;
+    else return 1.0;
+  }
    double cleb =0.0;
 	double threej = 0.0;
    double fj1, fj2, fj3, fm3;
@@ -127,6 +132,11 @@ double three_j(int j1, int j2, int j3, int m1, int m2, int m3) {
 }
 
 double clebsch(int nj1, int nm1, int nj2, int nm2, int nj3, int nm3) {
+
+  if(!SpinAdapted::dmrginp.spinAdapted()) {
+    if(nj3 != nj1+nj2) return 0.0;
+    else return 1.0;
+  }
    double j1, j2, j3;
    double m1, m2, m3;
 

@@ -18,12 +18,15 @@ namespace SpinAdapted{
 
 double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
 {
-  int aspin = a.get_s(), airrep = a.get_symm().getirrep();
-  int bspin = b.get_s(), birrep = b.get_symm().getirrep();
-  int cspin = c.get_s(), cirrep = c.get_symm().getirrep();
+  int aspin = a.get_s().getirrep(), airrep = a.get_symm().getirrep();
+  int bspin = b.get_s().getirrep(), birrep = b.get_symm().getirrep();
+  int cspin = c.get_s().getirrep(), cirrep = c.get_symm().getirrep();
 
-  int an = a.get_n(), bn = b.get_n();
+  //int an = a.get_n(), bn = b.get_n();
   int parity = IsFermion(a) && IsFermion(b) ? -1 : 1;
+
+  if (!dmrginp.spinAdapted()) return parity;
+
   for (int asz = -aspin; asz<aspin+1; asz+=2)
   for (int bsz = -bspin; bsz<bspin+1; bsz+=2)
   for (int al = 0; al<Symmetry::sizeofIrrep(airrep); al++)
@@ -32,7 +35,7 @@ double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
     //double cleb = cleb_(aspin, asz, bspin, bsz, cspin, cspin);
     double cleb = clebsch(aspin, asz, bspin, bsz, cspin, cspin);
     double clebspatial = Symmetry::spatial_cg(airrep, birrep, cirrep, al, bl, 0);
-    if (fabs(cleb) <= 1.0e-14 || fabs(clebspatial) <= 1.0e-14)
+    if (fabs(cleb) <= NUMERICAL_ZERO || fabs(clebspatial) <= NUMERICAL_ZERO)
       continue;
     else {
       //return parity*cleb*clebdinfh/cleb_(bspin, bsz, aspin, asz, cspin, cspin)/Symmetry::spatial_cg(birrep, airrep, cirrep, bl, al, 0);
@@ -50,33 +53,56 @@ double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
 
 double Transposeview::get_scaling(SpinQuantum leftq, SpinQuantum rightq) const 
 {
-  //if (conjugacy() == 'n') {return 1.0;}
+  if(!dmrginp.spinAdapted()) return 1.0;
+  if (conjugacy() == 'n') {return 1.0;}
 
-  int lspin = leftq.get_s(), lirrep = leftq.get_symm().getirrep();
-  int rspin = rightq.get_s(), rirrep = rightq.get_symm().getirrep();
-  int cspin = opdata->get_deltaQuantum().get_s(), cirrep = opdata->get_deltaQuantum().get_symm().getirrep();
+  int lspin = leftq.get_s().getirrep(), lirrep = leftq.get_symm().getirrep();
+  int rspin = rightq.get_s().getirrep(), rirrep = rightq.get_symm().getirrep();
+  int cspin = opdata->get_deltaQuantum(0).get_s().getirrep(), cirrep = opdata->get_deltaQuantum(0).get_symm().getirrep();
 
   for (int lsz = -lspin; lsz<lspin+1; lsz+=2)
   for (int rsz = -rspin; rsz<rspin+1; rsz+=2)
   for (int ll = 0; ll<Symmetry::sizeofIrrep(lirrep); ll++)
   for (int rl = 0; rl<Symmetry::sizeofIrrep(rirrep); rl++)
   {
-    double cleb = clebsch(lspin, lsz, cspin, cspin, rspin, rsz);
+    double cleb = clebsch(lspin, lsz, cspin, -cspin, rspin, rsz);
     double clebspatial = Symmetry::spatial_cg(lirrep, cirrep, rirrep, ll, 0, rl);
-    if (fabs(cleb) <= 1.0e-14 || fabs(clebspatial) <= 1.0e-14)
+    if (fabs(cleb) <= NUMERICAL_ZERO || fabs(clebspatial) <= NUMERICAL_ZERO)
       continue;
     else {
       ///CHANGE THE SPATIAL_CG cirrep,1 to cirrep,0 depending on how the transpose works out!!!
-      double spinscale =  cleb/clebsch(rspin, rsz, cspin, -cspin, lspin, lsz);
+      double spinscale = pow(-1.0,cspin) * cleb/clebsch(rspin, rsz, cspin, cspin, lspin, lsz);
       double spatscale =  clebspatial/Symmetry::spatial_cg(rirrep, cirrep, lirrep, rl, Symmetry::sizeofIrrep(cirrep)-1, ll);  
 
-      
       return spinscale*spatscale;
     }
   }
   cout << "Major trouble, inappropriate arguments to get_scaling!!!"<<endl;
+  cout << leftq<<"  ";
+  for (int i = 0; i < get_deltaQuantum_size(); ++i) {
+    cout <<get_deltaQuantum(i)<<"  ";
+  }
+  cout <<rightq<<endl;
   exit(0);
   return 1.0;
+}
+
+
+void SparseMatrix::makeIdentity(const StateInfo& s) 
+{
+  set_deltaQuantum(1, SpinQuantum (0, SpinSpace(0), IrrepSpace(0)));
+  allocate(s);
+  built = true;
+  initialised = true;
+  for (int i = 0; i < allowedQuantaMatrix.Nrows (); ++i)
+    for (int j = 0; j < allowedQuantaMatrix.Ncols (); ++j)
+      {
+	if (allowedQuantaMatrix (i,j)) {
+	  operatorMatrix(i,j) = 0.0;
+	  for (int k=0; k<s.quantaStates.at(i); k++)
+	    operatorMatrix(i,j)(k+1, k+1) = 1.0;
+	}
+      }
 }
 
 
@@ -85,21 +111,10 @@ void SparseMatrix::allocate(const SpinBlock& b)
   allocate(b.get_stateInfo());
 }
 
+
 void SparseMatrix::allocate(const StateInfo& s)
 {
-  resize(s.quanta.size(), s.quanta.size());
-  long totalmemory = 0;
-  for (int i = 0; i < allowedQuantaMatrix.Nrows (); ++i)
-    for (int j = 0; j < allowedQuantaMatrix.Ncols (); ++j)
-    {
-      allowedQuantaMatrix (i,j) = s.quanta[i].allow(deltaQuantum, s.quanta[j]);
-      if (allowedQuantaMatrix (i,j)) 
-	{
-	  operatorMatrix (i,j).ReSize (s.quantaStates.at(i), s.quantaStates.at(j));//, largeArray+usedindex);
-	  SpinAdapted::Clear (operatorMatrix (i,j));
-	}
-
-    }     
+  allocate(s, s);
 }
 
 void SparseMatrix::allocate(const StateInfo& sr, const StateInfo& sc)
@@ -109,7 +124,14 @@ void SparseMatrix::allocate(const StateInfo& sr, const StateInfo& sc)
   for (int i = 0; i < allowedQuantaMatrix.Nrows (); ++i)
     for (int j = 0; j < allowedQuantaMatrix.Ncols (); ++j)
     {
-      allowedQuantaMatrix (i,j) = sr.quanta[i].allow(deltaQuantum, sc.quanta[j]);
+      bool allowedcoupling = false;
+      for (int k = 0; k < deltaQuantum.size(); ++k) {
+        if (sr.quanta[i].allow(deltaQuantum[k], sc.quanta[j])) {
+          allowedcoupling = true;
+          break;
+        }
+      }
+      allowedQuantaMatrix (i,j) = allowedcoupling;
       if (allowedQuantaMatrix (i,j)) 
 	{
 	  operatorMatrix (i,j).ReSize (sr.quantaStates.at(i), sc.quantaStates.at(j));//, largeArray+usedindex);
@@ -124,7 +146,7 @@ void SparseMatrix::CleanUp ()
   built = false;
   initialised = false;
   fermion = 0;
-  deltaQuantum = SpinQuantum (0, 0, IrrepSpace(0));
+  deltaQuantum.clear();
   orbs.resize(0);
   allowedQuantaMatrix.ReSize (0,0);
   operatorMatrix.ReSize (0,0);
@@ -135,14 +157,20 @@ const Transposeview Transpose(SparseMatrix& op) { return Transposeview(op); };
 ostream& operator<< (ostream& os, const SparseMatrix& a)
 {
   assert (a.initialised);
-	for (int i = 0; i < a.allowedQuantaMatrix.Nrows (); ++i)
-	for (int j = 0; j < a.allowedQuantaMatrix.Ncols (); ++j)
+  os<<"indices : ";
+  for(int i=0; i<a.orbs.size(); i++)
+    os<<a.orbs[i]<<"  ";
+  os <<endl;
+  for (int i = 0; i < a.get_deltaQuantum_size(); ++i) {
+    os<<a.get_deltaQuantum(i)<<endl;
+  }
+  for (int i = 0; i < a.nrows (); ++i)
+	for (int j = 0; j < a.ncols (); ++j)
 	{
 	  if (a.allowed(i, j)) 
 	    os << i << " " << j << endl << a.operator_element(i, j) << endl;
-
 	}
-      return os;
+  return os;
 }
 
 double SparseMatrix::memoryUsed(const SpinBlock& b)
@@ -167,11 +195,10 @@ void SparseMatrix::buildUsingCsf(const SpinBlock& b, vector< vector<Csf> >& ladd
   for (int i=0; i < stateinfo.quanta.size(); i++)
     for (int j=0; j<stateinfo.quanta.size(); j++)
       if (allowedQuantaMatrix(i,j) )
-	for (int jq =stateinfo.unBlockedIndex[j]; jq < stateinfo.unBlockedIndex[j]+stateinfo.quantaStates[j]; jq++) 
-	{
-	  for (int iq =stateinfo.unBlockedIndex[i]; iq < stateinfo.unBlockedIndex[i]+stateinfo.quantaStates[i]; iq++) 
-	    operatorMatrix(i,j)(iq-stateinfo.unBlockedIndex[i]+1, jq-stateinfo.unBlockedIndex[j]+1) = redMatrixElement(s[iq], ladders[jq], &b);
-	}
+	    for (int jq =stateinfo.unBlockedIndex[j]; jq < stateinfo.unBlockedIndex[j]+stateinfo.quantaStates[j]; jq++) {
+	      for (int iq =stateinfo.unBlockedIndex[i]; iq < stateinfo.unBlockedIndex[i]+stateinfo.quantaStates[i]; iq++) 
+	        operatorMatrix(i,j)(iq-stateinfo.unBlockedIndex[i]+1, jq-stateinfo.unBlockedIndex[j]+1) = redMatrixElement(s[iq], ladders[jq], &b);
+	    }
 
 }
 
@@ -180,7 +207,7 @@ void SparseMatrix::Randomise ()
   for (int lQ = 0; lQ < nrows(); ++lQ)
     for (int rQ = 0; rQ < ncols(); ++rQ)
       if (allowed(lQ, rQ))
-	SpinAdapted::Randomise (operator_element(lQ, rQ));
+	    SpinAdapted::Randomise(operator_element(lQ, rQ));
 }
 
 double DotProduct(const SparseMatrix& lhs, const SparseMatrix& rhs)
@@ -189,7 +216,7 @@ double DotProduct(const SparseMatrix& lhs, const SparseMatrix& rhs)
   for (int lQ = 0; lQ < lhs.nrows(); ++lQ)
     for (int rQ = 0; rQ < lhs.ncols (); ++rQ)
       if (lhs.allowed(lQ, rQ) && rhs.allowed(lQ, rQ))
-	result += MatrixDotProduct(lhs.operator_element(lQ, rQ), rhs.operator_element(lQ, rQ));
+	    result += MatrixDotProduct(lhs.operator_element(lQ, rQ), rhs.operator_element(lQ, rQ));
 
   return result;
 }
@@ -207,12 +234,12 @@ void ScaleAdd(double d, const SparseMatrix& a, SparseMatrix& b)
   for (int lQ = 0; lQ < a.nrows(); ++lQ)
     for (int rQ = 0; rQ < a.ncols(); ++rQ)
       if (a.allowed(lQ, rQ))
-        {
-	  if (!b.allowed(lQ, rQ))
-	    cout <<"Not a valid addition"<<endl;
-          assert(b.allowed(lQ, rQ));
-          MatrixScaleAdd(d, a.operator_element(lQ, rQ), b.operator_element(lQ, rQ));
-        }
+      {
+	    if (!b.allowed(lQ, rQ))
+	      cout <<"Not a valid addition"<<endl;
+        assert(b.allowed(lQ, rQ));
+        MatrixScaleAdd(d, a.operator_element(lQ, rQ), b.operator_element(lQ, rQ));
+      }
 }
 
 void Normalise(SparseMatrix& a, int* success)
@@ -223,10 +250,12 @@ void Normalise(SparseMatrix& a, int* success)
 void SparseMatrix::Normalise (int* success)
 {
   double normalisation = DotProduct(*this, *this);
-  if(normalisation > 1.e-12)
+
+  //if the norm is really small then dont normalize??
+  if(normalisation > NUMERICAL_ZERO)
     Scale(1./sqrt(normalisation), *this);
   else {
-    pout << "\t\t\t Warning :: Didn't Normalise, because norm is too small" << endl;
+    pout << "\t\t\t Warning :: Didn't Normalise, because norm is " << normalisation<<endl;
     *success = 1; //not successful in normlaising                                                                                  
   }
 }
@@ -236,7 +265,7 @@ void SparseMatrix::Clear ()
   built = false;
   for (int i = 0; i < allowedQuantaMatrix.Nrows (); ++i)
     for (int j = 0; j < allowedQuantaMatrix.Ncols (); ++j)
-      if (allowedQuantaMatrix (i,j)) SpinAdapted::Clear (operatorMatrix (i,j));
+      if (allowedQuantaMatrix (i,j)) SpinAdapted::Clear(operatorMatrix (i,j));
 }
 
 void assignloopblock(SpinBlock*& loopblock, SpinBlock*& otherblock, SpinBlock* leftBlock,
@@ -275,10 +304,10 @@ void SparseMatrix::OperatorMatrixReference (ObjectMatrix<Matrix*>& m, const std:
   m.ReSize (rows, cols);
   for (int i = 0; i < rows; ++i)
     for (int j = 0; j < cols; ++j)
-      {
-	assert (allowedQuantaMatrix (oldToNewStateI [i], oldToNewStateJ [j]));
-	m (i,j) = &operatorMatrix (oldToNewStateI [i], oldToNewStateJ [j]);
-      }
+    {
+	  assert (allowedQuantaMatrix (oldToNewStateI [i], oldToNewStateJ [j]));
+	  m (i,j) = &operatorMatrix (oldToNewStateI [i], oldToNewStateJ [j]);
+    }
 }
 
 //Renormalization functions for core and virtual operators                                                                                
@@ -342,6 +371,67 @@ void SparseMatrix::build_and_renormalise_transform(SpinBlock *big, const opTypes
 
 }
 
+//Renormalization functions for core and virtual operators                                                                                
+void SparseMatrix::renormalise_transform(const std::vector<Matrix>& leftrotate_matrix, const StateInfo *leftstateinfo, const std::vector<Matrix>& rightrotate_matrix, const StateInfo *rightstateinfo)
+{
+  ObjectMatrix<Matrix> tmp = operatorMatrix; //cannot instantiate a SparseMatrix and so instantiating a Cre
+
+  this->allocate(*leftstateinfo, *rightstateinfo); // new allocations                                                                                           
+
+  int lQPrime = 0;
+  for (int lQ = 0; lQ < leftrotate_matrix.size (); ++lQ)
+    if (leftrotate_matrix[lQ].Ncols () != 0)
+    {
+      int rQPrime = 0;
+      for (int rQ = 0; rQ < rightrotate_matrix.size (); ++rQ)
+	if (rightrotate_matrix[rQ].Ncols () != 0)
+	{
+	  if (this->allowedQuantaMatrix (lQPrime, rQPrime))
+	    MatrixRotate (leftrotate_matrix[lQ], tmp(lQ, rQ), rightrotate_matrix[rQ],
+			  this->operatorMatrix (lQPrime, rQPrime) );
+	  ++rQPrime;
+	}
+      ++lQPrime;
+    }
+  
+}
+
+void SparseMatrix::build_and_renormalise_transform(SpinBlock *big, const opTypes &ot, const std::vector<Matrix>& leftrotate_matrix, const StateInfo *newleftStateInfo, 
+						   const std::vector<Matrix>& rightrotate_matrix, const StateInfo *newrightStateInfo)
+{
+  
+  boost::shared_ptr<SparseMatrix> tmp;
+  if (orbs.size() == 0)
+    tmp =   big->get_op_rep(ot, deltaQuantum);
+  if (orbs.size() == 1)
+    tmp =   big->get_op_rep(ot, deltaQuantum, orbs[0]);
+  if (orbs.size() == 2)
+    tmp =   big->get_op_rep(ot, deltaQuantum, orbs[0], orbs[1]);
+
+  tmp->built = true;
+
+  this->allocate(*newleftStateInfo, *newrightStateInfo);
+  this->built = true;
+
+  int lQPrime = 0;
+  for (int lQ = 0; lQ < leftrotate_matrix.size (); ++lQ)
+    if (leftrotate_matrix[lQ].Ncols () != 0)
+    {
+      int rQPrime = 0;
+      for (int rQ = 0; rQ < rightrotate_matrix.size (); ++rQ)
+	if (rightrotate_matrix[rQ].Ncols () != 0)
+	{
+	  if (this->allowedQuantaMatrix (lQPrime, rQPrime))
+	    MatrixRotate (leftrotate_matrix[lQ], tmp->operator_element(lQ, rQ), rightrotate_matrix[rQ],
+			  this->operatorMatrix (lQPrime, rQPrime) );
+	  ++rQPrime;
+	}
+      ++lQPrime;
+    }
+
+}
+
+
 SparseMatrix& SparseMatrix::operator+=(const SparseMatrix& other)
 {
   for (int i = 0; i < nrows(); ++i)
@@ -353,4 +443,39 @@ SparseMatrix& SparseMatrix::operator+=(const SparseMatrix& other)
 	}
   return *this;
 }
+
+SubSparseMatrix::SubSparseMatrix(SparseMatrix& op, int sec, const StateInfo& s): section(sec) {
+  opdata = boost::shared_ptr<SparseMatrix>(&op, boostutils::null_deleter());
+  SpinQuantum q = opdata->get_deltaQuantum(section);
+  SuballowedQuantaMatrix.ReSize(s.quanta.size(), s.quanta.size());
+  for (int i = 0; i < SuballowedQuantaMatrix.Nrows (); ++i)
+    for (int j = 0; j < SuballowedQuantaMatrix.Ncols (); ++j) {
+      if (s.quanta[i].allow(q, s.quanta[j])) {
+        SuballowedQuantaMatrix(i,j) = true;
+      }
+    }
+}
+
+SubSparseMatrix::SubSparseMatrix(const boost::shared_ptr<SparseMatrix>& opptr, int sec, const StateInfo& s): opdata(opptr), section(sec) {
+  SpinQuantum q = opdata->get_deltaQuantum(section);
+  SuballowedQuantaMatrix.ReSize(s.quanta.size(), s.quanta.size());
+  for (int i = 0; i < SuballowedQuantaMatrix.Nrows (); ++i)
+    for (int j = 0; j < SuballowedQuantaMatrix.Ncols (); ++j) {
+      if (s.quanta[i].allow(q, s.quanta[j])) {
+        SuballowedQuantaMatrix(i,j) = true;
+      }
+    }
+}
+
+SubSparseMatrix::SubSparseMatrix(const boost::shared_ptr<SparseMatrix>& opptr, int sec, const StateInfo& sr, const StateInfo& sc): opdata(opptr), section(sec) {
+  SpinQuantum q = opdata->get_deltaQuantum(section);
+  SuballowedQuantaMatrix.ReSize(sr.quanta.size(), sc.quanta.size());
+  for (int i = 0; i < SuballowedQuantaMatrix.Nrows (); ++i)
+    for (int j = 0; j < SuballowedQuantaMatrix.Ncols (); ++j) {
+      if (sr.quanta[i].allow(q, sc.quanta[j])) {
+        SuballowedQuantaMatrix(i,j) = true;
+      }
+    }
+}
+
 }

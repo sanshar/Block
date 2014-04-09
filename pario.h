@@ -5,8 +5,8 @@
 #include <iostream>
 
 #ifndef MOLPRO
-#define pout if (mpigetrank() == 0) cout
-#define dout if (mpigetrank() == 0) cout
+#define pout if (mpigetrank() == 0 && dmrginp.outputlevel() >= 0) cout
+#define dout if (mpigetrank() == 0 && dmrginp.outputlevel() >= 0) cout
 #else
 #include "global/CxOutputStream.h"
 //#define pout if (mpigetrank() == 0) xout

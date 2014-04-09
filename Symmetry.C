@@ -6,7 +6,7 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
-
+#include "nonAbelianGroup.h"
 #include "Symmetry.h"
 #include <boost/lexical_cast.hpp>
 #include <string>
@@ -20,6 +20,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 template class multiarray<int>;
 template class array_2d<int>;
 array_2d<int> groupTable;
+SpinAdapted::nonAbelianGroup nonAbelianGrp;
 
 namespace SpinAdapted {
 
@@ -103,6 +104,7 @@ void Symmetry::InitialiseTable(string psym)
 	  groupTable(i, j) = static_cast<int>(d2h.element(i, j));
     }
   else if (sym == "dinfh") {
+    NonabelianSym = true;
     groupTable.resize(4, 4);
     groupTable(0, 0) = 0;
     groupTable(0, 1) = 1;
@@ -124,6 +126,24 @@ void Symmetry::InitialiseTable(string psym)
     groupTable(3, 2) = 1;
     groupTable(3, 3) = 0;
   }
+
+  else if (sym == "c3v") {
+    NonabelianSym = true;
+    nonAbelianGrp = C3v();
+  }
+  else if (sym == "c5v") {
+    NonabelianSym = true;
+    nonAbelianGrp = C5v();
+  }
+  else if (sym == "d5h") {
+    NonabelianSym = true;
+    nonAbelianGrp = D5h();
+  }
+  else if (sym == "d4h") {
+    NonabelianSym = true;
+    nonAbelianGrp = D4h();
+  }
+
   else if (sym == "trans") {
     //do nothing;
   }
@@ -163,9 +183,13 @@ void Symmetry::InitialiseTable(string psym)
 
 bool Symmetry::irrepAllowed(int irrep)
 {
-  if ( (sym == "dinfh"|| sym == "dinfh_abelian") && ((irrep<0 && irrep >-4) || irrep == 2 || irrep == 3)) {
-    pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with dinfh symmetry"<<endl;
-    abort();
+  if ( (sym == "dinfh"|| sym == "dinfh_abelian")) {
+    if ((irrep<0 && irrep >-4) || irrep == 2 || irrep == 3) {
+      pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with dinfh symmetry"<<endl;
+      abort();
+    }
+    else
+      return true;
   }
   if (sym == "d2h" && (irrep<0 || irrep >= 8)) {
     pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
@@ -180,6 +204,10 @@ bool Symmetry::irrepAllowed(int irrep)
     abort();
   }
   if (sym == "c1" && irrep != 0) {
+    pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
+    abort();
+  }
+  if ( (NonabelianSym) && (irrep < 0 || irrep >= nonAbelianGrp.getNumIrreps())) {
     pout << "Orbital cannot have an irreducible representation of "<<irrep+1<<"  with "<<sym<<" symmetry"<<endl;
     abort();
   }
@@ -304,6 +332,9 @@ string Symmetry::stringOfIrrep(int irrep)
     else if (irrep >=2 && irrep <4 ) output+= '-';
     symbol = output;
   }
+  else if (NonabelianSym) {
+    return nonAbelianGrp.getIrrepName(irrep);
+  }
   else if(sym == "trans") {
     std::vector<int> irreps = decompress(irrep);
     string output = "";
@@ -335,8 +366,11 @@ int Symmetry::sizeofIrrep(int irrep)
 {
   if (sym == "dinfh")
     return irrep > 3 ? 2 : 1;
+  else if (NonabelianSym)
+    return nonAbelianGrp.getIrrepSize(irrep);
   else
     return 1;
+
 }
 
 int Symmetry::negativeof(int irrep)
@@ -392,6 +426,9 @@ std::vector<int> Symmetry::add(int irrepl, int irrepr)
       
       return vec;
     }
+  }
+  else if (NonabelianSym) {
+    return nonAbelianGrp.getProduct(irrepl, irrepr);
   }
   else if (sym == "dinfh_abelian") {
     std::vector<int> vec;
@@ -478,7 +515,7 @@ std::vector<int> Symmetry::add(int irrepl, int irrepr)
 
 
 double Symmetry::spatial_sixj(int j1, int j2, int j3, int j5, int j4, int j7) {
-  if (sym != "dinfh") {
+  if (! (NonabelianSym) ) {
     if (j3 != add(j1,j2)[0]) return 0.0;
     if (j7 != add(j2,j5)[0]) return 0.0;
     if (j4 != add(j3,j5)[0]) return 0.0;
@@ -493,7 +530,7 @@ double Symmetry::spatial_sixj(int j1, int j2, int j3, int j5, int j4, int j7) {
 
 double Symmetry::spatial_ninej(int j1, int j2, int j12, int j3, int j4, int j34, int j13, int j24, int j) {
   
-  if (sym != "dinfh") {
+  if (!(NonabelianSym)) {
     return 1.0;
   }
 
@@ -539,6 +576,7 @@ double Symmetry::spatial_ninej(int j1, int j2, int j12, int j3, int j4, int j34,
 }
 
 double Symmetry::spatial_cg(int a, int b, int c, int rowa, int rowb, int rowc) {
+
   if (sym == "dinfh") {
     if (a<4 && rowa != 0)
       { pout<<"a= "<<a<<" and row = "<<rowa<<endl; exit(0);} 
@@ -577,6 +615,8 @@ double Symmetry::spatial_cg(int a, int b, int c, int rowa, int rowb, int rowc) {
     
     return out;
   }
+  else if (NonabelianSym)
+    return nonAbelianGrp.getCG(a, b, c, rowa, rowb, rowc);
   else {
     if (c == add(a,b)[0])
       return 1.0;

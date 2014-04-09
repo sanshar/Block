@@ -1,0 +1,32 @@
+CXX=g++ -std=c++0x
+CXXFLAGS=-g -O3 -fopenmp -D_HAS_CBLAS
+
+BLASDIR=~/CBLAS
+BLASINC=-I$(BLASDIR)/include
+BLASLIB=-lblas -llapack
+
+BOOSTDIR=~/boost/1.54.0
+BOOSTINC=-I$(BOOSTDIR)/include
+BOOSTLIB=-L$(BOOSTDIR)/lib -lboost_serialization
+
+INCLUDEFLAGS=-I. -I../include $(BLASINC) $(BOOSTINC)
+LIBRARYFLAGS=                 $(BLASLIB) $(BOOSTLIB)
+
+
+SRC_LIBBTAS = Dreindex.C clapack.C libbtas.C
+
+OBJ_LIBBTAS = $(SRC_LIBBTAS:.C=.o)
+
+.C.o:
+	$(CXX) $(CXXFLAGS) $(INCLUDEFLAGS) -c $< -o $@
+
+all	: libbtas.a tests.x
+
+libbtas.a : $(OBJ_LIBBTAS)
+	ar cr libbtas.a $(OBJ_LIBBTAS)
+
+tests.x : tests.o
+	$(CXX) $(CXXFLAGS) $(LIBRARYFLAGS) -o tests.x tests.o libbtas.a $(BLASDIR)/lib/cblas.a
+
+clean:
+	rm *.o; rm *.x; rm *.a;

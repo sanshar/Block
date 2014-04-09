@@ -1,0 +1,5 @@
+Environmental variables used in compilation:
+_HAS_CBLAS
+_HAS_INTEL_MKL
+_DEFAULT_QUANTUM
+_SERIAL

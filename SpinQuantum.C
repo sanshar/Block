@@ -13,15 +13,16 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 
 SpinQuantum::SpinQuantum () : particleNumber (0), totalSpin (0), orbitalSymmetry (0) {}
-SpinQuantum::SpinQuantum (const int p, const int s, const IrrepSpace orbS) : particleNumber (p), totalSpin (s), orbitalSymmetry(orbS) {}
+SpinQuantum::SpinQuantum (const int p, const SpinSpace s, const IrrepSpace orbS) : particleNumber (p), totalSpin (s), orbitalSymmetry(orbS) {}
 
 int SpinQuantum::insertionNum(const SpinQuantum& ql, const SpinQuantum& qr) const
 {
   int index = 0;
-  for (int i=abs(ql.totalSpin- qr.totalSpin); i<= ql.totalSpin+qr.totalSpin; i+=2) {
-    vector<IrrepSpace> vec = ql.orbitalSymmetry+qr.orbitalSymmetry;
+  vector<SpinSpace> spins = ql.totalSpin+qr.totalSpin;
+  vector<IrrepSpace> vec = ql.orbitalSymmetry+qr.orbitalSymmetry;
+  for (int i=0; i< spins.size(); i++) {
     for (int j=0; j<vec.size(); j++) {
-      if (*this == SpinQuantum(ql.particleNumber+qr.particleNumber, i, vec[j]))
+      if (*this == SpinQuantum(ql.particleNumber+qr.particleNumber, spins[i], vec[j]))
 	return index;
       else 
 	index++;
@@ -31,46 +32,53 @@ int SpinQuantum::insertionNum(const SpinQuantum& ql, const SpinQuantum& qr) cons
   
 }
 
+vector<SpinQuantum> SpinQuantum::spinToNonSpin() const
+{
+  vector<SpinQuantum> quanta;
+  if(totalSpin.getirrep() < 0 ) {
+    cout << "The quanta is already nonspinAdapted"<<endl;
+    exit(0);
+  }
+  if (dmrginp.spinAdapted()) {
+    quanta.push_back(*this);
+    return quanta;
+  }
+  else {
+    for (int i=-totalSpin.getirrep(); i<=totalSpin.getirrep(); i+=2)
+      quanta.push_back(SpinQuantum(particleNumber, SpinSpace(i), orbitalSymmetry));
+    return quanta;
+  }
+}
+
 vector<SpinQuantum> SpinQuantum::operator+ (const SpinQuantum q) const
 {
   vector<SpinQuantum> quanta;
-  for (int i=abs(q.totalSpin- totalSpin); i<= q.totalSpin+totalSpin; i+=2) {
-    vector<IrrepSpace> vec = orbitalSymmetry+q.orbitalSymmetry;
-    for (int j=0; j<vec.size(); j++) {
-      quanta.push_back(SpinQuantum(particleNumber+q.particleNumber, i, vec[j]));
-    }
-  }
+  vector<SpinSpace> spins = totalSpin+q.totalSpin;
+  vector<IrrepSpace> vec = orbitalSymmetry+q.orbitalSymmetry;
+  for (int i=0; i< spins.size(); i++) 
+  for (int j=0; j<vec.size(); j++) 
+    quanta.push_back(SpinQuantum(particleNumber+q.particleNumber, spins[i], vec[j]));
+  
+  
   return quanta;
 }
 
 vector<SpinQuantum> SpinQuantum::operator- (const SpinQuantum q) const
 {
-  vector<SpinQuantum> quanta;
-  for (int i=abs(q.totalSpin- totalSpin); i<= q.totalSpin+totalSpin; i+=2) {
-    IrrepSpace negativeQSym = -q.orbitalSymmetry;
-    vector<IrrepSpace> vec = orbitalSymmetry+negativeQSym;
-    for (int j=0; j<vec.size(); j++)
-      quanta.push_back(SpinQuantum(particleNumber-q.particleNumber, i, vec[j]));
-  }
-  return quanta;
+  SpinQuantum negative = -q;
+  return *this+negative;
 }
 
 SpinQuantum SpinQuantum::operator-() const
 {
-  return SpinQuantum(-particleNumber, totalSpin, -orbitalSymmetry);
+  return SpinQuantum(-particleNumber, -totalSpin, -orbitalSymmetry);
 }
 
 bool SpinQuantum::allow(const SpinQuantum s1, const SpinQuantum s2) const
 {
-  if (particleNumber != s1.get_n() + s2.get_n()) return false;
-  if ( totalSpin < abs(s1.get_s() - s2.get_s()) || totalSpin > (s1.get_s() + s2.get_s())) return false;
-  if ( (totalSpin - abs(s1.get_s() - s2.get_s()))%2 != 0) return false;
-
-  IrrepSpace sym1 = s1.get_symm(), sym2 = s2.get_symm();
-  std::vector<IrrepSpace> sym3 = sym1+sym2;
-
-  for (int i=0 ;i<sym3.size(); i++)
-    if (sym3[i] == get_symm())
+  std::vector<SpinQuantum> sumQ = s1+s2;
+  for (int i=0; i<sumQ.size(); i++)
+    if (*this == sumQ[i])
       return true;
 
   return false;
@@ -105,26 +113,31 @@ ostream& operator<< (ostream& os, const SpinQuantum q)
 bool SpinQuantum::can_complement (SpinQuantum q)
 {
   int q_try = dmrginp.total_particle_number() - q.get_n();
-  int s_try = abs(dmrginp.total_spin_number() - q.get_s());
-  return (abs (s_try) <= q_try);
-}
-
-void SpinQuantum::complementize ()
-{
-  particleNumber = dmrginp.total_particle_number() - particleNumber;
-  totalSpin = abs(dmrginp.total_spin_number() - totalSpin);
-  orbitalSymmetry = (dmrginp.total_symmetry_number() + orbitalSymmetry)[0];
+  int s_try = abs(dmrginp.total_spin_number().getirrep() - q.get_s().getirrep());
+  return (abs(s_try) <= q_try);
 }
 
 vector<SpinQuantum> SpinQuantum::get_complement () const
 {
   vector<SpinQuantum> quanta;
-  int n = dmrginp.total_particle_number() - particleNumber;
+  vector<int> ns;
+  if (dmrginp.hamiltonian() == BCS) {
+    for (int n = 0; n <= dmrginp.total_particle_number(); n+=2) {
+      if (n-particleNumber < 0) continue;
+      ns.push_back(n-particleNumber);
+    }
+  } else {
+    ns.push_back(dmrginp.total_particle_number() - particleNumber);
+  }
+  vector<SpinSpace> spins = dmrginp.total_spin_number() + (- totalSpin);
   vector<IrrepSpace> vec = dmrginp.total_symmetry_number() + (- orbitalSymmetry);
-  for (int i=abs(dmrginp.total_spin_number()- totalSpin); i<= dmrginp.total_spin_number()+totalSpin; i+=2) {
-    if (i <= n) {
-      for (int j=0; j<vec.size(); j++)
-	quanta.push_back(SpinQuantum(n, i, vec[j]));
+  for (int n_idx = 0; n_idx < ns.size(); ++n_idx) {
+    int n = ns[n_idx];
+    for (int i=0; i< spins.size(); i++) {
+      if (abs(i) <= n) {
+        for (int j=0; j<vec.size(); j++)
+      quanta.push_back(SpinQuantum(n, spins[i], vec[j]));
+      }
     }
   }
   return quanta;

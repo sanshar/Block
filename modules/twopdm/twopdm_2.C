@@ -35,14 +35,14 @@ void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& lef
   Bindices = rightindices;
 
   Wavefunction opw2;
-  SpinQuantum dQ = wave1.get_deltaQuantum();
+  vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
   opw2.initialise(dQ, &big, true);
 
   SpinBlock* leftBlock = big.get_leftBlock();
   SpinBlock* rightBlock = big.get_rightBlock();
 
   Cre AOp; //This is just an example class
-  int totalspin = (&rightOp) ? rightOp.get_spin() : 0;
+  int totalspin = (&rightOp) ? rightOp.get_spin().getirrep() : 0;
 
   if (Aindices != 0)
     FormLeftOp(leftBlock, leftOp, dotOp, AOp, totalspin);
@@ -50,22 +50,22 @@ void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& lef
   //different cases
   if (Aindices == 0 && Bindices == 4)
   {
-    operatorfunctions::TensorMultiply(rightBlock, rightOp, &big, wave2, opw2, dQ, 1.0);
+    operatorfunctions::TensorMultiply(rightBlock, rightOp, &big, wave2, opw2, dQ[0], 1.0);
     expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
   }
   else if (Aindices == 4&& Bindices == 0)
   { 
-    operatorfunctions::TensorMultiply(leftBlock, AOp, &big, wave2, opw2, dQ, 1.0);
+    operatorfunctions::TensorMultiply(leftBlock, AOp, &big, wave2, opw2, dQ[0], 1.0);
     expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );
   }
   else if (Aindices != 0 && Bindices != 0)
   { 
-    operatorfunctions::TensorMultiply(leftBlock, AOp, rightOp, &big, wave2, opw2, dQ, 1.0);
+    operatorfunctions::TensorMultiply(leftBlock, AOp, rightOp, &big, wave2, opw2, dQ[0], 1.0);
     expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );    
     if (doTranspose)
     {
       opw2.Clear();
-      operatorfunctions::TensorMultiply(leftBlock, Transposeview(AOp), rightOp, &big, wave2, opw2, dQ, 1.0);
+      operatorfunctions::TensorMultiply(leftBlock, Transposeview(AOp), rightOp, &big, wave2, opw2, dQ[0], 1.0);
       expectations.push_back( DotProduct(wave1, opw2, dmrginp.Sz(), big) );    
     }
   }
@@ -90,7 +90,7 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
     {
       Aop.set_fermion() = false;
       Aop.set_orbs() = leftOp.get_orbs();
-      Aop.set_deltaQuantum() = leftOp.get_deltaQuantum();
+      Aop.set_deltaQuantum(1, leftOp.get_deltaQuantum(0)); // FIXME does leftOp always has only one dQ?
       Aop.allocate(leftBlock->get_stateInfo());
       operatorfunctions::TensorTrace(leftBlock->get_leftBlock(), leftOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
     }
@@ -98,7 +98,7 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
     {
       Aop.set_fermion() = false;
       Aop.set_orbs() = dotOp.get_orbs();
-      Aop.set_deltaQuantum() = dotOp.get_deltaQuantum();
+      Aop.set_deltaQuantum(1, dotOp.get_deltaQuantum(0));
       Aop.allocate(leftBlock->get_stateInfo());
       operatorfunctions::TensorTrace(leftBlock->get_rightBlock(), dotOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
     }
@@ -106,12 +106,12 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
     {
       Aop.set_orbs() = leftOp.get_orbs(); copy(dotOp.get_orbs().begin(), dotOp.get_orbs().end(), back_inserter(Aop.set_orbs()));
       Aop.set_fermion() = Aop.set_orbs().size() == 2 ? true : false;
-      vector<SpinQuantum> spins = (dotOp.get_deltaQuantum() + leftOp.get_deltaQuantum());
+      vector<SpinQuantum> spins = (dotOp.get_deltaQuantum(0) + leftOp.get_deltaQuantum(0));
       SpinQuantum dQ;
       for (int i=0; i< spins.size(); i++) {
-	if (spins[i].get_s() == totalspin) { dQ = spins[i]; break; }
+	if (spins[i].get_s().getirrep() == totalspin) { dQ = spins[i]; break; }
       }
-      Aop.set_deltaQuantum() = dQ;
+      Aop.set_deltaQuantum(1, dQ);
       Aop.allocate(leftBlock->get_stateInfo());
       operatorfunctions::TensorProduct(leftBlock->get_leftBlock(), leftOp, dotOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);      
     }
@@ -203,7 +203,7 @@ void save_twopdm_text(const array_4d<double>& twopdm, const int &i, const int &j
   if(!mpigetrank())
   {
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/twopdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/twopdm.", i, j, ".txt");
     ofstream ofs(file);
     ofs << twopdm.dim1() << endl;
     for(int k=0;k<twopdm.dim1();++k)
@@ -220,8 +220,14 @@ void save_spatial_twopdm_text(const array_4d<double>& twopdm, const int &i, cons
   //the spatial has a factor of 1/2 in front of it 
   if(!mpigetrank())
   {
+    std::vector<int> reorder;
+    reorder.resize(twopdm.dim1()/2);
+    for (int k=0; k<twopdm.dim2()/2; k++) {
+      reorder.at(dmrginp.reorder_vector()[k]) = k;
+    }
+
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j, ".txt");
     ofstream ofs(file);
     ofs << twopdm.dim1()/2 << endl;
     for(int k=0;k<twopdm.dim1()/2;++k)
@@ -231,7 +237,7 @@ void save_spatial_twopdm_text(const array_4d<double>& twopdm, const int &i, cons
 	    double pdm = 0.0;
 	    for (int s=0; s<2; s++)
 	      for (int t =0; t<2; t++)
-		pdm += twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s)*0.5;
+		pdm += twopdm(2*reorder.at(k)+s, 2*reorder.at(l)+t, 2*reorder.at(m)+t, 2*reorder.at(n)+s)*0.5;
 		
             ofs << boost::format("%d %d %d %d %20.14e\n") % k % l % m % n % pdm;
 	  }
@@ -244,8 +250,14 @@ void save_spatial_twopdm_binary(const array_4d<double>& twopdm, const int &i, co
   //the spatial has a factor of 1/2 in front of it 
   if(!mpigetrank())
   {
+    std::vector<int> reorder;
+    reorder.resize(twopdm.dim1()/2);
+    for (int k=0; k<twopdm.dim2()/2; k++) {
+      reorder.at(dmrginp.reorder_vector()[k]) = k;
+    }
+
     char file[5000];
-    sprintf (file, "%s%s%d.%d", dmrginp.save_prefix().c_str(),"/spatial_binary_twopdm.", i, j);
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_binary_twopdm.", i, j, ".bin");
     FILE* f = fopen(file, "wb");
 
     int nrows = twopdm.dim1()/2;
@@ -257,7 +269,7 @@ void save_spatial_twopdm_binary(const array_4d<double>& twopdm, const int &i, co
 	    pdm(k, l, m, n) = 0.0;
 	    for (int s=0; s<2; s++)
 	      for (int t =0; t<2; t++)
-		pdm(k, l, m, n) += twopdm(2*k+s, 2*l+t, 2*m+t, 2*n+s)*0.5;
+		pdm(k,l,m,n) += twopdm(2*reorder.at(k)+s, 2*reorder.at(l)+t, 2*reorder.at(m)+t, 2*reorder.at(n)+s)*0.5;
 	  }
     int result = fwrite(&nrows,  1, sizeof(int), f);
     result = fwrite(&pdm(0,0,0,0), pdm.size(), sizeof(double), f);

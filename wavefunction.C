@@ -18,6 +18,42 @@ void SpinAdapted::Wavefunction::initialise(const SpinQuantum dQ, const SpinBlock
 {
   initialised = true;
   fermion = false;
+  deltaQuantum.assign(1, dQ);
+  onedot = onedot_; 
+  resize(b->get_leftBlock()->get_stateInfo().quanta.size (), b->get_rightBlock()->get_stateInfo().quanta.size ());
+
+  const SpinBlock* lBlock = b->get_leftBlock();
+  const SpinBlock* rBlock = b->get_rightBlock();
+
+  long totalmemory = 0;
+
+  for (int lQ = 0; lQ < lBlock->get_stateInfo().quanta.size (); ++lQ)
+    for (int rQ = 0; rQ < rBlock->get_stateInfo().quanta.size (); ++rQ)
+    {
+      for (int i = 0; i < deltaQuantum.size(); ++i)
+        allowedQuantaMatrix(lQ, rQ) = deltaQuantum[i].allow(lBlock->get_stateInfo().quanta [lQ] , rBlock->get_stateInfo().quanta [rQ]);
+      if (allowedQuantaMatrix(lQ, rQ))
+        totalmemory += lBlock->get_stateInfo().quantaStates [lQ]* rBlock->get_stateInfo().quantaStates [rQ];
+    }
+  //double* largeArray = new double[totalmemory];
+  long usedindex = 0;
+
+  for (int lQ = 0; lQ < lBlock->get_stateInfo().quanta.size (); ++lQ)
+    for (int rQ = 0; rQ < rBlock->get_stateInfo().quanta.size (); ++rQ)
+    {
+      if (allowedQuantaMatrix(lQ, rQ))
+      {
+	(*this)(lQ, rQ).ReSize (lBlock->get_stateInfo().quantaStates [lQ], rBlock->get_stateInfo().quantaStates [rQ]);//, &largeArray[usedindex]);
+	SpinAdapted::Clear ((*this)(lQ, rQ));
+	usedindex += lBlock->get_stateInfo().quantaStates [lQ]* rBlock->get_stateInfo().quantaStates [rQ];
+      }
+    }
+}
+
+void SpinAdapted::Wavefunction::initialise(const vector<SpinQuantum>& dQ, const SpinBlock* b, const bool &onedot_)
+{
+  initialised = true;
+  fermion = false;
   deltaQuantum = dQ;
   onedot = onedot_; 
   resize(b->get_leftBlock()->get_stateInfo().quanta.size (), b->get_rightBlock()->get_stateInfo().quanta.size ());
@@ -27,12 +63,15 @@ void SpinAdapted::Wavefunction::initialise(const SpinQuantum dQ, const SpinBlock
 
   long totalmemory = 0;
   for (int lQ = 0; lQ < lBlock->get_stateInfo().quanta.size (); ++lQ)
-    for (int rQ = 0; rQ < rBlock->get_stateInfo().quanta.size (); ++rQ)
-    {
-      allowedQuantaMatrix(lQ, rQ) = dQ.allow(lBlock->get_stateInfo().quanta [lQ] , rBlock->get_stateInfo().quanta [rQ]);
+    for (int rQ = 0; rQ < rBlock->get_stateInfo().quanta.size (); ++rQ) {
+      allowedQuantaMatrix(lQ, rQ) = false;
+      for (int i = 0; i < deltaQuantum.size(); ++i)
+        if (deltaQuantum[i].allow(lBlock->get_stateInfo().quanta [lQ] , rBlock->get_stateInfo().quanta [rQ])) {
+          allowedQuantaMatrix(lQ, rQ) = true;
+          break;
+        }
       if (allowedQuantaMatrix(lQ, rQ))
-	totalmemory += lBlock->get_stateInfo().quantaStates [lQ]* rBlock->get_stateInfo().quantaStates [rQ];
-
+	    totalmemory += lBlock->get_stateInfo().quantaStates [lQ]* rBlock->get_stateInfo().quantaStates [rQ];
     }
   //double* largeArray = new double[totalmemory];
   long usedindex = 0;
@@ -90,7 +129,8 @@ void SpinAdapted::Wavefunction::CollectFrom (const RowVector& C)
 void SpinAdapted::Wavefunction::SaveWavefunctionInfo (const StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num)
 {
   char file [5000];
-  sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/wave-", sites [0], "-", *(sites.rbegin()), ".", mpigetrank(), ".", wave_num, ".tmp");
+  int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
+  sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/wave-", first, "-", last, ".", mpigetrank(), ".", wave_num, ".tmp");
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Saving Wavefunction " << file << endl;
   if (mpigetrank() == 0)
@@ -104,12 +144,14 @@ void SpinAdapted::Wavefunction::SaveWavefunctionInfo (const StateInfo &waveInfo,
       this->Save (ofs);
       ofs.close();
     }
+
 }
 
 void SpinAdapted::Wavefunction::LoadWavefunctionInfo (StateInfo &waveInfo, const std::vector<int>& sites, const int wave_num)
 {
   char file [5000];
-  sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.load_prefix().c_str(), "/wave-", sites [0], "-", *(sites.rbegin()), ".", mpigetrank(), ".", wave_num, ".tmp");
+  int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
+  sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.load_prefix().c_str(), "/wave-", first, "-", last, ".", mpigetrank(), ".", wave_num, ".tmp");
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Loading Wavefunction " << file << endl;
   waveInfo.Allocate ();
@@ -136,19 +178,16 @@ void SpinAdapted::Wavefunction::CollectQuantaAlongRows (const StateInfo& sRow, c
       tmpState.CollectQuanta ();
       Wavefunction tmpOper;
 
-
-      tmpOper.AllowQuantaFor (tmpState, sCol, deltaQuantum);
+      tmpOper.AllowQuantaFor(tmpState, sCol, deltaQuantum);
       ObjectMatrix<Matrix*> matRef;
       for (int i = 0; i < tmpState.quanta.size (); ++i)
-	for (int j = 0; j < sCol.quanta.size (); ++j)
-	  {
-	    std::vector<int> dum (1); dum [0] = j;
-	    if (tmpOper.allowed(i, j))
-	      {
-		OperatorMatrixReference (matRef, tmpState.oldToNewState [i], dum);
-		CatenateProduct (matRef, tmpOper.operator_element(i,j), true);
+	    for (int j = 0; j < sCol.quanta.size (); ++j) {
+	      std::vector<int> dum (1); dum [0] = j;
+	      if (tmpOper.allowed(i, j)) {
+		    OperatorMatrixReference (matRef, tmpState.oldToNewState [i], dum);
+		    CatenateProduct (matRef, tmpOper.operator_element(i,j), true);
 	      }
-	  }
+	    }
       allowedQuantaMatrix = tmpOper.allowedQuantaMatrix;
       copy(tmpOper.operatorMatrix, operatorMatrix);
     }
@@ -194,6 +233,8 @@ void SpinAdapted::Wavefunction::UnCollectQuantaAlongRows (const StateInfo& sRow,
       abort ();
     }
 }
+
+
 
 void SpinAdapted::Wavefunction::CollectQuantaAlongColumns (const StateInfo& sRow, const StateInfo& sCol)
 {
@@ -258,23 +299,46 @@ void  SpinAdapted::Wavefunction::UnCollectQuantaAlongColumns (const StateInfo& s
     }*/
 }
 
-
+/*
 void SpinAdapted::Wavefunction::AllowQuantaFor (const StateInfo& sRow, const StateInfo& sCol, const SpinQuantum q)
+{
+  deltaQuantum.assign(1, q);
+  resize(sRow.quanta.size (), sCol.quanta.size ());
+  initialised = true;
+  for (int i = 0; i < sRow.quanta.size (); ++i)
+    for (int j = 0; j < sCol.quanta.size (); ++j) {
+	  allowedQuantaMatrix(i, j) = q.allow(sRow.quanta[i], sCol.quanta[j]);
+	  operator_element(i, j).CleanUp ();
+	  if (allowedQuantaMatrix(i,j))
+	  {
+	    operator_element(i, j).ReSize (sRow.quantaStates [i], sCol.quantaStates [j]);
+	    SpinAdapted::Clear (operator_element(i, j));
+	  }
+    }
+}
+*/
+
+void SpinAdapted::Wavefunction::AllowQuantaFor (const StateInfo& sRow, const StateInfo& sCol, const vector<SpinQuantum>& q)
 {
   deltaQuantum = q;
   resize(sRow.quanta.size (), sCol.quanta.size ());
   initialised = true;
   for (int i = 0; i < sRow.quanta.size (); ++i)
-    for (int j = 0; j < sCol.quanta.size (); ++j)
-      {
-	allowedQuantaMatrix(i, j) = q.allow(sRow.quanta[i], sCol.quanta[j]);
-	operator_element(i, j).CleanUp ();
-	if (allowedQuantaMatrix(i,j))
+    for (int j = 0; j < sCol.quanta.size (); ++j) {
+      allowedQuantaMatrix(i, j) = false;
+      for (int k = 0; k < q.size(); ++k) {
+        if (q[k].allow(sRow.quanta[i], sCol.quanta[j])) {
+	      allowedQuantaMatrix(i, j) = true;
+          break;
+        }
+      }
+	  operator_element(i, j).CleanUp ();
+	  if (allowedQuantaMatrix(i,j))
 	  {
 	    operator_element(i, j).ReSize (sRow.quantaStates [i], sCol.quantaStates [j]);
 	    SpinAdapted::Clear (operator_element(i, j));
 	  }
-      }
+    }
 }
 
 SpinAdapted::Wavefunction& SpinAdapted::Wavefunction::operator+=(const Wavefunction& other)

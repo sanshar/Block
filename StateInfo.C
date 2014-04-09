@@ -94,55 +94,59 @@ void TensorProduct (StateInfo& a, StateInfo& b, const SpinQuantum q, const int c
 
   for (int i = 0; i < a.quanta.size (); ++i)
     for (int j = 0; j < b.quanta.size (); ++j)
-      if (  constraint == LessThanQ && 
-	    (  a.quanta [i].get_n() + b.quanta [j].get_n() > q.get_n() ))
-
-	{	  
-	  continue;
-	}
-      else if (constraint == EqualQ && q.allow(a.quanta [i] , b.quanta [j]) )
-      {
-	c.quantaMap(i,j).resize(1);
-
-	c.quanta.push_back(q);
-	c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
-	c.totalStates += a.quantaStates[i]*b.quantaStates[j];
-	c.allowedQuanta(i,j) = true;
-	c.quantaMap(i,j)[0] = c.quanta.size() - 1;
-	c.leftUnMapQuanta.push_back(i);
-	c.rightUnMapQuanta.push_back(j);
-	
-      }
-      else if (constraint == LessThanQ)
-      {
-	vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
-	for (int vq=0; vq< v.size(); vq++) {
-	  if ( (v[vq].get_n() > q.get_n()) || (v[vq].get_n()==q.get_n() && v[vq].get_s() != q.get_s())
-	       || ( (v[vq].get_s() + (q.get_n()-v[vq].get_n()) < q.get_s() )) 
-	       || ( (v[vq].get_s() - (q.get_n()-v[vq].get_n()) > q.get_s() )) 
-	       || (v[vq].get_n() == q.get_n() && v[vq].get_symm() != q.get_symm()) )
-	       continue;
-	  bool include = false;
-	  if (compState != 0) {
-	    for (int k=0; k<compState->quanta.size(); k++)
-	    {
-	      if (q.allow(v[vq], compState->quanta[k])){
-		include = true;
-		break;
-	      }
+      if (constraint == LessThanQ && 
+	      (a.quanta [i].get_n() + b.quanta [j].get_n() > q.get_n() )) {	  
+	    continue;
+	  } else if (constraint == EqualQ && q.allow(a.quanta [i] , b.quanta [j]) ) {
+	    c.quantaMap(i,j).resize(1);
+	    c.quanta.push_back(q);
+	    c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
+	    c.totalStates += a.quantaStates[i]*b.quantaStates[j];
+	    c.allowedQuanta(i,j) = true;
+	    c.quantaMap(i,j)[0] = c.quanta.size() - 1;
+	    c.leftUnMapQuanta.push_back(i);
+	    c.rightUnMapQuanta.push_back(j);
+      } else if (constraint == EqualS) {
+        vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
+        for (int vq=0; vq<v.size(); vq++) {
+          if (v[vq].get_n() > q.get_n() || v[vq].get_s() != q.get_s() || v[vq].get_s().getirrep() != q.get_s().getirrep() || v[vq].get_symm() != q.get_symm())
+            continue;
+          
+          c.quanta.push_back(v[vq]);
+	      c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
+	      c.totalStates += a.quantaStates[i]*b.quantaStates[j];
+	      c.allowedQuanta(i,j) = true;
+	      c.quantaMap(i,j).push_back(c.quanta.size() - 1);
+	      c.leftUnMapQuanta.push_back(i);
+	      c.rightUnMapQuanta.push_back(j);
+        }
+      } else if (constraint == LessThanQ) {
+	    vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
+	    for (int vq=0; vq< v.size(); vq++) {
+	      if ( (v[vq].get_n() > q.get_n()) || (v[vq].get_n()==q.get_n() && v[vq].get_s() != q.get_s())
+	        || ( abs(v[vq].get_s().getirrep()-q.get_s().getirrep()) > (q.get_n()-v[vq].get_n())  )
+	        || (v[vq].get_n() == q.get_n() && v[vq].get_symm() != q.get_symm()) )
+	        continue;
+	      bool include = false;
+	      if (compState != 0) {
+	        for (int k=0; k<compState->quanta.size(); k++) {
+	          if (q.allow(v[vq], compState->quanta[k])){
+		        include = true;
+		        break;
+	          }
+	        }
+	      } else
+	        include = true;
+	      if (!include)
+            continue;
+	      c.quanta.push_back(v[vq]);
+	      c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
+	      c.totalStates += a.quantaStates[i]*b.quantaStates[j];
+	      c.allowedQuanta(i,j) = true;
+	      c.quantaMap(i,j).push_back(c.quanta.size() - 1);
+	      c.leftUnMapQuanta.push_back(i);
+	      c.rightUnMapQuanta.push_back(j);
 	    }
-	  }
-	  else
-	    include = true;
-	  if (!include) continue;
-	  c.quanta.push_back(v[vq]);
-	  c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
-	  c.totalStates += a.quantaStates[i]*b.quantaStates[j];
-	  c.allowedQuanta(i,j) = true;
-	  c.quantaMap(i,j).push_back(c.quanta.size() - 1);
-	  c.leftUnMapQuanta.push_back(i);
-	  c.rightUnMapQuanta.push_back(j);
-	}
       }
   c.UnBlockIndex ();
 }
@@ -153,10 +157,13 @@ void TensorProduct (StateInfo& a, StateInfo& b, StateInfo& c, const int constrai
   ObjectMatrix<char> dummy;
   assert (constraint != WITH_LIST);
 
-  if (constraint == NO_PARTICLE_SPIN_NUMBER_CONSTRAINT)
+  if (constraint == NO_PARTICLE_SPIN_NUMBER_CONSTRAINT) {
     TensorProduct (a, b, dmrginp.effective_molecule_quantum(), LessThanQ, c, compState);
-  else if (constraint == PARTICLE_SPIN_NUMBER_CONSTRAINT)
+  } else if (constraint == PARTICLE_SPIN_NUMBER_CONSTRAINT) {
     TensorProduct (a, b, dmrginp.effective_molecule_quantum(), EqualQ, c);
+  } else if (constraint == SPIN_NUMBER_CONSTRAINT) {
+    TensorProduct (a, b, dmrginp.effective_molecule_quantum(), EqualS, c);
+  }
 }
 
 }
@@ -201,7 +208,8 @@ void SpinAdapted::StateInfo::AllocateUnCollectedStateInfo ()
 
 void SpinAdapted::StateInfo::quanta_distribution (std::vector<SpinQuantum>& qnumbers, std::vector<int>& distribution, const bool complement)
 {
-  // first extract the unique quantum numbers                                                                                             
+  // first extract the unique quantum numbers
+
   std::vector<SpinQuantum> nosymquanta;
   std::vector<int> nosymquantastates;
 
@@ -211,25 +219,22 @@ void SpinAdapted::StateInfo::quanta_distribution (std::vector<SpinQuantum>& qnum
 
   qnumbers.resize (0);
   distribution.resize (0);
-
-  for (int i = 0; i < nosymquanta.size (); ++i)
-    {
-      if (complement)
-        if (SpinQuantum::can_complement (nosymquanta [i]))
-          {
-	    std::vector<SpinQuantum> complements = nosymquanta[i].get_complement();
-	    for (int j=0; j<complements.size(); j++) {
-	      qnumbers.push_back (complements[j]);
-	      distribution.push_back (nosymquantastates [i]);
-	    }
-	    //qnumbers.rbegin ()->complementize ();
-          }
-        else
-          {
-            qnumbers.push_back (nosymquanta [i]);
-            distribution.push_back (nosymquantastates [i]);
-          }
+  
+  for (int i = 0; i < nosymquanta.size (); ++i) {
+    if (complement) {
+      if (SpinQuantum::can_complement (nosymquanta [i])) {
+        std::vector<SpinQuantum> complements = nosymquanta[i].get_complement();
+        for (int j=0; j<complements.size(); j++) {
+          qnumbers.push_back (complements[j]);
+          distribution.push_back (nosymquantastates [i]);
+        }
+        //qnumbers.rbegin ()->complementize ();
+      }
+    } else {
+      qnumbers.push_back (nosymquanta [i]);
+      distribution.push_back (nosymquantastates [i]);
     }
+  }
 }
 
 void SpinAdapted::StateInfo::Allocate ()
@@ -266,48 +271,72 @@ void SpinAdapted::StateInfo::UnMapQuantumState (const int QS, const int secondQS
   secondQS = QS % secondQSTotal;
 }
 
-void SpinAdapted::StateInfo::store(bool forward, const vector<int>& sites, const std::vector<StateInfo>& stateInfos)
+//takes the old state and a rotaition matrix and gives back a rotated renormalized state
+void SpinAdapted::StateInfo::transform_state(const std::vector<Matrix>& rotateMatrix, const StateInfo& stateInfo, StateInfo& newStateInfo)
 {
-  std::string file;
-  if (forward)
-    file = str(boost::format("%s%s%d%s%d%s") % dmrginp.load_prefix() % "/SpinState-forward-" % sites[0] % "-" % sites[sites.size()-1] % ".tmp" );
-  else
-    file = str(boost::format("%s%s%d%s%d%s") % dmrginp.load_prefix() % "/SpinState-backward-"% sites[0] % "-" % sites[sites.size()-1] % ".tmp" );
-
-  pout << "\t\t\t Storing stateinfo :: " << file << endl;
-
-  std::ofstream ofs(file.c_str(), std::ios::binary);
-  boost::archive::binary_oarchive save_state(ofs);
-  int size = stateInfos.size();
-  save_state << size;
-  for (int i=0; i<stateInfos.size(); i++)
-    save_state << stateInfos[i];
-
-  ofs.close();
-  //coutbuf = 0;
-  //return;
+  std::vector<SpinQuantum> newQuanta;
+  std::vector<int> newQuantaStates;
+  std::vector<int> newQuantaMap;
+  for (int Q = 0; Q < rotateMatrix.size (); ++Q)
+    {
+      if (rotateMatrix [Q].Ncols () != 0)
+        {
+          newQuanta.push_back (stateInfo.quanta [Q]);
+          newQuantaStates.push_back (rotateMatrix [Q].Ncols ());
+          newQuantaMap.push_back (Q);
+        }
+    }
+  newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
 }
 
-void SpinAdapted::StateInfo::restore(bool forward, const vector<int>& sites, std::vector<StateInfo>& states)
+void SpinAdapted::StateInfo::restore(bool forward, const vector<int>& sites, StateInfo& stateInfo, int left)
 {
   std::string file;
+  int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
   if (forward)
-    file = str(boost::format("%s%s%d%s%d%s") % dmrginp.load_prefix() % "/SpinState-forward-" % sites[0] % "-" % sites[sites.size()-1] % ".tmp" );
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-forward-" % first % "-" % last % "." % left % "." % mpigetrank() % ".tmp" );
   else
-    file = str(boost::format("%s%s%d%s%d%s") % dmrginp.load_prefix() % "/SpinState-backward-"% sites[0] % "-" % sites[sites.size()-1] % ".tmp" );
-  
-  pout << "\t\t\t Restoring stateinfo :: " << file << endl;
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % first % "-" % last % "." % left % "." % mpigetrank() % ".tmp" );
   
   std::ifstream ifs(file.c_str(), std::ios::binary);
   boost::archive::binary_iarchive load_state(ifs);
-  int statesize;
-  load_state >> statesize;
-  states.resize(statesize);
-  for (int i=0; i<statesize; i++)
-    load_state >> states[i];
+
+  if (dmrginp.outputlevel() > 0) 
+    pout << "\t\t\t Loading state file :: " << file << endl;
+
+  load_state >> stateInfo;
   
   ifs.close();
-  //coutbuf = 0;
-  //return;
+
+}
+
+void SpinAdapted::StateInfo::store(bool forward, const vector<int>& sites, StateInfo& stateInfo, int left)
+{
+  
+  std::string file;
+  int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
+  if (dmrginp.spinAdapted()) {
+    if (forward)
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-forward-" % first % "-" % last % "." % left % "." % mpigetrank() % ".tmp" );
+    else
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % first % "-" % last % "." % left % "." % mpigetrank() % ".tmp" );
+  }
+  else {
+    if (forward)
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-forward-" % (first/2) % "-" % (last/2) % "." % left % "." % mpigetrank() % ".tmp" );
+    else
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % (first/2) % "-" % (last/2) % "." % left % "." % mpigetrank() % ".tmp" );
+  }
+  
+  if (dmrginp.outputlevel() > 0) 
+    pout << "\t\t\t Saving state file :: " << file << endl;
+
+  std::ofstream ofs(file.c_str(), std::ios::binary);
+  boost::archive::binary_oarchive save_state(ofs);
+
+  save_state << stateInfo;
+  
+  ofs.close();
+
 }
 

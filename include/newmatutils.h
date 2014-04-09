@@ -79,7 +79,7 @@ void serialize(Archive & ar, Matrix& a, const unsigned int version)
   ar & Nrs;
   ar & Ncs;
 
-  if(a.Nrows() != Nrs && a.Ncols() != Ncs)
+  if(a.Nrows() != Nrs || a.Ncols() != Ncs)
     {
       a.ReSize(Nrs, Ncs);
     }

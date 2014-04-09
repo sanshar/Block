@@ -27,53 +27,58 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
 {
   SweepParams sweepParams;
   sweepParams.set_sweep_parameters();
-  SpinBlock system;
-  InitBlocks::InitStartingBlock(system, true, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
 
-  int numsites = dmrginp.last_site();
+  SpinBlock system;
+  InitBlocks::InitStartingBlock(system, true, 0, 0, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
+  int numsites = dmrginp.spinAdapted() ? dmrginp.last_site() : dmrginp.last_site()/2;
   int forwardsites = numsites/2+numsites%2;
   int backwardsites = numsites - forwardsites;
-  SpinQuantum hq(0,0,IrrepSpace(0));
+  SpinQuantum hq(0,SpinSpace(0),IrrepSpace(0));
+
 
   for (int i=0; i<forwardsites-1; i++) {
-    SpinBlock sysdot(i+1, i+1);
+    SpinBlock sysdot(i+1, i+1, true);
     SpinBlock newSystem;
     system.addAdditionalCompOps();
-    newSystem.default_op_components(false, system, sysdot, false, true);
+    newSystem.default_op_components(false, system, sysdot, false, true, true);
     newSystem.setstoragetype(DISTRIBUTED_STORAGE);
     newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, sysdot);
+
     system = newSystem;
+
   }
 
   SpinBlock environment;
-  InitBlocks::InitStartingBlock(environment, false, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
+  InitBlocks::InitStartingBlock(environment, false, 0, 0, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
+  cout << environment<<endl;
   for (int i=0;i <backwardsites-1; i++) {
-    SpinBlock envdot(numsites-2-i, numsites-2-i);
+    SpinBlock envdot(numsites-2-i, numsites-2-i, true);
     SpinBlock newEnvironment;
     environment.addAdditionalCompOps();
-    newEnvironment.default_op_components(false, environment, envdot, true, true);
+    newEnvironment.default_op_components(false, environment, envdot, true, true, true);
     newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
     newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, envdot);
+
     environment = newEnvironment;
   }
-
-  /*
-  Op_component_base& oparray = system.get_op_array(CRE_CRE_DESCOMP);
-  for (int i=0; i<oparray.get_size(); i++)
-    cout <<oparray.get_local_element(i)[0]->get_orbs(0)<<endl<< *(oparray.get_local_element(i)[0]->getworkingrepresentation(&system))<<endl;
-  */
 
   pout <<"\t\t\t System Block :: "<< system;
   pout <<"\t\t\t Environment Block :: "<< environment;
   SpinBlock big;
   InitBlocks::InitBigBlock(system, environment, big); 
+
+  //SpinBlock systemp(0,1), envtmp(2,3);
+  //InitBlocks::InitBigBlock(systemp, envtmp, big); 
+
   int nroots = dmrginp.nroots(0);
   std::vector<Wavefunction> solution(nroots);
   std::vector<double> energies(nroots);
   double tol = sweepParams.get_davidson_tol();
 
   pout << "\t\t\t Solving the Wavefunction "<<endl;
-  Solver::solve_wavefunction(solution, energies, big, tol, BASIC, false, true, false, sweepParams.get_additional_noise());
+  int currentState = 0;
+  std::vector<Wavefunction> lowerStates;
+  Solver::solve_wavefunction(solution, energies, big, tol, BASIC, false, true, false, sweepParams.get_additional_noise(), currentState, lowerStates);
   for (int i=0; i<nroots; i++) {
     pout << "fullci energy "<< energies[i]+dmrginp.get_coreenergy()<<endl;
   }
@@ -105,9 +110,9 @@ void SpinAdapted::Sweep::tiny(double sweep_tol)
   int nroots = dmrginp.nroots(0);
   SweepParams sweepParams;
   sweepParams.set_sweep_parameters();
-  SpinBlock system(0,dmrginp.last_site()-1);
+  SpinBlock system(0,dmrginp.last_site()-1, true);
   const StateInfo& sinfo = system.get_stateInfo();
-  SpinQuantum hq(0,0,IrrepSpace(0));
+  SpinQuantum hq(0,SpinSpace(0),IrrepSpace(0));
   for (int i=0; i<sinfo.totalStates; i++) {
     if (sinfo.quanta[i] == dmrginp.molecule_quantum()) {
       Matrix& h = system.get_op_rep(HAM, hq)->operator_element(i,i);

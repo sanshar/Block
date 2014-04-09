@@ -42,7 +42,11 @@ SpinAdapted::SweepParams::SweepParams()
   sys_add = dmrginp.sys_add();
   env_add = dmrginp.env_add();
   forward_starting_size = 1;
-  n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+  if(dmrginp.spinAdapted())
+    n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+  else
+    n_iters = (dmrginp.last_site() - 4*forward_starting_size - 2*sys_add - 2*env_add) / (2*sys_add) + 1;
+
   backward_starting_size = forward_starting_size;
 }
 
@@ -50,7 +54,8 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
 {
   int iter;
   int current = 0;
-  int current_ls = 0;
+  //ROA: Deactivated least squares
+  //int current_ls = 0;
   int sweep_iter_ls = sweep_iter + 1;
   for (iter = 0; iter < dmrginp.sweep_iter_schedule().size(); ++iter)
   {
@@ -59,6 +64,8 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
        //pout << "chosen current " << iter << endl;
      }
   }
+  /*
+  //ROA: Deactivated least squares
   for (iter = 0; iter < dmrginp.sweep_iter_schedule().size(); ++iter)
   {
      if (sweep_iter_ls >= dmrginp.sweep_iter_schedule()[iter]) { 
@@ -66,8 +73,10 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
        //pout << "chosen current " << iter << endl;
      }
   }
+  */
   keep_states = dmrginp.sweep_state_schedule()[current];
-  keep_states_ls = dmrginp.sweep_state_schedule()[current_ls];
+  //ROA: Deactivated least squares
+  //keep_states_ls = dmrginp.sweep_state_schedule()[current_ls];
   keep_qstates = 0.0;//dmrginp.sweep_qstate_schedule()[current];
   davidson_tol = dmrginp.sweep_tol_schedule()[current];
   noise = dmrginp.sweep_noise_schedule()[current];
@@ -95,7 +104,10 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
   {
     onedot = true;
     env_add = 0;
-    n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+    if(dmrginp.spinAdapted())
+      n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+    else
+      n_iters = (dmrginp.last_site() - 4*forward_starting_size - 2*sys_add - 2*env_add) / (2*sys_add) + 1;
     if (dmrginp.twodot_to_onedot_iter() == SpinAdapted::SweepParams::sweep_iter)
       pout << "\t\t\t Switching from two dot to one dot ... " << endl;
   }
@@ -104,7 +116,11 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
 
 void SpinAdapted::SweepParams::calc_niter()
 {
-  n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+    if(dmrginp.spinAdapted())
+      n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+    else
+      n_iters = (dmrginp.last_site() - 4*forward_starting_size - 2*sys_add - 2*env_add) / (2*sys_add) + 1;
+    //n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
 }
 
 void SpinAdapted::SweepParams::savestate(const bool &forward, const int &size)

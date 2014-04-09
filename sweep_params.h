@@ -22,7 +22,7 @@ private:
   {
     ar & block_iter & sweep_iter & n_iters & forward_starting_size & backward_starting_size & keep_states & keep_states_ls;
     ar & keep_qstates & sys_add & env_add & noise & additional_noise & davidson_tol & lowest_energy & lowest_energy_spins & guesstype;
-    ar & error & largest_dw & onedot;
+    ar & error & largest_dw & onedot & currentRoot;
   }
 
   int restart_iter;
@@ -37,6 +37,7 @@ private:
   int keep_qstates;
   int sys_add;
   int env_add;
+  int currentRoot;
   double noise;
   double additional_noise;
   double davidson_tol;
@@ -55,6 +56,7 @@ public:
   void restorestate(bool &forward, int &size);
   void calc_niter();
 
+  const int &current_root() const {return currentRoot;}
   const bool &get_onedot() const { return onedot; }
   const int &get_block_iter() const { return block_iter; }
   const int &get_sweep_iter() const { return sweep_iter; }
@@ -76,6 +78,7 @@ public:
   const guessWaveTypes &get_guesstype() const { return guesstype; }
   const int &get_restart_iter() const {return restart_iter;}
 
+  int &current_root() {return currentRoot;}
   int &set_restart_iter() {return restart_iter;}
   bool &set_onedot() { return onedot; }
   int &set_block_iter() { return block_iter; }

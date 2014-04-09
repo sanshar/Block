@@ -106,7 +106,7 @@ public:
   }
 
   // returns a list of creation cv and destruction operators dv
-  // to produce state s from this (with arbitrary parity)
+  // to produce this state from s (with arbitrary parity)
   void connect (const Orbstring& s, std::vector<int>& cv, std::vector<int>& dv) const
   {
     for (int i = 0; i < occ_rep.size(); ++i)

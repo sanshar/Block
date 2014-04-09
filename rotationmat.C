@@ -13,8 +13,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <include/sortutils.h>
 #include <boost/serialization/vector.hpp>
 #include "pario.h"
+#include "cmath"
 using namespace boost;
 using namespace std;
+
 
 void SpinAdapted::SaveRotationMatrix (const std::vector<int>& sites, const std::vector<Matrix>& m1, int state)
 {
@@ -24,7 +26,11 @@ void SpinAdapted::SaveRotationMatrix (const std::vector<int>& sites, const std::
     {
 
       char file [5000];
-      sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(),".state",state, ".tmp");
+      int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
+      if (state == -1)
+	sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", first, "-", last, ".", mpigetrank(),".state_average.tmp");
+      else
+	sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", first, "-", last, ".", mpigetrank(),".state",state, ".tmp");
       if (dmrginp.outputlevel() > 0) 
 	pout << "\t\t\t Saving Rotation Matrix :: " << file << endl;
       std::ofstream ofs(file, std::ios::binary);
@@ -41,8 +47,11 @@ void SpinAdapted::LoadRotationMatrix (const std::vector<int>& sites, std::vector
   if (rank == 0)
   {
     char file [5000];
-    //sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.load_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(), ".tmp");
-    sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(),".state",state, ".tmp");
+    int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
+    if(state == -1)
+      sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", first, "-", last, ".", mpigetrank(),".state_average.tmp");
+    else
+      sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", first, "-", last, ".", mpigetrank(),".state",state, ".tmp");
     if (dmrginp.outputlevel() > 0) 
       pout << "\t\t\t Loading Rotation Matrix :: " << file << endl;
     std::ifstream ifs(file, std::ios::binary);
@@ -52,12 +61,27 @@ void SpinAdapted::LoadRotationMatrix (const std::vector<int>& sites, std::vector
   }
 }
 
+void SpinAdapted::allocate(const StateInfo& row, const StateInfo& col, std::vector<Matrix>& rotations)
+{
+  rotations.resize(row.quanta.size());
+  for (int i=0; i<row.quanta.size(); i++) {
+    int nrows = row.quantaStates[i];
+    int ncols = 0;
+    for (int j=0; j<col.quanta.size(); j++) 
+      if (col.quanta[j] == row.quanta[i])
+	ncols += col.quantaStates[j];
+
+    rotations[i].ReSize(nrows, ncols);
+  }
+}
+
+
 bool SpinAdapted::can_connect(int n, int spin, int right_block_size)
 {
   for(int alpha=0;alpha<=min(right_block_size/2,dmrginp.total_particle_number()-n);++alpha)
   {
     int beta = dmrginp.total_particle_number() - n - alpha;
-    if(dmrginp.total_spin_number() - (alpha - beta) == spin && beta <= right_block_size/2)
+    if(dmrginp.total_spin_number().getirrep() - (alpha - beta) == spin && beta <= right_block_size/2)
       return true;
   }
   return false;
@@ -245,7 +269,7 @@ void SpinAdapted::diagonalise_dm(SparseMatrix& tracedMatrix, SparseMatrix& trans
   for (int tQ = 0; tQ < nquanta; ++tQ)
     {
       int nStates = tracedMatrix.operator_element(tQ, tQ).Nrows ();
-      DiagonalMatrix weights (nStates); 
+      DiagonalMatrix weights (nStates);
 #ifdef USELAPACK
       diagonalise(tracedMatrix.operator_element(tQ, tQ), weights, transformMatrix.operator_element(tQ, tQ));
 #else
@@ -258,6 +282,38 @@ void SpinAdapted::diagonalise_dm(SparseMatrix& tracedMatrix, SparseMatrix& trans
           weights.element(i,i) = 0.;
       eigenMatrix [tQ] = weights;
     }  
+}
+
+void SpinAdapted::svd_densitymat(SparseMatrix& tracedMatrix, SparseMatrix& transformMatrix, std::vector<DiagonalMatrix>& eigenMatrix) {
+  // SVD of matrix M=(A,B,C)=USV^T
+  // since MM^T=AA^T+BB^T+CC^T=USS^TU^T, we don't have to explicitly construct M
+  int nquanta = tracedMatrix.nrows();
+  eigenMatrix.resize(nquanta);
+  vector<double> totalquantaweights(nquanta);
+  for (int tQ = 0; tQ < nquanta; ++tQ) {
+    int nStates = tracedMatrix.operator_element(tQ, tQ).Nrows ();
+    DiagonalMatrix weights(nStates);
+    Matrix M(nStates, nStates);
+    M = 0.;
+    for (int sQ = 0; sQ < nquanta; ++sQ)
+      if (tracedMatrix.allowed(tQ, sQ))
+        M += tracedMatrix.operator_element(tQ, tQ) * tracedMatrix.operator_element(tQ, tQ).t();
+
+#ifdef USELAPACK
+    diagonalise(M, weights, transformMatrix.operator_element(tQ, tQ));
+#else
+    SymmetricMatrix dM (nStates);
+    dM << M;
+    EigenValues(dM, weights, transformMatrix.operator_element(tQ,tQ));
+#endif
+    for (int i=0; i<weights.Nrows(); ++i) {
+      if(weights.element(i,i) < 1.e-28)
+        weights.element(i,i) = 0.;
+      else
+        weights.element(i,i) = sqrt(weights.element(i,i));
+    }
+    eigenMatrix[tQ] = weights;    
+  }
 }
 
 void SpinAdapted::sort_weights(std::vector<DiagonalMatrix>& eigenMatrix, vector<pair<int, int> >& inorderwts, vector<vector<int> >& weightsbyquanta)

@@ -94,7 +94,7 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
   //if (useSlater) {
-    systemDot = SpinBlock(systemDotStart, systemDotEnd);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
     //SpinBlock::store(true, systemDot.get_sites(), systemDot);
     //}
     //else
@@ -106,9 +106,9 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
   system.addAdditionalCompOps();
-  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, true, true);
+  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, true, true);
   
-  InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
+  InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, sweepParams.current_root(), sweepParams.current_root(), 
 				      sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 				      sweepParams.get_onedot(), nexact, useSlater, true, true, true);
   SpinBlock big;
@@ -129,12 +129,12 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 #endif
 
   std::vector<Matrix> rotateMatrix;
-  DensityMatrix tracedMatrix;
+  DensityMatrix tracedMatrix(newSystem.get_stateInfo());
   tracedMatrix.allocate(newSystem.get_stateInfo());
   tracedMatrix.makedensitymatrix(solution, big, std::vector<double>(1,1.0), 0.0, 0.0, false);
   rotateMatrix.clear();
   if (!mpigetrank())
-    double error = newSystem.makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
+    double error = makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
   
 
 #ifndef SERIAL
@@ -165,6 +165,10 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 
 double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state)
 {
+  if (dmrginp.hamiltonian() == BCS) {
+    cout << "Two PDM with BCS calculations is not implemented" << endl;
+    exit(0);
+  }
   cout.precision(12);
   SpinBlock system;
   const int nroots = dmrginp.nroots();
@@ -177,20 +181,20 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   pout << ((forward) ? "\t\t\t Starting renormalisation sweep in forwards direction" : "\t\t\t Starting renormalisation sweep in backwards direction") << endl;
   pout << "\t\t\t ============================================================================ " << endl;
   
-  InitBlocks::InitStartingBlock (system,forward, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+  InitBlocks::InitStartingBlock (system,forward, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
   if(!restart)
     sweepParams.set_block_iter() = 0;
  
   pout << "\t\t\t Starting block is :: " << endl << system << endl;
   if (!restart) 
-    SpinBlock::store (forward, system.get_sites(), system); // if restart, just restoring an existing block --
+    SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root()); // if restart, just restoring an existing block --
   sweepParams.savestate(forward, system.get_sites().size());
   bool dot_with_sys = true;
 
   array_4d<double> twopdm(2*dmrginp.last_site(), 2*dmrginp.last_site(), 2*dmrginp.last_site(), 2*dmrginp.last_site());
   twopdm.Clear();
-  for (int i=0; i<nroots; i++)
-    save_twopdm_binary(twopdm, i, i); 
+
+  save_twopdm_binary(twopdm, state, state); 
 
 
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
@@ -233,11 +237,11 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
       pout << system<<endl;
       
-      SpinBlock::store (forward, system.get_sites(), system);	 	
+      SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root());	 	
 
       pout << "\t\t\t saving state " << system.get_sites().size() << endl;
       ++sweepParams.set_block_iter();
-      sweepParams.savestate(forward, system.get_sites().size());
+      //sweepParams.savestate(forward, system.get_sites().size());
     }
   //for(int j=0;j<nroots;++j)
   {int j = state;
