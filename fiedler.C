@@ -93,11 +93,15 @@ std::vector<int> fiedler_reorder(const SymmetricMatrix& m)
          for (int j=0;j<vSize;++j)
             if (abs(i-j)==1)
                h.element(i,j)=-1.;
+
+      //Setting up a permutation of indices
       int indices[]={1,0,5,7,4,2,3,6};
+      //Permuting
       Matrix hper=permute(h,indices);
       hsym << hper;
       reorderTest = fiedler_reorder(hsym);
       std::vector<int> expected(vSize);
       for (int i=0;i<vSize;i++) expected.at(i)=indices[(vSize-1)-i];
+      // Running the test
       BOOST_CHECK_EQUAL_COLLECTIONS(reorderTest.begin(), reorderTest.end(), expected.begin(), expected.end()); }
 #endif
