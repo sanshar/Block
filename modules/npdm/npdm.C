@@ -267,9 +267,6 @@ void npdm( int npdm_order )
     else abort();
   }
 
-  // Debug !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  dmrginp.new_npdm_code() = false;
-
   // Not state-specific
   //--------------------
   if ( !dmrginp.setStateSpecific() ) {
