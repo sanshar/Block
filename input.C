@@ -152,8 +152,7 @@ void SpinAdapted::Input::usedkey_error(string& key, string& line) {
   abort();
 }
 
-SpinAdapted::Input::Input(const string& config_name)
-{
+SpinAdapted::Input::Input(const string& config_name) {
   //first collect all the data
   std::vector<int> usedkey(NUMKEYWORDS, -1);
   int n_elec = -1;
@@ -355,10 +354,8 @@ SpinAdapted::Input::Input(const string& config_name)
 	  
 	  m_sweep_iter_schedule.push_back( atoi(schd_tok[0].c_str()));
 	  m_sweep_state_schedule.push_back( atoi(schd_tok[1].c_str()));
-	  m_sweep_qstate_schedule.push_back( 0);  //DEPRECATED OPTION
 	  m_sweep_tol_schedule.push_back( atof(schd_tok[2].c_str()));
 	  m_sweep_noise_schedule.push_back( atof(schd_tok[3].c_str()));
-	  m_sweep_additional_noise_schedule.push_back( 0.0);  //DEPRECATED OPTION
 	  
 	  if (m_sweep_state_schedule[i] <= 0) {
 	    pout << "Number of retained states cannot be less than 0"<<endl;
@@ -722,7 +719,7 @@ SpinAdapted::Input::Input(const string& config_name)
       }
       else if (boost::iequals(keyword,  "backward")) {
          m_backward = true;	  
-         m_schedule_type_backward = true;
+         m_schedule_type_backward = true; 
          m_algorithm_type = TWODOT;
       }
 
@@ -821,6 +818,8 @@ mpi::broadcast(world, m_Bogoliubov,0);
 
     pout << "Checking input for errors"<<endl;
     performSanityTest();
+    generateDefaultSchedule();
+    //add twodot_toonedot(bla bla bla)
     pout << "Summary of input"<<endl;
     pout << "----------------"<<endl;
 #ifndef MOLPRO
@@ -843,8 +842,7 @@ mpi::broadcast(world, m_Bogoliubov,0);
 #endif
 }
 
-void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& oldtonew)
-{
+void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& oldtonew) {
   string msg; int msgsize = 5000;
   ReadMeaningfulLine(dumpFile, msg, msgsize);
   vector<string> tok;
@@ -859,7 +857,8 @@ void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& o
 	  pout << msg<<endl;
 	  abort();
 	}
-	oldtonew.push_back(atoi(tok[i].c_str())-1); //reorder is starting from 1 to n, but internally we store it from 0 to n
+	//reorder is starting from 1 to n, but internally we store it from 0 to n-1
+	oldtonew.push_back(atoi(tok[i].c_str())-1); 
 	if (oldtonew.back() >m_norbs || oldtonew.back() < 0) {
 	  pout << "Illegal orbital index "<<atoi(tok[i].c_str())<<" in reorder file"<<endl;
 	  abort();
@@ -1642,7 +1641,7 @@ void SpinAdapted::Input::performSanityTest()
     Symmetry::irrepAllowed(m_total_symmetry_number.getirrep());
 
   //this is important so the user cannot break the code
-  if (m_schedule_type_default) {
+  if (m_schedule_type_default && !m_schedule_type_backward) {
     if (m_maxM == 0) {
       pout << "With default schedule a non-zero maxM has to be specified"<<endl;
       pout << "Current m_maxM = "<<m_maxM<<endl;
@@ -1666,101 +1665,8 @@ void SpinAdapted::Input::performSanityTest()
        pout << "or specify a startM smaller than " << m_maxM << endl;
        abort();
     }
-
-    if (m_sweep_tol <= 0.0) {
-      pout << "Using the default tolerance sweep tolerance of 1.0e-5."<<endl;
-      m_sweep_tol = 1.0e-5;
-    }
-    int nentry = 0;
-    m_sweep_iter_schedule.resize(nentry);
-    m_sweep_state_schedule.resize(nentry);
-    m_sweep_qstate_schedule.resize(nentry,0);
-    m_sweep_tol_schedule.resize(nentry);
-    m_sweep_noise_schedule.resize(nentry);
-    m_sweep_additional_noise_schedule.resize(nentry,0);
-    
-    double sweeptol = m_sweep_tol;
-    int lastiter = 0;
-    int firstSched = 0;
-    int sweepCount = 0;
-    int nSched=14;
-    int defM [] = {50, 100, 250, 500, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000};
-    int defIter [] = {8, 8, 8, 8, 8, 4, 4, 4, 4, 4, 4, 4, 4, 4};
-    double defNoise [] = {1.0e-4, 1.0e-4, 1e-4, 1e-4, 5e-5, 5e-5, 5e-5, 5e-5, 5e-5, 5e-5, 5e-5, 5e-5, 5e-5, 5e-5};
-    double defTol [] = {1.0e-5, 1.0e-5, 1e-5, 1e-5, 5e-5, 5e-6, 5e-6, 5e-6, 5e-6, 5e-6, 5e-6, 5e-6, 5e-6, 5e-6};
-
-    for (int i=0; i<nSched;++i){
-       if (firstSched==0){
-          if (m_startM == m_maxM){
-             //cout << sweepCount << " " << m_startM << " " << defTol[i] << " " << defNoise[i] << endl;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(1E-5);  m_sweep_noise_schedule.push_back(1E-4);
-             sweepCount += 8;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(5E-6);  m_sweep_noise_schedule.push_back(5E-5);
-             break;
-          }
-
-          else if ((m_startM == defM[i])){
-             //cout << sweepCount << " " << defM[i] << " " << defTol[i] << " " << defNoise[i] << endl;
-             firstSched = 1;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(defTol[i]);  m_sweep_noise_schedule.push_back(defNoise[i]);
-             sweepCount += defIter[i];
-          }
-          else if ((m_startM < defM[i])){
-             firstSched = 1;
-             //cout << sweepCount << " " << m_startM << " " << defTol[i-1] << " " << defNoise[i-1] << endl;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(defTol[i-1]);  m_sweep_noise_schedule.push_back(defNoise[i-1]);
-             sweepCount += defIter[i-1];
-
-             //cout << sweepCount << " " << defM[i] << " " << defTol[i] << " " << defNoise[i] << endl;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(defTol[i]);  m_sweep_noise_schedule.push_back(defNoise[i]);
-             sweepCount += defIter[i];
-          }
-       }
-       else{//After first iteration
-          if (defM[i]>=m_maxM){
-             //cout << sweepCount << " " << m_maxM << " " << defTol[i] << " " << defNoise[i] << endl;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(defTol[i]);  m_sweep_noise_schedule.push_back(defNoise[i]);
-             sweepCount += defIter[i];
-             break;
-          }
-          else{
-             //cout << sweepCount << " " << defM[i] << " " << defTol[i] << " " << defNoise[i] << endl;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(defTol[i]);  m_sweep_noise_schedule.push_back(defNoise[i]);
-             sweepCount += defIter[i];
-          }
-       }
-    }
-       lastiter = m_sweep_iter_schedule.back();
-       //lastiter = sweepCount;
-       m_sweep_iter_schedule.push_back(lastiter+2); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(sweeptol/10.0);  m_sweep_noise_schedule.push_back(0.0e-5);
-
-
-    if (m_twodot_to_onedot_iter < 18 && m_algorithm_type == TWODOT_TO_ONEDOT) {
-      if (m_twodot_to_onedot_iter <= 0)
-         pout << "Sweep at which the switch from twodot to onedot will happen -> "<<lastiter+4<<endl;
-      m_twodot_to_onedot_iter = lastiter+4;
-    }
-    if (m_maxiter <= m_sweep_iter_schedule.back()) {
-      //pout << "With the default schedule and maxM specified, maxiter has to be at least "<<lastiter+6<<endl;
-      //pout << "changing maxiter to "<<lastiter+6<<endl;
-      m_maxiter = lastiter+6;
-    }
   }
   else if (m_schedule_type_backward) {
-
-    int nentry = 0;
-    m_sweep_iter_schedule.resize(nentry);
-    m_sweep_state_schedule.resize(nentry);
-    m_sweep_qstate_schedule.resize(nentry,0);
-    m_sweep_tol_schedule.resize(nentry);
-    m_sweep_noise_schedule.resize(nentry);
-    m_sweep_additional_noise_schedule.resize(nentry,0);
-
-    double sweeptol = m_sweep_tol;
-    int lastiter = 0;
-    int firstSched = 0;
-    int sweepCount = 0;
-    int nSched=17;
     int lastM=0; //To be changed to a variable
     lastM = m_lastM;
     if (lastM==0) lastM=50;
@@ -1770,50 +1676,9 @@ void SpinAdapted::Input::performSanityTest()
        pout << "or specify a larger startM " << endl;
        abort();
     }
-    double bNoise = 0.0;
-    double bTol = 5e-6;
-
-    int defIter [] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
-    int defM [] = {10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000, 2000, 1000, 500, 250, 100, 50, 25, 10, 1};
-
-    for (int i=0; i<nSched;++i){
-       if (firstSched==0){
-          if (lastM == m_startM){
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
-             sweepCount += 3;
-             break;
-          }
-          else if(m_startM==defM[i]){ 
-             firstSched = 1;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
-             sweepCount += defIter[i];
-       }
-          else if ((m_startM > defM[i])){
-             firstSched = 1;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
-             sweepCount += defIter[i-1];
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
-             sweepCount += defIter[i];
-          }
-       }
-       else{//After first iteration
-          if (defM[i]<=lastM){
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(lastM); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
-             sweepCount += defIter[i];
-             break;
-          }
-          else{
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
-             sweepCount += defIter[i];
-          }
-
-        }
-    }
-       lastiter = m_sweep_iter_schedule.back();
-       m_maxiter = lastiter+3;
-       pout << "maxiter " << m_maxiter << endl;
   }
   else {
+  // This needs to go at the end of sanity check, or move up schedule 
     if (m_maxM != 0) {
       pout << "With detailed schedule a non-zero maxM should not be specified"<<endl;
       abort();
@@ -1824,8 +1689,9 @@ void SpinAdapted::Input::performSanityTest()
     }
   }
 
-  if(m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter == 0)
-    m_twodot_to_onedot_iter = min(m_sweep_iter_schedule.back()+2, m_maxiter-1);
+  //Still part of the schedule. Might need to move to Schedule.C
+  //if(m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter == 0)
+  //  m_twodot_to_onedot_iter = min(m_sweep_iter_schedule.back()+2, m_maxiter-1);
 
   if (m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter >= m_maxiter) {
     pout << "Switch from twodot to onedot algorithm cannot happen after maxiter"<<endl;
@@ -1836,14 +1702,6 @@ void SpinAdapted::Input::performSanityTest()
     pout << "Only onedot algorithm is allowed with state specific calculation."<<endl;
     abort();
   }
-
-  if (m_maxiter < m_sweep_iter_schedule.back()) {
-    pout << "maximum iterations allowed is less than the last sweep iteration in your schedule."<<endl;
-    pout << m_maxiter <<" < "<< (m_sweep_iter_schedule.back())<<endl;
-    pout << "either increase the max_iter or reduce the number of sweeps"<<endl;
-    abort();
-  }
-  
 
 #ifndef SERIAL
   }
