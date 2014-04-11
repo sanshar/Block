@@ -15,6 +15,12 @@ Sandeep Sharma, Garnet K.-L. Chan and Roberto Olivares-Amaya
 #include <newmatap.h>
 #include <sortutils.h>
 #include "fiedler.h"
+#ifdef UNITTEST
+#define BOOST_TEST_DYN_LINK
+#define BOOST_TEST_MODULE Fiedler
+#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
+#endif
 
 Matrix argpermute(const Matrix& m, const int* indices)
 {
@@ -73,3 +79,25 @@ std::vector<int> fiedler_reorder(const SymmetricMatrix& m)
   /* BLOCK works with findices*/
 
 }
+
+#ifdef UNITTEST
+   // General: Evaluates fiedler_reorder for a Huckel case
+   // Subroutines tested: permute, fiedler_reorder
+   BOOST_AUTO_TEST_CASE(Fiedler Hueckel){
+      std::vector<int> reorderTest;
+      int vSize=8;
+      Matrix h(vSize,vSize);
+      SymmetricMatrix hsym;
+      h=0.;
+      for (int i=0;i<vSize;++i)
+         for (int j=0;j<vSize;++j)
+            if (abs(i-j)==1)
+               h.element(i,j)=-1.;
+      int indices[]={1,0,5,7,4,2,3,6};
+      Matrix hper=permute(h,indices);
+      hsym << hper;
+      reorderTest = fiedler_reorder(hsym);
+      std::vector<int> expected(vSize);
+      for (int i=0;i<vSize;i++) expected.at(i)=indices[(vSize-1)-i];
+      BOOST_CHECK_EQUAL_COLLECTIONS(reorderTest.begin(), reorderTest.end(), expected.begin(), expected.end()); }
+#endif

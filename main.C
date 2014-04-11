@@ -21,6 +21,7 @@ Sandeep Sharma, Garnet K.-L. Chan and Roberto Olivares-Amaya
 using namespace std;
 int calldmrg(char*, char*);
 
+#ifndef UNITTEST
 int main(int argc, char* argv []) 
 {
 #ifndef SERIAL
@@ -37,3 +38,4 @@ int main(int argc, char* argv [])
   char* output = 0;
   return calldmrg(argv[1], output);
 }
+#endif
