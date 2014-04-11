@@ -203,6 +203,7 @@ class Input {
   void writeSummaryForMolpro();
 #endif
   void performSanityTest();
+  void generateDefaultSchedule();
   void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
   void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, PairArray& vcc, CCCCArray& vcccc, CCCDArray& vcccd);  
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
