@@ -11,6 +11,9 @@
 using namespace std;
 
 void SpinAdapted::Input::generateDefaultSchedule(){
+#ifndef SERIAL
+  if (mpigetrank() == 0) {
+#endif
 
    if (m_sweep_tol <= 0.0) {
       pout << "Using the default tolerance sweep tolerance of 1.0e-5."<<endl;
@@ -171,6 +174,9 @@ void SpinAdapted::Input::generateDefaultSchedule(){
     pout << "either increase the max_iter or reduce the number of sweeps"<<endl;
     abort();
   }
+#ifndef SERIAL
+  }
+#endif
 }
 
 
