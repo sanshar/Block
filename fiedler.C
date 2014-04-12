@@ -83,7 +83,7 @@ std::vector<int> fiedler_reorder(const SymmetricMatrix& m)
 #ifdef UNITTEST
    // General: Evaluates fiedler_reorder for a Huckel case
    // Subroutines tested: permute, fiedler_reorder
-   BOOST_AUTO_TEST_CASE(Fiedler Hueckel){
+   BOOST_AUTO_TEST_CASE(Fiedler){
       std::vector<int> reorderTest;
       int vSize=8;
       Matrix h(vSize,vSize);
