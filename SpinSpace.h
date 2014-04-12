@@ -12,11 +12,18 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/serialization/serialization.hpp>
 #include <vector>
 #include <iostream>
-//In nonabelian symmetries, in this case the spin SU(2), each irrep could have many basis vectors, 
-//this class represents the irrep (in this case Spin). Each basis vector in a irrep is represented by a 
-// different class IrrepVector (Sz). If we dont want to use SpinAdapted algorithm then this class
-//will become Sz and each irrep will only have a single basis vector.
+
+
 namespace SpinAdapted{
+/// @brief `SpinSpace` is a wrapper class for the spin irrep.
+///
+/// In Sz symmetry, the irrep is 2*Sz. In SU(2) symmetry, the
+/// irrep is 2*S. The behaviour is toggled between Sz and S2 symmetry by checking dmrg.spinAdapted().
+///
+/// `SpinSpace` defines addition of irreps in SU(2) symmetry
+/// to return the Clebsch-Gordon series for S1+S2=|S1-S2|...S1+S2.
+///
+/// 
 class SpinSpace
 {
  private:
@@ -25,6 +32,7 @@ class SpinSpace
   {
     ar & irrep;
   }
+  /// Integer representing 2*S or 2*Sz 
   int irrep;
  public:
   SpinSpace() : irrep(0) {}
@@ -34,8 +42,14 @@ class SpinSpace
   bool operator==(SpinSpace rhs) const;
   bool operator!=(SpinSpace rhs) const;
   bool operator<(SpinSpace rhs) const;
+  /// Adds integer irreps in lhs, rhs. 
+  /// \return If S2 symmetry (`dmrg.spinAdapted()==true`),  vector |S1-S2| ... S1+S2, else, 
+  /// vector of length 1 containing Sz1+Sz2
   friend std::vector<SpinSpace> operator+(SpinSpace lhs, SpinSpace rhs);
-  friend std::vector<SpinSpace> operator-(SpinSpace lhs, SpinSpace rhs);
+
+  /// Negate irrep.
+  /// \return In Sz symmetry, -Sz; for S2 symmetry, returns same irrep S (i.e. does nothing,
+  /// since negative S has no meaning).
   friend SpinSpace operator-(SpinSpace lhs);
   void Save(std::ofstream &ofs);
   void Load(std::ifstream &ifs);
