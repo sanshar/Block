@@ -800,6 +800,7 @@ mpi::broadcast(world, m_Bogoliubov,0);
   // Kij-based ordering by GA opt.
 #ifndef SERIAL
   mpi::broadcast(world,m_reorderType,0);
+  mpi::broadcast(world,m_add_noninteracting_orbs,0);
 #endif
 
   if (m_Bogoliubov) {
@@ -1715,8 +1716,11 @@ void SpinAdapted::Input::makeInitialHFGuess() {
 
   std::vector<int> hf_occupancy_tmp(m_norbs,0);
 
-
-  if (m_hf_occ_user == "manual") {
+  if (m_Bogoliubov) {
+    // overwrite hf_occ_user option, since initial guess is always vacuum in BCS case
+    m_hf_occupancy.assign(m_norbs, 0);
+  }
+  else if (m_hf_occ_user == "manual") {
     //check if n_orbs is correct and if n_elec is correct
     if (m_hf_occupancy.size() != m_norbs/2 ) {
       pout << "ERROR: The length of user-defined HF occupancies does not match the number of orbitals " << endl;
