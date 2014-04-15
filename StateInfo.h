@@ -137,6 +137,7 @@ class StateInfo
  public:
   StateInfo();
   StateInfo (const int n, const SpinQuantum q [], const int qS []); 
+  StateInfo(const std::vector< Csf >& dets, bool addWavefunctionQuanta = false);
 
   /// Type 1. Constructor 
   /// \param[in] CSF's on a set of sites
