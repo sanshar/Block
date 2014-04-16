@@ -3,15 +3,16 @@
 #This program is integrated in Molpro with the permission of 
 #Sandeep Sharma and Garnet K.-L. Chan
 
-##BOOSTINCLUDE = /home/sandeep/Work/Programs/boost_1_54_0/
-BOOSTINCLUDE = /home/mark/libs/boost_1_55_0/
-EIGENINCLUDE = /home/mark/libs/eigen/
+#BOOSTINCLUDE = /home/sandeep/apps/boost/boost_1_55_0_della4/
+BOOSTINCLUDE = /home/sandeep/apps/boost_1_55_0/
+EIGENINCLUDE = /home/markaw/libs/eigen/
 
 #specify boost and lapack-blas library locations
-##BOOSTLIB = -L/home/sandeep/Work/Programs/boost_1_54_0/lib/ -lboost_serialization -lboost_system -lboost_filesystem
-##LAPACKBLAS =  -lblas -llapack #-lmkl_intel_lp64 -lmkl_sequential -lmkl_core
-BOOSTLIB = -L/home/mark/libs/boost_1_55_0/stage/lib/ -lboost_serialization -lboost_system -lboost_filesystem  #maw
-LAPACKBLAS = -L/usr/lib -lblas -llapack_atlas -llapack
+#BOOSTLIB = -L/home/sandeep/apps/boost/boost_1_55_0_della4/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+BOOSTLIB = -L/home/sandeep/apps/boost_1_55_0/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+LAPACKBLAS =  -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+#BOOSTLIB = -L/home/mark/libs/boost_1_55_0/stage/lib/ -lboost_serialization -lboost_system -lboost_filesystem  #maw
+#LAPACKBLAS = -L/usr/lib -lblas -llapack_atlas -llapack
 
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes

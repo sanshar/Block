@@ -13,3 +13,4 @@ find . -name "onepdm_fromtpdm" |xargs rm >/dev/null 2>&1
 find . -name "pairmat.*" |xargs rm >/dev/null 2>&1
 find . -name "dmrg.out" |xargs rm >/dev/null 2>&1
 find . -name "RI*tmp" |xargs rm >/dev/null 2>&1
+find npdm_h2o_small -name "*.tmp"|xargs rm >/dev/null 2>&1

@@ -2,7 +2,7 @@
 # appropriately, here we are using fiedler restart, so this will test if the twopdm is printed correctly
 echo "testing energy for c2_d2h..."
 cd c2_d2h
-mpirun -np 2 ../../block.spin_adapted dmrg.conf >dmrg.out
+srun  ../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 2  1.0e-6 -74.1299567218  -74.1255003600
 echo "testing 2-pdm for c2_d2h..."
 python ../test_twopdm.py spatial_twopdm.0.0.txt spat_twopdm.0.0.txt 1e-7
@@ -12,28 +12,28 @@ cd ../
 #this just tests the lowest energy calculation. The run here uses no symmetry
 echo "performing energy test on h2o..."
 cd h2o_nosym
-mpirun -np 2 ../../block.spin_adapted dmrg.conf >dmrg.out
+srun  ../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 1  1.0e-6 -76.11460447
 cd ../
 
 #test for hubbard model and also calculate the onepdm
 echo "performing reorder, 1-pdm test on hubbard..."
 cd hubbard
-mpirun -np 2  ../../block.spin_adapted dmrg.conf >dmrg.out
+srun   ../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 1  1.0e-6 -6.56819216
 python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
 cd ../
 
 echo "performing nonspinadapted test on hubbard..."
 cd hubbard_nospin
-mpirun -np 2  ../../block.spin_adapted dmrg.conf >dmrg.out
+srun   ../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 1  1.0e-6 -6.56819216
 python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
 cd ../
 
 echo "performing heisenberg test..."
 cd heisenberg_2d
-mpirun -np 2  ../../block.spin_adapted dmrg.conf >dmrg.out
+srun   ../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 1  1.0e-6 -11.2284830996
 cd ../
 
@@ -43,9 +43,9 @@ cd ../
 #checks if the partially traced twopdm matches the calculated onepdm
 echo "testing energy for c2_d2h_smallM..."
 cd c2_d2h_smallM
-mpirun -np 2 ../../block.spin_adapted dmrg.conf >dmrg.out
+srun  ../../block.spin_adapted dmrg.conf >dmrg.out
 python test_twopdm_withe.py 
-mpirun -np 2 ../../block.spin_adapted dmrg_fullrestart.conf >dmrg.out
+srun  ../../block.spin_adapted dmrg_fullrestart.conf >dmrg.out
 python test_onepdm_withtwopdm.py 
 cd ../
 
@@ -53,7 +53,7 @@ cd ../
 # check the ground state energy, onepdm, and pairing matrix
 echo "testing energy for bcs calculation..."
 cd bcs
-mpirun -np 2 ../../block.spin_adapted dmrg.conf >dmrg.out
+srun  ../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 1  1.0e-6 -1.4816808342
 echo "testing onepdm and pairing matrix for bcs calculation..."
 python ../test_onepdm.py onepdm.0.0.txt ref_onepdm.0.0 1e-7
@@ -62,43 +62,43 @@ cd ../
 
 echo "testing state specific excited states..."
 cd hubbard_stateSpecific
-mpirun -np 2 ../../block.spin_adapted dmrg.conf >dmrg.out
+srun  ../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 20  1.0e-6  -2.5065432138	 -2.1684123422	 -2.1684123422	 -1.4755687956	 -1.4755687956	 -1.4142135624  -1.4142135624  -1.2897006828  -0.8284271247 -0.5180081887 -0.5180081887 -0.4079274397 -0.4079274397 0 0 0.1224001196 0.1224001196 0.5857864376 0.5857864376 0.5857864376 0.5857864376 1.0754964003
-mpirun -np 2 ../../block.spin_adapted dmrg_statespecific.conf >dmrg.out
+srun  ../../block.spin_adapted dmrg_statespecific.conf >dmrg.out
 python ../test_energy.py 20  1.0e-6  -2.5065432138	 -2.1684123422	 -2.1684123422	 -1.4755687956	 -1.4755687956	 -1.4142135624  -1.4142135624  -1.2897006828  -0.8284271247 -0.5180081887 -0.5180081887 -0.4079274397 -0.4079274397 0 0 0.1224001196 0.1224001196 0.5857864376 0.5857864376 0.5857864376 0.5857864376 1.0754964003
 cd ../
 
 
 cd c2_dinfh
 echo "testing dinfh irrep1 state..."
-mpirun -np 2 ../../block.spin_adapted dmrg_irrep1.conf >dmrg.out
+srun  ../../block.spin_adapted dmrg_irrep1.conf >dmrg.out
 python ../test_energy.py 2 1e-6 -75.5720477277 -75.4863972517 
 
 echo "testing dinfh irrep4 state..."
-mpirun -np 2 ../../block.spin_adapted dmrg_irrep4.conf >dmrg.out
+srun  ../../block.spin_adapted dmrg_irrep4.conf >dmrg.out
 python ../test_energy.py 2 1e-6 -75.2687246202 -75.2467228544
 
 echo "testing dinfh irrep5 state..."
-mpirun -np 2 ../../block.spin_adapted dmrg_irrep5.conf >dmrg.out
+srun  ../../block.spin_adapted dmrg_irrep5.conf >dmrg.out
 python ../test_energy.py 2 1e-6 -75.4013432124  -75.2436463006
 cd ../
 
 cd NH5_c5v
 echo "testing C5v irrep1 state..."
-mpirun -np 2 ../../block.spin_adapted dmrg_irrep1.conf >dmrg.out
+srun  ../../block.spin_adapted dmrg_irrep1.conf >dmrg.out
 python ../test_energy.py 2 1e-6 -56.1710199089 -55.7379915817 
 
 echo "testing c5v irrep2 state..."
-mpirun -np 2 ../../block.spin_adapted dmrg_irrep2.conf >dmrg.out
+srun  ../../block.spin_adapted dmrg_irrep2.conf >dmrg.out
 python ../test_energy.py 2 1e-6 -55.2183717306 -54.9572014126
 
 
 echo "testing c5v irrep3 state..."
-mpirun -np 2 ../../block.spin_adapted dmrg_irrep3.conf >dmrg.out
+srun  ../../block.spin_adapted dmrg_irrep3.conf >dmrg.out
 python ../test_energy.py 2 1e-6 -55.5836757776 -55.3816201164
 
 echo "testing c5v irrep4 state..."
-mpirun -np 2 ../../block.spin_adapted dmrg_irrep4.conf >dmrg.out
+srun  ../../block.spin_adapted dmrg_irrep4.conf >dmrg.out
 python ../test_energy.py 2 1e-6 -55.8015784472 -55.4362910647
 cd ../
 
