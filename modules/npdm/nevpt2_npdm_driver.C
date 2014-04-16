@@ -50,6 +50,19 @@ void Nevpt2_npdm_driver::save_data( const int i, const int j )
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+void Nevpt2_npdm_driver::clear()
+{
+    onepdm_driver.clear();
+    twopdm_driver.clear();
+    threepdm_driver.clear();
+    fourpdm_driver.clear();
+#ifndef DEBUG_NEVPT2NPDM
+    nevpt2_A16_matrix.clear();
+#endif
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void Nevpt2_npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos) 
 {
   // Compute NPDM elements at this sweep position
@@ -63,11 +76,10 @@ void Nevpt2_npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavef
 
 void Nevpt2_npdm_driver::compute_matrices( const int i, const int j )
 {
-#ifndef SERIAL
-  boost::mpi::communicator world;
-  if ( world.size() > 1 ) abort();  // not parallelized
-#endif
-  // 1PDM
+  // Note not parallel
+  if( mpigetrank() > 0 ) return;
+
+  // Load 1PDM
   char file[5000];
   array_2d<double> onepdm;
   sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(), "/spatial_onepdm.", i, j,".bin");
@@ -75,21 +87,21 @@ void Nevpt2_npdm_driver::compute_matrices( const int i, const int j )
   boost::archive::binary_iarchive load1(ifs1);
   load1 >> onepdm;
   ifs1.close();
-  // 2PDM
+  // Load 2PDM
   array_4d<double> twopdm;
   sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(), "/spatial_twopdm.", i, j,".bin");
   std::ifstream ifs2(file, std::ios::binary);
   boost::archive::binary_iarchive load2(ifs2);
   load2 >> twopdm;
   ifs2.close();
-  // 3PDM
+  // Load 3PDM
   array_6d<double> threepdm;
   sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(), "/spatial_threepdm.", i, j,".bin");
   std::ifstream ifs3(file, std::ios::binary);
   boost::archive::binary_iarchive load3(ifs3);
   load3 >> threepdm;
   ifs3.close();
-  // 4PDM
+  // Load 4PDM
   array_8d<double> fourpdm;
   sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(), "/spatial_fourpdm.", i, j,".bin");
   std::ifstream ifs4(file, std::ios::binary);
