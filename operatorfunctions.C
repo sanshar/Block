@@ -537,3 +537,179 @@ void SpinAdapted::operatorfunctions::TensorProduct (const SpinBlock *ablock, con
 	      }
 	  }
 }
+
+
+void SpinAdapted::operatorfunctions::TensorProduct (const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const StateInfo *brastateinfo, const StateInfo *ketstateinfo, Baseoperator<Matrix>& c, double scale, bool aIsLeftOp, int num_thrds)
+{
+  if (fabs(scale) < TINY) return;
+  int rows = c.nrows();
+  int cols = c.ncols();
+#ifdef _OPENMP
+#pragma omp parallel default(shared) num_threads(num_thrds) 
+#endif
+  {
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic)
+#endif
+  for (int cq = 0; cq < rows; ++cq)
+    for (int cqprime = 0; cqprime < cols; ++cqprime)
+      if (c.allowed(cq, cqprime)) {
+	TensorProductElement(a, b, brastateinfo, ketstateinfo, c, c.operator_element(cq, cqprime), cq, cqprime, aIsLeftOp, scale);
+      }
+  }
+}
+
+
+void SpinAdapted::operatorfunctions::TensorProductElement(const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const StateInfo *brastateinfo, const StateInfo *ketstateinfo, Baseoperator<Matrix>& c, Matrix& cel, int cq, int cqprime, bool aIsLeftOp, double scale)
+{
+  if (fabs(scale) < TINY) return;
+  assert (a.get_initialised());
+  assert (b.get_initialised());
+  assert (c.get_initialised());
+ 
+  const std::vector<int>& oldToNewI = brastateinfo->oldToNewState.at(cq);
+  const std::vector<int>& oldToNewJ = ketstateinfo->oldToNewState.at(cqprime);
+ 
+  const char conjC = aIsLeftOp ? 'n' : 't';
+  
+  const StateInfo* lbraS = brastateinfo->leftStateInfo, *rbraS = brastateinfo->rightStateInfo;
+  const StateInfo* lketS = ketstateinfo->leftStateInfo, *rketS = ketstateinfo->rightStateInfo;
+  int rowstride = 0, colstride = 0;
+
+  int aq, aqprime, bq, bqprime;
+
+  //cout << "old to new size "<<oldToNewI.size()<<" "<<oldToNewJ.size()<<endl;
+  for (int oldi =0; oldi < oldToNewI.size(); oldi++) {
+    colstride = 0;
+    for (int oldj = 0; oldj < oldToNewJ.size(); oldj++)
+    {
+      if (conjC == 'n')
+      {
+	aq = brastateinfo->leftUnMapQuanta[ oldToNewI[oldi] ];
+	aqprime = ketstateinfo->leftUnMapQuanta[ oldToNewJ[oldj] ];
+	bq = brastateinfo->rightUnMapQuanta[ oldToNewI[oldi] ];
+	bqprime = ketstateinfo->rightUnMapQuanta[ oldToNewJ[oldj] ];
+      }
+      else 
+      {
+	aq = brastateinfo->rightUnMapQuanta[ oldToNewI[oldi] ];
+	aqprime = ketstateinfo->rightUnMapQuanta[ oldToNewJ[oldj] ];
+	bq = brastateinfo->leftUnMapQuanta[ oldToNewI[oldi] ];
+	bqprime = ketstateinfo->leftUnMapQuanta[ oldToNewJ[oldj] ];
+      }
+  
+      Real scaleA = scale;
+      Real scaleB = 1.0;
+      if (a.allowed(aq, aqprime) && b.allowed(bq, bqprime))
+      {
+	if (conjC == 'n')
+	{
+	  scaleB = dmrginp.get_ninej()(lketS->quanta[aqprime].get_s().getirrep() , rketS->quanta[bqprime].get_s().getirrep(), ketstateinfo->quanta[cqprime].get_s().getirrep(), 
+			 a.get_spin().getirrep(), b.get_spin().getirrep(), c.get_spin().getirrep(),
+			 lbraS->quanta[aq].get_s().getirrep() , rbraS->quanta[bq].get_s().getirrep(), brastateinfo->quanta[cq].get_s().getirrep());
+	  scaleB *= Symmetry::spatial_ninej(lketS->quanta[aqprime].get_symm().getirrep() , rketS->quanta[bqprime].get_symm().getirrep(), ketstateinfo->quanta[cqprime].get_symm().getirrep(), 
+			       a.get_symm().getirrep(), b.get_symm().getirrep(), c.get_symm().getirrep(),
+			       lbraS->quanta[aq].get_symm().getirrep() , rbraS->quanta[bq].get_symm().getirrep(), brastateinfo->quanta[cq].get_symm().getirrep());
+	  scaleB *= b.get_scaling(rbraS->quanta[bq], rketS->quanta[bqprime]);
+	  scaleA *= a.get_scaling(lbraS->quanta[aq], lketS->quanta[aqprime]);
+	  if (b.get_fermion() && IsFermion (ketstateinfo->leftStateInfo->quanta [aqprime])) scaleB *= -1;
+	  MatrixTensorProduct (a.operator_element(aq, aqprime), a.conjugacy(), scaleA, 
+			       b.operator_element(bq, bqprime), b.conjugacy(), scaleB, cel,rowstride, colstride);
+	}
+	else
+	{
+	  scaleB = dmrginp.get_ninej()(lketS->quanta[bqprime].get_s().getirrep(), rketS->quanta[aqprime].get_s().getirrep() , ketstateinfo->quanta[cqprime].get_s().getirrep(), 
+			 b.get_spin().getirrep(), a.get_spin().getirrep(), c.get_spin().getirrep(),
+			 lbraS->quanta[bq].get_s().getirrep(), rbraS->quanta[aq].get_s().getirrep() , brastateinfo->quanta[cq].get_s().getirrep());
+	  scaleB *= Symmetry::spatial_ninej(lketS->quanta[bqprime].get_symm().getirrep() , rketS->quanta[aqprime].get_symm().getirrep(), ketstateinfo->quanta[cqprime].get_symm().getirrep(), 
+			       b.get_symm().getirrep(), a.get_symm().getirrep(), c.get_symm().getirrep(),
+			       lbraS->quanta[bq].get_symm().getirrep() , rbraS->quanta[aq].get_symm().getirrep(), brastateinfo->quanta[cq].get_symm().getirrep());
+	  scaleB *= b.get_scaling(lbraS->quanta[bq], lketS->quanta[bqprime]);
+	  scaleA *= a.get_scaling(rbraS->quanta[aq], rketS->quanta[aqprime]);
+	  if (a.get_fermion() && IsFermion (ketstateinfo->leftStateInfo->quanta[bqprime]) ) scaleB *= -1.;
+	  
+	  MatrixTensorProduct (b.operator_element(bq, bqprime), b.conjugacy(), scaleB, 
+			       a.operator_element(aq, aqprime), a.conjugacy(), scaleA, cel, rowstride, colstride);
+	}
+      }
+      colstride += ketstateinfo->unCollectedStateInfo->quantaStates[ oldToNewJ[oldj] ];
+
+    }
+    rowstride += brastateinfo->unCollectedStateInfo->quantaStates[ oldToNewI[oldi] ];
+    
+  }
+
+  
+}
+
+
+void SpinAdapted::operatorfunctions::TensorMultiply(const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const StateInfo *brastateinfo, const StateInfo *ketstateinfo, const Wavefunction& c, Wavefunction& v, const SpinQuantum opQ, bool aIsLeftOp, double scale)
+{
+  const int leftBraOpSz = brastateinfo->leftStateInfo->quanta.size ();
+  const int leftKetOpSz = ketstateinfo->leftStateInfo->quanta.size ();
+  const int rightBraOpSz = brastateinfo->rightStateInfo->quanta.size ();
+  const int rightKetOpSz = ketstateinfo->rightStateInfo->quanta.size ();
+
+  const StateInfo* lbraS = brastateinfo->leftStateInfo, *rbraS = brastateinfo->rightStateInfo;
+  const StateInfo* lketS = ketstateinfo->leftStateInfo, *rketS = ketstateinfo->rightStateInfo;
+
+  const char conjC = (aIsLeftOp) ? 'n' : 't';
+
+  const Baseoperator<Matrix>& leftOp = (conjC == 'n') ? a : b; // an ugly hack to support the release memory optimisation
+  const Baseoperator<Matrix>& rightOp = (conjC == 'n') ? b : a;
+  const char leftConj = (conjC == 'n') ? a.conjugacy() : b.conjugacy();
+  const char rightConj = (conjC == 'n') ? b.conjugacy() : a.conjugacy();
+
+  Wavefunction u;
+  u.resize(leftBraOpSz*leftKetOpSz, rightKetOpSz);
+
+  int totalmem =0;
+
+  {
+    for (int lQrQPrime = 0; lQrQPrime<leftBraOpSz*rightKetOpSz; ++lQrQPrime)
+    {
+      int rQPrime = lQrQPrime%rightKetOpSz, lQ = lQrQPrime/rightKetOpSz;
+	for (int lQPrime = 0; lQPrime < leftKetOpSz; lQPrime++)
+	  if (leftOp.allowed(lQ, lQPrime) && c.allowed(lQPrime, rQPrime))
+	  {
+	    int lindex = lQ*leftKetOpSz+lQPrime;
+	    u.allowed(lindex, rQPrime) = true;
+
+	    u(lindex,rQPrime).ReSize(lbraS->getquantastates(lQ), rketS->getquantastates(rQPrime));
+	    double factor = leftOp.get_scaling(lbraS->quanta[lQ], lketS->quanta[lQPrime]);
+	    MatrixMultiply (leftOp.operator_element(lQ, lQPrime), leftConj, c.operator_element(lQPrime, rQPrime), 'n',
+			    u.operator_element(lindex, rQPrime), factor, 0.);	      
+
+	  }
+    }
+  }
+
+  {
+    for (int lQrQ = 0; lQrQ<leftBraOpSz*rightBraOpSz; ++lQrQ)
+    {
+      int rQ = lQrQ%rightBraOpSz, lQ=lQrQ/rightBraOpSz;
+	if (v.allowed(lQ, rQ))
+	  for (int rQPrime = 0; rQPrime < rightKetOpSz; rQPrime++)
+	    if (rightOp.allowed(rQ, rQPrime))
+	      for (int lQPrime = 0; lQPrime < leftKetOpSz; lQPrime++)
+		if (leftOp.allowed(lQ, lQPrime) && u.allowed(lQ*leftKetOpSz+lQPrime, rQPrime))
+		{
+		  int lindex = lQ*leftKetOpSz+lQPrime;
+		  double factor = scale;
+
+		  factor *= dmrginp.get_ninej()(lketS->quanta[lQPrime].get_s().getirrep(), rketS->quanta[rQPrime].get_s().getirrep() , c.get_deltaQuantum(0).get_s().getirrep(), 
+						leftOp.get_spin().getirrep(), rightOp.get_spin().getirrep(), opQ.get_s().getirrep(),
+						lbraS->quanta[lQ].get_s().getirrep(), rbraS->quanta[rQ].get_s().getirrep() , v.get_deltaQuantum(0).get_s().getirrep());
+		  factor *= Symmetry::spatial_ninej(lketS->quanta[lQPrime].get_symm().getirrep() , rketS->quanta[rQPrime].get_symm().getirrep(), c.get_symm().getirrep(), 
+				       leftOp.get_symm().getirrep(), rightOp.get_symm().getirrep(), opQ.get_symm().getirrep(),
+				       lbraS->quanta[lQ].get_symm().getirrep() , rbraS->quanta[rQ].get_symm().getirrep(), v.get_symm().getirrep());
+		  int parity = rightOp.get_fermion() && IsFermion(lketS->quanta[lQPrime]) ? -1 : 1;
+		  factor *=  rightOp.get_scaling(rbraS->quanta[rQ], rketS->quanta[rQPrime]);
+		  MatrixMultiply (u.operator_element(lindex, rQPrime), 'n',
+				  rightOp(rQ, rQPrime), TransposeOf(rightOp.conjugacy()), v.operator_element(lQ, rQ), factor*parity);
+		}
+    }
+  }
+	      
+}
+

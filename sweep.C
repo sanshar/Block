@@ -163,7 +163,12 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     vector<int> newSysSites;
     if (!dot_with_sys) {
       newSysSites = system.get_sites();
-      newSysSites.push_back(systemDotStart);
+      if (dmrginp.spinAdapted())
+	newSysSites.push_back(systemDotStart);
+      else {
+	newSysSites.push_back(2*systemDotStart);
+	newSysSites.push_back(2*systemDotStart+1);
+      }
       sort(newSysSites.begin(), newSysSites.end());
     }
     else

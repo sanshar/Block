@@ -97,7 +97,12 @@ void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const State
   Wavefunction oldWave;
 
   vector<int> wfsites = rightsites;
-  wfsites.insert(wfsites.end(), dotsites.begin(), dotsites.end());
+  if (dmrginp.spinAdapted())
+    wfsites.insert(wfsites.end(), dotsites.begin(), dotsites.end());
+  else {
+    wfsites.push_back(2*dotsites[0]);
+    wfsites.push_back(2*dotsites[0]+1);
+  }
   sort(wfsites.begin(), wfsites.end());
   oldWave.LoadWavefunctionInfo(oldStateInfo, wfsites, state);
   onedot_transpose_wavefunction(oldStateInfo, stateInfo, oldWave, trial);

@@ -92,6 +92,8 @@ class StateInfo
   friend void TensorProduct (StateInfo& a, StateInfo& b, const SpinQuantum q, const int constraint, StateInfo& c, StateInfo* compState=0);
   // interface to the above function
   friend void TensorProduct (StateInfo& a, StateInfo& b, StateInfo& c, const int constraint, StateInfo* compState=0);
+  friend void makeStateInfo(StateInfo& s, int site);
+
   void quanta_distribution (std::vector<SpinQuantum>& qnumbers, std::vector<int>& distribution, const bool complement);
 
   void Allocate();

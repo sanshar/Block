@@ -83,6 +83,43 @@ ostream& operator<< (ostream& os, const StateInfo& s) {
   return os;
 }
 
+
+//This take the sites and just makes a stateinfo containing all the states in it
+void makeStateInfo(StateInfo& s, int site)
+{
+  std::vector< std::vector<Csf> > ladders;
+  std::vector< Csf > dets; 
+  std::vector<int> new_sites(1, site), sites;
+  if (dmrginp.spinAdapted()) {
+    sites = new_sites;
+    dets = CSFUTIL::spinfockstrings(new_sites, ladders);
+  }
+  else {
+    for (int i=0; i<new_sites.size(); i++) {
+      sites.push_back( dmrginp.spatial_to_spin()[new_sites[i]]   );
+      sites.push_back( dmrginp.spatial_to_spin()[new_sites[i]]+1 );
+    }
+    dets = CSFUTIL::spinfockstrings(new_sites);
+    for (int j=0; j<dets.size(); j++)
+      ladders.push_back(std::vector<Csf>(1,dets[j]));
+  }
+  s = StateInfo(dets);
+
+  if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0 && dmrginp.spinAdapted() && site == 0)
+  {
+    SpinQuantum sq = dmrginp.molecule_quantum();
+    sq = SpinQuantum(sq.get_s().getirrep(), sq.get_s(), IrrepSpace(0));
+    int qs = 1, ns = 1;
+    StateInfo addstate(ns, &sq, &qs), newstate; 
+
+    TensorProduct(s, addstate, newstate, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
+    s = newstate;
+  }
+
+}
+
+
+
 void TensorProduct (StateInfo& a, StateInfo& b, const SpinQuantum q, const int constraint, StateInfo& c, StateInfo* compState) {
   c.leftStateInfo = &a;
   c.rightStateInfo = &b;
@@ -297,12 +334,12 @@ void SpinAdapted::StateInfo::restore(bool forward, const vector<int>& sites, Sta
     file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-forward-" % first % "-" % last % "." % left % "." % mpigetrank() % ".tmp" );
   else
     file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % first % "-" % last % "." % left % "." % mpigetrank() % ".tmp" );
-  
-  std::ifstream ifs(file.c_str(), std::ios::binary);
-  boost::archive::binary_iarchive load_state(ifs);
 
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Loading state file :: " << file << endl;
+
+  std::ifstream ifs(file.c_str(), std::ios::binary);
+  boost::archive::binary_iarchive load_state(ifs);
 
   load_state >> stateInfo;
   
