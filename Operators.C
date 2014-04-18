@@ -121,7 +121,8 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 	  factor += 0.5*(v_2(Ind1[0], Ind1[1], Ind2[0], Ind1[2]) - v_2(Ind1[1], Ind1[0], Ind2[0], Ind1[2]) )*iSz1.at(i1)*iSz2.at(i2)/cleb;
 	}
 	else if (comp == CDD) {
-	  factor += 0.5*(v_2(Ind2[0], Ind1[0], Ind1[1], Ind1[2]) - v_2(Ind1[0], Ind2[0], Ind1[1], Ind1[2]) )*iSz1.at(i1)*iSz2.at(i2)/cleb;
+	  factor += 0.5*(v_2(Ind2[0], Ind1[0], Ind1[2], Ind1[1]) - v_2(Ind1[0], Ind2[0], Ind1[2], Ind1[1]) )*iSz1.at(i1)*iSz2.at(i2)/cleb;
+	  //factor += 0.5*(v_2(Ind2[0], Ind1[0], Ind1[1], Ind1[2]) - v_2(Ind1[0], Ind2[0], Ind1[1], Ind1[2]) )*iSz1.at(i1)*iSz2.at(i2)/cleb;
 	}
 	else if (comp == C) {
 	  if (op1.dn() == 1) {
@@ -175,7 +176,8 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 	  factor += v_2(Ind1[0], Ind1[1], Ind2[0], Ind1[2])*iSz1.at(i1)*iSz2.at(i2)/cleb;
 	}
 	else if (comp == CDD) {
-	  factor += 0.5*(v_2(Ind2[0], Ind1[0], Ind1[1], Ind1[2]) - v_2(Ind1[0], Ind2[0], Ind1[1], Ind1[2]) )*iSz1.at(i1)*iSz2.at(i2)/cleb;
+	  factor += 0.5*(v_2(Ind2[0], Ind1[0], Ind1[2], Ind1[1]) - v_2(Ind1[0], Ind2[0], Ind1[2], Ind1[1]) )*iSz1.at(i1)*iSz2.at(i2)/cleb;
+	  //factor += 0.5*(v_2(Ind2[0], Ind1[0], Ind1[1], Ind1[2]) - v_2(Ind1[0], Ind2[0], Ind1[1], Ind1[2]) )*iSz1.at(i1)*iSz2.at(i2)/cleb;
 	}
 	else if (comp == C) {
 	  factor += 0.5*v_1(Ind1[0], Ind2[0])*iSz1.at(i1)*iSz2.at(i2)/cleb;
@@ -1779,7 +1781,7 @@ double SpinAdapted::CreCreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
               if (CCDIJL.empty) continue;
               std::vector<double> MatElements = calcMatrixElements(c1, CCDIJL, ladder[i]);
               double scale = calcCompfactor(CCDIJL, D, CCD, *(b->get_twoInt()));
-              if (fabs(scale) > dmrginp.oneindex_screen_tol())
+              if (fabs(scale) > dmrginp.oneindex_screen_tol()) 
                 element += MatElements[index]*scale/cleb;
             }
           }
@@ -1799,8 +1801,9 @@ double SpinAdapted::CreCreDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
           TensorOp CI(_i, 1);
           std::vector<double> MatElements = calcMatrixElements(c1, CI, ladder[i]);
           double factor = calcCompfactor(CI, D, C, *(b->get_twoInt()));
-          if (fabs(factor) > dmrginp.oneindex_screen_tol())
+          if (fabs(factor) > dmrginp.oneindex_screen_tol()) 
             element += factor*MatElements[index]/cleb;
+
         }
 
       }
@@ -1944,11 +1947,10 @@ double SpinAdapted::CreDesDesComp::redMatrixElement(Csf c1, vector<Csf>& ladder,
 	    
 	    std::vector<double> MatElements = calcMatrixElements(c1, CDDIJL, ladder[i]);
 	    double scale = calcCompfactor(CDDIJL, CK, CDD, *(b->get_twoInt()));
+	    if (dmrginp.spinAdapted()) scale*=-1; //terrible hack
 
-	    if (fabs(scale) > dmrginp.oneindex_screen_tol())
+	    if (fabs(scale) > dmrginp.oneindex_screen_tol()) 
 	      element += MatElements[index]*scale/cleb;
-
-
 	  }
 	}
       }

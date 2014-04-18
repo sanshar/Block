@@ -1,8 +1,16 @@
 #include "fciqmchelper.h"
 #include "rotationmat.h"
 #include "operatorfunctions.h"
+#include "spinblock.h"
+#include "initblocks.h"
 
 namespace SpinAdapted{
+
+  //initializing the static variables
+  int MPS::sweepIters ;
+  bool MPS::spinAdapted ;
+  std::vector<SpinBlock> MPS::siteBlocks;
+
   
   //assumes that the state has been canonicalized in the left canonical form already and stored on disk
   MPS::MPS(int stateindex) {
@@ -20,13 +28,9 @@ namespace SpinAdapted{
     for (int i=0; i<MPS::sweepIters; i++) {
       LoadRotationMatrix(rotSites, rotMat, stateindex);
       SiteTensors.push_back(rotMat);
-
-      Wavefunction w1;StateInfo s;
-      w1.LoadWavefunctionInfo(s, rotSites, stateindex);
-      cout << w1<<endl;
-
       rotSites[1] += 2;
     }
+
     //loading the final wavefunction
     rotSites[1] -=2;
 
@@ -35,31 +39,26 @@ namespace SpinAdapted{
   }
 
 
-
   //this is a helper function to make a MPS from a occupation number representation of determinant
-  MPS::MPS(std::vector<bool>& occnum)
+  void MPS::Init(std::vector<bool>& occnum)
   {
     assert(occnum.size() == dmrginp.last_site());
     Matrix m(1,1); m=1.0;
     Matrix dummy;
 
-    StateInfo siteInfo;
-    makeStateInfo(siteInfo, 0);
-
-    //first rotation matrix which does not get added to the rotSites
+    //first rotation matrix 
     std::vector<Matrix> rotMat; rotMat.resize(4, dummy);
     int index = occnum[0]*2+occnum[1];
     rotMat[index]=m;
     SiteTensors.push_back(rotMat);
-    SpinQuantum sTotal = siteInfo.quanta[index];
+    SpinQuantum sTotal = MPS::siteBlocks[0].get_stateInfo().quanta[index];
 
     for (int i=0; i<MPS::sweepIters-1; i++) {
       //stateinfo of in incoming bond of dimension 1
       SpinQuantum sq[] = {sTotal}; int qs[] = {1}; int n = 1;
       StateInfo stateTotal(n, sq, qs), currentState;
 
-      makeStateInfo(siteInfo, i+1);
-      TensorProduct(stateTotal, siteInfo, currentState, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
+      TensorProduct(stateTotal, const_cast<StateInfo&>(MPS::siteBlocks[i+1].get_stateInfo()), currentState, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
 
       std::vector<Matrix> rotMat; rotMat.resize(currentState.quanta.size(), dummy);
       int index = occnum[2*i+2]*2+occnum[2*i+3];
@@ -74,24 +73,15 @@ namespace SpinAdapted{
     SpinQuantum sq[] = {sTotal}; int qs[] = {1}; int n = 1;
     StateInfo stateTotal(n, sq, qs), secondLastState;
 
-    //second to last site stateinfo
-    makeStateInfo(siteInfo, MPS::sweepIters);
-
     //the incoming bond x k-1 site stateinfo
-    TensorProduct(stateTotal, siteInfo, secondLastState, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
+    TensorProduct(stateTotal, const_cast<StateInfo&>(MPS::siteBlocks[MPS::sweepIters].get_stateInfo()), 
+		  secondLastState, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
     int index1 =  occnum[2*MPS::sweepIters]*2+occnum[2*MPS::sweepIters+1];
     index1 = secondLastState.quantaMap(0, index1)[0];
 
-    //last site state info
-    StateInfo finalSite;
-    makeStateInfo(finalSite, MPS::sweepIters+1);
-    StateInfo A;
-
-    //A will be the stateinfo the big block, with secondLastState as left and final state as right
-    TensorProduct(secondLastState, finalSite, A, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
-
     //now make wavefunction with the big state A
-    w.AllowQuantaFor(secondLastState, finalSite, std::vector<SpinQuantum>(1,dmrginp.effective_molecule_quantum()));
+    w.AllowQuantaFor(secondLastState, MPS::siteBlocks[MPS::sweepIters+1].get_stateInfo(), 
+		     std::vector<SpinQuantum>(1,dmrginp.effective_molecule_quantum()));
 
     int index2 = occnum[2*MPS::sweepIters+2]*2+occnum[2*MPS::sweepIters+3];
 
@@ -99,33 +89,59 @@ namespace SpinAdapted{
   }
 
 
+  //this is a helper function to make a MPS from a occupation number representation of determinant
+  //this representation is slightly different than the usual occupation, here each integer
+  //element is a spatial orbital which can have a value 0, -1, 1, or 2.
+  MPS::MPS(long *occnum, int length)
+  {
+    assert(length*64 >= dmrginp.last_site());
+
+    //convert the int array into a vector<bool>
+    std::vector<bool> occ(dmrginp.last_site(), 0);
+
+    ulong temp = 1;
+    int index = 0;
+    for (int i=0; i <length ; i++) 
+      for (int j=63; j>=0; j--) {
+	if (index >=dmrginp.last_site()) break;
+
+	occ[index] = occnum[i] & ( temp << j ) ;
+	index++;
+      }
+
+    Init(occ);
+  }
+
+
+  MPS::MPS(std::vector<bool>& occ) {
+    Init(occ);
+  }
+
+
   double calculateOverlap(const MPS& statea, const MPS& stateb) {
 
     Overlap siteOverlap;
-    StateInfo siteInfo;
-    makeStateInfo(siteInfo, 0);
-    siteOverlap.makeIdentity(siteInfo);
+    siteOverlap.makeIdentity(MPS::siteBlocks[0].get_stateInfo());
 
-    StateInfo stateA=siteInfo, stateB=siteInfo;
+    StateInfo stateA=MPS::siteBlocks[0].get_stateInfo(), stateB=MPS::siteBlocks[0].get_stateInfo();
     Overlap o = siteOverlap;
 
     for (int i=0; i<MPS::sweepIters; i++) {
 
       StateInfo renormA, renormB;
-      cout << stateA<<endl;
-      cout << o <<endl;
       SpinAdapted::StateInfo::transform_state(statea.getSiteTensors(i), stateA, renormA);
       SpinAdapted::StateInfo::transform_state(stateb.getSiteTensors(i), stateB, renormB);
       o.renormalise_transform(statea.getSiteTensors(i), &renormA, stateb.getSiteTensors(i), &renormB);
 
       //make overlap and state info for the current site
-      makeStateInfo(siteInfo, i+1);
-      siteOverlap.makeIdentity(siteInfo);
+      siteOverlap.makeIdentity(MPS::siteBlocks[i+1].get_stateInfo());
       
       //take tensor product of stateinfo
       StateInfo A, B;
-      TensorProduct(renormA, siteInfo, A, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
-      TensorProduct(renormB, siteInfo, B, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
+      TensorProduct(renormA, const_cast<StateInfo&>(MPS::siteBlocks[i+1].get_stateInfo()), 
+		    A, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
+      TensorProduct(renormB, const_cast<StateInfo&>(MPS::siteBlocks[i+1].get_stateInfo()), 
+		    B, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
       A.CollectQuanta(); B.CollectQuanta();
       stateA = A; stateB = B;
 
@@ -140,17 +156,57 @@ namespace SpinAdapted{
     Wavefunction temp = statea.getw();
     temp.Clear();
 
-    makeStateInfo(siteInfo, MPS::sweepIters+1);
-    siteOverlap.makeIdentity(siteInfo);
+    siteOverlap.makeIdentity(MPS::siteBlocks[MPS::sweepIters+1].get_stateInfo());
 
     StateInfo braStateInfo, ketStateInfo;
-    TensorProduct(stateA, siteInfo, braStateInfo, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
-    TensorProduct(stateB, siteInfo, ketStateInfo, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
+    TensorProduct(stateA, const_cast<StateInfo&>(MPS::siteBlocks[MPS::sweepIters+1].get_stateInfo()), 
+		  braStateInfo, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
+    TensorProduct(stateB, const_cast<StateInfo&>(MPS::siteBlocks[MPS::sweepIters+1].get_stateInfo())
+		  , ketStateInfo, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
 
     SpinAdapted::operatorfunctions::TensorMultiply(o, siteOverlap, &braStateInfo, &ketStateInfo, stateb.getw(), temp, SpinQuantum(0, SpinSpace(0), IrrepSpace(0)), true, 1.0);
     double overlap = DotProduct(statea.getw(), temp);
     return overlap;
   }
+
+
+  void calcHamiltonianAndOverlap(const MPS& statea, const MPS& stateb, double& h, double& o) {
+
+    SpinBlock system = SpinBlock(0,0,false), siteblock;
+    SpinQuantum hq(0, SpinSpace(0), IrrepSpace(0));
+
+    system.transform_operators(const_cast<std::vector<Matrix>&>(statea.getSiteTensors(0)), 
+			       const_cast<std::vector<Matrix>&>(stateb.getSiteTensors(0)) );
+
+    int sys_add = true; bool direct = true; 
+
+    for (int i=0; i<MPS::sweepIters-1; i++) {
+      SpinBlock newSystem;
+      InitBlocks::InitNewSystemBlock(system, MPS::siteBlocks[i+1], newSystem, 0, 1, sys_add, direct, DISTRIBUTED_STORAGE, false, true);
+      newSystem.transform_operators(const_cast<std::vector<Matrix>&>(statea.getSiteTensors(i+1)), 
+				    const_cast<std::vector<Matrix>&>(stateb.getSiteTensors(i+1)), false );
+
+      system = newSystem;
+    }
+
+    SpinBlock newSystem, big;
+    InitBlocks::InitNewSystemBlock(system, MPS::siteBlocks[MPS::sweepIters], newSystem, 0, 1, sys_add, direct, DISTRIBUTED_STORAGE, false, true);
+    
+    InitBlocks::InitBigBlock(newSystem, MPS::siteBlocks[MPS::sweepIters+1], big); 
+    
+    Wavefunction temp = statea.getw();
+    temp.Clear();
+
+    big.multiplyH(const_cast<Wavefunction&>(stateb.getw()), &temp, 1);
+    h = DotProduct(statea.getw(), temp);
+
+    temp.Clear();
+    big.multiplyOverlap(const_cast<Wavefunction&>(stateb.getw()), &temp, 1);
+    o = DotProduct(statea.getw(), temp);
+    return;
+  }
+
+
 }
 
       

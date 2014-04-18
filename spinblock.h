@@ -182,6 +182,7 @@ class SpinBlock
   void set_loopblock(bool p_loopblock){loopblock = p_loopblock;}
   friend ostream& operator<< (ostream& os, const SpinBlock& b);
   void multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) const;
+  void multiplyOverlap(Wavefunction& c, Wavefunction* v, int num_threads) const;
   void diagonalH(DiagonalMatrix& e) const;
   void clear();
   void sendcompOps(Op_component_base& opcomp, int I, int J, int optype, int compsite);
@@ -194,7 +195,7 @@ class SpinBlock
 			int currenroot, std::vector<Wavefunction>& lowerStates);
 
   void transform_operators(std::vector<Matrix>& rotateMatrix);
-  void transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix);
+  void transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix, bool clearRightBlock = true);
 };
 
  double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates);

@@ -71,6 +71,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_calc_type = DMRG;
   m_solve_type = DAVIDSON;
   m_stateSpecific = false;
+  m_implicitTranspose = true; //dont make DD just use CC^T to evaluate it
 
   m_spinAdapted = true;
   m_Bogoliubov = false;
@@ -260,6 +261,12 @@ SpinAdapted::Input::Input(const string& config_name) {
 	pout << "THIS CALCULATION WILL TAKE THE PREVIOUS WAVEFUNCTIONS AND REFINE THEM"<<endl;
 	pout<<"--------------------------------------------------------------------"<<endl;
 	m_stateSpecific = true;
+      }
+      else if (boost::iequals(keyword, "donttranspose")) {
+	pout<<"--------------------------------------------------------------------"<<endl;
+	pout << "DONT USE THIS OPTION BECAUSE IT SLOWS DOWN THE CODE."<<endl;
+	pout<<"--------------------------------------------------------------------"<<endl;
+	m_implicitTranspose = false;
       }
       else if (boost::iequals(keyword, "lastM")) {
 	if(usedkey[LASTM] == 0) 

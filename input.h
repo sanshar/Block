@@ -123,6 +123,7 @@ class Input {
   bool m_fullrestart;
   bool m_restart_warm;
   bool m_reset_iterations;
+  bool m_implicitTranspose;
 
   std::vector<int> m_spin_vector;
   std::vector<int> m_spin_orbs_symmetry;
@@ -143,7 +144,7 @@ class Input {
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & m_thrds_per_node & m_spinAdapted & m_Bogoliubov & m_stateSpecific ;
+    ar & m_thrds_per_node & m_spinAdapted & m_Bogoliubov & m_stateSpecific & m_implicitTranspose;
     ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz;
     ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occ_user & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule & m_reorder;
@@ -245,10 +246,12 @@ class Input {
 
   //const bool& doStateSpecific() const {return m_doStateSpecific;}
   //bool& doStateSpecific() {return m_doStateSpecific;}
+  const bool& doimplicitTranspose() const {return m_implicitTranspose;}
   const bool& setStateSpecific() const {return m_stateSpecific;}
   bool& setStateSpecific() {return m_stateSpecific;}
   const orbitalFormat& orbformat() const {return m_orbformat;}
   const int& outputlevel() const {return m_outputlevel;}
+  int& setOutputlevel()  {return m_outputlevel;}
   const vector<int>& spatial_to_spin() const {return m_spatial_to_spin;}
   int spatial_to_spin(int i) const {return m_spatial_to_spin.at(i);}
   const vector<int>& spin_to_spatial() const {return m_spin_to_spatial;}

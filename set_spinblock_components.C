@@ -293,6 +293,7 @@ void SpinBlock::default_op_components(bool complementary_, bool implicitTranspos
 {
   // New version of NPDM code not yet working with implicit transposes
   if ( dmrginp.new_npdm_code() ) implicitTranspose = false;
+  if ( !dmrginp.doimplicitTranspose() ) implicitTranspose = false; //this is usually used for testing
 
   complementary = complementary_;
   normal = !complementary_;
@@ -371,6 +372,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
 {
   // New version of NPDM code not yet working with implicit transposes
   if ( dmrginp.new_npdm_code() ) implicitTranspose = false;
+  if ( !dmrginp.doimplicitTranspose() ) implicitTranspose = false; //this is usually used for testing
 
   this->direct = direct;
   if (lBlock.is_complementary() || rBlock.is_complementary()) {

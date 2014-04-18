@@ -303,7 +303,7 @@ newQuantaMap.push_back (Q);
 
 }
 
-void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix)
+  void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix, bool clearRightBlock)
 {
 
   StateInfo oldbraStateInfo=braStateInfo, oldketStateInfo=ketStateInfo;
@@ -343,7 +343,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::
 
   if (leftBlock)
     leftBlock->clear();
-  if (rightBlock)
+  if (rightBlock && clearRightBlock)
     rightBlock->clear();
 
 
