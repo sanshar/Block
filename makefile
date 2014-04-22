@@ -162,6 +162,10 @@ $(EXECUTABLE) : $(OBJ_spin_adapted) $(NEWMATLIB)/libnewmat.a $(BTAS)/lib/libbtas
 else
 $(EXECUTABLE) : $(OBJ_spin_adapted) $(NEWMATLIB)/libnewmat.a 
 	$(CXX)   $(FLAGS) $(OPT) -o  $(EXECUTABLE) $(OBJ_spin_adapted) $(LIBS)
+
+OH : $(OBJ_OH) $(NEWMATLIB)/libnewmat.a 
+	$(CXX)   $(FLAGS) $(OPT) -o  OH $(OBJ_OH) $(LIBS)
+
 endif
 
 $(NEWMATLIB)/libnewmat.a : 
