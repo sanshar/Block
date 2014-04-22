@@ -432,7 +432,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     //and dont really required incore storage
     ops[CRE] = make_new_op(CRE, false); 
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
-    ops[HAM] = make_new_op(HAM, true);
+    ops[HAM] = make_new_op(HAM, false);
     ops[OVERLAP] = make_new_op(OVERLAP, false);
 
     //this option is used when bra and ket states are different

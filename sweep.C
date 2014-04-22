@@ -484,14 +484,15 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   transformmatrix.allocate(newSystem.get_stateInfo());
   SpinQuantum q(0,SpinSpace(0),IrrepSpace(0));
 
+  //if (mpigetrank() == 0) {
+  double minval = 1e12;
+  for (int i=0; i<nquanta; i++) {
+    diagonalise(newSystem.get_op_rep(HAM,q)->operator_element(i,i), energies[i], transformmatrix(i,i));
+    for (int j=0; j<energies[i].Nrows(); j++) 
+      if (minval > energies[i](j+1))
+	minval = energies[i](j+1);
+  }
   if (mpigetrank() == 0) {
-    double minval = 1e12;
-    for (int i=0; i<nquanta; i++) {
-      diagonalise(newSystem.get_op_rep(HAM,q)->operator_element(i,i), energies[i], transformmatrix(i,i));
-      for (int j=0; j<energies[i].Nrows(); j++) 
-	if (minval > energies[i](j+1))
-	  minval = energies[i](j+1);
-    }
     for (int i=0; i<nquanta; i++) {
       for (int j=0; j<energies[i].Nrows(); j++) 
 	energies[i](j+1) = 1.0/(energies[i](j+1)-minval+1);

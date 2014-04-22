@@ -3,7 +3,6 @@
 
 #include "global.h"
 #include <vector>
-#include "overlaptensor.h"
 #include "boost/shared_ptr.hpp"
 #include "StateInfo.h"
 #include "Operators.h"

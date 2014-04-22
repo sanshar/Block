@@ -426,12 +426,12 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   dmrginp.s0time -> start();
 
 
-  boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0];
+  boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
   boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
   TensorMultiply(leftBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0) ,1.0);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
 
   overlap = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
-  op = rightBlock->get_op_array(HAM).get_local_element(0)[0];
+  op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
   TensorMultiply(rightBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0), 1.0);  
 
   dmrginp.s0time -> stop();
@@ -484,10 +484,10 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 
   initiateMultiThread(&e, e_array, e_distributed, MAX_THRD);
 
-  boost::shared_ptr<SparseMatrix> op =leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(this);
+  boost::shared_ptr<SparseMatrix> op =leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
   TensorTrace(leftBlock, *op, this, &(get_stateInfo()), e, 1.0);
 
-  op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(this);
+  op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
   TensorTrace(rightBlock, *op, this, &(get_stateInfo()), e, 1.0);  
 #ifndef SERIAL
   boost::mpi::communicator world;

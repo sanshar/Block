@@ -6,7 +6,6 @@
 ##BOOSTINCLUDE = /home/sandeep/Work/Programs/boost_1_54_0/
 #specify boost include file
 BOOSTINCLUDE = /home/sandeep/apps/boost_1_55_0/
-EIGENINCLUDE = /home/sandeep/apps/eigen/
 
 #specify boost and lapack-blas library locations
 BOOSTLIB = -L/home/sandeep/apps/boost_1_55_0/lib/ -lboost_serialization -lboost_system -lboost_filesystem
@@ -15,7 +14,7 @@ LAPACKBLAS =  -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
-USE_BTAS = yes
+USE_BTAS = no
 USE_MKL = yes
 
 ifeq ($(USE_MKL), yes)
@@ -65,12 +64,12 @@ ifeq ($(MOLPRO), yes)
    MOLPRO_BLOCK= -DMOLPRO
 endif
 
-FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(EIGENINCLUDE) -I$(MOLPROINCLUDE) \
+FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(MOLPROINCLUDE) \
          -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(HOME)/modules/twopdm/ \
-         -I$(HOME)/modules/npdm -I$(HOME)/modules/two_index_ops -I$(HOME)/modules/three_index_ops -I$(HOME)/modules/four_index_ops
+         -I$(HOME)/modules/npdm -I$(HOME)/modules/two_index_ops -I$(HOME)/modules/three_index_ops -I$(HOME)/modules/four_index_ops -std=c++0x
 
 ifeq ($(USE_BTAS), yes)
-	FLAGS +=  -I$(BTAS)/include -std=c++0x -DUSE_BTAS
+	FLAGS +=  -I$(BTAS)/include  -DUSE_BTAS
 	LIBS = -L$(BTAS)/lib -lbtas 
 else
 	LIBS = 
