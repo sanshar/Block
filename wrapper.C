@@ -28,7 +28,16 @@ void readMPSFromDiskAndInitializeStaticVariables(int mpsindex) {
   for (int i=0; i<MPS::sweepIters+2; i++)
     MPS::siteBlocks.push_back(SpinBlock(i, i, false)); //alway make transpose operators as well
 
-  globalMPS = ::MPS(mpsindex);
+#ifndef SERIAL
+  if (mpigetrank() == 0)
+#endif
+    globalMPS = ::MPS(mpsindex);
+
+#ifndef SERIAL
+  mpi::communicator world;
+  mpi::broadcast(world, globalMPS, 0);
+#endif
+
 }
 
 
@@ -36,4 +45,5 @@ void evaluateOverlapAndHamiltonian(long *occ, int length, double* o, double* h) 
   MPS dmrgc(occ, length);
   calcHamiltonianAndOverlap(globalMPS, dmrgc, *h, *o);
 }
+
 
