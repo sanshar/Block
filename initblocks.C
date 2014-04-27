@@ -33,7 +33,7 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
   }
   else if (forward)
   {
-    startingBlock = SpinBlock(0, forward_starting_size - 1, true);
+    startingBlock = SpinBlock(0, forward_starting_size - 1, leftState==rightState, true);
     if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0 && dmrginp.spinAdapted())
     {
       SpinQuantum s = dmrginp.molecule_quantum();
@@ -47,8 +47,6 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
       newstartingBlock.BuildSumBlock(NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, startingBlock, dummyblock);
       startingBlock.clear();
       startingBlock = newstartingBlock;
-      startingBlock.setOverlap() = boost::shared_ptr<SparseMatrix>(new Ham);
-      startingBlock.setOverlap()->makeIdentity(startingBlock.get_stateInfo());
   }
   }
   else
@@ -162,6 +160,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 	    //tmp.quanta_distribution (quantumNumbers, distribution, true);
 
       }
+      
       for (int i = 0; i < distribution.size (); ++i) {
 	    quantaIterator = quantaDist.find(quantumNumbers[i]);
 	    if (quantaIterator != quantaDist.end())
@@ -178,9 +177,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 	      quantaDist[quantumNumbers[i]] = distribution[i];
       }
 
-      if (dmrginp.outputlevel() > 0)
-	    pout << "\t\t\t Quantum numbers and states used for warm up :: " << endl << "\t\t\t ";
-      
+      if (dmrginp.outputlevel() > 0) pout << "\t\t\t Quantum numbers and states used for warm up :: " << endl << "\t\t\t ";
       quantumNumbers.clear(); quantumNumbers.reserve(distribution.size());
       distribution.clear();distribution.reserve(quantumNumbers.size());
       std::map<SpinQuantum, int>::iterator qit = quantaDist.begin();
@@ -193,7 +190,6 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 	    }
       }
       pout << endl;
-
 
       if(dot_with_sys && onedot)
       {

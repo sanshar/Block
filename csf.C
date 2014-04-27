@@ -620,8 +620,8 @@ std::vector< SpinAdapted::Csf > SpinAdapted::Csf::distribute (const int n, const
 	}
 	
 	std::vector<bool> tmp = lbuffer;
-	copy (orbs.begin(), orbs.end(), back_inserter(tmp));
-	copy (rbuffer.begin(), rbuffer.end(), back_inserter(tmp));
+	for (std::vector<bool>::iterator it = orbs.begin(); it!=orbs.end(); ++it) tmp.push_back(*it);
+	for (std::vector<bool>::iterator it = rbuffer.begin(); it!=rbuffer.end(); ++it) tmp.push_back(*it);
 	Slater new_det = Slater (Orbstring (tmp));
 	map<Slater, double> m;
 	m[new_det] = 1.0;
@@ -763,8 +763,8 @@ std::vector<Csf> Csf::distributeNonSpinAdapted (const int n, const int sp, const
 	}
       }
       std::vector<bool> tmp = lbuffer;
-      copy (orbs.begin(), orbs.end(), back_inserter(tmp));
-      copy (rbuffer.begin(), rbuffer.end(), back_inserter(tmp));
+      for (std::vector<bool>::iterator it = orbs.begin(); it!=orbs.end(); ++it) tmp.push_back(*it);
+      for (std::vector<bool>::iterator it = rbuffer.begin(); it!=rbuffer.end(); ++it) tmp.push_back(*it);
       Slater new_det = Slater (Orbstring (tmp));
       map<Slater, double> m;
       m[new_det] = 1.0;

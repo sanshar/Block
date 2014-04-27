@@ -97,7 +97,7 @@ SpinBlock::SpinBlock () :
   hasMemoryAllocated (false),
   direct(false), complementary(false), normal(true), leftBlock(0), rightBlock(0) { }
 
-SpinBlock::SpinBlock(int start, int finish, bool is_complement) :  
+SpinBlock::SpinBlock(int start, int finish, bool implicitTranspose, bool is_complement) :  
   name (rand()), 
   hasMemoryAllocated (false), 
   direct(false), leftBlock(0), rightBlock(0)
@@ -107,7 +107,7 @@ SpinBlock::SpinBlock(int start, int finish, bool is_complement) :
 
   //this is used to make dot block and we make the 
   //additional operators by default because they are cheap
-  default_op_components(is_complement, false);
+  default_op_components(is_complement, implicitTranspose);
 
   std::vector<int> sites; 
   if (dmrginp.use_partial_two_integrals()) {
@@ -210,10 +210,6 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
   }
   build_operators(dets, ladders);
 
-  //this block is make with csfs and has the same bra and ket states
-  //overlap is an identity matrix
-  Overlap = boost::shared_ptr<SparseMatrix>(new Ham);
-  Overlap->makeIdentity(braStateInfo);
 }
 
 std::vector<int> SpinBlock::make_complement(const std::vector<int>& sites)
@@ -235,6 +231,7 @@ void SpinBlock::build_iterators()
   }
 }
 
+
 void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vector<Csf> >& ladders)
 {
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
@@ -255,6 +252,48 @@ void SpinBlock::build_operators()
 	    it->second->build_operators(*this);
       }
     }
+}
+
+
+void SpinBlock::renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo)
+{
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    if(it->second->is_core()) {
+      it->second->renormalise_transform(rotateMatrix, stateinfo);
+    }
+  }
+}
+
+
+void SpinBlock::renormalise_transform(const std::vector<Matrix>& leftMat, const StateInfo *bra, const std::vector<Matrix>& rightMat, const StateInfo *ket)
+{
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    if(it->second->is_core()) {
+      it->second->renormalise_transform(leftMat, bra, rightMat, ket);
+    }
+  }
+}
+
+
+void SpinBlock::build_and_renormalise_operators(const std::vector<Matrix>& rotateMatrix, const StateInfo *newStateInfo)
+{
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    opTypes ot = it->first;
+    if(! it->second->is_core()) {
+      it->second->build_and_renormalise_operators(*this, ot, rotateMatrix, newStateInfo);
+    }
+  }
+}
+
+
+void SpinBlock::build_and_renormalise_operators(const std::vector<Matrix>& leftMat, const StateInfo *bra, const std::vector<Matrix>& rightMat, const StateInfo *ket)
+{
+  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it) {
+    opTypes ot = it->first;
+    if(! it->second->is_core()) {
+      it->second->build_and_renormalise_operators(*this, ot, leftMat, bra, rightMat, ket);
+    }
+  }
 }
 
 
@@ -352,8 +391,26 @@ void SpinBlock::operator= (const SpinBlock& b)
   rightBlock = b.rightBlock;
   twoInt = b.twoInt;
   ops = b.ops;
-  Overlap = b.Overlap;
 }
+
+void SpinBlock::multiplyOverlap(Wavefunction& c, Wavefunction* v, int num_threads) const
+{
+
+  SpinBlock* loopBlock=(leftBlock->is_loopblock()) ? leftBlock : rightBlock;
+  SpinBlock* otherBlock = loopBlock == leftBlock ? rightBlock : leftBlock;
+
+  Wavefunction *v_array=0, *v_distributed=0, *v_add=0;
+
+  int maxt = 1;
+  initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
+
+  boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
+  boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+  TensorMultiply(leftBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0) ,1.0);  // dmrginp.ef
+
+  accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
+}
+
 
 void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) const
 {
@@ -368,11 +425,14 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   dmrginp.oneelecT -> start();
   dmrginp.s0time -> start();
 
-  boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0];
-  TensorMultiply(leftBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum() ,1.0, MAX_THRD);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
 
-  op = rightBlock->get_op_array(HAM).get_local_element(0)[0];
-  TensorMultiply(rightBlock, *op, this, c, *v, dmrginp.effective_molecule_quantum(), 1.0, MAX_THRD);  
+  boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
+  boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+  TensorMultiply(leftBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0) ,1.0);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
+
+  overlap = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
+  op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+  TensorMultiply(rightBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0), 1.0);  
 
   dmrginp.s0time -> stop();
 #ifndef SERIAL
@@ -424,10 +484,10 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 
   initiateMultiThread(&e, e_array, e_distributed, MAX_THRD);
 
-  boost::shared_ptr<SparseMatrix> op =leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(this);
+  boost::shared_ptr<SparseMatrix> op =leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
   TensorTrace(leftBlock, *op, this, &(get_stateInfo()), e, 1.0);
 
-  op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(this);
+  op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
   TensorTrace(rightBlock, *op, this, &(get_stateInfo()), e, 1.0);  
 #ifndef SERIAL
   boost::mpi::communicator world;
@@ -546,10 +606,6 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t time in slater operator build " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
 
-  //this block is make with csfs and has the same bra and ket states
-  //overlap is an identity matrix
-  Overlap = boost::shared_ptr<SparseMatrix>(new Ham);
-  Overlap->makeIdentity(braStateInfo);
 
 }
 

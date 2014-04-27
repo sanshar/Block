@@ -71,6 +71,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_calc_type = DMRG;
   m_solve_type = DAVIDSON;
   m_stateSpecific = false;
+  m_implicitTranspose = true; //dont make DD just use CC^T to evaluate it
 
   m_spinAdapted = true;
   m_Bogoliubov = false;
@@ -103,7 +104,9 @@ void SpinAdapted::Input::initialize_defaults()
   m_add_noninteracting_orbs = true;
   m_no_transform = false;
   m_do_fci = false;
-  m_do_cd = false;
+  m_do_npdm_ops = false;
+  m_do_npdm_in_core = false;
+  m_new_npdm_code = false;
   m_maxiter = 10;
   m_oneindex_screen_tol = NUMERICAL_ZERO;
   m_twoindex_screen_tol = NUMERICAL_ZERO;
@@ -150,8 +153,7 @@ void SpinAdapted::Input::usedkey_error(string& key, string& line) {
   abort();
 }
 
-SpinAdapted::Input::Input(const string& config_name)
-{
+SpinAdapted::Input::Input(const string& config_name) {
   //first collect all the data
   std::vector<int> usedkey(NUMKEYWORDS, -1);
   int n_elec = -1;
@@ -260,6 +262,12 @@ SpinAdapted::Input::Input(const string& config_name)
 	pout<<"--------------------------------------------------------------------"<<endl;
 	m_stateSpecific = true;
       }
+      else if (boost::iequals(keyword, "donttranspose")) {
+	pout<<"--------------------------------------------------------------------"<<endl;
+	pout << "DONT USE THIS OPTION BECAUSE IT SLOWS DOWN THE CODE."<<endl;
+	pout<<"--------------------------------------------------------------------"<<endl;
+	m_implicitTranspose = false;
+      }
       else if (boost::iequals(keyword, "lastM")) {
 	if(usedkey[LASTM] == 0) 
 	  usedkey_error(keyword, msg);
@@ -353,10 +361,8 @@ SpinAdapted::Input::Input(const string& config_name)
 	  
 	  m_sweep_iter_schedule.push_back( atoi(schd_tok[0].c_str()));
 	  m_sweep_state_schedule.push_back( atoi(schd_tok[1].c_str()));
-	  m_sweep_qstate_schedule.push_back( 0);  //DEPRECATED OPTION
 	  m_sweep_tol_schedule.push_back( atof(schd_tok[2].c_str()));
 	  m_sweep_noise_schedule.push_back( atof(schd_tok[3].c_str()));
-	  m_sweep_additional_noise_schedule.push_back( 0.0);  //DEPRECATED OPTION
 	  
 	  if (m_sweep_state_schedule[i] <= 0) {
 	    pout << "Number of retained states cannot be less than 0"<<endl;
@@ -471,6 +477,10 @@ SpinAdapted::Input::Input(const string& config_name)
 	m_ham_type = HEISENBERG;
       else if (boost::iequals(keyword,  "dmrg"))
 	m_calc_type = DMRG;
+      else if (boost::iequals(keyword,  "calcoverlap"))
+	m_calc_type = CALCOVERLAP;
+      else if (boost::iequals(keyword,  "calchamiltonian"))
+	m_calc_type = CALCHAMILTONIAN;
       else if (boost::iequals(keyword,  "maxj")) {
 	if (tok.size() !=  2) {
 	  pout << "keyword maxj should be followed by a single integer and then an end line."<<endl;
@@ -486,6 +496,12 @@ SpinAdapted::Input::Input(const string& config_name)
 	m_calc_type = ONEPDM;
       else if (boost::iequals(keyword,  "twopdm") || boost::iequals(keyword,  "twordm") || boost::iequals(keyword,  "trdm"))
 	m_calc_type = TWOPDM;
+      else if (boost::iequals(keyword,  "threepdm"))
+	m_calc_type = THREEPDM;
+      else if (boost::iequals(keyword,  "fourpdm"))
+	m_calc_type = FOURPDM;
+      else if (boost::iequals(keyword,  "nevpt2_npdm"))
+	m_calc_type = NEVPT2PDM;
       else if (boost::iequals(keyword,  "restart_onepdm") || boost::iequals(keyword,  "restart_onerdm") || boost::iequals(keyword,  "restart_ordm"))
 	m_calc_type = RESTART_ONEPDM;
       else if (boost::iequals(keyword,  "restart_twopdm") || boost::iequals(keyword,  "restart_twordm") || boost::iequals(keyword,  "restart_trdm"))
@@ -583,9 +599,13 @@ SpinAdapted::Input::Input(const string& config_name)
       }
 
 
-      else if (boost::iequals(keyword,  "docd") || boost::iequals(keyword,  "do_cd"))
+      else if (boost::iequals(keyword,  "docd") || boost::iequals(keyword,  "do_npdm_ops"))
       {
-        m_do_cd = true;
+        m_do_npdm_ops = true;
+      }
+      else if (boost::iequals(keyword,  "do_npdm_in_core"))
+      {
+        m_do_npdm_in_core = true;
       }
 
 
@@ -706,7 +726,7 @@ SpinAdapted::Input::Input(const string& config_name)
       }
       else if (boost::iequals(keyword,  "backward")) {
          m_backward = true;	  
-         m_schedule_type_backward = true;
+         m_schedule_type_backward = true; 
          m_algorithm_type = TWODOT;
       }
 
@@ -737,7 +757,7 @@ SpinAdapted::Input::Input(const string& config_name)
         pout << "number of electrons has to be specified using the keyword nelec"<<endl;
         abort();
       } else {
-        n_elec = 0;
+        n_elec = m_norbs;
       }
     }
 
@@ -755,6 +775,7 @@ SpinAdapted::Input::Input(const string& config_name)
 #ifndef SERIAL
   boost::mpi::communicator world;
   mpi::broadcast(world, sym, 0);
+  mpi::broadcast(world, m_Bogoliubov, 0);
 #endif
     
   if (sym != "c1")
@@ -772,6 +793,10 @@ SpinAdapted::Input::Input(const string& config_name)
   else
     v_2.permSymm = false;
 
+#ifndef SERIAL
+mpi::broadcast(world, m_Bogoliubov,0);
+#endif
+
   if (m_Bogoliubov) {
     v_2.permSymm = false;
     v_cc.rhf = true;
@@ -782,6 +807,7 @@ SpinAdapted::Input::Input(const string& config_name)
   // Kij-based ordering by GA opt.
 #ifndef SERIAL
   mpi::broadcast(world,m_reorderType,0);
+  mpi::broadcast(world,m_add_noninteracting_orbs,0);
 #endif
 
   if (m_Bogoliubov) {
@@ -790,17 +816,18 @@ SpinAdapted::Input::Input(const string& config_name)
     v_cccd.rhf=true;
     readorbitalsfile(orbitalfile, v_1, v_2, v_cc, v_cccc, v_cccd);
     assert(!m_add_noninteracting_orbs);
-    m_molecule_quantum = SpinQuantum(m_norbs, SpinSpace(m_alpha - m_beta), m_total_symmetry_number);
   } else {
     readorbitalsfile(orbitalfile, v_1, v_2);
-    m_molecule_quantum = SpinQuantum(m_alpha + m_beta, SpinSpace(m_alpha - m_beta), m_total_symmetry_number);      
   }
+  m_molecule_quantum = SpinQuantum(m_alpha + m_beta, SpinSpace(m_alpha - m_beta), m_total_symmetry_number);
 
   if (mpigetrank() == 0) {
     makeInitialHFGuess();
 
     pout << "Checking input for errors"<<endl;
     performSanityTest();
+    generateDefaultSchedule();
+    //add twodot_toonedot(bla bla bla)
     pout << "Summary of input"<<endl;
     pout << "----------------"<<endl;
 #ifndef MOLPRO
@@ -823,8 +850,7 @@ SpinAdapted::Input::Input(const string& config_name)
 #endif
 }
 
-void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& oldtonew)
-{
+void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& oldtonew) {
   string msg; int msgsize = 5000;
   ReadMeaningfulLine(dumpFile, msg, msgsize);
   vector<string> tok;
@@ -839,7 +865,8 @@ void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& o
 	  pout << msg<<endl;
 	  abort();
 	}
-	oldtonew.push_back(atoi(tok[i].c_str())-1); //reorder is starting from 1 to n, but internally we store it from 0 to n
+	//reorder is starting from 1 to n, but internally we store it from 0 to n-1
+	oldtonew.push_back(atoi(tok[i].c_str())-1); 
 	if (oldtonew.back() >m_norbs || oldtonew.back() < 0) {
 	  pout << "Illegal orbital index "<<atoi(tok[i].c_str())<<" in reorder file"<<endl;
 	  abort();
@@ -1622,7 +1649,7 @@ void SpinAdapted::Input::performSanityTest()
     Symmetry::irrepAllowed(m_total_symmetry_number.getirrep());
 
   //this is important so the user cannot break the code
-  if (m_schedule_type_default) {
+  if (m_schedule_type_default && !m_schedule_type_backward) {
     if (m_maxM == 0) {
       pout << "With default schedule a non-zero maxM has to be specified"<<endl;
       pout << "Current m_maxM = "<<m_maxM<<endl;
@@ -1646,101 +1673,8 @@ void SpinAdapted::Input::performSanityTest()
        pout << "or specify a startM smaller than " << m_maxM << endl;
        abort();
     }
-
-    if (m_sweep_tol <= 0.0) {
-      pout << "Using the default tolerance sweep tolerance of 1.0e-5."<<endl;
-      m_sweep_tol = 1.0e-5;
-    }
-    int nentry = 0;
-    m_sweep_iter_schedule.resize(nentry);
-    m_sweep_state_schedule.resize(nentry);
-    m_sweep_qstate_schedule.resize(nentry,0);
-    m_sweep_tol_schedule.resize(nentry);
-    m_sweep_noise_schedule.resize(nentry);
-    m_sweep_additional_noise_schedule.resize(nentry,0);
-    
-    double sweeptol = m_sweep_tol;
-    int lastiter = 0;
-    int firstSched = 0;
-    int sweepCount = 0;
-    int nSched=14;
-    int defM [] = {50, 100, 250, 500, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000};
-    int defIter [] = {8, 8, 8, 8, 8, 4, 4, 4, 4, 4, 4, 4, 4, 4};
-    double defNoise [] = {1.0e-4, 1.0e-4, 1e-4, 1e-4, 5e-5, 5e-5, 5e-5, 5e-5, 5e-5, 5e-5, 5e-5, 5e-5, 5e-5, 5e-5};
-    double defTol [] = {1.0e-5, 1.0e-5, 1e-5, 1e-5, 5e-5, 5e-6, 5e-6, 5e-6, 5e-6, 5e-6, 5e-6, 5e-6, 5e-6, 5e-6};
-
-    for (int i=0; i<nSched;++i){
-       if (firstSched==0){
-          if (m_startM == m_maxM){
-             //cout << sweepCount << " " << m_startM << " " << defTol[i] << " " << defNoise[i] << endl;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(1E-5);  m_sweep_noise_schedule.push_back(1E-4);
-             sweepCount += 8;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(5E-6);  m_sweep_noise_schedule.push_back(5E-5);
-             break;
-          }
-
-          else if ((m_startM == defM[i])){
-             //cout << sweepCount << " " << defM[i] << " " << defTol[i] << " " << defNoise[i] << endl;
-             firstSched = 1;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(defTol[i]);  m_sweep_noise_schedule.push_back(defNoise[i]);
-             sweepCount += defIter[i];
-          }
-          else if ((m_startM < defM[i])){
-             firstSched = 1;
-             //cout << sweepCount << " " << m_startM << " " << defTol[i-1] << " " << defNoise[i-1] << endl;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(defTol[i-1]);  m_sweep_noise_schedule.push_back(defNoise[i-1]);
-             sweepCount += defIter[i-1];
-
-             //cout << sweepCount << " " << defM[i] << " " << defTol[i] << " " << defNoise[i] << endl;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(defTol[i]);  m_sweep_noise_schedule.push_back(defNoise[i]);
-             sweepCount += defIter[i];
-          }
-       }
-       else{//After first iteration
-          if (defM[i]>=m_maxM){
-             //cout << sweepCount << " " << m_maxM << " " << defTol[i] << " " << defNoise[i] << endl;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(defTol[i]);  m_sweep_noise_schedule.push_back(defNoise[i]);
-             sweepCount += defIter[i];
-             break;
-          }
-          else{
-             //cout << sweepCount << " " << defM[i] << " " << defTol[i] << " " << defNoise[i] << endl;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(defTol[i]);  m_sweep_noise_schedule.push_back(defNoise[i]);
-             sweepCount += defIter[i];
-          }
-       }
-    }
-       lastiter = m_sweep_iter_schedule.back();
-       //lastiter = sweepCount;
-       m_sweep_iter_schedule.push_back(lastiter+2); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(sweeptol/10.0);  m_sweep_noise_schedule.push_back(0.0e-5);
-
-
-    if (m_twodot_to_onedot_iter < 18 && m_algorithm_type == TWODOT_TO_ONEDOT) {
-      if (m_twodot_to_onedot_iter <= 0)
-         pout << "Sweep at which the switch from twodot to onedot will happen -> "<<lastiter+4<<endl;
-      m_twodot_to_onedot_iter = lastiter+4;
-    }
-    if (m_maxiter <= m_sweep_iter_schedule.back()) {
-      //pout << "With the default schedule and maxM specified, maxiter has to be at least "<<lastiter+6<<endl;
-      //pout << "changing maxiter to "<<lastiter+6<<endl;
-      m_maxiter = lastiter+6;
-    }
   }
   else if (m_schedule_type_backward) {
-
-    int nentry = 0;
-    m_sweep_iter_schedule.resize(nentry);
-    m_sweep_state_schedule.resize(nentry);
-    m_sweep_qstate_schedule.resize(nentry,0);
-    m_sweep_tol_schedule.resize(nentry);
-    m_sweep_noise_schedule.resize(nentry);
-    m_sweep_additional_noise_schedule.resize(nentry,0);
-
-    double sweeptol = m_sweep_tol;
-    int lastiter = 0;
-    int firstSched = 0;
-    int sweepCount = 0;
-    int nSched=17;
     int lastM=0; //To be changed to a variable
     lastM = m_lastM;
     if (lastM==0) lastM=50;
@@ -1750,50 +1684,9 @@ void SpinAdapted::Input::performSanityTest()
        pout << "or specify a larger startM " << endl;
        abort();
     }
-    double bNoise = 0.0;
-    double bTol = 5e-6;
-
-    int defIter [] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
-    int defM [] = {10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000, 2000, 1000, 500, 250, 100, 50, 25, 10, 1};
-
-    for (int i=0; i<nSched;++i){
-       if (firstSched==0){
-          if (lastM == m_startM){
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
-             sweepCount += 3;
-             break;
-          }
-          else if(m_startM==defM[i]){ 
-             firstSched = 1;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
-             sweepCount += defIter[i];
-       }
-          else if ((m_startM > defM[i])){
-             firstSched = 1;
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
-             sweepCount += defIter[i-1];
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
-             sweepCount += defIter[i];
-          }
-       }
-       else{//After first iteration
-          if (defM[i]<=lastM){
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(lastM); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
-             sweepCount += defIter[i];
-             break;
-          }
-          else{
-             m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(bTol);  m_sweep_noise_schedule.push_back(bNoise);
-             sweepCount += defIter[i];
-          }
-
-        }
-    }
-       lastiter = m_sweep_iter_schedule.back();
-       m_maxiter = lastiter+3;
-       pout << "maxiter " << m_maxiter << endl;
   }
   else {
+  // This needs to go at the end of sanity check, or move up schedule 
     if (m_maxM != 0) {
       pout << "With detailed schedule a non-zero maxM should not be specified"<<endl;
       abort();
@@ -1804,8 +1697,9 @@ void SpinAdapted::Input::performSanityTest()
     }
   }
 
-  if(m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter == 0)
-    m_twodot_to_onedot_iter = min(m_sweep_iter_schedule.back()+2, m_maxiter-1);
+  //Still part of the schedule. Might need to move to Schedule.C
+  //if(m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter == 0)
+  //  m_twodot_to_onedot_iter = min(m_sweep_iter_schedule.back()+2, m_maxiter-1);
 
   if (m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter >= m_maxiter) {
     pout << "Switch from twodot to onedot algorithm cannot happen after maxiter"<<endl;
@@ -1816,14 +1710,6 @@ void SpinAdapted::Input::performSanityTest()
     pout << "Only onedot algorithm is allowed with state specific calculation."<<endl;
     abort();
   }
-
-  if (m_maxiter < m_sweep_iter_schedule.back()) {
-    pout << "maximum iterations allowed is less than the last sweep iteration in your schedule."<<endl;
-    pout << m_maxiter <<" < "<< (m_sweep_iter_schedule.back())<<endl;
-    pout << "either increase the max_iter or reduce the number of sweeps"<<endl;
-    abort();
-  }
-  
 
 #ifndef SERIAL
   }
@@ -1837,8 +1723,11 @@ void SpinAdapted::Input::makeInitialHFGuess() {
 
   std::vector<int> hf_occupancy_tmp(m_norbs,0);
 
-
-  if (m_hf_occ_user == "manual") {
+  if (m_Bogoliubov) {
+    // overwrite hf_occ_user option, since initial guess is always vacuum in BCS case
+    m_hf_occupancy.assign(m_norbs, 0);
+  }
+  else if (m_hf_occ_user == "manual") {
     //check if n_orbs is correct and if n_elec is correct
     if (m_hf_occupancy.size() != m_norbs/2 ) {
       pout << "ERROR: The length of user-defined HF occupancies does not match the number of orbitals " << endl;

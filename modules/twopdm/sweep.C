@@ -94,7 +94,7 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
   //if (useSlater) {
-    systemDot = SpinBlock(systemDotStart, systemDotEnd);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
     //SpinBlock::store(true, systemDot.get_sites(), systemDot);
     //}
     //else

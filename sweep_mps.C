@@ -30,41 +30,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 using namespace boost;
 using namespace std;
 
-//This take the sites and just makes a stateinfo containing all the states in it
-void makeStateInfo(StateInfo& s, int site)
-{
-  std::vector< std::vector<Csf> > ladders;
-  std::vector< Csf > dets; 
-  std::vector<int> new_sites(1, site), sites;
-  if (dmrginp.spinAdapted()) {
-    sites = new_sites;
-    dets = CSFUTIL::spinfockstrings(new_sites, ladders);
-  }
-  else {
-    for (int i=0; i<new_sites.size(); i++) {
-      sites.push_back( dmrginp.spatial_to_spin()[new_sites[i]]   );
-      sites.push_back( dmrginp.spatial_to_spin()[new_sites[i]]+1 );
-    }
-    dets = CSFUTIL::spinfockstrings(new_sites);
-    for (int j=0; j<dets.size(); j++)
-      ladders.push_back(std::vector<Csf>(1,dets[j]));
-  }
-  s = StateInfo(dets);
-
-  if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0 && dmrginp.spinAdapted() && site == 0)
-  {
-    SpinQuantum sq = dmrginp.molecule_quantum();
-    sq = SpinQuantum(sq.get_s().getirrep(), sq.get_s(), IrrepSpace(0));
-    int qs = 1, ns = 1;
-    StateInfo addstate(ns, &sq, &qs), newstate; 
-
-    TensorProduct(s, addstate, newstate, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
-    s = newstate;
-  }
-
-}
-
-
 
 void getComplementarySites(std::vector<int> &sites, std::vector<int> &complementarySites) 
 {
@@ -113,11 +78,21 @@ void SpinAdapted::Sweep::getLowerStatesBlockRow(int currentState, const std::vec
     btas::STArray<double,2> fOverlap, rOverlap; 		     
     std::vector<int> prevSites;
     if (sites[0] == 0) {
-      prevSites = sites; prevSites.pop_back();
+      if (dmrginp.spinAdapted()) {
+	prevSites = sites; prevSites.pop_back();
+      }
+      else {
+	prevSites = sites; prevSites.pop_back(), prevSites.pop_back();
+      }
     }
-    else 
-      prevSites = std::vector<int>((++sites.begin()), sites.end());
-
+    else  {
+      if (dmrginp.spinAdapted()) {
+	prevSites = std::vector<int>((++sites.begin()), sites.end());
+      }
+      else {
+	prevSites = std::vector<int>((++(++sites.begin())), sites.end());
+      }
+    }
     readOverlap(prevSites, fOverlap, istate, currentState);
     readOverlap(complementSites, rOverlap, istate, currentState);
 
@@ -150,10 +125,21 @@ void SpinAdapted::Sweep::getLowerStatesBlockCol(int currentState, const std::vec
     btas::STArray<double,2> fOverlap, rOverlap; 		     
     std::vector<int> prevSites;
     if (complementSites[0] == 0) {
-      prevSites = complementSites; prevSites.pop_back();
+      if (dmrginp.spinAdapted()) {
+	prevSites = complementSites; prevSites.pop_back();
+      }
+      else {
+	prevSites = complementSites; prevSites.pop_back(), prevSites.pop_back();
+      }
     }
-    else 
-      prevSites = std::vector<int>((++complementSites.begin()), complementSites.end());
+    else  {
+      if (dmrginp.spinAdapted()) {
+	prevSites = std::vector<int>((++complementSites.begin()), complementSites.end());
+      }
+      else {
+	prevSites = std::vector<int>((++(++complementSites.begin())), complementSites.end());
+      }
+    }
 
     readOverlap(sites, fOverlap, istate, currentState);
     readOverlap(prevSites, rOverlap, istate, currentState);
@@ -186,12 +172,24 @@ void SpinAdapted::Sweep::saveUpdatedLocalOverlapMatrix(int currentState, const s
     btas::STArray<double, 2> Overlap;
 
     if (sites[0] == 0) {
-      std::vector<int> prevSites = sites; prevSites.pop_back();
-      LoadOverlapTensor(prevSites, Overlap, istate, currentState);
+      if (dmrginp.spinAdapted()) {
+	std::vector<int> prevSites = sites; prevSites.pop_back();
+	LoadOverlapTensor(prevSites, Overlap, istate, currentState);
+      }
+      else {
+	std::vector<int> prevSites = sites; prevSites.pop_back(); prevSites.pop_back();
+	LoadOverlapTensor(prevSites, Overlap, istate, currentState);
+      }
     }
     else {
-      std::vector<int> prevSites((++sites.begin()), sites.end());
-      LoadOverlapTensor(prevSites, Overlap, istate, currentState);
+      if (dmrginp.spinAdapted()) {
+	std::vector<int> prevSites((++sites.begin()), sites.end());
+	LoadOverlapTensor(prevSites, Overlap, istate, currentState);
+      }
+      else {
+	std::vector<int> prevSites((++(++sites.begin())), sites.end());
+	LoadOverlapTensor(prevSites, Overlap, istate, currentState);
+      }
     }
 
 
@@ -306,12 +304,18 @@ void SpinAdapted::Sweep::CanonicalizeWavefunction(SweepParams &sweepParams, cons
   }
   else {
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
-    new_site = dmrginp.last_site()-1;
+    new_site = dmrginp.spinAdapted() ? dmrginp.last_site()-1 : dmrginp.last_site()/2-1;
   }
   pout << "\t\t\t ============================================================================ " << 
     endl;
-  pout << new_site<<endl;
-  sites.push_back(new_site);
+
+  if (dmrginp.spinAdapted())
+    sites.push_back(new_site);
+  else {
+    sites.push_back(2*new_site);
+    sites.push_back(2*new_site+1);
+    std::sort(sites.begin(), sites.end());
+  }
     
     
   //only need statinfos
@@ -333,7 +337,15 @@ void SpinAdapted::Sweep::CanonicalizeWavefunction(SweepParams &sweepParams, cons
       pout << "\t\t\t Current direction is :: Backwards " << endl;
     }
     std::vector<int> complementarySites, spindotsites(1, new_site), oldsites = sites, oldcomplement;
-    sites.push_back(new_site);
+
+    if (dmrginp.spinAdapted())
+      sites.push_back(new_site);
+    else {
+      sites.push_back(2*new_site);
+      sites.push_back(2*new_site+1);
+      std::sort(sites.begin(), sites.end());
+    }
+
     getComplementarySites(sites, complementarySites);
     getComplementarySites(oldsites, oldcomplement);
     
@@ -344,7 +356,15 @@ void SpinAdapted::Sweep::CanonicalizeWavefunction(SweepParams &sweepParams, cons
 
     Wavefunction w; w.set_deltaQuantum() = dmrginp.effective_molecule_quantum_vec();
     w.set_onedot(true);
-    StateInfo::restore(!forward, complementarySites, envstate, currentstate);
+
+    if (!dmrginp.spinAdapted()) {
+      std::vector<int> spinSites(complementarySites.size()/2, 0);
+      for (int s=0; s<spinSites.size(); s++)
+	spinSites[s] = complementarySites[2*s]/2;
+      StateInfo::restore(!forward, spinSites, envstate, currentstate);
+    }
+    else
+      StateInfo::restore(!forward, complementarySites, envstate, currentstate);
 
     TensorProduct(newState1, envstate, bigstate, PARTICLE_SPIN_NUMBER_CONSTRAINT);
 
@@ -388,10 +408,15 @@ void SpinAdapted::Sweep::InitializeStateInfo(SweepParams &sweepParams, const boo
   if (forward) 
     new_site = 0;
   else 
-    new_site = dmrginp.last_site()-1;
-  
-  sites.push_back(new_site);
-    
+    new_site = dmrginp.spinAdapted() ? dmrginp.last_site()-1 : dmrginp.last_site()/2-1;
+
+  if (dmrginp.spinAdapted())
+    sites.push_back(new_site);
+  else {
+    sites.push_back(2*new_site);
+    sites.push_back(2*new_site+1);
+    std::sort(sites.begin(), sites.end());
+  }
     
   //only need statinfos
   StateInfo stateInfo1; makeStateInfo(stateInfo1, new_site);
@@ -404,13 +429,20 @@ void SpinAdapted::Sweep::InitializeStateInfo(SweepParams &sweepParams, const boo
     else 
       new_site--;
 
-    sites.push_back(new_site);
+    if (dmrginp.spinAdapted())
+      sites.push_back(new_site);
+    else {
+      sites.push_back(2*new_site);
+      sites.push_back(2*new_site+1);
+      std::sort(sites.begin(), sites.end());
+    }
+
     
     StateInfo siteState, newState1; 
     makeStateInfo(siteState, new_site);
     TensorProduct(stateInfo1, siteState, newState1, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
     newState1.CollectQuanta();
-
+  
       
     //make the newstate
     std::vector<Matrix> rotation1; 
@@ -444,11 +476,19 @@ void Sweep::InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward,
   }
   else {
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
-    new_site = dmrginp.last_site()-1;
+    new_site = dmrginp.spinAdapted() ? dmrginp.last_site()-1 : dmrginp.last_site()/2-1;
   }
   pout << "\t\t\t ============================================================================ " << 
     endl;
-  sites.push_back(new_site);
+
+  if (dmrginp.spinAdapted())
+    sites.push_back(new_site);
+  else {
+    sites.push_back(2*new_site);
+    sites.push_back(2*new_site+1);
+    std::sort(sites.begin(), sites.end());
+  }
+
   
   
   //only need statinfos
@@ -481,7 +521,15 @@ void Sweep::InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward,
       wave_site = new_site-1;
       pout << "\t\t\t Current direction is :: Backwards " << endl;
     }
-    sites.push_back(new_site);
+
+    if (dmrginp.spinAdapted())
+      sites.push_back(new_site);
+    else {
+      sites.push_back(2*new_site);
+      sites.push_back(2*new_site+1);
+      std::sort(sites.begin(), sites.end());
+    }
+
     StateInfo siteState, newState1, newState2; makeStateInfo(siteState, new_site);
     
     //make the newstate
@@ -539,7 +587,7 @@ void Sweep::InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward,
 }
 
 //generate all the overlap elements between all the mps wavefunction stored on disk. 
-void SpinAdapted::Sweep::calculateAllOverlap()
+void SpinAdapted::Sweep::calculateAllOverlap(Matrix& O)
 {
   bool direction;
   int restartsize;
@@ -557,11 +605,10 @@ void SpinAdapted::Sweep::calculateAllOverlap()
   StateInfo statew1, statew2;
   btas::TVector<btas::Dshapes, 2> overlapShape; overlapShape[0]=quanta; overlapShape[1] = quanta;
   btas::STArray<double, 2>  output(overlapShape, false); //O(ni, mi) matrix
-  Matrix O(dmrginp.nroots(), dmrginp.nroots()); O = 0.0;
+  O.ReSize(dmrginp.nroots(), dmrginp.nroots()); O = 0.0;
 
   for (int i=0; i<dmrginp.nroots(); i++) {
-    O(i+1,i+1) = 1.0;
-    for (int j=i+1; j<dmrginp.nroots(); j++) { 
+    for (int j=i; j<dmrginp.nroots(); j++) { 
       Sweep::InitializeAllOverlaps(sweepParams, true, i, j);
 
       w1.LoadWavefunctionInfo(statew1, wavesites, i);
@@ -589,14 +636,110 @@ void SpinAdapted::Sweep::calculateAllOverlap()
 	o += output.find(btas::make_array(k,k))->second->operator()(0,0);
       cout << "overlap between "<<i<<"  and "<<j<<"  =  "<<o<<endl;
       O(i+1, j+1) = o;
-      O(j+1, i+1) = o;
 
     }
   }
-  cout << O<<endl;
 }
 
-void SpinAdapted::Sweep::calculateHMatrixElements()
+void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H)
+{
+  bool direction, restoredirection;
+  int restartsize;
+  SweepParams sweepParams;
+  sweepParams.restorestate(restoredirection, restartsize);
+  sweepParams.current_root() = 0;
+
+  direction = restoredirection;
+
+  int sysdotsite, envsite, envsize=2;
+  std::vector<int> sites(dmrginp.last_site()-envsize-1,0), wavesites(dmrginp.last_site()-envsize,0), envsites(envsize,0);
+  if (direction) {
+    sysdotsite = dmrginp.last_site()-envsize-1;
+    envsite = dmrginp.last_site()-envsize;
+    for (int i=0; i<dmrginp.last_site()-envsize-1; i++)
+      sites[i] = i;
+    for (int i=0; i<dmrginp.last_site()-envsize; i++)
+      wavesites[i] = i;
+    for (int i=dmrginp.last_site()-envsize; i<dmrginp.last_site(); i++) 
+      envsites[-dmrginp.last_site()+envsize+i] = i;
+  }
+  else {
+    sysdotsite = envsize;
+    envsite = 0;
+    for (int i=0; i<dmrginp.last_site()-envsize-1; i++)
+      sites[i] = envsize+1+i;
+    for (int i=0; i<dmrginp.last_site()-envsize; i++)
+      wavesites[i] = envsize+i;
+    for (int i=0; i<envsize; i++)
+      envsites[i] = i;
+  }
+
+  pout.precision(12);
+  Wavefunction w1, w2;
+  StateInfo statew1, statew2;
+  H.ReSize(dmrginp.nroots(), dmrginp.nroots()); H = 0.0;
+
+  for (int i=0; i<dmrginp.nroots(); i++) {
+    for (int j=i; j<dmrginp.nroots(); j++) { 
+      SpinAdapted::SweepGenblock::do_one(sweepParams, direction, i, j);
+
+      w1.LoadWavefunctionInfo(statew1, wavesites, i);
+      w2.LoadWavefunctionInfo(statew2, wavesites, j);
+
+
+      SpinBlock newSystem, system, systemDot, env, big;
+      SpinBlock::restore(direction, sites, system, i, j);
+      systemDot = SpinBlock(sysdotsite, sysdotsite, i==j);
+      system.addAdditionalCompOps();
+
+      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, i, j, 1, direction, 
+				     DISTRIBUTED_STORAGE, false, true);
+
+
+      if (envsize == 1) {
+	int dotsize = 1, restartsize = 0;
+	int restart = false, warmup = false;
+	InitBlocks::InitStartingBlock(env, !direction, i, j, dotsize, dotsize, restartsize, restart, warmup);
+      }
+      else 
+	SpinBlock::restore(!direction, envsites, env, i, j);
+
+      pout << env<<endl;
+      pout << env.get_ketStateInfo()<<endl;
+
+      newSystem.set_loopblock(false);
+      system.set_loopblock(false);
+      env.set_loopblock(true);
+      
+      InitBlocks::InitBigBlock(newSystem, env, big); 
+
+      w1.LoadWavefunctionInfo(statew1, wavesites, i);
+      w2.LoadWavefunctionInfo(statew2, wavesites, j);
+
+      pout << w1<<endl;
+      pout << w2<<endl;
+
+#ifndef SERIAL
+      mpi::communicator world;
+      broadcast(world, w1, 0);
+      broadcast(world, w2, 0);
+#endif
+      Wavefunction Hw2 = w1; Hw2.Clear();
+
+      big.multiplyH(w2, &Hw2, MAX_THRD);
+      double o = DotProduct(w1, Hw2);
+
+      cout <<"matrix element "<<o<<endl;
+      if (i==j) o += dmrginp.get_coreenergy();
+      H(i+1, j+1) = o;
+      H(j+1, i+1) = o;
+      pout << H <<endl; 
+    }
+  }
+}
+
+/*
+void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H)
 {
   bool direction;
   int restartsize;
@@ -604,51 +747,65 @@ void SpinAdapted::Sweep::calculateHMatrixElements()
   sweepParams.restorestate(direction, restartsize);
   sweepParams.current_root() = 0;
 
+  /*
   std::vector<int> sites(dmrginp.last_site()-2,0), wavesites(dmrginp.last_site()-1,0), quanta(3,1);
   for (int i=0; i<dmrginp.last_site()-2; i++)
     sites[i] = i;
   for (int i=0; i<dmrginp.last_site()-1; i++)
     wavesites[i] = i;
 
+  pout.precision(12);
   Wavefunction w1, w2;
   StateInfo statew1, statew2;
-  btas::TVector<btas::Dshapes, 2> overlapShape; overlapShape[0]=quanta; overlapShape[1] = quanta;
-  btas::STArray<double, 2>  output(overlapShape, false); //O(ni, mi) matrix
-  Matrix H(dmrginp.nroots(), dmrginp.nroots()); H = 0.0;
+  H.ReSize(dmrginp.nroots(), dmrginp.nroots()); H = 0.0;
   for (int i=0; i<dmrginp.nroots(); i++) {
     for (int j=i; j<dmrginp.nroots(); j++) { 
       SpinAdapted::SweepGenblock::do_one(sweepParams, true, i, j);
+      SpinAdapted::SweepGenblock::do_one(sweepParams, false, i, j);
 
-      w1.LoadWavefunctionInfo(statew1, wavesites, i);
-      w2.LoadWavefunctionInfo(statew2, wavesites, j);
+      std::vector<int> sites(1,0), wavesites(1,0); wavesites.push_back(1);
+      for (int k=0; k<5; k++) {
+	w1.LoadWavefunctionInfo(statew1, wavesites, i);
+	w2.LoadWavefunctionInfo(statew2, wavesites, j);
 
-      Wavefunction Hw1 = w1; Hw1.Clear();
-      SpinBlock newSystem, system, systemDot, env, big;
-      SpinBlock::restore(true, sites, system, i, j);
-      systemDot = SpinBlock(dmrginp.last_site()-2, dmrginp.last_site()-2);
-      env = SpinBlock(dmrginp.last_site()-1, dmrginp.last_site()-1);
-      
-      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, i, j, 1, true, 
-      			     DISTRIBUTED_STORAGE, false, true);
+	Wavefunction Hw1 = w2; Hw1.Clear();
+	SpinBlock newSystem, system, systemDot, env, big;
+	SpinBlock::restore(true, sites, system, i, j);
+	systemDot = SpinBlock(k+1, k+1, i==j);
+	
+	InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, i, j, 1, true, 
+				       DISTRIBUTED_STORAGE, true, true);
+	
+	SpinBlock::restore(false, newSystem.get_complementary_sites(), env, i, j);
+	//cout << env<<endl;
+	//env.printOperatorSummary();
 
-      newSystem.set_loopblock(false);
-      system.set_loopblock(false);
-      env.set_loopblock(true);
-      InitBlocks::InitBigBlock(newSystem, env, big); 
-
-
-      big.multiplyH(w1, &Hw1, MAX_THRD);
-
-      double o = DotProduct(w2, Hw1);
-
-      H(i+1, j+1) = o;
-      H(j+1, i+1) = o;
-      cout << "Matrix element between "<<i<<" and  "<<j<<" = "<<o<<endl;
+	newSystem.set_loopblock(true);
+	system.set_loopblock(false);
+	env.set_loopblock(false);
+	InitBlocks::InitBigBlock(newSystem, env, big); 
+	
+	//cout << *env.getOverlap()<<endl;
+	cout << DotProduct(w1, w2)<<endl;
+	cout << DotProduct(w1, w1)<<endl;
+	cout << DotProduct(w2, w2)<<endl;
+	cout << DotProduct(Hw1, Hw1)<<endl;
+	
+	big.multiplyH(w1, &Hw1, MAX_THRD);
+	cout <<i<<"  "<<j<<" ****************MAT ELEMENT "<< DotProduct(w2, Hw1)<<endl;
+	cout << DotProduct(Hw1, Hw1)<<endl;
+	double o = DotProduct(w2, Hw1);
+	
+	sites.push_back(k+1);
+	wavesites.push_back(k+2);
+	H(i+1, j+1) = 0;
+	H(j+1, i+1) = 0;
+      }
+      cout << "Matrix element between "<<i<<" and  "<<j<<" = "<<H(i+1, j+1)<<endl;
     }
   }
-  
 }
-
+*/
 
 void SpinAdapted::Wavefunction::CollectQuantaAlongRows (const StateInfo& sRow, const StateInfo& sCol, btas::STArray<double, 3>& siteWave, const vector<SpinQuantum> dQ)
 {
@@ -898,8 +1055,10 @@ void SpinAdapted::UnCollectQuantaAlongRows(const StateInfo& sRow, const StateInf
 
 #else
 
-void Sweep::InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward, int currentstate) {return;}
+void Sweep::InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward, int stateA, int stateB) {return;}
 void SpinAdapted::Sweep::CanonicalizeWavefunction(SweepParams &sweepParams, const bool &forward, int currentstate) {return;}
 void SpinAdapted::Sweep::InitializeStateInfo(SweepParams &sweepParams, const bool &forward, int currentstate) {return;}
+void SpinAdapted::Sweep::calculateAllOverlap(Matrix& O){return;}
+void SpinAdapted::Sweep::calculateHMatrixElements(Matrix& H) {return;}
 
 #endif

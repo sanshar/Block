@@ -37,7 +37,7 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
   vector<int> spindotsites(2); 
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
-  systemDot = SpinBlock(systemDotStart, systemDotEnd);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
 
   SpinBlock environment, environmentDot, newEnvironment;
   int environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;

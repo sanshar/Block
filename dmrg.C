@@ -14,9 +14,13 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "orbstring.h"
 #include "least_squares.h"
 #include <include/communicate.h>
+#include "sweepgenblock.h"
+#include "npdm.h"
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+
 //the following can be removed later
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
@@ -34,9 +38,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "rotationmat.h"
 #include "density.h"
 #include "sweep.h"
-#include "sweepgenblock.h"
-#include "sweeponepdm.h"
-#include "sweeptwopdm.h"
 #include "BaseOperator.h"
 #include "dmrg_wrapper.h"
 
@@ -121,26 +122,55 @@ int calldmrg(char* input, char* output)
 
   SweepParams sweep_copy;
   bool direction_copy; int restartsize_copy;
-
-
-  /*
-  for (int istate = 0; istate<dmrginp.nroots(); istate++) {
-    bool direction;
-    int restartsize;
-    sweepParams.restorestate(direction, restartsize);
-    Sweep::InitializeStateInfo(sweepParams, !direction, istate);
-    Sweep::InitializeStateInfo(sweepParams, direction, istate);
-    Sweep::CanonicalizeWavefunction(sweepParams, !direction, istate);
-    Sweep::CanonicalizeWavefunction(sweepParams, direction, istate);
-    Sweep::CanonicalizeWavefunction(sweepParams, !direction, istate);
-  }
-  //Sweep::calculateAllOverlap();
-  Sweep::calculateHMatrixElements();
-  exit(0);
-  */
+  Matrix O, H;
 
   switch(dmrginp.calc_type()) {
+
+  case (CALCOVERLAP):
+    pout.precision(12);
+    if (mpigetrank() == 0) {
+      for (int istate = 0; istate<dmrginp.nroots(); istate++) {
+	bool direction;
+	int restartsize;
+	sweepParams.restorestate(direction, restartsize);
+	Sweep::InitializeStateInfo(sweepParams, !direction, istate);
+	Sweep::InitializeStateInfo(sweepParams, direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, !direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, istate);
+      }
+      for (int istate = 0; istate<dmrginp.nroots(); istate++) 
+	for (int j=istate; j<dmrginp.nroots() ; j++) {
+	  Sweep::InitializeAllOverlaps(sweepParams, !direction, istate, j);
+	  Sweep::InitializeAllOverlaps(sweepParams, direction, istate, j);
+	}
+      Sweep::calculateAllOverlap(O);
+    }
+    cout <<"overlap"<<endl<< O <<endl;
+    break;
+
+  case (CALCHAMILTONIAN):
+    pout.precision(12);
+
+    for (int istate = 0; istate<dmrginp.nroots(); istate++) {
+      bool direction;
+      int restartsize;
+      sweepParams.restorestate(direction, restartsize);
+      
+      if (mpigetrank() == 0) {
+	Sweep::InitializeStateInfo(sweepParams, !direction, istate);
+	Sweep::InitializeStateInfo(sweepParams, direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, !direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, !direction, istate);
+      }
+    }
     
+    Sweep::calculateHMatrixElements(H);
+    pout << "overlap "<<endl<<O<<endl;
+    pout << "hamiltonian "<<endl<<H<<endl;
+    break;
+
   case (DMRG):
     if (RESTART && !FULLRESTART)
       restart(sweep_tol, reset_iter);
@@ -172,243 +202,45 @@ int calldmrg(char* input, char* output)
   case (TINYCALC):
     Sweep::tiny(sweep_tol);
     break;
-
   case (ONEPDM):
-    if (dmrginp.algorithm_method() == TWODOT) {
-      pout << "Onepdm not allowed with twodot algorithm" << endl;
-      abort();
-    }
-    if (RESTART && !FULLRESTART)
-      restart(sweep_tol, reset_iter);
-    else if (FULLRESTART) {
-      fullrestartGenblock();
-      reset_iter = true;
-      sweepParams.restorestate(direction, restartsize);
-      sweepParams.calc_niter();
-      sweepParams.savestate(direction, restartsize);
-      restart(sweep_tol, reset_iter);
-    }
-    else {
-      dmrg(sweep_tol);
-    }
-
-    dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
-    dmrginp.Sz() = dmrginp.total_spin_number().getirrep();
-    sweep_copy.restorestate(direction_copy, restartsize_copy);
-
-    if(!dmrginp.setStateSpecific()) {
-      dmrginp.set_fullrestart() = true;
-      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
-      dmrginp.set_fullrestart() = false;
-
-      for (int state=0; state<dmrginp.nroots(); state++) {
-	sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-	SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);
-      }
-    }
-    else {
-      //this only generates onpem between the same wavefunctions and cannot generate
-      //transition pdms. atleast not for now
-      for (int state=0; state<dmrginp.nroots(); state++) {
-	dmrginp.set_fullrestart() = true;
-	sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-	
-	if (mpigetrank() == 0) {
-	  Sweep::InitializeStateInfo(sweepParams, direction, state);
-	  Sweep::InitializeStateInfo(sweepParams, !direction, state);
-	  Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
-	  Sweep::CanonicalizeWavefunction(sweepParams, !direction, state);
-	  Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
-	}
-	SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
-	dmrginp.set_fullrestart() = false;    
-	
-	SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);
-      }
-    }
-
-    sweep_copy.savestate(direction_copy, restartsize_copy);
+    Npdm::npdm(1);
     break;
 
   case (TWOPDM):
-    if (dmrginp.algorithm_method() == TWODOT) {
-      pout << "Twopdm not allowed with twodot algorithm" << endl;
-      abort();
-    }
+    Npdm::npdm(2);
+    break;
 
-    if (RESTART && !FULLRESTART)
-      restart(sweep_tol, reset_iter);
-    else if (FULLRESTART) {
-      fullrestartGenblock();
-      reset_iter = true;
-      sweepParams.restorestate(direction, restartsize);
-      sweepParams.calc_niter();
-      sweepParams.savestate(direction, restartsize);
-      restart(sweep_tol, reset_iter);
-    }
-    else {
-      dmrg(sweep_tol);
-    }
+  case (THREEPDM):
+    Npdm::npdm(3);
+    break;
 
+  case (FOURPDM):
+    Npdm::npdm(4);
+    break;
 
-    dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
-    dmrginp.twoindex_screen_tol() = 0.0; //need to turn screening off for two index ops
-
-    dmrginp.Sz() = dmrginp.total_spin_number().getirrep();
-    dmrginp.do_cd() = true;
-
-    sweep_copy.restorestate(direction_copy, restartsize_copy);
-
-    if(!dmrginp.setStateSpecific()) {
-      dmrginp.set_fullrestart() = true;
-      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
-      dmrginp.set_fullrestart() = false;
-
-      for (int state=0; state<dmrginp.nroots(); state++) {
-	sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-	SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
-      }
-    }
-    else {
-      //this only generates onpem between the same wavefunctions and cannot generate
-      //transition pdms. atleast not for now
-      for (int state=0; state<dmrginp.nroots(); state++) {
-	dmrginp.set_fullrestart() = true;
-	sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-	
-	if (mpigetrank() == 0) {
-	  Sweep::InitializeStateInfo(sweepParams, direction, state);
-	  Sweep::InitializeStateInfo(sweepParams, !direction, state);
-	  Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
-	  Sweep::CanonicalizeWavefunction(sweepParams, !direction, state);
-	  Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
-	}
-	SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
-	dmrginp.set_fullrestart() = false;    
-	
-	SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);
-      }
-    }
-
-    sweep_copy.savestate(direction_copy, restartsize_copy);
+  case (NEVPT2PDM):
+    Npdm::npdm(0);
     break;
 
   case (RESTART_ONEPDM):
-    if(sym == "dinfh") {
-      pout << "One pdm not implemented with dinfh symmetry"<<endl;
-      abort();
-    }
-    sweepParams.restorestate(direction, restartsize);
-    if(!sweepParams.get_onedot() || dmrginp.algorithm_method() == TWODOT) {
-      pout << "Onepdm only runs for the onedot algorithm" << endl;
-      abort();
-    }
-
-
-    dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
-    dmrginp.Sz() = dmrginp.total_spin_number().getirrep();
-    sweep_copy.restorestate(direction_copy, restartsize_copy);
-
-    if(!dmrginp.setStateSpecific()) {
-      dmrginp.set_fullrestart() = true;
-      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
-      dmrginp.set_fullrestart() = false;
-
-      for (int state=0; state<dmrginp.nroots(); state++) {
-	sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-	SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);
-      }
-    }
-    else {
-      //this only generates onpem between the same wavefunctions and cannot generate
-      //transition pdms. atleast not for now
-      for (int state=0; state<dmrginp.nroots(); state++) {
-	dmrginp.set_fullrestart() = true;
-	sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-	
-	if (mpigetrank() == 0) {
-	  Sweep::InitializeStateInfo(sweepParams, direction, state);
-	  Sweep::InitializeStateInfo(sweepParams, !direction, state);
-	  Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
-	  Sweep::CanonicalizeWavefunction(sweepParams, !direction, state);
-	  Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
-	}
-	SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
-	dmrginp.set_fullrestart() = false;    
-	
-	SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);
-      }
-    }
-    sweep_copy.savestate(direction_copy, restartsize_copy);
-
+    Npdm::npdm_restart(1);
     break;
 
   case (RESTART_TWOPDM):
-    if(sym == "dinfh") {
-      pout << "Two pdm not implemented with dinfh symmetry"<<endl;
-      abort();
-    }
-    sweepParams.restorestate(direction, restartsize);
-    if(!sweepParams.get_onedot() || dmrginp.algorithm_method() == TWODOT) {
-      pout << "Twopdm only runs for the onedot algorithm" << endl;
-      abort();
-    }
-
-    dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
-    dmrginp.twoindex_screen_tol() = 0.0; //need to turn screening off for two index ops
-
-    dmrginp.Sz() = dmrginp.total_spin_number().getirrep();
-    dmrginp.do_cd() = true;
-
-    sweep_copy.restorestate(direction_copy, restartsize_copy);
-
-    if(!dmrginp.setStateSpecific()) {
-      dmrginp.set_fullrestart() = true;
-      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
-      dmrginp.set_fullrestart() = false;
-
-      for (int state=0; state<dmrginp.nroots(); state++) {
-	sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-	SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
-      }
-    }
-    else {
-      //this only generates onpem between the same wavefunctions and cannot generate
-      //transition pdms. atleast not for now
-      for (int state=0; state<dmrginp.nroots(); state++) {
-	dmrginp.set_fullrestart() = true;
-	sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-	
-	if (mpigetrank() == 0) {
-	  Sweep::InitializeStateInfo(sweepParams, direction, state);
-	  Sweep::InitializeStateInfo(sweepParams, !direction, state);
-	  Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
-	  Sweep::CanonicalizeWavefunction(sweepParams, !direction, state);
-	  Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
-	}
-	SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
-	dmrginp.set_fullrestart() = false;    
-	
-	SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
-      }
-    }
-    sweep_copy.savestate(direction_copy, restartsize_copy);
-
+    Npdm::npdm_restart(2);
     break;
   }
 
   return 0;
-
 }
+
+
 void calldmrg_(char* input, char* output) {
    int a;
    //a=calldmrg("dmrg.inp",0);//, output);
    a=calldmrg(input,0);//, output);
 }
+
 
 void fullrestartGenblock() {
   SweepParams sweepParams;
@@ -425,6 +257,7 @@ void fullrestartGenblock() {
   
   sweepParams.savestate(direction, restartsize);
 }  
+
 
 void restart(double sweep_tol, bool reset_iter)
 {
@@ -689,14 +522,15 @@ void dmrg_stateSpecific(double sweep_tol, int targetState)
     {
       old_fe = last_fe;
       old_be = last_be;
-      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter()) //CHANGE THIS TO SOME INPUT PARAMETER
+      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter()) 
 	break;
+
       last_be = Sweep::do_one(sweepParams, false, !direction, false, 0);
       if (dmrginp.outputlevel() > 0) 
          pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
 
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
-         break;
+	break;
 
 
       last_fe = Sweep::do_one(sweepParams, false, direction, false, 0);

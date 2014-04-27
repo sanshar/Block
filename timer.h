@@ -32,14 +32,14 @@ class cumulTimer
  public:
 
 #ifndef SERIAL
- cumulTimer() : localStart(0), cumulativeSum(0){t = boost::shared_ptr<boost::mpi::timer> (new boost::mpi::timer());};
+ cumulTimer() : localStart(-1.0), cumulativeSum(0){t = boost::shared_ptr<boost::mpi::timer> (new boost::mpi::timer());};
 #ifdef _OPENMP
   void start() {if(!omp_get_thread_num()) {localStart = t->elapsed();}}
 #else
   void start() {localStart = t->elapsed();}
 #endif
 #else
-  cumulTimer() : localStart(0), cumulativeSum(0) {};
+  cumulTimer() : localStart(-1.0), cumulativeSum(0) {};
   void start() {localStart = clock();}
 #endif
 
@@ -48,7 +48,7 @@ class cumulTimer
 #ifdef _OPENMP
     if(!omp_get_thread_num()){
 #endif
-      if (localStart == 0) 
+      if (localStart < 0) 
 	{
 	  cout << "local stop called without starting first"<<endl;
 	  throw 20;

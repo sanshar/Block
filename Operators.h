@@ -13,7 +13,7 @@ namespace SpinAdapted{
 class Cre: public SpinAdapted::SparseMatrix
 {
  public:
-  Cre() { orbs.resize(1); fermion = true;}
+  Cre() { orbs.resize(1); fermion = true; build_pattern = "(C)"; }
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
@@ -22,7 +22,7 @@ class Cre: public SpinAdapted::SparseMatrix
 class Des: public SpinAdapted::SparseMatrix
 {
  public:
-  Des() { orbs.resize(1); fermion = true;}
+  Des() { orbs.resize(1); fermion = true; build_pattern = "(D)"; }
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
@@ -32,7 +32,7 @@ class Des: public SpinAdapted::SparseMatrix
 class CreDes: public SpinAdapted::SparseMatrix
 {
  public:
-  CreDes() { orbs.resize(2); fermion = false;}
+  CreDes() { orbs.resize(2); fermion = false; build_pattern = "(CD)"; }
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
@@ -41,7 +41,7 @@ class CreDes: public SpinAdapted::SparseMatrix
 class DesCre: public SpinAdapted::SparseMatrix
 {
  public:
-  DesCre() { orbs.resize(2); fermion = false;}
+  DesCre() { orbs.resize(2); fermion = false; build_pattern = "(DC)"; }
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
@@ -50,7 +50,7 @@ class DesCre: public SpinAdapted::SparseMatrix
 class CreCre: public SpinAdapted::SparseMatrix
 {
  public:
-  CreCre() { orbs.resize(2); fermion = false;}
+  CreCre() { orbs.resize(2); fermion = false; build_pattern = "(CC)"; }
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
@@ -59,7 +59,7 @@ class CreCre: public SpinAdapted::SparseMatrix
 class DesDes: public SpinAdapted::SparseMatrix
 {
  public:
-  DesDes() { orbs.resize(2); fermion = false;}
+  DesDes() { orbs.resize(2); fermion = false; build_pattern = "(DD)"; }
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
@@ -127,6 +127,15 @@ class Ham: public SpinAdapted::SparseMatrix
 {
  public:
   Ham() { fermion = false;}
+  void build(const SpinBlock& b) ;
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+  double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+class Overlap: public SpinAdapted::SparseMatrix
+{
+ public:
+  Overlap() { fermion = false;}
   void build(const SpinBlock& b) ;
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);

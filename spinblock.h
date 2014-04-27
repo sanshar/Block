@@ -31,22 +31,49 @@ class SpinBlock
       //FIX ME!! remove register_type stuff and add BOOST_CLASS_EXPORT to op_components.h (will take longer to compile)                     
       ar.register_type(static_cast<Op_component<Cre> *>(NULL));
       ar.register_type(static_cast<Op_component<Des> *>(NULL));
+
       ar.register_type(static_cast<Op_component<CreDes> *>(NULL));
       ar.register_type(static_cast<Op_component<DesCre> *>(NULL));
       ar.register_type(static_cast<Op_component<CreCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<DesDes> *>(NULL));
+
       ar.register_type(static_cast<Op_component<CreDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<DesCreComp> *>(NULL));
       ar.register_type(static_cast<Op_component<DesDesComp> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreComp> *>(NULL));
       ar.register_type(static_cast<Op_component<CreCreDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<CreDesDesComp> *>(NULL));
+
       ar.register_type(static_cast<Op_component<Ham> *>(NULL));
+      ar.register_type(static_cast<Op_component<Overlap> *>(NULL));
+
+      // 3PDM
+      ar.register_type(static_cast<Op_component<RI3index> *>(NULL));
+      ar.register_type(static_cast<Op_component<RI4index> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreCre> *>(NULL));
+      // 4PDM
+      ar.register_type(static_cast<Op_component<DesCreDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<DesDesCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<DesCreCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<DesDesDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreDesDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesCreDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesDesCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesDesDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreCreDes> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreDesCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreDesCreCre> *>(NULL));
+      ar.register_type(static_cast<Op_component<CreCreCreCre> *>(NULL));
+
       ar & ops;
     }
 
  private:
 
   std::map<opTypes, boost::shared_ptr<Op_component_base> > ops;
-  boost::shared_ptr<SparseMatrix> Overlap;
   bool complementary;
   bool normal;
   bool loopblock;
@@ -66,7 +93,7 @@ class SpinBlock
   SpinBlock();
   SpinBlock (const StateInfo& s);
   SpinBlock (const SpinBlock& b);
-  SpinBlock (int start, int finish, bool is_complement = false);
+  SpinBlock (int start, int finish, bool implicitTranspose, bool is_complement = false);
   void BuildTensorProductBlock (std::vector<int>& new_sites);
   
   static std::string  restore (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char* name=0);//left and right are the bra and ket states and the name is the type of the MPO (currently only H)
@@ -115,8 +142,6 @@ class SpinBlock
   Op_component_base& get_op_array(opTypes optype){assert(has(optype));return *(ops.find(optype)->second);}
   const Op_component_base& get_op_array(opTypes optype) const {assert(has(optype));return *(ops.find(optype)->second);}
   
-  boost::shared_ptr<SparseMatrix> getOverlap() {return Overlap;}
-  boost::shared_ptr<SparseMatrix>& setOverlap() {return Overlap;}
 
   boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const SpinQuantum& s, int i=-1, int j=-1, int k=-1) {
     assert(has(optypes));
@@ -145,6 +170,11 @@ class SpinBlock
   void build_iterators();
   void build_operators(std::vector<Csf >& s, std::vector< std::vector<Csf> >& ladders);
   void build_operators();
+  void build_and_renormalise_operators(const std::vector<Matrix>& rotateMatrix, const StateInfo *newStateInfo);
+  void build_and_renormalise_operators(const std::vector<Matrix>& leftMat, const StateInfo *bra, const std::vector<Matrix>& rightMat, const StateInfo *ket);
+  void renormalise_transform(const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo);
+  void renormalise_transform(const std::vector<Matrix>& leftMat, const StateInfo *bra, const std::vector<Matrix>& rightMat, const StateInfo *ket);
+
   void BuildSumBlock(int condition, SpinBlock& b_1, SpinBlock& b_2, StateInfo* compState=0);
   void BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState=0);
   void BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum> qnumbers, std::vector<int> distribution, bool random, 
@@ -152,6 +182,7 @@ class SpinBlock
   void set_loopblock(bool p_loopblock){loopblock = p_loopblock;}
   friend ostream& operator<< (ostream& os, const SpinBlock& b);
   void multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) const;
+  void multiplyOverlap(Wavefunction& c, Wavefunction* v, int num_threads) const;
   void diagonalH(DiagonalMatrix& e) const;
   void clear();
   void sendcompOps(Op_component_base& opcomp, int I, int J, int optype, int compsite);
@@ -164,7 +195,7 @@ class SpinBlock
 			int currenroot, std::vector<Wavefunction>& lowerStates);
 
   void transform_operators(std::vector<Matrix>& rotateMatrix);
-  void transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix);
+  void transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix, bool clearRightBlock = true);
 };
 
  double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates);

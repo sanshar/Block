@@ -54,13 +54,6 @@ std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBloc
   b.Load (ifs);
   ifs.close();
 
-  //this block is make with csfs and has the same bra and ket states
-  //overlap is an identity matrix
-  b.Overlap = boost::shared_ptr<SparseMatrix>(new Ham);
-  if ( left == right)
-    b.Overlap->makeIdentity(b.braStateInfo);
-  else 
-    SpinAdapted::Sweep::makeDMRGOverlapFromBTASOverlap(*b.Overlap, sites, left, right);
 
   return file;
 }
@@ -138,7 +131,7 @@ void SpinBlock::recvcompOps(Op_component_base& opcomp, int I, int J, int optype)
   boost::mpi::communicator world;
   std::vector<boost::shared_ptr<SparseMatrix> > oparray = opcomp.get_element(I,J);
   for(int i=0; i<oparray.size(); i++) {
-    world.recv(processorindex(trimap(I, J, dmrginp.last_site())), optype+i*10+1000*J+100000*I, *oparray[i]);
+    world.recv(processorindex(trimap_2d(I, J, dmrginp.last_site())), optype+i*10+1000*J+100000*I, *oparray[i]);
   }
 #endif
 }
@@ -155,9 +148,21 @@ void SpinBlock::addAdditionalCompOps()
   if (!ops[CRE]->is_local()) {
     for(int i=0; i<get_sites().size(); i++) {
       if (ops[CRE]->has(sites[i])) {
-	if (processorindex(sites[i]) != mpigetrank()) 
-	  ops[CRE]->add_local_indices(sites[i]);
-	mpi::broadcast(world, *(ops[CRE]->get_element(sites[i])[0]), processorindex(sites[i]));
+        if (processorindex(sites[i]) != mpigetrank()) ops[CRE]->add_local_indices(sites[i]);
+        ops[CRE]->set_local() = true;
+        mpi::broadcast(world, *(ops[CRE]->get_element(sites[i])[0]), processorindex(sites[i]));
+      }
+    }
+  }
+
+  if (has(DES)) {
+    if (!ops[DES]->is_local()) {
+      for(int i=0; i<get_sites().size(); i++) {
+        if (ops[DES]->has(sites[i])) {
+        if (processorindex(sites[i]) != mpigetrank()) ops[DES]->add_local_indices(sites[i]);
+        ops[DES]->set_local() = true;
+        mpi::broadcast(world, *(ops[DES]->get_element(sites[i])[0]), processorindex(sites[i]));
+	}
       }
     }
   }
@@ -177,37 +182,66 @@ void SpinBlock::addAdditionalCompOps()
         continue;
       int I = (compsite > dotopindex) ? compsite : dotopindex;
       int J = (compsite > dotopindex) ? dotopindex : compsite;
-      if (processorindex(compsite) == processorindex(trimap(I, J, length)))
+      if (processorindex(compsite) == processorindex(trimap_2d(I, J, length)))
         continue;
       if (processorindex(compsite) == mpigetrank()) {
         //this will potentially receive some ops        
         bool other_proc_has_ops = true;
-        world.recv(processorindex(trimap(I, J, length)), 0, other_proc_has_ops);
+        world.recv(processorindex(trimap_2d(I, J, length)), 0, other_proc_has_ops);
         if (other_proc_has_ops) {
 	      ops[CRE_DESCOMP]->add_local_indices(I, J);
 	      recvcompOps(*ops[CRE_DESCOMP], I, J, CRE_DESCOMP);
         }
         other_proc_has_ops = true;
-        world.recv(processorindex(trimap(I, J, length)), 0, other_proc_has_ops);
+        world.recv(processorindex(trimap_2d(I, J, length)), 0, other_proc_has_ops);
         if (other_proc_has_ops) {
 	      ops[DES_DESCOMP]->add_local_indices(I, J);
 	      recvcompOps(*ops[DES_DESCOMP], I, J, DES_DESCOMP);
         }
-      } else {
+	if (has(DES)) {
+	  other_proc_has_ops = true;
+	  world.recv(processorindex(trimap_2d(I, J, length)), 0, other_proc_has_ops);
+	  if (other_proc_has_ops) {
+	    ops[CRE_CRECOMP]->add_local_indices(I, J);
+	    recvcompOps(*ops[CRE_CRECOMP], I, J, CRE_CRECOMP);
+	  }
+	  other_proc_has_ops = true;
+	  world.recv(processorindex(trimap_2d(I, J, length)), 0, other_proc_has_ops);
+	  if (other_proc_has_ops) {
+	    ops[DES_CRECOMP]->add_local_indices(I, J);
+	    recvcompOps(*ops[DES_CRECOMP], I, J, DES_CRECOMP);
+	  }
+	}
+      } 
+      else {
         //this will potentially send some ops
-        if (processorindex(trimap(I, J, length)) == mpigetrank()) {
-	      bool this_proc_has_ops = ops[CRE_DESCOMP]->has_local_index(I, J);
-	      world.send(processorindex(compsite), 0, this_proc_has_ops);
-	      if (this_proc_has_ops) {
-	        sendcompOps(*ops[CRE_DESCOMP], I, J, CRE_DESCOMP, compsite);
-	      }
+        if (processorindex(trimap_2d(I, J, length)) == mpigetrank()) {
+	  bool this_proc_has_ops = ops[CRE_DESCOMP]->has_local_index(I, J);
+	  world.send(processorindex(compsite), 0, this_proc_has_ops);
+	  if (this_proc_has_ops) {
+	    sendcompOps(*ops[CRE_DESCOMP], I, J, CRE_DESCOMP, compsite);
+	  }
           this_proc_has_ops = ops[DES_DESCOMP]->has_local_index(I, J);
-	      world.send(processorindex(compsite), 0, this_proc_has_ops);
-	      if (this_proc_has_ops) {
-	        sendcompOps(*ops[DES_DESCOMP], I, J, DES_DESCOMP, compsite);     
-	      }
-        } else 
-	      continue;
+	  world.send(processorindex(compsite), 0, this_proc_has_ops);
+	  if (this_proc_has_ops) {
+	    sendcompOps(*ops[DES_DESCOMP], I, J, DES_DESCOMP, compsite);     
+	  }
+	  if (has(DES)) {
+	    this_proc_has_ops = ops[CRE_CRECOMP]->has_local_index(I, J);
+	    world.send(processorindex(compsite), 0, this_proc_has_ops);
+	    if (this_proc_has_ops) {
+	      sendcompOps(*ops[CRE_CRECOMP], I, J, CRE_CRECOMP, compsite);     
+	    }
+	    this_proc_has_ops = ops[DES_CRECOMP]->has_local_index(I, J);
+	    world.send(processorindex(compsite), 0, this_proc_has_ops);
+	    if (this_proc_has_ops) {
+	      sendcompOps(*ops[DES_CRECOMP], I, J, DES_CRECOMP, compsite);     
+	    }
+	  }
+	  
+        } 
+	else 
+	  continue;
       }
     }
   }
@@ -216,9 +250,6 @@ void SpinBlock::addAdditionalCompOps()
 
 void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
 {
-  //here the bra and ket are the same
-  Overlap = Sweep::updateLocalOverlapMatrix(*leftBlock->Overlap, rotateMatrix, rotateMatrix, braStateInfo, ketStateInfo);
-
 
   StateInfo oldStateInfo = braStateInfo;
   std::vector<SpinQuantum> newQuanta;
@@ -228,17 +259,15 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   {
     if (rotateMatrix [Q].Ncols () != 0)
       {
-	newQuanta.push_back (braStateInfo.quanta [Q]);
-	newQuantaStates.push_back (rotateMatrix [Q].Ncols ());
-	newQuantaMap.push_back (Q);
+newQuanta.push_back (braStateInfo.quanta [Q]);
+newQuantaStates.push_back (rotateMatrix [Q].Ncols ());
+newQuantaMap.push_back (Q);
       }
   }
   StateInfo newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
 
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    if (! it->second->is_core())
-      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
-						       boost::ref(rotateMatrix) , &newStateInfo));
+  build_and_renormalise_operators( rotateMatrix, &newStateInfo );
+
   braStateInfo = newStateInfo;
   braStateInfo.AllocatePreviousStateInfo ();
   *braStateInfo.previousStateInfo = oldStateInfo;
@@ -256,10 +285,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   }
   Timer transformtimer;
 
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    if ( it->second->is_core())
-      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), (&this->braStateInfo)));
-
+  renormalise_transform( rotateMatrix, &this->braStateInfo );
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if (! it->second->is_core())
@@ -277,10 +303,8 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
 
 }
 
-void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix)
+  void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix, bool clearRightBlock)
 {
-  //here the bra and ket are the same
-  Overlap = Sweep::updateLocalOverlapMatrix(*leftBlock->Overlap, leftrotateMatrix, rightrotateMatrix, braStateInfo, ketStateInfo);
 
   StateInfo oldbraStateInfo=braStateInfo, oldketStateInfo=ketStateInfo;
   StateInfo newbraStateInfo, newketStateInfo;
@@ -288,10 +312,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::
   StateInfo::transform_state(rightrotateMatrix, ketStateInfo, newketStateInfo);
 
 
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    if (! it->second->is_core())
-      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
-						      boost::ref(leftrotateMatrix) , &newbraStateInfo, boost::ref(rightrotateMatrix), &newketStateInfo));
+  build_and_renormalise_operators( leftrotateMatrix, &newbraStateInfo, rightrotateMatrix, &newketStateInfo );
 
   braStateInfo = newbraStateInfo;
   braStateInfo.AllocatePreviousStateInfo ();
@@ -310,12 +331,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::
   }
   Timer transformtimer;
 
-  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-    if ( it->second->is_core())
-      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, 
-						      boost::ref(leftrotateMatrix), &this->braStateInfo, 
-						      boost::ref(rightrotateMatrix), &this->ketStateInfo ));
-
+  renormalise_transform( leftrotateMatrix, &this->braStateInfo, rightrotateMatrix, &this->ketStateInfo );
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if (! it->second->is_core())
@@ -327,7 +343,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::
 
   if (leftBlock)
     leftBlock->clear();
-  if (rightBlock)
+  if (rightBlock && clearRightBlock)
     rightBlock->clear();
 
 

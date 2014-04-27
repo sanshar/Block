@@ -53,7 +53,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   vector<int> spindotsites(2); 
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
-  systemDot = SpinBlock(systemDotStart, systemDotEnd);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
   SpinBlock environment, environmentDot, newEnvironment;
 
 
@@ -75,7 +75,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   envdotsites[1] = environmentDotEnd;
 
   if (!sweepParams.get_onedot())
-    environmentDot = SpinBlock(environmentDotStart, environmentDotEnd);
+    environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, true);
 
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
@@ -163,7 +163,12 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     vector<int> newSysSites;
     if (!dot_with_sys) {
       newSysSites = system.get_sites();
-      newSysSites.push_back(systemDotStart);
+      if (dmrginp.spinAdapted())
+	newSysSites.push_back(systemDotStart);
+      else {
+	newSysSites.push_back(2*systemDotStart);
+	newSysSites.push_back(2*systemDotStart+1);
+      }
       sort(newSysSites.begin(), newSysSites.end());
     }
     else
@@ -221,15 +226,6 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   newSystem.transform_operators(rotatematrix);
   storeStates[2] = newSystem.get_stateInfo();
   dmrginp.operrotT -> stop();
-
-  /*
-  SpinQuantum s = SpinQuantum(0,SpinSpace(0), IrrepSpace(0));
-  pout << *newSystem.get_op_rep(CRE_DES, s, 1, 0)<<endl;
-  pout << *newSystem.get_op_rep(DES_CRE, s, 1, 0)<<endl;
-  pout << *newSystem.get_op_rep(CRE_DESCOMP, s, 3, 2)<<endl;
-  pout << *newSystem.get_op_rep(DES_CRECOMP, s, 3, 2)<<endl;
-  exit(0);
-  */
 
 
 #ifdef USE_BTAS
@@ -471,7 +467,7 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   vector<int> spindotsites(2); 
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
-  systemDot = SpinBlock(systemDotStart, systemDotEnd); // default is_complement=false
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, true); // default is_complement=false
   
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
@@ -488,14 +484,15 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   transformmatrix.allocate(newSystem.get_stateInfo());
   SpinQuantum q(0,SpinSpace(0),IrrepSpace(0));
 
+  //if (mpigetrank() == 0) {
+  double minval = 1e12;
+  for (int i=0; i<nquanta; i++) {
+    diagonalise(newSystem.get_op_rep(HAM,q)->operator_element(i,i), energies[i], transformmatrix(i,i));
+    for (int j=0; j<energies[i].Nrows(); j++) 
+      if (minval > energies[i](j+1))
+	minval = energies[i](j+1);
+  }
   if (mpigetrank() == 0) {
-    double minval = 1e12;
-    for (int i=0; i<nquanta; i++) {
-      diagonalise(newSystem.get_op_rep(HAM,q)->operator_element(i,i), energies[i], transformmatrix(i,i));
-      for (int j=0; j<energies[i].Nrows(); j++) 
-	if (minval > energies[i](j+1))
-	  minval = energies[i](j+1);
-    }
     for (int i=0; i<nquanta; i++) {
       for (int j=0; j<energies[i].Nrows(); j++) 
 	energies[i](j+1) = 1.0/(energies[i](j+1)-minval+1);

@@ -33,7 +33,7 @@ enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD, BCS, HEISENBERG};
 enum solveTypes {LANCZOS, DAVIDSON};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
-enum calcType {DMRG, ONEPDM, TWOPDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI, EXCITEDDMRG};
+enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI, EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
@@ -88,7 +88,9 @@ class Input {
   solveTypes m_solve_type;
   bool m_do_deriv;
   bool m_do_fci;
-  bool m_do_cd;
+  bool m_do_npdm_ops;
+  bool m_do_npdm_in_core;
+  bool m_new_npdm_code;
   bool m_set_Sz;
   int m_maxiter;
   double m_oneindex_screen_tol;
@@ -121,6 +123,7 @@ class Input {
   bool m_fullrestart;
   bool m_restart_warm;
   bool m_reset_iterations;
+  bool m_implicitTranspose;
 
   std::vector<int> m_spin_vector;
   std::vector<int> m_spin_orbs_symmetry;
@@ -141,7 +144,7 @@ class Input {
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & m_thrds_per_node & m_spinAdapted & m_Bogoliubov & m_stateSpecific ;
+    ar & m_thrds_per_node & m_spinAdapted & m_Bogoliubov & m_stateSpecific & m_implicitTranspose;
     ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz;
     ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occ_user & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule & m_reorder;
@@ -149,7 +152,8 @@ class Input {
     ar & m_save_prefix & m_load_prefix & m_direct & m_max_lanczos_dimension;
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat ;
-    ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform & m_do_cd;
+    ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform ;
+    ar & m_do_npdm_ops & m_do_npdm_in_core & m_new_npdm_code;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_oneindex_screen_tol & m_twoindex_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
@@ -200,6 +204,7 @@ class Input {
   void writeSummaryForMolpro();
 #endif
   void performSanityTest();
+  void generateDefaultSchedule();
   void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
   void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, PairArray& vcc, CCCCArray& vcccc, CCCDArray& vcccd);  
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
@@ -241,10 +246,12 @@ class Input {
 
   //const bool& doStateSpecific() const {return m_doStateSpecific;}
   //bool& doStateSpecific() {return m_doStateSpecific;}
+  const bool& doimplicitTranspose() const {return m_implicitTranspose;}
   const bool& setStateSpecific() const {return m_stateSpecific;}
   bool& setStateSpecific() {return m_stateSpecific;}
   const orbitalFormat& orbformat() const {return m_orbformat;}
   const int& outputlevel() const {return m_outputlevel;}
+  int& setOutputlevel()  {return m_outputlevel;}
   const vector<int>& spatial_to_spin() const {return m_spatial_to_spin;}
   int spatial_to_spin(int i) const {return m_spatial_to_spin.at(i);}
   const vector<int>& spin_to_spatial() const {return m_spin_to_spatial;}
@@ -329,18 +336,23 @@ class Input {
   }
   vector<SpinQuantum> effective_molecule_quantum_vec() {
     vector<SpinQuantum> q;
-    if (!m_Bogoliubov)
-      q.push_back(effective_molecule_quantum());
-    else
-      for (int i = 0; i <= m_norbs/2; ++i) {
-        q.push_back(SpinQuantum(i*2, SpinSpace(0), total_symmetry_number()));
+    if (!m_Bogoliubov) q.push_back(effective_molecule_quantum());
+    else {
+      SpinQuantum q_max = effective_molecule_quantum();
+      for (int n = 0; n <= q_max.get_n(); n+=2) {
+        q.push_back(SpinQuantum(n, q_max.get_s(), q_max.get_symm()));
       }
+    }
     return q;
   }
   std::vector<double>& get_orbenergies() {return m_orbenergies;}
   int getHFQuanta(const SpinBlock& b) const;
-  const bool &do_cd() const {return m_do_cd;}
-  bool &do_cd() {return m_do_cd;}
+  const bool &do_npdm_ops() const {return m_do_npdm_ops;}
+  bool &do_npdm_ops() {return m_do_npdm_ops;}
+  const bool &do_npdm_in_core() const {return m_do_npdm_in_core;}
+  bool &do_npdm_in_core() {return m_do_npdm_in_core;}
+  const bool &new_npdm_code() const {return m_new_npdm_code;}
+  bool &new_npdm_code() {return m_new_npdm_code;}
   int slater_size() const {return m_norbs;}
   const std::vector<int> &reorder_vector() {return m_reorder;}
   bool spinAdapted() {return m_spinAdapted;}

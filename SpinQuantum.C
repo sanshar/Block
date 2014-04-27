@@ -112,14 +112,9 @@ ostream& operator<< (ostream& os, const SpinQuantum q)
 
 bool SpinQuantum::can_complement (SpinQuantum q)
 {
-  int q_try = 0;
-  if (dmrginp.hamiltonian() == BCS) {
-    q_try = dmrginp.slater_size();
-  } else {
-    q_try = dmrginp.total_particle_number() - q.get_n();
-  }
+  int q_try = dmrginp.total_particle_number() - q.get_n();
   int s_try = abs(dmrginp.total_spin_number().getirrep() - q.get_s().getirrep());
-  return (abs (s_try) <= q_try);
+  return (abs(s_try) <= q_try);
 }
 
 vector<SpinQuantum> SpinQuantum::get_complement () const
@@ -127,9 +122,9 @@ vector<SpinQuantum> SpinQuantum::get_complement () const
   vector<SpinQuantum> quanta;
   vector<int> ns;
   if (dmrginp.hamiltonian() == BCS) {
-    for (int i = 0; i <= dmrginp.slater_size(); i+=2) {
-      if (i-particleNumber < 0) continue;
-      ns.push_back(i-particleNumber);
+    for (int n = 0; n <= dmrginp.total_particle_number(); n+=2) {
+      if (n-particleNumber < 0) continue;
+      ns.push_back(n-particleNumber);
     }
   } else {
     ns.push_back(dmrginp.total_particle_number() - particleNumber);

@@ -19,6 +19,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "StateInfo.h"
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/base_object.hpp>
+//FIXME
+#include <boost/serialization/map.hpp>
+#include <boost/serialization/string.hpp>
+//<<
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 
@@ -29,10 +33,17 @@ class SpinBlock;
 //when bra and ket states are different then DES cannot be made by just taking the transpose of
 //CRE. In such a case we need to explicitly make the operators in the second row. 
 enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESCOMP, 
-	      DES, DES_DES, CRE_CRECOMP, DES_CRE, DES_CRECOMP, CRE_DES_DESCOMP};
+              DES, DES_DES, CRE_CRECOMP, DES_CRE, DES_CRECOMP, CRE_DES_DESCOMP, OVERLAP,
+              // Extra (empty) operator classes for RI-approx NPDM
+              RI_3INDEX, RI_4INDEX,
+              // Extra 3PDM operators
+              CRE_CRE_CRE, CRE_CRE_DES, CRE_DES_DES, CRE_DES_CRE,
+              // Extra 4PDM operators
+              DES_CRE_DES, DES_DES_CRE, DES_CRE_CRE, DES_DES_DES,
+              CRE_CRE_DES_DES, CRE_DES_CRE_DES, CRE_DES_DES_CRE, CRE_DES_DES_DES,
+              CRE_CRE_CRE_DES, CRE_CRE_DES_CRE, CRE_DES_CRE_CRE, CRE_CRE_CRE_CRE };
 
-enum CompType{CD, DD, CCD, C};
-
+enum CompType{CD, DD, CCD, C, CDD};
 
 template<class T> class Baseoperator  // The abstract class of an operator
 {
@@ -69,12 +80,18 @@ class SparseMatrix : public Baseoperator<Matrix>  // the sparse matrix represent
     void serialize(Archive & ar, const unsigned int version)
     {
       ar & orbs \
-	& deltaQuantum \
-	& fermion \
-	& initialised \
-	& built \
-	& allowedQuantaMatrix \
-	& operatorMatrix & Sign;
+         & deltaQuantum \
+         & quantum_ladder \
+         & build_pattern \
+         & fermion \
+         & initialised \
+         & built \
+         & built_on_disk \
+         & allowedQuantaMatrix \
+         & quantum_ladder \
+         & build_pattern \
+         & operatorMatrix \
+         & Sign;
     }
 
  protected:
@@ -83,11 +100,17 @@ class SparseMatrix : public Baseoperator<Matrix>  // the sparse matrix represent
   ObjectMatrix<char> allowedQuantaMatrix;  // some whether it is allowed?
   bool initialised;
   bool built;
+  bool built_on_disk;
   ObjectMatrix<Matrix> operatorMatrix;  // put the dense block in the place it should be
   std::vector<SpinQuantum> deltaQuantum;    // allowed quantum
   int Sign;
+  // With N-index ops (N>2), there are several ways to build them...
+  std::string build_pattern;
+  // ...and for each way we record the spin ladder components
+  std::map< std::string, std::vector<SpinQuantum> > quantum_ladder;
+
  public:
-  SparseMatrix() : orbs(2), initialised(false), built(false), Sign(1), fermion(false){};
+  SparseMatrix() : fermion(false), orbs(2), initialised(false), built(false), built_on_disk(false), Sign(1){};
   virtual ~SparseMatrix(){};
   int nrows() const { return allowedQuantaMatrix.nrows(); }
   int ncols() const { return allowedQuantaMatrix.ncols(); }
@@ -109,6 +132,10 @@ class SparseMatrix : public Baseoperator<Matrix>  // the sparse matrix represent
   SpinSpace get_spin(int i=0) const  { return deltaQuantum[i].get_s();}
   IrrepSpace get_symm(int i=0) const  { return deltaQuantum[i].get_symm();}
   std::vector<SpinQuantum> get_deltaQuantum() const { return deltaQuantum; }
+  std::map< std::string, std::vector<SpinQuantum> >  get_quantum_ladder() const { return quantum_ladder; }
+  std::map< std::string, std::vector<SpinQuantum> >& set_quantum_ladder() { return quantum_ladder; }
+  std::string  get_build_pattern() const { return build_pattern; }
+  std::string& set_build_pattern() { return build_pattern; }
   SpinQuantum get_deltaQuantum(int i) const { return deltaQuantum[i]; }
   int get_orbs(int i) const 
   { 
@@ -122,6 +149,8 @@ class SparseMatrix : public Baseoperator<Matrix>  // the sparse matrix represent
   std::vector<int>& set_orbs() { return orbs; }
   const bool& get_built() const { return built; }
   bool& set_built() { return built; }  
+  const bool& get_built_on_disk() const { return built_on_disk; }
+  bool& set_built_on_disk() { return built_on_disk; }
   double get_scaling(SpinQuantum leftq, SpinQuantum rightq) const {return 1.0;}
 
   void resize(int n, int c) { operatorMatrix.ReSize(n, c); allowedQuantaMatrix.ReSize(n, c); }

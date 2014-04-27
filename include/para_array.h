@@ -77,13 +77,14 @@ public:
 
   virtual bool has(int i) const {}
   virtual bool has(int i, int j) const {}
-  virtual bool has(int i=-1, int j=-1, int k=-1) const {};
+  virtual bool has(int i=-1, int j=-1, int k=-1, int l=-1) const {};
   virtual bool has(const std::vector<int>& orbs) const {};
   virtual const std::vector<T>& get_store() const {};
   virtual const std::vector<int>& get_indices() const {};
-  virtual int trimap(int i, int j) const {};
+  virtual int trimap_2d(int i, int j) const {};
   virtual T& get(const std::vector<int>& orbs)=0;
-  virtual const std::pair<int, int> unmap_local_index(int i) const {};
+  virtual const std::vector<int> unmap_local_index(int i) const { assert(false); };
+
 };
 
 /// A wrapper for a single element 
@@ -99,6 +100,7 @@ template<class T> class para_array_0d : public para_sparse_vector<T>
 public:
 
   /// implements para_sparse_vector interface by forwarding to para_array_1d
+  const int num_indices() { return 0; }
 
   void clear() { store.clear(); }
   int local_nnz() const { return store.local_nnz(); }
@@ -109,9 +111,9 @@ public:
   T& get_global_element(int i) { return store.get_global_element(i); }
   T& operator()(const std::vector<int>& orbs) { return store.get_local_element(orbs[0]); }
   const T& operator()(const std::vector<int>& orbs) const { return store.get_local_element(orbs[0]); }
-  T& operator()(int i=-1, int j=-1, int k=-1) { return store(0); }
-  const T& operator()(int i=-1, int j=-1, int k=-1) const { return store(0); }
-  bool has_local_index(int i, int j=-1, int k=-1) const { return store.has_local_index(i); }
+  T& operator()(int i=-1, int j=-1, int k=-1, int l=-1) { return store(0); }
+  const T& operator()(int i=-1, int j=-1, int k=-1, int l=-1) const { return store(0); }
+  bool has_local_index(int i, int j=-1, int k=-1, int l=-1) const { return store.has_local_index(i); }
   const std::vector<T>& get_store() const { return store.get_store(); }
   void set_indices() 
   { 
@@ -162,6 +164,9 @@ template<class T> class para_array_1d : public para_sparse_vector<T>
 public:
   para_array_1d() : stored_local(true) {}
   
+  // This is designed for 1-index operators
+  const int num_indices() { return 1; }
+
   /// clears all elements
   void clear()
   {
@@ -174,11 +179,11 @@ public:
   const std::vector<int>& get_local_indices() const { return local_indices; }
 
   /// query whether elements are non-null, locally and globally
-  bool has(int i, int j=-1, int k=-1) const
+  bool has(int i, int j=-1, int k=-1, int l=-1) const
   {
     return has_global_index(i); 
   }
-  bool has_local_index(int i, int j=-1, int k=-1) const 
+  bool has_local_index(int i, int j=-1, int k=-1, int l=-1) const 
   { 
     return local_indices_map[i] != -1; 
   }
@@ -239,7 +244,7 @@ public:
 
 
   /// returns value at index i
-  const T& operator()(int i, int j=-1, int k=-1) const
+  const T& operator()(int i, int j=-1, int k=-1, int l=-1) const
   {
     assert(has_global_index(i));
     if (is_distributed())		/**< if storage is distributed, make sure index is available on current processor */
@@ -248,7 +253,7 @@ public:
   }    
 
   /// returns value at index i
-  T& operator()(int i, int j=-1, int k=-1)
+  T& operator()(int i, int j=-1, int k=-1, int l=-1)
   {
     assert(has_global_index(i));
     if (is_distributed())
@@ -332,17 +337,17 @@ private:
 
 
 
-inline int tristore(int i)
+inline int tristore_2d(int i)
 {
   return i * (i + 1) / 2;
 }
 
-inline int trimap(int i, int j, int length, bool ut = false)
+inline int trimap_2d(int i, int j, int length, bool ut = false)
 {
   if (i>=j) 
     {
       //if (ut)
-      //return tristore(i) + j;
+      //return tristore_2d(i) + j;
       
       int halflen = length/2;
       //there are three slots
@@ -352,14 +357,14 @@ inline int trimap(int i, int j, int length, bool ut = false)
       
       //first check if our case is in slot 1
       if (i>=halflen && j >= halflen)
-	return tristore(length - j - 1) + length - i - 1;
+        return tristore_2d(length - j - 1) + length - i - 1;
       else if (i < halflen && j <halflen)
-	return tristore(length - halflen - 1) + length - halflen + tristore(i) + j;
+        return tristore_2d(length - halflen - 1) + length - halflen + tristore_2d(i) + j;
       else {
-	int base= tristore(length - halflen - 1) + length - halflen + tristore(halflen);
-	return base + (i-halflen)*(halflen) + (j);
+        int base= tristore_2d(length - halflen - 1) + length - halflen + tristore_2d(halflen);
+        return base + (i-halflen)*(halflen) + (j);
       }
-      //return tristore(length - j - 1) + length - i - 1;
+      //return tristore_2d(length - j - 1) + length - i - 1;
     }
   else 
     abort();
@@ -379,6 +384,9 @@ template<class T> class para_array_triang_2d : public para_sparse_vector<T>
 {
 public:
   para_array_triang_2d() : stored_local(true), upper_triangular(false) {}
+
+  // This is designed for 2-index operators
+  const int num_indices() { return 2; }
 
   /// exposes storage
   const std::vector<T>& get_store() const { return store; }	/**< deprecated */
@@ -455,37 +463,37 @@ public:
     return (*this)(i, j);
   }
   /// returns elements at i, j
-  T& operator()(int i, int j, int k=-1)
+  T& operator()(int i, int j, int k=-1, int l=-1)
   {
     assert (i >= j);
     assert(has(i, j));
     if (!stored_local)
-      assert(has_local_index(trimap(i, j)));
-    return store[trimap(i, j)];
+      assert(has_local_index(trimap_2d(i, j)));
+    return store[trimap_2d(i, j)];
   }
-  const T& operator()(int i, int j, int k=-1) const
+  const T& operator()(int i, int j, int k=-1, int l=-1) const
   {
     assert (i >= j);
     assert(has(i, j));
     if (!stored_local)
-      assert(has_local_index(trimap(i, j)));
-    return store[trimap(i, j)];
+      assert(has_local_index(trimap_2d(i, j)));
+    return store[trimap_2d(i, j)];
   }
 
   /// query whether elements are non-null
-  bool has(int i, int j, int k=-1) const { return has_global_index(trimap(i, j)); }
+  bool has(int i, int j, int k=-1, int l=-1) const { return has_global_index(trimap_2d(i, j)); }
   bool has(const std::vector<int>& orbs) const
   {
     assert(orbs.size() == 2);
     return has(orbs[0], orbs[1]);
   }
-  bool has_global_index(int i, int j, int k=-1) const
+  bool has_global_index(int i, int j, int k=-1, int l=-1) const
   {
-    return has_global_index(trimap(i, j));
+    return has_global_index(trimap_2d(i, j));
   }
-  bool has_local_index(int i, int j, int k=-1) const
+  bool has_local_index(int i, int j, int k=-1, int l=-1) const
   {
-    return has_local_index(trimap(i, j));
+    return has_local_index(trimap_2d(i, j));
   }
   bool has_global_index(int i) const
   {
@@ -503,9 +511,9 @@ public:
   }
 
   /// returns 1d index from i, j
-  int trimap(int i, int j) const
+  int trimap_2d(int i, int j) const
   {
-    return ::trimap(i, j, length, upper_triangular);
+    return ::trimap_2d(i, j, length, upper_triangular);
   }
 
   /// returns i j for ith element of global storage
@@ -514,16 +522,20 @@ public:
     return global_index_pair[i];
   }
   /// returns i j for ith element of local storage
-  const std::pair<int, int> unmap_local_index(int i) const
+  const std::vector<int> unmap_local_index(int i) const
   {
-    return local_index_pair[i];
+//MAW    return local_index_pair[i];
+    std::vector<int> ret(2);
+    ret[0] = local_index_pair[i].first;
+    ret[1] = local_index_pair[i].second;
+    return ret;
   }
 
   para_array_triang_2d<T>* clone() const { return new para_array_triang_2d<T>(*this); }
 
   void add_local_indices(int i, int j)
   {
-    int index = trimap(i, j);
+    int index = trimap_2d(i, j);
     local_indices.push_back(index);
     local_indices_map[index]= index;
     // I am not updating local_index_pair because it seems to do nothing
@@ -545,13 +557,13 @@ public:
     length = len;
     upper_triangular = ut;
 
-    int length_1d = tristore(len);
+    int length_1d = tristore_2d(len);
 
     /* this part is different from set_indices */
     for (std::vector<std::pair<int, int> >::const_iterator ptr = occupied.begin(); 
 	 ptr != occupied.end(); ++ptr)
       {
-	global_indices.push_back(trimap(ptr->first, ptr->second));
+	global_indices.push_back(trimap_2d(ptr->first, ptr->second));
 	global_index_pair.push_back(*ptr);
       }
 				 
@@ -573,7 +585,7 @@ private:
    */
   void setup_local_indices()
   {
-    int length_1d = tristore(length);
+    int length_1d = tristore_2d(length);
     if (stored_local)
       {
 	local_indices = global_indices;
@@ -751,9 +763,12 @@ public:
     return global_index_pair[i];
   }
   /// returns i j for ith element of local storage
-  const std::pair<int, int> unmap_local_index(int i) const
+  const std::vector<int> unmap_local_index(int i) const
   {
-    return local_index_pair[i];
+    std::vector<int> ret(2);
+    ret[0] = local_index_pair[i].first;
+    ret[1] = local_index_pair[i].second;
+    return ret;
   }
 
   para_array_2d<T>* clone() const { return new para_array_2d<T>(*this); }

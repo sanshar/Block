@@ -5,10 +5,9 @@ cd c2_d2h
 mpirun -np 2 ../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 2  1.0e-6 -74.1299567218  -74.1255003600
 echo "testing 2-pdm for c2_d2h..."
-python ../test_twopdm.py spatial_twopdm.0.0 spat_twopdm.0.0.bkp 1e-7
-python ../test_twopdm.py spatial_twopdm.1.1 spat_twopdm.1.1.bkp 1e-7
+python ../test_twopdm.py spatial_twopdm.0.0.txt spat_twopdm.0.0.txt 1e-7
+python ../test_twopdm.py spatial_twopdm.1.1.txt spat_twopdm.1.1.txt 1e-7
 cd ../
-
 
 #this just tests the lowest energy calculation. The run here uses no symmetry
 echo "performing energy test on h2o..."
@@ -22,14 +21,14 @@ echo "performing reorder, 1-pdm test on hubbard..."
 cd hubbard
 mpirun -np 2  ../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 1  1.0e-6 -6.56819216
-python ../test_onepdm.py spatial_onepdm.0.0 spat_onepdm.0.0 1e-7
+python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
 cd ../
 
 echo "performing nonspinadapted test on hubbard..."
 cd hubbard_nospin
 mpirun -np 2  ../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 1  1.0e-6 -6.56819216
-python ../test_onepdm.py spatial_onepdm.0.0 spat_onepdm.0.0 1e-7
+python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
 cd ../
 
 echo "performing heisenberg test..."
@@ -57,8 +56,8 @@ cd bcs
 mpirun -np 2 ../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 1  1.0e-6 -1.4816808342
 echo "testing onepdm and pairing matrix for bcs calculation..."
-python ../test_onepdm.py onepdm.0.0 ref_onepdm.0.0 1e-7
-python ../test_onepdm.py spatial_pairmat.0.0 spat_pairmat.0.0 1e-7
+python ../test_onepdm.py onepdm.0.0.txt ref_onepdm.0.0 1e-7
+python ../test_onepdm.py spatial_pairmat.0.0.txt spat_pairmat.0.0 1e-7
 cd ../
 
 echo "testing state specific excited states..."
@@ -101,6 +100,20 @@ python ../test_energy.py 2 1e-6 -55.5836757776 -55.3816201164
 echo "testing c5v irrep4 state..."
 mpirun -np 2 ../../block.spin_adapted dmrg_irrep4.conf >dmrg.out
 python ../test_energy.py 2 1e-6 -55.8015784472 -55.4362910647
+cd ../
+
+echo "testing 3pdm, 4pdm and NEVPT2 A16_matrix for h2o_small"
+cd npdm_h2o_small
+echo "testing 3pdm..."
+mpirun -np 2 ../../block.spin_adapted dmrg3.conf >dmrg.out
+python ../test_threepdm.py spatial_threepdm.0.0.txt spat_threepdm.0.0.txt 1e-7
+echo "testing 4pdm..."
+mpirun -np 2 ../../block.spin_adapted dmrg4.conf >dmrg.out
+python ../test_fourpdm.py spatial_fourpdm.0.0.txt spat_fourpdm.0.0.txt 1e-7
+echo "testing A16_matrix..."
+rm -f partial*bin A16_matrix*txt
+mpirun -np 2 ../../block.spin_adapted dmrgA16.conf >dmrg.out
+python ../test_threepdm.py A16_matrix.0.0.txt A16_matrix.0.0.ref 1e-7
 cd ../
 
 ./clean
