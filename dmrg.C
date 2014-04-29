@@ -38,6 +38,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "rotationmat.h"
 #include "density.h"
 #include "sweep.h"
+#include "sweepCompress.h"
 #include "BaseOperator.h"
 #include "dmrg_wrapper.h"
 
@@ -60,6 +61,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 void calculateOverlap();
 #endif
 void dmrg(double sweep_tol);
+void compress(double sweep_tol, int targetState, int baseState);
 void restart(double sweep_tol, bool reset_iter);
 void dmrg_stateSpecific(double sweep_tol, int targetState);
 void ReadInput(char* conf);
@@ -124,8 +126,25 @@ int calldmrg(char* input, char* output)
   bool direction_copy; int restartsize_copy;
   Matrix O, H;
 
+
+
+
   switch(dmrginp.calc_type()) {
 
+  case (COMPRESS):
+
+    bool direction; int restartsize;
+    sweepParams.restorestate(direction, restartsize);
+    sweepParams.set_sweep_iter() = 0;
+    restartsize = 0;
+    //this genblock is required to generate all the nontranspose operators
+    dmrginp.setimplicitTranspose() = false;
+    SweepGenblock::do_one(sweepParams, false, false, false, restartsize, 0, 0);
+
+    int targetState, baseState;
+    targetState = 1; baseState = 0;
+    compress(sweep_tol, targetState, baseState);
+    break;
   case (CALCOVERLAP):
     pout.precision(12);
     if (mpigetrank() == 0) {
@@ -492,6 +511,58 @@ void dmrg(double sweep_tol)
     if (dmrginp.outputlevel() > 0)
       pout << "ALL STATE SPECIFIC CALCUALTIONS FINISHED"<<endl;
   }
+}
+
+void compress(double sweep_tol, int targetState, int baseState)
+{
+  double last_fe = 10.e6;
+  double last_be = 10.e6;
+  double old_fe = 0.;
+  double old_be = 0.;
+  SweepParams sweepParams;
+
+  int old_states=sweepParams.get_keep_states();
+  int new_states;
+  double old_error=0.0;
+  double old_energy=0.0;
+  // warm up sweep ...
+  bool dodiis = false;
+
+  int domoreIter = 0;
+  bool direction;
+
+  sweepParams.current_root() = -1;
+  last_fe = SweepCompress::do_one(sweepParams, true, true, false, 0, targetState, baseState);
+  direction = false;
+  while ( true)
+    {
+      old_fe = last_fe;
+      old_be = last_be;
+      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+	break;
+      last_be = SweepCompress::do_one(sweepParams, false, false, false, 0, targetState, baseState);
+      direction = true;
+      if (dmrginp.outputlevel() > 0) 
+	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      
+      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+	break;
+      
+      //For obtaining the extrapolated energy
+      old_states=sweepParams.get_keep_states();
+      new_states=sweepParams.get_keep_states_ls();
+      
+      last_fe = SweepCompress::do_one(sweepParams, false, true, false, 0, targetState, baseState);
+      direction = false;
+      
+      new_states=sweepParams.get_keep_states();
+      
+      
+      if (dmrginp.outputlevel() > 0)
+	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      
+    }
+  
 }
 
 

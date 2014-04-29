@@ -43,7 +43,7 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
   else 
     e.ReSize(0);
 
-  //bool haveEnoughStates = (e.Ncols()<= nroots || e.Ncols() <= currentRoot) ? false : true;
+
   bool haveEnoughStates = (e.Ncols()<= nroots) ? false : true;
 #ifndef SERIAL
   mpi::communicator world;
@@ -80,6 +80,14 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
 	lowerStates.resize(0);
 	
       Linear::block_davidson(solution, e, tol, warmUp, davidson_f, useprecond, currentRoot, lowerStates);
+
+    }
+    else if (dmrginp.solve_method() == CONJUGATE_GRADIENT) {
+      solution.resize(nroots);
+      multiply_h davidson_f(big, onedot);
+      GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise, currentRoot); 
+
+      Linear::ConjugateGradient(solution[0], e, e(1), tol, davidson_f, lowerStates);
 
     }
     else {

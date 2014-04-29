@@ -391,3 +391,57 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
     }
 }
 
+//solves the equation (H-E)|psi_1> = -QV|\Psi_0>  where lowerState[0] contains |\Psi_0> to enforce orthogonality (Q), and lowerState[1] contains V|\Psi_0> so we can calculate its projection in the krylov space 
+//the algorithm is taken from wikipedia page
+void SpinAdapted::Linear::ConjugateGradient(Wavefunction& xi, DiagonalMatrix& h_diag, double E0, double normtol, Davidson_functor& h_multiply, std::vector<Wavefunction> &lowerStates)
+{
+
+  pout.precision (12);
+#ifndef SERIAL
+  mpi::communicator world;
+#endif
+  int iter = 0;
+  double levelshift = 0.0;
+
+  Wavefunction b = lowerStates[1];
+  //make b[0] orthogonal to lowerStates[0]
+  double overlap = DotProduct(b, lowerStates[0]);
+  double overlap2 = DotProduct(lowerStates[0], lowerStates[0]);
+  ScaleAdd(-overlap/overlap2, lowerStates[0], b);    
+
+  //normalise all the guess roots
+  if(mpigetrank() == 0) {
+    Normalise(xi);  
+  }
+  
+  Wavefunction pi, ri; 
+  ri=xi; ri.Clear();
+  h_multiply(xi, ri);
+  ScaleAdd(-E0, xi, ri); // (H-E0)|psi>
+
+  ScaleAdd(-1.0, lowerStates[1], ri);
+  Scale(-1.0, ri);
+  pi = ri;
+
+  double oldError = DotProduct(ri, ri);
+  while(true) {
+    Wavefunction Hp = pi; Hp.Clear();
+    h_multiply(pi, Hp);
+    ScaleAdd(-E0, pi, Hp); // (H-E0)|psi>
+
+    double alpha = oldError/DotProduct(pi, Hp);
+
+    ScaleAdd(alpha, pi, xi);
+    ScaleAdd(-alpha, Hp, ri);
+
+    double Error = DotProduct(ri, ri);
+    if (Error > normtol) 
+      return;
+    else {      
+      double beta = Error/oldError;
+      oldError = Error;
+      ScaleAdd(1.0/beta, ri, pi);
+      Scale(beta, pi);
+    }
+  }
+}

@@ -748,6 +748,109 @@ void compute_two_pdm_0_3_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   */
 }
 
+
+void compute_two_pdm_0_3_1_notranspose(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, array_4d<double>& twopdm)
+{
+  SpinBlock* leftBlock = big.get_leftBlock();
+  SpinBlock* rightBlock = big.get_rightBlock();
+  SpinBlock* dotBlock = leftBlock->get_rightBlock();
+
+  int dotindex = dotBlock->get_sites()[0];
+  int jx = dotindex;
+
+  boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_array(CRE).get_local_element(0)[0];//dotBlock->get_op_rep(CRE_S1, dotindex);
+  boost::shared_ptr<SparseMatrix> dotop0d = dotBlock->get_op_array(DES).get_local_element(0)[0];//dotBlock->get_op_rep(CRE_S1, dotindex);
+  boost::shared_ptr<SparseMatrix> dotop1  = dotBlock->get_op_array(CRE_CRE).get_local_element(0)[0];//dotBlock->get_op_rep(CRE_CRE_S0, dotindex, dotindex);
+  boost::shared_ptr<SparseMatrix> dotop2  = dotBlock->get_op_array(CRE_CRE).get_local_element(0)[1];//dotBlock->get_op_rep(CRE_CRE_S2, dotindex, dotindex);
+
+  Cre Dotop1, Dotop2;
+  Dotop1.set_orbs() = dotop0->get_orbs(); Dotop1.set_orbs().push_back(dotindex); Dotop1.set_orbs().push_back(dotindex);
+  Dotop1.set_initialised() = true;
+  Dotop1.set_fermion() = true;
+  Dotop1.set_deltaQuantum(1, (dotop1->get_deltaQuantum(0) - dotop0->get_deltaQuantum(0))[0]);
+  Dotop1.allocate(dotBlock->get_stateInfo());
+  operatorfunctions::Product(dotBlock, *dotop1, *dotop0d, Dotop1, 1.0);
+
+  Dotop2.set_orbs() = dotop0->get_orbs(); Dotop2.set_orbs().push_back(dotindex); Dotop2.set_orbs().push_back(dotindex);
+  Dotop2.set_initialised() = true;
+  Dotop2.set_fermion() = true;
+  Dotop2.set_deltaQuantum(1, (dotop2->get_deltaQuantum(0) - dotop0->get_deltaQuantum(0))[0]);
+  Dotop2.allocate(dotBlock->get_stateInfo());
+  operatorfunctions::Product(dotBlock, *dotop2, *dotop0d, Dotop2, 1.0);
+        
+#ifdef _OPENMP
+#pragma omp parallel default(shared)
+#endif
+  {
+  SparseMatrix *leftop = 0;
+  int dsize = rightBlock->get_op_array(DES).get_size();
+#ifdef _OPENMP
+#pragma omp for schedule(guided) nowait
+#endif
+  for (int k =0; k <dsize; k++)
+    {
+      SparseMatrix& rightop = *rightBlock->get_op_array(DES).get_local_element(k)[0];
+      int kx = rightop.get_orbs(0);
+
+      vector<double> expectations;
+      spinExpectation(wave1, wave2, *leftop, Dotop1, rightop, big, expectations, false);
+      spinExpectation(wave1, wave2, *leftop, Dotop2, rightop, big, expectations, false);
+      vector<int> indices(4,0);
+      indices[0] = jx; indices[1] = jx; indices[2] = jx; indices[3] = kx;
+      spin_to_nonspin(indices, expectations, twopdm, CC_D_D, false);
+    }
+  }
+
+
+  //******
+  {
+    dotop0 = dotBlock->get_op_array(CRE).get_local_element(0)[0];//dotBlock->get_op_rep(CRE_S1, dotindex);
+    dotop0d = dotBlock->get_op_array(DES).get_local_element(0)[0];//dotBlock->get_op_rep(CRE_S1, dotindex);
+    dotop1  = dotBlock->get_op_array(DES_DES).get_local_element(0)[0];//dotBlock->get_op_rep(CRE_CRE_S0, dotindex, dotindex);
+    dotop2  = dotBlock->get_op_array(DES_DES).get_local_element(0)[1];//dotBlock->get_op_rep(CRE_CRE_S2, dotindex, dotindex);
+    
+    Cre Dotop1, Dotop2;
+    Dotop1.set_orbs() = dotop0->get_orbs(); Dotop1.set_orbs().push_back(dotindex); Dotop1.set_orbs().push_back(dotindex);
+    Dotop1.set_initialised() = true;
+    Dotop1.set_fermion() = true;
+    Dotop1.set_deltaQuantum(1, (dotop1->get_deltaQuantum(0) + dotop0->get_deltaQuantum(0))[0]);
+    Dotop1.allocate(dotBlock->get_stateInfo());
+    operatorfunctions::Product(dotBlock, *dotop0, *dotop1, Dotop1, 1.0);
+    
+    Dotop2.set_orbs() = dotop0->get_orbs(); Dotop2.set_orbs().push_back(dotindex); Dotop2.set_orbs().push_back(dotindex);
+    Dotop2.set_initialised() = true;
+    Dotop2.set_fermion() = true;
+    Dotop2.set_deltaQuantum(1, (dotop2->get_deltaQuantum(0) + dotop0->get_deltaQuantum(0))[0]);
+    Dotop2.allocate(dotBlock->get_stateInfo());
+    operatorfunctions::Product(dotBlock, *dotop0, *dotop2, Dotop2, 1.0);
+    
+#ifdef _OPENMP
+#pragma omp parallel default(shared)
+#endif
+    {
+      SparseMatrix *leftop = 0;
+      int dsize = rightBlock->get_op_array(CRE).get_size();
+#ifdef _OPENMP
+#pragma omp for schedule(guided) nowait
+#endif
+      for (int k =0; k <dsize; k++)
+	{
+	  SparseMatrix& rightop = *rightBlock->get_op_array(CRE).get_local_element(k)[0];
+	  int kx = rightop.get_orbs(0);
+	  
+	  vector<double> expectations;
+	  spinExpectation(wave1, wave2, *leftop, Dotop1, rightop, big, expectations, false);
+	  spinExpectation(wave1, wave2, *leftop, Dotop2, rightop, big, expectations, false);
+	  vector<int> indices(4,0);
+	  indices[0] = kx; indices[1] = jx; indices[2] = jx; indices[3] = jx;
+	  spin_to_nonspin(indices, expectations, twopdm, CC_D_D, false);
+	}
+    }
+  }
+
+}
+
+
 void compute_two_pdm_3_0_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, array_4d<double>& twopdm)
 {
   SpinBlock* leftBlock = big.get_leftBlock()->get_leftBlock();

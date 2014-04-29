@@ -481,6 +481,8 @@ SpinAdapted::Input::Input(const string& config_name) {
 	m_calc_type = CALCOVERLAP;
       else if (boost::iequals(keyword,  "calchamiltonian"))
 	m_calc_type = CALCHAMILTONIAN;
+      else if (boost::iequals(keyword,  "compress"))
+	m_calc_type = COMPRESS;
       else if (boost::iequals(keyword,  "maxj")) {
 	if (tok.size() !=  2) {
 	  pout << "keyword maxj should be followed by a single integer and then an end line."<<endl;

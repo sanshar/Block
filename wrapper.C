@@ -23,7 +23,10 @@ void ReadInputFromC(char* conf, int outputlevel) {
 }
 
 void readMPSFromDiskAndInitializeStaticVariables(int mpsindex) {
-  MPS::sweepIters = dmrginp.last_site()/2-2;
+  if(!dmrginp.spinAdapted())
+    MPS::sweepIters = dmrginp.last_site()/2-2;
+  else
+    MPS::sweepIters = dmrginp.last_site()-2;
   MPS::spinAdapted = false;
   for (int i=0; i<MPS::sweepIters+2; i++)
     MPS::siteBlocks.push_back(SpinBlock(i, i, false)); //alway make transpose operators as well
@@ -40,6 +43,21 @@ void readMPSFromDiskAndInitializeStaticVariables(int mpsindex) {
 
 }
 
+void test()
+{
+  MPS statea(0);
+  double o, h;
+  calcHamiltonianAndOverlap(statea, statea, h, o);
+  cout << o<<"  "<<h<<endl;
+  MPS stateb(1);
+  calcHamiltonianAndOverlap(stateb, statea, h, o);
+  cout << o<<"  "<<h<<endl;
+  stateb.normalize();
+  calcHamiltonianAndOverlap(stateb, stateb, h, o);
+  cout << o<<"  "<<h<<endl;
+  calcHamiltonianAndOverlap(stateb, statea, h, o);
+  cout << o<<"  "<<h<<endl;
+}
 
 void evaluateOverlapAndHamiltonian(long *occ, int length, double* o, double* h) {
   MPS dmrgc(occ, length);

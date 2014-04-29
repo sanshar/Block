@@ -104,7 +104,7 @@ class SpinBlock
   const boost::shared_ptr<TwoElectronArray> get_twoInt() const {return twoInt;}
   double memoryUsed();
   void addAdditionalCompOps();
-  const StateInfo& get_stateInfo() const {return braStateInfo;}
+  const StateInfo& get_stateInfo() const {return ketStateInfo;}
   const StateInfo& get_braStateInfo() const {return braStateInfo;}
   const StateInfo& get_ketStateInfo() const {return ketStateInfo;}
   static std::vector<int> make_complement(const std::vector<int>& sites);

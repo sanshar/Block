@@ -259,9 +259,9 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   {
     if (rotateMatrix [Q].Ncols () != 0)
       {
-newQuanta.push_back (braStateInfo.quanta [Q]);
-newQuantaStates.push_back (rotateMatrix [Q].Ncols ());
-newQuantaMap.push_back (Q);
+	newQuanta.push_back (braStateInfo.quanta [Q]);
+	newQuantaStates.push_back (rotateMatrix [Q].Ncols ());
+	newQuantaMap.push_back (Q);
       }
   }
   StateInfo newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
