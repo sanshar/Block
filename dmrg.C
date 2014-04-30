@@ -99,12 +99,15 @@ using namespace SpinAdapted;
 
 int calldmrg(char* input, char* output)
 {
-  license();
+  streambuf *backup;
+  backup = std::cout.rdbuf();
+  ofstream file;
   if (output != 0) {
-    ofstream file;
     file.open(output);
     cout.rdbuf(file.rdbuf());
   }
+
+  license();
   ReadInput(input);
   MAX_THRD = dmrginp.thrds_per_node()[mpigetrank()];
 #ifdef _OPENMP
@@ -230,6 +233,8 @@ int calldmrg(char* input, char* output)
     Npdm::npdm_restart(2);
     break;
   }
+
+  cout.rdbuf(backup);
 
   return 0;
 }
