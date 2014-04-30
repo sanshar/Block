@@ -77,7 +77,7 @@ ifeq ($(notdir $(firstword $(CXX))),icpc)
       OPENMP_FLAGS= -openmp -D_OPENMP 
    endif
 # Intel compiler
-	OPT = -DNDEBUG -O3 -funroll-loops 
+	OPT = -DNDEBUG -O3 -funroll-loops  -fPIC
 #	OPT = -g 
 	CXX = icc
 endif
@@ -87,7 +87,7 @@ ifeq ($(notdir $(firstword $(CXX))),g++)
       OPENMP_FLAGS= -fopenmp -D_OPENMP 
    endif
 # GNU compiler
-	OPT = -DNDEBUG -O3 
+	OPT = -DNDEBUG -O3 -fPIC
 #	OPT = -g
 endif
 
@@ -137,11 +137,15 @@ OBJ_spin_library=$(SRC_spin_library:.C=.o)
 
 all	: $(EXECUTABLE) libqcdmrg.a OH
 
-library : libqcdmrg.a $(NEWMATLIB)/libnewmat.a 
+library : libqcdmrg.a $(NEWMATLIB)/libnewmat.a libqcdmrg.so
+
 
 libqcdmrg.a : $(OBJ_spin_library)
 	$(AR) $(ARFLAGS) $@ $^
 	$(RANLIB) $@
+
+libqcdmrg.so : $(OBJ_spin_library)
+	$(CXX) -shared -o $@ $^ $(LIBS)
 
 $(EXECUTABLE) : $(OBJ_spin_adapted) $(NEWMATLIB)/libnewmat.a 
 	$(CXX)   $(FLAGS) $(OPT) -o  $(EXECUTABLE) $(OBJ_spin_adapted) $(LIBS)
