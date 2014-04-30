@@ -398,7 +398,12 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     int istate = dmrginp.setStateSpecific() ? sweepParams.current_root() : j;
     if (mpigetrank() == 0) {
 #ifndef MOLPRO
-      printf("\t\t\t M = %6i  state = %4i  Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), istate, finalError, finalEnergy[j]+dmrginp.get_coreenergy());
+//    printf("\t\t\t M = %6i  state = %4i  Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), istate, finalError, finalEnergy[j]+dmrginp.get_coreenergy());
+      pout << "\t\t\t M = " << setw(6) << sweepParams.get_keep_states()
+           << "  state = " << setw(4) << istate
+           << "  Largest Discarded Weight = " << setw(8) << setprecision(3) << scientific << finalError
+           << "  Sweep Energy = " << setw(20) << setprecision(10) << fixed << finalEnergy[j]+dmrginp.get_coreenergy()
+           << " " << endl;
 #else 
       //printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
       xout << "\t\t\t M = " <<  setw(6) << sweepParams.get_keep_states() ; 
