@@ -14,7 +14,6 @@ LAPACKBLAS =  -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
-USE_BTAS = yes
 USE_MKL = yes
 
 ifeq ($(USE_MKL), yes)
@@ -69,12 +68,6 @@ FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTI
          -I$(HOME)/modules/npdm -I$(HOME)/modules/two_index_ops -I$(HOME)/modules/three_index_ops -I$(HOME)/modules/four_index_ops -std=c++0x \
 	 -I$(HOME)/modules/ResponseTheory
 
-ifeq ($(USE_BTAS), yes)
-	FLAGS +=  -I$(BTAS)/include  -DUSE_BTAS
-	LIBS = -L$(BTAS)/lib -lbtas 
-else
-	LIBS = 
-endif
 
 LIBS +=  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp 
 MPI_OPT = -DSERIAL
@@ -131,9 +124,6 @@ SRC_spin_library =  modules/ResponseTheory/sweepCompress.C fciqmchelper.C dmrg.C
 
 #SRC_spin_library =  fciqmchelper.C fiedler.C IrrepSpace.C least_squares.C sweep_mps.C dmrg.C readinput.C save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C Schedule.C orbstring.C slater.C csf.C spinblock.C StateInfo.C set_spinblock_components.C op_components.C Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C linear.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C  modules/onepdm/sweep.C modules/onepdm/onepdm.C  modules/generate_blocks/sweep.C fci.C $(SRC_genetic) SpinSpace.C include/IntegralMatrix.C $(SRC_npdm)
 
-BTAS_source = btas/lib/Dreindex.C btas/lib/clapack.C btas/lib/libbtas.C
-
-BTAS_obj=$(BTAS_source:.C=.o)
 OBJ_OH+=$(SRC_OH:.C=.o)
 OBJ_spin_adapted=$(SRC_spin_adapted:.C=.o)
 OBJ_spin_library=$(SRC_spin_library:.C=.o)
@@ -147,33 +137,20 @@ OBJ_spin_library=$(SRC_spin_library:.C=.o)
 
 all	: $(EXECUTABLE) libqcdmrg.a OH
 
-library : libqcdmrg.a $(NEWMATLIB)/libnewmat.a $(BTAS)/lib/libbtas.a
+library : libqcdmrg.a $(NEWMATLIB)/libnewmat.a 
 
 libqcdmrg.a : $(OBJ_spin_library)
 	$(AR) $(ARFLAGS) $@ $^
 	$(RANLIB) $@
-ifeq ($(USE_BTAS), yes)
 
-OH : $(OBJ_OH) $(NEWMATLIB)/libnewmat.a $(BTAS)/lib/libbtas.a
-	$(CXX)   $(FLAGS) $(OPT) -o  OH $(OBJ_OH) $(LIBS)
-
-
-$(EXECUTABLE) : $(OBJ_spin_adapted) $(NEWMATLIB)/libnewmat.a $(BTAS)/lib/libbtas.a
-	$(CXX)   $(FLAGS) $(OPT) -o  $(EXECUTABLE) $(OBJ_spin_adapted) $(LIBS)
-else
 $(EXECUTABLE) : $(OBJ_spin_adapted) $(NEWMATLIB)/libnewmat.a 
 	$(CXX)   $(FLAGS) $(OPT) -o  $(EXECUTABLE) $(OBJ_spin_adapted) $(LIBS)
 
 OH : $(OBJ_OH) $(NEWMATLIB)/libnewmat.a 
 	$(CXX)   $(FLAGS) $(OPT) -o  OH $(OBJ_OH) $(LIBS)
 
-endif
-
 $(NEWMATLIB)/libnewmat.a : 
 	cd $(NEWMATLIB) && $(MAKE) -f makefile libnewmat.a
-
-$(BTAS)/lib/libbtas.a: $(BTAS_obj)
-	ar cr $(BTAS)/lib/libbtas.a $(BTAS_obj)
 
 clean:
 	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o modules/npdm/*.o $(NEWMATLIB)*.o libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a genetic/gaopt genetic/*.o btas/lib/*.o btas/lib/libbtas.a modules/two_index_ops/*.o modules/three_index_ops/*.o modules/four_index_ops/*.o

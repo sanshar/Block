@@ -19,134 +19,134 @@ void SpinBlock::setstoragetype(Storagetype st)
   {
     localstorage = true;
     if (has(CRE))
-      set_op_array(CRE).set_local() = true;
+      set_op_array(CRE)->set_local() = true;
     if (has(DES))
-      set_op_array(DES).set_local() = true;
+      set_op_array(DES)->set_local() = true;
     if (has(CRE_DES))
-      set_op_array(CRE_DES).set_local() = true;
+      set_op_array(CRE_DES)->set_local() = true;
     if (has(DES_CRE))
-      set_op_array(DES_CRE).set_local() = true;
+      set_op_array(DES_CRE)->set_local() = true;
     if (has(CRE_CRE))
-      set_op_array(CRE_CRE).set_local() = true;
+      set_op_array(CRE_CRE)->set_local() = true;
     if (has(DES_DES))
-      set_op_array(DES_DES).set_local() = true;
+      set_op_array(DES_DES)->set_local() = true;
     if (has(DES_DESCOMP))
-      set_op_array(DES_DESCOMP).set_local() = true;
+      set_op_array(DES_DESCOMP)->set_local() = true;
     if (has(CRE_CRECOMP))
-      set_op_array(CRE_CRECOMP).set_local() = true;
+      set_op_array(CRE_CRECOMP)->set_local() = true;
     if (has(CRE_DESCOMP))
-      set_op_array(CRE_DESCOMP).set_local() = true;
+      set_op_array(CRE_DESCOMP)->set_local() = true;
     if (has(DES_CRECOMP))
-      set_op_array(DES_CRECOMP).set_local() = true;
+      set_op_array(DES_CRECOMP)->set_local() = true;
     if (has(CRE_CRE_DESCOMP))
-      set_op_array(CRE_CRE_DESCOMP).set_local() = true;
+      set_op_array(CRE_CRE_DESCOMP)->set_local() = true;
     if (has(CRE_DES_DESCOMP))
-      set_op_array(CRE_DES_DESCOMP).set_local() = true;
+      set_op_array(CRE_DES_DESCOMP)->set_local() = true;
     // NPDM
     if (has(RI_3INDEX))
-      set_op_array(RI_3INDEX).set_local() = true;
+      set_op_array(RI_3INDEX)->set_local() = true;
     if (has(RI_4INDEX))
-      set_op_array(RI_4INDEX).set_local() = true;
+      set_op_array(RI_4INDEX)->set_local() = true;
     if (has(CRE_CRE_DES))
-      set_op_array(CRE_CRE_DES).set_local() = true;
+      set_op_array(CRE_CRE_DES)->set_local() = true;
     if (has(CRE_DES_DES))
-      set_op_array(CRE_DES_DES).set_local() = true;
+      set_op_array(CRE_DES_DES)->set_local() = true;
     if (has(CRE_DES_CRE))
-      set_op_array(CRE_DES_CRE).set_local() = true;
+      set_op_array(CRE_DES_CRE)->set_local() = true;
     if (has(CRE_CRE_CRE))
-      set_op_array(CRE_CRE_CRE).set_local() = true;
+      set_op_array(CRE_CRE_CRE)->set_local() = true;
     // 4PDM
     if (has(DES_CRE_DES))
-      set_op_array(DES_CRE_DES).set_local() = true;
+      set_op_array(DES_CRE_DES)->set_local() = true;
     if (has(DES_DES_CRE))
-      set_op_array(DES_DES_CRE).set_local() = true;
+      set_op_array(DES_DES_CRE)->set_local() = true;
     if (has(DES_CRE_CRE))
-      set_op_array(DES_CRE_CRE).set_local() = true;
+      set_op_array(DES_CRE_CRE)->set_local() = true;
     if (has(DES_DES_DES))
-      set_op_array(DES_DES_DES).set_local() = true;
+      set_op_array(DES_DES_DES)->set_local() = true;
     if (has(CRE_CRE_DES_DES))
-      set_op_array(CRE_CRE_DES_DES).set_local() = true;
+      set_op_array(CRE_CRE_DES_DES)->set_local() = true;
     if (has(CRE_DES_CRE_DES))
-      set_op_array(CRE_DES_CRE_DES).set_local() = true;
+      set_op_array(CRE_DES_CRE_DES)->set_local() = true;
     if (has(CRE_DES_DES_CRE))
-      set_op_array(CRE_DES_DES_CRE).set_local() = true;
+      set_op_array(CRE_DES_DES_CRE)->set_local() = true;
     if (has(CRE_DES_DES_DES))
-      set_op_array(CRE_DES_DES_DES).set_local() = true;
+      set_op_array(CRE_DES_DES_DES)->set_local() = true;
     if (has(CRE_CRE_CRE_DES))
-      set_op_array(CRE_CRE_CRE_DES).set_local() = true;
+      set_op_array(CRE_CRE_CRE_DES)->set_local() = true;
     if (has(CRE_CRE_DES_CRE))
-      set_op_array(CRE_CRE_DES_CRE).set_local() = true;
+      set_op_array(CRE_CRE_DES_CRE)->set_local() = true;
     if (has(CRE_DES_CRE_CRE))
-      set_op_array(CRE_DES_CRE_CRE).set_local() = true;
+      set_op_array(CRE_DES_CRE_CRE)->set_local() = true;
     if (has(CRE_CRE_CRE_CRE))
-      set_op_array(CRE_CRE_CRE_CRE).set_local() = true;
+      set_op_array(CRE_CRE_CRE_CRE)->set_local() = true;
 
   }
   else if (st == DISTRIBUTED_STORAGE)
   {
     localstorage = false;
     if (has(CRE))
-      set_op_array(CRE).set_local() = false;
+      set_op_array(CRE)->set_local() = false;
     if (has(DES))
-      set_op_array(DES).set_local() = false;
+      set_op_array(DES)->set_local() = false;
     if (has(CRE_DES))
-      set_op_array(CRE_DES).set_local() = false;
+      set_op_array(CRE_DES)->set_local() = false;
     if (has(DES_CRE))
-      set_op_array(DES_CRE).set_local() = false;
+      set_op_array(DES_CRE)->set_local() = false;
     if (has(CRE_CRE))
-      set_op_array(CRE_CRE).set_local() = false;
+      set_op_array(CRE_CRE)->set_local() = false;
     if (has(DES_DES))
-      set_op_array(DES_DES).set_local() = false;
+      set_op_array(DES_DES)->set_local() = false;
     if (has(DES_DESCOMP))
-      set_op_array(DES_DESCOMP).set_local() = false;
+      set_op_array(DES_DESCOMP)->set_local() = false;
     if (has(CRE_CRECOMP))
-      set_op_array(CRE_CRECOMP).set_local() = false;
+      set_op_array(CRE_CRECOMP)->set_local() = false;
     if (has(CRE_DESCOMP))
-      set_op_array(CRE_DESCOMP).set_local() = false;
+      set_op_array(CRE_DESCOMP)->set_local() = false;
     if (has(DES_CRECOMP))
-      set_op_array(DES_CRECOMP).set_local() = false;
+      set_op_array(DES_CRECOMP)->set_local() = false;
     if (has(CRE_CRE_DESCOMP))
-      set_op_array(CRE_CRE_DESCOMP).set_local() = false;
+      set_op_array(CRE_CRE_DESCOMP)->set_local() = false;
     if (has(CRE_DES_DESCOMP))
-      set_op_array(CRE_DES_DESCOMP).set_local() = false;
+      set_op_array(CRE_DES_DESCOMP)->set_local() = false;
     // NPDM
     if (has(RI_3INDEX))
-      set_op_array(RI_3INDEX).set_local() = false;
+      set_op_array(RI_3INDEX)->set_local() = false;
     if (has(RI_4INDEX))
-      set_op_array(RI_4INDEX).set_local() = false;
+      set_op_array(RI_4INDEX)->set_local() = false;
     if (has(CRE_CRE_DES))
-      set_op_array(CRE_CRE_DES).set_local() = false;
+      set_op_array(CRE_CRE_DES)->set_local() = false;
     if (has(CRE_DES_DES))
-      set_op_array(CRE_DES_DES).set_local() = false;
+      set_op_array(CRE_DES_DES)->set_local() = false;
     if (has(CRE_DES_CRE))
-      set_op_array(CRE_DES_CRE).set_local() = false;
+      set_op_array(CRE_DES_CRE)->set_local() = false;
     if (has(CRE_CRE_CRE))
-      set_op_array(CRE_CRE_CRE).set_local() = false;
+      set_op_array(CRE_CRE_CRE)->set_local() = false;
     // 4PDM
     if (has(DES_CRE_DES))
-      set_op_array(DES_CRE_DES).set_local() = false;
+      set_op_array(DES_CRE_DES)->set_local() = false;
     if (has(DES_DES_CRE))
-      set_op_array(DES_DES_CRE).set_local() = false;
+      set_op_array(DES_DES_CRE)->set_local() = false;
     if (has(DES_CRE_CRE))
-      set_op_array(DES_CRE_CRE).set_local() = false;
+      set_op_array(DES_CRE_CRE)->set_local() = false;
     if (has(DES_DES_DES))
-      set_op_array(DES_DES_DES).set_local() = false;
+      set_op_array(DES_DES_DES)->set_local() = false;
     if (has(CRE_CRE_DES_DES))
-      set_op_array(CRE_CRE_DES_DES).set_local() = false;
+      set_op_array(CRE_CRE_DES_DES)->set_local() = false;
     if (has(CRE_DES_CRE_DES))
-      set_op_array(CRE_DES_CRE_DES).set_local() = false;
+      set_op_array(CRE_DES_CRE_DES)->set_local() = false;
     if (has(CRE_DES_DES_CRE))
-      set_op_array(CRE_DES_DES_CRE).set_local() = false;
+      set_op_array(CRE_DES_DES_CRE)->set_local() = false;
     if (has(CRE_DES_DES_DES))
-      set_op_array(CRE_DES_DES_DES).set_local() = false;
+      set_op_array(CRE_DES_DES_DES)->set_local() = false;
     if (has(CRE_CRE_CRE_DES))
-      set_op_array(CRE_CRE_CRE_DES).set_local() = false;
+      set_op_array(CRE_CRE_CRE_DES)->set_local() = false;
     if (has(CRE_CRE_DES_CRE))
-      set_op_array(CRE_CRE_DES_CRE).set_local() = false;
+      set_op_array(CRE_CRE_DES_CRE)->set_local() = false;
     if (has(CRE_DES_CRE_CRE))
-      set_op_array(CRE_DES_CRE_CRE).set_local() = false;
+      set_op_array(CRE_DES_CRE_CRE)->set_local() = false;
     if (has(CRE_CRE_CRE_CRE))
-      set_op_array(CRE_CRE_CRE_CRE).set_local() = false;
+      set_op_array(CRE_CRE_CRE_CRE)->set_local() = false;
   }
 
   //this is needed for onepdm generation, the system block all the cre are local
@@ -158,17 +158,17 @@ void SpinBlock::setstoragetype(Storagetype st)
     if ( dmrginp.new_npdm_code() ) assert(false);
     localstorage = false;
     if (has(CRE))
-      set_op_array(CRE).set_local() = true;
+      set_op_array(CRE)->set_local() = true;
     if (has(CRE_DES))
-      set_op_array(CRE_DES).set_local() = false;
+      set_op_array(CRE_DES)->set_local() = false;
     if (has(CRE_CRE))
-      set_op_array(CRE_CRE).set_local() = false;
+      set_op_array(CRE_CRE)->set_local() = false;
     if (has(DES_DESCOMP))
-      set_op_array(DES_DESCOMP).set_local() = false;
+      set_op_array(DES_DESCOMP)->set_local() = false;
     if (has(CRE_DESCOMP))
-      set_op_array(CRE_DESCOMP).set_local() = false;
+      set_op_array(CRE_DESCOMP)->set_local() = false;
     if (has(CRE_CRE_DESCOMP))
-      set_op_array(CRE_CRE_DESCOMP).set_local() = false;
+      set_op_array(CRE_CRE_DESCOMP)->set_local() = false;
   }
 
 

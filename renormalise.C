@@ -39,7 +39,7 @@ namespace SpinAdapted{
 void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins, double& error, vector<Matrix>& rotateMatrix, 
 				const int keptstates, const int keptqstates, const double tol, SpinBlock& big, 
 				const guessWaveTypes &guesswavetype, const double noise, const double additional_noise, const bool &onedot, SpinBlock& System, 
-				SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys,
+				SpinBlock& sysDot, SpinBlock& environment, const bool& dot_with_sys,
 				const bool& warmUp, int sweepiter, int currentRoot, std::vector<Wavefunction>& lowerStates)
 {
   int nroots = dmrginp.nroots(sweepiter);
@@ -68,7 +68,6 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
       wave_solutions[i] = tempwave;
     }
     *this = newsystem;
-    envDot.clear();
     big.get_rightBlock()->clear();
     big.clear();
   }

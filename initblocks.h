@@ -26,6 +26,12 @@ namespace InitBlocks
                                const int &sys_add, const int &env_add, const bool &forward, const bool &direct, const bool &onedot, 
 			       const bool &nexact, const bool &useSlater, 
 			       bool haveNormops = true, bool haveCompops = true, const bool& dot_with_sys = true);
+
+  void InitNewOverlapEnvironmentBlock(SpinBlock &environment, SpinBlock& environmentDot, SpinBlock &newEnvironment, 
+				      const SpinBlock &system, SpinBlock &systemDot, int leftState, int rightState,
+				      const int &sys_add, const int &env_add, const bool &forward, 
+				      const bool &onedot, const bool& dot_with_sys);
+
   void InitBigBlock(SpinBlock &leftBlock, SpinBlock &rightBlock, SpinBlock &big);
 }
 }

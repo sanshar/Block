@@ -42,13 +42,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "BaseOperator.h"
 #include "dmrg_wrapper.h"
 
-#ifdef USE_BTAS
-#include "overlaptensor.h"
-#include "btas/SPARSE/STArray.h"
-#include "btas/SPARSE/SDcontract.h"
-#include <btas/TVector.h>
-#endif
-
 #ifndef SERIAL
 #include <boost/mpi/environment.hpp>
 #include <boost/mpi/communicator.hpp>
@@ -160,12 +153,11 @@ int calldmrg(char* input, char* output)
       }
       for (int istate = 0; istate<dmrginp.nroots(); istate++) 
 	for (int j=istate; j<dmrginp.nroots() ; j++) {
-	  Sweep::InitializeAllOverlaps(sweepParams, !direction, istate, j);
-	  Sweep::InitializeAllOverlaps(sweepParams, direction, istate, j);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, j, istate);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, j, istate);
 	}
-      Sweep::calculateAllOverlap(O);
+      //Sweep::calculateAllOverlap(O);
     }
-    cout <<"overlap"<<endl<< O <<endl;
     break;
 
   case (CALCHAMILTONIAN):
@@ -185,7 +177,7 @@ int calldmrg(char* input, char* output)
       }
     }
     
-    Sweep::calculateHMatrixElements(H);
+    //Sweep::calculateHMatrixElements(H);
     pout << "overlap "<<endl<<O<<endl;
     pout << "hamiltonian "<<endl<<H<<endl;
     break;
@@ -346,8 +338,8 @@ void restart(double sweep_tol, bool reset_iter)
       sweepParams.current_root() = i;
       if (mpigetrank()==0) {
 	for (int j=0; j<i; j++) {
-	  Sweep::InitializeAllOverlaps(sweepParams, !direction, i, j);
-	  Sweep::InitializeAllOverlaps(sweepParams, direction, i, j);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, i, j);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, i, j);
 	}
       }
     }
@@ -376,8 +368,8 @@ void restart(double sweep_tol, bool reset_iter)
 	Sweep::CanonicalizeWavefunction(sweepParams, !direction, i);
 	Sweep::CanonicalizeWavefunction(sweepParams, direction, i);
 	for (int j=0; j<i ; j++) {
-	  Sweep::InitializeAllOverlaps(sweepParams, direction, j, i);
-	  Sweep::InitializeAllOverlaps(sweepParams, !direction, j, i);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, i, j);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, i, j);
 	}
       }
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, i, i);
@@ -471,9 +463,9 @@ void dmrg(double sweep_tol)
 
     bool direction;
     int restartsize;
-    sweepParams.restorestate(direction, restartsize);
-    sweepParams.set_sweep_iter() = 0;
-    sweepParams.set_restart_iter() = 0;
+    //sweepParams.restorestate(direction, restartsize);
+    //sweepParams.set_sweep_iter() = 0;
+    //sweepParams.set_restart_iter() = 0;
 
     if (dmrginp.outputlevel() > 0)
       pout << "STARTING STATE SPECIFIC CALCULATION "<<endl;
@@ -489,12 +481,16 @@ void dmrg(double sweep_tol)
 	Sweep::CanonicalizeWavefunction(sweepParams, direction, i);
 	Sweep::CanonicalizeWavefunction(sweepParams, !direction, i);
 	Sweep::CanonicalizeWavefunction(sweepParams, direction, i);
+	Sweep::InitializeStateInfo(sweepParams, direction, i);
+	Sweep::InitializeStateInfo(sweepParams, !direction, i);
 
-	for (int j=0; j<i ; j++) {
-	  Sweep::InitializeAllOverlaps(sweepParams, direction, j, i);
-	  Sweep::InitializeAllOverlaps(sweepParams, !direction, j, i);
-	}
       }
+
+      for (int j=0; j<i ; j++) {
+	Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, i, j);
+	Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, i, j);
+      }
+
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, i, i);
       sweepParams.set_sweep_iter() = 0;
       sweepParams.set_restart_iter() = 0;
@@ -627,6 +623,8 @@ void dmrg_stateSpecific(double sweep_tol, int targetState)
     Sweep::CanonicalizeWavefunction(sweepParams, !direction, targetState);
     Sweep::CanonicalizeWavefunction(sweepParams, direction, targetState);
     Sweep::CanonicalizeWavefunction(sweepParams, !direction, targetState);
+    Sweep::InitializeStateInfo(sweepParams, !direction, targetState);
+    Sweep::InitializeStateInfo(sweepParams, direction, targetState);
     
   }
 

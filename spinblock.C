@@ -95,6 +95,7 @@ SpinBlock::SpinBlock () :
   localstorage(false),
   name (rand()), 
   hasMemoryAllocated (false),
+  loopblock(false),
   direct(false), complementary(false), normal(true), leftBlock(0), rightBlock(0) { }
 
 SpinBlock::SpinBlock(int start, int finish, bool implicitTranspose, bool is_complement) :  
@@ -393,6 +394,12 @@ void SpinBlock::operator= (const SpinBlock& b)
   ops = b.ops;
 }
 
+void SpinBlock::initialise_op_array(opTypes optype, bool is_core)
+{
+  ops[optype] = make_new_op(optype, is_core);
+  return;
+}
+
 void SpinBlock::multiplyOverlap(Wavefunction& c, Wavefunction* v, int num_threads) const
 {
   if (mpigetrank() == 0) {
@@ -477,7 +484,6 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
   DiagonalMatrix *e_array=0, *e_distributed=0, *e_add=0;
 
   initiateMultiThread(&e, e_array, e_distributed, MAX_THRD);
-
 
   boost::shared_ptr<SparseMatrix> op =leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
   TensorTrace(leftBlock, *op, this, &(get_stateInfo()), e, 1.0);

@@ -237,6 +237,72 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 
 }
 
+
+void SpinAdapted::InitBlocks::InitNewOverlapEnvironmentBlock(SpinBlock &environment, SpinBlock& environmentDot, SpinBlock &newEnvironment, 
+							     const SpinBlock &system, SpinBlock &systemDot, int leftState, int rightState,
+							     const int &sys_add, const int &env_add, const bool &forward, 
+							     const bool &onedot, const bool& dot_with_sys)
+{
+  // now initialise environment Dot
+  int systemDotStart, systemDotEnd, environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
+  int systemDotSize = sys_add - 1;
+  int environmentDotSize = env_add - 1;
+  if (forward)
+  {
+    systemDotStart = dmrginp.spinAdapted() ? *system.get_sites().rbegin () + 1 : (*system.get_sites().rbegin ())/2 + 1 ;
+    systemDotEnd = systemDotStart + systemDotSize;
+    environmentDotStart = systemDotEnd + 1;
+    environmentDotEnd = environmentDotStart + environmentDotSize;
+    environmentStart = environmentDotEnd + 1;
+    environmentEnd = dmrginp.spinAdapted() ? dmrginp.last_site() - 1 : dmrginp.last_site()/2 - 1;
+  }
+  else
+  {
+    systemDotStart = dmrginp.spinAdapted() ? system.get_sites()[0] - 1 : (system.get_sites()[0])/2 - 1 ;
+    systemDotEnd = systemDotStart - systemDotSize;
+    environmentDotStart = systemDotEnd - 1;
+    environmentDotEnd = environmentDotStart - environmentDotSize;
+    environmentStart = environmentDotEnd - 1;
+    environmentEnd = 0;
+  }
+
+  std::vector<int> environmentSites;
+  environmentSites.resize(abs(environmentEnd - environmentStart) + 1);
+  for (int i = 0; i < abs(environmentEnd - environmentStart) + 1; ++i) *(environmentSites.begin () + i) = min(environmentStart,environmentEnd) + i;
+
+
+  if (dmrginp.outputlevel() > 0)
+    pout << "\t\t\t Restoring block of size " << environmentSites.size () << " from previous iteration" << endl;
+
+  if(dot_with_sys && onedot) 
+    SpinBlock::restore (!forward, environmentSites, newEnvironment, leftState, rightState);
+  else
+    SpinBlock::restore (!forward, environmentSites, environment, leftState, rightState);
+  if (dmrginp.outputlevel() > 0)
+    mcheck("");
+
+  // now initialise newEnvironment
+  if (!dot_with_sys || !onedot)
+  {
+    newEnvironment.initialise_op_array(OVERLAP, false);
+    //newEnvironment.set_op_array(OVERLAP) = boost::shared_ptr<Op_component<Overlap> >(new Op_component<Overlap>(false));
+    newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
+      
+    newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, environmentDot);
+    if (dmrginp.outputlevel() > 0) {
+      pout << "\t\t\t Environment block " << endl << environment << endl;
+      environment.printOperatorSummary();
+      pout << "\t\t\t NewEnvironment block " << endl << newEnvironment << endl;
+      newEnvironment.printOperatorSummary();
+    }
+  }
+  else  if (dmrginp.outputlevel() > 0) {
+    pout << "\t\t\t Environment block " << endl << newEnvironment << endl;
+    newEnvironment.printOperatorSummary();
+  }
+
+}
+
 void SpinAdapted::InitBlocks::InitBigBlock(SpinBlock &leftBlock, SpinBlock &rightBlock, SpinBlock &big)
 {
   //set big block components
