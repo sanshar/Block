@@ -386,7 +386,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
   // Not direct
   //------------------
   if (!is_direct()) {
-    if ( dmrginp.new_npdm_code() ) assert(false);
+    if ( dmrginp.new_npdm_code() && sites.size() > 1) assert(false);
 
     ops[CRE] = make_new_op(CRE, true);
     ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
@@ -415,6 +415,35 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
         if (!implicitTranspose) {
           ops[DES_CRECOMP] = make_new_op(DES_CRECOMP, true);
           ops[CRE_CRECOMP] = make_new_op(CRE_CRECOMP, true);
+        }
+      }
+    }
+
+    if ( dmrginp.new_npdm_code() ) {
+      ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
+      ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
+      if ( (dmrginp.calc_type() == THREEPDM) ||
+           (dmrginp.calc_type() == FOURPDM)  ||
+           (dmrginp.calc_type() == NEVPT2PDM) ) {
+        ops[DES_CRE] = make_new_op(DES_CRE, true);
+        ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
+        ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
+        ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
+        ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
+        if ( (dmrginp.calc_type() == FOURPDM)   ||
+             (dmrginp.calc_type() == NEVPT2PDM) ) {
+          ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
+          ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
+          ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, true);
+          ops[DES_DES_DES] = make_new_op(DES_DES_DES, true);
+          ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, true);
+          ops[CRE_DES_CRE_DES] = make_new_op(CRE_DES_CRE_DES, true);
+          ops[CRE_DES_DES_CRE] = make_new_op(CRE_DES_DES_CRE, true);
+          ops[CRE_DES_DES_DES] = make_new_op(CRE_DES_DES_DES, true);
+          ops[CRE_CRE_CRE_DES] = make_new_op(CRE_CRE_CRE_DES, true);
+          ops[CRE_CRE_DES_CRE] = make_new_op(CRE_CRE_DES_CRE, true);
+          ops[CRE_DES_CRE_CRE] = make_new_op(CRE_DES_CRE_CRE, true);
+          ops[CRE_CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE_CRE, true);
         }
       }
     }
