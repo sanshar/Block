@@ -156,6 +156,14 @@ std::map< std::tuple<int,int,int>, int > get_local_3index_tuples(SpinBlock& b)
 std::map< std::tuple<int,int,int>, int > get_3index_tuples(SpinBlock& b)
 {
   std::map< std::tuple<int,int,int>, int > tuples;
+  std::vector<int> sites = b.get_sites();
+
+  //add a special case for when rightblock is a dummyblock
+  if (b.get_rightBlock() != NULL) 
+    if (b.get_rightBlock()->get_sites().size() == 0) {
+      tuples[ std::make_tuple(sites[0], sites[0], sites[0]) ] = -1;
+      return tuples;
+    }
 
   if ( b.get_leftBlock() != NULL ) {
     // Generate only mpi local tuples for compound block, consistent with existing operators on sys and dot
@@ -163,7 +171,6 @@ std::map< std::tuple<int,int,int>, int > get_3index_tuples(SpinBlock& b)
   }
 
   // Generate all tuples such that (k <= j <= i) and let para_array assign them to local processes as necessary
-  std::vector<int> sites = b.get_sites();
   for (int i = 0; i < sites.size(); ++i)
     for (int j = 0; j <= i; ++j)
       for (int k = 0; k <= j; ++k) {

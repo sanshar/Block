@@ -1,0 +1,10 @@
+#cmakedefine HAVE_STDINT_H
+
+#cmakedefine _OPENMP
+
+#cmakedefine SERIAL
+#cmakedefine FAST_MTP
+
+#define BLAS
+#define USELAPACK
+

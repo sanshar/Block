@@ -30,6 +30,8 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
   e.ReSize(big.get_stateInfo().totalStates); e= 0;
   if (dmrginp.outputlevel() > 0)
     pout << "\t\t\t Building Diagonal Hamiltonian " << endl;
+
+
   big.diagonalH(e);
   if (dmrginp.outputlevel() > 0)
     pout << "\t\t\t Done building diagonal hamiltonian "<<endl;
@@ -43,7 +45,7 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
   else 
     e.ReSize(0);
 
-  //bool haveEnoughStates = (e.Ncols()<= nroots || e.Ncols() <= currentRoot) ? false : true;
+
   bool haveEnoughStates = (e.Ncols()<= nroots) ? false : true;
 #ifndef SERIAL
   mpi::communicator world;
@@ -70,16 +72,27 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
       multiply_h davidson_f(big, onedot);
       GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise, currentRoot); 
 
-      for (int istate=0; istate<lowerStates.size(); istate++) 
-      for (int jstate=istate+1; jstate<lowerStates.size(); jstate++) {
-	double overlap = DotProduct(lowerStates[istate], lowerStates[jstate]);
-	ScaleAdd(-overlap/DotProduct(lowerStates[istate], lowerStates[istate]), lowerStates[istate], lowerStates[jstate]);
+      if (mpigetrank() == 0) {
+	for (int istate=0; istate<lowerStates.size(); istate++)  {
+	  for (int jstate=istate+1; jstate<lowerStates.size(); jstate++) {
+	    double overlap = DotProduct(lowerStates[istate], lowerStates[jstate]);
+	    ScaleAdd(-overlap/DotProduct(lowerStates[istate], lowerStates[istate]), lowerStates[istate], lowerStates[jstate]);
+	  }
+	}
       }
 
       if (nroots == 1 && currentRoot >= e.Ncols()) //state specific calculation
 	lowerStates.resize(0);
-	
+
       Linear::block_davidson(solution, e, tol, warmUp, davidson_f, useprecond, currentRoot, lowerStates);
+
+    }
+    else if (dmrginp.solve_method() == CONJUGATE_GRADIENT) {
+      solution.resize(nroots);
+      multiply_h davidson_f(big, onedot);
+      GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise, currentRoot); 
+
+      Linear::ConjugateGradient(solution[0], e, e(1), tol, davidson_f, lowerStates);
 
     }
     else {

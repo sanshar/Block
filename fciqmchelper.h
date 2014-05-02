@@ -39,6 +39,7 @@ class MPS{
   std::vector<Matrix>& getSiteTensors(int i) {return SiteTensors[i];}
   const std::vector<Matrix>& getSiteTensors(int i) const {return SiteTensors[i];}
   const Wavefunction& getw() const {return w;}
+  void normalize() {int success; w.Normalise(&success);}
 };
 
 

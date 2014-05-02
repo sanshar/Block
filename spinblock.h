@@ -18,6 +18,7 @@ class Wavefunction;
 class DensityMatrix;
 
 enum Storagetype {LOCAL_STORAGE, DISTRIBUTED_STORAGE, DISTRIBUTED_STORAGE_FOR_ONEPDM};
+boost::shared_ptr<Op_component_base> make_new_op(const opTypes &optype, const bool &is_core);
 
 class SpinBlock
 {
@@ -26,8 +27,15 @@ class SpinBlock
   template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
     {
-      ar & localstorage & name & complementary & hasMemoryAllocated & normal & direct & loopblock
-	& sites & complementary_sites ;
+      ar & localstorage;
+      ar & name;
+      ar & complementary;
+      ar & hasMemoryAllocated;
+      ar & normal; 
+      ar & direct;
+      ar & loopblock;
+      ar & sites;
+      ar & complementary_sites ;
       //FIX ME!! remove register_type stuff and add BOOST_CLASS_EXPORT to op_components.h (will take longer to compile)                     
       ar.register_type(static_cast<Op_component<Cre> *>(NULL));
       ar.register_type(static_cast<Op_component<Des> *>(NULL));
@@ -104,7 +112,7 @@ class SpinBlock
   const boost::shared_ptr<TwoElectronArray> get_twoInt() const {return twoInt;}
   double memoryUsed();
   void addAdditionalCompOps();
-  const StateInfo& get_stateInfo() const {return braStateInfo;}
+  const StateInfo& get_stateInfo() const {return ketStateInfo;}
   const StateInfo& get_braStateInfo() const {return braStateInfo;}
   const StateInfo& get_ketStateInfo() const {return ketStateInfo;}
   static std::vector<int> make_complement(const std::vector<int>& sites);
@@ -137,8 +145,9 @@ class SpinBlock
   SpinBlock* get_rightBlock() const {return rightBlock;}
   
   //void makeCCD_comp_ops();
-  
-  Op_component_base& set_op_array(opTypes optype){assert(has(optype));return *(ops.find(optype)->second);}
+
+  void initialise_op_array(opTypes optype, bool is_core);
+  boost::shared_ptr<Op_component_base>& set_op_array(opTypes optype){assert(has(optype));return ops.find(optype)->second;}
   Op_component_base& get_op_array(opTypes optype){assert(has(optype));return *(ops.find(optype)->second);}
   const Op_component_base& get_op_array(opTypes optype) const {assert(has(optype));return *(ops.find(optype)->second);}
   
@@ -191,7 +200,7 @@ class SpinBlock
   void RenormaliseFrom (std::vector<double> &energies, std::vector<double> &spins, double &error, std::vector<Matrix>& rotateMatrix,
                         const int keptstates, const int keptqstates, const double tol, SpinBlock& big,
                         const guessWaveTypes &guesswavetype, const double noise, const double additional_noise, const bool &onedot, SpinBlock& system, 
-			SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys, const bool& warmUp, int sweepiter, 
+			SpinBlock& sysDot, SpinBlock& environment, const bool& dot_with_sys, const bool& warmUp, int sweepiter, 
 			int currenroot, std::vector<Wavefunction>& lowerStates);
 
   void transform_operators(std::vector<Matrix>& rotateMatrix);

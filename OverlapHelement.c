@@ -17,8 +17,8 @@ int main(int argc, char* argv []) {
   int mpsstate=0;
   
   readMPSFromDiskAndInitializeStaticVariables(mpsstate);
+  test();
   
-
   double overlap, hvalue;
 
   long temp=1, occ;

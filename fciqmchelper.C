@@ -16,23 +16,40 @@ namespace SpinAdapted{
   MPS::MPS(int stateindex) {
 
     std::vector<int> rotSites(2,0);
-    rotSites[0] = 0; rotSites[1] = 3; //this should be 1 for spinadapted
-
+    if (!dmrginp.spinAdapted()) {
+      rotSites[0] = 0; rotSites[1] = 3; //this should be 1 for spinadapted
+    }
+    else {
+      rotSites[0] = 0; rotSites[1] = 1; //this should be 1 for spinadapted
+    }
 
     Matrix m(1,1); m=0;
-    std::vector<Matrix> rotMat(4,m);
-    rotMat[0](1,1) = 1.0;rotMat[1](1,1) = 1.0;rotMat[2](1,1) = 1.0;rotMat[3](1,1) = 1.0;
+    std::vector<Matrix> rotMat;
+    if (!dmrginp.spinAdapted()) {
+      rotMat = std::vector<Matrix>(4,m);
+      rotMat[0](1,1) = 1.0;rotMat[1](1,1) = 1.0;rotMat[2](1,1) = 1.0;rotMat[3](1,1) = 1.0;
+    }
+    else {
+      rotMat = std::vector<Matrix>(3,m);
+      rotMat[0](1,1) = 1.0;rotMat[1](1,1) = 1.0;rotMat[2](1,1) = 1.0;
+    }
 
     SiteTensors.push_back(rotMat);
 
     for (int i=0; i<MPS::sweepIters; i++) {
       LoadRotationMatrix(rotSites, rotMat, stateindex);
       SiteTensors.push_back(rotMat);
-      rotSites[1] += 2;
+      if (!dmrginp.spinAdapted())
+	rotSites[1] += 2;
+      else
+	rotSites[1] += 1;
     }
 
     //loading the final wavefunction
-    rotSites[1] -=2;
+    if (!dmrginp.spinAdapted())
+      rotSites[1] -=2;
+    else
+      rotSites[1] -=1;
 
     StateInfo s;
     w.LoadWavefunctionInfo(s, rotSites, stateindex);
