@@ -14,6 +14,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "sweeptwopdm.h"  // For legacy version of 2pdm
 #include "npdm_driver.h"
 #include "nevpt2_npdm_driver.h"
+#include "transition_sweeponepdm.h"
+#include "transition_sweeptwopdm.h"
 
 void dmrg(double sweep_tol);
 void restart(double sweep_tol, bool reset_iter);
@@ -332,7 +334,6 @@ void npdm( int npdm_order )
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // Note this routine calls the old onepdm and twopdm code
-
 void npdm_restart( int npdm_order )
 {
   bool direction;
@@ -405,8 +406,137 @@ void npdm_restart( int npdm_order )
   sweep_copy.savestate(direction_copy, restartsize_copy);
 }
 
+
 //===========================================================================================================================================================
 
+void transition_pdm( int npdm_order )
+{
+  double sweep_tol = 1e-7;
+  sweep_tol = dmrginp.get_sweep_tol();
+  bool direction;
+  int restartsize;
+  bool direction_copy; int restartsize_copy;
+  SweepParams sweepParams;
+  SweepParams sweep_copy;
+  dmrginp.setimplicitTranspose() = false;
+
+  if(sym == "dinfh") {
+    pout << "Npdm not implemented with dinfh symmetry"<<endl;
+    abort();
+  }
+
+  if (dmrginp.algorithm_method() == TWODOT) {
+    pout << "Npdm not allowed with twodot algorithm" << endl;
+    abort();
+  }
+
+  if (RESTART && !FULLRESTART)
+    restart(sweep_tol, reset_iter);
+  else if (FULLRESTART) {
+    fullrestartGenblock();
+    reset_iter = true;
+    sweepParams.restorestate(direction, restartsize);
+    sweepParams.calc_niter();
+    sweepParams.savestate(direction, restartsize);
+    restart(sweep_tol, reset_iter);
+  }
+  else {
+    dmrg(sweep_tol);
+  }
+
+  // Screening can break things for NPDM (e.g. smaller operators won't be available from which to build larger ones etc...?)
+  dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
+  dmrginp.twoindex_screen_tol() = 0.0; //need to turn screening off for two index ops
+  dmrginp.Sz() = dmrginp.total_spin_number().getirrep();
+  dmrginp.do_npdm_ops() = true;
+  sweep_copy.restorestate(direction_copy, restartsize_copy);
+
+  // Initialize npdm_driver
+  boost::shared_ptr<Npdm_driver_base> npdm_driver;
+  if ( (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) && dmrginp.spinAdapted() ) {
+    dmrginp.new_npdm_code() = false;
+    if      (npdm_order == 1) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Onepdm_driver( dmrginp.last_site() ) );
+    else if (npdm_order == 2) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Twopdm_driver( dmrginp.last_site() ) );
+    else if (npdm_order == 3) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Threepdm_driver( dmrginp.last_site() ) );
+    else if (npdm_order == 4) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Fourpdm_driver( dmrginp.last_site() ) );
+    else if (npdm_order == 0) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Nevpt2_npdm_driver( dmrginp.last_site() ) );
+    else abort();
+  }
+
+  //--------------------
+    // Prepare NPDM operators
+  Timer timer;
+  dmrginp.set_fullrestart() = true;
+  sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+  SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
+  pout << "NPDM SweepGenblock time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+  dmrginp.set_fullrestart() = false;
+  
+  for (int state=0; state<dmrginp.nroots(); state++) {
+     for(int stateB=0; stateB<= state; stateB++){
+   //  Usually, interacting operator is hermitian, <\Phi_1|V|\Phi_2> = <\Phi_2|V|\Phi_1>
+   //  for(int stateB=0; stateB<= dmrginp.nroots(); stateB++){
+        sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+        if (npdm_order == 1) transition_onepdm::do_one(sweepParams, false, direction, false, 0, state,stateB);     
+        else if (npdm_order == 2) transition_twopdm::do_one(sweepParams, false, direction, false, 0, state,stateB);
+        else abort();
+  }
+  }
+
+  sweep_copy.savestate(direction_copy, restartsize_copy);
+
+}
+
+void transition_pdm_restart( int npdm_order )
+{
+  bool direction;
+  int restartsize;
+  bool direction_copy; int restartsize_copy;
+  SweepParams sweepParams;
+  SweepParams sweep_copy;
+  dmrginp.setimplicitTranspose() = false;
+
+  if(sym == "dinfh") {
+    pout << "Npdm not implemented with dinfh symmetry"<<endl;
+    abort();
+  }
+
+  if (dmrginp.algorithm_method() == TWODOT) {
+    pout << "Npdm not allowed with twodot algorithm" << endl;
+    abort();
+  }
+
+  dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
+  dmrginp.twoindex_screen_tol() = 0.0; //need to turn screening off for two index ops
+  dmrginp.Sz() = dmrginp.total_spin_number().getirrep();
+  dmrginp.do_npdm_ops() = true;
+
+  sweep_copy.restorestate(direction_copy, restartsize_copy);
+
+  // Not state-specific
+  //--------------------
+  if ( !dmrginp.setStateSpecific() ) {
+    dmrginp.set_fullrestart() = true;
+    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
+    dmrginp.set_fullrestart() = false;
+  
+    for (int state=0; state<dmrginp.nroots(); state++) {
+     for(int stateB=0; stateB<= state; stateB++){
+   //  Usually, interacting operator is hermitian, <\Phi_1|V|\Phi_2> = <\Phi_2|V|\Phi_1>
+  //    for(int stateB=0; stateB < dmrginp.nroots(); stateB++){
+        sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+        // 1PDM
+        if (npdm_order == 1) transition_onepdm::do_one(sweepParams, false, direction, false, 0, state,stateB);
+        // 2PDM
+        else if (npdm_order == 2) transition_twopdm::do_one(sweepParams, false, direction, false, 0, state,stateB);
+        else abort();
+      }
+    }
+  } 
+
+  sweep_copy.savestate(direction_copy, restartsize_copy);
+}
 }
 }
 

@@ -240,9 +240,21 @@ int calldmrg(char* input, char* output)
   case (RESTART_TWOPDM):
     Npdm::npdm_restart(2);
     break;
-  }
+  case (TRANSITION_ONEPDM):
+    Npdm::transition_pdm(1);
+    break;
+  case (TRANSITION_TWOPDM):
+    Npdm::transition_pdm(2);
+    break;
+  case (RESTART_T_ONEPDM):
+    Npdm::transition_pdm_restart(1);
+    break;
+  case (RESTART_T_TWOPDM):
+    Npdm::transition_pdm_restart(2);
+    break;
 
   return 0;
+  }
 }
 
 
