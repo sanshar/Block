@@ -37,8 +37,8 @@ enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPD
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
-	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, 
-	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, BOGOLIUBOV, NUMKEYWORDS};
+	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER,
+	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, BOGOLIUBOV, TWODOT_NOISE, NUMKEYWORDS};
 
 class Input {
 
@@ -116,6 +116,10 @@ class Input {
   int m_maxj;
   ninejCoeffs m_ninej;
   int m_max_lanczos_dimension;
+  
+  int n_twodot_noise;
+  double m_twodot_noise;
+  double m_twodot_gamma;
 
   double m_sweep_tol;
   bool m_restart;
@@ -158,6 +162,7 @@ class Input {
     ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
     ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_backward & m_schedule_type_default & m_core_energy &m_integral_disk_storage_thresh;
+    ar & n_twodot_noise & m_twodot_noise & m_twodot_gamma;
   }
 
 
@@ -268,6 +273,11 @@ class Input {
   const bool& get_fullrestart() const {return m_fullrestart;}
   const bool& get_backward() const {return m_backward;}
   const double& get_sweep_tol() const {return m_sweep_tol;}
+  const int& get_noise_method() const {return n_twodot_noise;} 
+  const double& get_twodot_noise() const {return m_twodot_noise;} 
+  double& set_twodot_noise()  {return m_twodot_noise;}
+  const double& get_twodot_gamma() const {return m_twodot_gamma;}
+  double& set_twodot_gamma()  {return m_twodot_gamma;}
   const bool& get_restart() const {return m_restart;}
   const bool& get_restart_warm() const {return m_restart_warm;}
   const bool& get_reset_iterations() const {return m_reset_iterations;}

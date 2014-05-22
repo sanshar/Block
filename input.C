@@ -118,6 +118,10 @@ void SpinAdapted::Input::initialize_defaults()
   m_ninej.init(m_maxj);
   m_set_Sz = false;
 
+  n_twodot_noise = 0;
+  m_twodot_noise = 0.0;
+  m_twodot_gamma = 0.0;
+
   m_sweep_tol = 1.0e-5;
   m_restart = false;
   m_fullrestart = false;
@@ -680,6 +684,21 @@ SpinAdapted::Input::Input(const string& config_name) {
         m_twodot_to_onedot_iter = atoi(tok[1].c_str());
       }
 
+      else if(boost::iequals(keyword, "twodot_noise")) 
+      {
+	if(usedkey[TWODOT_NOISE] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[TWODOT_NOISE] = 0;
+         if (tok.size() !=  3) {
+           pout << "keyword twodot_noise should be followed by two single numbers and then an endline"<<endl;
+           pout << "error found in the following line "<<endl;
+           pout << msg<<endl;
+           abort();
+         }
+         n_twodot_noise = 1;
+         m_twodot_noise = atof(tok[1].c_str());
+         m_twodot_gamma = atof(tok[2].c_str());
+       }
 
       else if (boost::iequals(keyword,  "sweep_tol") || boost::iequals(keyword,  "sweep_tolerance"))
       {
@@ -772,6 +791,15 @@ SpinAdapted::Input::Input(const string& config_name) {
     m_beta = (n_elec - n_spin)/2;
     if (sym == "trans" || sym == "lzsym") 
       m_total_symmetry_number = IrrepSpace(m_total_symmetry_number.getirrep()+1); //in translational symmetry lowest irrep is 0 and not 1
+
+    if (n_twodot_noise == 1) {
+     if (m_algorithm_type == ONEDOT){
+       pout << "twodot_noise is disabled using ONEDOT algorithm" << endl;
+       n_twodot_noise = 0;
+       m_twodot_noise = 0.0;
+       m_twodot_gamma = 0.0;
+     }
+    }
   }
 
 #ifndef SERIAL
@@ -829,6 +857,10 @@ mpi::broadcast(world, m_Bogoliubov,0);
     pout << "Checking input for errors"<<endl;
     performSanityTest();
     generateDefaultSchedule();
+    if (n_twodot_noise == 1) {
+      pout << "Scheduled random noise is disabled using twodot_noise" << endl;
+      fill(m_sweep_noise_schedule.begin(),m_sweep_noise_schedule.end(),0.0);
+    }
     //add twodot_toonedot(bla bla bla)
     pout << "Summary of input"<<endl;
     pout << "----------------"<<endl;
