@@ -858,7 +858,7 @@ mpi::broadcast(world, m_Bogoliubov,0);
     performSanityTest();
     generateDefaultSchedule();
     if (n_twodot_noise == 1) {
-      pout << "Scheduled random noise is disabled using twodot_noise" << endl;
+      pout << "\nScheduled random noise is disabled using twodot_noise \n" << endl;
       fill(m_sweep_noise_schedule.begin(),m_sweep_noise_schedule.end(),0.0);
     }
     //add twodot_toonedot(bla bla bla)
