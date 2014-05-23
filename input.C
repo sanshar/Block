@@ -793,8 +793,8 @@ SpinAdapted::Input::Input(const string& config_name) {
       m_total_symmetry_number = IrrepSpace(m_total_symmetry_number.getirrep()+1); //in translational symmetry lowest irrep is 0 and not 1
 
     if (n_twodot_noise == 1) {
-     if (m_algorithm_type == ONEDOT){
-       pout << "twodot_noise is disabled using ONEDOT algorithm" << endl;
+     if (m_algorithm_type == ONEDOT || fabs(m_twodot_noise*m_twodot_gamma) <= NUMERICAL_ZERO){
+       pout << "twodot_noise is disabled using RANDOM noise" << endl;
        n_twodot_noise = 0;
        m_twodot_noise = 0.0;
        m_twodot_gamma = 0.0;
