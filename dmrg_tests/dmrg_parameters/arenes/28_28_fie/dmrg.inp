@@ -1,0 +1,11 @@
+nelec 28
+spin 0
+irrep 1
+schedule default
+startm 50
+maxm 1000
+hf_occ integral
+maxiter 44
+twodot
+sweep_tol 1e-9
+orbitals FCIDUMP

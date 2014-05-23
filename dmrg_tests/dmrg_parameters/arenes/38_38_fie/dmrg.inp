@@ -1,0 +1,10 @@
+nelec 38
+spin 0
+irrep 1
+schedule default
+maxM 4000
+twodot
+sweep_tol 1e-9
+orbitals FCIDUMP
+reorder fiedler_reorder.dat
+hf_occ integral
