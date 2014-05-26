@@ -34,68 +34,71 @@ RANLIB=ranlib
 
 # use this variable to set if we will use integer size of 8 or not.
 # molpro compilation requires I8, since their integers are long
-I8_OPT = yes
+I8_OPT = no
 MOLPRO = no
 OPENMP = no
 
-##MAW FIXME THIS BREAKS boost/spirit stuff!
-#MAWifeq ($(I8_OPT), yes)
-#MAW	I8 = -DI8
-#MAWendif
+ifeq ($(I8_OPT), yes)
+	I8 = -DMolpro_I8
+endif
 
 EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
 CXX =  g++
 MPICXX = /usr/lib64/openmpi/bin/mpicxx
-HOME = .
-NEWMATINCLUDE = $(HOME)/newmat10/
-INCLUDE1 = $(HOME)/include/
-INCLUDE2 = $(HOME)/
-NEWMATLIB = $(HOME)/newmat10/
-BTAS = $(HOME)/btas
+BLOCKHOME = .
+NEWMATINCLUDE = $(BLOCKHOME)/newmat10/
+INCLUDE1 = $(BLOCKHOME)/include/
+INCLUDE2 = $(BLOCKHOME)/
+NEWMATLIB = $(BLOCKHOME)/newmat10/
+BTAS = $(BLOCKHOME)/btas
 .SUFFIXES: .C .cpp
 
    
 MOLPROINCLUDE=.
 ifeq ($(MOLPRO), yes)
-   MOLPROINCLUDE=$(HOME)/../
+   MOLPROINCLUDE=$(BLOCKHOME)/../
    MOLPRO_BLOCK= -DMOLPRO
 endif
 
 FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(MOLPROINCLUDE) \
-         -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(HOME)/modules/twopdm/ \
-         -I$(HOME)/modules/npdm -I$(HOME)/modules/two_index_ops -I$(HOME)/modules/three_index_ops -I$(HOME)/modules/four_index_ops -std=c++0x \
-	 -I$(HOME)/modules/ResponseTheory
+         -I$(BLOCKHOME)/modules/generate_blocks/ -I$(BLOCKHOME)/modules/onepdm -I$(BLOCKHOME)/modules/twopdm/ \
+         -I$(BLOCKHOME)/modules/npdm -I$(BLOCKHOME)/modules/two_index_ops -I$(BLOCKHOME)/modules/three_index_ops -I$(BLOCKHOME)/modules/four_index_ops -std=c++0x \
+	 -I$(BLOCKHOME)/modules/ResponseTheory
 
 
 LIBS +=  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp 
 MPI_OPT = -DSERIAL
 
-ifeq ($(notdir $(firstword $(CXX))),icpc)
+MPICOMPILER=
+ifeq ($(USE_MPI), yes)
+     MPI_OPT = 
+     MPI_LIB = -lboost_mpi
+     LIBS += $(MPI_LIB)
+     CXX = $(MPICXX)
+     MPICOMPILER=$(notdir $(firstword $(shell $(MPICXX) -showname)))
+endif
+
+ifeq (icpc, $(filter icpc, $(notdir $(firstword $(CXX))) $(MPICOMPILER)))
    ifeq ($(OPENMP), yes)
       OPENMP_FLAGS= -openmp -D_OPENMP 
    endif
 # Intel compiler
-	OPT = -DNDEBUG -O3 -funroll-loops  -fPIC
-#	OPT = -g 
-	CXX = icc
+   OPT = -DNDEBUG -O3 -funroll-loops  -fPIC
+#  OPT = -g 
+   ifeq ($(USE_MPI), no) 
+      CXX = icc
+   endif
 endif
 
-ifeq ($(notdir $(firstword $(CXX))),g++)
+ifeq (g++, $(filter g++, $(notdir $(firstword $(CXX))) $(MPICOMPILER)))
    ifeq ($(OPENMP), yes)
       OPENMP_FLAGS= -fopenmp -D_OPENMP 
    endif
 # GNU compiler
-	OPT = -DNDEBUG -O3 -fPIC
-#	OPT = -g
-endif
-
-ifeq ($(USE_MPI), yes)
-	MPI_OPT = 
-	MPI_LIB = -lboost_mpi
-        LIBS += $(MPI_LIB)
-	CXX = $(MPICXX)
+     OPT = -DNDEBUG -O3 -fPIC
+#    OPT = -g
 endif
 
 OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)  -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL ${MKLOPT} ${UNITTEST}
@@ -155,7 +158,7 @@ $(NEWMATLIB)/libnewmat.a :
 	cd $(NEWMATLIB) && $(MAKE) -f makefile libnewmat.a
 
 clean:
-	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o modules/npdm/*.o $(NEWMATLIB)*.o libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a genetic/gaopt genetic/*.o btas/lib/*.o btas/lib/libbtas.a modules/two_index_ops/*.o modules/three_index_ops/*.o modules/four_index_ops/*.o
+	rm *.o include/*.o modules/ResponseTheory/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o modules/npdm/*.o $(NEWMATLIB)*.o libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a genetic/gaopt genetic/*.o btas/lib/*.o btas/lib/libbtas.a modules/two_index_ops/*.o modules/three_index_ops/*.o modules/four_index_ops/*.o
 
 # DO NOT DELETE
 
