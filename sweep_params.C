@@ -80,7 +80,7 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
   keep_qstates = 0.0;//dmrginp.sweep_qstate_schedule()[current];
   davidson_tol = dmrginp.sweep_tol_schedule()[current];
            
-  if (dmrginp.get_noise_method() == 1) {
+  if (dmrginp.get_twodot_method() == 1) {
    if (this->get_sweep_iter() == 0) 
     this->set_additional_noise() = dmrginp.get_twodot_noise();
    if (this->get_sweep_iter() > 0 && (this->get_sweep_iter() < dmrginp.twodot_to_onedot_iter() || dmrginp.algorithm_method()==TWODOT))

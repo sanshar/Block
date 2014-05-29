@@ -273,7 +273,7 @@ class Input {
   const bool& get_fullrestart() const {return m_fullrestart;}
   const bool& get_backward() const {return m_backward;}
   const double& get_sweep_tol() const {return m_sweep_tol;}
-  const int& get_noise_method() const {return n_twodot_noise;} 
+  const int& get_twodot_method() const {return n_twodot_noise;} 
   const double& get_twodot_noise() const {return m_twodot_noise;} 
   double& set_twodot_noise()  {return m_twodot_noise;}
   const double& get_twodot_gamma() const {return m_twodot_gamma;}
