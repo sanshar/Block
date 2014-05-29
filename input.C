@@ -144,6 +144,8 @@ void SpinAdapted::Input::initialize_defaults()
   m_gaconffile = "default";
 
   m_orbformat=MOLPROFORM;
+
+  m_warmup = WILSON;
 }
 
 void SpinAdapted::Input::usedkey_error(string& key, string& line) {
@@ -234,6 +236,29 @@ SpinAdapted::Input::Input(const string& config_name) {
 	}
     m_Bogoliubov = true;
     m_ham_type = BCS;
+      }
+      else if (boost::iequals(keyword, "warmup")) {
+        if (usedkey[WARMUP] == 0)
+          usedkey_error(keyword, msg);
+        usedkey[WARMUP] = 0;
+        if (tok.size() != 2) {
+          pout << "must specify warmup type with keyword warmup" << endl;
+          pout << msg << endl;
+          abort();
+        }
+        if (boost::iequals(tok[1], "wilson")) {
+          m_warmup = WILSON; // default option select the lowest energy slater determinants
+        } else if (boost::iequals(tok[1], "local_2site")) {
+          m_warmup = LOCAL2;
+        } else if (boost::iequals(tok[1], "local_3site")) {
+          m_warmup = LOCAL3;
+        } else if (boost::iequals(tok[1], "local_4site")) {
+          m_warmup = LOCAL4;
+        } else {
+          pout << "warm-up algorithm not defined" << endl;
+          pout << tok[1] << endl;
+          abort();
+        }
       }
       else if (boost::iequals(keyword, "startM")) {
 	if(usedkey[STARTM] == 0) 
@@ -725,7 +750,8 @@ SpinAdapted::Input::Input(const string& config_name) {
 
       else if (boost::iequals(keyword,  "fullrestart")) {
          m_fullrestart = true;	  
-      }
+      }      
+
       else if (boost::iequals(keyword,  "backward")) {
          m_backward = true;	  
          m_schedule_type_backward = true; 

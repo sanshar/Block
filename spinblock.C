@@ -520,8 +520,7 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 
 }
 
-void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum> qnumbers, std::vector<int> distribution, 
-				  bool random, const bool haveNormops)
+void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum> qnumbers, std::vector<int> distribution, bool random, const bool haveNormops)
 {
   name = get_name();
 
@@ -612,4 +611,88 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
 
 }
 
+void SpinBlock::BuildSingleSlaterBlock(std::vector<int> sts) {
+  name = get_name();
+  if (dmrginp.spinAdapted()) {
+    sites = sts;
+  }
+  else {
+    for (int i=0; i<sts.size(); i++) {
+      sites.push_back( dmrginp.spatial_to_spin()[sts[i]]   );
+      sites.push_back( dmrginp.spatial_to_spin()[sts[i]]+1 );
+    }
+  }
+
+  complementary_sites = make_complement(sites);
+  assert (sites.size () > 0);
+  sort (sites.begin (), sites.end ());
+
+  int left = sites[0], right = sites[0] + sites.size(), edge = dmrginp.last_site();
+  int n = 0, sp = 0;
+  std::vector<bool> tmp(0);
+  IrrepSpace irrep;
+  
+  if (dmrginp.spinAdapted()) {
+    for (int orbI = left; orbI < right; ++orbI) {
+      if (dmrginp.hf_occupancy()[orbI] == 2) {
+        n += 2;
+      } else if (dmrginp.hf_occupancy()[orbI] == 1) {
+        sp += 1;
+        n += 1;
+        irrep += SymmetryOfSpatialOrb(orbI);
+      }
+    } 
+
+    for (int i = 0; i < dmrginp.spatial_to_spin()[left]; ++i) {
+      tmp.push_back(0);
+    }
+    for (int orbI = left; orbI < right; ++orbI) {
+      if (dmrginp.hf_occupancy()[orbI] == 0) {
+        tmp.push_back(0);
+        tmp.push_back(0);
+      } else if (dmrginp.hf_occupancy()[orbI] == 1) {
+        tmp.push_back(1);
+        tmp.push_back(0);
+      } else {
+        tmp.push_back(1);
+        tmp.push_back(1);
+      }
+    }
+    for (int i = 0; i < dmrginp.spatial_to_spin()[edge]-dmrginp.spatial_to_spin()[right]; ++i) {
+      tmp.push_back(0);
+    }
+  } else {
+    for (int i = 0; i < left; ++i) {
+      tmp.push_back(0);
+    }
+    for (int orbI = left; orbI < right; ++orbI) {
+      if (dmrginp.hf_occupancy()[orbI] == 1) {
+        n += 1;
+        sp += SpinOf(orbI);
+      }
+      tmp.push_back(dmrginp.hf_occupancy()[orbI]);
+    }
+    for (int i = 0; i < edge-right; ++i) {
+      tmp.push_back(0);
+    }
+  }
+
+  Slater new_det = Slater(Orbstring(tmp));
+  map<Slater, double> m;
+  m[new_det] = 1.0;
+
+  Csf origin(m, n, SpinSpace(sp), sp, IrrepVector(irrep.getirrep(), 0));
+  std::vector<Csf> dets = origin.spinLadder(origin.S.getirrep());
+
+  braStateInfo = StateInfo (dets);
+  ketStateInfo = StateInfo (dets);
+  twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
+  build_iterators();
+
+  std::vector< std::vector<Csf> > ladders; ladders.resize(dets.size());
+  for (int i=0; i< dets.size(); i++)
+    ladders[i] = dets[i].spinLadder(min(2, dets[i].S.getirrep()));
+
+  build_operators(dets, ladders);
+}
 }

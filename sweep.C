@@ -71,7 +71,6 @@ void SpinAdapted::Sweep::makeSystemEnvironmentBigBlocks(SpinBlock& system, SpinB
 
   if (!dot_with_sys && sweepParams.get_onedot()) 
     environmentDot = systemDot;
-
   InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, sweepParams.current_root(), sweepParams.current_root(),
 				      sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 				      sweepParams.get_onedot(), nexact, useSlater, !haveNormOps, haveCompOps, dot_with_sys);
@@ -119,7 +118,6 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
   environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, true);
   SpinBlock environment, newEnvironment;
-
   SpinBlock big;  // new_sys = sys+sys_dot; new_env = env+env_dot; big = new_sys + new_env then renormalize to find new_sys(new)
   makeSystemEnvironmentBigBlocks(system, systemDot, newSystem, environment, environmentDot, newEnvironment, big, sweepParams, dot_with_sys, useSlater);
 

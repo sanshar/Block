@@ -188,6 +188,7 @@ class SpinBlock
   void BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState=0);
   void BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum> qnumbers, std::vector<int> distribution, bool random, 
 			 const bool haveNormops);
+  void BuildSingleSlaterBlock(std::vector<int> sts);
   void set_loopblock(bool p_loopblock){loopblock = p_loopblock;}
   friend ostream& operator<< (ostream& os, const SpinBlock& b);
   void multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) const;
