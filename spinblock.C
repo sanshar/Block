@@ -631,32 +631,26 @@ void SpinBlock::BuildSingleSlaterBlock(std::vector<int> sts) {
   int n = 0, sp = 0;
   std::vector<bool> tmp(0);
   IrrepSpace irrep;
-  
+
   if (dmrginp.spinAdapted()) {
     for (int orbI = left; orbI < right; ++orbI) {
-      if (dmrginp.hf_occupancy()[orbI] == 2) {
-        n += 2;
-      } else if (dmrginp.hf_occupancy()[orbI] == 1) {
-        sp += 1;
-        n += 1;
+      n += dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]] + dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]+1];
+      sp += dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]] - dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]+1];
+
+      if (dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]] == 1) {
         irrep += SymmetryOfSpatialOrb(orbI);
       }
-    } 
+      if (dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]+1] == 1) {
+        irrep += SymmetryOfSpatialOrb(orbI);
+      }
+    }
 
     for (int i = 0; i < dmrginp.spatial_to_spin()[left]; ++i) {
       tmp.push_back(0);
     }
     for (int orbI = left; orbI < right; ++orbI) {
-      if (dmrginp.hf_occupancy()[orbI] == 0) {
-        tmp.push_back(0);
-        tmp.push_back(0);
-      } else if (dmrginp.hf_occupancy()[orbI] == 1) {
-        tmp.push_back(1);
-        tmp.push_back(0);
-      } else {
-        tmp.push_back(1);
-        tmp.push_back(1);
-      }
+      tmp.push_back(dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]]);
+      tmp.push_back(dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]+1]);
     }
     for (int i = 0; i < dmrginp.spatial_to_spin()[edge]-dmrginp.spatial_to_spin()[right]; ++i) {
       tmp.push_back(0);
@@ -682,8 +676,7 @@ void SpinBlock::BuildSingleSlaterBlock(std::vector<int> sts) {
   m[new_det] = 1.0;
 
   Csf origin(m, n, SpinSpace(sp), sp, IrrepVector(irrep.getirrep(), 0));
-  std::vector<Csf> dets = origin.spinLadder(origin.S.getirrep());
-
+  std::vector<Csf> dets(1, origin);
   braStateInfo = StateInfo (dets);
   ketStateInfo = StateInfo (dets);
   twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
@@ -694,5 +687,6 @@ void SpinBlock::BuildSingleSlaterBlock(std::vector<int> sts) {
     ladders[i] = dets[i].spinLadder(min(2, dets[i].S.getirrep()));
 
   build_operators(dets, ladders);
+
 }
 }
