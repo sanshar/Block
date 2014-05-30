@@ -327,6 +327,8 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       else {
          if (sweepParams.set_sweep_iter() == 1 && sweepParams.get_block_iter() == 0)
            sweepParams.set_guesstype() = BASIC;
+         if(sweepParams.set_sweep_iter() == 1 && sweepParams.get_largest_dw()<=NUMERICAL_ZERO)
+           sweepParams.set_additional_noise() = dmrginp.get_twodot_noise();
          BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys);
       }
       

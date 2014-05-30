@@ -1,0 +1,11 @@
+nelec 40
+point_group c1
+spin 4
+irrep 1
+schedule  default
+maxm 5000
+twodot
+sweep_tol 1e-9
+orbitals FCIDUMP
+hf_occ 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+reorder genetic_reorder.dat
