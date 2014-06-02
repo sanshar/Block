@@ -34,7 +34,10 @@ std::map< std::tuple<int,int,int,int>, int > get_local_4index_tuples(SpinBlock& 
   SpinBlock* dotBlock = b.get_rightBlock();
   
   assert( dotBlock != NULL );
+  if(dmrginp.spinAdapted())
   assert( dotBlock->get_sites().size() == 1 );
+  if(!dmrginp.spinAdapted())
+  assert( dotBlock->get_sites().size() == 2 );
 
   bool forward = true;
   if ( sysBlock->get_sites()[0] > dotBlock->get_sites()[0] ) forward = false;

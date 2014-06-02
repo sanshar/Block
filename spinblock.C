@@ -184,6 +184,8 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
       sites.push_back( dmrginp.spatial_to_spin()[new_sites[i]]   );
       sites.push_back( dmrginp.spatial_to_spin()[new_sites[i]]+1 );
     }
+    // dets is   {0, alpha, beta, alphabeta;}
+    // in StateInfo.C, they are sorted, they become {0,beta,alpha,alphabeta}
     dets = CSFUTIL::spinfockstrings(new_sites);
     for (int j=0; j<dets.size(); j++)
       ladders.push_back(std::vector<Csf>(1,dets[j]));

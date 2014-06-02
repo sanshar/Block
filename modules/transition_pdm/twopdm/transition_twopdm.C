@@ -475,8 +475,7 @@ void compute_two_pdm_0_2_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     
       vector<int> indices(4,0);
       indices[0] = ix; indices[1] = lx; indices[2] = jx; indices[3] = kx;
-      //FIXME
-      spin_to_nonspin(indices, expectations, twopdm, CD_CD, false);
+      spin_to_nonspin(indices, expectations, twopdm, CD_DC, false);
 
     }
     }
@@ -612,41 +611,9 @@ void compute_two_pdm_2_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     
       vector<int> indices(4,0);
       indices[0] = ix; indices[1] = lx; indices[2] = jx; indices[3] = kx;
-      //FIXME
-      //why CD_CD work, but CD_DC not
-      spin_to_nonspin(indices, expectations, twopdm, CD_CD, false);
-//      cout << ix<<','<<jx<<','<<kx<<','<<lx<<";"<<expectations[0]<<','<<expectations[1]<<endl;
+      spin_to_nonspin(indices, expectations, twopdm, CD_DC, false);
     }
   }      
-//  {
-//    int cdsize = leftBlock->get_op_array(DES_CRE).get_size();
-//#ifdef _OPENMP
-//#pragma omp for schedule(guided) nowait
-//#endif
-//  for (int ij = 0; ij < cdsize; ++ij)
-//  {
-//    boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(DES_CRE).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
-//    int ix = leftop2->get_orbs(0);
-//    int jx = leftop2->get_orbs(1);
-//    boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_array(DES_CRE).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);//leftBlock->get_op_rep(CRE_DES_S0, ix, jx);
-//    SparseMatrix* dotop = 0;
-//        
-//    for (int kl =0; kl <rightBlock->get_op_array(CRE_DES).get_size(); kl++)
-//    {
-//      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
-//      int kx = rightop2->get_orbs(0);
-//      int lx = rightop2->get_orbs(1);
-//      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);//rightBlock->get_op_rep(CRE_DES_S0, kx, lx);
-//      vector<double> expectations;
-//      spinExpectation(wave1, wave2, *leftop0, *dotop, *rightop0, big, expectations, false);
-//      spinExpectation(wave1, wave2, *leftop2, *dotop, *rightop2, big, expectations, false);
-//    
-//      vector<int> indices(4,0);
-//      indices[0] = ix; indices[1] = kx; indices[2] = jx; indices[3] = lx;
-//      spin_to_nonspin(indices, expectations, twopdm, CD_CD, false);
-//    }
-//  }
-//  }      
 }
 
 void compute_two_pdm_2_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, array_4d<double>& twopdm)
@@ -776,215 +743,8 @@ void compute_two_pdm_2_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   } 
   }     
 
-//  {
-//    int cdsize = leftBlock->get_op_array(DES_CRE).get_size();
-//#ifdef _OPENMP
-//#pragma omp for schedule(guided) nowait
-//#endif
-//  for (int ij = 0; ij < cdsize; ++ij)
-//  {
-//    boost::shared_ptr<SparseMatrix> leftop2 = leftBlock->get_op_array(DES_CRE).get_local_element(ij)[1]->getworkingrepresentation(leftBlock);
-//    int ix = leftop2->get_orbs(0);
-//    int jx = leftop2->get_orbs(1);
-//    boost::shared_ptr<SparseMatrix> leftop0 = leftBlock->get_op_array(DES_CRE).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);//leftBlock->get_op_rep(CRE_DES_S0, ix, jx);
-//    SparseMatrix* rightop = 0;
-//        
-//    for (int kl =0; kl <dotBlock->get_op_array(CRE_DES).get_size(); kl++)
-//    {
-//      boost::shared_ptr<SparseMatrix> dotop2 = dotBlock->get_op_array(CRE_DES).get_local_element(kl)[1]->getworkingrepresentation(dotBlock);
-//      int kx = dotop2->get_orbs(0);
-//      int lx = dotop2->get_orbs(1);
-//      boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_array(CRE_DES).get_local_element(kl)[0]->getworkingrepresentation(dotBlock);//dotBlock->get_op_rep(CRE_DES_S0, kx, lx);
-//      vector<double> expectations;
-//      spinExpectation(wave1, wave2, *leftop0, *dotop0, *rightop, big, expectations, false);
-//      spinExpectation(wave1, wave2, *leftop2, *dotop2, *rightop, big, expectations, false);
-//      vector<int> indices(4,0);
-//      indices[0] = ix; indices[1] = kx; indices[2] = jx; indices[3] = lx;
-//      spin_to_nonspin(indices, expectations, twopdm, DC_CD, false);
-//
-////      expectations.resize(0);
-////      spinExpectation(wave2, wave1, *leftop0, *dotop0, *rightop, big, expectations, false);
-////      spinExpectation(wave2, wave1, *leftop2, *dotop2, *rightop, big, expectations, false);
-////      indices[0] = ix; indices[1] = kx; indices[2] = jx; indices[3] = lx;
-////      spin_to_nonspin(indices, expectations, twopdm, CD_CD, false);
-//    }
-//  } 
-//  }     
 }
 
-//TODO
-//void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, array_4d<double>& twopdm)
-//{
-//  SpinBlock* leftBlock = big.get_leftBlock();
-//  SpinBlock* rightBlock = big.get_rightBlock();
-//  SpinBlock* dotBlock = leftBlock->get_rightBlock();
-//
-//  int dotindex = dotBlock->get_sites()[0];
-//
-//  for (int j = 0; j < leftBlock->get_leftBlock()->get_op_array(CRE).get_size(); ++j)
-//  {
-//    boost::shared_ptr<SparseMatrix> leftop = leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(j)[0];
-//    boost::shared_ptr<SparseMatrix> dotop  = dotBlock->get_op_rep(CRE, getSpinQuantum(dotindex), dotindex);
-//    int ix = leftop->get_orbs(0);
-//    int jx = dotindex;
-//        
-//    //#pragma omp parallel default(shared)
-//    {
-//      int ccsize = rightBlock->get_op_array(CRE_CRE).get_size();
-//      //#pragma omp for schedule(guided) nowait
-//    for (int kl =0; kl <ccsize; kl++)
-//    {
-//      //boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_CRE).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
-//      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(DES_DES).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
-//      int lx = rightop2->get_orbs(0);
-//      int kx = rightop2->get_orbs(1);
-//      //boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE_CRE).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);//rightBlock->get_op_rep(CRE_CRE_S0, kx, lx);
-//      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(DES_DES).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);//rightBlock->get_op_rep(CRE_CRE_S0, kx, lx);
-//      //Transposeview rop0 = Transposeview(*rightop0), rop2 = Transposeview(*rightop2); 
-//      // for right block with more than one site, DES_DES is not the the transpose of the CRE_CRE
-//      // now it is ddcc rather than ccdd
-//
-//      vector<double> expectations;
-//      spinExpectation(wave1, wave2, *leftop, *dotop, *rightop0, big, expectations, false);
-//      spinExpectation(wave1, wave2, *leftop, *dotop, *rightop2, big, expectations, false);
-//      vector<int> indices(4,0);
-//      indices[0] = ix; indices[1] = jx; indices[2] = kx; indices[3] = lx;
-//      expectations[0]*=-1; expectations[1]*=-1;
-//      spin_to_nonspin(indices, expectations, twopdm, CC_DD, false);
-//
-//
-//
-////      expectations.resize(0);
-////      spinExpectation(wave2, wave1, *leftop, *dotop, *rightop0, big, expectations, false);
-////      spinExpectation(wave2, wave1, *leftop, *dotop, *rightop2, big, expectations, false);
-////      indices[0] = lx; indices[1] = kx; indices[2] = jx; indices[3] = ix;
-////      expectations[0]*=-1; expectations[1]*=-1;
-////      spin_to_nonspin(indices, expectations, twopdm, CC_DD, false);
-//
-//      //vector<double> expectations;
-//      //spinExpectation(wave2, wave1, *leftop, *dotop, *rightop0, big, expectations, false);
-//      //spinExpectation(wave2, wave1, *leftop, *dotop, *rightop2, big, expectations, false);
-//      //vector<int> indices(4,0);
-//      //indices[0] = lx; indices[1] = kx; indices[2] = jx; indices[3] = ix;
-//      //expectations[0]*=-1; expectations[1]*=-1;
-//      //spin_to_nonspin(indices, expectations, twopdm, CC_DD, false);
-//
-//      //expectations.resize(0);
-//      //spinExpectation(wave1, wave2, *leftop, *dotop, *rightop0, big, expectations, false);
-//      //spinExpectation(wave1, wave2, *leftop, *dotop, *rightop2, big, expectations, false);
-//      //indices[0] = kx; indices[1] = lx; indices[2] = ix; indices[3] = jx;
-//      //expectations[0]*=-1; expectations[1]*=-1;
-//      //spin_to_nonspin(indices, expectations, twopdm, CC_DD, false);
-//    }
-//    }
-//  }      
-//
-//  for (int j = 0; j < leftBlock->get_leftBlock()->get_op_array(CRE).get_size(); ++j)
-//  {
-//    boost::shared_ptr<SparseMatrix> leftop = leftBlock->get_leftBlock()->get_op_array(CRE).get_local_element(j)[0];
-//    //boost::shared_ptr<SparseMatrix> dotop  = dotBlock->get_op_rep(DES, getSpinQuantum(dotindex) , dotindex);
-//    //boost::shared_ptr<SparseMatrix> dotop  = dotBlock->get_op_rep(DES, getSpinQuantum(dotindex) , dotindex);
-//    boost::shared_ptr<SparseMatrix> dotop  = dotBlock->get_op_array(DES).get_local_element(0)[0];
-//
-//    boost::shared_ptr<SparseMatrix> test_leftop = leftBlock->get_leftBlock()->get_op_array(DES).get_local_element(j)[0];
-//    boost::shared_ptr<SparseMatrix> test_dotop  = dotBlock->get_op_array(CRE).get_local_element(0)[0];
-//    int ix = leftop->get_orbs(0);
-//    int jx = dotindex;
-//        
-//#ifdef _OPENMP
-//#pragma omp parallel default(shared)
-//#endif
-//    {
-//      int cdsize = rightBlock->get_op_array(CRE_DES).get_size();
-//#ifdef _OPENMP
-//#pragma omp for schedule(guided) nowait
-//#endif
-//    for (int kl =0; kl <cdsize; kl++)
-//    {
-//      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
-//      int kx = rightop2->get_orbs(0);
-//      int lx = rightop2->get_orbs(1);
-//      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);//rightBlock->get_op_rep(CRE_DES_S0, kx, lx);
-//      boost::shared_ptr<SparseMatrix> test_rightop2 = rightBlock->get_op_array(DES_CRE).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
-//      boost::shared_ptr<SparseMatrix> test_rightop0 = rightBlock->get_op_array(DES_CRE).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);//rightBlock->get_op_rep(CRE_DES_S0, kx, lx);
-//      //Transposeview tdot = Transposeview(*dotop);
-//      vector<double> expectations;
-//      spinExpectation(wave1, wave2, *leftop, *dotop, *rightop0, big, expectations, false);
-//      spinExpectation(wave1, wave2, *leftop, *dotop, *rightop2, big, expectations, false);
-//      vector<int> indices(4,0);
-//      indices[0] = ix; indices[1] = kx; indices[2] = jx; indices[3] = lx;
-//      spin_to_nonspin(indices, expectations, twopdm, CD_CD, false);
-//      cout << ix<<','<<jx<<','<<kx<<','<<lx<<":" <<expectations[0]<<','<<expectations[1]<<endl;
-//
-//      expectations.resize(0);
-//      spinExpectation(wave2, wave1, *leftop, *dotop, *rightop0, big, expectations, false);
-//      spinExpectation(wave2, wave1, *leftop, *dotop, *rightop2, big, expectations, false);
-//      indices[0] = lx; indices[1] = jx; indices[2] = kx; indices[3] = ix;
-//      spin_to_nonspin(indices, expectations, twopdm, CD_CD, false);
-//      cout << ix<<','<<jx<<','<<kx<<','<<lx<<"transpose:" <<expectations[0]<<','<<expectations[1]<<endl;
-//      expectations.resize(0);
-//      spinExpectation(wave1, wave2, *test_leftop, *test_dotop, *test_rightop0, big, expectations, false);
-//      spinExpectation(wave1, wave2, *test_leftop, *test_dotop, *test_rightop2, big, expectations, false);
-//      cout << ix<<','<<jx<<','<<kx<<','<<lx <<expectations[0]<<','<<expectations[1]<<"....."<< test_leftop->get_orbs(0)<<','<<jx<<','<<test_rightop2->get_orbs(0)<<','<<test_rightop2->get_orbs(0)<<endl;
-//
-//    }
-//    }
-//  }      
-//  
-//  for (int j = 0; j < leftBlock->get_leftBlock()->get_op_array(DES).get_size(); ++j)
-//  {
-//    boost::shared_ptr<SparseMatrix> dotop  = dotBlock->get_op_rep(CRE, getSpinQuantum(dotindex) , dotindex);
-//    boost::shared_ptr<SparseMatrix> leftop = leftBlock->get_leftBlock()->get_op_array(DES).get_local_element(j)[0];
-//    int ix = leftop->get_orbs(0);
-//    int jx = dotindex;
-//        
-//#ifdef _OPENMP
-//#pragma omp parallel default(shared)
-//#endif
-//    {
-//      int cdsize = rightBlock->get_op_array(CRE_DES).get_size();
-//#ifdef _OPENMP
-//#pragma omp for schedule(guided) nowait
-//#endif
-//    for (int kl =0; kl <cdsize; kl++)
-//    {
-//      boost::shared_ptr<SparseMatrix> rightop2 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[1]->getworkingrepresentation(rightBlock);
-//      int kx = rightop2->get_orbs(0);
-//      int lx = rightop2->get_orbs(1);
-//      if(kx==lx) continue;
-//      boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);//rightBlock->get_op_rep(CRE_DES_S0, kx, lx);
-//      //Transposeview tdot = Transposeview(*dotop);
-//      vector<double> expectations;
-//
-//      spinExpectation(wave1, wave2, *leftop, *dotop, *rightop0, big, expectations, false);
-//      spinExpectation(wave1, wave2, *leftop, *dotop, *rightop2, big, expectations, false);
-//
-//      vector<int> indices(4,0);
-//      //expectations[0]*=1; expectations[1]*=-1;
-//      indices[0] = jx; indices[1] = kx; indices[2] = ix; indices[3] = lx;
-//      spin_to_nonspin(indices, expectations, twopdm, CD_CD, false);
-////      cout << ix<<','<<jx<<','<<kx<<','<<lx<<":" <<expectations[0]<<','<<expectations[1]<<endl;
-//
-////      expectations.resize(0);
-////      boost::shared_ptr<SparseMatrix>  leftop = leftBlock->get_leftBlock()->get_op_array(DES).get_local_element(j)[0];
-////      spinExpectation(wave2, wave1, *leftop, *dotop, *rightop0, big, expectations, false);
-////      spinExpectation(wave2, wave1, *leftop, *dotop, *rightop2, big, expectations, false);
-////
-////      //spinExpectation(wave2, wave1, leftop, *dotop, *rightop0, big, expectations, false);
-////      //spinExpectation(wave2, wave1, leftop, *dotop, *rightop2, big, expectations, false);
-////      //expectations[0]*=1; expectations[1]*=-1;
-////      indices[0] = lx; indices[1] = ix; indices[2] = kx; indices[3] = jx;
-////      spin_to_nonspin(indices, expectations, twopdm, CD_CD, false);
-////
-//////      expect2[0] = expectations[1]; expect2[1] = -expectations[3];
-//////      indices[0] = jx; indices[1] = kx; indices[2] = ix; indices[3] = lx;
-//////      spin_to_nonspin(indices, expect2, twopdm, CD_CD, true);
-//
-//    }
-//    }
-//}
-//
-//}
 
 
 void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, array_4d<double>& twopdm)
@@ -1014,7 +774,6 @@ void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       vector<double> expectations;
       spinExpectation(wave1, wave2, *leftop, *dotop, *rightop0, big, expectations, false);
       spinExpectation(wave1, wave2, *leftop, *dotop, *rightop2, big, expectations, false);
-      cout << ix<<','<<jx<<','<<kx<<','<<lx<<','<<expectations[0]<< ","<<expectations[1]<<endl;
       vector<int> indices(4,0);
       indices[0] = ix; indices[1] = jx; indices[2] = kx; indices[3] = lx;
       //expectations[0]*=-1; expectations[1]*=-1;
@@ -1045,7 +804,6 @@ void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       vector<double> expectations;
       spinExpectation(wave1, wave2, *leftop, *dotop, *rightop0, big, expectations, false);
       spinExpectation(wave1, wave2, *leftop, *dotop, *rightop2, big, expectations, false);
-      cout << ix<<','<<jx<<','<<kx<<','<<lx<<",transpose:"<<expectations[0]<< ","<<expectations[1]<<endl;
       vector<int> indices(4,0);
       indices[0] = kx; indices[1] = lx; indices[2] = ix; indices[3] = jx;
       //expectations[0]*=-1; expectations[1]*=-1;
@@ -1107,8 +865,6 @@ void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       spinExpectation(wave1, wave2, *leftop, *dotop, *rightop2, big, expectations, false);
       vector<int> indices(4,0);
       indices[0] = ix; indices[1] = lx; indices[2] = jx; indices[3] = kx;
-      //FIXME, I do not know why there is a -1. CD_DC and DC_CD should be the same. Strange???
-      expectations[1]*=-1;
       spin_to_nonspin(indices, expectations, twopdm, CD_DC, false);
 
     }
@@ -1168,8 +924,6 @@ void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 //      cout << ix<<','<<jx<<','<<kx<<','<<lx<<','<<"transpose:" <<expectations[0]<<','<<expectations[1]<<endl;
 
       vector<int> indices(4,0);
-      //expectations[1]*=-1;
-      expectations[1]*=-1;
       indices[0] = jx; indices[1] = lx; indices[2] = ix; indices[3] = kx;
       spin_to_nonspin(indices, expectations, twopdm, CD_CD, false);
 

@@ -258,6 +258,7 @@ bool screen_dd_interaction(int ci, int cj, const vector<int, std::allocator<int>
     return (ninter == 0);
   }
   else  {
+    if(ci==cj) return false;
     int ninter = interactingix.size();
     
     for (int k = 0; k < ninter; ++k)

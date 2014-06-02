@@ -130,9 +130,11 @@ void SpinAdapted::operatorfunctions::Product (const SpinBlock *ablock, const Bas
 	    int apj = astate->quanta[aprime].get_s().getirrep(), cqj = astate->quanta[cq].get_s().getirrep(), cqpj = astate->quanta[cqprime].get_s().getirrep();
 	    double factor = a.get_scaling(astate->quanta[cq], astate->quanta[aprime]);
 	    factor *= b.get_scaling(astate->quanta[aprime], astate->quanta[cqprime]);
+      if(dmrginp.spinAdapted()){
 
 	    factor *= racah(cqpj, b.get_spin().getirrep(), cqj, a.get_spin().getirrep(), apj, c.get_spin().getirrep()) * pow( (1.0*c.get_spin().getirrep()+1.0)*(1.0*apj+1.0), 0.5 )
 	            *pow(-1.0, static_cast<int>((b.get_spin().getirrep()+a.get_spin().getirrep()-c.get_spin().getirrep())/2.0));
+      }
 	    MatrixMultiply(a.operator_element(cq, aprime), a.conjugacy(), b.operator_element(aprime, cqprime), b.conjugacy(),
 			   c.operator_element(cq, cqprime), scale*factor, 1.0);
 
@@ -696,10 +698,14 @@ void SpinAdapted::operatorfunctions::TensorMultiply(const Baseoperator<Matrix>& 
 		{
 		  int lindex = lQ*leftKetOpSz+lQPrime;
 		  double factor = scale;
+      //if(dmrginp.spinAdapted()){
+      //ninej has already considered non spin-adapted
+      //it is just 1 in nonspin-adapted
 
 		  factor *= dmrginp.get_ninej()(lketS->quanta[lQPrime].get_s().getirrep(), rketS->quanta[rQPrime].get_s().getirrep() , c.get_deltaQuantum(0).get_s().getirrep(), 
 						leftOp.get_spin().getirrep(), rightOp.get_spin().getirrep(), opQ.get_s().getirrep(),
 						lbraS->quanta[lQ].get_s().getirrep(), rbraS->quanta[rQ].get_s().getirrep() , v.get_deltaQuantum(0).get_s().getirrep());
+      //}
 		  factor *= Symmetry::spatial_ninej(lketS->quanta[lQPrime].get_symm().getirrep() , rketS->quanta[rQPrime].get_symm().getirrep(), c.get_symm().getirrep(), 
 				       leftOp.get_symm().getirrep(), rightOp.get_symm().getirrep(), opQ.get_symm().getirrep(),
 				       lbraS->quanta[lQ].get_symm().getirrep() , rbraS->quanta[rQ].get_symm().getirrep(), v.get_symm().getirrep());

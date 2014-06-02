@@ -23,7 +23,7 @@ class Npdm_expectations {
  
   public:
     Npdm_expectations( Npdm_spin_adaptation& spin_adaptation, Npdm_patterns& npdm_patterns, 
-                       const int order, Wavefunction & wavefunction, const SpinBlock & big );
+                       const int order, Wavefunction &wavefunction0, Wavefunction &wavefunction1, const SpinBlock & big );
 
     std::vector< std::pair< std::vector<int>, double > > 
       get_nonspin_adapted_expectations(NpdmSpinOps_base& lhsOps, NpdmSpinOps_base& rhsOps, NpdmSpinOps_base& dotOps );
@@ -32,7 +32,8 @@ class Npdm_expectations {
     Npdm_spin_adaptation& spin_adaptation_;
     std::vector< double > expectations_;
     Npdm_patterns& npdm_patterns_;
-    Wavefunction& wavefunction_; 
+    Wavefunction & wavefunction_0; 
+    Wavefunction & wavefunction_1; 
     const SpinBlock& big_; 
     const int npdm_order_;
 

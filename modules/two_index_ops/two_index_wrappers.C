@@ -266,10 +266,17 @@ Npdm_op_wrapper_D::Npdm_op_wrapper_D( SpinBlock * spinBlock )
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;
-  size_ = spinBlock_->get_op_array(CRE).get_size();
-  is_local_ = spinBlock_->get_op_array(CRE).is_local();
   factor_ = 1.0;
-  transpose_ = true;
+  if(dmrginp.doimplicitTranspose()){
+    size_ = spinBlock_->get_op_array(CRE).get_size();
+    is_local_ = spinBlock_->get_op_array(CRE).is_local();
+    transpose_ = true;
+  }
+  else {
+    size_ = spinBlock_->get_op_array(DES).get_size();
+    is_local_ = spinBlock_->get_op_array(DES).is_local();
+    transpose_= false;
+  }
   build_pattern_ = "(D)";
 }
 
@@ -278,7 +285,10 @@ Npdm_op_wrapper_D::Npdm_op_wrapper_D( SpinBlock * spinBlock )
 bool Npdm_op_wrapper_D::set_local_ops( int idx )
 {
   indices_.clear();
-  opReps_ = spinBlock_->get_op_array(CRE).get_local_element(idx);
+  if(dmrginp.doimplicitTranspose())
+    opReps_ = spinBlock_->get_op_array(CRE).get_local_element(idx);
+  else
+    opReps_ = spinBlock_->get_op_array(DES).get_local_element(idx);
   int ix = opReps_.at(0)->get_orbs(0);
   indices_.push_back(ix);
   return false;

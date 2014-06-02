@@ -23,11 +23,17 @@ Threepdm_container::Threepdm_container( int sites )
   store_full_spatial_array_ = true;
 
   if ( store_full_spin_array_ ) {
-    threepdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);
+    if(dmrginp.spinAdapted())
+      threepdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);
+    else
+      threepdm.resize(sites,sites,sites,sites,sites,sites);
     threepdm.Clear();
   } 
   if ( store_full_spatial_array_ ) {
-    spatial_threepdm.resize(sites,sites,sites,sites,sites,sites);
+    if(dmrginp.spinAdapted())
+      spatial_threepdm.resize(sites,sites,sites,sites,sites,sites);
+    else
+      spatial_threepdm.resize(sites/2,sites/2,sites/2,sites/2,sites/2,sites/2);
     spatial_threepdm.Clear();
   }
 
