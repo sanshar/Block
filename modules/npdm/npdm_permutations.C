@@ -10,6 +10,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <algorithm>
 
 #include "npdm_permutations.h"
+#include "spinblock.h"
 
 namespace SpinAdapted{
 
@@ -64,6 +65,7 @@ void Onepdm_permutations::get_spin_permutations( std::vector<std::pair<std::vect
   idx = { i, j };
   spin_batch.push_back( std::make_pair( idx, val ) );
   // Transpose is same 
+  if(dmrginp.doimplicitTranspose())
   if ( i != j ) {
     idx = { j, i };
     spin_batch.push_back( std::make_pair( idx, val ) );
@@ -99,7 +101,7 @@ void Twopdm_permutations::get_spin_permutations( std::vector<std::pair<std::vect
   idx = { j, i, k, l }; spin_batch.push_back( std::make_pair( idx, -val ) );
   idx = { j, i, l, k }; spin_batch.push_back( std::make_pair( idx, val ) );
                     
-  if ( !skip_transpose ) {
+  if ( !skip_transpose && dmrginp.doimplicitTranspose()) {
     idx = { l, k, j, i }; spin_batch.push_back( std::make_pair( idx, val ) );
     idx = { k, l, j, i }; spin_batch.push_back( std::make_pair( idx, -val ) );
     idx = { l, k, i, j }; spin_batch.push_back( std::make_pair( idx, -val ) );
@@ -756,10 +758,7 @@ void Fourpdm_permutations::get_spin_permutations( std::vector<std::pair<std::vec
   idx = { k, j, i, l, m, p, q, n }; spin_batch.push_back( std::make_pair( idx,  -val ) ); 
   idx = { k, j, i, l, m, q, n, p }; spin_batch.push_back( std::make_pair( idx,  -val ) ); 
   idx = { k, j, i, l, n, m, q, p }; spin_batch.push_back( std::make_pair( idx,  -val ) ); 
-  idx = { k, j, i, l, n, p, m, q }; spin_batch.push_back( std::make_pair( idx,  -val ) ); 
-  idx = { k, j, i, l, n, q, p, m }; spin_batch.push_back( std::make_pair( idx,  -val ) ); 
-  idx = { k, j, i, l, p, m, n, q }; spin_batch.push_back( std::make_pair( idx,  -val ) ); 
-  idx = { k, j, i, l, p, n, q, m }; spin_batch.push_back( std::make_pair( idx,  -val ) ); 
+  idx = { k, j, i, l, n, p, m, q }; spin_batch.push_back( std::make_pair( idx,  -val ) ); idx = { k, j, i, l, n, q, p, m }; spin_batch.push_back( std::make_pair( idx,  -val ) ); idx = { k, j, i, l, p, m, n, q }; spin_batch.push_back( std::make_pair( idx,  -val ) ); idx = { k, j, i, l, p, n, q, m }; spin_batch.push_back( std::make_pair( idx,  -val ) ); 
   idx = { k, j, i, l, p, q, m, n }; spin_batch.push_back( std::make_pair( idx,  -val ) ); 
   idx = { k, j, i, l, q, m, p, n }; spin_batch.push_back( std::make_pair( idx,  -val ) ); 
   idx = { k, j, i, l, q, n, m, p }; spin_batch.push_back( std::make_pair( idx,  -val ) ); 

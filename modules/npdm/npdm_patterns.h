@@ -38,7 +38,8 @@ class Npdm_patterns
     bool screen_3pdm_strings( const std::vector<int>& indices, const std::string& CD );
     bool screen_4pdm_strings( const std::vector<int>& indices, const std::string& CD );
 
-  private:
+    //FIXME
+//  private:
     int pdm_order_;
     // Operator dimensions on LHS, RHS and Dot (add up to 2*order of PDM)
     std::set< std::tuple<int,int,int> > lhs_dot_rhs_types_;

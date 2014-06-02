@@ -625,14 +625,14 @@ void SpinAdapted::DesCre::build(const SpinBlock& b)
   {
     const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(DES, -getSpinQuantum(i), i);
     const boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(j), j);
-    double parity = getCommuteParity(op1->get_deltaQuantum()[0], op2->get_deltaQuantum()[0], get_deltaQuantum()[0]);
-    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op2, *op1, &b, &(b.get_stateInfo()), *this, 1.0*parity);
+    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op2, *op1, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   else if (rightBlock->get_op_array(DES).has(i))
   {
     const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(DES, -getSpinQuantum(i), i);
     const boost::shared_ptr<SparseMatrix> op2 = leftBlock->get_op_rep(CRE, getSpinQuantum(j), j);
-    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, 1.0);
+    double parity = getCommuteParity(op1->get_deltaQuantum()[0], op2->get_deltaQuantum()[0], get_deltaQuantum()[0]);
+    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   else
     abort();  
@@ -650,14 +650,16 @@ double SpinAdapted::DesCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const 
   int spin = deltaQuantum[0].get_s().getirrep();
 
   TensorOp D(I, -1), C(J, 1);
-  TensorOp CD = C.product(D, spin, irrep);
+  
+  TensorOp DC = D.product(C, spin, irrep);
+
 
   for (int j = 0; j < deltaQuantum.size(); ++j) {
     for (int i=0; i<ladder.size(); i++)
     {
       int index = 0; double cleb=0.0;
       if (nonZeroTensorComponent(c1, deltaQuantum[j], ladder[i], index, cleb)) {
-        std::vector<double> MatElements = calcMatrixElements(c1, CD, ladder[i]) ;
+        std::vector<double> MatElements = calcMatrixElements(c1, DC, ladder[i]) ;
         element += MatElements[index]/cleb;
         break;
       }

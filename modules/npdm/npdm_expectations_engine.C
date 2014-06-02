@@ -45,7 +45,13 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
   SpinBlock* rightBlock = big.get_rightBlock();
 
   Cre AOp; //This is just an example class
-  int totalspin = (&rightOp) ? rightOp.get_spin().getirrep() : 0;
+  int totalspin;
+  // In spin-adapted, getirrep is the value of S
+  // In non spin-adapted, getirrep is the value of S_z
+  if(dmrginp.spinAdapted())
+    totalspin = (&rightOp) ? rightOp.get_spin().getirrep() : 0;
+  else
+    totalspin = (&rightOp) ? -(rightOp.get_spin().getirrep()) : 0;
 
   if (Aindices != 0) {
     FormLeftOp(leftBlock, leftOp, dotOp, AOp, totalspin);
@@ -84,9 +90,11 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
 
   Aop.CleanUp();
   Aop.set_initialised() = true;
+  Aop.set_fermion() = Aindices%2==1 ? true : false;
   if (dotindices == 0)
-    {
-      Aop.set_fermion() = false;
+    { //FIXME
+      // Why set fermion false? 
+      //Aop.set_fermion() = false;
       Aop.set_orbs() = leftOp.get_orbs();
       Aop.set_deltaQuantum(1, leftOp.get_deltaQuantum(0)); // FIXME does leftOp always has only one dQ?
       Aop.allocate(leftBlock->get_stateInfo());
@@ -94,7 +102,7 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
     }
   else if (leftindices == 0)
     {
-      Aop.set_fermion() = false;
+      //Aop.set_fermion() = false;
       Aop.set_orbs() = dotOp.get_orbs();
       Aop.set_deltaQuantum(1, dotOp.get_deltaQuantum(0));
       Aop.allocate(leftBlock->get_stateInfo());
@@ -103,13 +111,20 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
   else
     {
       Aop.set_orbs() = leftOp.get_orbs(); copy(dotOp.get_orbs().begin(), dotOp.get_orbs().end(), back_inserter(Aop.set_orbs()));
-      Aop.set_fermion() = Aop.set_orbs().size() == 2 ? true : false;
+      //Aop.set_fermion() = Aop.set_orbs().size() == 2 ? true : false;
+      //Aop.set_fermion() = Aop.set_orbs().size() == 2 ? true : false;
       vector<SpinQuantum> spins = (dotOp.get_deltaQuantum(0) + leftOp.get_deltaQuantum(0));
       SpinQuantum dQ;
       for (int i=0; i< spins.size(); i++) {
 	if (spins[i].get_s().getirrep() == totalspin) { dQ = spins[i]; break; }
       }
-      Aop.set_deltaQuantum(1, dQ);
+      if(dmrginp.spinAdapted())
+        Aop.set_deltaQuantum(1, dQ);
+      //FIXME
+      // Above expression should also works for non-spinAdapted
+      // I do not know why it does not work.
+      else
+        Aop.set_deltaQuantum(1, spins[0]);
       Aop.allocate(leftBlock->get_stateInfo());
       operatorfunctions::TensorProduct(leftBlock->get_leftBlock(), leftOp, dotOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);      
     }

@@ -97,6 +97,7 @@ void compute_one_pdm_2_0_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     }
   }      
 
+  //Actually no DES_CRE on a dot site, when spin adaptation is used.
   for (int ij = 0; ij < leftBlock->get_op_array(DES_CRE).get_size(); ++ij)
   {
     boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(DES_CRE).get_local_element(ij)[0]->getworkingrepresentation(leftBlock);//spin 0
@@ -321,6 +322,7 @@ void compute_one_pdm_1_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       onepdm(ix+1, jx+1) = sum/sqrt(2.0);
     }
   }      
+
   for (int i = 0; i < leftBlock->get_op_array(DES).get_size(); ++i)
   for (int j = 0; j < dotBlock->get_op_array(CRE).get_size(); ++j)
   {
@@ -334,10 +336,10 @@ void compute_one_pdm_1_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     leftop1.set_orbs() = op1->get_orbs(); leftop1.set_orbs().push_back(op2->get_orbs(0));
     leftop1.set_initialised() = true;
     leftop1.set_fermion() = false;
-    leftop1.set_deltaQuantum(1, (op1->get_deltaQuantum(0)+op2->get_deltaQuantum(0))[0]);
+    leftop1.set_deltaQuantum(1, (op2->get_deltaQuantum(0)+op1->get_deltaQuantum(0))[0]);
     //leftop1.set_deltaQuantum(1, (op1->get_deltaQuantum(0)-op2->get_deltaQuantum(0))[0]);
     leftop1.allocate(big.get_leftBlock()->get_stateInfo());
-    operatorfunctions::TensorProduct(leftBlock, *op1, *op2, big.get_leftBlock(), &(big.get_leftBlock()->get_stateInfo()), leftop1, 1.0);
+    operatorfunctions::TensorProduct(dotBlock, *op2, *op1, big.get_leftBlock(), &(big.get_leftBlock()->get_stateInfo()), leftop1, 1.0);
 
     Wavefunction opw2;
     vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
@@ -504,7 +506,7 @@ void compute_one_pdm_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
       boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_array(CRE).get_local_element(i)[0]->getworkingrepresentation(leftBlock);
       int ix = op1->get_orbs(0);
 
-      vector<SpinQuantum> opQ = op1->get_deltaQuantum(0)-op2->get_deltaQuantum(0);
+      vector<SpinQuantum> opQ = op1->get_deltaQuantum(0)+op2->get_deltaQuantum(0);
       Wavefunction opw2;
       vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
       opw2.initialise(dQ, &big, true);
@@ -532,11 +534,11 @@ void compute_one_pdm_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
       boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_array(DES).get_local_element(i)[0]->getworkingrepresentation(leftBlock);
       int ix = op1->get_orbs(0);
 
-      vector<SpinQuantum> opQ = op1->get_deltaQuantum(0)-op2->get_deltaQuantum(0);
+      vector<SpinQuantum> opQ = op2->get_deltaQuantum(0)+op1->get_deltaQuantum(0);
       Wavefunction opw2;
       vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
       opw2.initialise(dQ, &big, true);
-      operatorfunctions::TensorMultiply(leftBlock, *op1, *op2, &big, wave2, opw2, opQ[0], 1.0);
+      operatorfunctions::TensorMultiply(rightBlock, *op2, *op1, &big, wave2, opw2, opQ[0], 1.0);
       double sum = sqrt(2.0)*DotProduct(wave1, opw2);
 
 //#ifndef DNDEBUG

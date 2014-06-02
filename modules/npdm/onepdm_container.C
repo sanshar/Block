@@ -19,8 +19,15 @@ namespace Npdm{
 
 Onepdm_container::Onepdm_container( int sites )
 {
-  onepdm.resize(2*sites,2*sites);
-  spatial_onepdm.resize(sites,sites);
+  if(dmrginp.spinAdapted()){
+    onepdm.resize(2*sites,2*sites);
+    spatial_onepdm.resize(sites,sites);
+
+  }
+  else{
+    onepdm.resize(sites,sites);
+    spatial_onepdm.resize(sites/2,sites/2);
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -234,7 +241,8 @@ void Onepdm_container::update_full_spatial_array( std::vector< std::pair< std::v
 
 void Onepdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
-  assert( new_spin_orbital_elements.size() == 2 );
+  if(dmrginp.spinAdapted()) assert( new_spin_orbital_elements.size() == 2 );
+  else assert( new_spin_orbital_elements.size()==1);
   Onepdm_permutations perm;
   std::vector< std::pair< std::vector<int>, double > > spin_batch;
   // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product

@@ -23,11 +23,17 @@ Fourpdm_container::Fourpdm_container( int sites )
   store_full_spatial_array_ = true;
 
   if ( store_full_spin_array_ ) {
-    fourpdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);
+    if(dmrginp.spinAdapted())
+      fourpdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);
+    else
+      fourpdm.resize(sites,sites,sites,sites,sites,sites,sites,sites);
     fourpdm.Clear();
   } 
   if ( store_full_spatial_array_ ) {
-    spatial_fourpdm.resize(sites,sites,sites,sites,sites,sites,sites,sites);
+    if(dmrginp.spinAdapted())
+      spatial_fourpdm.resize(sites,sites,sites,sites,sites,sites,sites,sites);
+    else
+      spatial_fourpdm.resize(sites/2,sites/2,sites/2,sites/2,sites/2,sites/2,sites/2,sites/2);
     spatial_fourpdm.Clear();
   } 
 

@@ -185,6 +185,7 @@ void BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& n
   DiagonalMatrix e;
   GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, true, 0.0); 
   GuessWave::guess_wavefunctions(solution[1], e, big, sweepParams.get_guesstype(), true, stateB, true, 0.0); 
+  cout << " current_root: " << sweepParams.current_root()<< endl;
 
 #ifndef SERIAL
   mpi::communicator world;
@@ -403,6 +404,7 @@ double do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward,
 
   save_onepdm_binary(onepdm, state ,stateB);
 
+  cout << " current_root: " << sweepParams.current_root()<< endl;
   sweepParams.set_sweep_parameters();
   // a new renormalisation sweep routine
   pout << ((forward) ? "\t\t\t Starting renormalisation sweep in forwards direction" : "\t\t\t Starting renormalisation sweep in backwards direction") << endl;

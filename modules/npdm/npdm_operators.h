@@ -399,7 +399,14 @@ class Npdm_op_wrapper_D : public NpdmSpinOps {
     Npdm_op_wrapper_D( SpinBlock * spinBlock );
     bool set_local_ops( int idx );
 //    const std::vector< int >& get_1d_indices() { return spinBlock_->get_op_array(CRE).get_local_indices(); }
-    std::vector< std::vector<int> > get_indices() { return spinBlock_->get_op_array(CRE).get_array(); }
+//    FIXME
+
+      std::vector< std::vector<int> > get_indices() { 
+        if(dmrginp.doimplicitTranspose())
+          return spinBlock_->get_op_array(CRE).get_array(); 
+        else
+          return spinBlock_->get_op_array(DES).get_array(); 
+      }
 };
 
 //===========================================================================================================================================================
