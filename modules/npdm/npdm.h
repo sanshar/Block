@@ -14,7 +14,6 @@ namespace Npdm{
 
   void npdm(int npdm_order);
   void npdm_restart(int npdm_order);
-  void npdm_restart_newcode(int npdm_order);
   void transition_pdm( int npdm_order );
   void transition_pdm_restart( int npdm_order );
 

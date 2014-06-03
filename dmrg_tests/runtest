@@ -131,9 +131,11 @@ cd hubbard_transition_pdm
 echo " test transiton 1pdm..."
 mpirun -np 2 ../../block.spin_adapted dmrg_onepdm.conf >dmrg.out
 python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
+python ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
 echo " test transition 2pdm..."
 mpirun -np 2 ../../block.spin_adapted dmrg_twopdm.conf >dmrg.out
 python ../test_onepdm.py spatial_twopdm.0.0.txt spat_twopdm.0.0.txt 1e-7
+python ../test_onepdm.py spatial_twopdm.1.1.txt spat_twopdm.1.1.txt 1e-7
 cd ../
 
 ./clean
