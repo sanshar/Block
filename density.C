@@ -38,6 +38,10 @@ void DensityMatrix::makedensitymatrix(const std::vector<Wavefunction>& wave_solu
 
   if(noise > NUMERICAL_ZERO)
     this->add_onedot_noise(wave_solutions, big, noise);
+                               
+  if(additional_noise > NUMERICAL_ZERO){
+    this->add_twodot_noise(big, additional_noise);
+  }
 
 }
 

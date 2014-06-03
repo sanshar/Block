@@ -1,0 +1,12 @@
+nelec 48
+point_group d2h
+spin 0
+irrep 1
+schedule default
+maxm 6000
+twodot
+sweep_tol 1e-9
+orbitals FCIDUMP
+reorder reorder.dat
+hf_occ 2 2 2 2 2 2 2 2 0 0 0 2 2 2 0 2 2 2 0 2 0 2 2 2 2 2 0 0 0 0 0 0 2 2 0 0 2 2 0 0 0 0
+screen_tol 0.0

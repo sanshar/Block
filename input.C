@@ -118,6 +118,10 @@ void SpinAdapted::Input::initialize_defaults()
   m_ninej.init(m_maxj);
   m_set_Sz = false;
 
+  n_twodot_noise = 0;
+  m_twodot_noise = 0.0;
+  m_twodot_gamma = 0.0;
+
   m_sweep_tol = 1.0e-5;
   m_restart = false;
   m_fullrestart = false;
@@ -144,6 +148,8 @@ void SpinAdapted::Input::initialize_defaults()
   m_gaconffile = "default";
 
   m_orbformat=MOLPROFORM;
+
+  m_warmup = WILSON;
 }
 
 void SpinAdapted::Input::usedkey_error(string& key, string& line) {
@@ -234,6 +240,29 @@ SpinAdapted::Input::Input(const string& config_name) {
 	}
     m_Bogoliubov = true;
     m_ham_type = BCS;
+      }
+      else if (boost::iequals(keyword, "warmup")) {
+        if (usedkey[WARMUP] == 0)
+          usedkey_error(keyword, msg);
+        usedkey[WARMUP] = 0;
+        if (tok.size() != 2) {
+          pout << "must specify warmup type with keyword warmup" << endl;
+          pout << msg << endl;
+          abort();
+        }
+        if (boost::iequals(tok[1], "wilson")) {
+          m_warmup = WILSON; // default option select the lowest energy slater determinants
+        } else if (boost::iequals(tok[1], "local_2site")) {
+          m_warmup = LOCAL2;
+        } else if (boost::iequals(tok[1], "local_3site")) {
+          m_warmup = LOCAL3;
+        } else if (boost::iequals(tok[1], "local_4site")) {
+          m_warmup = LOCAL4;
+        } else {
+          pout << "warm-up algorithm not defined" << endl;
+          pout << tok[1] << endl;
+          abort();
+        }
       }
       else if (boost::iequals(keyword, "startM")) {
 	if(usedkey[STARTM] == 0) 
@@ -688,6 +717,21 @@ SpinAdapted::Input::Input(const string& config_name) {
         m_twodot_to_onedot_iter = atoi(tok[1].c_str());
       }
 
+      else if(boost::iequals(keyword, "twodot_noise")) 
+      {
+	if(usedkey[TWODOT_NOISE] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[TWODOT_NOISE] = 0;
+         if (tok.size() !=  3) {
+           pout << "keyword twodot_noise should be followed by two single numbers and then an endline"<<endl;
+           pout << "error found in the following line "<<endl;
+           pout << msg<<endl;
+           abort();
+         }
+         n_twodot_noise = 1;
+         m_twodot_noise = atof(tok[1].c_str());
+         m_twodot_gamma = atof(tok[2].c_str());
+       }
 
       else if (boost::iequals(keyword,  "sweep_tol") || boost::iequals(keyword,  "sweep_tolerance"))
       {
@@ -733,7 +777,8 @@ SpinAdapted::Input::Input(const string& config_name) {
 
       else if (boost::iequals(keyword,  "fullrestart")) {
          m_fullrestart = true;	  
-      }
+      }      
+
       else if (boost::iequals(keyword,  "backward")) {
          m_backward = true;	  
          m_schedule_type_backward = true; 
@@ -780,6 +825,15 @@ SpinAdapted::Input::Input(const string& config_name) {
     m_beta = (n_elec - n_spin)/2;
     if (sym == "trans" || sym == "lzsym") 
       m_total_symmetry_number = IrrepSpace(m_total_symmetry_number.getirrep()+1); //in translational symmetry lowest irrep is 0 and not 1
+
+    if (n_twodot_noise == 1) {
+     if (m_algorithm_type == ONEDOT || fabs(m_twodot_noise*m_twodot_gamma) <= NUMERICAL_ZERO){
+       pout << "twodot_noise is disabled using RANDOM noise" << endl;
+       n_twodot_noise = 0;
+       m_twodot_noise = 0.0;
+       m_twodot_gamma = 0.0;
+     }
+    }
   }
 
 #ifndef SERIAL
@@ -837,6 +891,10 @@ mpi::broadcast(world, m_Bogoliubov,0);
     pout << "Checking input for errors"<<endl;
     performSanityTest();
     generateDefaultSchedule();
+    if (n_twodot_noise == 1) {
+      pout << "\nScheduled random noise is disabled using twodot_noise \n" << endl;
+      fill(m_sweep_noise_schedule.begin(),m_sweep_noise_schedule.end(),0.0);
+    }
     //add twodot_toonedot(bla bla bla)
     pout << "Summary of input"<<endl;
     pout << "----------------"<<endl;

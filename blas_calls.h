@@ -21,7 +21,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 //                               DEC: dxml
 //                               SGI: sgimath
 
-#ifndef I8
+#ifndef Molpro_I8
 #define FORTINT int
 #else
 #define FORTINT long

@@ -71,7 +71,6 @@ void SpinAdapted::Sweep::makeSystemEnvironmentBigBlocks(SpinBlock& system, SpinB
 
   if (!dot_with_sys && sweepParams.get_onedot()) 
     environmentDot = systemDot;
-
   InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, sweepParams.current_root(), sweepParams.current_root(),
 				      sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 				      sweepParams.get_onedot(), nexact, useSlater, !haveNormOps, haveCompOps, dot_with_sys);
@@ -119,7 +118,6 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
   environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, true);
   SpinBlock environment, newEnvironment;
-
   SpinBlock big;  // new_sys = sys+sys_dot; new_env = env+env_dot; big = new_sys + new_env then renormalize to find new_sys(new)
   makeSystemEnvironmentBigBlocks(system, systemDot, newSystem, environment, environmentDot, newEnvironment, big, sweepParams, dot_with_sys, useSlater);
 
@@ -329,6 +327,8 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       else {
          if (sweepParams.set_sweep_iter() == 1 && sweepParams.get_block_iter() == 0)
            sweepParams.set_guesstype() = BASIC;
+         if(sweepParams.set_sweep_iter() == 1 && sweepParams.get_largest_dw()<=NUMERICAL_ZERO)
+           sweepParams.set_additional_noise() = dmrginp.get_twodot_noise();
          BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys);
       }
       
