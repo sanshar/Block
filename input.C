@@ -1472,20 +1472,19 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
       m_core_energy += value;
       section += 1;
     } else if (RHF) {
-      // switch different sections for RHFB
-      if (section == 0) { // ccdd
+      if (section == 0) {
         v2(2*reorder.at(i), 2*reorder.at(k), 2*reorder.at(j),2*reorder.at(l)) = value;
-      } else if (section == 1) { // cccd
+      } else if (section == 1) {
         vcccd.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(k)+1, 2*reorder.at(l), value);
-      } else if (section == 2) { // cccc
+      } else if (section == 2) {
         vcccc.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(l)+1, 2*reorder.at(k)+1, value);
-      } else if (section == 3) { // cd
+      } else if (section == 3) {
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();
         }
         v1(2*reorder.at(i), 2*reorder.at(j)) = value;
-      } else if (section == 4) { // cc
+      } else if (section == 4) {
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();
@@ -1496,32 +1495,31 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
         abort();
       }
     } else {
-      // switch different sections for UHFB
-      if (section == 0) { // ccdd_aa
+      if (section == 0) {
         v2(2*reorder.at(i), 2*reorder.at(k), 2*reorder.at(j),2*reorder.at(l)) = value;
-      } else if (section == 1) { // ccdd_bb
+      } else if (section == 1) {
         v2(2*reorder.at(i)+1, 2*reorder.at(k)+1, 2*reorder.at(j)+1,2*reorder.at(l)+1) = value;
-      } else if (section == 2) { // ccdd_ab
+      } else if (section == 2) {
         v2(2*reorder.at(i), 2*reorder.at(k)+1, 2*reorder.at(j),2*reorder.at(l)+1) = value;
-      } else if (section == 3) { // cccd_a
+      } else if (section == 3) {
         vcccd.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(k)+1, 2*reorder.at(l), value);
-      } else if (section == 4) { // cccd_b
+      } else if (section == 4) {
         vcccd.set(2*reorder.at(i)+1, 2*reorder.at(j)+1, 2*reorder.at(k), 2*reorder.at(l)+1, value);
-      } else if (section == 5) { // cccc  w_{ijkl}C_ia C_ja C_kb C_lb
+      } else if (section == 5) {
         vcccc.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(l)+1, 2*reorder.at(k)+1, value);
-      } else if (section == 6) { // cd_a
+      } else if (section == 6) {
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();
         }
         v1(2*reorder.at(i), 2*reorder.at(j)) = value;
-      } else if (section == 7) { // cd_b
+      } else if (section == 7) {
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();
         }
         v1(2*reorder.at(i)+1, 2*reorder.at(j)+1) = value;
-      } else if (section == 8) { // cc
+      } else if (section == 8) {
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();
