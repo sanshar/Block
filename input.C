@@ -229,18 +229,6 @@ SpinAdapted::Input::Input(const string& config_name) {
 	m_add_noninteracting_orbs = false;
         m_spinAdapted = false;
       }
-      else if (boost::iequals(keyword, "bogoliubov")) {
-    if(usedkey[BOGOLIUBOV] == 0)
-      usedkey_error(keyword, msg);
-    usedkey[BOGOLIUBOV] = 0;
-	if (tok.size() !=  1) {
-	  pout << "keyword bogoliubov is a stand alone keyword"<<endl;
-	  pout << msg<<endl;
-	  abort();
-	}
-    m_Bogoliubov = true;
-    m_ham_type = BCS;
-      }
       else if (boost::iequals(keyword, "warmup")) {
         if (usedkey[WARMUP] == 0)
           usedkey_error(keyword, msg);
