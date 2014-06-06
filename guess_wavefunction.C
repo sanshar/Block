@@ -603,7 +603,6 @@ it's not necessary to take the pseudo inverse of right rotation matrix.
   }
 
 
-  //cout << "okay here?\n";
   double norm = DotProduct(trial, trial);
 }
 
@@ -715,9 +714,6 @@ it's not necessary to take the pseudo inverse of right rotation matrix.
       rotsites = big.get_rightBlock()->get_sites();
       LoadRotationMatrix(rotsites, rightRotationMatrix, state);
     }
-    //FIXME
-    //Statespecific transition matrix crashes for onedot_transform_wavefunction, when bra and ket are different.
-    //Why?
     if(ket)
     onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWave, leftRotationMatrix, rightRotationMatrix, trial, transpose_guess_wave);
     else 
@@ -725,7 +721,6 @@ it's not necessary to take the pseudo inverse of right rotation matrix.
   }
 
 
-  //cout << "okay here?\n";
   double norm = DotProduct(trial, trial);
 }
 

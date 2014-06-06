@@ -46,7 +46,7 @@ EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
 CXX =  g++
-MPICXX = /usr/local/openmpi/1.6.3/gcc/x86_64/bin/mpicxx
+MPICXX = /usr/lib64/openmpi/bin/mpicxx
 BLOCKHOME = .
 HOME = .
 NEWMATINCLUDE = $(BLOCKHOME)/newmat10/
@@ -98,8 +98,8 @@ ifeq (g++, $(filter g++, $(notdir $(firstword $(CXX))) $(MPICOMPILER)))
       OPENMP_FLAGS= -fopenmp -D_OPENMP 
    endif
 # GNU compiler
-#     OPT = -DNDEBUG -O3 -fPIC
-    OPT = -g
+     OPT = -DNDEBUG -O3 -fPIC
+#    OPT = -g
 endif
 
 OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)  -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL ${MKLOPT} ${UNITTEST}
