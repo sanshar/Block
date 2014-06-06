@@ -116,13 +116,9 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
     if(lhsOps.transpose_ || dotOps.transpose_ || rhsOps.transpose_)
     {
       pout << "Transposeview could not be used if m_implicitTranspose is false" <<endl;
-//      abort();
+      abort();
     }
-//    else
-//      pout << "Transposeview is not used. " << endl;
   }
-//  else
-//    pout << "Transposeview is used " <<endl;
     
   // We need to distinguish cases where one or more blocks has an empty operator string
   // X_X_X

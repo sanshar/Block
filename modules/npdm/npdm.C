@@ -192,38 +192,49 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   system.set_loopblock(false);
   newEnvironment.set_loopblock(false);
   InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
+  cout << newSystem<<endl;
+  cout << newEnvironment<<endl;
+  cout << big<<endl;
 
   const int nroots = dmrginp.nroots();
   std::vector<Wavefunction> solution(2);
 
   DiagonalMatrix e;
-  GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, true, 0.0); 
-  GuessWave::guess_wavefunctions(solution[1], e, big, sweepParams.get_guesstype(), true, stateB, true, 0.0); 
-
+  GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, true, 0.0,false); 
+  GuessWave::guess_wavefunctions(solution[1], e, big, sweepParams.get_guesstype(), true, stateB, true, 0.0,true); 
 
 #ifndef SERIAL
   mpi::communicator world;
   mpi::broadcast(world, solution, 0);
 #endif
 
+
+  //GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, false, 0.0); 
+  //GuessWave::guess_wavefunctions(solution[1], e, big, sweepParams.get_guesstype(), true, stateB, true, 0.0); 
+
+
+
+  //bra and ket rotation matrices are calculated from different density matrices.
+
   std::vector<Matrix> rotateMatrix;
   std::vector<Matrix> rotateMatrixB;
-  DensityMatrix tracedMatrix(newSystem.get_stateInfo());
-  tracedMatrix.allocate(newSystem.get_stateInfo());
-  tracedMatrix.makedensitymatrix(solution, big, std::vector<double>(1,1.0), 0.0, 0.0, false);
+  DensityMatrix tracedMatrix(newSystem.get_braStateInfo());
+  tracedMatrix.allocate(newSystem.get_braStateInfo());
+  tracedMatrix.makedensitymatrix(std::vector<Wavefunction>(1,solution[0]), big, std::vector<double>(1,1.0), 0.0, 0.0, false);
+
+  DensityMatrix tracedMatrixB(newSystem.get_ketStateInfo());
+  tracedMatrixB.allocate(newSystem.get_ketStateInfo());
+  tracedMatrixB.makedensitymatrix(std::vector<Wavefunction>(1,solution[1]), big, std::vector<double>(1,1.0), 0.0, 0.0, false);
+
   rotateMatrix.clear();
   rotateMatrixB.clear();
   if (!mpigetrank()){
     double error = makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
-    error = makeRotateMatrix(tracedMatrix, rotateMatrixB, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
+    error = makeRotateMatrix(tracedMatrixB, rotateMatrixB, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
   }
 
   
 
-#ifndef SERIAL
-  mpi::broadcast(world,rotateMatrix,0);
-  mpi::broadcast(world,rotateMatrixB,0);
-#endif
 
   int sweepPos = sweepParams.get_block_iter();
   int endPos = sweepParams.get_n_iters()-1;
@@ -233,14 +244,33 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
   SaveRotationMatrix (newSystem.get_sites(), rotateMatrixB, stateB);
 
-  solution[0].SaveWavefunctionInfo (big.get_stateInfo(), big.get_leftBlock()->get_sites(), state);
-  solution[1].SaveWavefunctionInfo (big.get_stateInfo(), big.get_leftBlock()->get_sites(), stateB);
+  solution[0].SaveWavefunctionInfo (big.get_braStateInfo(), big.get_leftBlock()->get_sites(), state);
+  solution[1].SaveWavefunctionInfo (big.get_ketStateInfo(), big.get_leftBlock()->get_sites(), stateB);
+
+
+  //FIXME
+  //Maybe, for StateSpecific calculations, we can load rotation matrices, wavefuntions from the disk. 
+  //There is no longer need to transform wavefuntions and to make rotation matrices from the density matrices.
+  
+  //FIXME
+  //If in the state-average pdm, different states do not share the same rotation matrices as they do in energy calculations. Making rotation matrices from 
+  //density matrices of different states is neccessary. 
+  
+  //if(newSystem.get_sites().size()>1){
+  //if (!mpigetrank()){
+  //LoadRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
+  //LoadRotationMatrix (newSystem.get_sites(), rotateMatrixB, stateB);
+  //}
+  #ifndef SERIAL
+    mpi::broadcast(world,rotateMatrix,0);
+    mpi::broadcast(world,rotateMatrixB,0);
+  #endif
 
   // Do we need to do this step for NPDM on the last sweep site? (It's not negligible cost...?)
   //It crashes at the last sweep site. 
   //Since it is useless, Just omit it at the last sweep site.
-  //if( sweepParams.get_block_iter()  != sweepParams.get_n_iters() - 1) newSystem.transform_operators(rotateMatrix,rotateMatrixB);
-  newSystem.transform_operators(rotateMatrix,rotateMatrixB);
+  if( sweepParams.get_block_iter()  != sweepParams.get_n_iters() - 1) newSystem.transform_operators(rotateMatrix,rotateMatrixB);
+  //newSystem.transform_operators(rotateMatrix,rotateMatrixB);
   pout << "NPDM block and decimate and compute elements " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 
 }
@@ -378,7 +408,7 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
 
   if (!restart) sweepParams.set_block_iter() = 0;
   if(dmrginp.setStateSpecific()){
-    if (!restart) SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root() ); // if restart, just restoring an existing block --
+    if (!restart) SpinBlock::store (forward, system.get_sites(), system, state, stateB ); // if restart, just restoring an existing block --
   }
   else{
     if (!restart) SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root() ); // if restart, just restoring an existing block --
@@ -861,9 +891,8 @@ void transition_pdm( int npdm_order )
 
   else {
     // state-specific
-    // this only generates onpem between the same wavefunctions and cannot generate transition pdms. atleast not for now
     for (int state=0; state<dmrginp.nroots(); state++) {
-      for (int stateB=0; stateB<state; stateB++) {
+      for (int stateB=0; stateB<=state; stateB++) {
 
       dmrginp.set_fullrestart() = true;
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
@@ -974,10 +1003,10 @@ void transition_pdm_restart( int npdm_order )
     dmrginp.set_fullrestart() = false;
 
     
-    //for (int state=0; state<dmrginp.nroots(); state++) {
-    //   for(int stateB=0; stateB<= state; stateB++){
-    for (int state=dmrginp.nroots()-1;state>=0; state--) {
-       for(int stateB=state; stateB>=0; stateB--){
+    for (int state=0; state<dmrginp.nroots(); state++) {
+       for(int stateB=0; stateB<= state; stateB++){
+    //for (int state=dmrginp.nroots()-1;state>=0; state--) {
+    //   for(int stateB=state; stateB>=0; stateB--){
      //  <\Phi_k|a^+_ia_j|\Phi_l> = <\Phi_l|a^+_ja_i|\Phi_k>*
      //  Therefore, only calculate the situations with k >= l.
      //  for(int stateB=0; stateB<= dmrginp.nroots(); stateB++){
@@ -1000,8 +1029,10 @@ void transition_pdm_restart( int npdm_order )
   else {
     // state-specific
     // this only generates onpem between the same wavefunctions and cannot generate transition pdms. atleast not for now
-    for (int state=0; state<dmrginp.nroots(); state++) {
-      for (int stateB=0; stateB<=state; stateB++) {
+    for (int state=dmrginp.nroots()-1;state>=0; state--) {
+       for(int stateB=state; stateB>=0; stateB--){
+    //for (int state=0; state<dmrginp.nroots(); state++) {
+    //  for (int stateB=1; stateB<=state; stateB++) {
 
       dmrginp.set_fullrestart() = true;
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;

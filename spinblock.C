@@ -83,9 +83,11 @@ ostream& operator<< (ostream& os, const SpinBlock& b)
   if (dmrginp.outputlevel() > 0) {
     os << endl;
     os << b.braStateInfo;
+    os << b.ketStateInfo;
   }
   else {
     os <<"    # states: "<<b.braStateInfo.totalStates<<endl;
+    os <<"    # states: "<<b.ketStateInfo.totalStates<<endl;
   }
   return os;
 }

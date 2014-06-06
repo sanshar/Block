@@ -31,6 +31,8 @@ public:
   Wavefunction(const vector<SpinQuantum>& dQ, const SpinBlock* b, const bool onedot_) : onedot(onedot_) { initialise(dQ, b, onedot_); }  
   void initialise(const SpinQuantum dQ, const SpinBlock* b, const bool &onedot_);
   void initialise(const vector<SpinQuantum>& dQ, const SpinBlock* b, const bool &onedot_);  
+  void initialisebra(const SpinQuantum dQ, const SpinBlock* b, const bool &onedot_);
+  void initialisebra(const vector<SpinQuantum>& dQ, const SpinBlock* b, const bool &onedot_);  
   const bool &get_onedot() const {return onedot;}
   void set_onedot(bool p_onedot) {onedot = p_onedot;}
 

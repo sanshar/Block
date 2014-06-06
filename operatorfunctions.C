@@ -165,6 +165,8 @@ void SpinAdapted::operatorfunctions::TensorProduct (const SpinBlock *ablock, con
 
 void SpinAdapted::operatorfunctions::TensorProductElement(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const SpinBlock *cblock, const StateInfo *cstateinfo, Baseoperator<Matrix>& c, Matrix& cel, int cq, int cqprime, double scale)
 {
+  //cstateinfo is not used
+  //This function can be used for different bra and ket stateinfo.
   if (fabs(scale) < TINY) return;
   assert (a.get_initialised());
   assert (b.get_initialised());
@@ -252,6 +254,7 @@ void SpinAdapted::operatorfunctions::TensorProductElement(const SpinBlock *abloc
 
 void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const SpinBlock *cblock, Wavefunction& c, Wavefunction& v, const SpinQuantum dQ, double scale, int num_thrds)
 {
+  // cannot be used for situation with different bra and ket
   const int leftOpSz = cblock->get_leftBlock()->get_stateInfo().quanta.size ();
   const int rightOpSz = cblock->get_rightBlock()->get_stateInfo().quanta.size ();
 
@@ -322,6 +325,7 @@ void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, con
 
 void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const SpinBlock *cblock, Wavefunction& c, Wavefunction& v, const SpinQuantum opQ, double scale)
 {
+  // can be used for situation with different bra and ket
   const int leftBraOpSz = cblock->get_leftBlock()->get_braStateInfo().quanta.size ();
   const int leftKetOpSz = cblock->get_leftBlock()->get_ketStateInfo().quanta.size ();
   const int rightBraOpSz = cblock->get_rightBlock()->get_braStateInfo().quanta.size ();
