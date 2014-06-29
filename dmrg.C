@@ -475,9 +475,9 @@ void dmrg(double sweep_tol)
 
     bool direction;
     int restartsize;
-    //sweepParams.restorestate(direction, restartsize);
-    //sweepParams.set_sweep_iter() = 0;
-    //sweepParams.set_restart_iter() = 0;
+    sweepParams.restorestate(direction, restartsize);
+    sweepParams.set_sweep_iter() = 0;
+    sweepParams.set_restart_iter() = 0;
 
     if (dmrginp.outputlevel() > 0)
       pout << "STARTING STATE SPECIFIC CALCULATION "<<endl;
