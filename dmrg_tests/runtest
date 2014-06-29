@@ -138,4 +138,18 @@ python ../test_onepdm.py spatial_twopdm.0.0.txt spat_twopdm.0.0.txt 1e-7
 python ../test_onepdm.py spatial_twopdm.1.1.txt spat_twopdm.1.1.txt 1e-7
 cd ../
 
+echo "testing transition 1pdm and 2pdm for h2o"
+cd h2o_transitionpdm
+echo " test transiton 1pdm with state average..."
+mpirun -np 2 ../../block.spin_adapted dmrg_onepdm.conf >dmrg_onepdm.out
+python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
+python ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
+python ../test_transitiononepdm.py spatial_onepdm.1.0.txt spat_onepdm.1.0.txt 1e-7
+echo " test transiton 1pdm with state specific..."
+mpirun -np 2 ../../block.spin_adapted dmrg_onepdm.conf >dmrg_onepdm.out
+mpirun -np 2 ../../block.spin_adapted dmrg_statespecific.conf >dmrg_statespecific.out
+python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
+python ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
+python ../test_transitiononepdm.py spatial_onepdm.1.0.txt spat_onepdm.1.0.txt 1e-7
+
 ./clean
