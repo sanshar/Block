@@ -39,7 +39,7 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
 
   Wavefunction opw2;
   vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
-  if(dmrginp.setStateSpecific()) opw2.initialisebra(dQ, &big, true);
+  if(dmrginp.setStateSpecific() || !dmrginp.doimplicitTranspose()) opw2.initialisebra(dQ, &big, true);
   else opw2.initialise(dQ, &big, true);
   SpinBlock* leftBlock = big.get_leftBlock();
   SpinBlock* rightBlock = big.get_rightBlock();
@@ -65,7 +65,7 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
   //different cases
   if (Aindices == 0 && Bindices != 0)
   {
-    if(!dmrginp.setStateSpecific())
+    if(!dmrginp.setStateSpecific() && dmrginp.doimplicitTranspose())
       operatorfunctions::TensorMultiply(rightBlock, rightOp, &big, wave2, opw2, dQ[0], 1.0);
     else{
       boost::shared_ptr<SparseMatrix> overlap=leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
@@ -74,7 +74,7 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
   }
   else if (Aindices != 0 && Bindices == 0)
   { 
-    if(!dmrginp.setStateSpecific())
+    if(!dmrginp.setStateSpecific() && dmrginp.doimplicitTranspose())
       operatorfunctions::TensorMultiply(leftBlock, AOp, &big, wave2, opw2, dQ[0], 1.0);
     else{
       boost::shared_ptr<SparseMatrix> overlap=rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
@@ -114,7 +114,12 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
       Aop.set_deltaQuantum(1, leftOp.get_deltaQuantum(0)); // FIXME does leftOp always has only one dQ?
       //Aop.allocate(leftBlock->get_stateInfo());
       Aop.allocate(leftBlock->get_braStateInfo(),leftBlock->get_ketStateInfo());
-      operatorfunctions::TensorTrace(leftBlock->get_leftBlock(), leftOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
+      if(!dmrginp.setStateSpecific() && dmrginp.doimplicitTranspose())
+        operatorfunctions::TensorTrace(leftBlock->get_leftBlock(), leftOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
+      else{
+        boost::shared_ptr<SparseMatrix> overlap=leftBlock->get_rightBlock()->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock->get_rightBlock());
+        operatorfunctions::TensorProduct(leftBlock->get_leftBlock(),leftOp, *overlap, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
+      }
     }
   else if (leftindices == 0)
     {
@@ -123,7 +128,12 @@ void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const Sp
       Aop.set_deltaQuantum(1, dotOp.get_deltaQuantum(0));
       //Aop.allocate(leftBlock->get_stateInfo());
       Aop.allocate(leftBlock->get_braStateInfo(),leftBlock->get_ketStateInfo());
-      operatorfunctions::TensorTrace(leftBlock->get_rightBlock(), dotOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
+      if(!dmrginp.setStateSpecific() && dmrginp.doimplicitTranspose())
+        operatorfunctions::TensorTrace(leftBlock->get_rightBlock(), dotOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
+      else{
+        boost::shared_ptr<SparseMatrix> overlap=leftBlock->get_leftBlock()->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock->get_leftBlock());
+        operatorfunctions::TensorProduct(leftBlock->get_leftBlock(),*overlap, dotOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
+      }
     }
   else
     {
