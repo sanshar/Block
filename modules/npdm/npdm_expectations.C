@@ -19,11 +19,12 @@ namespace Npdm{
 //===========================================================================================================================================================
 
 Npdm_expectations::Npdm_expectations( Npdm_spin_adaptation& spin_adaptation, Npdm_patterns& npdm_patterns, 
-                                      const int order, Wavefunction & wavefunction, const SpinBlock & big )
+                                      const int order, Wavefunction & wavefunction0, Wavefunction & wavefunction1, const SpinBlock & big )
 : spin_adaptation_(spin_adaptation),
   npdm_patterns_(npdm_patterns),
   npdm_order_(order),
-  wavefunction_(wavefunction),
+  wavefunction_0(wavefunction0),
+  wavefunction_1(wavefunction1),
   big_(big)
 { }
 
@@ -111,6 +112,14 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
   if ( dotOps.opReps_.size() > 0 ) dotOp = dotOps.opReps_.at(idot);
   if ( rhsOps.opReps_.size() > 0 ) rhsOp = rhsOps.opReps_.at(irhs);
 
+  if(SpinAdapted::dmrginp.doimplicitTranspose()==false){
+    if(lhsOps.transpose_ || dotOps.transpose_ || rhsOps.transpose_)
+    {
+      pout << "Transposeview could not be used if m_implicitTranspose is false" <<endl;
+      abort();
+    }
+  }
+    
   // We need to distinguish cases where one or more blocks has an empty operator string
   // X_X_X
   if ( (lhsOps.opReps_.size() > 0) && (dotOps.opReps_.size() > 0) && (rhsOps.opReps_.size() > 0) ) {
@@ -120,7 +129,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
     if ( dotOps.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *rhsOp, big_);
+    expectation = spinExpectation(wavefunction_0, wavefunction_1, *lhsOp, *dotOp, *rhsOp, big_);
   }
   // X_X_0
   else if ( (lhsOps.opReps_.size() > 0) && (dotOps.opReps_.size() > 0) && (rhsOps.opReps_.size() == 0) ) {
@@ -128,7 +137,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
     if ( lhsOps.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     Transposeview dotOpTr = Transposeview(*dotOp);
     if ( dotOps.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *dotOp, *null, big_);
+    expectation = spinExpectation(wavefunction_0, wavefunction_1, *lhsOp, *dotOp, *null, big_);
   }
   // X_0_X
   else if ( (lhsOps.opReps_.size() > 0) && (dotOps.opReps_.size() == 0) && (rhsOps.opReps_.size() > 0) ) {
@@ -136,7 +145,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
     if ( lhsOps.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *null, *rhsOp, big_);
+    expectation = spinExpectation(wavefunction_0, wavefunction_1, *lhsOp, *null, *rhsOp, big_);
   }
   // 0_X_X
   else if ( (lhsOps.opReps_.size() == 0) && (dotOps.opReps_.size() > 0) && (rhsOps.opReps_.size() > 0) ) {
@@ -144,25 +153,25 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
     if ( dotOps.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *rhsOp, big_);
+    expectation = spinExpectation(wavefunction_0, wavefunction_1, *null, *dotOp, *rhsOp, big_);
   }
   // X_0_0
   else if ( (lhsOps.opReps_.size() > 0) && (dotOps.opReps_.size() == 0) && (rhsOps.opReps_.size() == 0) ) {
     Transposeview lhsOpTr = Transposeview(*lhsOp);
     if ( lhsOps.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_, wavefunction_, *lhsOp, *null, *null, big_);
+    expectation = spinExpectation(wavefunction_0, wavefunction_1, *lhsOp, *null, *null, big_);
   }
   // 0_X_0
   else if ( (lhsOps.opReps_.size() == 0) && (dotOps.opReps_.size() > 0) && (rhsOps.opReps_.size() == 0) ) {
     Transposeview dotOpTr = Transposeview(*dotOp);
     if ( dotOps.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_, wavefunction_, *null, *dotOp, *null, big_);
+    expectation = spinExpectation(wavefunction_0, wavefunction_1, *null, *dotOp, *null, big_);
   }
   // 0_0_X
   else if ( (lhsOps.opReps_.size() == 0) && (dotOps.opReps_.size() == 0) && (rhsOps.opReps_.size() > 0) ) {
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_, wavefunction_, *null, *null, *rhsOp, big_);
+    expectation = spinExpectation(wavefunction_0, wavefunction_1, *null, *null, *rhsOp, big_);
   }
   else abort();
 
@@ -242,11 +251,21 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
 {
   // Initialize dimension of spin-adapted to non-spin-adapted transformation
   int dim = 0;
+  if(dmrginp.spinAdapted()){
   if ( npdm_order_ == 1 ) dim = 2;
   else if ( npdm_order_ == 2 ) dim = 6;
   else if ( npdm_order_ == 3 ) dim = 20;
   else if ( npdm_order_ == 4 ) dim = 70;
   else abort();
+  }
+  else{
+    //if ( npdm_order_ == 1 ) dim = 1;
+    //else if ( npdm_order_ == 2 ) dim = 1;
+    //else if ( npdm_order_ == 3 ) dim = 20;
+   // else if ( npdm_order_ == 4 ) dim = 70;
+    //else abort();
+
+  }
   std::vector< std::pair< std::vector<int>, double > > new_pdm_elements;
 
   // Get operator build string. e.g. (C2C4)(D5D6)
@@ -255,11 +274,71 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
   get_full_op_string( lhsOps, rhsOps, dotOps, op_string, indices );
 
   // Screen away unwanted strings (e.g. those that produce duplicate NPDM elements)
+  //cout << op_string<<endl;
+  //for( int i=0;i<indices.size();i++)
+  //  cout << indices[i]<<',';
+  //cout <<endl;
   if ( screen_op_string_for_duplicates( op_string, indices ) ) return new_pdm_elements;
 
+
+  if(!dmrginp.spinAdapted()){
+    std::vector<int> cd_order;
+    int k=0;
+    for ( auto it = op_string.begin(); it != op_string.end(); ++it ) {
+      if (*it=='C') cd_order.push_back((indices[k++]));
+      if (*it=='D') cd_order.push_back(1000+indices[k++]);
+    }
+    //sort cd_order; bubble sort
+    int parity=1;
+    double tmp;
+    for( int i=cd_order.size()-1;i >0;i--)
+      for(int j=0; j <i;j++){
+        if(cd_order[j]>cd_order[j+1]){
+          tmp=cd_order[j+1];
+          cd_order[j+1]=cd_order[j];
+          cd_order[j]=tmp;
+          parity*=-1;
+          
+        }
+      }
+
+    //change cd_order back to spinorbital number
+    //And check whether total S_z of operator is zero
+    int sz=0;
+    for(int i=0;i<cd_order.size()/2;i++){
+      if(cd_order[i]%2)
+        sz+=1;
+      else 
+        sz+=-1;
+
+    }
+    for(int i=cd_order.size()/2; i<cd_order.size() ;i++){
+      assert(cd_order[i]>=1000);
+      cd_order[i]-=1000;
+      if(cd_order[i]%2)
+        sz+=-1;
+      else
+        sz+=1;
+    }
+//    cout << "nonspinadapted spinorbital ordered: ";
+//    for( int i=0;i<cd_order.size();i++)
+//      cout << cd_order[i]<<',';
+//    cout <<endl;
+//    cout <<"sz: " <<sz<<endl;
+    if(sz!=0) return new_pdm_elements;
+    double nonspinvalue;
+
+   // cout <<"size of operator: " <<lhsOps.opReps_.size()<<','<<rhsOps.opReps_.size()<<','<<dotOps.opReps_.size()<<endl;
+      nonspinvalue=contract_spin_adapted_operators( 0, 0, 0, lhsOps, rhsOps, dotOps );
+      cout <<"nonspinvalue: " <<nonspinvalue<<endl;
+
+    new_pdm_elements.push_back(std::make_pair(cd_order,nonspinvalue*parity));
+    return new_pdm_elements;
+  }
+  
   // Contract spin-adapted spatial operators and build singlet expectation values
   build_spin_adapted_singlet_expectations( lhsOps, rhsOps, dotOps );
-  
+
   // Now transform to non-spin-adapted spin-orbital representation
   // b holds the spin-adapted expectation values (we only care about the singlets)
   // Note the spin-order of elements in b follows a convention

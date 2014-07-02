@@ -25,11 +25,10 @@ std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBloc
   Timer disktimer;
   std::string file;
 
-  //we only every save one set of spin blocks because they take up so much memory, so the spin block names are not indexed with states
   if (forward)
-    file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
   else
-    file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
   
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Restoring block file :: " << file << endl;
@@ -64,15 +63,15 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b, int
   std::string file;
   if(dmrginp.spinAdapted()) {
     if (forward)
-      file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
     else
-      file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
   }
   else {
     if (forward)
-      file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
     else
-      file = str(boost::format("%s%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
   }
   
   if (dmrginp.outputlevel() > 0) 
@@ -259,18 +258,14 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   {
     if (rotateMatrix [Q].Ncols () != 0)
       {
-newQuanta.push_back (braStateInfo.quanta [Q]);
-newQuantaStates.push_back (rotateMatrix [Q].Ncols ());
-newQuantaMap.push_back (Q);
+	newQuanta.push_back (braStateInfo.quanta [Q]);
+	newQuantaStates.push_back (rotateMatrix [Q].Ncols ());
+	newQuantaMap.push_back (Q);
       }
   }
   StateInfo newStateInfo = StateInfo (newQuanta, newQuantaStates, newQuantaMap);
 
   build_and_renormalise_operators( rotateMatrix, &newStateInfo );
-//FIXMEMAW  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-//FIXMEMAW    if (! it->second->is_core())
-//FIXMEMAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
-//FIXMEMAW                                    boost::ref(rotateMatrix) , &newStateInfo));
 
   braStateInfo = newStateInfo;
   braStateInfo.AllocatePreviousStateInfo ();
@@ -290,9 +285,6 @@ newQuantaMap.push_back (Q);
   Timer transformtimer;
 
   renormalise_transform( rotateMatrix, &this->braStateInfo );
-//FIXMEMAW  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-//FIXMEMAW    if ( it->second->is_core())
-//FIXMEMAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, boost::ref(rotateMatrix), (&this->braStateInfo)));
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if (! it->second->is_core())
@@ -310,7 +302,7 @@ newQuantaMap.push_back (Q);
 
 }
 
-void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix)
+  void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix, bool clearRightBlock)
 {
 
   StateInfo oldbraStateInfo=braStateInfo, oldketStateInfo=ketStateInfo;
@@ -320,10 +312,6 @@ void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::
 
 
   build_and_renormalise_operators( leftrotateMatrix, &newbraStateInfo, rightrotateMatrix, &newketStateInfo );
-//FIXMEMAW  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-//FIXMEMAW    if (! it->second->is_core())
-//FIXMEMAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::build_and_renormalise_transform, _1, this, it->first, 
-//FIXMEMAW						      boost::ref(leftrotateMatrix) , &newbraStateInfo, boost::ref(rightrotateMatrix), &newketStateInfo));
 
   braStateInfo = newbraStateInfo;
   braStateInfo.AllocatePreviousStateInfo ();
@@ -343,11 +331,6 @@ void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::
   Timer transformtimer;
 
   renormalise_transform( leftrotateMatrix, &this->braStateInfo, rightrotateMatrix, &this->ketStateInfo );
-//FIXMEMAW  for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
-//FIXMEMAW    if ( it->second->is_core())
-//FIXMEMAW      for_all_operators_multithread(*it->second, bind(&SparseMatrix::renormalise_transform, _1, 
-//FIXMEMAW						      boost::ref(leftrotateMatrix), &this->braStateInfo, 
-//FIXMEMAW						      boost::ref(rightrotateMatrix), &this->ketStateInfo ));
 
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     if (! it->second->is_core())
@@ -359,7 +342,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::
 
   if (leftBlock)
     leftBlock->clear();
-  if (rightBlock)
+  if (rightBlock && clearRightBlock)
     rightBlock->clear();
 
 

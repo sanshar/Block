@@ -14,7 +14,6 @@ namespace SpinAdapted {
 template<class T, size_t N>
 void SaveOverlapTensor (const std::vector<int>& sites, const btas::STArray<T, N>& m1, int state1, int state2)
 {
-  Timer disktimer;
   int rank = mpigetrank();
   if (rank == 0)
     {
@@ -33,7 +32,6 @@ void SaveOverlapTensor (const std::vector<int>& sites, const btas::STArray<T, N>
 template<class T, size_t N>
 void LoadOverlapTensor (const std::vector<int>& sites, btas::STArray<T, N>& m1, int state1, int state2)
 {
-  Timer disktimer;
   int rank = mpigetrank();
   if (rank == 0)
     {

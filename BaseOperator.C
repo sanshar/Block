@@ -156,7 +156,10 @@ const Transposeview Transpose(SparseMatrix& op) { return Transposeview(op); };
 
 ostream& operator<< (ostream& os, const SparseMatrix& a)
 {
-  assert (a.initialised);
+  if (!a.initialised){
+    os <<" not initialised"<<endl;
+    return os;
+  };
   os<<"indices : ";
   for(int i=0; i<a.orbs.size(); i++)
     os<<a.orbs[i]<<"  ";

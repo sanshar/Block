@@ -24,6 +24,7 @@ Npdm_op_compound_CCD::Npdm_op_compound_CCD( SpinBlock * spinBlock )
 //FIXMEMAW
 //  size_ = 1;
   size_ = spinBlock_->get_op_array(RI_3INDEX).get_size();
+//  if(!dmrginp.spinAdapted()) size_=1;
   is_local_ = true;
   factor_ = 1.0;
   transpose_ = false;
@@ -34,6 +35,7 @@ Npdm_op_compound_CCD::Npdm_op_compound_CCD( SpinBlock * spinBlock )
 
 bool Npdm_op_compound_CCD::set_local_ops( int idx )
 {
+  if(dmrginp.doimplicitTranspose()){
 //cout << "getting compound CCD operator...\n";
 //cout << "size_ = " << size_ << endl;
 //assert( idx == 0 );
@@ -43,9 +45,16 @@ bool Npdm_op_compound_CCD::set_local_ops( int idx )
   int ix = indices_[0];
   int jx = indices_[1];
   int kx = indices_[2];
+  //cout <<ix<<','<<jx<<','<<kx<<endl;
+  if(!dmrginp.spinAdapted()){
+    // only suitble for single site block. ( there are two sites in single site block in non-spinadapted dmrg.)
+    if(ix==jx) return true;
+   // if(ix==kx) return true;
+  }
 
   // Get 2-index and 1-index ops as RI building blocks
   std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_element(ix,jx);
+  //std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(DES).get_element(kx);
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_element(kx);
 
 ////  // Spatial orbital indices
@@ -64,13 +73,53 @@ bool Npdm_op_compound_CCD::set_local_ops( int idx )
 
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
   opReps_.clear();
-  // S=0 (+) S=1/2  =>  S=1/2
-  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(0), oneOp.at(0), 0, indices_, true ) );
-  // S=1 (+) S=1/2  =>  S=1/2
-  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 0, indices_, true ) );
-  // S=1 (+) S=1/2  =>  S=3/2
-  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 1, indices_, true ) );
+  if(dmrginp.spinAdapted()){
+    // S=0 (+) S=1/2  =>  S=1/2
+    opReps_.push_back( build_compound_operator( true, -1, twoOps.at(0), oneOp.at(0), 0, indices_, true ) );
+    // S=1 (+) S=1/2  =>  S=1/2
+    opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 0, indices_, true ) );
+    // S=1 (+) S=1/2  =>  S=3/2
+    opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 1, indices_, true ) );
+  }
+  else{
+    opReps_.push_back( build_compound_operator( true, -1, twoOps.at(0), oneOp.at(0), 0, indices_, true ) );
+  }
   return false;
+  }
+  else{
+//FIXME don't need to keep reconstructing whole array!
+  indices_ = spinBlock_->get_op_array(RI_3INDEX).get_array().at(idx);
+  int ix = indices_[0];
+  int jx = indices_[1];
+  int kx = indices_[2];
+  if(!dmrginp.spinAdapted()){
+    if(ix==jx) return true;
+    if(ix==kx) return true;
+  }
+
+  // Get 2-index and 1-index ops as RI building blocks
+  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_element(ix,jx);
+  std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(DES).get_element(kx);
+
+  std::vector< boost::shared_ptr<SparseMatrix> > testOp = spinBlock_->get_op_array(DES_CRE).get_element(ix,jx);
+  
+
+
+  // Allocate and build operator representation on the fly as RI tensor product for each spin component
+  opReps_.clear();
+  if(dmrginp.spinAdapted()){
+    // S=0 (+) S=1/2  =>  S=1/2
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(0), oneOp.at(0), 0, indices_, false) );
+    // S=1 (+) S=1/2  =>  S=1/2
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(1), oneOp.at(0), 0, indices_, false) );
+    // S=1 (+) S=1/2  =>  S=3/2
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(1), oneOp.at(0), 1, indices_, false) );
+  }
+  else{
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(0), oneOp.at(0), 0, indices_, false) );
+  }
+  return false;
+  }
 }
 
 //===========================================================================================================================================================
@@ -83,6 +132,7 @@ Npdm_op_compound_CDD::Npdm_op_compound_CDD( SpinBlock * spinBlock )
 //FIXMEMAW
 //  size_ = 1;
   size_ = spinBlock_->get_op_array(RI_3INDEX).get_size();
+//  if(!dmrginp.spinAdapted()) size_=1;
   is_local_ = true;
   factor_ = 1.0;
   transpose_ = false;
@@ -93,6 +143,7 @@ Npdm_op_compound_CDD::Npdm_op_compound_CDD( SpinBlock * spinBlock )
 
 bool Npdm_op_compound_CDD::set_local_ops( int idx )
 {
+  if(dmrginp.doimplicitTranspose()){
 //cout << "getting compound CDD operator...\n";
 //assert( idx == 0 );
   // Spatial orbital indices
@@ -101,6 +152,10 @@ bool Npdm_op_compound_CDD::set_local_ops( int idx )
   int ix = indices_[0];
   int jx = indices_[1];
   int kx = indices_[2];
+  if(!dmrginp.spinAdapted()) {
+    if(kx==jx) return true;
+    if(kx==ix) return true;
+  }
 
   std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_DES).get_element(ix,jx);
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_element(kx);
@@ -120,12 +175,18 @@ bool Npdm_op_compound_CDD::set_local_ops( int idx )
 ////cout << "CDD indices = " << ix << ", " << jx << ", " << kx << endl;
 
   opReps_.clear();
-  // S=0 (+) S=1/2  =>  S=1/2
-  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(0), oneOp.at(0), 0, indices_, true ) );
-  // S=1 (+) S=1/2  =>  S=1/2
-  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 0, indices_, true ) );
-  // S=1 (+) S=1/2  =>  S=3/2
-  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 1, indices_, true ) );
+  if(dmrginp.spinAdapted()){
+    // S=0 (+) S=1/2  =>  S=1/2
+    opReps_.push_back( build_compound_operator( true, -1, twoOps.at(0), oneOp.at(0), 0, indices_, true ) );
+    // S=1 (+) S=1/2  =>  S=1/2
+    opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 0, indices_, true ) );
+    // S=1 (+) S=1/2  =>  S=3/2
+    opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 1, indices_, true ) );
+  }
+  else{
+    opReps_.push_back( build_compound_operator( true, -1, twoOps.at(0), oneOp.at(0), 0, indices_, true ) );
+    //opReps_.push_back( build_compound_operator( true, 1, twoOps.at(0), oneOp.at(0), 0, indices_, false ) );
+  }
 
 
 //-----------------------------
@@ -164,23 +225,93 @@ bool Npdm_op_compound_CDD::set_local_ops( int idx )
 //cout << "4  CDD operator elements:\n";
 //cout << *(opReps_[2]);
   return false;
+  }
+  else{
+//FIXME don't need to keep reconstructing whole array!
+  indices_ = spinBlock_->get_op_array(RI_3INDEX).get_array().at(idx);
+  int ix = indices_[0];
+  int jx = indices_[1];
+  int kx = indices_[2];
+  if(!dmrginp.spinAdapted()) {
+    if(kx==jx) return true;
+    if(kx==ix) return true;
+  }
+
+  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_DES).get_element(ix,jx);
+  std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(DES).get_element(kx);
+
+
+  opReps_.clear();
+  if(dmrginp.spinAdapted()){
+    // S=0 (+) S=1/2  =>  S=1/2
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(0), oneOp.at(0), 0, indices_, false ) );
+    // S=1 (+) S=1/2  =>  S=1/2
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(1), oneOp.at(0), 0, indices_, false ) );
+    // S=1 (+) S=1/2  =>  S=3/2
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(1), oneOp.at(0), 1, indices_, false ) );
+  }
+  else{
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(0), oneOp.at(0), 0, indices_, false ) );
+  }
+
+
+//-----------------------------
+// 2 other ways
+//-----------------------------
+
+//  "(C(DD))";
+//  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_CRE).get_local_element(idx);
+//  build_pattern_ = "(C(DD))";
+//  factor_ = -1.0;  //FIXME note we need -1 here!
+//  opReps_.clear();
+//  // S=0 (+) S=1/2  =>  S=1/2
+//  opReps_.push_back( build_compound_operator( true, -1, oneOp.at(0), twoOps.at(0), 0, indices_, true ) );
+//  // S=1 (+) S=1/2  =>  S=1/2
+//  opReps_.push_back( build_compound_operator( true, -1, oneOp.at(0), twoOps.at(1), 0, indices_, true ) );
+//  // S=1 (+) S=1/2  =>  S=3/2
+//  opReps_.push_back( build_compound_operator( true, -1, oneOp.at(0), twoOps.at(1), 1, indices_, true ) );
+
+//  "((CC)D)" + tranpose;
+//  "(C(DD))";
+//  transpose_ = true;
+//  build_pattern_ = "(C(DD))"; //FIXME note build pattern reflects structure *after* transpose is taken
+//  opReps_.clear();
+//  // S=0 (+) S=1/2  =>  S=1/2
+//  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(0), oneOp.at(0), 0, indices_, true ) );
+//  // S=1 (+) S=1/2  =>  S=1/2
+//  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 0, indices_, true ) );
+//  // S=1 (+) S=1/2  =>  S=3/2
+//  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 1, indices_, true ) );
+
+// PRINT
+//cout << "2a CDD operator elements:\n";
+//cout << *(opReps_[0]);
+//cout << "2b CDD operator elements:\n";
+//cout << *(opReps_[1]);
+//cout << "4  CDD operator elements:\n";
+//cout << *(opReps_[2]);
+  return false;
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Npdm_op_compound_CDC::Npdm_op_compound_CDC( SpinBlock * spinBlock )
 {
-abort();
+//abort();
   // Assume single site block
-  assert( spinBlock->size() == 1 );
+  // for spinAdpated dot block, creator must be on the left of destructor
+  if(dmrginp.spinAdapted()) assert( spinBlock->size() == 1 && 1==0 );
+  else assert(spinBlock->size() == 2);
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = 1;
+  if(!dmrginp.spinAdapted()) size_ = spinBlock_->get_op_array(RI_3INDEX).get_size();
   is_local_ = true;
   factor_ = 1.0;
   transpose_ = false;
-//  build_pattern_ = "((CD)C)";
+  build_pattern_ = "((CD)C)";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -189,6 +320,25 @@ bool Npdm_op_compound_CDC::set_local_ops( int idx )
 {
 //cout << "getting compound CDC operator...\n";
   // Spatial orbital indices
+  if(!dmrginp.spinAdapted()){
+    //cout << spinBlock_->get_op_array(RI_3INDEX).get_array().size();
+    indices_ = spinBlock_->get_op_array(RI_3INDEX).get_array().at(idx);
+    int ix = indices_[0];
+    int jx = indices_[1];
+    int kx = indices_[2];
+    if(ix==kx) return true;
+    if(jx==kx) return true;
+
+    std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_DES).get_element(ix,jx);
+    std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_element(kx);
+
+
+    opReps_.clear();
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(0), oneOp.at(0), 0, indices_, false ) );
+    return false;
+  }
+  else{
+
   indices_.clear();
   int ix, jx, kx;
 
@@ -204,9 +354,9 @@ bool Npdm_op_compound_CDC::set_local_ops( int idx )
 //cout << "half C operator elements:\n";
 //cout << *(oneOp[0]);
 
-  // Assumed single site (i=j=k)
-  assert ( ix == jx );
-  assert ( jx == kx );
+    // Assumed single site (i=j=k)
+    assert ( ix == jx );
+    assert ( jx == kx );
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
@@ -221,14 +371,18 @@ bool Npdm_op_compound_CDC::set_local_ops( int idx )
 // 1st way
 //----------
 
-  build_pattern_ = "((CD)C)";
   opReps_.clear();
-  // S=0 (+) S=1/2  =>  S=1/2
-  opReps_.push_back( build_compound_operator( true, 1, twoOps.at(0), oneOp.at(0), 0, indices_, false ) );
-  // S=1 (+) S=1/2  =>  S=1/2
-  opReps_.push_back( build_compound_operator( true, 1, twoOps.at(1), oneOp.at(0), 0, indices_, false ) );
-  // S=1 (+) S=1/2  =>  S=3/2
-  opReps_.push_back( build_compound_operator( true, 1, twoOps.at(1), oneOp.at(0), 1, indices_, false ) );
+  if(dmrginp.spinAdapted()){
+    // S=0 (+) S=1/2  =>  S=1/2
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(0), oneOp.at(0), 0, indices_, false ) );
+    // S=1 (+) S=1/2  =>  S=1/2
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(1), oneOp.at(0), 0, indices_, false ) );
+    // S=1 (+) S=1/2  =>  S=3/2
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(1), oneOp.at(0), 1, indices_, false ) );
+  }
+  else{
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(0), oneOp.at(0), 0, indices_, false ) );
+  }
 
 //----------
 // 2nd way
@@ -328,6 +482,7 @@ bool Npdm_op_compound_CDC::set_local_ops( int idx )
 //cout << *(opReps_[2]);
 
   return false;
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -362,6 +517,7 @@ bool Npdm_op_compound_CCC::set_local_ops( int idx )
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
   kx = oneOp.at(0)->get_orbs(0);
 
+  if(dmrginp.spinAdapted()) return true;
   // Assumed single site (i=j=k)
   assert ( ix == jx );
   assert ( jx == kx );
@@ -384,13 +540,16 @@ bool Npdm_op_compound_CCC::set_local_ops( int idx )
 
 Npdm_op_compound_DCD::Npdm_op_compound_DCD( SpinBlock * spinBlock )
 {
-abort();
+//abort();
   // Assume single site block
-  assert( spinBlock->size() == 1 );
+  // for spinAdpated dot block, creator must be on the left of destructor
+  if(dmrginp.spinAdapted()) assert( spinBlock->size() == 1 && 1==0 );
+  else assert(spinBlock->size()==2);
   opReps_.clear();
   indices_.clear();
   spinBlock_ = spinBlock;
-  size_ = 1;
+  if(dmrginp.spinAdapted()) size_ = 1;
+  else size_= spinBlock_->get_op_array(RI_3INDEX).get_size();
   is_local_ = true;
   factor_ = 1.0;
   transpose_ = false;
@@ -401,7 +560,29 @@ abort();
 
 bool Npdm_op_compound_DCD::set_local_ops( int idx )
 {
-//cout << "getting compound DCD operator...\n";
+  if(dmrginp.doimplicitTranspose()){
+  if(!dmrginp.spinAdapted()){
+    indices_ = spinBlock_->get_op_array(RI_3INDEX).get_array().at(idx);
+    int ix = indices_[0];
+    int jx = indices_[1];
+    int kx = indices_[2];
+    if(ix==jx) return true;
+    if(ix==kx) return true;
+
+    std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_element(ix);
+    boost::shared_ptr<SparseMatrix>  t_oneOp(new Transposeview(*oneOp.at(0)));
+    //cout << Transposeview(*oneOp.at(0));
+    //*t_oneOp = Transposeview(*oneOp.at(0));
+    std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_DES).get_element(jx,kx);
+
+
+
+    opReps_.clear();
+    opReps_.push_back( build_compound_operator( true, 1, t_oneOp, twoOps.at(0), 0, indices_, false ) );
+    return false;
+  }
+  pout << " no need to build DCD in a dot site for spin Adapted\n";
+  abort();
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -412,9 +593,61 @@ bool Npdm_op_compound_DCD::set_local_ops( int idx )
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
   kx = oneOp.at(0)->get_orbs(0);
 
-  // Assumed single site (i=j=k)
-  assert ( ix == jx );
-  assert ( jx == kx );
+  if(ix==jx) return true;
+  if(ix==kx) return true;
+  indices_.push_back( ix );
+  indices_.push_back( jx );
+  indices_.push_back( kx );
+  if ( ix == jx ) {
+    //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
+    //cout << "WARNING: skipping this operator\n";
+    return true;
+  }
+
+  opReps_.clear();
+  if(dmrginp.spinAdapted()){
+    // S=0 (+) S=1/2  =>  S=1/2
+    opReps_.push_back( build_compound_operator( true, -1, twoOps.at(0), oneOp.at(0), 0, indices_, true ) );
+    // S=1 (+) S=1/2  =>  S=1/2
+    opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 0, indices_, true ) );
+    // S=1 (+) S=1/2  =>  S=3/2
+    opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 1, indices_, true ) );
+  }
+  else{
+    opReps_.push_back( build_compound_operator( true, -1, twoOps.at(0), oneOp.at(0), 0, indices_, true ) );
+  }
+
+  return false;
+  }
+  else{
+  if(!dmrginp.spinAdapted()){
+    indices_ = spinBlock_->get_op_array(RI_3INDEX).get_array().at(idx);
+    int ix = indices_[0];
+    int jx = indices_[1];
+    int kx = indices_[2];
+    if(ix==jx) return true;
+    if(ix==kx) return true;
+
+    std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(DES_CRE).get_element(ix,jx);
+    std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(DES).get_element(kx);
+
+
+    opReps_.clear();
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(0), oneOp.at(0), 0, indices_, false ) );
+    return false;
+  }
+  // Spatial orbital indices
+  indices_.clear();
+  int ix, jx, kx;
+
+  std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(DES_CRE).get_local_element(idx);
+  ix = twoOps.at(0)->get_orbs(0);
+  jx = twoOps.at(0)->get_orbs(1);
+  std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(DES).get_local_element(idx);
+  kx = oneOp.at(0)->get_orbs(0);
+
+  if(jx==ix) return true;
+  if(kx==ix) return true;
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
@@ -426,13 +659,13 @@ bool Npdm_op_compound_DCD::set_local_ops( int idx )
 
   opReps_.clear();
   // S=0 (+) S=1/2  =>  S=1/2
-  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(0), oneOp.at(0), 0, indices_, true ) );
+  opReps_.push_back( build_compound_operator( true, 1, twoOps.at(0), oneOp.at(0), 0, indices_, false ) );
   // S=1 (+) S=1/2  =>  S=1/2
-  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 0, indices_, true ) );
+  opReps_.push_back( build_compound_operator( true, 1, twoOps.at(1), oneOp.at(0), 0, indices_, false ) );
   // S=1 (+) S=1/2  =>  S=3/2
-  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 1, indices_, true ) );
-
+  opReps_.push_back( build_compound_operator( true, 1, twoOps.at(1), oneOp.at(0), 1, indices_, false ) );
   return false;
+  }
 
 }
 
@@ -459,6 +692,7 @@ bool Npdm_op_compound_DDC::set_local_ops( int idx )
 {
 //cout << "getting compound DDC operator...\n";
   // Spatial orbital indices
+  // FIXME, really no DDC ? 
 abort();
 //  indices_.clear();
 //  int ix, jx, kx;
@@ -501,10 +735,11 @@ Npdm_op_compound_DCC::Npdm_op_compound_DCC( SpinBlock * spinBlock )
   indices_.clear();
   spinBlock_ = spinBlock;
   size_ = spinBlock_->get_op_array(RI_3INDEX).get_size();
+  if(!dmrginp.spinAdapted()) size_=1;
   is_local_ = true;
   factor_ = 1.0;
   transpose_ = false;
-  build_pattern_ = "0";
+  build_pattern_ = "((DC)C)";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -514,27 +749,41 @@ bool Npdm_op_compound_DCC::set_local_ops( int idx )
 //cout << "getting compound DCC operator...\n";
   // Spatial orbital indices
 //FIXME don't need to keep reconstructing whole array!
+//
+  pout << " no need to build DCD in a dot site for spin Adapted\n";
+  abort();
   indices_ = spinBlock_->get_op_array(RI_3INDEX).get_array().at(idx);
   int ix = indices_[0];
   int jx = indices_[1];
   int kx = indices_[2];
 
+  if(!dmrginp.spinAdapted()){
+    if(ix==jx) return true;
+    if(kx==jx) return true;
+    if(kx==ix) return true;
+  }
+
   // Skip operator if i,j equal
   if ( ix == jx ) return true;
 
   // Get 2-index and 1-index ops as RI building blocks
-  build_pattern_ = "((DC)C)";
   std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(DES_CRE).get_element(ix,jx);
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_element(kx);
 
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
   opReps_.clear();
-  // S=0 (+) S=1/2  =>  S=1/2
-  opReps_.push_back( build_compound_operator( true, 1, twoOps.at(0), oneOp.at(0), 0, indices_, false ) );
-  // S=1 (+) S=1/2  =>  S=1/2
-  opReps_.push_back( build_compound_operator( true, 1, twoOps.at(1), oneOp.at(0), 0, indices_, false ) );
-  // S=1 (+) S=1/2  =>  S=3/2
-  opReps_.push_back( build_compound_operator( true, 1, twoOps.at(1), oneOp.at(0), 1, indices_, false ) );
+  if(dmrginp.spinAdapted()){
+    // S=0 (+) S=1/2  =>  S=1/2
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(0), oneOp.at(0), 0, indices_, false ) );
+    // S=1 (+) S=1/2  =>  S=1/2
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(1), oneOp.at(0), 0, indices_, false ) );
+    // S=1 (+) S=1/2  =>  S=3/2
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(1), oneOp.at(0), 1, indices_, false ) );
+  }
+  else{
+    opReps_.push_back( build_compound_operator( true, 1, twoOps.at(0), oneOp.at(0), 0, indices_, false ) );
+
+  }
 
   return false;
 }

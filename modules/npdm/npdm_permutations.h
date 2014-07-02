@@ -18,7 +18,7 @@ class Npdm_permutations {
     Npdm_permutations() {}
     virtual ~Npdm_permutations() {}
 
-    void process_new_elements( const std::vector< std::pair< std::vector<int>, double > >& in, 
+    void process_new_elements( const std::vector<std::pair<std::vector<int>, double > >& in, 
                                std::vector< std::pair< std::vector<int>, double > >& nonredundant_elements,
                                std::vector< std::pair< std::vector<int>, double > >& spin_batch );
   private:

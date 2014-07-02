@@ -102,4 +102,54 @@ srun  ../../block.spin_adapted dmrg_irrep4.conf >dmrg.out
 python ../test_energy.py 2 1e-6 -55.8015784472 -55.4362910647
 cd ../
 
+echo "testing 3pdm, 4pdm and NEVPT2 A16_matrix for h2o_small"
+cd npdm_h2o_small
+echo "testing 3pdm..."
+srun ../../block.spin_adapted dmrg3.conf >dmrg.out
+python ../test_threepdm.py spatial_threepdm.0.0.txt spat_threepdm.0.0.txt 1e-7
+echo "testing 4pdm..."
+srun ../../block.spin_adapted dmrg4.conf >dmrg.out
+python ../test_fourpdm.py spatial_fourpdm.0.0.txt spat_fourpdm.0.0.txt 1e-7
+echo "testing A16_matrix..."
+rm -f partial*bin A16_matrix*txt
+srun ../../block.spin_adapted dmrgA16.conf >dmrg.out
+python ../test_threepdm.py A16_matrix.0.0.txt A16_matrix.0.0.ref 1e-7
+cd ../
+
+echo "testing 1pdm and 2pdm in non-spinAdapted calcultions"
+cd hubbard_nonspinpdm
+echo " test 1pdm..."
+srun ../../block.spin_adapted dmrg_onepdm.conf >dmrg.out
+python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
+echo " test 2pdm..."
+srun ../../block.spin_adapted dmrg_twopdm.conf >dmrg.out
+python ../test_onepdm.py spatial_twopdm.0.0.txt spat_twopdm.0.0.txt 1e-7
+cd ../
+
+echo "testing transition 1pdm and 2pdm for hubbard model"
+cd hubbard_transition_pdm
+echo " test transiton 1pdm..."
+srun ../../block.spin_adapted dmrg_onepdm.conf >dmrg.out
+python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
+python ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
+echo " test transition 2pdm..."
+srun ../../block.spin_adapted dmrg_twopdm.conf >dmrg.out
+python ../test_onepdm.py spatial_twopdm.0.0.txt spat_twopdm.0.0.txt 1e-7
+python ../test_onepdm.py spatial_twopdm.1.1.txt spat_twopdm.1.1.txt 1e-7
+cd ../
+
+echo "testing transition 1pdm for h2o"
+cd h2o_transitionpdm
+echo " test transiton 1pdm with state average..."
+srun ../../block.spin_adapted dmrg_onepdm.conf >dmrg_onepdm.out
+python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
+python ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
+python ../test_transitiononepdm.py spatial_onepdm.1.0.txt spat_onepdm.1.0.txt 1e-7
+echo " test transiton 1pdm with state specific..."
+srun ../../block.spin_adapted dmrg_onepdm.conf >dmrg_onepdm.out
+srun ../../block.spin_adapted dmrg_statespecific.conf >dmrg_statespecific.out
+python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
+python ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
+python ../test_transitiononepdm.py spatial_onepdm.1.0.txt spat_onepdm.1.0.txt 1e-7
+
 ./clean

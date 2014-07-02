@@ -19,6 +19,9 @@ namespace GuessWave
   void guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, const SpinBlock &big,
 			   const guessWaveTypes &guesswavetype, const bool &onedot, const int &state, const bool& transpose_guess_wave, double additional_noise=0.0);
 
+  void guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, const SpinBlock &big,
+			   const guessWaveTypes &guesswavetype, const bool &onedot, const int &state, const bool& transpose_guess_wave, double additional_noise, bool ket);
+
   //onedot transpose wave guess
   void transpose_previous_wavefunction(Wavefunction& trial, const StateInfo& stateInfo, const std::vector<int>& rightsites, const std::vector<int> &dotsites, const int state, const bool &onedot, const bool& transpose_guess_wave);
   void transpose_previous_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state, const bool &onedot, const bool& transpose_guess_wave);
@@ -36,6 +39,9 @@ namespace GuessWave
 						   ObjectMatrix3D< vector<Matrix> >& threewavefunction);
   void transform_previous_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state, const bool &onedt, 
 				       const bool& transpose_guess_wave);
+
+  void transform_previous_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state, const bool &onedt, 
+				       const bool& transpose_guess_wave, bool ket);
   void transform_previous_wavefunction(Wavefunction& trial, const StateInfo& stateInfo, const std::vector<int> &leftsites, const std::vector<int> &rightsites, const int state, const bool &onedot, const bool& transpose_guess_wave);
 
   //ondeot transform wave guess                                                                                  

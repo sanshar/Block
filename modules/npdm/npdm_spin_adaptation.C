@@ -128,29 +128,29 @@ void Npdm_spin_adaptation::parse_result_into_matrix( const std::vector<TensorOp>
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Npdm_spin_adaptation::apply_permutation( Eigen::MatrixXi & perm_mat, std::vector< std::vector<int> >& so_indices)
+void Npdm_spin_adaptation::apply_permutation( Matrix & perm_mat, std::vector< std::vector<int> >& so_indices)
 {
   int cols = so_indices.size();
   int rows = so_indices[0].size();
-  assert( perm_mat.rows() == rows );
-  assert( perm_mat.cols() == rows );
+  assert( perm_mat.Nrows() == rows );
+  assert( perm_mat.Ncols() == rows );
 
   // Convert so_indices to explicit matrix type
-  Eigen::MatrixXi so_mat(rows,cols);
+  Matrix so_mat(rows,cols);
   for (int j=0; j<cols; j++) {
     for (int i=0; i<rows; i++) {
-      so_mat(i,j) = so_indices[j][i];
+      so_mat(i+1,j+1) = so_indices[j][i];
     }
   }
 
   // Transform by matrix multiplication
-  Eigen::MatrixXi new_so_mat(rows,cols);
+  Matrix new_so_mat(rows,cols);
   new_so_mat = perm_mat * so_mat;
 
   // Over-write so_indices with new ordering
   for (int j=0; j<cols; j++) {
     for (int i=0; i<rows; i++) {
-      so_indices[j][i] = new_so_mat(i,j);
+      so_indices[j][i] = new_so_mat(i+1,j+1);
     }
   }
 
@@ -188,18 +188,19 @@ int Npdm_spin_adaptation::commute_so_indices_to_pdm_order( const std::string& s,
   std::sort( perm_mat_pair.begin(), perm_mat_pair.end() );
 
   // Back out permutation matrix as explicit matrix type
-  Eigen::MatrixXi perm_mat(dim,dim);
+
+  Matrix perm_mat(dim, dim);
   for (int i=0; i<dim; i++) {
     for (int j=0; j<dim; j++) {
-      perm_mat(i,j) = perm_mat_pair[i].second[j];
+      perm_mat(i+1,j+1) = perm_mat_pair[i].second[j];
     }
   }
 
-  // Re-order so_indices
-  apply_permutation( perm_mat, so_indices );
+  apply_permutation( perm_mat, so_indices);
 
+  
   // Parity is just the determinant of permutation matrix
-  int parity = perm_mat.determinant();
+  int parity = perm_mat.Determinant() > 0 ? 1 : -1;
   assert( abs(parity) == 1 );
 
   return parity;

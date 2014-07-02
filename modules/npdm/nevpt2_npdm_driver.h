@@ -27,7 +27,7 @@ class Nevpt2_npdm_driver : public Npdm_driver_base {
   
     void save_data( const int i, const int j );
     void compute_npdm_elements( std::vector<Wavefunction>& wavefunctions, const SpinBlock& big, int sweepPos, int endPos );
-    void clear() { nevpt2_A16_matrix.clear(); }
+    void clear();
 
   private:
 #ifdef DEBUG_NEVPT2NPDM

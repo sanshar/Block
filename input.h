@@ -29,16 +29,17 @@ class PairArray;
 class CCCCArray;
 class CCCDArray;
 
+enum WarmUpTypes {WILSON, LOCAL2, LOCAL3, LOCAL4};
 enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD, BCS, HEISENBERG};
-enum solveTypes {LANCZOS, DAVIDSON};
+enum solveTypes {LANCZOS, DAVIDSON, CONJUGATE_GRADIENT};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
-enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI, EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN};
+enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI, EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN, COMPRESS, TRANSITION_ONEPDM, TRANSITION_TWOPDM, RESTART_T_ONEPDM, RESTART_T_TWOPDM};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
-	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, 
-	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, BOGOLIUBOV, NUMKEYWORDS};
+	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER,
+	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, BOGOLIUBOV, TWODOT_NOISE, WARMUP, NUMKEYWORDS};
 
 class Input {
 
@@ -84,6 +85,7 @@ class Input {
   calcType m_calc_type;
   noiseTypes m_noise_type;
   hamTypes m_ham_type;
+  WarmUpTypes m_warmup;
   int m_nroots;
   solveTypes m_solve_type;
   bool m_do_deriv;
@@ -116,6 +118,10 @@ class Input {
   int m_maxj;
   ninejCoeffs m_ninej;
   int m_max_lanczos_dimension;
+  
+  int n_twodot_noise;
+  double m_twodot_noise;
+  double m_twodot_gamma;
 
   double m_sweep_tol;
   bool m_restart;
@@ -123,6 +129,7 @@ class Input {
   bool m_fullrestart;
   bool m_restart_warm;
   bool m_reset_iterations;
+  bool m_implicitTranspose;
 
   std::vector<int> m_spin_vector;
   std::vector<int> m_spin_orbs_symmetry;
@@ -143,7 +150,7 @@ class Input {
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & m_thrds_per_node & m_spinAdapted & m_Bogoliubov & m_stateSpecific ;
+    ar & m_thrds_per_node & m_spinAdapted & m_Bogoliubov & m_stateSpecific & m_implicitTranspose;
     ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz;
     ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occ_user & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule & m_reorder;
@@ -154,9 +161,10 @@ class Input {
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform ;
     ar & m_do_npdm_ops & m_do_npdm_in_core & m_new_npdm_code;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_oneindex_screen_tol & m_twoindex_screen_tol & m_quantaToKeep & m_noise_type;
-    ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type;
+    ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type & m_warmup;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
     ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_backward & m_schedule_type_default & m_core_energy &m_integral_disk_storage_thresh;
+    ar & n_twodot_noise & m_twodot_noise & m_twodot_gamma;
   }
 
 
@@ -203,6 +211,7 @@ class Input {
   void writeSummaryForMolpro();
 #endif
   void performSanityTest();
+  void generateDefaultSchedule();
   void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
   void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, PairArray& vcc, CCCCArray& vcccc, CCCDArray& vcccd);  
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
@@ -244,10 +253,13 @@ class Input {
 
   //const bool& doStateSpecific() const {return m_doStateSpecific;}
   //bool& doStateSpecific() {return m_doStateSpecific;}
+  const bool& doimplicitTranspose() const {return m_implicitTranspose;}
+  bool& setimplicitTranspose() {return m_implicitTranspose;}
   const bool& setStateSpecific() const {return m_stateSpecific;}
   bool& setStateSpecific() {return m_stateSpecific;}
   const orbitalFormat& orbformat() const {return m_orbformat;}
   const int& outputlevel() const {return m_outputlevel;}
+  int& setOutputlevel()  {return m_outputlevel;}
   const vector<int>& spatial_to_spin() const {return m_spatial_to_spin;}
   int spatial_to_spin(int i) const {return m_spatial_to_spin.at(i);}
   const vector<int>& spin_to_spatial() const {return m_spin_to_spatial;}
@@ -263,11 +275,17 @@ class Input {
   const bool& get_fullrestart() const {return m_fullrestart;}
   const bool& get_backward() const {return m_backward;}
   const double& get_sweep_tol() const {return m_sweep_tol;}
+  const int& get_twodot_method() const {return n_twodot_noise;} 
+  const double& get_twodot_noise() const {return m_twodot_noise;} 
+  double& set_twodot_noise()  {return m_twodot_noise;}
+  const double& get_twodot_gamma() const {return m_twodot_gamma;}
+  double& set_twodot_gamma()  {return m_twodot_gamma;}
   const bool& get_restart() const {return m_restart;}
   const bool& get_restart_warm() const {return m_restart_warm;}
   const bool& get_reset_iterations() const {return m_reset_iterations;}
   const ninejCoeffs& get_ninej() const {return m_ninej;}
   const hamTypes &hamiltonian() const {return m_ham_type;}
+  const WarmUpTypes &warmup() const {return m_warmup;}
   const int &guess_permutations() const { return m_guess_permutations; }
   const int &max_lanczos_dimension() const {return m_max_lanczos_dimension;}
   std::vector<int> thrds_per_node() const { return m_thrds_per_node; }

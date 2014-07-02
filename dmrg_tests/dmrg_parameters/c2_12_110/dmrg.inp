@@ -1,0 +1,11 @@
+nelec 12
+point_group d2h
+spin 0
+irrep 1
+schedule default
+maxm 6000
+twodot
+sweep_tol 1e-9
+orbitals FCIDUMP
+reorder genetic_reorder.dat
+hf_occ 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0

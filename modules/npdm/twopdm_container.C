@@ -23,11 +23,17 @@ Twopdm_container::Twopdm_container( int sites )
   store_full_spatial_array_ = true;
 
   if ( store_full_spin_array_ ) {
-    twopdm.resize(2*sites,2*sites,2*sites,2*sites);
+    if(dmrginp.spinAdapted())
+      twopdm.resize(2*sites,2*sites,2*sites,2*sites);
+    else
+      twopdm.resize(sites,sites,sites,sites);
     twopdm.Clear();
   }
   if ( store_full_spatial_array_ ) {
-    spatial_twopdm.resize(sites,sites,sites,sites);
+    if(dmrginp.spinAdapted())
+      spatial_twopdm.resize(sites,sites,sites,sites);
+    else
+      spatial_twopdm.resize(sites/2,sites/2,sites/2,sites/2);
     spatial_twopdm.Clear();
   }
 }
@@ -247,7 +253,8 @@ void Twopdm_container::update_full_spatial_array( std::vector< std::pair< std::v
 
 void Twopdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
-  assert( new_spin_orbital_elements.size() == 6 );
+  if(dmrginp.spinAdapted()) assert( new_spin_orbital_elements.size() == 6 );
+  else assert(new_spin_orbital_elements.size() == 1);
   Twopdm_permutations perm;
   std::vector< std::pair< std::vector<int>, double > > spin_batch;
   // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product

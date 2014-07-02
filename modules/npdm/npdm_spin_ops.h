@@ -21,6 +21,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/string.hpp>
+#include "spinblock.h"
 
 namespace SpinAdapted{
 namespace Npdm{
@@ -129,6 +130,7 @@ class NpdmSpinOps : public NpdmSpinOps_base {
 //    virtual const std::vector< int >& get_1d_indices() { abort(); }
 
   protected:
+    //FIXME
     boost::shared_ptr<SparseMatrix> build_compound_operator( bool is_fermion, int sign,
                                                              boost::shared_ptr<SparseMatrix> lhsOp,
                                                              boost::shared_ptr<SparseMatrix> rhsOp,

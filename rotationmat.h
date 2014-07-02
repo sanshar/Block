@@ -12,9 +12,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <vector>
 #include "Operators.h"
 #include "multiarray.h"
-#ifdef USE_BTAS
-#include "btas/SPARSE/STArray.h"
-#endif
 
 namespace SpinAdapted{
 
@@ -29,9 +26,6 @@ bool can_connect(int n, int spin, int right_block_size);
 
 void allocate(const StateInfo& row, const StateInfo& col, std::vector<Matrix>& rotations);
 
-#ifdef USE_BTAS
-void UnCollectQuantaAlongRows(const StateInfo& sRow, const StateInfo& sCol, const std::vector<Matrix> &inRotation, btas::STArray<double, 3>& SiteTensor);
-#endif
 
 }
 #endif

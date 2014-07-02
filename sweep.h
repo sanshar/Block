@@ -12,10 +12,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "spinblock.h"
 #include "sweep_params.h"
 
-#ifdef USE_BTAS
-#include "btas/SPARSE/STArray.h"
-#endif
-
 namespace SpinAdapted{
 namespace Sweep
 {
@@ -28,18 +24,17 @@ namespace Sweep
 
   void CanonicalizeWavefunction(SweepParams &sweepParams, const bool &forward, int currentstate);
   void InitializeStateInfo(SweepParams &sweepParams, const bool &forward, int currentstate);
-  void InitializeAllOverlaps(SweepParams &sweepParams, const bool &forward, int stateA, int stateB);
+  void InitializeOverlapSpinBlocks(SweepParams &sweepParams, const bool &forward, int stateA, int stateB);
   void calculateAllOverlap(Matrix& overlap);
   void calculateHMatrixElements(Matrix& H);
+  void makeSystemEnvironmentBigBlocks(SpinBlock& system, SpinBlock& systemDot, SpinBlock& newSystem, 
+				      SpinBlock& environment, SpinBlock& environmentDot, SpinBlock& newEnvironment,
+				      SpinBlock& big, SweepParams& sweepParams, const bool& dot_with_sys, const bool& useSlater);
+  void makeSystemEnvironmentBigOverlapBlocks(const std::vector<int>& systemSites, SpinBlock& systemDot, SpinBlock& environmentDot,
+					     SpinBlock& system, SpinBlock& newSystem, SpinBlock& environment, SpinBlock& newEnvironment,
+					     SpinBlock& big, SweepParams& sweepParams, const bool& dot_with_sys, const bool& useSlater,
+					     int braState, int ketState);
   
-#ifdef USE_BTAS
-  void saveUpdatedLocalOverlapMatrix(int currentState, const std::vector<int>& sites, StateInfo& leftState, StateInfo& rightState);
-  void getLowerStatesBlockRow(int currentState, const std::vector<int>& sites, const std::vector<int>& complementSites, std::vector<Wavefunction>& lowerStates, const StateInfo& leftState, const StateInfo& rightState, const vector<StateInfo>& stateInfoi);
-  void getLowerStatesBlockCol(int currentState, const std::vector<int>& sites, const std::vector<int>& complementSites, std::vector<Wavefunction>& lowerStates, const StateInfo& leftState, const StateInfo& rightState, const vector<StateInfo>& stateInfoi);
-  void makeDMRGOverlapFromBTASOverlap(SparseMatrix &Overlap, const std::vector<int>& sites, int left, int right);
-  void makeBTASOverlapFromDMRGOverlap(const SparseMatrix& Overlap, btas::STArray<double, 2>& OverlapBtas);
-  boost::shared_ptr<SparseMatrix> updateLocalOverlapMatrix(const SparseMatrix &Overlap, const std::vector<Matrix>& leftrotateMatrix, const std::vector<Matrix>& rightrotateMatrix,  const StateInfo& braState, const StateInfo& ketState);
-#endif
 };
 }
 #endif

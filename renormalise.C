@@ -39,7 +39,7 @@ namespace SpinAdapted{
 void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins, double& error, vector<Matrix>& rotateMatrix, 
 				const int keptstates, const int keptqstates, const double tol, SpinBlock& big, 
 				const guessWaveTypes &guesswavetype, const double noise, const double additional_noise, const bool &onedot, SpinBlock& System, 
-				SpinBlock& sysDot, SpinBlock& envDot, SpinBlock& environment, const bool& dot_with_sys,
+				SpinBlock& sysDot, SpinBlock& environment, const bool& dot_with_sys,
 				const bool& warmUp, int sweepiter, int currentRoot, std::vector<Wavefunction>& lowerStates)
 {
   int nroots = dmrginp.nroots(sweepiter);
@@ -68,7 +68,6 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
       wave_solutions[i] = tempwave;
     }
     *this = newsystem;
-    envDot.clear();
     big.get_rightBlock()->clear();
     big.clear();
   }
@@ -111,15 +110,6 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix);
   for (int i=0; i<nroots; i++) {
     int state = dmrginp.setStateSpecific() ? currentRoot : i;
-    /*
-    DensityMatrix tracedMatrix_i(braStateInfo);
-    std::vector<Matrix> rotateMatrixi;
-    std::vector<double> weights(nroots, 0.0); weights[i] = 1.0;
-
-    tracedMatrix_i.allocate(braStateInfo);
-    tracedMatrix_i.makedensitymatrix(wave_solutions, newbig, weights, 0.0, twodotnoise, normalnoise);
-    error = makeRotateMatrix(tracedMatrix_i, rotateMatrixi, keptstates, keptqstates);
-    */
     SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix, state);
     wave_solutions[i].SaveWavefunctionInfo (newbig.braStateInfo, newbig.leftBlock->sites, state);
   }

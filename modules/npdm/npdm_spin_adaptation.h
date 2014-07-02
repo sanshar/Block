@@ -1,7 +1,6 @@
 #ifndef NPDM_SPIN_ADAPTATION_H
 #define NPDM_SPIN_ADAPTATION_H
 
-#include <Eigen/Dense>
 #include "MatrixBLAS.h"
 #include "npdm_tensor_operator.h"
 
@@ -24,7 +23,7 @@ class Npdm_spin_adaptation {
     void parse_result_into_matrix( const std::vector<TensorOp>& tensor_ops, 
                                    Matrix& matrix, std::vector< std::vector<int> >& so_indices, std::vector<int>& singlet_rows);
     
-    void apply_permutation( Eigen::MatrixXi & perm_mat, std::vector< std::vector<int> >& so_indices);
+    void apply_permutation( Matrix & perm_mat, std::vector< std::vector<int> >& so_indices);
     int commute_so_indices_to_pdm_order( const std::string& s, std::vector< std::vector<int> >& so_indices);
     std::map< std::vector<int>, double > get_matrix_row ( const TensorOp& op, bool & is_singlet );
     std::map< std::vector<int>, int > get_map_to_int( std::vector< std::map< std::vector<int>, double > > & matrix_rows );

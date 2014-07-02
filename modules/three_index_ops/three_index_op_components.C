@@ -69,7 +69,10 @@ std::map< std::tuple<int,int,int>, int > get_local_3index_tuples(SpinBlock& b)
   SpinBlock* dotBlock = b.get_rightBlock();
   
   assert( dotBlock != NULL );
+  if(dmrginp.spinAdapted())
   assert( dotBlock->get_sites().size() == 1 );
+  if(!dmrginp.spinAdapted())
+  assert( dotBlock->get_sites().size() == 2 );
 
   bool forward = true;
   if ( sysBlock->get_sites()[0] > dotBlock->get_sites()[0] ) forward = false;
@@ -156,6 +159,14 @@ std::map< std::tuple<int,int,int>, int > get_local_3index_tuples(SpinBlock& b)
 std::map< std::tuple<int,int,int>, int > get_3index_tuples(SpinBlock& b)
 {
   std::map< std::tuple<int,int,int>, int > tuples;
+  std::vector<int> sites = b.get_sites();
+
+  //add a special case for when rightblock is a dummyblock
+  if (b.get_rightBlock() != NULL) 
+    if (b.get_rightBlock()->get_sites().size() == 0) {
+      tuples[ std::make_tuple(sites[0], sites[0], sites[0]) ] = -1;
+      return tuples;
+    }
 
   if ( b.get_leftBlock() != NULL ) {
     // Generate only mpi local tuples for compound block, consistent with existing operators on sys and dot
@@ -163,7 +174,6 @@ std::map< std::tuple<int,int,int>, int > get_3index_tuples(SpinBlock& b)
   }
 
   // Generate all tuples such that (k <= j <= i) and let para_array assign them to local processes as necessary
-  std::vector<int> sites = b.get_sites();
   for (int i = 0; i < sites.size(); ++i)
     for (int j = 0; j <= i; ++j)
       for (int k = 0; k <= j; ++k) {
@@ -208,7 +218,14 @@ void Op_component<RI3index>::build_and_renormalise_operators(SpinBlock&b, const 
 template<>
 void Op_component<RI3index>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                              const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ abort(); }
+{ 
+  //FIXME
+  //No need to renormalise RI3index, since it is just gotten by product of two index operator and one operattor on single site.
+  //This is just for compatibility of transition pdm.
+  //abort(); 
+  return;
+}
+
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 

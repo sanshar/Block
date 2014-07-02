@@ -39,8 +39,13 @@ namespace operatorfunctions
 
   void TensorProductElement(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const SpinBlock *cblock, const StateInfo *cstateinfo, Baseoperator<Matrix>& c, Matrix& cel, int cq, int cqprime, double scale);
 
+  void TensorProduct (const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const StateInfo *brastateinfo, const StateInfo *ketstateinfo, Baseoperator<Matrix>& c, double scale, bool aIsLeftOp, int num_thrds=1);
+
+  void TensorProductElement(const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const StateInfo *brastateinfo, const StateInfo *ketstateinfo, Baseoperator<Matrix>& c, Matrix& cel, int cq, int cqprime, bool aIsLeftOp, double scale);
+
   void TensorMultiply(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const SpinBlock *cblock, Wavefunction& c, Wavefunction& v, const SpinQuantum dQ, double scale, int num_thrds = 1);
   void TensorMultiply(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const SpinBlock *cblock, Wavefunction& c, Wavefunction& v, const SpinQuantum opQ, double scale);
+  void TensorMultiply(const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const StateInfo *brastateinfo, const StateInfo *ketstateinfo, const Wavefunction& c, Wavefunction& v, const SpinQuantum opQ, bool aIsLeft, double scale);
   
   void OperatorScaleAdd(double scaleV, const SpinBlock& b, const Baseoperator<Matrix>& op1, Baseoperator<Matrix>& op2);
   void MultiplyProduct(const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, Baseoperator<Matrix>& c, Real scale);

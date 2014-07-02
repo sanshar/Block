@@ -97,7 +97,12 @@ void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const State
   Wavefunction oldWave;
 
   vector<int> wfsites = rightsites;
-  wfsites.insert(wfsites.end(), dotsites.begin(), dotsites.end());
+  if (dmrginp.spinAdapted())
+    wfsites.insert(wfsites.end(), dotsites.begin(), dotsites.end());
+  else {
+    wfsites.push_back(2*dotsites[0]);
+    wfsites.push_back(2*dotsites[0]+1);
+  }
   sort(wfsites.begin(), wfsites.end());
   oldWave.LoadWavefunctionInfo(oldStateInfo, wfsites, state);
   onedot_transpose_wavefunction(oldStateInfo, stateInfo, oldWave, trial);
@@ -293,6 +298,54 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
 }
 
 
+void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, const SpinBlock &big,
+				    const guessWaveTypes &guesswavetype, const bool &onedot, const int &state, const bool& transpose_guess_wave,
+				    double additional_noise, bool ket)
+// ket determines use braSateinfo or ketStateinfo to guess_wavefunctions.
+{
+#ifndef SERIAL
+  mpi::communicator world;
+#endif
+  solution.initialise(dmrginp.effective_molecule_quantum_vec(), &big, onedot);
+
+  if (!mpigetrank())
+  {
+    switch(guesswavetype)
+    {
+    case TRANSFORM:
+      transform_previous_wavefunction(solution, big, state, onedot, transpose_guess_wave,ket);
+      break;
+    case BASIC:
+      basic_guess_wavefunction(e, solution, &big.get_stateInfo(), state);
+      break;
+    case TRANSPOSE:
+      transpose_previous_wavefunction(solution, big, state, onedot, transpose_guess_wave);
+      break;
+    }
+
+    double norm = DotProduct(solution, solution);
+
+    if (guesswavetype == BASIC) {
+      Wavefunction noiseMatrix = solution;
+      noiseMatrix.Randomise();
+      double norm = DotProduct(noiseMatrix, noiseMatrix);
+      if (abs(norm) >= 1e-14) {
+	ScaleAdd(1e-6/sqrt(norm), noiseMatrix, solution);
+      }
+    }
+
+    Normalise(solution);
+    norm = DotProduct(solution, solution);
+    if (dmrginp.outputlevel() > 0) 
+      pout << "\t\t\t Norm of wavefunction :: "<<norm<<endl;
+    
+  }
+  /*
+#ifndef SERIAL
+  broadcast(world, solution, 0);
+#endif
+  */
+}
 
 void GuessWave::guess_wavefunctions(std::vector<Wavefunction>& solution, DiagonalMatrix& e, const SpinBlock &big, 
 				    const guessWaveTypes &guesswavetype, const bool &onedot, const bool &transpose_guess_wave, double additional_noise, int currentState)
@@ -549,9 +602,127 @@ it's not necessary to take the pseudo inverse of right rotation matrix.
     onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWave, leftRotationMatrix, rightRotationMatrix, trial, transpose_guess_wave);
   }
 
+
   double norm = DotProduct(trial, trial);
 }
 
+void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state, const bool &onedot, const bool& transpose_guess_wave,bool ket)
+// ket determines use braSateinfo or ketStateinfo to guess_wavefunctions.
+{
+  if (dmrginp.outputlevel() > 0) 
+    pout << "\t\t\t Transforming previous wavefunction " << endl;
+  
+  ObjectMatrix3D< vector<Matrix> > oldTrialWavefunction;
+  ObjectMatrix3D< vector<Matrix> > newTrialWavefunction;
+  StateInfo oldStateInfo;
+  Wavefunction oldWave;
+  DiagonalMatrix D;
+  Matrix U;
+  Matrix V;
+  std::vector<Matrix> leftRotationMatrix;
+  if (transpose_guess_wave || !onedot){
+    oldWave.LoadWavefunctionInfo (oldStateInfo, big.get_leftBlock()->get_leftBlock()->get_sites(), state);
+    LoadRotationMatrix (big.get_leftBlock()->get_leftBlock()->get_sites(), leftRotationMatrix, state);
+  }
+  else{
+    oldWave.LoadWavefunctionInfo (oldStateInfo, big.get_leftBlock()->get_sites(), state);
+    LoadRotationMatrix (big.get_leftBlock()->get_sites(), leftRotationMatrix, state);
+  }
+
+  for (int q = 0; q < leftRotationMatrix.size (); ++q)
+  {
+    if (leftRotationMatrix [q].Nrows () > 0)
+    {
+
+/****************************************************************************************************
+FIXME:
+Left rotation matrix should be transposed rather than inverted. Fortunately, this bug doesn't affect
+to any results, since rotation matrix has singular values which are all equal to 1, meaning that
+the pseudo inverse of a rotation matrix is indeed, the transposition of it. From the same reason,
+it's not necessary to take the pseudo inverse of right rotation matrix.
+****************************************************************************************************/
+
+//    try
+//    {
+//      svd(inverseLeftRotationMatrix[q], D, U, V);
+//    }
+//    catch (Exception)
+//    {
+//      pout << Exception::what() << endl;
+//      pout << D << endl;
+//      pout << U << endl;
+//      pout << V << endl;
+//      abort();
+//    }
+//    Matrix vd = V;
+//    vd *= D.i();
+//    inverseLeftRotationMatrix[q].ReSize(V.Nrows(), U.Nrows());
+//    SpinAdapted::Clear(inverseLeftRotationMatrix[q]);
+//    MatrixMultiply(vd, 'n', U, 't', inverseLeftRotationMatrix[q], 1.);
+      leftRotationMatrix[q] = leftRotationMatrix[q].t();
+    }
+  }
+
+  std::vector<Matrix> rightRotationMatrix;
+  if(!onedot)
+  {
+    Wavefunction tempoldWave;
+    tempoldWave.AllowQuantaFor(*big.get_stateInfo().leftStateInfo->leftStateInfo, *oldStateInfo.rightStateInfo, oldWave.get_deltaQuantum()); 
+    TransformLeftBlock(oldWave, big.get_stateInfo(), leftRotationMatrix, tempoldWave);
+
+    StateInfo tempoldStateInfo;
+    if (dmrginp.hamiltonian() == BCS)
+      TensorProduct (*(big.get_stateInfo().leftStateInfo->leftStateInfo), *oldStateInfo.rightStateInfo, tempoldStateInfo,
+		   SPIN_NUMBER_CONSTRAINT);
+    else
+      TensorProduct (*(big.get_stateInfo().leftStateInfo->leftStateInfo), *oldStateInfo.rightStateInfo, tempoldStateInfo,
+		   PARTICLE_SPIN_NUMBER_CONSTRAINT);
+
+    tempoldStateInfo.CollectQuanta();
+
+    Wavefunction tempnewWave;
+    tempnewWave.AllowQuantaFor(*big.get_stateInfo().leftStateInfo, *oldStateInfo.rightStateInfo->leftStateInfo, oldWave.get_deltaQuantum()); 
+    StateInfo tempnewStateInfo;
+    if (dmrginp.hamiltonian() == BCS)
+      TensorProduct (*(big.get_stateInfo().leftStateInfo), *oldStateInfo.rightStateInfo->leftStateInfo, tempnewStateInfo,
+		   SPIN_NUMBER_CONSTRAINT);
+    else
+      TensorProduct (*(big.get_stateInfo().leftStateInfo), *oldStateInfo.rightStateInfo->leftStateInfo, tempnewStateInfo,
+		   PARTICLE_SPIN_NUMBER_CONSTRAINT);
+
+    
+    tempnewStateInfo.CollectQuanta();
+    onedot_shufflesysdot(tempoldStateInfo, tempnewStateInfo, tempoldWave, tempnewWave);
+
+    LoadRotationMatrix (big.get_rightBlock()->get_sites(), rightRotationMatrix, state);
+
+    trial.AllowQuantaFor(*big.get_stateInfo().leftStateInfo, *big.get_stateInfo().rightStateInfo, oldWave.get_deltaQuantum()); 
+    TransformRightBlock(tempnewWave, oldStateInfo, rightRotationMatrix, trial);
+    // from tensor product form |a>|b> group together blocks with same quantum numbers
+    //trial.CollectQuantaAlongColumns(*big.get_stateInfo().leftStateInfo, *big.get_stateInfo().rightStateInfo->unCollectedStateInfo);
+  }
+  else
+  {
+    vector<int> rotsites;
+    if (transpose_guess_wave) {
+      rotsites = big.get_rightBlock()->get_sites();
+      rotsites.insert(rotsites.end(), big.get_leftBlock()->get_rightBlock()->get_sites().begin(), big.get_leftBlock()->get_rightBlock()->get_sites().end());
+      sort(rotsites.begin(), rotsites.end());
+      LoadRotationMatrix(rotsites, rightRotationMatrix, state);
+    }
+    else {
+      rotsites = big.get_rightBlock()->get_sites();
+      LoadRotationMatrix(rotsites, rightRotationMatrix, state);
+    }
+    if(ket)
+    onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWave, leftRotationMatrix, rightRotationMatrix, trial, transpose_guess_wave);
+    else 
+    onedot_transform_wavefunction(oldStateInfo, big.get_braStateInfo(), oldWave, leftRotationMatrix, rightRotationMatrix, trial, transpose_guess_wave);
+  }
+
+
+  double norm = DotProduct(trial, trial);
+}
 
 /*!  
   @brief Transform wavefunction from previous block configuration 

@@ -38,15 +38,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "rotationmat.h"
 #include "density.h"
 #include "sweep.h"
+#include "sweepCompress.h"
 #include "BaseOperator.h"
 #include "dmrg_wrapper.h"
-
-#ifdef USE_BTAS
-#include "overlaptensor.h"
-#include "btas/SPARSE/STArray.h"
-#include "btas/SPARSE/SDcontract.h"
-#include <btas/TVector.h>
-#endif
 
 #ifndef SERIAL
 #include <boost/mpi/environment.hpp>
@@ -60,6 +54,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 void calculateOverlap();
 #endif
 void dmrg(double sweep_tol);
+void compress(double sweep_tol, int targetState, int baseState);
 void restart(double sweep_tol, bool reset_iter);
 void dmrg_stateSpecific(double sweep_tol, int targetState);
 void ReadInput(char* conf);
@@ -124,8 +119,25 @@ int calldmrg(char* input, char* output)
   bool direction_copy; int restartsize_copy;
   Matrix O, H;
 
+
+
+
   switch(dmrginp.calc_type()) {
 
+  case (COMPRESS):
+
+    bool direction; int restartsize;
+    sweepParams.restorestate(direction, restartsize);
+    sweepParams.set_sweep_iter() = 0;
+    restartsize = 0;
+    //this genblock is required to generate all the nontranspose operators
+    dmrginp.setimplicitTranspose() = false;
+    SweepGenblock::do_one(sweepParams, false, false, false, restartsize, 0, 0);
+
+    int targetState, baseState;
+    targetState = 1; baseState = 0;
+    compress(sweep_tol, targetState, baseState);
+    break;
   case (CALCOVERLAP):
     pout.precision(12);
     if (mpigetrank() == 0) {
@@ -141,12 +153,11 @@ int calldmrg(char* input, char* output)
       }
       for (int istate = 0; istate<dmrginp.nroots(); istate++) 
 	for (int j=istate; j<dmrginp.nroots() ; j++) {
-	  Sweep::InitializeAllOverlaps(sweepParams, !direction, istate, j);
-	  Sweep::InitializeAllOverlaps(sweepParams, direction, istate, j);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, j, istate);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, j, istate);
 	}
-      Sweep::calculateAllOverlap(O);
+      //Sweep::calculateAllOverlap(O);
     }
-    cout <<"overlap"<<endl<< O <<endl;
     break;
 
   case (CALCHAMILTONIAN):
@@ -166,7 +177,7 @@ int calldmrg(char* input, char* output)
       }
     }
     
-    Sweep::calculateHMatrixElements(H);
+    //Sweep::calculateHMatrixElements(H);
     pout << "overlap "<<endl<<O<<endl;
     pout << "hamiltonian "<<endl<<H<<endl;
     break;
@@ -229,9 +240,21 @@ int calldmrg(char* input, char* output)
   case (RESTART_TWOPDM):
     Npdm::npdm_restart(2);
     break;
-  }
+  case (TRANSITION_ONEPDM):
+    Npdm::transition_pdm(1);
+    break;
+  case (TRANSITION_TWOPDM):
+    Npdm::transition_pdm(2);
+    break;
+  case (RESTART_T_ONEPDM):
+    Npdm::transition_pdm_restart(1);
+    break;
+  case (RESTART_T_TWOPDM):
+    Npdm::transition_pdm_restart(2);
+    break;
 
   return 0;
+  }
 }
 
 
@@ -327,8 +350,8 @@ void restart(double sweep_tol, bool reset_iter)
       sweepParams.current_root() = i;
       if (mpigetrank()==0) {
 	for (int j=0; j<i; j++) {
-	  Sweep::InitializeAllOverlaps(sweepParams, !direction, i, j);
-	  Sweep::InitializeAllOverlaps(sweepParams, direction, i, j);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, i, j);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, i, j);
 	}
       }
     }
@@ -357,8 +380,8 @@ void restart(double sweep_tol, bool reset_iter)
 	Sweep::CanonicalizeWavefunction(sweepParams, !direction, i);
 	Sweep::CanonicalizeWavefunction(sweepParams, direction, i);
 	for (int j=0; j<i ; j++) {
-	  Sweep::InitializeAllOverlaps(sweepParams, direction, j, i);
-	  Sweep::InitializeAllOverlaps(sweepParams, !direction, j, i);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, i, j);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, i, j);
 	}
       }
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, i, i);
@@ -470,12 +493,16 @@ void dmrg(double sweep_tol)
 	Sweep::CanonicalizeWavefunction(sweepParams, direction, i);
 	Sweep::CanonicalizeWavefunction(sweepParams, !direction, i);
 	Sweep::CanonicalizeWavefunction(sweepParams, direction, i);
+	Sweep::InitializeStateInfo(sweepParams, direction, i);
+	Sweep::InitializeStateInfo(sweepParams, !direction, i);
 
-	for (int j=0; j<i ; j++) {
-	  Sweep::InitializeAllOverlaps(sweepParams, direction, j, i);
-	  Sweep::InitializeAllOverlaps(sweepParams, !direction, j, i);
-	}
       }
+
+      for (int j=0; j<i ; j++) {
+	Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, i, j);
+	Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, i, j);
+      }
+
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, i, i);
       sweepParams.set_sweep_iter() = 0;
       sweepParams.set_restart_iter() = 0;
@@ -492,6 +519,58 @@ void dmrg(double sweep_tol)
     if (dmrginp.outputlevel() > 0)
       pout << "ALL STATE SPECIFIC CALCUALTIONS FINISHED"<<endl;
   }
+}
+
+void compress(double sweep_tol, int targetState, int baseState)
+{
+  double last_fe = 10.e6;
+  double last_be = 10.e6;
+  double old_fe = 0.;
+  double old_be = 0.;
+  SweepParams sweepParams;
+
+  int old_states=sweepParams.get_keep_states();
+  int new_states;
+  double old_error=0.0;
+  double old_energy=0.0;
+  // warm up sweep ...
+  bool dodiis = false;
+
+  int domoreIter = 0;
+  bool direction;
+
+  sweepParams.current_root() = -1;
+  last_fe = SweepCompress::do_one(sweepParams, true, true, false, 0, targetState, baseState);
+  direction = false;
+  while ( true)
+    {
+      old_fe = last_fe;
+      old_be = last_be;
+      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+	break;
+      last_be = SweepCompress::do_one(sweepParams, false, false, false, 0, targetState, baseState);
+      direction = true;
+      if (dmrginp.outputlevel() > 0) 
+	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      
+      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+	break;
+      
+      //For obtaining the extrapolated energy
+      old_states=sweepParams.get_keep_states();
+      new_states=sweepParams.get_keep_states_ls();
+      
+      last_fe = SweepCompress::do_one(sweepParams, false, true, false, 0, targetState, baseState);
+      direction = false;
+      
+      new_states=sweepParams.get_keep_states();
+      
+      
+      if (dmrginp.outputlevel() > 0)
+	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      
+    }
+  
 }
 
 
@@ -556,6 +635,8 @@ void dmrg_stateSpecific(double sweep_tol, int targetState)
     Sweep::CanonicalizeWavefunction(sweepParams, !direction, targetState);
     Sweep::CanonicalizeWavefunction(sweepParams, direction, targetState);
     Sweep::CanonicalizeWavefunction(sweepParams, !direction, targetState);
+    Sweep::InitializeStateInfo(sweepParams, !direction, targetState);
+    Sweep::InitializeStateInfo(sweepParams, direction, targetState);
     
   }
 

@@ -83,9 +83,11 @@ ostream& operator<< (ostream& os, const SpinBlock& b)
   if (dmrginp.outputlevel() > 0) {
     os << endl;
     os << b.braStateInfo;
+    os << b.ketStateInfo;
   }
   else {
     os <<"    # states: "<<b.braStateInfo.totalStates<<endl;
+    os <<"    # states: "<<b.ketStateInfo.totalStates<<endl;
   }
   return os;
 }
@@ -95,6 +97,7 @@ SpinBlock::SpinBlock () :
   localstorage(false),
   name (rand()), 
   hasMemoryAllocated (false),
+  loopblock(false),
   direct(false), complementary(false), normal(true), leftBlock(0), rightBlock(0) { }
 
 SpinBlock::SpinBlock(int start, int finish, bool implicitTranspose, bool is_complement) :  
@@ -183,6 +186,8 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
       sites.push_back( dmrginp.spatial_to_spin()[new_sites[i]]   );
       sites.push_back( dmrginp.spatial_to_spin()[new_sites[i]]+1 );
     }
+    // dets is   {0, alpha, beta, alphabeta;}
+    // in StateInfo.C, they are sorted, they become {0,beta,alpha,alphabeta}
     dets = CSFUTIL::spinfockstrings(new_sites);
     for (int j=0; j<dets.size(); j++)
       ladders.push_back(std::vector<Csf>(1,dets[j]));
@@ -393,6 +398,24 @@ void SpinBlock::operator= (const SpinBlock& b)
   ops = b.ops;
 }
 
+void SpinBlock::initialise_op_array(opTypes optype, bool is_core)
+{
+  ops[optype] = make_new_op(optype, is_core);
+  return;
+}
+
+void SpinBlock::multiplyOverlap(Wavefunction& c, Wavefunction* v, int num_threads) const
+{
+  if (mpigetrank() == 0) {
+    boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
+    
+    boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+    TensorMultiply(leftBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0) ,1.0);  // dmrginp.ef
+  }
+
+}
+
+
 void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) const
 {
 
@@ -406,14 +429,15 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   dmrginp.oneelecT -> start();
   dmrginp.s0time -> start();
 
-
-  boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0];
-  boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
-  TensorMultiply(leftBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0) ,1.0);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
-
-  overlap = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
-  op = rightBlock->get_op_array(HAM).get_local_element(0)[0];
-  TensorMultiply(rightBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0), 1.0);  
+  //if (mpigetrank() == 0) {
+    boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
+    boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+    TensorMultiply(leftBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0) ,1.0);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
+    
+    overlap = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
+    op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+    TensorMultiply(rightBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0), 1.0);  
+    //}
 
   dmrginp.s0time -> stop();
 #ifndef SERIAL
@@ -465,11 +489,13 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 
   initiateMultiThread(&e, e_array, e_distributed, MAX_THRD);
 
-  boost::shared_ptr<SparseMatrix> op =leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(this);
+  boost::shared_ptr<SparseMatrix> op =leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
   TensorTrace(leftBlock, *op, this, &(get_stateInfo()), e, 1.0);
-
-  op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(this);
+  
+  op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
   TensorTrace(rightBlock, *op, this, &(get_stateInfo()), e, 1.0);  
+
+
 #ifndef SERIAL
   boost::mpi::communicator world;
   int size = world.size();
@@ -498,8 +524,7 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
 
 }
 
-void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum> qnumbers, std::vector<int> distribution, 
-				  bool random, const bool haveNormops)
+void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum> qnumbers, std::vector<int> distribution, bool random, const bool haveNormops)
 {
   name = get_name();
 
@@ -590,4 +615,82 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
 
 }
 
+void SpinBlock::BuildSingleSlaterBlock(std::vector<int> sts) {
+  name = get_name();
+  if (dmrginp.spinAdapted()) {
+    sites = sts;
+  }
+  else {
+    for (int i=0; i<sts.size(); i++) {
+      sites.push_back( dmrginp.spatial_to_spin()[sts[i]]   );
+      sites.push_back( dmrginp.spatial_to_spin()[sts[i]]+1 );
+    }
+  }
+
+  complementary_sites = make_complement(sites);
+  assert (sites.size () > 0);
+  sort (sites.begin (), sites.end ());
+
+  int left = sites[0], right = sites[0] + sites.size(), edge = dmrginp.last_site();
+  int n = 0, sp = 0;
+  std::vector<bool> tmp(0);
+  IrrepSpace irrep;
+
+  if (dmrginp.spinAdapted()) {
+    for (int orbI = left; orbI < right; ++orbI) {
+      n += dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]] + dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]+1];
+      sp += dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]] - dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]+1];
+
+      if (dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]] == 1) {
+        irrep += SymmetryOfSpatialOrb(orbI);
+      }
+      if (dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]+1] == 1) {
+        irrep += SymmetryOfSpatialOrb(orbI);
+      }
+    }
+
+    for (int i = 0; i < dmrginp.spatial_to_spin()[left]; ++i) {
+      tmp.push_back(0);
+    }
+    for (int orbI = left; orbI < right; ++orbI) {
+      tmp.push_back(dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]]);
+      tmp.push_back(dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]+1]);
+    }
+    for (int i = 0; i < dmrginp.spatial_to_spin()[edge]-dmrginp.spatial_to_spin()[right]; ++i) {
+      tmp.push_back(0);
+    }
+  } else {
+    for (int i = 0; i < left; ++i) {
+      tmp.push_back(0);
+    }
+    for (int orbI = left; orbI < right; ++orbI) {
+      if (dmrginp.hf_occupancy()[orbI] == 1) {
+        n += 1;
+        sp += SpinOf(orbI);
+      }
+      tmp.push_back(dmrginp.hf_occupancy()[orbI]);
+    }
+    for (int i = 0; i < edge-right; ++i) {
+      tmp.push_back(0);
+    }
+  }
+
+  Slater new_det = Slater(Orbstring(tmp));
+  map<Slater, double> m;
+  m[new_det] = 1.0;
+
+  Csf origin(m, n, SpinSpace(sp), sp, IrrepVector(irrep.getirrep(), 0));
+  std::vector<Csf> dets(1, origin);
+  braStateInfo = StateInfo (dets);
+  ketStateInfo = StateInfo (dets);
+  twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
+  build_iterators();
+
+  std::vector< std::vector<Csf> > ladders; ladders.resize(dets.size());
+  for (int i=0; i< dets.size(); i++)
+    ladders[i] = dets[i].spinLadder(min(2, dets[i].S.getirrep()));
+
+  build_operators(dets, ladders);
+
+}
 }
