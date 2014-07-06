@@ -192,9 +192,6 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   system.set_loopblock(false);
   newEnvironment.set_loopblock(false);
   InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
-  cout << newSystem<<endl;
-  cout << newEnvironment<<endl;
-  cout << big<<endl;
 
   const int nroots = dmrginp.nroots();
   std::vector<Wavefunction> solution(2);
@@ -256,7 +253,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   //If in the state-average pdm, different states do not share the same rotation matrices as they do in energy calculations. Making rotation matrices from 
   //density matrices of different states is neccessary. 
   
-  //if(newSystem.get_sites().size()>1){
+  //if(newSystem.get_sites().size()>1)
   //if (!mpigetrank()){
   //LoadRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
   //LoadRotationMatrix (newSystem.get_sites(), rotateMatrixB, stateB);
@@ -839,9 +836,9 @@ void transition_pdm( int npdm_order )
     else abort();
   }
 
-  //--------------------
-    // Prepare NPDM operators
-  if( !dmrginp.setStateSpecific()){
+
+
+    if( !dmrginp.setStateSpecific()){
     Timer timer;
     dmrginp.set_fullrestart() = true;
     sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
@@ -991,10 +988,41 @@ void transition_pdm_restart( int npdm_order )
     else abort();
   }
 
-  // Not state-specific
-  //--------------------
-  // Prepare NPDM operators
-  if( !dmrginp.setStateSpecific()){
+  if(dmrginp.transition_diff_irrep()){
+    // It is used when bra and ket has different spatial irrep
+    // For now, only the transtion pdm between two wavefuntions( 1 as bra and 0 as ket) are calculation
+    // If the spatial irrep information is stored in wavefuntions, transition pdm among  several wavefunctions( i for bra and j for ket, there are n(n-1)/2 kinds of situations.) are possible.
+    for (int state=0; state<dmrginp.nroots(); state++) {
+       for(int stateB=0; stateB<state; stateB++){
+    Timer timer;
+    dmrginp.set_fullrestart() = true;
+    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, stateB); //this will generate the cd operators                               
+    pout << "NPDM SweepGenblock time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+    dmrginp.set_fullrestart() = false;
+
+    
+     //  <\Phi_k|a^+_ia_j|\Phi_l> = <\Phi_l|a^+_ja_i|\Phi_k>*
+     //  Therefore, only calculate the situations with k >= l.
+     //  for(int stateB=0; stateB<= dmrginp.nroots(); stateB++){
+          sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+        if ( dmrginp.new_npdm_code() ) {
+          Timer timerX;
+          npdm_driver->clear();
+          npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,stateB);
+          pout << "NPDM sweep time " << timerX.elapsedwalltime() << " " << timerX.elapsedcputime() << endl;
+        } 
+        else{
+          if (npdm_order == 1) transition_onepdm::do_one(sweepParams, false, direction, false, 0, state,stateB);     
+          else if (npdm_order == 2) transition_twopdm::do_one(sweepParams, false, direction, false, 0, state,stateB);
+          else abort();
+        }
+       }
+       }
+
+    }
+
+    else if( !dmrginp.setStateSpecific()){
     Timer timer;
     dmrginp.set_fullrestart() = true;
     sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
@@ -1028,11 +1056,8 @@ void transition_pdm_restart( int npdm_order )
 
   else {
     // state-specific
-    // this only generates onpem between the same wavefunctions and cannot generate transition pdms. atleast not for now
-    for (int state=dmrginp.nroots()-1;state>=0; state--) {
-       for(int stateB=state; stateB>=0; stateB--){
-    //for (int state=0; state<dmrginp.nroots(); state++) {
-    //  for (int stateB=1; stateB<=state; stateB++) {
+    for (int state=0; state<dmrginp.nroots(); state++) {
+      for (int stateB=0; stateB<=state; stateB++) {
 
       dmrginp.set_fullrestart() = true;
       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;

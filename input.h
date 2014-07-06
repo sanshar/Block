@@ -53,6 +53,9 @@ class Input {
   bool m_Bogoliubov;
 
   IrrepSpace m_total_symmetry_number;
+  IrrepSpace m_bra_symmetry_number;// This is used when bra and ket have different spatial symmetry irrep;
+                                // It is only used for transition density matrix calculations.
+  bool m_transition_diff_spatial_irrep=false;
   SpinQuantum m_molecule_quantum;
   int m_total_spin;
   int m_guess_permutations;
@@ -155,6 +158,7 @@ class Input {
     ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occ_user & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule & m_reorder;
     ar & m_molecule_quantum & m_total_symmetry_number & m_total_spin & m_orbenergies & m_add_noninteracting_orbs;
+    ar & m_bra_symmetry_number;
     ar & m_save_prefix & m_load_prefix & m_direct & m_max_lanczos_dimension;
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat ;
@@ -327,6 +331,7 @@ class Input {
   const bool &direct() const { return m_direct; }
   const int &deflation_max_size() const { return m_deflation_max_size; }
   const IrrepSpace &total_symmetry_number() const { return m_total_symmetry_number; }
+  const IrrepSpace &bra_symmetry_number() const { return m_bra_symmetry_number; }
   const SpinQuantum &molecule_quantum() const { return m_molecule_quantum; }
   const int &sys_add() const { return m_sys_add; }
   bool add_noninteracting_orbs() const {return m_add_noninteracting_orbs;}
@@ -348,6 +353,12 @@ class Input {
     else 
       return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), total_symmetry_number());
   }
+  SpinQuantum bra_quantum() {
+    if (!m_add_noninteracting_orbs) 
+      return SpinQuantum(total_particle_number(), SpinSpace(m_alpha - m_beta), bra_symmetry_number());
+    else 
+      return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), bra_symmetry_number());
+  }
   vector<SpinQuantum> effective_molecule_quantum_vec() {
     vector<SpinQuantum> q;
     if (!m_Bogoliubov) q.push_back(effective_molecule_quantum());
@@ -358,6 +369,20 @@ class Input {
       }
     }
     return q;
+  }
+  vector<SpinQuantum> bra_quantum_vec() {
+    vector<SpinQuantum> q;
+    if (!m_Bogoliubov) q.push_back(bra_quantum());
+    else {
+      SpinQuantum q_max = bra_quantum();
+      for (int n = 0; n <= q_max.get_n(); n+=2) {
+        q.push_back(SpinQuantum(n, q_max.get_s(), q_max.get_symm()));
+      }
+    }
+    return q;
+  }
+  bool transition_diff_irrep(){
+    return m_transition_diff_spatial_irrep;
   }
   std::vector<double>& get_orbenergies() {return m_orbenergies;}
   int getHFQuanta(const SpinBlock& b) const;

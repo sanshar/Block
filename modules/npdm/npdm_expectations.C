@@ -330,7 +330,6 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
 
    // cout <<"size of operator: " <<lhsOps.opReps_.size()<<','<<rhsOps.opReps_.size()<<','<<dotOps.opReps_.size()<<endl;
       nonspinvalue=contract_spin_adapted_operators( 0, 0, 0, lhsOps, rhsOps, dotOps );
-      cout <<"nonspinvalue: " <<nonspinvalue<<endl;
 
     new_pdm_elements.push_back(std::make_pair(cd_order,nonspinvalue*parity));
     return new_pdm_elements;
