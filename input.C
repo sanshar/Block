@@ -72,6 +72,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_solve_type = DAVIDSON;
   m_stateSpecific = false;
   m_implicitTranspose = true; //dont make DD just use CC^T to evaluate it
+  m_baseEnergy = -1.e10;
 
   m_spinAdapted = true;
   m_Bogoliubov = false;
@@ -498,8 +499,24 @@ SpinAdapted::Input::Input(const string& config_name) {
 	m_calc_type = CALCOVERLAP;
       else if (boost::iequals(keyword,  "calchamiltonian"))
 	m_calc_type = CALCHAMILTONIAN;
+      else if (boost::iequals(keyword,  "response")) {
+	m_calc_type = RESPONSE;
+	m_solve_type = CONJUGATE_GRADIENT;
+      }
       else if (boost::iequals(keyword,  "compress"))
 	m_calc_type = COMPRESS;
+      else if (boost::iequals(keyword, "baseenergy")) {
+	if(usedkey[BASENERGY] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[BASENERGY] = 0;
+	if (tok.size() !=  2) {
+	  pout << "keyword basenergy should be followed by a single number and then an end line"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}	
+        m_baseEnergy= atof(tok[1].c_str());
+      }
       else if (boost::iequals(keyword,  "maxj")) {
 	if (tok.size() !=  2) {
 	  pout << "keyword maxj should be followed by a single integer and then an end line."<<endl;
@@ -1754,6 +1771,11 @@ void SpinAdapted::Input::performSanityTest()
   //Still part of the schedule. Might need to move to Schedule.C
   //if(m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter == 0)
   //  m_twodot_to_onedot_iter = min(m_sweep_iter_schedule.back()+2, m_maxiter-1);
+
+  if (m_calc_type == RESPONSE && fabs(m_baseEnergy+1.e10) < 1.0) {
+    pout << "When chosing RESPONSE calculation type base energy is needed"<<endl;
+    abort();
+  }
 
   if (m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter >= m_maxiter) {
     pout << "Switch from twodot to onedot algorithm cannot happen after maxiter"<<endl;

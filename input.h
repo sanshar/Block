@@ -34,11 +34,11 @@ enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD, BCS, HEISENBERG};
 enum solveTypes {LANCZOS, DAVIDSON, CONJUGATE_GRADIENT};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
-enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI, EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN, COMPRESS, TRANSITION_ONEPDM, TRANSITION_TWOPDM, RESTART_T_ONEPDM, RESTART_T_TWOPDM};
+ enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI, EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN, COMPRESS, RESPONSE, TRANSITION_ONEPDM, TRANSITION_TWOPDM, RESTART_T_ONEPDM, RESTART_T_TWOPDM};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
-	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER,
+	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, BASENERGY,
 	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, BOGOLIUBOV, TWODOT_NOISE, WARMUP, NUMKEYWORDS};
 
 class Input {
@@ -58,6 +58,7 @@ class Input {
   int m_guess_permutations;
   bool m_stateSpecific; //when targetting excited states we switch from state 
   //average to statespecific 
+  double m_baseEnergy;
 
   std::vector<int> m_hf_occupancy;
   std::string m_hf_occ_user;
@@ -151,7 +152,7 @@ class Input {
   void serialize(Archive & ar, const unsigned int version)
   {
     ar & m_thrds_per_node & m_spinAdapted & m_Bogoliubov & m_stateSpecific & m_implicitTranspose;
-    ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz;
+    ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz & m_baseEnergy;
     ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occ_user & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule & m_reorder;
     ar & m_molecule_quantum & m_total_symmetry_number & m_total_spin & m_orbenergies & m_add_noninteracting_orbs;
@@ -253,6 +254,7 @@ class Input {
 
   //const bool& doStateSpecific() const {return m_doStateSpecific;}
   //bool& doStateSpecific() {return m_doStateSpecific;}
+  const double& baseEnergy() const {return m_baseEnergy;}
   const bool& doimplicitTranspose() const {return m_implicitTranspose;}
   bool& setimplicitTranspose() {return m_implicitTranspose;}
   const bool& setStateSpecific() const {return m_stateSpecific;}

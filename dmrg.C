@@ -39,6 +39,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "density.h"
 #include "sweep.h"
 #include "sweepCompress.h"
+#include "sweepResponse.h"
 #include "BaseOperator.h"
 #include "dmrg_wrapper.h"
 
@@ -55,6 +56,7 @@ void calculateOverlap();
 #endif
 void dmrg(double sweep_tol);
 void compress(double sweep_tol, int targetState, int baseState);
+void responseSweep(double sweep_tol, int targetState, int correctionVector, int baseState);
 void restart(double sweep_tol, bool reset_iter);
 void dmrg_stateSpecific(double sweep_tol, int targetState);
 void ReadInput(char* conf);
@@ -127,16 +129,51 @@ int calldmrg(char* input, char* output)
   case (COMPRESS):
 
     bool direction; int restartsize;
-    sweepParams.restorestate(direction, restartsize);
-    sweepParams.set_sweep_iter() = 0;
+    //sweepParams.restorestate(direction, restartsize);
+    //sweepParams.set_sweep_iter() = 0;
     restartsize = 0;
+
+    {
+      direction = true;
+      int istate = 0;
+      algorithmTypes atype = dmrginp.algorithm_method();
+      dmrginp.set_algorithm_method() = ONEDOT;
+      //initialize state info and canonicalize wavefunction is always done using onedot algorithm
+      if (mpigetrank()==0) {
+	Sweep::InitializeStateInfo(sweepParams, direction, istate);
+	Sweep::InitializeStateInfo(sweepParams, !direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, !direction, istate);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, istate);
+      }
+      dmrginp.set_algorithm_method() = atype;
+    }
+
     //this genblock is required to generate all the nontranspose operators
     dmrginp.setimplicitTranspose() = false;
     SweepGenblock::do_one(sweepParams, false, false, false, restartsize, 0, 0);
 
-    int targetState, baseState;
-    targetState = 1; baseState = 0;
-    compress(sweep_tol, targetState, baseState);
+    int targetState, baseState, correctionVector;
+    targetState=2;correctionVector = 1; baseState = 0;
+
+    compress(sweep_tol, correctionVector, baseState);
+
+    break;
+  case (RESPONSE):
+
+    //compressing the V|\Psi_0>, here \Psi_0 is the basestate and 
+    //its product with V will have a larger bond dimension and is being compressed
+    //it is called the target state
+
+    dmrginp.setimplicitTranspose() = false;
+    targetState=2;correctionVector = 1; baseState = 0;
+    pout << "DONE COMPRESSING THE CORRECTION VECTOR"<<endl;
+    pout << "NOW WE WILL OPTIMIZE THE RESPONSE WAVEFUNCTION"<<endl;
+
+
+    //finally now calculate the response state
+    responseSweep(sweep_tol, targetState, correctionVector, baseState);
+
     break;
   case (CALCOVERLAP):
     pout.precision(12);
@@ -473,15 +510,18 @@ void dmrg(double sweep_tol)
   else { //this is state specific calculation  
     const int nroots = dmrginp.nroots();
 
-    bool direction;
+    bool direction=true;
     int restartsize;
-    sweepParams.restorestate(direction, restartsize);
-    sweepParams.set_sweep_iter() = 0;
-    sweepParams.set_restart_iter() = 0;
+    //sweepParams.restorestate(direction, restartsize);
+    //sweepParams.set_sweep_iter() = 0;
+    //sweepParams.set_restart_iter() = 0;
 
+    algorithmTypes atype;
     if (dmrginp.outputlevel() > 0)
       pout << "STARTING STATE SPECIFIC CALCULATION "<<endl;
     for (int i=0; i<nroots; i++) {
+      atype = dmrginp.algorithm_method();
+      dmrginp.set_algorithm_method() = ONEDOT;
       sweepParams.current_root() = i;
 
       if (dmrginp.outputlevel() > 0)
@@ -502,6 +542,10 @@ void dmrg(double sweep_tol)
 	Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, i, j);
 	Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, i, j);
       }
+      dmrginp.set_algorithm_method() = atype;
+
+      if (dmrginp.outputlevel() > 0)
+	pout << "RUNNING GENERATE BLOCKS FOR STATE "<<i<<endl;
 
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, i, i);
       sweepParams.set_sweep_iter() = 0;
@@ -521,7 +565,7 @@ void dmrg(double sweep_tol)
   }
 }
 
-void compress(double sweep_tol, int targetState, int baseState)
+void responseSweep(double sweep_tol, int targetState, int correctionVector, int baseState)
 {
   double last_fe = 10.e6;
   double last_be = 10.e6;
@@ -529,18 +573,62 @@ void compress(double sweep_tol, int targetState, int baseState)
   double old_be = 0.;
   SweepParams sweepParams;
 
-  int old_states=sweepParams.get_keep_states();
-  int new_states;
-  double old_error=0.0;
-  double old_energy=0.0;
-  // warm up sweep ...
-  bool dodiis = false;
+  bool direction, warmUp, restart;
+  int restartSize=0;
+  direction = true; //forward
+  warmUp = true; //startup sweep
+  restart = false; //not a restart
 
-  int domoreIter = 0;
+  sweepParams.current_root() = -1;
+
+  algorithmTypes atype = dmrginp.algorithm_method();
+  dmrginp.set_algorithm_method() = ONEDOT;
+
+  //the baseState is the initial guess for the targetState
+  last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, correctionVector, baseState);
+  dmrginp.set_algorithm_method() = atype;
+
+  warmUp = false;
+  while ( true)
+    {
+      direction = false;
+      old_fe = last_fe;
+      old_be = last_be;
+      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+	break;
+      last_be = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, correctionVector, baseState);
+      if (dmrginp.outputlevel() > 0) 
+	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      
+      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+	break;
+      
+      direction = true;
+      last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, correctionVector, baseState);
+
+      
+      if (dmrginp.outputlevel() > 0)
+	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      
+    }
+  
+}
+
+
+
+void compress(double sweep_tol, int targetState, int baseState)
+{
+  double last_fe = 10.e6;
+  double last_be = 10.e6;
+  double old_fe = 0.;
+  double old_be = 0.;
+  SweepParams sweepParams;
   bool direction;
 
   sweepParams.current_root() = -1;
+  //this is the warmup sweep, the baseState is used as the initial guess for the targetState
   last_fe = SweepCompress::do_one(sweepParams, true, true, false, 0, targetState, baseState);
+
   direction = false;
   while ( true)
     {
@@ -556,23 +644,30 @@ void compress(double sweep_tol, int targetState, int baseState)
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
       
-      //For obtaining the extrapolated energy
-      old_states=sweepParams.get_keep_states();
-      new_states=sweepParams.get_keep_states_ls();
-      
       last_fe = SweepCompress::do_one(sweepParams, false, true, false, 0, targetState, baseState);
       direction = false;
-      
-      new_states=sweepParams.get_keep_states();
       
       
       if (dmrginp.outputlevel() > 0)
 	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       
     }
+
+  //we finally canonicalize the targetState
+  //one has to canonicalize the wavefunction with atleast 3 sweeps, this is a quirk of the way 
+  //we transform wavefunction
+  if (mpigetrank()==0) {
+    Sweep::InitializeStateInfo(sweepParams, !direction, targetState);
+    Sweep::InitializeStateInfo(sweepParams, direction, targetState);
+    Sweep::CanonicalizeWavefunction(sweepParams, !direction, targetState);
+    Sweep::CanonicalizeWavefunction(sweepParams, direction, targetState);
+    Sweep::CanonicalizeWavefunction(sweepParams, !direction, targetState);
+    Sweep::InitializeStateInfo(sweepParams, !direction, targetState);
+    Sweep::InitializeStateInfo(sweepParams, direction, targetState);
+    
+  }
   
 }
-
 
 void dmrg_stateSpecific(double sweep_tol, int targetState)
 {

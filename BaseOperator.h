@@ -283,6 +283,7 @@ double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c);
 void Normalise(SparseMatrix& a, int* success = 0);
 void ScaleAdd(double d, const SparseMatrix& a, SparseMatrix& b);
 double DotProduct(const SparseMatrix& lhs, const SparseMatrix& rhs);
+double trace(const SparseMatrix& lhs);
 void Scale(double d, SparseMatrix& a);
 void assignloopblock(SpinBlock*& loopblock, SpinBlock*& otherblock, SpinBlock* leftSpinBlock, SpinBlock* rightSpinBlock);
 void copy(const ObjectMatrix<Matrix>& a, ObjectMatrix<Matrix>& b);

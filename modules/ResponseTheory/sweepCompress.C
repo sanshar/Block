@@ -21,7 +21,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "density.h"
 #include "pario.h"
 #include "davidson.h"
-
+#include "sweep.h"
 
 using namespace boost;
 using namespace std;
@@ -39,104 +39,31 @@ void SpinAdapted::SweepCompress::BlockDecimateAndCompress (SweepParams &sweepPar
   dmrginp.guessgenT -> start();
   bool forward = (system.get_sites() [0] == 0);
   SpinBlock systemDot;
-  SpinBlock envDot;
+  SpinBlock environment, environmentDot, newEnvironment;
+  SpinBlock envDot, big;
   int systemDotStart, systemDotEnd;
+  int environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
   int systemDotSize = sweepParams.get_sys_add() - 1;
+  int environmentDotSize = sweepParams.get_env_add() -1;
   if (forward)
   {
     systemDotStart = dmrginp.spinAdapted() ? *system.get_sites().rbegin () + 1 : (*system.get_sites().rbegin ())/2 + 1 ;
     systemDotEnd = systemDotStart + systemDotSize;
-  }
-  else
-  {
-    systemDotStart = dmrginp.spinAdapted() ? system.get_sites()[0] - 1 : (system.get_sites()[0])/2 - 1 ;
-    systemDotEnd = systemDotStart - systemDotSize;
-  }
-  vector<int> spindotsites(2); 
-  spindotsites[0] = systemDotStart;
-  spindotsites[1] = systemDotEnd;
-  systemDot = SpinBlock(systemDotStart, systemDotEnd, false);
-  SpinBlock environment, environmentDot, newEnvironment;
-
-
-  int environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
-  int environmentDotSize = sweepParams.get_env_add() -1;
-  if (environmentDotSize <0) environmentDotSize = 0 ; 
-  if (forward)
-  {
     environmentDotStart = systemDotEnd + 1;
     environmentDotEnd = environmentDotStart + environmentDotSize;
   }
   else
   {
+    systemDotStart = dmrginp.spinAdapted() ? system.get_sites()[0] - 1 : (system.get_sites()[0])/2 - 1 ;
+    systemDotEnd = systemDotStart - systemDotSize;
     environmentDotStart = systemDotEnd - 1;
     environmentDotEnd = environmentDotStart - environmentDotSize;
   }
-  vector<int> envdotsites(2); 
-  envdotsites[0] = environmentDotStart;
-  envdotsites[1] = environmentDotEnd;
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
+  environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, true);
 
-  if (!sweepParams.get_onedot())
-    environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, false);
+  Sweep::makeSystemEnvironmentBigBlocks(system, systemDot, newSystem, environment, environmentDot, newEnvironment, big, sweepParams, dot_with_sys, useSlater, targetState, baseState);
 
-  const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
-
-  //before halfway put the sysdot with system otherwise with environment
-  if (!sweepParams.get_onedot()) {
-      dmrginp.datatransfer -> start();
-      system.addAdditionalCompOps();
-      dmrginp.datatransfer -> stop();
-
-      bool haveNormOps = dot_with_sys, haveCompOps = true;
-      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, baseState, targetState, sweepParams.get_sys_add(), dmrginp.direct(), 
-      			     DISTRIBUTED_STORAGE, haveNormOps, haveCompOps);
-      if (dmrginp.outputlevel() > 0)
-         mcheck("");
-
-      InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, baseState, targetState,
-					  sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-					  sweepParams.get_onedot(), nexact, useSlater, !haveNormOps, haveCompOps, dot_with_sys);
-      if (dmrginp.outputlevel() > 0)
-         mcheck("");
-  }
-  else {
-    dmrginp.datatransfer -> start();
-    system.addAdditionalCompOps();
-    dmrginp.datatransfer -> stop();
-
-    bool haveNormOps = dot_with_sys, haveCompOps = true;
-    if (dot_with_sys) {
-      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, baseState, targetState, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, haveNormOps, haveCompOps);
-
-    }
-    InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, baseState, targetState,
-					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-					sweepParams.get_onedot(), nexact, useSlater, !haveNormOps, haveCompOps, dot_with_sys);
-  }
-  SpinBlock big;  // new_sys = sys+sys_dot; new_env = env+env_dot; big = new_sys + new_env then renormalize to find new_sys(new)
-  if (dot_with_sys) {
-    newSystem.set_loopblock(true);
-    system.set_loopblock(false);
-    newEnvironment.set_loopblock(false);
-    if (!sweepParams.get_onedot())
-      environment.set_loopblock(false);
-    InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
-  }
-  else{
-    if (sweepParams.get_onedot()) {
-      system.set_loopblock(false);
-      newEnvironment.set_loopblock(true);
-      environment.set_loopblock(true);
-      InitBlocks::InitBigBlock(system, newEnvironment, big); 
-    }
-    else {
-      newSystem.set_loopblock(false);
-      system.set_loopblock(false);
-      newEnvironment.set_loopblock(true);
-      environment.set_loopblock(false);
-      InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
-    }
-  }
   //analyse_operator_distribution(big);
   dmrginp.guessgenT -> stop();
   dmrginp.multiplierT -> start();
@@ -145,26 +72,26 @@ void SpinAdapted::SweepCompress::BlockDecimateAndCompress (SweepParams &sweepPar
   if (dmrginp.outputlevel() > 0)
     mcheck(""); 
   if (dmrginp.outputlevel() == 0) {
-    if (!dot_with_sys && sweepParams.get_onedot()) {
-      pout << "\t\t\t System  Block"<<system;
-      pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
-    }
-    else {
-      pout << "\t\t\t System  Block"<<newSystem;
-      pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
-    }
+    if (!dot_with_sys && sweepParams.get_onedot()) pout << "\t\t\t System  Block"<<system;    
+    else pout << "\t\t\t System  Block"<<newSystem;
+    pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
     pout << "\t\t\t Solving wavefunction "<<endl;
   }
 
   std::vector<Wavefunction> solution; solution.resize(1);
 
   DiagonalMatrix e;
-  e.ReSize(big.get_stateInfo().totalStates); e= 0;
+
 
   //read the 0th wavefunction which we keep on the ket side because by default the ket stateinfo is used to initialize wavefunction
   //also when you use spinblock operators to multiply a state, it does so from the ket side i.e.  H|ket>
   GuessWave::guess_wavefunctions(solution, e, big, sweepParams.set_guesstype(), sweepParams.get_onedot(), dot_with_sys, 0.0, baseState); 
 
+#ifndef SERIAL
+  mpi::communicator world;
+  broadcast(world, solution, 0);
+#endif
+  
   multiply_h davidson_f(big, sweepParams.get_onedot());
   vector<Wavefunction> outputState; outputState.resize(1);
   outputState[0].AllowQuantaFor(big.get_leftBlock()->get_braStateInfo(), big.get_rightBlock()->get_braStateInfo(), dmrginp.effective_molecule_quantum_vec());
@@ -172,11 +99,7 @@ void SpinAdapted::SweepCompress::BlockDecimateAndCompress (SweepParams &sweepPar
   outputState[0].Clear();
 
   davidson_f(solution[0], outputState[0]);
-
-  Wavefunction overlapIntermediate=outputState[0]; overlapIntermediate.Clear();
-  big.multiplyOverlap(solution[0], &overlapIntermediate, MAX_THRD);
-  double overlap = DotProduct(overlapIntermediate, outputState[0])/sqrt(DotProduct(outputState[0], outputState[0])* DotProduct(solution[0], solution[0]));
-  pout << "\t\t\t The overlap = "<<overlap<<endl;
+  double overlap = 1.0;
   
   sweepParams.set_lowest_energy() = std::vector<double>(1,overlap);
 
@@ -201,15 +124,20 @@ void SpinAdapted::SweepCompress::BlockDecimateAndCompress (SweepParams &sweepPar
   else
     newbig = big;
 
-  environment.clear();
-  newEnvironment.clear();
-
-
   std::vector<Matrix> brarotateMatrix, ketrotateMatrix;
   DensityMatrix bratracedMatrix(newSystem.get_braStateInfo()), kettracedMatrix(newSystem.get_ketStateInfo());
   bratracedMatrix.allocate(newSystem.get_braStateInfo()); kettracedMatrix.allocate(newSystem.get_ketStateInfo());
 
   bratracedMatrix.makedensitymatrix(outputState, newbig, dmrginp.weights(sweepiter), 0.0, 0.0, true);
+  if (sweepParams.get_noise() > NUMERICAL_ZERO) {
+    pout << "adding noise  "<<trace(bratracedMatrix)<<"  "<<sweepiter<<"  "<<dmrginp.weights(sweepiter)[0]<<endl;
+    bratracedMatrix.add_onedot_noise_forCompression(solution[0], newbig, sweepParams.get_noise()*max(1.0,trace(bratracedMatrix)));
+    pout << "after noise  "<<trace(bratracedMatrix)<<endl;
+  }
+
+  environment.clear();
+  newEnvironment.clear();
+
   kettracedMatrix.makedensitymatrix(solution, newbig, dmrginp.weights(sweepiter), 0.0, 0.0, true);
   double braerror, keterror;
   if (!mpigetrank()) {
@@ -218,7 +146,6 @@ void SpinAdapted::SweepCompress::BlockDecimateAndCompress (SweepParams &sweepPar
   }
 
 #ifndef SERIAL
-  mpi::communicator world;
   broadcast(world, ketrotateMatrix, 0);
   broadcast(world, brarotateMatrix, 0);
 #endif
@@ -288,7 +215,7 @@ double SpinAdapted::SweepCompress::do_one(SweepParams &sweepParams, const bool &
   if (dmrginp.outputlevel() > 0)
     pout << "\t\t\t Starting block is :: " << endl << system << endl;
 
-  SpinBlock::store (forward, system.get_sites(), system, baseState, targetState); // if restart, just restoring an existing block --
+  SpinBlock::store (forward, system.get_sites(), system, targetState, baseState); // if restart, just restoring an existing block --
   sweepParams.savestate(forward, system.get_sites().size());
   bool dot_with_sys = true;
   vector<int> syssites = system.get_sites();
@@ -346,6 +273,7 @@ double SpinAdapted::SweepCompress::do_one(SweepParams &sweepParams, const bool &
       system = newSystem;
       if (dmrginp.outputlevel() > 0){
 	    pout << system<<endl;
+	    pout << system.get_braStateInfo()<<endl;
 	    system.printOperatorSummary();
       }
       
@@ -355,7 +283,7 @@ double SpinAdapted::SweepCompress::do_one(SweepParams &sweepParams, const bool &
       if (!forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
 	    dot_with_sys = false;
 
-      SpinBlock::store (forward, system.get_sites(), system, baseState, targetState);	 	
+      SpinBlock::store (forward, system.get_sites(), system, targetState, baseState);	 	
       syssites = system.get_sites();
       if (dmrginp.outputlevel() > 0)
 	pout << "\t\t\t saving state " << syssites.size() << endl;
@@ -370,6 +298,27 @@ double SpinAdapted::SweepCompress::do_one(SweepParams &sweepParams, const bool &
          mcheck("at the end of sweep iteration");
     }
 
+  /*
+  //when we are doing twodot, we still need to do the last sweep to make sure that the
+  //correctionVector and base wavefunction are propogated correctly across sweeps
+  //especially when we switch from twodot to onedot algorithm
+  if (!sweepParams.get_onedot() && !warmUp) {
+      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+      pout << "\t\t\t ----------------------------" << endl;
+      if (dmrginp.outputlevel() > 0) {
+	    if (forward)
+	      pout << "\t\t\t Current direction is :: Forwards " << endl;
+	    else
+	      pout << "\t\t\t Current direction is :: Backwards " << endl;
+      }
+    sweepParams.set_onedot() = true;
+    sweepParams.set_env_add() = 0;
+    bool dot_with_sys = true;
+    WavefunctionCanonicalize(sweepParams, system, warmUp, dot_with_sys, targetState, baseState);
+    sweepParams.set_onedot() = false;
+    sweepParams.set_env_add() = 1;
+  }
+  */
 
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
   pout << "\t\t\t Largest overlap for Sweep with " << sweepParams.get_keep_states() << " states is " << finalEnergy[0] << endl;
@@ -448,7 +397,7 @@ void SpinAdapted::SweepCompress::Startup (SweepParams &sweepParams, SpinBlock& s
       if (dmrginp.outputlevel() > 0)
          mcheck("");
 
-      InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, -1, -1,
+      InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, 0, 0,
 					  sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 					  sweepParams.get_onedot(), nexact, useSlater, !haveNormOps, haveCompOps, dot_with_sys);
       if (dmrginp.outputlevel() > 0)
@@ -464,7 +413,7 @@ void SpinAdapted::SweepCompress::Startup (SweepParams &sweepParams, SpinBlock& s
       InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, targetState, baseState, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, haveNormOps, haveCompOps);
 
     }
-    InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, -1, -1,
+    InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, 0, 0,
 					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 					sweepParams.get_onedot(), nexact, useSlater, !haveNormOps, haveCompOps, dot_with_sys);
   }
@@ -515,17 +464,16 @@ void SpinAdapted::SweepCompress::Startup (SweepParams &sweepParams, SpinBlock& s
 
   DiagonalMatrix e;
   e.ReSize(big.get_stateInfo().totalStates); e= 0;
-  int guessState = 0;
 
   //read the 0th wavefunction which we keep on the ket side because by default the ket stateinfo is used to initialize wavefunction
   //also when you use spinblock operators to multiply a state, it does so from the ket side i.e.  H|ket>
-  GuessWave::guess_wavefunctions(solution, e, big, sweepParams.set_guesstype(), sweepParams.get_onedot(), dot_with_sys, baseState, targetState); 
+  GuessWave::guess_wavefunctions(solution, e, big, sweepParams.set_guesstype(), sweepParams.get_onedot(), dot_with_sys, 0.0, targetState); 
 
   SpinBlock newbig;
 
   if (sweepParams.get_onedot() && !dot_with_sys)
   {
-    InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, baseState, guessState, systemDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true);
+    InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, targetState, baseState, systemDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true);
     InitBlocks::InitBigBlock(newSystem, environment, newbig); 
 
     Wavefunction tempwave = solution[0];
@@ -540,36 +488,50 @@ void SpinAdapted::SweepCompress::Startup (SweepParams &sweepParams, SpinBlock& s
     newbig = big;
 
 
+
+  std::vector<Matrix> ketrotateMatrix, brarotateMatrix;
+  DensityMatrix kettracedMatrix(newSystem.get_ketStateInfo());
+  DensityMatrix bratracedMatrix(newSystem.get_braStateInfo());
+
+  kettracedMatrix.allocate(newSystem.get_ketStateInfo());
+  bratracedMatrix.allocate(newSystem.get_braStateInfo());
+
+
+  bratracedMatrix.makedensitymatrix(solution, newbig, dmrginp.weights(0), 0.0, 
+				    0.0, true);
+  //bratracedMatrix.add_onedot_noise_forCompression(solution[0], newbig, sweepParams.get_noise()*trace(bratracedMatrix));
   environment.clear();
   newEnvironment.clear();
 
-  std::vector<Matrix> ketrotateMatrix;
-  DensityMatrix kettracedMatrix(newSystem.get_ketStateInfo());
-  kettracedMatrix.allocate(newSystem.get_ketStateInfo());
 
-  kettracedMatrix.makedensitymatrix(solution, newbig, dmrginp.weights(0), 0.0, 0.0, true);
-  double keterror;
+  kettracedMatrix.makedensitymatrix(solution, newbig, dmrginp.weights(0), 0.0, 
+				    0.0, true);
+  //kettracedMatrix.add_twodot_noise(newbig, sweepParams.get_noise());
+  double keterror, braerror;
   if (!mpigetrank()) {
     keterror = makeRotateMatrix(kettracedMatrix, ketrotateMatrix, newbig.get_rightBlock()->get_ketStateInfo().totalStates, 0);
+    braerror = makeRotateMatrix(bratracedMatrix, brarotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
   }
 
 #ifndef SERIAL
   mpi::communicator world;
   broadcast(world, ketrotateMatrix, 0);
+  broadcast(world, brarotateMatrix, 0);
 #endif
 
   //assert(keterror < NUMERICAL_ZERO);
   pout <<"\t\t\t Performing Renormalization "<<endl;
-  pout << "\t\t\t Total discarded weight "<<keterror<<endl<<endl;
+  pout << "\t\t\t Total ket discarded weight "<<keterror<<endl<<endl;
+  pout << "\t\t\t Total bra discarded weight "<<braerror<<endl<<endl;
   sweepParams.set_lowest_error() = keterror;
 
   SaveRotationMatrix (newbig.get_leftBlock()->get_sites(), ketrotateMatrix, baseState);
-  SaveRotationMatrix (newbig.get_leftBlock()->get_sites(), ketrotateMatrix, targetState);
+  SaveRotationMatrix (newbig.get_leftBlock()->get_sites(), brarotateMatrix, targetState);
   solution[0].SaveWavefunctionInfo (newbig.get_ketStateInfo(), newbig.get_leftBlock()->get_sites(), baseState);
-  solution[0].SaveWavefunctionInfo (newbig.get_ketStateInfo(), newbig.get_leftBlock()->get_sites(), targetState);
+  solution[0].SaveWavefunctionInfo (newbig.get_braStateInfo(), newbig.get_leftBlock()->get_sites(), targetState);
 
 
-  newSystem.transform_operators(ketrotateMatrix);
+  newSystem.transform_operators(brarotateMatrix, ketrotateMatrix);
 
 
 
@@ -588,4 +550,140 @@ void SpinAdapted::SweepCompress::Startup (SweepParams &sweepParams, SpinBlock& s
     pout << *dmrginp.addnoise<<" "<<*dmrginp.s0time<<" "<<*dmrginp.s1time<<" "<<*dmrginp.s2time<<endl;
   }
 
+}
+
+void SpinAdapted::SweepCompress::WavefunctionCanonicalize (SweepParams &sweepParams, SpinBlock& system, const bool &useSlater, const bool& dot_with_sys, int correctionVector, int baseState)
+{
+  if (dmrginp.outputlevel() > 0) {
+    mcheck("at the start of block and decimate");
+    pout << "\t\t\t dot with system "<<dot_with_sys<<endl;
+  }
+  pout <<endl<< "\t\t\t Performing Blocking"<<endl;
+  // figure out if we are going forward or backwards
+  dmrginp.guessgenT -> start();
+  
+  SpinBlock newSystem;
+  
+  bool forward = (system.get_sites() [0] == 0);
+  SpinBlock systemDot, environmentDot;
+  int systemDotStart, systemDotEnd, environmentDotStart, environmentDotEnd;
+  int systemDotSize = sweepParams.get_sys_add() - 1;
+  int environmentDotSize = 0;
+  if (forward)
+    {
+      systemDotStart = dmrginp.spinAdapted() ? 
+	*system.get_sites().rbegin () + 1 : (*system.get_sites().rbegin ())/2 + 1 ;
+      systemDotEnd = systemDotStart + systemDotSize;
+      environmentDotStart = systemDotEnd + 1;
+      environmentDotEnd = environmentDotStart + environmentDotSize;
+    }
+  else
+    {
+      systemDotStart = dmrginp.spinAdapted() ? 
+	system.get_sites()[0] - 1 : (system.get_sites()[0])/2 - 1 ;
+      systemDotEnd = systemDotStart - systemDotSize;
+      environmentDotStart = systemDotEnd - 1;
+      environmentDotEnd = environmentDotStart - environmentDotSize;
+    }
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
+  environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, true);
+  SpinBlock environment, newEnvironment;
+  
+  SpinBlock big;  // new_sys = sys+sys_dot; new_env = env+env_dot; big = new_sys + new_env then renormalize to find new_sys(new)
+
+  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, correctionVector, baseState, sweepParams.get_sys_add(), dmrginp.direct(), 
+				 DISTRIBUTED_STORAGE, false, true);
+
+  newSystem.set_loopblock(false);  environmentDot.set_loopblock(false); 
+  InitBlocks::InitBigBlock(newSystem, environmentDot, big);
+
+  
+  
+  //analyse_operator_distribution(big);
+  dmrginp.guessgenT -> stop();
+  dmrginp.multiplierT -> start();
+  std::vector<Matrix> rotatematrix;
+  
+  if (dmrginp.outputlevel() > 0)
+    mcheck(""); 
+  if (dmrginp.outputlevel() == 0) {
+    if (!dot_with_sys && sweepParams.get_onedot()) pout << "\t\t\t System  Block"<<system;    
+    else pout << "\t\t\t System  Block"<<newSystem;
+    pout << "\t\t\t Environment Block"<<environmentDot<<endl;
+    pout << "\t\t\t Solving wavefunction "<<endl;
+  }
+  
+  
+  
+  //make the baseState
+  int originalOutputlevel = dmrginp.outputlevel();
+  dmrginp.setOutputlevel() = -1;
+  
+  
+  
+  std::vector< Wavefunction> solution(1);
+  GuessWave::transform_previous_twodot_to_onedot_wavefunction(solution[0], big, baseState);
+
+  multiply_h davidson_f(big, sweepParams.get_onedot());
+  vector<Wavefunction> outputState; outputState.resize(1);
+  outputState[0].AllowQuantaFor(big.get_leftBlock()->get_braStateInfo(), big.get_rightBlock()->get_braStateInfo(), dmrginp.effective_molecule_quantum_vec());
+  outputState[0].set_onedot(sweepParams.get_onedot());
+  outputState[0].Clear();
+
+  davidson_f(solution[0], outputState[0]);
+
+  
+  std::vector<Matrix> ketrotateMatrix, brarotateMatrix;
+  DensityMatrix bratracedMatrix, kettracedMatrix;
+  bratracedMatrix.allocate(newSystem.get_braStateInfo());
+  kettracedMatrix.allocate(newSystem.get_ketStateInfo());
+  bratracedMatrix.allocate(newSystem.get_braStateInfo()); kettracedMatrix.allocate(newSystem.get_ketStateInfo());
+
+  bratracedMatrix.makedensitymatrix(outputState, big, dmrginp.weights(0), 0.0, 0.0, true);
+  if (sweepParams.get_noise() > NUMERICAL_ZERO) {
+    pout << "adding noise  "<<trace(bratracedMatrix)<<endl;
+    bratracedMatrix.add_onedot_noise_forCompression(solution[0], big, sweepParams.get_noise()*max(1.0,trace(bratracedMatrix)));
+    pout << "after noise  "<<trace(bratracedMatrix)<<endl;
+  }
+
+  kettracedMatrix.makedensitymatrix(solution, big, dmrginp.weights(0), 0.0, 0.0, true);
+  double braerror, keterror;
+  if (!mpigetrank()) {
+    keterror = makeRotateMatrix(kettracedMatrix, ketrotateMatrix, big.get_rightBlock()->get_ketStateInfo().totalStates, 0);
+    braerror = makeRotateMatrix(bratracedMatrix, brarotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
+  }
+
+#ifndef SERIAL
+  mpi::communicator world;
+  broadcast(world, ketrotateMatrix, 0);
+  broadcast(world, brarotateMatrix, 0);
+#endif
+
+
+  pout << "\t\t\t Total ket discarded weight "<<keterror<<endl<<endl;
+  pout << "\t\t\t Total bra discarded weight "<<braerror<<endl<<endl;
+
+  sweepParams.set_lowest_error() = braerror;
+
+  SaveRotationMatrix (big.get_leftBlock()->get_sites(), ketrotateMatrix, baseState);
+  SaveRotationMatrix (big.get_leftBlock()->get_sites(), brarotateMatrix, correctionVector);
+  solution[0].SaveWavefunctionInfo (big.get_ketStateInfo(), big.get_leftBlock()->get_sites(), baseState);
+  outputState[0].SaveWavefunctionInfo (big.get_braStateInfo(), big.get_leftBlock()->get_sites(), correctionVector);
+
+  pout <<"\t\t\t Performing Renormalization "<<endl;
+  newSystem.transform_operators(brarotateMatrix, ketrotateMatrix);
+
+
+  
+  if (dmrginp.outputlevel() > 0){
+    pout << *dmrginp.guessgenT<<" "<<*dmrginp.multiplierT<<" "<<*dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+    pout << *dmrginp.makeopsT<<" makeops "<<endl;
+    pout << *dmrginp.datatransfer<<" datatransfer "<<endl;
+    pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
+    pout << *dmrginp.oneelecT<<" "<<*dmrginp.twoelecT<<" "<<*dmrginp.hmultiply<<" "<<*dmrginp.couplingcoeff<<" hmult"<<endl;
+    pout << *dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<" build block"<<endl;
+    pout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
+    pout << *dmrginp.addnoise<<" "<<*dmrginp.s0time<<" "<<*dmrginp.s1time<<" "<<*dmrginp.s2time<<endl;
+  }
+  
 }

@@ -29,7 +29,8 @@ namespace Sweep
   void calculateHMatrixElements(Matrix& H);
   void makeSystemEnvironmentBigBlocks(SpinBlock& system, SpinBlock& systemDot, SpinBlock& newSystem, 
 				      SpinBlock& environment, SpinBlock& environmentDot, SpinBlock& newEnvironment,
-				      SpinBlock& big, SweepParams& sweepParams, const bool& dot_with_sys, const bool& useSlater);
+				      SpinBlock& big, SweepParams& sweepParams, const bool& dot_with_sys, const bool& useSlater,
+				      int braState=-1, int ketState=-1);
   void makeSystemEnvironmentBigOverlapBlocks(const std::vector<int>& systemSites, SpinBlock& systemDot, SpinBlock& environmentDot,
 					     SpinBlock& system, SpinBlock& newSystem, SpinBlock& environment, SpinBlock& newEnvironment,
 					     SpinBlock& big, SweepParams& sweepParams, const bool& dot_with_sys, const bool& useSlater,

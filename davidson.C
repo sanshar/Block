@@ -21,4 +21,16 @@ void SpinAdapted::multiply_h::operator()(Wavefunction& c, Wavefunction& v)
   block.multiplyH( c, &v, MAX_THRD);
 }
 
+SpinAdapted::multiply_h_e::multiply_h_e(const SpinBlock& b, const bool &onedot_, double E0_) : block(b), E0(E0_){}
+
+void SpinAdapted::multiply_h_e::operator()(Wavefunction& c, Wavefunction& v)
+{
+  Wavefunction oi = v; oi.Clear();
+  block.multiplyH( c, &v, MAX_THRD);
+  block.multiplyOverlap(c, &oi, MAX_THRD);
+  ScaleAdd(-E0, oi, v);
+}
+
+
+
 

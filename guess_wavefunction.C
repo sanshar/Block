@@ -62,6 +62,10 @@ void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const SpinB
   if(!onedot)
   {
     oldWave.LoadWavefunctionInfo (oldStateInfo, big.get_rightBlock()->get_sites(), state);
+    if (oldWave.get_onedot()) {
+      trial.resize(0,0);
+      trial.AllowQuantaFor(*oldStateInfo.rightStateInfo, *oldStateInfo.leftStateInfo, oldWave.get_deltaQuantum());
+    }
     for (int i = 0; i < trial.nrows(); ++i)
       for (int j = 0; j < trial.ncols(); ++j)
         if (trial.allowed(i, j))
@@ -79,6 +83,21 @@ void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const SpinB
 	  if (parity == -1)
 	    trial(i,j) *= -1.0;
         }
+    if (oldWave.get_onedot()) {
+      //the previous wavefunction was onedot and now make this previous onedot into two dot
+      oldWave.resize(0,0); oldWave = trial;
+      std::vector<Matrix> rightRotationMatrix;
+      LoadRotationMatrix(big.get_leftBlock()->get_sites(), rightRotationMatrix, state);
+      trial.resize(0,0);
+      trial.AllowQuantaFor(*big.get_stateInfo().leftStateInfo, *big.get_stateInfo().rightStateInfo, oldWave.get_deltaQuantum());
+      for (int i=0; i<oldWave.nrows(); i++)
+      for (int j=0; j<oldWave.ncols(); j++) {
+	if (oldWave.allowed(i,j))
+	  MatrixMultiply(rightRotationMatrix[oldStateInfo.rightStateInfo->newQuantaMap[i]], 'n', 
+			 oldWave(i,j), 'n', trial(oldStateInfo.rightStateInfo->newQuantaMap[i], j), 1.0);
+      }
+    }
+
   }
   else
   {
@@ -282,9 +301,9 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
       if (abs(norm) >= 1e-14) {
 	ScaleAdd(1e-6/sqrt(norm), noiseMatrix, solution);
       }
+      Normalise(solution);
     }
 
-    Normalise(solution);
     norm = DotProduct(solution, solution);
     if (dmrginp.outputlevel() > 0) 
       pout << "\t\t\t Norm of wavefunction :: "<<norm<<endl;
@@ -605,6 +624,68 @@ it's not necessary to take the pseudo inverse of right rotation matrix.
 
   double norm = DotProduct(trial, trial);
 }
+
+void GuessWave::transform_previous_twodot_to_onedot_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state)
+{
+  if (dmrginp.outputlevel() > 0) 
+    pout << "\t\t\t Transforming previous wavefunction " << endl;
+  
+  ObjectMatrix3D< vector<Matrix> > oldTrialWavefunction;
+  ObjectMatrix3D< vector<Matrix> > newTrialWavefunction;
+  StateInfo oldStateInfo;
+  Wavefunction oldWave;
+  DiagonalMatrix D;
+  Matrix U;
+  Matrix V;
+  std::vector<Matrix> leftRotationMatrix;
+
+  oldWave.LoadWavefunctionInfo (oldStateInfo, big.get_leftBlock()->get_leftBlock()->get_sites(), state);
+  LoadRotationMatrix (big.get_leftBlock()->get_leftBlock()->get_sites(), leftRotationMatrix, state);
+
+  for (int q = 0; q < leftRotationMatrix.size (); ++q)
+    if (leftRotationMatrix [q].Nrows () > 0)
+      leftRotationMatrix[q] = leftRotationMatrix[q].t();
+
+
+
+  int aSz = big.get_stateInfo().leftStateInfo->leftStateInfo->quanta.size (); 
+  int cSz = oldStateInfo.rightStateInfo->quanta.size();
+
+  Wavefunction tmpwavefunction;
+  tmpwavefunction.AllowQuantaFor(*big.get_stateInfo().leftStateInfo->leftStateInfo, *oldStateInfo.rightStateInfo, dmrginp.effective_molecule_quantum_vec());
+
+  //now contract the [s.] => [s] using the left rotation matrix
+  for (int a = 0; a < aSz; ++a) //aSz // aSz <= oldASz
+    for (int c = 0; c < cSz; ++c) //cSz
+    {
+      int oldA = big.get_stateInfo().leftStateInfo->leftStateInfo->newQuantaMap [a];
+
+      Matrix& tM = oldWave(oldA,c); //tmp (oldA, b, c);
+      if (tM.Ncols () != 0) // this quanta combination is not allowed
+      {
+	//assert (newstateinfo.leftStateInfo->leftStateInfo->quanta [a] == oldstateinfo.leftStateInfo->quanta [oldA]);
+	const Matrix& lM = leftRotationMatrix [oldA];
+	//assert (newstateinfo.leftStateInfo->leftStateInfo->quantaStates [a] == lM.Nrows ());
+	Matrix& nM = tmpwavefunction.operator_element(a, c);//tmpwavefunction (a, b, c);
+	nM.ReSize (lM.Nrows (), tM.Ncols ());
+	SpinAdapted::Clear (nM);
+	MatrixMultiply (lM, 'n', tM, 'n', nM, 1.); 
+      }
+    }
+
+
+  StateInfo tempoldStateInfo;
+  trial.set_deltaQuantum() = dmrginp.effective_molecule_quantum_vec();
+  trial.set_initialised() = true;
+  trial.set_fermion() = false;
+  trial.set_onedot(true);
+
+  TensorProduct( *big.get_stateInfo().leftStateInfo->leftStateInfo, *oldStateInfo.rightStateInfo,  tempoldStateInfo, PARTICLE_SPIN_NUMBER_CONSTRAINT);
+  onedot_shufflesysdot(  tempoldStateInfo, big.get_stateInfo(), tmpwavefunction, trial);
+
+  double norm = DotProduct(trial, trial);
+}
+
 
 void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state, const bool &onedot, const bool& transpose_guess_wave,bool ket)
 // ket determines use braSateinfo or ketStateinfo to guess_wavefunctions.

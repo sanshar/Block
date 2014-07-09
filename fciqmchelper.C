@@ -30,8 +30,14 @@ namespace SpinAdapted{
       rotMat[0](1,1) = 1.0;rotMat[1](1,1) = 1.0;rotMat[2](1,1) = 1.0;rotMat[3](1,1) = 1.0;
     }
     else {
-      rotMat = std::vector<Matrix>(3,m);
-      rotMat[0](1,1) = 1.0;rotMat[1](1,1) = 1.0;rotMat[2](1,1) = 1.0;
+      if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0) {
+	rotMat = std::vector<Matrix>(4,m);
+	rotMat[0](1,1) = 1.0;rotMat[1](1,1) = 1.0;rotMat[2](1,1) = 1.0;rotMat[3](1,1) = 1.0;
+      }
+      else {
+	rotMat = std::vector<Matrix>(3,m);
+	rotMat[0](1,1) = 1.0;rotMat[1](1,1) = 1.0;rotMat[2](1,1) = 1.0;
+      }
     }
 
     SiteTensors.push_back(rotMat);
@@ -189,17 +195,22 @@ namespace SpinAdapted{
 
   void calcHamiltonianAndOverlap(const MPS& statea, const MPS& stateb, double& h, double& o) {
 
-    SpinBlock system = SpinBlock(0,0,false), siteblock;
+    SpinBlock system, siteblock;
+    bool forward = true, restart=false, warmUp = false;
+    int leftState=0, rightState=1, forward_starting_size=1, backward_starting_size=0, restartSize =0;
+    InitBlocks::InitStartingBlock(system, forward, leftState, rightState, forward_starting_size, backward_starting_size, restartSize, restart, warmUp); 
     SpinQuantum hq(0, SpinSpace(0), IrrepSpace(0));
 
     system.transform_operators(const_cast<std::vector<Matrix>&>(statea.getSiteTensors(0)), 
-			       const_cast<std::vector<Matrix>&>(stateb.getSiteTensors(0)) );
+			       const_cast<std::vector<Matrix>&>(stateb.getSiteTensors(0)), false, false );
 
     int sys_add = true; bool direct = true; 
 
     for (int i=0; i<MPS::sweepIters-1; i++) {
       SpinBlock newSystem;
+
       InitBlocks::InitNewSystemBlock(system, MPS::siteBlocks[i+1], newSystem, 0, 1, sys_add, direct, DISTRIBUTED_STORAGE, false, true);
+
       newSystem.transform_operators(const_cast<std::vector<Matrix>&>(statea.getSiteTensors(i+1)), 
 				    const_cast<std::vector<Matrix>&>(stateb.getSiteTensors(i+1)), false );
 

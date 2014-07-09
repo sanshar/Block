@@ -50,6 +50,7 @@ namespace GuessWave
                                      const std::vector<Matrix>& rightRotationMatrix, Wavefunction& newwavefunction, 
 				     const bool& transpose_guess_wave);
   void basic_guess_wavefunction(DiagonalMatrix& e, Wavefunction& trial, const StateInfo *stateinfo, const int state);
+  void transform_previous_twodot_to_onedot_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state);
 
 }
 }

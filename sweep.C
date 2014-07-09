@@ -33,7 +33,16 @@ void SpinAdapted::Sweep::makeSystemEnvironmentBigOverlapBlocks(const std::vector
 {
   bool forward = (systemSites [0] == 0);
   
-  SpinBlock::restore(forward, systemSites, system, braState, ketState);
+  if (systemSites.size() == 1) {
+    int restartSize = 0; bool restart=false, warmUp = false;
+    InitBlocks::InitStartingBlock(system, forward, braState, ketState, 
+				  sweepParams.get_forward_starting_size(), 
+				  sweepParams.get_backward_starting_size(), restartSize, 
+				  restart, warmUp);
+  }
+  else 
+    SpinBlock::restore(forward, systemSites, system, braState, ketState);
+
   if (!sweepParams.get_onedot() || dot_with_sys) {
     newSystem.initialise_op_array(OVERLAP, false);
     newSystem.setstoragetype(DISTRIBUTED_STORAGE);
@@ -58,7 +67,7 @@ void SpinAdapted::Sweep::makeSystemEnvironmentBigOverlapBlocks(const std::vector
 
 void SpinAdapted::Sweep::makeSystemEnvironmentBigBlocks(SpinBlock& system, SpinBlock& systemDot, SpinBlock& newSystem, 
 							SpinBlock& environment, SpinBlock& environmentDot, SpinBlock& newEnvironment,
-							SpinBlock& big, SweepParams& sweepParams, const bool& dot_with_sys, const bool& useSlater)
+							SpinBlock& big, SweepParams& sweepParams, const bool& dot_with_sys, const bool& useSlater, int braState, int ketState)
 {
   bool forward = (system.get_sites() [0] == 0);
   bool haveNormOps = dot_with_sys, haveCompOps = true;
@@ -66,14 +75,17 @@ void SpinAdapted::Sweep::makeSystemEnvironmentBigBlocks(SpinBlock& system, SpinB
 
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
   if (!sweepParams.get_onedot() || dot_with_sys) 
-    InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), 
+    InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, braState, ketState, sweepParams.get_sys_add(), dmrginp.direct(), 
 				   DISTRIBUTED_STORAGE, haveNormOps, haveCompOps);
 
   if (!dot_with_sys && sweepParams.get_onedot()) 
-    environmentDot = systemDot;
-  InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, sweepParams.current_root(), sweepParams.current_root(),
-				      sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-				      sweepParams.get_onedot(), nexact, useSlater, !haveNormOps, haveCompOps, dot_with_sys);
+    InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, braState, ketState,
+					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
+					sweepParams.get_onedot(), nexact, useSlater, !haveNormOps, haveCompOps, dot_with_sys);
+  else
+    InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, braState, ketState,
+					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
+					sweepParams.get_onedot(), nexact, useSlater, !haveNormOps, haveCompOps, dot_with_sys);
   
 
 
@@ -119,7 +131,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, true);
   SpinBlock environment, newEnvironment;
   SpinBlock big;  // new_sys = sys+sys_dot; new_env = env+env_dot; big = new_sys + new_env then renormalize to find new_sys(new)
-  makeSystemEnvironmentBigBlocks(system, systemDot, newSystem, environment, environmentDot, newEnvironment, big, sweepParams, dot_with_sys, useSlater);
+  makeSystemEnvironmentBigBlocks(system, systemDot, newSystem, environment, environmentDot, newEnvironment, big, sweepParams, dot_with_sys, useSlater, sweepParams.current_root(), sweepParams.current_root());
 
 
   //analyse_operator_distribution(big);

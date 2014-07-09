@@ -302,7 +302,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
 
 }
 
-  void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix, bool clearRightBlock)
+  void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix, bool clearRightBlock, bool clearLeftBlock)
 {
 
   StateInfo oldbraStateInfo=braStateInfo, oldketStateInfo=ketStateInfo;
@@ -340,13 +340,12 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   if (dmrginp.outputlevel() > 0)
     pout << "\t\t\t transform time " << transformtimer.elapsedwalltime() << " " << transformtimer.elapsedcputime() << endl;
 
-  if (leftBlock)
+  if (leftBlock && clearLeftBlock)
     leftBlock->clear();
   if (rightBlock && clearRightBlock)
     rightBlock->clear();
 
 
 }
-
 
 }

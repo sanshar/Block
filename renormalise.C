@@ -36,11 +36,14 @@ using namespace boost;
 using namespace std;
 
 namespace SpinAdapted{
-void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins, double& error, vector<Matrix>& rotateMatrix, 
-				const int keptstates, const int keptqstates, const double tol, SpinBlock& big, 
-				const guessWaveTypes &guesswavetype, const double noise, const double additional_noise, const bool &onedot, SpinBlock& System, 
+void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins, double& error, 
+				vector<Matrix>& rotateMatrix, const int keptstates, 
+				const int keptqstates, const double tol, SpinBlock& big, 
+				const guessWaveTypes &guesswavetype, const double noise, 
+				const double additional_noise, const bool &onedot, SpinBlock& System,
 				SpinBlock& sysDot, SpinBlock& environment, const bool& dot_with_sys,
-				const bool& warmUp, int sweepiter, int currentRoot, std::vector<Wavefunction>& lowerStates)
+				const bool& warmUp, int sweepiter, int currentRoot, 
+				std::vector<Wavefunction>& lowerStates, int correctionVector)
 {
   int nroots = dmrginp.nroots(sweepiter);
   vector<Wavefunction> wave_solutions(nroots);
@@ -49,7 +52,8 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
     mcheck("before davidson but after all blocks are built");
 
   dmrginp.solvewf -> start();
-  Solver::solve_wavefunction(wave_solutions, energies, big, tol, guesswavetype, onedot, dot_with_sys, warmUp, additional_noise, currentRoot, lowerStates);
+  Solver::solve_wavefunction(wave_solutions, energies, big, tol, guesswavetype, onedot, 
+			     dot_with_sys, warmUp, additional_noise, currentRoot, lowerStates);
   dmrginp.solvewf -> stop();
 
   SpinBlock newsystem;
@@ -59,12 +63,14 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 
   if (onedot && !dot_with_sys)
   {
-    InitBlocks::InitNewSystemBlock(System, sysDot, newsystem, currentRoot, currentRoot, sysDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true);
+    InitBlocks::InitNewSystemBlock(System, sysDot, newsystem, currentRoot, currentRoot, 
+				   sysDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true);
     InitBlocks::InitBigBlock(newsystem, environment, newbig); 
     for (int i=0; i<nroots&& mpigetrank()==0; i++) 
     {
       Wavefunction tempwave = wave_solutions[i];
-      GuessWave::onedot_shufflesysdot(big.get_stateInfo(), newbig.get_stateInfo(),wave_solutions[i], tempwave);  
+      GuessWave::onedot_shufflesysdot(big.get_stateInfo(), newbig.get_stateInfo(),wave_solutions[i], 
+				      tempwave);  
       wave_solutions[i] = tempwave;
     }
     *this = newsystem;
@@ -110,9 +116,13 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix);
   for (int i=0; i<nroots; i++) {
     int state = dmrginp.setStateSpecific() ? currentRoot : i;
+    if (dmrginp.solve_method() == CONJUGATE_GRADIENT) 
+      state = currentRoot;
+
     SaveRotationMatrix (newbig.leftBlock->sites, rotateMatrix, state);
     wave_solutions[i].SaveWavefunctionInfo (newbig.braStateInfo, newbig.leftBlock->sites, state);
   }
+
   dmrginp.rotmatrixT -> stop();
   if (dmrginp.outputlevel() > 0)
     mcheck("after noise and calculation of density matrix");

@@ -27,6 +27,20 @@ class multiply_h : public Davidson_functor
   void operator()(Wavefunction& c, Wavefunction& v);
   const SpinBlock& get_block() {return block;}
 };
+
+//H-E
+class multiply_h_e : public Davidson_functor
+{
+ private:
+  const SpinBlock& block;
+  double E0;
+ public:
+  multiply_h_e(const SpinBlock& b, const bool &onedot_, double E0);
+  void operator()(Wavefunction& c, Wavefunction& v);
+  const SpinBlock& get_block() {return block;}
+};
+
+
 }
 
 #endif

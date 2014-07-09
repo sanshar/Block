@@ -115,6 +115,8 @@ class SpinBlock
   const StateInfo& get_stateInfo() const {return ketStateInfo;}
   const StateInfo& get_braStateInfo() const {return braStateInfo;}
   const StateInfo& get_ketStateInfo() const {return ketStateInfo;}
+  StateInfo& set_braStateInfo() {return braStateInfo;}
+  StateInfo& set_ketStateInfo() {return ketStateInfo;}
   static std::vector<int> make_complement(const std::vector<int>& sites);
   void setstoragetype(Storagetype st);
   void default_op_components(bool complementary_, bool implicitTranspose);
@@ -202,10 +204,10 @@ class SpinBlock
                         const int keptstates, const int keptqstates, const double tol, SpinBlock& big,
                         const guessWaveTypes &guesswavetype, const double noise, const double additional_noise, const bool &onedot, SpinBlock& system, 
 			SpinBlock& sysDot, SpinBlock& environment, const bool& dot_with_sys, const bool& warmUp, int sweepiter, 
-			int currenroot, std::vector<Wavefunction>& lowerStates);
+			int currenroot, std::vector<Wavefunction>& lowerStates, int correctionVector=-1);
 
   void transform_operators(std::vector<Matrix>& rotateMatrix);
-  void transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix, bool clearRightBlock = true);
+  void transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix, bool clearRightBlock = true, bool clearLeftBlock = true);
 };
 
  double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates);

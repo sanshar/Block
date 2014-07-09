@@ -213,6 +213,19 @@ void SparseMatrix::Randomise ()
 	    SpinAdapted::Randomise(operator_element(lQ, rQ));
 }
 
+double trace(const SparseMatrix& lhs)
+{
+  assert(lhs.nrows() == lhs.ncols());
+  double trace = 0.0;
+
+  for(int lQ=0;lQ<lhs.nrows();++lQ)
+    if(lhs.allowed(lQ,lQ))
+      for(int i=0;i<(lhs)(lQ,lQ).Nrows();++i)
+	trace += (lhs)(lQ,lQ)(i+1,i+1);
+
+  return trace;
+}
+
 double DotProduct(const SparseMatrix& lhs, const SparseMatrix& rhs)
 {
   double result = 0.;

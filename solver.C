@@ -19,7 +19,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 
 void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vector<double>& energies, SpinBlock& big, const double tol, 
-				const guessWaveTypes& guesswavetype, const bool &onedot, const bool& dot_with_sys, const bool& warmUp,
+					     const guessWaveTypes& guesswavetype, const bool &onedot, const bool& dot_with_sys, const bool& warmUp,
 					     double additional_noise, int currentRoot, std::vector<Wavefunction>& lowerStates)
 {
   const int nroots = solution.size();
@@ -88,11 +88,30 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
 
     }
     else if (dmrginp.solve_method() == CONJUGATE_GRADIENT) {
-      solution.resize(nroots);
-      multiply_h davidson_f(big, onedot);
-      GuessWave::guess_wavefunctions(solution, e, big, guesswavetype, onedot, dot_with_sys, additional_noise, currentRoot); 
+      solution.resize(1);
+      double E0_base = dmrginp.baseEnergy();
+      multiply_h_e davidson_f(big, onedot, E0_base);
 
-      Linear::ConjugateGradient(solution[0], e, e(1), tol, davidson_f, lowerStates);
+      if (mpigetrank()!=0) 
+	e.ReSize(0);
+
+      GuessWave::guess_wavefunctions(solution[0], e, big, guesswavetype, onedot, currentRoot, 
+				     dot_with_sys, 0.0); 
+
+      if (guesswavetype == BASIC)
+	solution[0].Clear();
+
+      //calculate H^T Q |cV>, |cV> is lowerStates[0];
+      if(mpigetrank() == 0) {
+	double overlap = DotProduct(lowerStates[1], lowerStates[0]);
+	double overlap2 = DotProduct(lowerStates[0], lowerStates[0]);
+	if (fabs(overlap2) > NUMERICAL_ZERO) 
+	  ScaleAdd(-overlap/overlap2, lowerStates[0], lowerStates[1]);
+      }
+
+      double functional = Linear::ConjugateGradient(solution[0], tol, davidson_f, lowerStates);
+      if (mpigetrank() == 0)
+	e(1) = functional;
 
     }
     else {

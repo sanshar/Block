@@ -9,6 +9,7 @@
 #include <pario.h>
 #include "spinblock.h"
 #include "wrapper.h"
+#include "rotationmat.h"
 
 void ReadInput(char* conf);
 namespace SpinAdapted{
@@ -43,20 +44,83 @@ void readMPSFromDiskAndInitializeStaticVariables(int mpsindex) {
 
 }
 
+void writeFullMPS()
+{
+  int ncore = 2;
+  int nactive = 8;
+  int nvirt = 18;
+
+  Matrix m(1,1); m(1,1)=1.0;
+  std::vector<Matrix> corerotMat, virtcorMat, firstactMat;
+  corerotMat.resize(3); virtcorMat.resize(3);firstactMat.resize(3);
+  corerotMat[2] = m; virtcorMat[0] = m;
+  firstactMat[0] = m; firstactMat[1] = m; firstactMat[2] = m;
+
+  std::vector<Matrix> rotMat_init;rotMat_init.resize(6);
+  rotMat_init[5] = m;
+
+  std::vector<int> readSites(2,0); 
+  std::vector< std::vector<Matrix> > activeRots; activeRots.resize(nactive);
+  for (int i=ncore+1; i<ncore+nactive-1; i++) {
+    readSites[1]++;
+    LoadRotationMatrix(readSites, activeRots[i-ncore-1], 0); 
+  }
+
+
+  std::vector<int> sites(2,0); sites[1] = 1;
+  SaveRotationMatrix(sites, rotMat_init, 0);
+
+  //write ncore rotation matrices
+  for (int i=2; i<ncore; i++) {
+    sites[1] = i;
+    cout << "save rotation "<<i<<endl;
+    SaveRotationMatrix(sites, rotMat_init, 0);
+  }
+
+
+  sites[1] = ncore;
+  SaveRotationMatrix(sites, firstactMat, 0);
+
+
+  //write ncore rotation matrices
+  for (int i=ncore+1; i<ncore+nactive-1; i++) {
+    sites[1] = i;
+    SaveRotationMatrix(sites, activeRots[i-ncore-1], 0);
+  }
+
+  sites[1] = ncore+nactive-1;
+  SaveRotationMatrix(sites, firstactMat, 0);
+
+  //write ncore rotation matrices
+  for (int i=ncore+nactive; i<ncore+nactive+nvirt; i++) {
+    sites[1] = i;
+    cout << "save virtual rotation "<<i<<endl;
+    SaveRotationMatrix(sites, virtcorMat, 0);
+  }
+
+
+}
+
 void test()
 {
   MPS statea(0);
   double o, h;
   calcHamiltonianAndOverlap(statea, statea, h, o);
+  cout.precision(12);
   cout << o<<"  "<<h<<endl;
+
   MPS stateb(1);
-  calcHamiltonianAndOverlap(stateb, statea, h, o);
-  cout << o<<"  "<<h<<endl;
-  stateb.normalize();
   calcHamiltonianAndOverlap(stateb, stateb, h, o);
   cout << o<<"  "<<h<<endl;
-  calcHamiltonianAndOverlap(stateb, statea, h, o);
+
+  MPS statec(2);
+  calcHamiltonianAndOverlap(statec, statea, h, o);
   cout << o<<"  "<<h<<endl;
+
+
+  calcHamiltonianAndOverlap(statec, statec, h, o);
+  cout << o<<"  "<<h<<endl;
+
 }
 
 void evaluateOverlapAndHamiltonian(long *occ, int length, double* o, double* h) {
