@@ -589,26 +589,30 @@ weights, one uses \begin{verbatim} nroots 2 weights 0.5 0.5 \end{verbatim}
 Currently, the implementation of the Davidson algorithm is somewhat inefficient
 for a large number of roots.
 
-%\subsubsection{Reduced density matrices (RDM)}
-\subsubsection{Reduced density matrices (RDM)}
-One-particle and two-particle density matrices can be calculated and output
-using the keywords \texttt{onerdm} or \texttt{twordm}.  If a calculation has
+%\subsubsection{Particle density matrices (pdm)}
+\subsubsection{Particle density matrices (pdm)}
+Up to four-paritcle density matrices and one-particle and two-particle transition density matrices can be calculated and output
+using the keywords \texttt{onepdm}, \texttt{twopdm}, \texttt{threepdm} , \texttt{fourpdm},\texttt{tran\_onepdm} or \texttt{tran\_twopdm}.  If a calculation has
 been completed, Block is able to use the scratch files from the previous
 calculation to compute the density matrices. To perform this kind of
-calculation,  use the keywords \texttt{restart\_onerdm} and
-\texttt{restart\_twordm}.
+calculation,  use the keywords \texttt{restart\_onepdm}
+\texttt{restart\_twopdm}, \texttt{restart\_threepdm}, \texttt{restart\_fourpdm}, \texttt{restart\_tran\_onepdm} or \texttt{restart\_tran\_twopdm}.
+( In order to be consistent with previous code, there is a factor 1/2 in two-particle (transition) density matrices.)
 
-The one-particle and two-particle density matrices of the $n$th state are
-calculated and stored in a text file name \texttt{spatial\_onepdm.n.n} and
-\texttt{spatial\_twopdm.n.n} respectively, starting with $n=0$. For example,
+Density matrices of the $n$th state are
+calculated and stored in a text file name \texttt{spatial\_onepdm.n.n}, 
+\texttt{spatial\_twopdm.n.n}, \texttt{spatial\_threepdm.n.n} and \texttt{spatial\_fourpdm.n.n} respectively, starting with $n=0$. 
+Transition density matrices between the $m$th state and $n$th state are calculated and 
+stored in a text file name \texttt{spatial\_onepdm.m.n} and \texttt{spatial\_onepdm.m.n}
+For example,
 the ground-state one-particle density matrix is stored in
-\texttt{spatial\_onepdm.0.0}.  Each line of the one-particle density matrix
+\texttt{spatial\_onepdm.m.n}.  Each line of the one-particle (transition) density matrix
 file contains 3 numbers, the first two are the orbital indices and the last
 number is the density matrix element:
-\\ \texttt{ \\i j $<a_i^\dag a_j>$\\ }
-\\and for the two-particle density matrix:
-\\ \texttt{ \\i j k l $<a_i^\dag
-a_j^\dag a_k a_l>$\\ } 
+\\ \texttt{ \\i j $<\Psi_m|a_i^\dag a_j|\Psi_n>$\\ }
+\\and for the two-particle (transition) density matrix:
+\\ \texttt{ \\i j k l $<\Psi_m|a_i^\dag
+a_j^\dag a_k a_l|\Psi_n>$\\ } 
 \\Note that the orbital labels start from 0.
 
 %\subsubsection{Restarting a calculation}
