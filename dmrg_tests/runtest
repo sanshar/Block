@@ -51,14 +51,14 @@ cd ../
 
 # this test is for non-particle number conserving BCS calculations
 # check the ground state energy, onepdm, and pairing matrix
-echo "testing energy for bcs calculation..."
-cd bcs
-srun  ../../block.spin_adapted dmrg.conf >dmrg.out
-python ../test_energy.py 1  1.0e-6 -1.4816808342
-echo "testing onepdm and pairing matrix for bcs calculation..."
-python ../test_onepdm.py onepdm.0.0.txt ref_onepdm.0.0 1e-7
-python ../test_onepdm.py spatial_pairmat.0.0.txt spat_pairmat.0.0 1e-7
-cd ../
+#echo "testing energy for bcs calculation..."
+#cd bcs
+#srun  ../../block.spin_adapted dmrg.conf >dmrg.out
+#python ../test_energy.py 1  1.0e-6 -1.4816808342
+#echo "testing onepdm and pairing matrix for bcs calculation..."
+#python ../test_onepdm.py onepdm.0.0.txt ref_onepdm.0.0 1e-7
+#python ../test_onepdm.py spatial_pairmat.0.0.txt spat_pairmat.0.0 1e-7
+#cd ../
 
 echo "testing state specific excited states..."
 cd hubbard_stateSpecific
@@ -152,4 +152,5 @@ python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
 python ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
 python ../test_transitiononepdm.py spatial_onepdm.1.0.txt spat_onepdm.1.0.txt 1e-7
 
+cd ../
 ./clean

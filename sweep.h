@@ -24,17 +24,17 @@ namespace Sweep
 
   void CanonicalizeWavefunction(SweepParams &sweepParams, const bool &forward, int currentstate);
   void InitializeStateInfo(SweepParams &sweepParams, const bool &forward, int currentstate);
-  void InitializeOverlapSpinBlocks(SweepParams &sweepParams, const bool &forward, int stateA, int stateB);
+  void InitializeOverlapSpinBlocks(SweepParams &sweepParams, const bool &forward, int stateA, int stateB, int integralIndex);
   void calculateAllOverlap(Matrix& overlap);
   void calculateHMatrixElements(Matrix& H);
   void makeSystemEnvironmentBigBlocks(SpinBlock& system, SpinBlock& systemDot, SpinBlock& newSystem, 
 				      SpinBlock& environment, SpinBlock& environmentDot, SpinBlock& newEnvironment,
 				      SpinBlock& big, SweepParams& sweepParams, const bool& dot_with_sys, const bool& useSlater,
-				      int braState=-1, int ketState=-1);
+				      int integralIndex, int braState=-1, int ketState=-1);
   void makeSystemEnvironmentBigOverlapBlocks(const std::vector<int>& systemSites, SpinBlock& systemDot, SpinBlock& environmentDot,
 					     SpinBlock& system, SpinBlock& newSystem, SpinBlock& environment, SpinBlock& newEnvironment,
 					     SpinBlock& big, SweepParams& sweepParams, const bool& dot_with_sys, const bool& useSlater,
-					     int braState, int ketState);
+					     int integralIndex, int braState, int ketState);
   
 };
 }

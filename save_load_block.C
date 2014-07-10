@@ -26,9 +26,9 @@ std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBloc
   std::string file;
 
   if (forward)
-    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." %b.integralIndex % "." % mpigetrank() % ".tmp" );
   else
-    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." %b.integralIndex % "." % mpigetrank() % ".tmp" );
   
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Restoring block file :: " << file << endl;
@@ -63,15 +63,15 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b, int
   std::string file;
   if(dmrginp.spinAdapted()) {
     if (forward)
-      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." %b.integralIndex % "." % mpigetrank() % ".tmp" );
     else
-      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." %b.integralIndex % "." % mpigetrank() % ".tmp" );
   }
   else {
     if (forward)
-      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % left % "." % right % "." %b.integralIndex % "." % mpigetrank() % ".tmp" );
     else
-      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % left % "." % right % "." %b.integralIndex % "." % mpigetrank() % ".tmp" );
   }
   
   if (dmrginp.outputlevel() > 0) 

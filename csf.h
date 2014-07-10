@@ -142,8 +142,8 @@ public:
     return os;
   }
 
-  static std::vector< Csf > distribute (const int n, const int s, const IrrepVector &sym, const int left, const int right, const int edge);
-  static std::vector<Csf> distributeNonSpinAdapted (const int n, const int sp, const IrrepVector &sym, const int left, const int right, const int edge);
+  static std::vector< Csf > distribute (const int n, const int s, const IrrepVector &sym, const int left, const int right, const int edge, int integralIndex);
+  static std::vector<Csf> distributeNonSpinAdapted (const int n, const int sp, const IrrepVector &sym, const int left, const int right, const int edge, int integralIndex);
     
 };
 
@@ -163,6 +163,6 @@ struct Csfcompare
   bool operator() (const boost::shared_ptr<Csf>& c1, const boost::shared_ptr<Csf>& c2) const {return (*c1 < *c2);}
 };
 
-double csf_energy (const Csf& s);
+ double csf_energy (const Csf& s, int integralIndex);
 }
 #endif

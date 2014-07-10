@@ -410,26 +410,26 @@ void SpinAdapted::PartialTwoElectronArray::populate(TwoElectronArray& v2) {
   }
 }
 
-void SpinAdapted::PartialTwoElectronArray::Load(std::string prefix) {
-        char file [5000];
-      sprintf (file, "%s%s%d%s%d%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", mpigetrank(), ".tmp");
-      if(mpigetrank() == 0) {
-	cout << "\t\t\t Reading Integral file "<<file <<endl;
-	std::ifstream ifs(file, std::ios::binary);
-	boost::archive::binary_iarchive load_integral(ifs);
-	load_integral >> *this ;
-      }
+void SpinAdapted::PartialTwoElectronArray::Load(std::string prefix, int index) {
+  char file [5000];
+  sprintf (file, "%s%s%d%s%d%d%s%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", index, ".", mpigetrank(), ".tmp");
+  if(mpigetrank() == 0) {
+    cout << "\t\t\t Reading Integral file "<<file <<endl;
+    std::ifstream ifs(file, std::ios::binary);
+    boost::archive::binary_iarchive load_integral(ifs);
+    load_integral >> *this ;
+  }
 }
 
-void SpinAdapted::PartialTwoElectronArray::Save(std::string prefix) {
-      char file [5000];
-      sprintf (file, "%s%s%d%s%d%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", mpigetrank(), ".tmp");
-      if(mpigetrank() == 0) {
-	cout << "\t\t\t Saving Integral file "<<file <<endl;
-	std::ofstream ofs(file, std::ios::binary);
-	boost::archive::binary_oarchive save_integral(ofs);
-	save_integral << *this ;
-      }
+void SpinAdapted::PartialTwoElectronArray::Save(std::string prefix, int index) {
+  char file [5000];
+  sprintf (file, "%s%s%d%s%d%d%s%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", index, ".", mpigetrank(), ".tmp");
+  if(mpigetrank() == 0) {
+    cout << "\t\t\t Saving Integral file "<<file <<endl;
+    std::ofstream ofs(file, std::ios::binary);
+    boost::archive::binary_oarchive save_integral(ofs);
+    save_integral << *this ;
+  }
 }
 
 double SpinAdapted::PartialTwoElectronArray::operator () (int i, int j, int k, int l) const {

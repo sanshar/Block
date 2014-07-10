@@ -53,7 +53,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
   //if (useSlater) {
-    systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), true);
     //SpinBlock::store(true, systemDot.get_sites(), systemDot);
     //}
     //else
@@ -67,21 +67,21 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   system.addAdditionalCompOps();
   if(dmrginp.setStateSpecific()){
   InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, state, state,
-                                 sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, true, true);
+                                 sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), DISTRIBUTED_STORAGE, true, true);
   
   InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
                                       state, state,
                                       sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-                                      sweepParams.get_onedot(), nexact, useSlater, true, true, true);
+                                      sweepParams.get_onedot(), nexact, useSlater, system.get_integralIndex(), true, true, true);
   }
   else{
   InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(),
-                                 sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, true, true);
+                                 sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), DISTRIBUTED_STORAGE, true, true);
   
   InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
                                       sweepParams.current_root(), sweepParams.current_root(),
                                       sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-                                      sweepParams.get_onedot(), nexact, useSlater, true, true, true);
+                                      sweepParams.get_onedot(), nexact, useSlater, system.get_integralIndex(), true, true, true);
   }
   SpinBlock big;
   newSystem.set_loopblock(true);
@@ -156,7 +156,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
   //if (useSlater) {
-    systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), true);
     //SpinBlock::store(true, systemDot.get_sites(), systemDot);
     //}
     //else
@@ -170,21 +170,21 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   system.addAdditionalCompOps();
   if(dmrginp.setStateSpecific()){
     InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, state, stateB,
-                                   sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, true, true);
+                                   sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), DISTRIBUTED_STORAGE, true, true);
     
     InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
                                       state, stateB,
                                       sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-                                      sweepParams.get_onedot(), nexact, useSlater, true, true, true);
+                                      sweepParams.get_onedot(), nexact, useSlater, system.get_integralIndex(), true, true, true);
   }
   else{
     InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(),
-                                   sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, true, true);
+                                   sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), DISTRIBUTED_STORAGE, true, true);
     
     InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
                                       sweepParams.current_root(), sweepParams.current_root(),
                                       sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-                                      sweepParams.get_onedot(), nexact, useSlater, true, true, true);
+                                      sweepParams.get_onedot(), nexact, useSlater, system.get_integralIndex(), true, true, true);
 
   }
   SpinBlock big;
@@ -281,6 +281,7 @@ double npdm_do_one_sweep(Npdm_driver_base& npdm_driver, SweepParams &sweepParams
                          const bool &restart, const int &restartSize, const int state)
 {
   cout.precision(12);
+  int integralIndex = 0;
   SpinBlock system;
   const int nroots = dmrginp.nroots();
   std::vector<double> finalEnergy(nroots,0.);
@@ -293,10 +294,10 @@ double npdm_do_one_sweep(Npdm_driver_base& npdm_driver, SweepParams &sweepParams
   pout << "\t\t\t ============================================================================ " << endl;
   
   if(dmrginp.setStateSpecific())
-    InitBlocks::InitStartingBlock( system, forward, state, state, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+    InitBlocks::InitStartingBlock( system, forward, state, state, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex);
   else
     InitBlocks::InitStartingBlock( system, forward, sweepParams.current_root(), sweepParams.current_root(), 
-                                 sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+				   sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex);
 
   pout << "\t\t\t Starting block is :: " << endl << system << endl;
 
@@ -387,6 +388,7 @@ double npdm_do_one_sweep(Npdm_driver_base& npdm_driver, SweepParams &sweepParams
 double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams, const bool &warmUp, const bool &forward, 
                          const bool &restart, const int &restartSize, const int state, const int stateB)
 {
+  int integralIndex=0;
   cout.precision(12);
   SpinBlock system;
   const int nroots = dmrginp.nroots();
@@ -400,9 +402,9 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
   pout << "\t\t\t ============================================================================ " << endl;
   
   if(dmrginp.setStateSpecific())
-    InitBlocks::InitStartingBlock( system, forward, state, stateB, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+    InitBlocks::InitStartingBlock( system, forward, state, stateB, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex);
   else 
-    InitBlocks::InitStartingBlock( system, forward, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+    InitBlocks::InitStartingBlock( system, forward, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex);
 
   pout << "\t\t\t Starting block is :: " << endl << system << endl;
 

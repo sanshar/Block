@@ -169,7 +169,7 @@ if( mpigetrank() == 0 ) {
   std::cout << "Building NEVPT2 A16 matrix\n";
 
   int dim = eeee.dim1();
-  const TwoElectronArray& twoInt = v_2;
+  const TwoElectronArray& twoInt = v_2[0];
 
   // Output text file
   char file[5000];
@@ -216,7 +216,7 @@ if( mpigetrank() == 0 ) {
   std::cout << "Building NEVPT2 A22 matrix\n";
 
   int dim = eee.dim1();
-  const TwoElectronArray& twoInt = v_2;
+  const TwoElectronArray& twoInt = v_2[0];
 
   // Output text file
   char file[5000];

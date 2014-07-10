@@ -55,13 +55,13 @@ void calcenergy(array_4d<double>& twopdm, int state)
   for (int j=0; j<dmrginp.last_site()*2; j++)
   for (int k=0; k<dmrginp.last_site()*2; k++)
   for (int l=0; l<dmrginp.last_site()*2; l++)
-    energy += v_2(i,j,k,l)*twopdm(i,j,l,k);
+    energy += v_2[0](i,j,k,l)*twopdm(i,j,l,k);
 
   energy *= 0.5;
 
   for (int i=0; i<dmrginp.last_site()*2; i++)
   for (int j=0; j<dmrginp.last_site()*2; j++)
-    energy += v_1(i,j) * onepdm(i+1,j+1);
+    energy += v_1[0](i,j) * onepdm(i+1,j+1);
 
   pout << "energy of state "<< state <<" = "<< energy+dmrginp.get_coreenergy()<<endl;
 
@@ -96,7 +96,7 @@ void BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& n
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
   //if (useSlater) {
-  systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), true);
     //SpinBlock::store(true, systemDot.get_sites(), systemDot);
     //}
     //else
@@ -108,11 +108,11 @@ void BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& n
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
   system.addAdditionalCompOps();
-  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, true, true);
+  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), DISTRIBUTED_STORAGE, true, true);
   
   InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, sweepParams.current_root(), sweepParams.current_root(), 
 				      sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-				      sweepParams.get_onedot(), nexact, useSlater, true, true, true);
+				      sweepParams.get_onedot(), nexact, useSlater, system.get_integralIndex(), true, true, true);
   SpinBlock big;
   newSystem.set_loopblock(true);
   system.set_loopblock(false);
@@ -172,6 +172,7 @@ double do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward,
     exit(0);
   }
   cout.precision(12);
+  int integralIndex = 0;
   SpinBlock system;
   const int nroots = dmrginp.nroots();
   std::vector<double> finalEnergy(nroots,0.);
@@ -183,7 +184,7 @@ double do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward,
   pout << ((forward) ? "\t\t\t Starting renormalisation sweep in forwards direction" : "\t\t\t Starting renormalisation sweep in backwards direction") << endl;
   pout << "\t\t\t ============================================================================ " << endl;
   
-  InitBlocks::InitStartingBlock (system,forward, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+  InitBlocks::InitStartingBlock (system,forward, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex);
   if(!restart)
     sweepParams.set_block_iter() = 0;
  
@@ -294,7 +295,7 @@ void BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& n
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
   //if (useSlater) {
-  systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), true);
     //SpinBlock::store(true, systemDot.get_sites(), systemDot);
     //}
     //else
@@ -306,11 +307,11 @@ void BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& n
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
   system.addAdditionalCompOps();
-  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, true, true);
+  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), DISTRIBUTED_STORAGE, true, true);
   
   InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, sweepParams.current_root(), sweepParams.current_root(), 
 				      sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-				      sweepParams.get_onedot(), nexact, useSlater, true, true, true);
+				      sweepParams.get_onedot(), nexact, useSlater, system.get_integralIndex(), true, true, true);
   SpinBlock big;
   newSystem.set_loopblock(true);
   system.set_loopblock(false);
@@ -376,6 +377,7 @@ void BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& n
 
 double do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state, int stateB)
 {
+  int integralIndex = 0;
   if (dmrginp.hamiltonian() == BCS) {
     cout << "Two PDM with BCS calculations is not implemented" << endl;
     exit(0);
@@ -392,7 +394,7 @@ double do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward,
   pout << ((forward) ? "\t\t\t Starting renormalisation sweep in forwards direction" : "\t\t\t Starting renormalisation sweep in backwards direction") << endl;
   pout << "\t\t\t ============================================================================ " << endl;
   
-  InitBlocks::InitStartingBlock (system,forward, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+  InitBlocks::InitStartingBlock (system,forward, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex);
   if(!restart)
     sweepParams.set_block_iter() = 0;
  

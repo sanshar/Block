@@ -14,3 +14,10 @@ find . -name "pairmat.*" |xargs rm >/dev/null 2>&1
 find . -name "dmrg.out" |xargs rm >/dev/null 2>&1
 find . -name "RI*tmp" |xargs rm >/dev/null 2>&1
 find npdm_h2o_small -name "*.tmp"|xargs rm >/dev/null 2>&1
+rm h2o_transitionpdm/dmrg_onepdm.out
+rm h2o_transitionpdm/dmrg_statespecific.out
+rm npdm_h2o_small/A16_matrix.0.0.txt
+rm npdm_h2o_small/partial_A16_matrix.0.0.p0.n0.bin
+rm npdm_h2o_small/partial_A16_matrix.0.0.p1.n0.bin
+rm npdm_h2o_small/threepdm.0.0.bin
+rm npdm_h2o_small/threepdm.0.0.txt

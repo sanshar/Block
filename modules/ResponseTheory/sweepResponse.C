@@ -59,13 +59,13 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
     environmentDotStart = systemDotEnd - 1;
     environmentDotEnd = environmentDotStart - environmentDotSize;
   }
-  systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
-  environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, true);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), true);
+  environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, system.get_integralIndex(), true);
   SpinBlock environment, newEnvironment;
 
   SpinBlock big;  // new_sys = sys+sys_dot; new_env = env+env_dot; big = new_sys + new_env then renormalize to find new_sys(new)
   Sweep::makeSystemEnvironmentBigBlocks(system, systemDot, newSystem, environment, environmentDot, 
-					newEnvironment, big, sweepParams, dot_with_sys, useSlater, 
+					newEnvironment, big, sweepParams, dot_with_sys, useSlater, system.get_integralIndex(),  
 					targetState, targetState);
 
 
@@ -113,7 +113,7 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
     Sweep::makeSystemEnvironmentBigOverlapBlocks(systemsites, systemDot, environmentDot,
 						 overlapsystem, overlapenvironment, overlapnewsystem, 
 						 overlapnewenvironment, overlapBig, sweepParams, 
-						 dot_with_sys, useSlater, targetState, baseState);
+						 dot_with_sys, useSlater, system.get_integralIndex(), targetState, baseState);
     GuessWave::guess_wavefunctions(lowerStates[0], e, overlapBig, guesstype, 
 				   sweepParams.get_onedot(), baseState, dot_with_sys, 0.0);
     
@@ -142,7 +142,7 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
     Sweep::makeSystemEnvironmentBigOverlapBlocks(systemsites, systemDot, environmentDot,
 						 overlapsystem, overlapenvironment, overlapnewsystem, 
 						 overlapnewenvironment, overlapBig, sweepParams, 
-						 dot_with_sys, useSlater, targetState, correctionVector);
+						 dot_with_sys, useSlater, system.get_integralIndex(), targetState, correctionVector);
     GuessWave::guess_wavefunctions(lowerStates[1], e, overlapBig, guesstype, 
 				   sweepParams.get_onedot(), correctionVector, dot_with_sys, 0.0);
 
@@ -199,14 +199,14 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
 
     SpinBlock overlapBig;
     SpinBlock overlapsystem, overlapenvironment, overlapnewsystem, overlapnewenvironment;
-    SpinBlock overlapsystemDot(systemDotStart, systemDotEnd, true);
-    SpinBlock overlapenvironmentDot(environmentDotStart, environmentDotEnd, true);
+    SpinBlock overlapsystemDot(systemDotStart, systemDotEnd, newSystem.get_integralIndex(), true);
+    SpinBlock overlapenvironmentDot(environmentDotStart, environmentDotEnd, newSystem.get_integralIndex(), true);
     guessWaveTypes guesstype = sweepParams.get_block_iter() == 0 ? TRANSPOSE : TRANSFORM;
       
     DiagonalMatrix e;
     Sweep::makeSystemEnvironmentBigOverlapBlocks(systemsites, overlapsystemDot, overlapenvironmentDot,
 						 overlapsystem, overlapnewsystem, overlapenvironment, overlapnewenvironment,
-						 overlapBig, sweepParams, true, useSlater,
+						 overlapBig, sweepParams, true, useSlater, newSystem.get_integralIndex(), 
 						 targetState, correctionVector);
 
     Wavefunction iwave;
@@ -243,14 +243,14 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
 
     SpinBlock overlapBig;
     SpinBlock overlapsystem, overlapenvironment, overlapnewsystem, overlapnewenvironment;
-    SpinBlock overlapsystemDot(systemDotStart, systemDotEnd, true);
-    SpinBlock overlapenvironmentDot(environmentDotStart, environmentDotEnd, true);
+    SpinBlock overlapsystemDot(systemDotStart, systemDotEnd, newSystem.get_integralIndex(), true);
+    SpinBlock overlapenvironmentDot(environmentDotStart, environmentDotEnd, newSystem.get_integralIndex(), true);
     guessWaveTypes guesstype = sweepParams.get_block_iter() == 0 ? TRANSPOSE : TRANSFORM;
       
     DiagonalMatrix e;
     Sweep::makeSystemEnvironmentBigOverlapBlocks(systemsites, overlapsystemDot, overlapenvironmentDot,
 						 overlapsystem, overlapnewsystem, overlapenvironment, overlapnewenvironment,
-						 overlapBig, sweepParams, true, useSlater,
+						 overlapBig, sweepParams, true, useSlater, newSystem.get_integralIndex(), 
 						 targetState, baseState);
 
     Wavefunction iwave;
@@ -301,7 +301,7 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
 					  const bool &restart, const int &restartSize, int targetState, 
 					  int correctionVector, int baseState)
 {
-
+  int integralIndex = 0;
   SpinBlock system;
 
   std::vector<double> finalEnergy(1,1.0e10);
@@ -318,7 +318,7 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
 
   InitBlocks::InitStartingBlock (system,forward, targetState, targetState,
 				 sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), 
-				 restartSize, restart, warmUp);
+				 restartSize, restart, warmUp, integralIndex);
 
   if(!restart)
     sweepParams.set_block_iter() = 0;
@@ -475,8 +475,8 @@ void SpinAdapted::SweepResponse::StartUp (SweepParams &sweepParams, SpinBlock& s
     environmentDotStart = systemDotEnd - 1;
     environmentDotEnd = environmentDotStart - environmentDotSize;
   }
-  systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
-  environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, true);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), true);
+  environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, system.get_integralIndex(), true);
   SpinBlock environment, newEnvironment;
 
   SpinBlock big;  // new_sys = sys+sys_dot; new_env = env+env_dot; big = new_sys + new_env then renormalize to find new_sys(new)
@@ -486,7 +486,7 @@ void SpinAdapted::SweepResponse::StartUp (SweepParams &sweepParams, SpinBlock& s
   //<target| H |target>
   {
     InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, correctionVector, correctionVector, 
-				   sweepParams.get_sys_add(), dmrginp.direct(), 
+				   sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), 
 				   DISTRIBUTED_STORAGE, haveNormOps, haveCompOps);
     
     LoadRotationMatrix (newSystem.get_sites(), brarotateMatrix, correctionVector);
@@ -521,17 +521,20 @@ void SpinAdapted::SweepResponse::StartUp (SweepParams &sweepParams, SpinBlock& s
   //<target| H |cV>
   {
     SpinBlock newOverlapSystemBlock, overlapSystemBlock;
-    systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
+    systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), true);
     
     if ( (system.get_sites().size() == 1 && dmrginp.spinAdapted()) || (!dmrginp.spinAdapted()&&system.get_sites().size() == 2) ) {
       int restartSize = 0; bool restart=false, warmUp = false;
       InitBlocks::InitStartingBlock(overlapSystemBlock, forward, targetState, correctionVector, 
 				    sweepParams.get_forward_starting_size(), 
 				    sweepParams.get_backward_starting_size(), restartSize, 
-				    restart, warmUp);
+				    restart, warmUp, system.get_integralIndex());
     }
-    else 
+    else {
+      overlapSystemBlock.set_integralIndex() = system.get_integralIndex();
       SpinBlock::restore(forward, systemsites, overlapSystemBlock, targetState, correctionVector);
+    }
+    newOverlapSystemBlock.set_integralIndex() = system.get_integralIndex();
     newOverlapSystemBlock.initialise_op_array(OVERLAP, false);
     newOverlapSystemBlock.setstoragetype(DISTRIBUTED_STORAGE);
     newOverlapSystemBlock.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, overlapSystemBlock, 
@@ -547,16 +550,19 @@ void SpinAdapted::SweepResponse::StartUp (SweepParams &sweepParams, SpinBlock& s
   //<target| H |base>
   {
     SpinBlock newOverlapSystemBlock, overlapSystemBlock;
-    systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
+    systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), true);
     if ( (system.get_sites().size() == 1 && dmrginp.spinAdapted()) || (!dmrginp.spinAdapted()&&system.get_sites().size() == 2) ) {
       int restartSize = 0; bool restart=false, warmUp = false;
       InitBlocks::InitStartingBlock(overlapSystemBlock, forward, targetState, baseState, 
 				  sweepParams.get_forward_starting_size(), 
 				  sweepParams.get_backward_starting_size(), restartSize, 
-				  restart, warmUp);
+				    restart, warmUp, system.get_integralIndex());
     }
-    else 
+    else {
+      overlapSystemBlock.set_integralIndex() = system.get_integralIndex();
       SpinBlock::restore(forward, systemsites, overlapSystemBlock, targetState, baseState);
+    }
+    newOverlapSystemBlock.set_integralIndex() = system.get_integralIndex();
     newOverlapSystemBlock.initialise_op_array(OVERLAP, false);
     newOverlapSystemBlock.setstoragetype(DISTRIBUTED_STORAGE);
     newOverlapSystemBlock.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, overlapSystemBlock, 
@@ -628,13 +634,13 @@ void SpinAdapted::SweepResponse::WavefunctionCanonicalize (SweepParams &sweepPar
       environmentDotStart = systemDotEnd - 1;
       environmentDotEnd = environmentDotStart - environmentDotSize;
     }
-  systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
-  environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, true);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), true);
+  environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, system.get_integralIndex(), true);
   SpinBlock environment, newEnvironment;
   
   SpinBlock big;  // new_sys = sys+sys_dot; new_env = env+env_dot; big = new_sys + new_env then renormalize to find new_sys(new)
 
-  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, targetState, targetState, sweepParams.get_sys_add(), dmrginp.direct(), 
+  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, targetState, targetState, sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), 
 				 DISTRIBUTED_STORAGE, false, true);
 
   newSystem.set_loopblock(false);  environmentDot.set_loopblock(false); 
@@ -717,12 +723,13 @@ void SpinAdapted::SweepResponse::WavefunctionCanonicalize (SweepParams &sweepPar
     
     SpinBlock overlapBig;
     SpinBlock overlapsystem, overlapenvironment, overlapnewsystem, overlapnewenvironment;
-    SpinBlock overlapsystemDot(systemDotStart, systemDotEnd, true);
-    SpinBlock overlapenvironmentDot(environmentDotStart, environmentDotEnd, true);
+    SpinBlock overlapsystemDot(systemDotStart, systemDotEnd, system.get_integralIndex(), true);
+    SpinBlock overlapenvironmentDot(environmentDotStart, environmentDotEnd, system.get_integralIndex(), true);
     guessWaveTypes guesstype = sweepParams.get_block_iter() == 0 ? TRANSPOSE : TRANSFORM;
     
     DiagonalMatrix e;
 
+    overlapsystem.set_integralIndex() = system.get_integralIndex();
     SpinBlock::restore(forward, systemsites, overlapsystem, targetState, correctionVector);
     overlapnewsystem.initialise_op_array(OVERLAP, false);
     overlapnewsystem.setstoragetype(DISTRIBUTED_STORAGE);
@@ -764,12 +771,13 @@ void SpinAdapted::SweepResponse::WavefunctionCanonicalize (SweepParams &sweepPar
     
     SpinBlock overlapBig;
     SpinBlock overlapsystem, overlapenvironment, overlapnewsystem, overlapnewenvironment;
-    SpinBlock overlapsystemDot(systemDotStart, systemDotEnd, true);
-    SpinBlock overlapenvironmentDot(environmentDotStart, environmentDotEnd, true);
+    SpinBlock overlapsystemDot(systemDotStart, systemDotEnd, system.get_integralIndex(), true);
+    SpinBlock overlapenvironmentDot(environmentDotStart, environmentDotEnd, system.get_integralIndex(), true);
     guessWaveTypes guesstype = sweepParams.get_block_iter() == 0 ? TRANSPOSE : TRANSFORM;
     
     DiagonalMatrix e;
 
+    overlapsystem.set_integralIndex() = system.get_integralIndex();
     SpinBlock::restore(forward, systemsites, overlapsystem, targetState, baseState);
     overlapnewsystem.initialise_op_array(OVERLAP, false);
     overlapnewsystem.setstoragetype(DISTRIBUTED_STORAGE);

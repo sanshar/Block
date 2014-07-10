@@ -77,8 +77,8 @@ namespace SpinAdapted{
   bool DEBUG_MEMORY = false;
   bool restartwarm = false;
   double NUMERICAL_ZERO = 1e-15;
-  OneElectronArray v_1;
-  TwoElectronArray v_2(TwoElectronArray::restrictedNonPermSymm);
+  std::vector<OneElectronArray> v_1;
+  std::vector<TwoElectronArray> v_2;
   PairArray v_cc;
   CCCCArray v_cccc;
   CCCDArray v_cccd;
@@ -190,8 +190,9 @@ int calldmrg(char* input, char* output)
       }
       for (int istate = 0; istate<dmrginp.nroots(); istate++) 
 	for (int j=istate; j<dmrginp.nroots() ; j++) {
-	  Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, j, istate);
-	  Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, j, istate);
+	  int integralIndex = 0;
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, j, istate, integralIndex);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, j, istate, integralIndex);
 	}
       //Sweep::calculateAllOverlap(O);
     }
@@ -387,8 +388,9 @@ void restart(double sweep_tol, bool reset_iter)
       sweepParams.current_root() = i;
       if (mpigetrank()==0) {
 	for (int j=0; j<i; j++) {
-	  Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, i, j);
-	  Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, i, j);
+	  int integralIndex = 0;
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, i, j, integralIndex);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, i, j, integralIndex);
 	}
       }
     }
@@ -417,8 +419,9 @@ void restart(double sweep_tol, bool reset_iter)
 	Sweep::CanonicalizeWavefunction(sweepParams, !direction, i);
 	Sweep::CanonicalizeWavefunction(sweepParams, direction, i);
 	for (int j=0; j<i ; j++) {
-	  Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, i, j);
-	  Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, i, j);
+	  int integralIndex = 0;
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, i, j, integralIndex);
+	  Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, i, j, integralIndex);
 	}
       }
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, i, i);
@@ -539,8 +542,9 @@ void dmrg(double sweep_tol)
       }
 
       for (int j=0; j<i ; j++) {
-	Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, i, j);
-	Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, i, j);
+	int integralIndex = 0;
+	Sweep::InitializeOverlapSpinBlocks(sweepParams, direction, i, j, integralIndex);
+	Sweep::InitializeOverlapSpinBlocks(sweepParams, !direction, i, j, integralIndex);
       }
       dmrginp.set_algorithm_method() = atype;
 

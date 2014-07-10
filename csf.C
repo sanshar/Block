@@ -54,12 +54,12 @@ void SpinAdapted::Csf::outerProd(const Csf& csf, double factor, map<Slater, doub
   }
 }
 
-double SpinAdapted::csf_energy(const Csf& s)
+double SpinAdapted::csf_energy(const Csf& s, int integralIndex)
 {
   map<Slater, double>::const_iterator it = s.det_rep.begin();
   double energy = 0.0;
   for (; it != s.det_rep.end();it++)
-    energy += it->second* det_energy(it->first);
+    energy += it->second* det_energy(it->first, integralIndex);
 
   return energy;
 }
@@ -528,7 +528,7 @@ std::vector<SpinAdapted::Csf > SpinAdapted::CSFUTIL::spinfockstrings(const std::
 
 
 
-std::vector< SpinAdapted::Csf > SpinAdapted::Csf::distribute (const int n, const int sp, const IrrepVector &sym, const int left, const int right, const int edge)
+std::vector< SpinAdapted::Csf > SpinAdapted::Csf::distribute (const int n, const int sp, const IrrepVector &sym, const int left, const int right, const int edge, int integralIndex)
 {
   std::vector< Csf > s;
 
@@ -583,7 +583,7 @@ std::vector< SpinAdapted::Csf > SpinAdapted::Csf::distribute (const int n, const
 	  alphaIndex++;
 	  continue;
 	}
-	orbMap.insert(pair<double, int>(v_1(2*i, 2*i), alphaIndex));
+	orbMap.insert(pair<double, int>(v_1[integralIndex](2*i, 2*i), alphaIndex));
 	++alphaIndex;
       }
     
@@ -644,7 +644,7 @@ std::vector< SpinAdapted::Csf > SpinAdapted::Csf::distribute (const int n, const
   return s;
 }
 
-std::vector<Csf> Csf::distributeNonSpinAdapted (const int n, const int sp, const IrrepVector &sym, const int left, const int right, const int edge)
+std::vector<Csf> Csf::distributeNonSpinAdapted (const int n, const int sp, const IrrepVector &sym, const int left, const int right, const int edge, int integralIndex)
 {
   std::vector<Csf> s;
   
@@ -719,12 +719,12 @@ std::vector<Csf> Csf::distributeNonSpinAdapted (const int n, const int sp, const
     }
     else if ((SpinOf(i) == 1)) // not HF orb, but alpha orb
     {
-      alphaMap.insert(pair<double, int>(v_1(i, i), alphaIndex));
+      alphaMap.insert(pair<double, int>(v_1[integralIndex](i, i), alphaIndex));
       ++alphaIndex;
     }
     else // beta orb
     {
-      betaMap.insert(pair<double, int>(v_1(i, i), betaIndex));
+      betaMap.insert(pair<double, int>(v_1[integralIndex](i, i), betaIndex));
       ++betaIndex;
     }
   }

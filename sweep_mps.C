@@ -206,7 +206,7 @@ void SpinAdapted::Sweep::InitializeStateInfo(SweepParams &sweepParams, const boo
 
 
 //before you start optimizing each state you want to initalize all the overlap matrices
-void Sweep::InitializeOverlapSpinBlocks(SweepParams &sweepParams, const bool &forward, int stateA, int stateB)
+void Sweep::InitializeOverlapSpinBlocks(SweepParams &sweepParams, const bool &forward, int stateA, int stateB, int integralIndex)
 {
   SpinBlock system;
 
@@ -218,7 +218,7 @@ void Sweep::InitializeOverlapSpinBlocks(SweepParams &sweepParams, const bool &fo
   pout << "\t\t\t ============================================================================ " << endl;
 
   int restartSize = 0; bool restart = false, warmUp = false;
-  InitBlocks::InitStartingBlock (system,forward, stateA, stateB, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+  InitBlocks::InitStartingBlock (system,forward, stateA, stateB, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex);
 
   sweepParams.set_block_iter() = 0;
 
@@ -256,7 +256,7 @@ void Sweep::InitializeOverlapSpinBlocks(SweepParams &sweepParams, const bool &fo
 	  systemDotStart = dmrginp.spinAdapted() ? system.get_sites()[0] - 1 : (system.get_sites()[0])/2 - 1 ;
 	  systemDotEnd = systemDotStart - systemDotSize;
 	}
-      systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
+      systemDot = SpinBlock(systemDotStart, systemDotEnd, integralIndex, true);
 
       SpinBlock newSystem; // new system after blocking and decimating
       newSystem.initialise_op_array(OVERLAP, false);

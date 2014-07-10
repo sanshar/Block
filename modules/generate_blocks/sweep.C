@@ -42,12 +42,12 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
   vector<int> spindotsites(2); 
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
-  systemDot = SpinBlock(systemDotStart, systemDotEnd, stateA==stateB);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), stateA==stateB);
 
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
   system.addAdditionalCompOps();
-  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, stateA, stateB, sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, dot_with_sys, true);
+  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, stateA, stateB, sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), DISTRIBUTED_STORAGE, dot_with_sys, true);
 
   pout << "\t\t\t System  Block"<<newSystem;
   if (dmrginp.outputlevel() > 0)
@@ -83,6 +83,7 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
 
 double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int stateA, int stateB)
 {
+  int integralIndex = 0;
 
   SpinBlock system;
   const int nroots = dmrginp.nroots();
@@ -95,7 +96,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
   pout << ((forward) ? "\t\t\t Starting renormalisation sweep in forwards direction" : "\t\t\t Starting renormalisation sweep in backwards direction") << endl;
   pout << "\t\t\t ============================================================================ " << endl;
   
-  InitBlocks::InitStartingBlock (system,forward, stateA, stateB, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+  InitBlocks::InitStartingBlock (system,forward, stateA, stateB, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex);
   if(!restart)
     sweepParams.set_block_iter() = 0;
 
@@ -174,7 +175,7 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
 
 void SweepGenblock::do_one(SweepParams &sweepParams, const bool &forward, int stateA, int stateB)
 {
-
+  int integralIndex = 0;
   SpinBlock system;
 
   sweepParams.set_sweep_parameters();
@@ -182,7 +183,7 @@ void SweepGenblock::do_one(SweepParams &sweepParams, const bool &forward, int st
   pout << ((forward) ? "\t\t\t Starting renormalisation sweep in forwards direction" : "\t\t\t Starting renormalisation sweep in backwards direction") << endl;
   pout << "\t\t\t ============================================================================ " << endl;
   
-  InitBlocks::InitStartingBlock (system,forward, stateA, stateB, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), 0, false, false);
+  InitBlocks::InitStartingBlock (system,forward, stateA, stateB, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), 0, false, false, integralIndex);
 
   sweepParams.set_block_iter() = 0;
 

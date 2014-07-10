@@ -96,13 +96,15 @@ ostream& operator<< (ostream& os, const SpinBlock& b)
 SpinBlock::SpinBlock () : 
   localstorage(false),
   name (rand()), 
+  integralIndex(0),
   hasMemoryAllocated (false),
   loopblock(false),
   direct(false), complementary(false), normal(true), leftBlock(0), rightBlock(0) { }
 
-SpinBlock::SpinBlock(int start, int finish, bool implicitTranspose, bool is_complement) :  
+SpinBlock::SpinBlock(int start, int finish, int p_integralIndex, bool implicitTranspose, bool is_complement) :  
   name (rand()), 
   hasMemoryAllocated (false), 
+  integralIndex(p_integralIndex),
   direct(false), leftBlock(0), rightBlock(0)
 {
   complementary = is_complement;
@@ -122,7 +124,7 @@ SpinBlock::SpinBlock(int start, int finish, bool implicitTranspose, bool is_comp
     for (int i=dmrginp.spatial_to_spin()[start]; i<dmrginp.spatial_to_spin()[start+1]; i+=2)
       o.push_back(i/2);
     twoInt = boost::shared_ptr<PartialTwoElectronArray> (new PartialTwoElectronArray(o));
-    twoInt->Load(dmrginp.load_prefix());
+    twoInt->Load(dmrginp.load_prefix(), integralIndex);
 #ifndef SERIAL
     mpi::communicator world;
     PartialTwoElectronArray& ar = dynamic_cast<PartialTwoElectronArray&>(*twoInt.get());
@@ -130,7 +132,7 @@ SpinBlock::SpinBlock(int start, int finish, bool implicitTranspose, bool is_comp
 #endif
   }
   else
-    twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
+    twoInt = boost::shared_ptr<TwoElectronArray>( &v_2[integralIndex], boostutils::null_deleter());
 
   int lower = min(start, finish);
   int higher = max(start, finish);
@@ -143,7 +145,7 @@ SpinBlock::SpinBlock(int start, int finish, bool implicitTranspose, bool is_comp
 
 SpinBlock::SpinBlock (const SpinBlock& b) { *this = b; }
 
-SpinBlock::SpinBlock(const StateInfo& s)
+SpinBlock::SpinBlock(const StateInfo& s, int integralIndex)
 {
   braStateInfo = s;
   ketStateInfo = s;
@@ -160,7 +162,7 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
     for (int i=dmrginp.spatial_to_spin()[new_sites[0]]; i<dmrginp.spatial_to_spin()[new_sites[new_sites.size()-1]+1]; i+=2)
       o.push_back(i/2);
     twoInt = boost::shared_ptr<PartialTwoElectronArray> (new PartialTwoElectronArray(o));
-    twoInt->Load(dmrginp.load_prefix());
+    twoInt->Load(dmrginp.load_prefix(), integralIndex);
 #ifndef SERIAL
     mpi::communicator world;
     PartialTwoElectronArray& ar = dynamic_cast<PartialTwoElectronArray&>(*twoInt.get());
@@ -169,7 +171,7 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
 #endif
   }
   else if (twoInt.get() == 0)
-    twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
+    twoInt = boost::shared_ptr<TwoElectronArray>( &v_2[integralIndex], boostutils::null_deleter());
 
   name = get_name();
 
@@ -311,6 +313,7 @@ void SpinBlock::clear()
 
 void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState)
 {
+
   name = get_name();
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Building Sum Block " << name << endl;
@@ -325,7 +328,7 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
       for (int i=dmrginp.spatial_to_spin().at(rBlock.sites[0]); i<dmrginp.spatial_to_spin().at(rBlock.sites[0]+1); i+=2)
 	o.push_back(i/2);
       twoInt = boost::shared_ptr<PartialTwoElectronArray> (new PartialTwoElectronArray(o));
-      twoInt->Load(dmrginp.load_prefix());
+      twoInt->Load(dmrginp.load_prefix(), integralIndex);
 #ifndef SERIAL
       mpi::communicator world;
       PartialTwoElectronArray& ar = dynamic_cast<PartialTwoElectronArray&>(*twoInt.get());
@@ -338,7 +341,7 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
 
   }
   else 
-    twoInt = boost::shared_ptr<TwoElectronArray>( &v_2,  boostutils::null_deleter());
+    twoInt = boost::shared_ptr<TwoElectronArray>( &v_2[integralIndex],  boostutils::null_deleter());
 
 
   sites = lBlock.sites;
@@ -364,6 +367,11 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
 
 void SpinBlock::BuildSumBlock(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState)
 {
+  if (!(lBlock.integralIndex == rBlock.integralIndex && lBlock.integralIndex == integralIndex))  {
+    pout << "The left, right and dot block should use the same integral indices"<<endl;
+    pout << "ABORTING!!"<<endl;
+    exit(0);
+  }
   dmrginp.buildsumblock -> start();
   BuildSumBlockSkeleton(condition, lBlock, rBlock, compState);
 
@@ -387,6 +395,7 @@ void SpinBlock::operator= (const SpinBlock& b)
   hasMemoryAllocated = b.hasMemoryAllocated;
   sites = b.sites;
   complementary_sites = b.complementary_sites;
+  integralIndex = b.integralIndex;
 
   direct = b.is_direct();
 
@@ -559,15 +568,15 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
 
       if(dmrginp.spinAdapted()) 
 	det_ex = Csf::distribute (qnumbers [i].get_n(), qnumbers [i].get_s().getirrep(), IrrepVector(qnumbers [i].get_symm().getirrep(), 0) , sites [0],
-				  sites [0] + sites.size (), dmrginp.last_site());
+				  sites [0] + sites.size (), dmrginp.last_site(), integralIndex);
       else
 	det_ex = Csf::distributeNonSpinAdapted (qnumbers [i].get_n(), qnumbers [i].get_s().getirrep(), IrrepVector(qnumbers [i].get_symm().getirrep(), 0) , sites [0],
-						sites [0] + sites.size (), dmrginp.last_site());
+						sites [0] + sites.size (), dmrginp.last_site(), integralIndex);
 
       multimap <double, Csf > slater_emap;
 
       for (int j = 0; j < det_ex.size(); ++j) {
-	slater_emap.insert (pair <double, Csf > (csf_energy (det_ex[j]), det_ex[j]));
+	slater_emap.insert (pair <double, Csf > (csf_energy (det_ex[j], integralIndex), det_ex[j]));
       }
 
       multimap <double, Csf >::iterator m = slater_emap.begin();
@@ -597,7 +606,7 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   braStateInfo = StateInfo (dets);
   ketStateInfo = StateInfo (dets);
 
-  twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
+  twoInt = boost::shared_ptr<TwoElectronArray>( &v_2[integralIndex], boostutils::null_deleter());
   build_iterators();
 
   if (dmrginp.outputlevel() > 0) 
@@ -683,7 +692,7 @@ void SpinBlock::BuildSingleSlaterBlock(std::vector<int> sts) {
   std::vector<Csf> dets(1, origin);
   braStateInfo = StateInfo (dets);
   ketStateInfo = StateInfo (dets);
-  twoInt = boost::shared_ptr<TwoElectronArray>( &v_2, boostutils::null_deleter());
+  twoInt = boost::shared_ptr<TwoElectronArray>( &v_2[integralIndex], boostutils::null_deleter());
   build_iterators();
 
   std::vector< std::vector<Csf> > ladders; ladders.resize(dets.size());

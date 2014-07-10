@@ -154,7 +154,7 @@ void Nevpt2_A16_matrix::save_full_array_text( array_6d<double>& matrix )
 
 void Nevpt2_A16_matrix::update_4pdm_contribution( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
 {
-  const TwoElectronArray& twoInt = v_2;
+  const TwoElectronArray& twoInt = v_2[0];
   int dim = a16_matrix_.dim1();
   int i,j,k,l,m,n,p,q;
 
@@ -191,7 +191,7 @@ void Nevpt2_A16_matrix::update_4pdm_contribution( std::vector< std::pair< std::v
 
 void Nevpt2_A16_matrix::update_3pdm_contribution( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
 {
-  const TwoElectronArray& twoInt = v_2;
+  const TwoElectronArray& twoInt = v_2[0];
   int dim = a16_matrix_.dim1();
   int i,j,k,l,m,n,p,q;
 
@@ -299,7 +299,7 @@ void Nevpt2_A16_matrix::update_3pdm_contribution( std::vector< std::pair< std::v
 
 void Nevpt2_A16_matrix::update_2pdm_contribution( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
 {
-  const TwoElectronArray& twoInt = v_2;
+  const TwoElectronArray& twoInt = v_2[0];
   int dim = a16_matrix_.dim1();
   int i,j,k,l,m,n,p,q;
 
@@ -443,7 +443,7 @@ void Nevpt2_A16_matrix::update_2pdm_contribution( std::vector< std::pair< std::v
 void Nevpt2_A16_matrix::update_1pdm_contribution( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
 {
 
-  const TwoElectronArray& twoInt = v_2;
+  const TwoElectronArray& twoInt = v_2[0];
   int dim = a16_matrix_.dim1();
 
   // Take into account orbital reordering

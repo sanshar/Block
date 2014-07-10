@@ -198,7 +198,7 @@ namespace SpinAdapted{
     SpinBlock system, siteblock;
     bool forward = true, restart=false, warmUp = false;
     int leftState=0, rightState=1, forward_starting_size=1, backward_starting_size=0, restartSize =0;
-    InitBlocks::InitStartingBlock(system, forward, leftState, rightState, forward_starting_size, backward_starting_size, restartSize, restart, warmUp); 
+    InitBlocks::InitStartingBlock(system, forward, leftState, rightState, forward_starting_size, backward_starting_size, restartSize, restart, warmUp, 0); 
     SpinQuantum hq(0, SpinSpace(0), IrrepSpace(0));
 
     system.transform_operators(const_cast<std::vector<Matrix>&>(statea.getSiteTensors(0)), 
@@ -209,7 +209,7 @@ namespace SpinAdapted{
     for (int i=0; i<MPS::sweepIters-1; i++) {
       SpinBlock newSystem;
 
-      InitBlocks::InitNewSystemBlock(system, MPS::siteBlocks[i+1], newSystem, 0, 1, sys_add, direct, DISTRIBUTED_STORAGE, false, true);
+      InitBlocks::InitNewSystemBlock(system, MPS::siteBlocks[i+1], newSystem, 0, 1, sys_add, direct, 0, DISTRIBUTED_STORAGE, false, true);
 
       newSystem.transform_operators(const_cast<std::vector<Matrix>&>(statea.getSiteTensors(i+1)), 
 				    const_cast<std::vector<Matrix>&>(stateb.getSiteTensors(i+1)), false );
@@ -218,7 +218,7 @@ namespace SpinAdapted{
     }
 
     SpinBlock newSystem, big;
-    InitBlocks::InitNewSystemBlock(system, MPS::siteBlocks[MPS::sweepIters], newSystem, 0, 1, sys_add, direct, DISTRIBUTED_STORAGE, false, true);
+    InitBlocks::InitNewSystemBlock(system, MPS::siteBlocks[MPS::sweepIters], newSystem, 0, 1, sys_add, direct, 0, DISTRIBUTED_STORAGE, false, true);
     
     InitBlocks::InitBigBlock(newSystem, MPS::siteBlocks[MPS::sweepIters+1], big); 
     

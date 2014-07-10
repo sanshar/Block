@@ -25,11 +25,12 @@ using namespace std;
 
 void SpinAdapted::Sweep::fullci(double sweep_tol)
 {
+  int integralIndex = 0;
   SweepParams sweepParams;
   sweepParams.set_sweep_parameters();
 
   SpinBlock system;
-  InitBlocks::InitStartingBlock(system, true, 0, 0, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
+  InitBlocks::InitStartingBlock(system, true, 0, 0, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true, integralIndex);
   int numsites = dmrginp.spinAdapted() ? dmrginp.last_site() : dmrginp.last_site()/2;
   int forwardsites = numsites/2+numsites%2;
   int backwardsites = numsites - forwardsites;
@@ -37,9 +38,10 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
 
 
   for (int i=0; i<forwardsites-1; i++) {
-    SpinBlock sysdot(i+1, i+1, true);
+    SpinBlock sysdot(i+1, i+1, integralIndex, true);
     SpinBlock newSystem;
     system.addAdditionalCompOps();
+    newSystem.set_integralIndex() = integralIndex;
     newSystem.default_op_components(false, system, sysdot, false, true, true);
     newSystem.setstoragetype(DISTRIBUTED_STORAGE);
     newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, sysdot);
@@ -49,12 +51,13 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   }
 
   SpinBlock environment;
-  InitBlocks::InitStartingBlock(environment, false, 0, 0, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true);
+  InitBlocks::InitStartingBlock(environment, false, 0, 0, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true, integralIndex);
   cout << environment<<endl;
   for (int i=0;i <backwardsites-1; i++) {
-    SpinBlock envdot(numsites-2-i, numsites-2-i, true);
+    SpinBlock envdot(numsites-2-i, numsites-2-i, integralIndex, true);
     SpinBlock newEnvironment;
     environment.addAdditionalCompOps();
+    newEnvironment.set_integralIndex() = integralIndex;
     newEnvironment.default_op_components(false, environment, envdot, true, true, true);
     newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
     newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, envdot);
@@ -107,10 +110,11 @@ void SpinAdapted::Sweep::tiny(double sweep_tol)
   if(mpigetrank() == 0) {
 #endif
     pout.precision(12);
+
   int nroots = dmrginp.nroots(0);
   SweepParams sweepParams;
   sweepParams.set_sweep_parameters();
-  SpinBlock system(0,dmrginp.last_site()-1, true);
+  SpinBlock system(0,dmrginp.last_site()-1, 0, true);
   const StateInfo& sinfo = system.get_stateInfo();
   SpinQuantum hq(0,SpinSpace(0),IrrepSpace(0));
   for (int i=0; i<sinfo.totalStates; i++) {

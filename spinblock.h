@@ -36,6 +36,7 @@ class SpinBlock
       ar & loopblock;
       ar & sites;
       ar & complementary_sites ;
+      ar & integralIndex;
       //FIX ME!! remove register_type stuff and add BOOST_CLASS_EXPORT to op_components.h (will take longer to compile)                     
       ar.register_type(static_cast<Op_component<Cre> *>(NULL));
       ar.register_type(static_cast<Op_component<Des> *>(NULL));
@@ -89,6 +90,7 @@ class SpinBlock
   bool hasMemoryAllocated;
   bool direct;
   int name;
+  int integralIndex;
   SpinBlock* leftBlock;
   SpinBlock* rightBlock;
   boost::shared_ptr<TwoElectronArray> twoInt;
@@ -99,9 +101,9 @@ class SpinBlock
   std::vector<int> complementary_sites;
  public: 
   SpinBlock();
-  SpinBlock (const StateInfo& s);
+  SpinBlock (const StateInfo& s, int integralIndex);
   SpinBlock (const SpinBlock& b);
-  SpinBlock (int start, int finish, bool implicitTranspose, bool is_complement = false);
+  SpinBlock (int start, int finish, int integralIndex, bool implicitTranspose, bool is_complement = false);
   void BuildTensorProductBlock (std::vector<int>& new_sites);
   
   static std::string  restore (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char* name=0);//left and right are the bra and ket states and the name is the type of the MPO (currently only H)
@@ -110,6 +112,8 @@ class SpinBlock
   void Load (std::ifstream &ifs);
 
   const boost::shared_ptr<TwoElectronArray> get_twoInt() const {return twoInt;}
+  int get_integralIndex() const {return integralIndex;}
+  int& set_integralIndex() {return integralIndex;}
   double memoryUsed();
   void addAdditionalCompOps();
   const StateInfo& get_stateInfo() const {return ketStateInfo;}

@@ -160,6 +160,6 @@ inline int flipindex(int i)
 {
   return 0;
 }
-double det_energy (const Slater& s);
+double det_energy (const Slater& s, int integralIndex);
 }
 #endif

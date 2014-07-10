@@ -30,7 +30,7 @@ void readMPSFromDiskAndInitializeStaticVariables(int mpsindex) {
     MPS::sweepIters = dmrginp.last_site()-2;
   MPS::spinAdapted = false;
   for (int i=0; i<MPS::sweepIters+2; i++)
-    MPS::siteBlocks.push_back(SpinBlock(i, i, false)); //alway make transpose operators as well
+    MPS::siteBlocks.push_back(SpinBlock(i, i, 0, false)); //alway make transpose operators as well
 
 #ifndef SERIAL
   if (mpigetrank() == 0)

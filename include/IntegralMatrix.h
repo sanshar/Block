@@ -174,8 +174,8 @@ class TwoElectronArray // 2e integral, notation (12|12), symmetric matrix
 
     int MapIndices(int n);
 
-    virtual void Load(std::string prefix) {}
-    virtual void Save(std::string prefix) {}
+    virtual void Load(std::string prefix, int index) {}
+    virtual void Save(std::string prefix, int index) {}
     virtual double& operator()(int i, int j, int k, int l);
     virtual double operator () (int i, int j, int k, int l) const;
 
@@ -193,7 +193,7 @@ class TwoElectronArray // 2e integral, notation (12|12), symmetric matrix
 
 
 class PartialTwoElectronArray : public TwoElectronArray // 2e integral, notation (OrbIndex2|12), where OrbIndex is given
-  {
+{
   private:
 
     std::vector<std::vector<double> > rep; //!< underlying storage 
@@ -220,9 +220,9 @@ class PartialTwoElectronArray : public TwoElectronArray // 2e integral, notation
 
     void setOrbIndex(std::vector<int>& pOrbIndex) {OrbIndex = pOrbIndex;}
 
-    void Load(std::string prefix);
+    void Load(std::string prefix, int index=0);
 
-    void Save(std::string prefix);
+    void Save(std::string prefix, int index=0);
 
     double operator () (int i, int j, int k, int l) const;
  
