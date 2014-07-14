@@ -240,6 +240,12 @@ int calldmrg(char* input, char* output)
   case (RESTART_TWOPDM):
     Npdm::npdm(2,true);
     break;
+  case (RESTART_THREEPDM):
+    Npdm::npdm(3,true);
+    break;
+  case (RESTART_FOURPDM):
+    Npdm::npdm(4,true);
+    break;
   case (TRANSITION_ONEPDM):
     Npdm::npdm(1,false,true);
     break;
