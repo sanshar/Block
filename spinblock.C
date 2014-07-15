@@ -322,6 +322,8 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
 
   sites.reserve (lBlock.sites.size () + rBlock.sites.size ());
 
+  dmrginp.blockintegrals -> start();
+  
   if (dmrginp.use_partial_two_integrals()) {
     if (rBlock.sites.size() == 1) {
       std::vector<int> o;
@@ -343,6 +345,9 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
   else 
     twoInt = boost::shared_ptr<TwoElectronArray>( &v_2[integralIndex],  boostutils::null_deleter());
 
+  dmrginp.blockintegrals -> stop();
+
+  dmrginp.blocksites -> start();
 
   sites = lBlock.sites;
   copy (rBlock.sites.begin(), rBlock.sites.end (), back_inserter (sites));
@@ -353,15 +358,20 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
     for (int i = 0; i < sites.size(); ++i) pout << sites[i] << " ";
     pout << endl;
   }
+  dmrginp.blocksites -> stop();
 
+  dmrginp.statetensorproduct -> start();
   TensorProduct (lBlock.braStateInfo, rBlock.braStateInfo, braStateInfo, condition, compState);
   TensorProduct (lBlock.ketStateInfo, rBlock.ketStateInfo, ketStateInfo, condition, compState);
+  dmrginp.statetensorproduct -> stop();
 
+  dmrginp.statecollectquanta -> start();
   if (!( (dmrginp.hamiltonian() == BCS && condition == SPIN_NUMBER_CONSTRAINT)  ||
 	 (dmrginp.hamiltonian() != BCS && condition == PARTICLE_SPIN_NUMBER_CONSTRAINT))) {
     braStateInfo.CollectQuanta();
     ketStateInfo.CollectQuanta();
   }
+  dmrginp.statecollectquanta -> stop();
 
 }
 

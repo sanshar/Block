@@ -76,6 +76,7 @@ class Input {
   int m_startM;
   int m_maxM;
   int m_integral_disk_storage_thresh;
+  int m_num_Integrals;
 
   bool m_do_diis;
   double m_diis_error;
@@ -151,7 +152,7 @@ class Input {
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & m_thrds_per_node & m_spinAdapted & m_Bogoliubov & m_stateSpecific & m_implicitTranspose;
+    ar & m_thrds_per_node & m_spinAdapted & m_Bogoliubov & m_stateSpecific & m_implicitTranspose & m_num_Integrals;
     ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz & m_baseEnergy;
     ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occ_user & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule & m_reorder;
@@ -213,7 +214,7 @@ class Input {
 #endif
   void performSanityTest();
   void generateDefaultSchedule();
-  void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
+  void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, int integralIndex);
   void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, PairArray& vcc, CCCCArray& vcccc, CCCDArray& vcccd);  
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
   std::vector<int> getgaorder(ifstream& gaconfFile, string& orbitalfile, std::vector<int>& fiedlerorder);

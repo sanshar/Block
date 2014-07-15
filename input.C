@@ -73,7 +73,10 @@ void SpinAdapted::Input::initialize_defaults()
   m_stateSpecific = false;
   m_implicitTranspose = true; //dont make DD just use CC^T to evaluate it
   m_baseEnergy = -1.e10;
-
+  m_num_Integrals = 1;
+  v_2.resize(1, TwoElectronArray(TwoElectronArray::restrictedNonPermSymm));
+  v_1.resize(1);
+  
   m_spinAdapted = true;
   m_Bogoliubov = false;
   m_sys_add = 1;
@@ -168,6 +171,7 @@ SpinAdapted::Input::Input(const string& config_name) {
   sym = "c1";
   NonabelianSym = false;
   string orbitalfile;
+  string perturbationIntegralfile;
 
   if(mpigetrank() == 0)
   {
@@ -500,8 +504,15 @@ SpinAdapted::Input::Input(const string& config_name) {
       else if (boost::iequals(keyword,  "calchamiltonian"))
 	m_calc_type = CALCHAMILTONIAN;
       else if (boost::iequals(keyword,  "response")) {
+	if (tok.size() != 2) {
+	  pout << "The keyword response should be followed by orbital file for the perturbation!"<<endl;
+	  abort();
+	}
+	perturbationIntegralfile = tok[1];
 	m_calc_type = RESPONSE;
 	m_solve_type = CONJUGATE_GRADIENT;
+	m_num_Integrals = 2;
+	
       }
       else if (boost::iequals(keyword,  "compress"))
 	m_calc_type = COMPRESS;
@@ -843,9 +854,17 @@ SpinAdapted::Input::Input(const string& config_name) {
 
 #ifndef SERIAL
   boost::mpi::communicator world;
+  mpi::broadcast(world, m_num_Integrals, 0);
   mpi::broadcast(world, sym, 0);
   mpi::broadcast(world, m_Bogoliubov, 0);
 #endif
+  v_2.resize(m_num_Integrals, TwoElectronArray(TwoElectronArray::restrictedNonPermSymm));
+  v_1.resize(m_num_Integrals);
+
+  if (m_Bogoliubov && m_num_Integrals >1 ) {
+    pout << "Currently the response code does not work with non-particle number conserving hamiltonians!!";
+    abort();
+  }
     
   if (sym != "c1")
     Symmetry::InitialiseTable(sym);
@@ -854,40 +873,44 @@ SpinAdapted::Input::Input(const string& config_name) {
      CheckFileExistence(orbitalfile, "Orbital file ");
 
   //read the orbitals
-  v_1.rhf=true;
-  v_2.rhf=true;
-  if (sym != "lzsym" && sym != "dinfh_abelian" && !NonabelianSym) {
-    v_2.permSymm = true;
-  }
-  else
-    v_2.permSymm = false;
+  for (int integral=0; integral < m_num_Integrals; integral++) {
+    v_1[integral].rhf=true;
+    v_2[integral].rhf=true;
+    if (sym != "lzsym" && sym != "dinfh_abelian" && !NonabelianSym) {
+      v_2[integral].permSymm = true;
+    }
+    else
+      v_2[integral].permSymm = false;
 
+    
+    if (m_Bogoliubov) {
+      v_2[integral].permSymm = false;
+      v_cc.rhf = true;
+      v_cccc.rhf = true;
+      v_cccd.rhf = true;
+    }
+    
+    // Kij-based ordering by GA opt.
 #ifndef SERIAL
-mpi::broadcast(world, m_Bogoliubov,0);
+    mpi::broadcast(world,m_reorderType,0);
+    mpi::broadcast(world,m_add_noninteracting_orbs,0);
 #endif
-
-  if (m_Bogoliubov) {
-    v_2.permSymm = false;
-    v_cc.rhf = true;
-    v_cccc.rhf = true;
-    v_cccd.rhf = true;
+    
+    if (m_Bogoliubov) {
+      v_cc.rhf=true;
+      v_cccc.rhf=true;
+      v_cccd.rhf=true;
+      readorbitalsfile(orbitalfile, v_1[integral], v_2[integral], v_cc, v_cccc, v_cccd);
+      assert(!m_add_noninteracting_orbs);
+    } 
+    else {
+      if (integral == 0)
+	readorbitalsfile(orbitalfile, v_1[integral], v_2[integral], integral);
+      else
+	readorbitalsfile(perturbationIntegralfile, v_1[integral], v_2[integral], integral);
+    }
   }
-
-  // Kij-based ordering by GA opt.
-#ifndef SERIAL
-  mpi::broadcast(world,m_reorderType,0);
-  mpi::broadcast(world,m_add_noninteracting_orbs,0);
-#endif
-
-  if (m_Bogoliubov) {
-    v_cc.rhf=true;
-    v_cccc.rhf=true;
-    v_cccd.rhf=true;
-    readorbitalsfile(orbitalfile, v_1, v_2, v_cc, v_cccc, v_cccd);
-    assert(!m_add_noninteracting_orbs);
-  } else {
-    readorbitalsfile(orbitalfile, v_1, v_2);
-  }
+  
   m_molecule_quantum = SpinQuantum(m_alpha + m_beta, SpinSpace(m_alpha - m_beta), m_total_symmetry_number);
 
   if (mpigetrank() == 0) {
@@ -958,7 +981,7 @@ void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& o
 
 }
 
-void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray& v1, TwoElectronArray& v2)
+void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray& v1, TwoElectronArray& v2, int integralIndex)
 {
   ifstream dumpFile; 
   dumpFile.open(orbitalfile.c_str(), ios::in);
@@ -1237,7 +1260,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
       }
       PartialTwoElectronArray vpart(orb);
       vpart.populate(v2);
-      vpart.Save(m_save_prefix);
+      vpart.Save(m_save_prefix, integralIndex);
     }
     v2.ReSize(0);
   }
@@ -1837,7 +1860,7 @@ void SpinAdapted::Input::makeInitialHFGuess() {
     //arrange t(i,i) in a multimap and it will rearrange the ts in ascending order with i
     multimap<double, int> ele_map;
     for( int i = 0; i < m_norbs/2; ++i ){
-      ele_map.insert( pair<double, int>( v_1(2*i, 2*i), i ) );
+      ele_map.insert( pair<double, int>( v_1[0](2*i, 2*i), i ) );
     }
 
     multimap<double, int> :: iterator it_alpha = ele_map.begin();

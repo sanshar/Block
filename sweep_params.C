@@ -119,6 +119,15 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
     if (dmrginp.twodot_to_onedot_iter() == SpinAdapted::SweepParams::sweep_iter)
       pout << "\t\t\t Switching from two dot to one dot ... " << endl;
   }
+  else {
+    onedot = false;
+    env_add = 1;
+    if(dmrginp.spinAdapted())
+      n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+    else
+      n_iters = (dmrginp.last_site() - 4*forward_starting_size - 2*sys_add - 2*env_add) / (2*sys_add) + 1;
+  }
+
 }
 
 

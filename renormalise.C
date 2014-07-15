@@ -64,7 +64,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
   if (onedot && !dot_with_sys)
   {
     InitBlocks::InitNewSystemBlock(System, sysDot, newsystem, currentRoot, currentRoot, 
-				   sysDot.size(), dmrginp.direct(), DISTRIBUTED_STORAGE, false, true);
+				   sysDot.size(), dmrginp.direct(), System.get_integralIndex(), DISTRIBUTED_STORAGE, false, true);
     InitBlocks::InitBigBlock(newsystem, environment, newbig); 
     for (int i=0; i<nroots&& mpigetrank()==0; i++) 
     {

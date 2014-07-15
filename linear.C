@@ -410,6 +410,11 @@ double SpinAdapted::Linear::ConjugateGradient(Wavefunction& xi, double normtol, 
     }
   }
 
+#ifndef SERIAL
+    mpi::communicator world;
+    mpi::broadcast(world, xi, 0);
+#endif
+
   Wavefunction pi, ri; 
   ri=xi; ri.Clear();
   h_multiply(xi, ri);  
