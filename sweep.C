@@ -98,28 +98,56 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 
   bool forward = (system.get_sites() [0] == 0);
   SpinBlock systemDot, environmentDot;
-  int systemDotStart, systemDotEnd, environmentDotStart, environmentDotEnd;
-  int systemDotSize = sweepParams.get_sys_add() - 1;
-  int environmentDotSize = sweepParams.get_env_add() - 1;
+  int systemDotStart, systemDotEnd, environmentDotStart, environmentDotEnd, systemDotSize,environmentDotSize;
+  int systemDotStart_bigdot, environmentDotStart_bigdot;
   if (forward)
   {
     systemDotStart = dmrginp.spinAdapted() ? *system.get_sites().rbegin () + 1 : (*system.get_sites().rbegin ())/2 + 1 ;
-    systemDotEnd = systemDotStart + systemDotSize;
+    systemDotSize = sweepParams.get_bigdot() ? sweepParams.get_sys_add()*(dmrginp.num_of_orb_bigdot(dmrginp.bigdot_map(systemDotStart))) : sweepParams.get_sys_add() ;
+    systemDotEnd = systemDotStart + systemDotSize-1;
     environmentDotStart = systemDotEnd + 1;
-    environmentDotEnd = environmentDotStart + environmentDotSize;
+    environmentDotSize = sweepParams.get_bigdot() ? sweepParams.get_env_add()*(dmrginp.num_of_orb_bigdot(dmrginp.bigdot_map(environmentDotStart))) :sweepParams.get_env_add() ;
+    environmentDotEnd = environmentDotStart + environmentDotSize -1;
   }
   else
   {
     systemDotStart = dmrginp.spinAdapted() ? system.get_sites()[0] - 1 : (system.get_sites()[0])/2 - 1 ;
-    systemDotEnd = systemDotStart - systemDotSize;
+    systemDotSize = sweepParams.get_bigdot() ? sweepParams.get_sys_add()*(dmrginp.num_of_orb_bigdot(dmrginp.bigdot_map(systemDotStart))) : sweepParams.get_sys_add();
+    systemDotEnd = systemDotStart - systemDotSize+1;
     environmentDotStart = systemDotEnd - 1;
-    environmentDotEnd = environmentDotStart - environmentDotSize;
+    environmentDotSize = sweepParams.get_bigdot() ? sweepParams.get_env_add()*(dmrginp.num_of_orb_bigdot(dmrginp.bigdot_map(environmentDotStart))) :sweepParams.get_env_add() ;
+    environmentDotEnd = environmentDotStart - environmentDotSize +1;
   }
   systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
   environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, true);
   SpinBlock environment, newEnvironment;
   SpinBlock big;  // new_sys = sys+sys_dot; new_env = env+env_dot; big = new_sys + new_env then renormalize to find new_sys(new)
-  makeSystemEnvironmentBigBlocks(system, systemDot, newSystem, environment, environmentDot, newEnvironment, big, sweepParams, dot_with_sys, useSlater);
+//  makeSystemEnvironmentBigBlocks(system, systemDot, newSystem, environment, environmentDot, newEnvironment, big, sweepParams, dot_with_sys, useSlater);
+  {
+    // no need to call another function, 
+    //just use it here
+  bool haveNormOps = dot_with_sys, haveCompOps = true;
+  system.addAdditionalCompOps();
+  const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
+  if (!sweepParams.get_onedot() || dot_with_sys) 
+    InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), systemDotSize , dmrginp.direct(), 
+				   DISTRIBUTED_STORAGE, haveNormOps, haveCompOps);
+
+  if (!dot_with_sys && sweepParams.get_onedot()) 
+    environmentDot = systemDot;
+  InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, sweepParams.current_root(), sweepParams.current_root(),
+				      systemDotSize, environmentDotSize, forward, dmrginp.direct(),
+				      sweepParams.get_onedot(), nexact, useSlater, !haveNormOps, haveCompOps, dot_with_sys);
+  newSystem.set_loopblock(false); newEnvironment.set_loopblock(false); environment.set_loopblock(false); newEnvironment.set_loopblock(false);
+  if (dot_with_sys) newSystem.set_loopblock(true);
+  else newEnvironment.set_loopblock(true);
+  if (!dot_with_sys && sweepParams.get_onedot())
+    InitBlocks::InitBigBlock(system, newEnvironment, big); 
+  else
+    InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
+  }
+  cout << "block distribution"<<endl;
+  cout << systemDotStart<<'\t'<<systemDotEnd<<'\t'<<environmentDotStart<<'\t'<<environmentDotEnd<<endl;
 
 
   //analyse_operator_distribution(big);

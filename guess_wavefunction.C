@@ -86,6 +86,9 @@ void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const SpinB
     wfsites.insert(wfsites.end(), big.get_leftBlock()->get_rightBlock()->get_sites().begin(), big.get_leftBlock()->get_rightBlock()->get_sites().end());
     sort(wfsites.begin(), wfsites.end());
     oldWave.LoadWavefunctionInfo(oldStateInfo, wfsites, state);
+  if(dmrginp.bigdot())
+    bigdot_transpose_wavefunction(oldStateInfo, big.get_stateInfo(), oldWave, trial);
+  else
     onedot_transpose_wavefunction(oldStateInfo, big.get_stateInfo(), oldWave, trial);
   }
 
@@ -105,7 +108,10 @@ void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const State
   }
   sort(wfsites.begin(), wfsites.end());
   oldWave.LoadWavefunctionInfo(oldStateInfo, wfsites, state);
-  onedot_transpose_wavefunction(oldStateInfo, stateInfo, oldWave, trial);
+  if(dmrginp.bigdot())
+    bigdot_transpose_wavefunction(oldStateInfo, stateInfo, oldWave, trial);
+  else
+    onedot_transpose_wavefunction(oldStateInfo, stateInfo, oldWave, trial);
 }
 
 
@@ -161,6 +167,56 @@ void GuessWave::onedot_transpose_wavefunction(const StateInfo& guessstateinfo, c
 }
 
 
+void GuessWave::bigdot_transpose_wavefunction(const StateInfo& guessstateinfo, const StateInfo& transposestateinfo,
+					      const Wavefunction& guesswf, Wavefunction& transposewf)
+{
+  cout << guessstateinfo;
+  cout << transposestateinfo;
+  ObjectMatrix3D< vector<ObjectMatrix3D<Real>> > threewave;
+  // first convert into three index wavefunction [s.][e] -> [s].[e]                                                                       
+  bigdot_twoindex_to_threeindex_wavefunction(guessstateinfo, guesswf, threewave);
+  ObjectMatrix3D< vector<ObjectMatrix3D<Real>> > threewavetranspose(threewave.NDim2(), threewave.NDim1(), threewave.NDim0());
+
+  cout <<"Finished Three Wave\n";
+  // now perform transpose. [s].[e] -> [e].[s], so we need to move state |s>|.> past state |e>                                            
+  // keeping track of the parity change                                                                                                   
+  for (int a = 0; a < threewave.NDim0(); ++a)
+    for (int b = 0; b < threewave.NDim1(); ++b)
+      for (int c = 0; c < threewave.NDim2(); ++c)
+	if (threewave(a, b, c).size () != 0)
+	  {
+	    threewavetranspose(c, b, a).resize( threewave(a, b, c).size());
+	    for (int i=0; i< threewave(a,b,c).size(); i++) 
+	    {
+	      if (threewave(a,b,c)[i].NDim0() == 0)
+		continue;
+	      //int ab = guessstateinfo.leftStateInfo->unCollectedStateInfo->quantaMap(a , b)[i];
+	      //int absize = guessstateinfo.leftStateInfo->unCollectedStateInfo->quantaMap(a , b).size();
+
+	      // from |s.e> configuration, determine parity for |e.s> form                                                              
+
+	      SpinQuantum Aq = guessstateinfo.leftStateInfo->leftStateInfo->quanta[a];
+	      SpinQuantum Bq = guessstateinfo.leftStateInfo->rightStateInfo->quanta[b];
+	      SpinQuantum Cq = guessstateinfo.rightStateInfo->quanta[c];
+	      SpinQuantum ABq = (Aq+Bq)[i];
+	      //SpinQuantum ABq = guessstateinfo.leftStateInfo->unCollectedStateInfo->quanta[ab];
+	      
+	      // first, from |s.e> -> |.se>	      
+	      int parity1 = getCommuteParity(Aq, Bq, ABq);		
+
+	      // next, |.se> -> |e.s>
+	      int parity = parity1*getCommuteParity(ABq, Cq, transposewf.get_deltaQuantum(0));
+      threewavetranspose(c, b, a)[i].ReSize(threewave(a,b,c)[i].NDim2(),threewave(a,b,c)[i].NDim1(),threewave(a,b,c)[i].NDim0());
+      for(int Sa=0; Sa<threewave(a,b,c)[i].NDim0(); Sa++ )
+      for(int Sb=0; Sb<threewave(a,b,c)[i].NDim1(); Sb++ )
+      for(int Sc=0; Sc<threewave(a,b,c)[i].NDim2(); Sc++ )
+	      threewavetranspose(c, b, a)[i](Sc,Sb,Sa)= parity*threewave(a, b, c)[i](Sa,Sb,Sc) ;
+	    }
+	  }
+
+  bigdot_threeindex_to_twoindex_wavefunction(transposestateinfo, threewavetranspose,
+					     transposewf, *guessstateinfo.leftStateInfo->unCollectedStateInfo);
+}
 
 /*!                                                                                                                                         
 @brief Convert wavefunction in three block form (with single dot) [s].[e] to two block form  [s.] [e].
@@ -223,6 +279,82 @@ void GuessWave::onedot_threeindex_to_twoindex_wavefunction(const StateInfo& twos
 
 	      if (threewavefunction(a, b, c)[insertionNum].Nrows() != 0)  {
 		MatrixScaleAdd(scale, threewavefunction (a, b, c)[insertionNum], twowavefunction.operator_element (ab, c));
+	      }
+	    }
+	  }
+
+  // from tensor product form |a>|b> group together blocks with same quantum numbers                                                      
+  twowavefunction.CollectQuantaAlongRows(uncollectedstateinfo, *twostateinfo.rightStateInfo);
+}
+
+void GuessWave::bigdot_threeindex_to_twoindex_wavefunction(const StateInfo& twostateinfo,
+							   const ObjectMatrix3D< std::vector<ObjectMatrix3D<Real>> >& threewavefunction, 
+							   Wavefunction& twowavefunction, const StateInfo& prevUnCollectedSI)
+{
+  int aSz = threewavefunction.NDim0();
+  int bSz = threewavefunction.NDim1();
+  int cSz = threewavefunction.NDim2();
+
+  const StateInfo& uncollectedstateinfo = *(twostateinfo.leftStateInfo->unCollectedStateInfo);
+
+  twowavefunction.AllowQuantaFor(uncollectedstateinfo, *twostateinfo.rightStateInfo,
+                                 twowavefunction.get_deltaQuantum()); // twowavefunction should already know its own quantum number
+
+  for (int a = 0; a < aSz; ++a)
+    for (int b = 0; b < bSz; ++b)
+      for (int c = 0; c < cSz; ++c)
+	if (threewavefunction (a, b, c).size() != 0 && uncollectedstateinfo.allowedQuanta(a, b))
+	  for (int i =0; i<uncollectedstateinfo.quantaMap(a,b).size(); i++)
+	  {
+      //cout <<"--------------------------------information of new twowavefuntion-----------------"<<endl;
+      //cout <<twostateinfo.leftStateInfo->leftStateInfo->quanta[a]<<endl; 
+      //cout <<twostateinfo.leftStateInfo->leftStateInfo->quantaStates[a]<<endl; 
+      //cout <<twostateinfo.leftStateInfo->rightStateInfo->quanta[b]<<endl; 
+      //cout <<twostateinfo.leftStateInfo->rightStateInfo->quantaStates[b]<<endl; 
+      //cout <<twostateinfo.rightStateInfo->quanta[c]<<endl;
+      //cout <<twostateinfo.rightStateInfo->quantaStates[c]<<endl;
+	    int ab = uncollectedstateinfo.quantaMap (a, b)[i];
+      //cout << uncollectedstateinfo.quanta[ab]<<endl;
+      //cout << uncollectedstateinfo.quantaStates[ab]<<endl;
+
+	    if (!twowavefunction.allowed(ab,c)) continue;
+	    int A, B, AB, C, J, CB;
+	    A = twostateinfo.leftStateInfo->leftStateInfo->quanta[a].get_s().getirrep(); 
+	    B = twostateinfo.leftStateInfo->rightStateInfo->quanta[b].get_s().getirrep();
+	    AB = uncollectedstateinfo.quanta[ab].get_s().getirrep();
+	    C =  twostateinfo.rightStateInfo->quanta[c].get_s().getirrep(); 
+	    J = twowavefunction.get_deltaQuantum(0).get_s().getirrep(); 
+
+	    int Al, Bl, ABl, Cl, Jl, CBl;
+	    Al = twostateinfo.leftStateInfo->leftStateInfo->quanta[a].get_symm().getirrep(); 
+	    Bl = twostateinfo.leftStateInfo->rightStateInfo->quanta[b].get_symm().getirrep();
+	    ABl = uncollectedstateinfo.quanta[ab].get_symm().getirrep();
+	    Cl =  twostateinfo.rightStateInfo->quanta[c].get_symm().getirrep(); 
+	    Jl = twowavefunction.get_deltaQuantum(0).get_symm().getirrep(); 
+
+	    for (int j=0; j<prevUnCollectedSI.quantaMap(c, b).size(); j++) {
+	      int cb = prevUnCollectedSI.quantaMap(c,b)[j];
+	      CB = prevUnCollectedSI.quanta[cb].get_s().getirrep();
+	      CBl = prevUnCollectedSI.quanta[cb].get_symm().getirrep();
+	      int insertionNum = prevUnCollectedSI.quanta[cb].insertionNum(twostateinfo.leftStateInfo->rightStateInfo->quanta[b], twostateinfo.rightStateInfo->quanta[c]);
+      //cout <<" insertionNum: "<<insertionNum<<endl;
+      //cout <<"--------------------------------information of threewavefuntion-----------------"<<endl;
+      //cout <<threewavefunction(a,b,c)[insertionNum].NDim0()<<"         " <<threewavefunction(a,b,c)[insertionNum].NDim1()<<"          "<<threewavefunction(a,b,c)[insertionNum].NDim2()<<endl;
+	      double scale = 1.0;
+	      if(dmrginp.spinAdapted()) {
+		scale = sixj(A, B, AB, C, J, CB);
+		scale *= pow((1.0*AB+1.0)*(1.0*CB+1.0), 0.5)* pow(-1.0, static_cast<int>((A +B +J +C)/2)); 
+	      }
+	      scale *= Symmetry::spatial_sixj(Al, Bl, ABl, Cl, Jl, CBl);
+
+	      //if (threewavefunction(a, b, c)[insertionNum].Nrows() != 0)  {
+	      if (threewavefunction(a, b, c)[insertionNum].NDim0() != 0)  {
+          //cout << threewavefunction (a, b, c)[insertionNum]<<endl;
+		//MatrixScaleAdd(scale, threewavefunction (a, b, c)[insertionNum], twowavefunction.operator_element (ab, c));
+      for(int Sa=0; Sa<threewavefunction(a,b,c)[insertionNum].NDim0(); Sa++ )
+      for(int Sb=0; Sb<threewavefunction(a,b,c)[insertionNum].NDim1(); Sb++ )
+      for(int Sc=0; Sc<threewavefunction(a,b,c)[insertionNum].NDim2(); Sc++ )
+		twowavefunction.operator_element (ab, c)(Sa*threewavefunction(a,b,c)[insertionNum].NDim1()+Sb+1,Sc+1)=scale*threewavefunction (a, b, c)[insertionNum](Sa,Sb,Sc);
 	      }
 	    }
 	  }
@@ -394,6 +526,9 @@ void GuessWave::onedot_twoindex_to_threeindex_wavefunction(const StateInfo& stat
 	  int A = stateinfo.leftStateInfo->leftStateInfo->quanta[a].get_s().getirrep();
 	  int B = stateinfo.leftStateInfo->rightStateInfo->quanta[b].get_s().getirrep();
 	  int insertionNum = uncollectedstateinfo.quanta[ab].insertionNum(stateinfo.leftStateInfo->leftStateInfo->quanta[a],  stateinfo.leftStateInfo->rightStateInfo->quanta[b]);
+    //cout << stateinfo.leftStateInfo->leftStateInfo->quanta[a]<<endl;
+    //cout << stateinfo.leftStateInfo->rightStateInfo->quanta[b]<<endl;
+    //cout << uncollectedstateinfo.quanta[ab]<<endl;
 	  vector<SpinQuantum> spq = stateinfo.leftStateInfo->leftStateInfo->quanta[a]+  stateinfo.leftStateInfo->rightStateInfo->quanta[b];
 	  if (threewavefunction(a, b, c).size() != spq.size())
 	    threewavefunction(a, b, c).resize(spq.size());
@@ -403,13 +538,134 @@ void GuessWave::onedot_twoindex_to_threeindex_wavefunction(const StateInfo& stat
 }
 
 
+void GuessWave::bigdot_twoindex_to_threeindex_wavefunction(const StateInfo& stateinfo, const Wavefunction& twowavefunction, 
+							   ObjectMatrix3D< vector<ObjectMatrix3D<Real>> >& threewavefunction)
+{
+  int NDimsys = stateinfo.leftStateInfo->leftStateInfo->quanta.size();
+  int NDimdot = stateinfo.leftStateInfo->rightStateInfo->quanta.size();
+  int NDimenv = stateinfo.rightStateInfo->quanta.size();
+
+  threewavefunction.ReSize(NDimsys, NDimdot, NDimenv);
+
+  Wavefunction uncollectedwf = twowavefunction;
+  uncollectedwf.UnCollectQuantaAlongRows(*stateinfo.leftStateInfo, *stateinfo.rightStateInfo);
+
+  const StateInfo& uncollectedstateinfo = *(stateinfo.leftStateInfo->unCollectedStateInfo);
+  for (int ab = 0; ab < uncollectedwf.nrows(); ++ab)
+    for (int c = 0; c < uncollectedwf.ncols(); ++c)
+      if (uncollectedwf.allowed(ab, c))
+	{
+	  int a = uncollectedstateinfo.leftUnMapQuanta[ab];
+	  int b = uncollectedstateinfo.rightUnMapQuanta[ab];
+	  int AB = uncollectedstateinfo.quanta[ab].get_s().getirrep();
+	  int A = stateinfo.leftStateInfo->leftStateInfo->quanta[a].get_s().getirrep();
+	  int B = stateinfo.leftStateInfo->rightStateInfo->quanta[b].get_s().getirrep();
+	  int insertionNum = uncollectedstateinfo.quanta[ab].insertionNum(stateinfo.leftStateInfo->leftStateInfo->quanta[a],  stateinfo.leftStateInfo->rightStateInfo->quanta[b]);
+    //cout << stateinfo.leftStateInfo->leftStateInfo->quanta[a]<<endl;
+    //cout << stateinfo.leftStateInfo->rightStateInfo->quanta[b]<<endl;
+    //cout << uncollectedstateinfo.quanta[ab]<<endl;
+	  vector<SpinQuantum> spq = stateinfo.leftStateInfo->leftStateInfo->quanta[a]+  stateinfo.leftStateInfo->rightStateInfo->quanta[b];
+	  if (threewavefunction(a, b, c).size() != spq.size())
+	    threewavefunction(a, b, c).resize(spq.size());
+      threewavefunction(a,b,c)[insertionNum].ReSize(stateinfo.leftStateInfo->leftStateInfo->quantaStates[a],stateinfo.leftStateInfo->rightStateInfo->quantaStates[b],stateinfo.rightStateInfo->quantaStates[c]);
+      //cout << "Three wave dimension\n";
+      //cout << threewavefunction(a,b,c)[insertionNum].NDim0()<<endl;
+      //cout << threewavefunction(a,b,c)[insertionNum].NDim1()<<endl;
+      //cout << threewavefunction(a,b,c)[insertionNum].NDim2()<<endl;
+      //cout << "Two wave dimension\n";
+      //cout << uncollectedwf(ab,c).Nrows()<<endl;
+      //cout << uncollectedwf(ab,c).Ncols()<<endl;
+      for(int Sa=0; Sa<threewavefunction(a,b,c)[insertionNum].NDim0(); Sa++ )
+      for(int Sb=0; Sb<threewavefunction(a,b,c)[insertionNum].NDim1(); Sb++ )
+      for(int Sc=0; Sc<threewavefunction(a,b,c)[insertionNum].NDim2(); Sc++ )
+        threewavefunction(a,b,c)[insertionNum](Sa,Sb,Sc)= uncollectedwf(ab, c)(Sa*threewavefunction(a,b,c)[insertionNum].NDim1()+Sb+1,Sc+1);
+        //cout << threewavefunction(a,b,c)[insertionNum](Sa,Sb,Sc)<<endl;
+      //cout << Sc*threewavefunction(a,b,c)[insertionNum].NDim1()+Sb<<endl;
+      //cout << uncollectedwf(a, bc);
+      //cout << uncollectedwf(a, bc)(1,1)<<endl;
+      //cout << uncollectedwf(a, bc)(Sa+1,Sc*threewavefunction(a,b,c)[insertionNum].NDim1()+Sb+1)<<endl;
+	}
+}
+
+
 void GuessWave::onedot_shufflesysdot(const StateInfo& guessstateinfo, const StateInfo& transposestateinfo,
 				     const Wavefunction& guesswf, Wavefunction& transposewf)
 {
-  ObjectMatrix3D< vector<Matrix> > threewave;
+  if(dmrginp.bigdot()){
+    ObjectMatrix3D< vector<ObjectMatrix3D<Real>> > threewave;
+    bigdot_twoindex_to_threeindex_shufflesysdot(guessstateinfo, guesswf, threewave);
+    bigdot_threeindex_to_twoindex_wavefunction(transposestateinfo, threewave, transposewf, *guessstateinfo.rightStateInfo->unCollectedStateInfo);
+  }
+  else 
+  {
+    ObjectMatrix3D< vector<Matrix> > threewave;
+    onedot_twoindex_to_threeindex_shufflesysdot(guessstateinfo, guesswf, threewave);
+    onedot_threeindex_to_twoindex_wavefunction(transposestateinfo, threewave, transposewf, *guessstateinfo.rightStateInfo->unCollectedStateInfo);
+  }
+  //cout << guesswf;
   // first convert into three index wavefunction [s][e.] -> [s].[e]                                                         
-  onedot_twoindex_to_threeindex_shufflesysdot(guessstateinfo, guesswf, threewave);
-  onedot_threeindex_to_twoindex_wavefunction(transposestateinfo, threewave, transposewf, *guessstateinfo.rightStateInfo->unCollectedStateInfo);
+}
+
+void GuessWave::bigdot_twoindex_to_threeindex_shufflesysdot(const StateInfo& stateinfo, const Wavefunction& twowavefunction, 
+							    ObjectMatrix3D< vector<ObjectMatrix3D<Real>> >& threewavefunction)
+{
+  int NDimsys = stateinfo.leftStateInfo->quanta.size();
+  int NDimdot = stateinfo.rightStateInfo->rightStateInfo->quanta.size();
+  int NDimenv = stateinfo.rightStateInfo->leftStateInfo->quanta.size();
+  threewavefunction.ReSize(NDimsys, NDimdot, NDimenv);
+  Wavefunction uncollectedwf = twowavefunction;
+  uncollectedwf.UnCollectQuantaAlongColumns(*stateinfo.leftStateInfo, *stateinfo.rightStateInfo);
+  const StateInfo& uncollectedstateinfo = *(stateinfo.rightStateInfo->unCollectedStateInfo);
+
+  for (int a = 0; a < uncollectedwf.nrows(); ++a)
+    for (int bc = 0; bc < uncollectedwf.ncols(); ++bc)
+      if (uncollectedwf.allowed(a, bc))
+        {
+          int b = uncollectedstateinfo.rightUnMapQuanta[bc];
+          int c = uncollectedstateinfo.leftUnMapQuanta[bc];
+          bool bodd = IsFermion(stateinfo.rightStateInfo->rightStateInfo->quanta[b]);
+          bool codd = IsFermion(stateinfo.rightStateInfo->leftStateInfo->quanta[c]);
+      //cout <<stateinfo.leftStateInfo->quanta[a]<<endl; 
+      //cout <<stateinfo.leftStateInfo->quantaStates[a]<<endl; 
+      //cout <<stateinfo.rightStateInfo->rightStateInfo->quanta[b]<<endl; 
+      //cout <<stateinfo.rightStateInfo->rightStateInfo->quantaStates[b]<<endl; 
+      //cout <<stateinfo.rightStateInfo->leftStateInfo->quanta[c]<<endl; 
+      //cout <<stateinfo.rightStateInfo->leftStateInfo->quantaStates[c]<<endl; 
+      //cout << uncollectedstateinfo.quanta[bc]<<endl;
+      //cout << uncollectedstateinfo.quantaStates[bc]<<endl;
+	  //int parity = (bodd&codd) ? -1 : 1;
+	  int j1 = stateinfo.rightStateInfo->leftStateInfo->quanta[c].get_s().getirrep();
+	  int j2 = stateinfo.rightStateInfo->rightStateInfo->quanta[b].get_s().getirrep();
+	  int J = uncollectedstateinfo.quanta[bc].get_s().getirrep();
+	  
+	  int parity = getCommuteParity(stateinfo.rightStateInfo->leftStateInfo->quanta[c],
+				    stateinfo.rightStateInfo->rightStateInfo->quanta[b],
+				    uncollectedstateinfo.quanta[bc]);
+
+	  //parity *= pow(-1.0, static_cast<int>( (3*j1 - j2 + J)/2));
+	  int insertionNum = uncollectedstateinfo.quanta[bc].insertionNum(stateinfo.rightStateInfo->rightStateInfo->quanta[b], stateinfo.rightStateInfo->leftStateInfo->quanta[c]);
+    //cout <<" insertionNum: "<<insertionNum<<endl;
+	  vector<SpinQuantum> spq = stateinfo.rightStateInfo->rightStateInfo->quanta[b]+ stateinfo.rightStateInfo->leftStateInfo->quanta[c];
+
+	  if(threewavefunction(a, b, c).size() != spq.size())
+	    threewavefunction(a, b, c).resize(spq.size());
+      threewavefunction(a,b,c)[insertionNum].ReSize(stateinfo.leftStateInfo->quantaStates[a],stateinfo.rightStateInfo->rightStateInfo->quantaStates[b],stateinfo.rightStateInfo->leftStateInfo->quantaStates[c]);
+      for(int Sa=0; Sa<threewavefunction(a,b,c)[insertionNum].NDim0(); Sa++ )
+      for(int Sb=0; Sb<threewavefunction(a,b,c)[insertionNum].NDim1(); Sb++ )
+      for(int Sc=0; Sc<threewavefunction(a,b,c)[insertionNum].NDim2(); Sc++ )
+      {
+        //cout << threewavefunction(a,b,c)[insertionNum](Sa,Sb,Sc)<<endl;
+      //cout << Sc*threewavefunction(a,b,c)[insertionNum].NDim1()+Sb<<endl;
+      //cout << uncollectedwf(a, bc);
+      //cout << uncollectedwf(a, bc)(1,1)<<endl;
+      //cout << uncollectedwf(a, bc)(Sa+1,Sc*threewavefunction(a,b,c)[insertionNum].NDim1()+Sb+1)<<endl;
+        threewavefunction(a,b,c)[insertionNum](Sa,Sb,Sc)= parity*uncollectedwf(a, bc)(Sa+1,Sc*threewavefunction(a,b,c)[insertionNum].NDim1()+Sb+1);
+          //copy(uncollectedwf(a, bc), threewavefunction(a, b, c)[insertionNum]);
+      }
+      }
+
+
+
 }
 
 void GuessWave::onedot_twoindex_to_threeindex_shufflesysdot(const StateInfo& stateinfo, const Wavefunction& twowavefunction, 
@@ -418,6 +674,7 @@ void GuessWave::onedot_twoindex_to_threeindex_shufflesysdot(const StateInfo& sta
   int NDimsys = stateinfo.leftStateInfo->quanta.size();
   int NDimdot = stateinfo.rightStateInfo->rightStateInfo->quanta.size();
   int NDimenv = stateinfo.rightStateInfo->leftStateInfo->quanta.size();
+  //cout << "Dim 3D: " << NDimsys<<','<<NDimdot<<','<<NDimenv<<endl;
 
   threewavefunction.ReSize(NDimsys, NDimdot, NDimenv);
 
@@ -433,6 +690,14 @@ void GuessWave::onedot_twoindex_to_threeindex_shufflesysdot(const StateInfo& sta
           int c = uncollectedstateinfo.leftUnMapQuanta[bc];
           bool bodd = IsFermion(stateinfo.rightStateInfo->rightStateInfo->quanta[b]);
           bool codd = IsFermion(stateinfo.rightStateInfo->leftStateInfo->quanta[c]);
+      //cout <<stateinfo.leftStateInfo->quanta[a]<<endl; 
+      //cout <<stateinfo.leftStateInfo->quantaStates[a]<<endl; 
+      //cout <<stateinfo.rightStateInfo->rightStateInfo->quanta[b]<<endl; 
+      //cout <<stateinfo.rightStateInfo->rightStateInfo->quantaStates[b]<<endl; 
+      //cout <<stateinfo.rightStateInfo->leftStateInfo->quanta[c]<<endl; 
+      //cout <<stateinfo.rightStateInfo->leftStateInfo->quantaStates[c]<<endl; 
+      //cout << uncollectedstateinfo.quanta[bc]<<endl;
+      //cout << uncollectedstateinfo.quantaStates[bc]<<endl;
 	  //int parity = (bodd&codd) ? -1 : 1;
 	  int j1 = stateinfo.rightStateInfo->leftStateInfo->quanta[c].get_s().getirrep();
 	  int j2 = stateinfo.rightStateInfo->rightStateInfo->quanta[b].get_s().getirrep();
@@ -444,6 +709,7 @@ void GuessWave::onedot_twoindex_to_threeindex_shufflesysdot(const StateInfo& sta
 
 	  //parity *= pow(-1.0, static_cast<int>( (3*j1 - j2 + J)/2));
 	  int insertionNum = uncollectedstateinfo.quanta[bc].insertionNum(stateinfo.rightStateInfo->rightStateInfo->quanta[b], stateinfo.rightStateInfo->leftStateInfo->quanta[c]);
+    //cout <<" insertionNum: "<<insertionNum<<endl;
 	  vector<SpinQuantum> spq = stateinfo.rightStateInfo->rightStateInfo->quanta[b]+ stateinfo.rightStateInfo->leftStateInfo->quanta[c];
 
 	  if(threewavefunction(a, b, c).size() != spq.size())
@@ -556,30 +822,40 @@ it's not necessary to take the pseudo inverse of right rotation matrix.
     TransformLeftBlock(oldWave, big.get_stateInfo(), leftRotationMatrix, tempoldWave);
 
     StateInfo tempoldStateInfo;
+    cout << *(big.get_stateInfo().leftStateInfo->leftStateInfo)<<endl;
+    cout << *oldStateInfo.rightStateInfo<<endl;
     if (dmrginp.hamiltonian() == BCS)
       TensorProduct (*(big.get_stateInfo().leftStateInfo->leftStateInfo), *oldStateInfo.rightStateInfo, tempoldStateInfo,
 		   SPIN_NUMBER_CONSTRAINT);
     else
       TensorProduct (*(big.get_stateInfo().leftStateInfo->leftStateInfo), *oldStateInfo.rightStateInfo, tempoldStateInfo,
 		   PARTICLE_SPIN_NUMBER_CONSTRAINT);
+    cout << tempoldStateInfo<<endl;
 
     tempoldStateInfo.CollectQuanta();
 
     Wavefunction tempnewWave;
     tempnewWave.AllowQuantaFor(*big.get_stateInfo().leftStateInfo, *oldStateInfo.rightStateInfo->leftStateInfo, oldWave.get_deltaQuantum()); 
     StateInfo tempnewStateInfo;
+    cout << *(big.get_stateInfo().leftStateInfo)<<endl;
+    cout << *oldStateInfo.rightStateInfo->leftStateInfo<<endl;
     if (dmrginp.hamiltonian() == BCS)
       TensorProduct (*(big.get_stateInfo().leftStateInfo), *oldStateInfo.rightStateInfo->leftStateInfo, tempnewStateInfo,
 		   SPIN_NUMBER_CONSTRAINT);
     else
       TensorProduct (*(big.get_stateInfo().leftStateInfo), *oldStateInfo.rightStateInfo->leftStateInfo, tempnewStateInfo,
 		   PARTICLE_SPIN_NUMBER_CONSTRAINT);
+    cout << tempnewStateInfo<<endl;
 
     
+    cout << "here?\n";
     tempnewStateInfo.CollectQuanta();
+
     onedot_shufflesysdot(tempoldStateInfo, tempnewStateInfo, tempoldWave, tempnewWave);
 
+    cout << "load another rotation matrix"<<endl;
     LoadRotationMatrix (big.get_rightBlock()->get_sites(), rightRotationMatrix, state);
+    cout << "finish load another rotation matrix"<<endl;
 
     trial.AllowQuantaFor(*big.get_stateInfo().leftStateInfo, *big.get_stateInfo().rightStateInfo, oldWave.get_deltaQuantum()); 
     TransformRightBlock(tempnewWave, oldStateInfo, rightRotationMatrix, trial);
@@ -831,6 +1107,10 @@ void GuessWave::onedot_transform_wavefunction(const StateInfo& oldstateinfo, con
 		 PARTICLE_SPIN_NUMBER_CONSTRAINT);
   tempoldStateInfo.CollectQuanta();
 
+  cout << "onedot Transform=============================\n";
+  cout << oldstateinfo;
+  cout << tempoldStateInfo;
+  cout << newstateinfo;
 
   onedot_shufflesysdot(  tempoldStateInfo, newstateinfo, tmpwavefunction, newwavefunction);
 }

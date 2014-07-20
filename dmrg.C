@@ -202,6 +202,7 @@ int calldmrg(char* input, char* output)
        restart(sweep_tol, reset_iter);
     }
     else {
+      cout << "okay\n";
       dmrg(sweep_tol);
     }
     break;

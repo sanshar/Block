@@ -27,16 +27,31 @@ namespace GuessWave
   void transpose_previous_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state, const bool &onedot, const bool& transpose_guess_wave);
   void onedot_transpose_wavefunction(const StateInfo& guessstateinfo, const StateInfo& transposestateinfo,
                                       const Wavefunction& guesswf, Wavefunction& transposewf);
+
+  void bigdot_transpose_wavefunction(const StateInfo& guessstateinfo, const StateInfo& transposestateinfo,
+                                      const Wavefunction& guesswf, Wavefunction& transposewf);
+
   void onedot_threeindex_to_twoindex_wavefunction(const StateInfo& twostateinfo, const ObjectMatrix3D< std::vector<Matrix> >& 
 						  threewavefunction, Wavefunction& twowavefunction, const StateInfo& guessstateinfo);
+
+  void bigdot_threeindex_to_twoindex_wavefunction(const StateInfo& twostateinfo, const ObjectMatrix3D< std::vector<ObjectMatrix3D<Real>> >& 
+						  threewavefunction, Wavefunction& twowavefunction, const StateInfo& guessstateinfo);
+
   void onedot_twoindex_to_threeindex_wavefunction(const StateInfo& stateinfo, const Wavefunction& twowavefunction, 
 						  ObjectMatrix3D< std::vector<Matrix> > & threewavefunction);
+
+  void bigdot_twoindex_to_threeindex_wavefunction(const StateInfo& stateinfo, const Wavefunction& twowavefunction, 
+						  ObjectMatrix3D< std::vector<ObjectMatrix3D<Real>> > & threewavefunction);
 
   void onedot_shufflesysdot(const StateInfo& guessstateinfo, const StateInfo& transposestateinfo,
 			    const Wavefunction& guesswf, Wavefunction& transposewf);
 
   void onedot_twoindex_to_threeindex_shufflesysdot(const StateInfo& stateinfo, const Wavefunction& twowavefunction, 
 						   ObjectMatrix3D< vector<Matrix> >& threewavefunction);
+
+  void bigdot_twoindex_to_threeindex_shufflesysdot(const StateInfo& stateinfo, const Wavefunction& twowavefunction, 
+						   ObjectMatrix3D< vector<ObjectMatrix3D<Real>> >& threewavefunction);
+
   void transform_previous_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state, const bool &onedt, 
 				       const bool& transpose_guess_wave);
 

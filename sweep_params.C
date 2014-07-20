@@ -29,8 +29,6 @@ SpinAdapted::SweepParams::SweepParams()
   n_iters = 0;
   error = 0.0;
   largest_dw = 0.0;
-  forward_starting_size = 1;
-  backward_starting_size = 1;
   keep_states = 0;
   keep_qstates = 0;
   noise = 0;
@@ -39,15 +37,17 @@ SpinAdapted::SweepParams::SweepParams()
   guesstype = BASIC;
 
   onedot = (dmrginp.algorithm_method() == ONEDOT);
+  bigdot = dmrginp.bigdot();
   sys_add = dmrginp.sys_add();
   env_add = dmrginp.env_add();
-  forward_starting_size = 1;
-  if(dmrginp.spinAdapted())
-    n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
-  else
-    n_iters = (dmrginp.last_site() - 4*forward_starting_size - 2*sys_add - 2*env_add) / (2*sys_add) + 1;
+  forward_starting_size = bigdot ? *(dmrginp.num_of_orb_bigdot().begin()): 1;
+  backward_starting_size = bigdot ? *(dmrginp.num_of_orb_bigdot().rbegin()): 1;
+  //if(dmrginp.spinAdapted())
+  //  n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+  //else
+  //  n_iters = (dmrginp.last_site() - 4*forward_starting_size - 2*sys_add - 2*env_add) / (2*sys_add) + 1;
+  calc_niter();
 
-  backward_starting_size = forward_starting_size;
 }
 
 void SpinAdapted::SweepParams::set_sweep_parameters()
@@ -112,10 +112,11 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
   {
     onedot = true;
     env_add = 0;
-    if(dmrginp.spinAdapted())
-      n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
-    else
-      n_iters = (dmrginp.last_site() - 4*forward_starting_size - 2*sys_add - 2*env_add) / (2*sys_add) + 1;
+    calc_niter();
+    //if(dmrginp.spinAdapted())
+    //  n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+    //else
+    //  n_iters = (dmrginp.last_site() - 4*forward_starting_size - 2*sys_add - 2*env_add) / (2*sys_add) + 1;
     if (dmrginp.twodot_to_onedot_iter() == SpinAdapted::SweepParams::sweep_iter)
       pout << "\t\t\t Switching from two dot to one dot ... " << endl;
   }
@@ -124,11 +125,20 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
 
 void SpinAdapted::SweepParams::calc_niter()
 {
+  if(!bigdot){
     if(dmrginp.spinAdapted())
       n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
     else
       n_iters = (dmrginp.last_site() - 4*forward_starting_size - 2*sys_add - 2*env_add) / (2*sys_add) + 1;
     //n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+  }
+  else{
+    if(dmrginp.spinAdapted())
+      n_iters = (dmrginp.num_of_orb_bigdot().size() - 2-sys_add-env_add)/sys_add +1;
+    else
+      n_iters = (dmrginp.num_of_orb_bigdot().size() - 2 - sys_add - env_add) / sys_add + 1;
+
+  }
 }
 
 void SpinAdapted::SweepParams::savestate(const bool &forward, const int &size)
@@ -180,4 +190,11 @@ void SpinAdapted::SweepParams::restorestate(bool &forward, int &size)
   mpi::broadcast(world, *this, 0);
 #endif
 }
+
+//int SpinAdapted::SweepParams::gitdotsize(){
+//  if(forward)
+//    return dmrginp.num_of_orb_bigdot()[block_iter];
+//  else
+//    return dmrginp.num_of_orb_bigdot()[n_iters-block_iter-1];
+//}
 

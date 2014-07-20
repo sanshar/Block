@@ -27,6 +27,8 @@ private:
 
   int restart_iter;
   bool onedot;
+  // bigdot means using a dot with multiple spatial orbitals
+  bool bigdot;
   int block_iter;
   int sweep_iter;
   int n_iters;
@@ -55,6 +57,7 @@ public:
   void savestate(const bool &forward, const int &size);
   void restorestate(bool &forward, int &size);
   void calc_niter();
+  int bigdotsize();
 
   const int &current_root() const {return currentRoot;}
   const bool &get_onedot() const { return onedot; }
@@ -77,6 +80,7 @@ public:
   const vector<double> &get_lowest_energy_spins() const { return lowest_energy_spins; }
   const guessWaveTypes &get_guesstype() const { return guesstype; }
   const int &get_restart_iter() const {return restart_iter;}
+  const bool &get_bigdot(){ return bigdot;}
 
   int &current_root() {return currentRoot;}
   int &set_restart_iter() {return restart_iter;}
@@ -99,6 +103,7 @@ public:
   vector<double> &set_lowest_energy() { return lowest_energy; }
   vector<double> &set_lowest_energy_spins() { return lowest_energy_spins; }
   guessWaveTypes &set_guesstype() { return guesstype; }
+  bool &set_bigdot(){ return bigdot;}
 };
 }
 #endif

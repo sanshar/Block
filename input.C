@@ -77,6 +77,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_Bogoliubov = false;
   m_sys_add = 1;
   m_env_add = 1;
+  m_bigdot=false;
 
   m_twodot_to_onedot_iter = 0;
   m_integral_disk_storage_thresh = 1000;
@@ -721,6 +722,15 @@ SpinAdapted::Input::Input(const string& config_name) {
          m_twodot_gamma = atof(tok[2].c_str());
        }
 
+      // Bigdot means using a dot with multiple spatial orbitals
+      else if (boost::iequals(keyword, "bigdot"))
+      {
+        m_bigdot=true;
+        m_num_of_orb_in_bigdot.resize(tok.size()-1);
+        for(int i=0;i < tok.size()-1;i++)
+          m_num_of_orb_in_bigdot[i] =atof(tok[i+1].c_str());
+      }
+
       else if (boost::iequals(keyword,  "sweep_tol") || boost::iequals(keyword,  "sweep_tolerance"))
       {
 	if(usedkey[SWEEP_TOL] == 0) 
@@ -828,6 +838,8 @@ SpinAdapted::Input::Input(const string& config_name) {
   boost::mpi::communicator world;
   mpi::broadcast(world, sym, 0);
   mpi::broadcast(world, m_Bogoliubov, 0);
+//  mpi::broadcast(world, m_bigdot,0);
+//  mpi::broadcast(world, m_num_of_orb_in_bigdot,0);
 #endif
     
   if (sym != "c1")
@@ -893,6 +905,37 @@ mpi::broadcast(world, m_Bogoliubov,0);
 #endif
     pout << endl;
   }
+
+  //parameterset_after_input();
+{
+  if(mpigetrank()==0){
+    m_bigdot_map.resize(m_num_spatial_orbs);
+    if(m_bigdot){
+      if(m_reorderType!=NOREORDER && m_reorderType!= MANUAL){
+        pout << "====================WARNING===================="<<endl;
+        pout << " bigdot is suitable for noreorder or Manual reorder"<<endl;
+      };
+      // Make a map from traditional orbitals to big orbitals
+      int numoforb=0;
+      for(int i =0; i<m_num_of_orb_in_bigdot.size();i++){
+        for(int j=m_num_of_orb_in_bigdot[i]; j>0;j--){
+          m_bigdot_map[numoforb]=i;
+          numoforb++;
+        }
+
+      }
+
+
+    }
+    else{
+//      for(int i=0; i< m_num_spatial_orbs;i++)
+//      m_bigdot_map[i]=i;
+
+    }
+  }
+
+
+}
 
 #ifndef SERIAL
   mpi::broadcast(world, *this,0);

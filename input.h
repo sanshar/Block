@@ -59,6 +59,10 @@ class Input {
   bool m_stateSpecific; //when targetting excited states we switch from state 
   //average to statespecific 
 
+  bool m_bigdot; // bigdot means using a dot with multiple spatial orbitals
+  std::vector<int> m_num_of_orb_in_bigdot;
+  std::vector<int> m_bigdot_map; // A map from traditional orbitals to big orbitals
+
   std::vector<int> m_hf_occupancy;
   std::string m_hf_occ_user;
   std::vector<double> m_weights;
@@ -165,6 +169,7 @@ class Input {
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
     ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_backward & m_schedule_type_default & m_core_energy &m_integral_disk_storage_thresh;
     ar & n_twodot_noise & m_twodot_noise & m_twodot_gamma;
+    ar & m_bigdot & m_num_of_orb_in_bigdot & m_bigdot_map;
   }
 
 
@@ -370,6 +375,12 @@ class Input {
   int slater_size() const {return m_norbs;}
   const std::vector<int> &reorder_vector() {return m_reorder;}
   bool spinAdapted() {return m_spinAdapted;}
+  bool bigdot() { return m_bigdot;}
+  std::vector<int> &num_of_orb_bigdot() { return m_num_of_orb_in_bigdot;}
+  int num_of_orb_bigdot(int i) { return m_num_of_orb_in_bigdot[i];}
+  std::vector<int> &bigdot_map() { return m_bigdot_map;}
+  int bigdot_map(int i) { return m_bigdot_map[i];}
+//  void parameterset_after_input();
 };
 }
 #endif
