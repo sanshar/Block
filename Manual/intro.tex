@@ -769,6 +769,38 @@ squares minimization of the last sweep for each $M$ (we currently use the last
 three of these $M$. This enables the user to see how after one is from
 convergence.}
 
+\subsubsection{Warm-up Scheme for Large Systems}
+Users who work with large systems may find that the first DMRG sweep, the warm-up sweep, takes much longer time than the subsequent ones using the default settings, sometimes half of the total computation time. This is because the BLOCK code needs to choose proper environment states as the initial guess. 
+
+By default, BLOCK uses the a sophisticated warm-up method based on Wilson renormalisation group. It chooses the lowest-energy states for each possible quantum number in the environment. The scheme ensures good convergence of DMRG, and avoids getting stuck in a local minimum. However, it can take a huge amount of time in finding those environment configurations and building the operators for them. 
+
+The new BLOCK version 1.00 introduces an alternative warm-up scheme called local warm-up scheme. In this scheme, the environment states are chosen as the full configuration space of the next X (X=2,3,4) sites and the Hartree-Fock configuration for the rest sites. It can be specified by using the keyword
+\begin{verbatim}
+warmup local_Xsite
+\end{verbatim}
+The time to generate the environment states scales O(1) with system size in the local warm-up method, making it very efficient for large systems.
+
+In principle, this scheme works best with localized orbitals. However, for the limited amount of cases we tested, it also works well with active space calculations using canonical orbitals for most needs. A benchmark result is shown in Table~\ref{tab:warmup}.
+
+\begin{table}
+\begin{center}
+\begin{tabular}{rrr}
+\hline
+\hline
+warm-up scheme& Energy(Hartree)& Wall time (sec)\\
+\hline
+local\_2site&-770.1730476921&2994\\
+local\_3site&-770.1730476961&3061\\
+Wilson&-770.1730477013&3545\\
+\hline
+\hline
+\end{tabular}
+\end{center}
+\caption{
+  DMRG converged energies and computation times using 3 different warm-up schemes, tested on C$_{20}$H$_{22}$ molecule with an active space of (20e,20o) using \textbf{canonical orbitals}. All 3 calculations converge after 35 sweeps, with StartM=100, maxM = 1000 and a default schedule. The convergence criteria is $\Delta E<1e-10$ Hartree. The numbers are computed using 4 threads of 2.50GHz Intel Xeon Processor E5-2670.
+} \label{tab:warmup}
+\end{table}
+
 \subsubsection{Creating FCIDUMP files}\label{sec:appFCIDUMP}
 For users who wish to generate their own \texttt{FCIDUMP} file using an external program, the first few lines of \texttt{FCIDUMP} are as follows:
 \begin{verbatim}
