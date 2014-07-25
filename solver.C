@@ -131,8 +131,12 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
     }
   }
   else {
-    for (int i=0; i<nroots&& mpigetrank() == 0;i++) 
-      energies[i] = e(1);
+    for (int i=0; i<nroots&& mpigetrank() == 0;i++) {
+      if (dmrginp.calc_type() == RESPONSE)
+	energies[i] = 1.e10;
+      else
+	energies[i] = e(1);
+    }
   }
 #ifndef SERIAL
   broadcast(world, energies, 0);

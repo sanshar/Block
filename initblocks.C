@@ -68,12 +68,12 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
 }
 
 
-void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &systemDot, SpinBlock &newSystem, int leftState, int rightState, const int& sys_add, const bool &direct, int integralIndex, const Storagetype &storage, bool haveNormops, bool haveCompops)
+void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &systemDot, SpinBlock &newSystem, int leftState, int rightState, const int& sys_add, const bool &direct, int integralIndex, const Storagetype &storage, bool haveNormops, bool haveCompops, int constraint)
 {
   newSystem.set_integralIndex() = integralIndex;
   newSystem.default_op_components(direct, system, systemDot, haveNormops, haveCompops, leftState==rightState);
   newSystem.setstoragetype(storage);
-  newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, systemDot);
+  newSystem.BuildSumBlock (constraint, system, systemDot);
 
   if (dmrginp.outputlevel() > 0) {
     pout << "\t\t\t NewSystem block " << endl << newSystem << endl;
@@ -85,7 +85,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 						      const SpinBlock &system, SpinBlock &systemDot, int leftState, int rightState,
 						      const int &sys_add, const int &env_add, const bool &forward, const bool &direct, 
 						      const bool &onedot, const bool &nexact, const bool &useSlater, int integralIndex, 
-						      bool haveNormops, bool haveCompops, const bool& dot_with_sys) {
+						      bool haveNormops, bool haveCompops, const bool& dot_with_sys, int constraint) {
   // now initialise environment Dot
   int systemDotStart, systemDotEnd, environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
   int systemDotSize = sys_add - 1;
@@ -187,12 +187,12 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 	  environment.set_integralIndex() = integralIndex;
           environment.default_op_components(!forward, leftState == rightState);
           environment.setstoragetype(DISTRIBUTED_STORAGE);
-          environment.BuildSumBlock(NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environmentCore, environmentActive);
+          environment.BuildSumBlock(constraint, environmentCore, environmentActive);
         } else {
 	  newEnvironment.set_integralIndex() = integralIndex;
           newEnvironment.default_op_components(direct, environmentCore, environmentActive, haveNormops, haveCompops, leftState == rightState);
           newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
-          newEnvironment.BuildSumBlock(NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environmentCore, environmentActive);
+          newEnvironment.BuildSumBlock(constraint, environmentCore, environmentActive);
           if (dmrginp.outputlevel() > 0) {
 	    pout << "\t\t\t NewEnvironment block " << endl << newEnvironment << endl;
 	    newEnvironment.printOperatorSummary();
@@ -223,7 +223,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
       if (onedot) tmp.quanta_distribution (quantumNumbers, distribution, true);
       else {
         StateInfo environmentdot_stateinfo = environmentDot.get_stateInfo();
-        TensorProduct (tmp, environmentdot_stateinfo, tmp2, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
+        TensorProduct (tmp, environmentdot_stateinfo, tmp2, constraint);
         tmp2.CollectQuanta ();
         tmp2.quanta_distribution (quantumNumbers, distribution, true);
 
@@ -285,7 +285,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
     newEnvironment.set_integralIndex() = integralIndex;
     newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops, leftState==rightState);
     newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
-    newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, environmentDot);
+    newEnvironment.BuildSumBlock (constraint, environment, environmentDot);
     if (dmrginp.outputlevel() > 0) {
 	  pout << "\t\t\t Environment block " << endl << environment << endl;
 	  environment.printOperatorSummary();
@@ -302,7 +302,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
 void SpinAdapted::InitBlocks::InitNewOverlapEnvironmentBlock(SpinBlock &environment, SpinBlock& environmentDot, SpinBlock &newEnvironment, 
 							     const SpinBlock &system, SpinBlock &systemDot, int leftState, int rightState,
 							     const int &sys_add, const int &env_add, const bool &forward, int integralIndex,
-							     const bool &onedot, const bool& dot_with_sys)
+							     const bool &onedot, const bool& dot_with_sys, int constraint)
 {
   // now initialise environment Dot
   int systemDotStart, systemDotEnd, environmentDotStart, environmentDotEnd, environmentStart, environmentEnd;
@@ -354,7 +354,7 @@ void SpinAdapted::InitBlocks::InitNewOverlapEnvironmentBlock(SpinBlock &environm
     //newEnvironment.set_op_array(OVERLAP) = boost::shared_ptr<Op_component<Overlap> >(new Op_component<Overlap>(false));
     newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
       
-    newEnvironment.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, environment, environmentDot);
+    newEnvironment.BuildSumBlock (constraint, environment, environmentDot);
     if (dmrginp.outputlevel() > 0) {
       pout << "\t\t\t Environment block " << endl << environment << endl;
       environment.printOperatorSummary();

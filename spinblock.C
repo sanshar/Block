@@ -206,15 +206,18 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
   //temporarily disable screening for single site blocks
   double twoindex_ScreenTol = dmrginp.twoindex_screen_tol();
   double oneindex_ScreenTol = dmrginp.oneindex_screen_tol();
-  if (new_sites.size() == 1) {
+  if (new_sites.size() == 1 && dmrginp.calc_type() != RESPONSE && dmrginp.calc_type() != COMPRESS) {
     dmrginp.twoindex_screen_tol() = 0.0;
     dmrginp.oneindex_screen_tol() = 0.0;
   }
+
   build_iterators();
-  if (new_sites.size() == 1) {
+
+  if (new_sites.size() == 1 && dmrginp.calc_type() != RESPONSE && dmrginp.calc_type() != COMPRESS) {
     dmrginp.twoindex_screen_tol() = twoindex_ScreenTol;
     dmrginp.oneindex_screen_tol() = oneindex_ScreenTol;
   }
+
   build_operators(dets, ladders);
 
 }
@@ -232,21 +235,25 @@ std::vector<int> SpinBlock::make_complement(const std::vector<int>& sites)
 
 void SpinBlock::build_iterators()
 {
+  dmrginp.builditeratorsT->start();
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
   {
     it->second->build_iterators(*this);
   }
+  dmrginp.builditeratorsT->stop();
 }
 
 
 void SpinBlock::build_operators(std::vector< Csf >& dets, std::vector< std::vector<Csf> >& ladders)
 {
+  dmrginp.buildcsfops->start();
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core()) {
         it->second->build_csf_operators(dets, ladders, *this);      
       }
     }
+  dmrginp.buildcsfops->stop();
 }
   
 

@@ -95,15 +95,19 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b, int
 
 void SpinBlock::Save (std::ofstream &ofs)
 {
+  dmrginp.diskio->start();
   boost::archive::binary_oarchive save_block(ofs);
   save_block << *this;
+  dmrginp.diskio->stop();
 }
 
 //helper function
 void SpinBlock::Load (std::ifstream & ifs)
 {
+  dmrginp.diskio->start();
   boost::archive::binary_iarchive load_block(ifs);
   load_block >> *this;
+  dmrginp.diskio->stop();
 }
 
 

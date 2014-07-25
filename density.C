@@ -308,12 +308,10 @@ public:
 		  const boost::shared_ptr<SparseMatrix> fullop = op.getworkingrepresentation(big.get_leftBlock());      
 		  if (dmrginp.hamiltonian() != BCS || q.get_n() <= dmrginp.effective_molecule_quantum().get_n()) {
 		    Wavefunction opxwave;
-		    opxwave.AllowQuantaFor(*big.get_braStateInfo().leftStateInfo, *big.get_braStateInfo().rightStateInfo, std::vector<SpinQuantum>(1,q));opxwave.set_onedot(wavefunction.get_onedot());
+		    opxwave.AllowQuantaFor(*big.get_braStateInfo().leftStateInfo, *big.get_ketStateInfo().rightStateInfo, std::vector<SpinQuantum>(1,q));opxwave.set_onedot(wavefunction.get_onedot());
 		    
 		    opxwave.Clear();
-		    boost::shared_ptr<SparseMatrix> overlap = big.get_rightBlock()->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(big.get_rightBlock());
-		    SpinQuantum hq = SpinQuantum(0, SpinSpace(0), IrrepSpace(0));
-		    TensorMultiply(big.get_leftBlock(), *fullop, *overlap, &big, const_cast<Wavefunction&> (wavefunction), opxwave, oQ[l], 1.0);
+		    TensorMultiply(big.get_leftBlock(), *fullop, &big, const_cast<Wavefunction&> (wavefunction), opxwave, oQ[l], 1.0);
 		    double norm = DotProduct(opxwave, opxwave);
 		    if (abs(norm) > NUMERICAL_ZERO) {
 		      Scale(1./sqrt(norm), opxwave);

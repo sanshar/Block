@@ -42,12 +42,19 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
   vector<int> spindotsites(2); 
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
+  dmrginp.sysdotmake->start();
   systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), stateA==stateB);
+  dmrginp.sysdotmake->stop();
 
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
+  dmrginp.guessgenT -> stop();
+  dmrginp.datatransfer -> start();
   system.addAdditionalCompOps();
+  dmrginp.datatransfer -> stop();
+  dmrginp.initnewsystem->start();
   InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, stateA, stateB, sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), DISTRIBUTED_STORAGE, dot_with_sys, true);
+  dmrginp.initnewsystem->stop();
 
   pout << "\t\t\t System  Block"<<newSystem;
   if (dmrginp.outputlevel() > 0)
@@ -66,10 +73,12 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
 
   pout <<"\t\t\t Performing Renormalization "<<endl<<endl;
 
+  dmrginp.operrotT->start();
   if (stateB == stateA)
     newSystem.transform_operators(leftrotateMatrix);
   else
     newSystem.transform_operators(leftrotateMatrix, rightrotateMatrix);
+  dmrginp.operrotT->stop();
 
 
   if (dmrginp.outputlevel() > 0) 
@@ -79,6 +88,19 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
   if (dmrginp.outputlevel() > 0)
     newSystem.printOperatorSummary();
   //mcheck("After renorm transform");
+
+  if (dmrginp.outputlevel() > 0){
+    pout << *dmrginp.guessgenT<<" "<<*dmrginp.multiplierT<<" "<<*dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+    pout << *dmrginp.makeopsT<<"  "<<*dmrginp.initnewsystem<<"  "<<*dmrginp.sysdotmake<<"  "<<*dmrginp.buildcsfops<<" makeops "<<endl;
+    pout << *dmrginp.datatransfer<<" datatransfer "<<endl;
+    pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
+    pout << *dmrginp.oneelecT<<" "<<*dmrginp.twoelecT<<" "<<*dmrginp.hmultiply<<" "<<*dmrginp.couplingcoeff<<" hmult"<<endl;
+    pout << *dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<" build block"<<endl;
+    pout << *dmrginp.blockintegrals<<"  "<<*dmrginp.blocksites<<"  "<<*dmrginp.statetensorproduct<<"  "<<*dmrginp.statecollectquanta<<"  "<<*dmrginp.buildsumblock<<" "<<*dmrginp.builditeratorsT<<"  "<<*dmrginp.diskio<<" build sum block"<<endl;
+    pout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
+    pout << *dmrginp.addnoise<<" "<<*dmrginp.s0time<<" "<<*dmrginp.s1time<<" "<<*dmrginp.s2time<<endl;
+  }
+
 }
 
 double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int stateA, int stateB)

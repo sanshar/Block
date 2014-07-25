@@ -59,6 +59,7 @@ class Input {
   bool m_stateSpecific; //when targetting excited states we switch from state 
   //average to statespecific 
   double m_baseEnergy;
+  int m_occupied_orbitals;
 
   std::vector<int> m_hf_occupancy;
   std::string m_hf_occ_user;
@@ -161,7 +162,7 @@ class Input {
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat ;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform ;
-    ar & m_do_npdm_ops & m_do_npdm_in_core & m_new_npdm_code;
+    ar & m_do_npdm_ops & m_do_npdm_in_core & m_new_npdm_code & m_occupied_orbitals;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_oneindex_screen_tol & m_twoindex_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type & m_warmup;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
@@ -179,6 +180,12 @@ class Input {
   // ROA
   void initCumulTimer()
   {
+  ddscreen       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  cdscreen       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  dscreen       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  buildcsfops       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  sysdotmake       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  initnewsystem       = boost::shared_ptr<cumulTimer> (new cumulTimer());
   guessgenT       = boost::shared_ptr<cumulTimer> (new cumulTimer());
   multiplierT     = boost::shared_ptr<cumulTimer> (new cumulTimer());
   operrotT        = boost::shared_ptr<cumulTimer> (new cumulTimer());
@@ -207,6 +214,12 @@ class Input {
   s0time          = boost::shared_ptr<cumulTimer> (new cumulTimer());
   s1time          = boost::shared_ptr<cumulTimer> (new cumulTimer());
   s2time          = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  blockintegrals  = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  blocksites      = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  statetensorproduct = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  statecollectquanta = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  builditeratorsT = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  diskio = boost::shared_ptr<cumulTimer> (new cumulTimer());
   }
   void writeSummary();
 #ifdef MOLPRO
@@ -224,6 +237,18 @@ class Input {
   void makeInitialHFGuess();
   static void ReadMeaningfulLine(ifstream&, string&, int);
 
+  boost::shared_ptr<cumulTimer> dscreen; 
+  boost::shared_ptr<cumulTimer> cdscreen; 
+  boost::shared_ptr<cumulTimer> ddscreen; 
+  boost::shared_ptr<cumulTimer> buildcsfops; 
+  boost::shared_ptr<cumulTimer> sysdotmake; 
+  boost::shared_ptr<cumulTimer> initnewsystem; 
+  boost::shared_ptr<cumulTimer> diskio; 
+  boost::shared_ptr<cumulTimer> builditeratorsT; 
+  boost::shared_ptr<cumulTimer> blockintegrals; 
+  boost::shared_ptr<cumulTimer> blocksites; 
+  boost::shared_ptr<cumulTimer> statetensorproduct; 
+  boost::shared_ptr<cumulTimer> statecollectquanta; 
   boost::shared_ptr<cumulTimer> guessgenT; 
   boost::shared_ptr<cumulTimer> multiplierT; 
   boost::shared_ptr<cumulTimer> operrotT; 
@@ -256,6 +281,7 @@ class Input {
   //const bool& doStateSpecific() const {return m_doStateSpecific;}
   //bool& doStateSpecific() {return m_doStateSpecific;}
   const double& baseEnergy() const {return m_baseEnergy;}
+  const int& num_occupied_orbitals() const {return m_occupied_orbitals;}
   const bool& doimplicitTranspose() const {return m_implicitTranspose;}
   bool& setimplicitTranspose() {return m_implicitTranspose;}
   const bool& setStateSpecific() const {return m_stateSpecific;}
@@ -345,11 +371,13 @@ class Input {
   const std::vector<int> &spin_vector() const { return m_spin_vector; }
   const std::string &save_prefix() const { return m_save_prefix; }
   const std::string &load_prefix() const { return m_load_prefix; }
+  SpinQuantum& set_molecule_quantum() {return m_molecule_quantum;}
   SpinQuantum effective_molecule_quantum() {
     if (!m_add_noninteracting_orbs) 
       return m_molecule_quantum;
     else 
-      return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), total_symmetry_number());
+      return SpinQuantum(m_molecule_quantum.particleNumber + m_molecule_quantum.totalSpin.getirrep(), SpinSpace(0), m_molecule_quantum.orbitalSymmetry);
+    //return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), total_symmetry_number());
   }
   vector<SpinQuantum> effective_molecule_quantum_vec() {
     vector<SpinQuantum> q;

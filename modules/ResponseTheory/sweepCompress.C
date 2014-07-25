@@ -64,6 +64,7 @@ void SpinAdapted::SweepCompress::BlockDecimateAndCompress (SweepParams &sweepPar
 
   Sweep::makeSystemEnvironmentBigBlocks(system, systemDot, newSystem, environment, environmentDot, newEnvironment, big, sweepParams, dot_with_sys, system.get_integralIndex(), useSlater, targetState, baseState);
 
+
   //analyse_operator_distribution(big);
   dmrginp.guessgenT -> stop();
   dmrginp.multiplierT -> start();
@@ -132,7 +133,7 @@ void SpinAdapted::SweepCompress::BlockDecimateAndCompress (SweepParams &sweepPar
   if (sweepParams.get_noise() > NUMERICAL_ZERO) {
     pout << "adding noise  "<<trace(bratracedMatrix)<<"  "<<sweepiter<<"  "<<dmrginp.weights(sweepiter)[0]<<endl;
     bratracedMatrix.add_onedot_noise_forCompression(solution[0], newbig, sweepParams.get_noise()*max(1.0,trace(bratracedMatrix)));
-    pout << "after noise  "<<trace(bratracedMatrix)<<endl;
+    pout << "after noise  "<<trace(bratracedMatrix)<<"  "<<sweepParams.get_noise()<<endl;
   }
 
   environment.clear();
@@ -512,7 +513,6 @@ void SpinAdapted::SweepCompress::Startup (SweepParams &sweepParams, SpinBlock& s
     keterror = makeRotateMatrix(kettracedMatrix, ketrotateMatrix, newbig.get_rightBlock()->get_ketStateInfo().totalStates, 0);
     braerror = makeRotateMatrix(bratracedMatrix, brarotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
   }
-
 #ifndef SERIAL
   mpi::communicator world;
   broadcast(world, ketrotateMatrix, 0);
@@ -532,7 +532,6 @@ void SpinAdapted::SweepCompress::Startup (SweepParams &sweepParams, SpinBlock& s
 
 
   newSystem.transform_operators(brarotateMatrix, ketrotateMatrix);
-
 
 
 
@@ -617,7 +616,7 @@ void SpinAdapted::SweepCompress::WavefunctionCanonicalize (SweepParams &sweepPar
   
   //make the baseState
   int originalOutputlevel = dmrginp.outputlevel();
-  dmrginp.setOutputlevel() = -1;
+  //dmrginp.setOutputlevel() = -1;
   
   
   

@@ -21,7 +21,8 @@ namespace SpinAdapted{
 enum {
   NO_PARTICLE_SPIN_NUMBER_CONSTRAINT,
   PARTICLE_SPIN_NUMBER_CONSTRAINT,
-  SPIN_NUMBER_CONSTRAINT
+  SPIN_NUMBER_CONSTRAINT,
+  PARTICLE_NUMBER_CONSTRAINT
 };
 
 enum {
@@ -29,6 +30,7 @@ enum {
   LessThanQ, 
   EqualQ,
   EqualS,
+  LessThanN,
   WITH_LIST /*< states are added together if the are allowed by the quantaList */
 };
 

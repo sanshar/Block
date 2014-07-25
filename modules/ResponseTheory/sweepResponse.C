@@ -141,7 +141,6 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
     temp.Clear();
     perturbationBig.multiplyOverlap(iwave, &temp, MAX_THRD);
     lowerStates[0] = temp;
-    pout << "overlaps "<<DotProduct(iwave, iwave)<<"  "<<DotProduct(lowerStates[0], lowerStates[0])<<"  "<<DotProduct(lowerStates[1], lowerStates[1])<<endl;
     
     if (mpigetrank() != 0) {
       lowerStates[0].CleanUp();
@@ -188,7 +187,7 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
 
 
   //<target|O|base>
-  //dmrginp.setOutputlevel() = -1; 
+  dmrginp.setOutputlevel() = -1; 
   {
     int originalOutputlevel = dmrginp.outputlevel();
     //dmrginp.setOutputlevel() = -1;
@@ -230,12 +229,15 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
     mpi::communicator world;
     broadcast(world, iwave, 0);
 #endif
+    dmrginp.setOutputlevel() = 10;
+    pout << "noise "<<sweepParams.get_noise()<<endl;
     if (sweepParams.get_noise() > NUMERICAL_ZERO) {
       int sweepiter = sweepParams.get_sweep_iter();
       pout << "adding noise  "<<trace(bratracedMatrix)<<"  "<<sweepiter<<"  "<<dmrginp.weights(sweepiter)[0]<<endl;
       bratracedMatrix.add_onedot_noise_forCompression(iwave, perturbationnewbig, sweepParams.get_noise()*max(1e-5,trace(bratracedMatrix)));
       pout << "after noise  "<<trace(bratracedMatrix)<<endl;
     }
+    dmrginp.setOutputlevel() = -1;
     double braerror = makeRotateMatrix(bratracedMatrix, rotatematrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
     
     std::vector<Matrix> ketrotatematrix;
@@ -283,6 +285,7 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
     pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
     pout << *dmrginp.oneelecT<<" "<<*dmrginp.twoelecT<<" "<<*dmrginp.hmultiply<<" "<<*dmrginp.couplingcoeff<<" hmult"<<endl;
     pout << *dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<" build block"<<endl;
+    pout << *dmrginp.blockintegrals<<"  "<<*dmrginp.blocksites<<"  "<<*dmrginp.statetensorproduct<<"  "<<*dmrginp.statecollectquanta<<"  "<<*dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<" build sum block"<<endl;
     pout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
     pout << *dmrginp.addnoise<<" "<<*dmrginp.s0time<<" "<<*dmrginp.s1time<<" "<<*dmrginp.s2time<<endl;
   }
@@ -300,6 +303,11 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
   std::vector<double> finalEnergy(1,1.0e10);
   double finalError = 0.;
 
+  if (restart) {
+    finalEnergy = sweepParams.get_lowest_energy();
+    finalError = sweepParams.get_lowest_error();
+  }
+
   sweepParams.set_sweep_parameters();
   // a new renormalisation sweep routine
   pout << endl;
@@ -315,7 +323,8 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
 
   {
     SpinBlock perturbationSystem;
-    InitBlocks::InitStartingBlock (perturbationSystem,forward, targetState, targetState,
+    perturbationSystem.set_integralIndex() = perturbationIntegral;
+    InitBlocks::InitStartingBlock (perturbationSystem,forward, targetState, baseState,
 				   sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), 
 				   restartSize, restart, warmUp, perturbationIntegral);
     SpinBlock::store (forward, system.get_sites(), perturbationSystem, targetState, baseState);
@@ -334,6 +343,14 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
 
   bool dot_with_sys = true;
   vector<int> syssites = system.get_sites();
+
+  if (restart)
+  {
+    if (sweepParams.get_onedot() && forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)
+      dot_with_sys = false;
+    if (sweepParams.get_onedot() && !forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
+      dot_with_sys = false;
+  }
 
  // get_n_iters() returns the number of blocking iterations needed in one sweep
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
@@ -432,7 +449,8 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
   //pout << "\t\t\t Sweep Energy for Sweep with " << sweepParams.get_keep_states() << " states is " << finalEnergy[0] << endl;
   sweepParams.set_largest_dw() = finalError;
   
-  printf("\t\t\t M = %6i  state = %4i  Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), 0, finalError, finalEnergy[0]);
+  if (mpigetrank() == 0)
+    printf("\t\t\t M = %6i  state = %4i  Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), 0, finalError, finalEnergy[0]);
 
   pout << "\t\t\t ============================================================================ " << endl;
 
@@ -490,6 +508,7 @@ void SpinAdapted::SweepResponse::StartUp (SweepParams &sweepParams, SpinBlock& s
 				   sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), 
 				   DISTRIBUTED_STORAGE, haveNormOps, haveCompOps);
     
+    dmrginp.guessgenT -> stop();
     LoadRotationMatrix (newSystem.get_sites(), brarotateMatrix, correctionVector);
     Wavefunction targetWave;
     StateInfo s;
@@ -521,6 +540,7 @@ void SpinAdapted::SweepResponse::StartUp (SweepParams &sweepParams, SpinBlock& s
   
   //<target| V |base>
   {
+    dmrginp.guessgenT -> start();
     int perturbationIntegral = 1;
     SpinBlock perturbationSystemDot, perturbationSystem, perturbationNewSystem;
     perturbationSystem.set_integralIndex() = perturbationIntegral;
@@ -534,6 +554,8 @@ void SpinAdapted::SweepResponse::StartUp (SweepParams &sweepParams, SpinBlock& s
 				   DISTRIBUTED_STORAGE, haveNormOps, haveCompOps);
 
     
+    dmrginp.guessgenT -> stop();
+
     LoadRotationMatrix (newSystem.get_sites(), ketrotateMatrix, baseState);
     
 #ifndef SERIAL
@@ -561,6 +583,7 @@ void SpinAdapted::SweepResponse::StartUp (SweepParams &sweepParams, SpinBlock& s
     pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
     pout << *dmrginp.oneelecT<<" "<<*dmrginp.twoelecT<<" "<<*dmrginp.hmultiply<<" "<<*dmrginp.couplingcoeff<<" hmult"<<endl;
     pout << *dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<" build block"<<endl;
+    pout << *dmrginp.blockintegrals<<"  "<<*dmrginp.blocksites<<"  "<<*dmrginp.statetensorproduct<<"  "<<*dmrginp.statecollectquanta<<"  "<<*dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<" build sum block"<<endl;
     pout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
     pout << *dmrginp.addnoise<<" "<<*dmrginp.s0time<<" "<<*dmrginp.s1time<<" "<<*dmrginp.s2time<<endl;
   }
@@ -614,8 +637,6 @@ void SpinAdapted::SweepResponse::WavefunctionCanonicalize (SweepParams &sweepPar
   newSystem.set_loopblock(false);  environmentDot.set_loopblock(false); 
   InitBlocks::InitBigBlock(newSystem, environmentDot, big);
 
-  
-  
   //analyse_operator_distribution(big);
   dmrginp.guessgenT -> stop();
   dmrginp.multiplierT -> start();
@@ -653,9 +674,15 @@ void SpinAdapted::SweepResponse::WavefunctionCanonicalize (SweepParams &sweepPar
   }
   
   
-  
   Wavefunction targetWave;
-  GuessWave::transform_previous_twodot_to_onedot_wavefunction(targetWave, big, targetState);
+  pout << "transform previous"<<endl;
+  if (!mpigetrank())
+    GuessWave::transform_previous_twodot_to_onedot_wavefunction(targetWave, big, targetState);
+
+#ifndef SERIAL
+    mpi::communicator world;
+    broadcast(world, targetWave, 0);
+#endif
 
   
   DensityMatrix bratracedMatrix;
@@ -665,8 +692,8 @@ void SpinAdapted::SweepResponse::WavefunctionCanonicalize (SweepParams &sweepPar
   if (!mpigetrank())
     double error = makeRotateMatrix(bratracedMatrix, rotatematrix, largeNumber, sweepParams.get_keep_qstates());
   
+  pout << "broadcast rotate"<<endl;
 #ifndef SERIAL
-  mpi::communicator world;
   broadcast(world, rotatematrix, 0);
 #endif
 
@@ -710,9 +737,15 @@ void SpinAdapted::SweepResponse::WavefunctionCanonicalize (SweepParams &sweepPar
     InitBlocks::InitBigBlock(overlapnewsystem, overlapenvironmentDot, overlapBig);
 
     
+    pout << "transform iwave"<<endl;
     Wavefunction iwave;
-    GuessWave::transform_previous_twodot_to_onedot_wavefunction(iwave, overlapBig, baseState);
+    if (!mpigetrank())
+      GuessWave::transform_previous_twodot_to_onedot_wavefunction(iwave, overlapBig, baseState);
 
+#ifndef SERIAL
+    mpi::communicator world;
+    broadcast(world, iwave, 0);
+#endif
 
     std::vector<Matrix> ketrotatematrix;
     DensityMatrix tracedMatrix;
@@ -722,8 +755,8 @@ void SpinAdapted::SweepResponse::WavefunctionCanonicalize (SweepParams &sweepPar
     if (!mpigetrank())
       double error = makeRotateMatrix(tracedMatrix, ketrotatematrix, largeNumber, sweepParams.get_keep_qstates());
     
+    pout << "broadcast ketrot"<<endl;
 #ifndef SERIAL
-    mpi::communicator world;
     broadcast(world, ketrotatematrix, 0);
 #endif
     

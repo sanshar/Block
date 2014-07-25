@@ -57,6 +57,7 @@ void calculateOverlap();
 void dmrg(double sweep_tol);
 void compress(double sweep_tol, int targetState, int baseState);
 void responseSweep(double sweep_tol, int targetState, int correctionVector, int baseState);
+void restartResponseSweep(double sweep_tol, int targetState, int correctionVector, int baseState);
 void restart(double sweep_tol, bool reset_iter);
 void dmrg_stateSpecific(double sweep_tol, int targetState);
 void ReadInput(char* conf);
@@ -164,15 +165,20 @@ int calldmrg(char* input, char* output)
     //compressing the V|\Psi_0>, here \Psi_0 is the basestate and 
     //its product with V will have a larger bond dimension and is being compressed
     //it is called the target state
-
     dmrginp.setimplicitTranspose() = false;
     targetState=2;correctionVector = 1; baseState = 0;
-    pout << "DONE COMPRESSING THE CORRECTION VECTOR"<<endl;
-    pout << "NOW WE WILL OPTIMIZE THE RESPONSE WAVEFUNCTION"<<endl;
-
-
-    //finally now calculate the response state
-    responseSweep(sweep_tol, targetState, correctionVector, baseState);
+    if (RESTART && !FULLRESTART)
+      restartResponseSweep(sweep_tol, targetState, correctionVector, baseState);
+    else if (FULLRESTART) {
+      fullrestartGenblock();
+      restartResponseSweep(sweep_tol, targetState, correctionVector, baseState);
+    }
+    else { 
+      pout << "DONE COMPRESSING THE CORRECTION VECTOR"<<endl;
+      pout << "NOW WE WILL OPTIMIZE THE RESPONSE WAVEFUNCTION"<<endl;
+      //finally now calculate the response state
+      responseSweep(sweep_tol, targetState, correctionVector, baseState);
+    }
 
     break;
   case (CALCOVERLAP):
@@ -310,7 +316,10 @@ void fullrestartGenblock() {
   sweepParams.set_sweep_iter() = 0;
   restartsize = 0;
 
-  SweepGenblock::do_one(sweepParams, false, !direction, RESTART, restartsize, -1, -1);
+  if (dmrginp.calc_type() == RESPONSE) 
+    SweepResponse::do_one(sweepParams, true, !direction, false, restartsize, 2, 2, 0);
+  else
+    SweepGenblock::do_one(sweepParams, false, !direction, RESTART, restartsize, -1, -1);
   
   sweepParams.restorestate(direction, restartsize);
   sweepParams.set_sweep_iter()=0;
@@ -601,6 +610,49 @@ void responseSweep(double sweep_tol, int targetState, int correctionVector, int 
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
       last_be = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, correctionVector, baseState);
+      if (dmrginp.outputlevel() > 0) 
+	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      
+      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+	break;
+      
+      direction = true;
+      last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, correctionVector, baseState);
+
+      
+      if (dmrginp.outputlevel() > 0)
+	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      
+    }
+  
+}
+
+
+void restartResponseSweep(double sweep_tol, int targetState, int correctionVector, int baseState)
+{
+  double last_fe = 10.e6;
+  double last_be = 10.e6;
+  double old_fe = 0.;
+  double old_be = 0.;
+  SweepParams sweepParams;
+  bool direction, warmUp=false, restart=true;
+  int restartSize=0;
+
+  sweepParams.restorestate(direction, restartSize);
+
+  sweepParams.current_root() = -1;
+
+  last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, correctionVector, baseState);
+
+  warmUp = false;
+  restart = false;
+  while ( true)
+    {
+      old_fe = last_fe;
+      old_be = last_be;
+      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+	break;
+      last_be = SweepResponse::do_one(sweepParams, warmUp, !direction, restart, restartSize, targetState, correctionVector, baseState);
       if (dmrginp.outputlevel() > 0) 
 	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       

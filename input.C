@@ -73,6 +73,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_stateSpecific = false;
   m_implicitTranspose = true; //dont make DD just use CC^T to evaluate it
   m_baseEnergy = -1.e10;
+  m_occupied_orbitals = -1;
   m_num_Integrals = 1;
   v_2.resize(1, TwoElectronArray(TwoElectronArray::restrictedNonPermSymm));
   v_1.resize(1);
@@ -81,7 +82,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_Bogoliubov = false;
   m_sys_add = 1;
   m_env_add = 1;
-
+  
   m_twodot_to_onedot_iter = 0;
   m_integral_disk_storage_thresh = 1000;
   m_max_lanczos_dimension = 5000;
@@ -290,6 +291,16 @@ SpinAdapted::Input::Input(const string& config_name) {
 	pout<<"--------------------------------------------------------------------"<<endl;
 	m_implicitTranspose = false;
       }
+      else if (boost::iequals(keyword, "occ")) {
+	if (tok.size() != 2) {
+	  pout << "keyword occ should be followed by a single number and then an end line"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}	
+	m_occupied_orbitals = atoi(tok[1].c_str());
+      }
+
       else if (boost::iequals(keyword, "lastM")) {
 	if(usedkey[LASTM] == 0) 
 	  usedkey_error(keyword, msg);
@@ -1741,6 +1752,11 @@ void SpinAdapted::Input::performSanityTest()
   }
   else
     Symmetry::irrepAllowed(m_total_symmetry_number.getirrep());
+
+  if (m_calc_type == RESPONSE && m_occupied_orbitals == -1) {
+    pout << "For response type of calculation, number of occupied orbitals must be specified"<<endl;
+    abort();
+  }
 
   //this is important so the user cannot break the code
   if (m_schedule_type_default && !m_schedule_type_backward) {
