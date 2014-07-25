@@ -10,6 +10,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/format.hpp>
 #include "threepdm_container.h"
 #include "npdm_permutations.h"
+#include <boost/filesystem.hpp>
+#include <boost/range/algorithm.hpp>
 
 namespace SpinAdapted{
 namespace Npdm{
@@ -18,18 +20,14 @@ namespace Npdm{
 
 Threepdm_container::Threepdm_container( int sites )
 {
-  store_nonredundant_spin_elements_ = true;
-  store_full_spin_array_ = true;
-  store_full_spatial_array_ = true;
-
-  if ( store_full_spin_array_ ) {
+  if ( dmrginp.store_spinpdm() ) {
     if(dmrginp.spinAdapted())
       threepdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);
     else
       threepdm.resize(sites,sites,sites,sites,sites,sites);
     threepdm.Clear();
   } 
-  if ( store_full_spatial_array_ ) {
+  if ( !dmrginp.spatpdm_disk_dump() ) {
     if(dmrginp.spinAdapted())
       spatial_threepdm.resize(sites,sites,sites,sites,sites,sites);
     else
@@ -37,7 +35,23 @@ Threepdm_container::Threepdm_container( int sites )
     spatial_threepdm.Clear();
   }
 
+  else{
+    elements_stride_.resize(6);
+    for(int i=0; i<6; i++ )
+      elements_stride_[i]=pow(sites,5-i);
+
+    char file[5000];
+    sprintf (file, "%s%s%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.",mpigetrank(),".tmp");
+    //std::ofstream spatpdm_disk(file, std::ios::binary);
+    spatpdm_disk=fopen(file,"wb");
+    //32M buffer;
+    setvbuf(spatpdm_disk,NULL,_IOFBF,1024*1024*32);
+    //spatpdm_disk.open(file, std::ios::binary);
+    //spatpdm_disk.close();
+  }
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -48,16 +62,16 @@ void Threepdm_container::save_npdms(const int& i, const int& j)
   world.barrier();
 #endif
   Timer timer;
-  if ( store_full_spin_array_ ) {
+  if ( dmrginp.store_spinpdm() ) {
     accumulate_npdm();
     save_npdm_binary(i, j);
     save_npdm_text(i, j);
   }
-  if ( store_full_spatial_array_ ) {
+  if ( !dmrginp.spatpdm_disk_dump() ) {
     accumulate_spatial_npdm();
-    save_spatial_npdm_binary(i, j);
     save_spatial_npdm_text(i, j);
   }
+  save_spatial_npdm_binary(i, j);
 
 #ifndef SERIAL
   world.barrier();
@@ -135,21 +149,122 @@ void Threepdm_container::save_npdm_binary(const int &i, const int &j)
     save << threepdm;
     ofs.close();
   }
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Threepdm_container::external_sort_index(const int &i, const int &j)
+{
+
+  boost::sort(nonspin_batch);
+#ifndef SERIAL
+  boost::mpi::communicator world;
+  if(mpigetrank() != 0){
+      world.send(0,0, nonspin_batch);
+  }
+  else{
+    //Store index from different processors on disk of root node.
+    for(int p=0; p< world.size();p++){
+      if(p!=0){
+        world.recv(p,0, nonspin_batch);
+      }
+      char file[5000];
+      //batch_index tmpbuffer[1000000];
+      //std::copy(nonspin_batch.begin(),nonspin_batch.end(),tmpbuffer);
+      sprintf (file, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm_index.", i, j,p,".bin");
+      FILE* inputfile=fopen(file,"wb");
+      fwrite(&nonspin_batch[0],sizeof(batch_index),nonspin_batch.size(),inputfile);
+      fclose(inputfile);
+      nonspin_batch.clear();
+    }
+    //external sort nonspin_batch
+    //TODO
+    //It is not parallel.
+    char outfilename[5000];
+    sprintf (outfilename, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm_index.",i,j,".bin");
+    FILE* outputfile = fopen(outfilename,"wb");
+    long sorting_buff= 1024*1024*(32/world.size());
+    //For batch_index, the sorting buff is about 96M/world.size();
+    std::vector<cache<batch_index>> filecache;
+    for(int p=0; p< world.size();p++){
+      char file[5000];
+      sprintf (file, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm_index.", i, j,p,".bin");
+      cache<batch_index> tmpcache( file, sorting_buff);
+      filecache.push_back(tmpcache);
+    }
+    long outputbuffsize=sorting_buff*4;
+    long outputbuff_position = 0;
+    batch_index outputbuff[outputbuffsize];
+    for(;;){
+      // select the smallest one in the current positions of different caches.
+      int smallest = 0;
+      for(int i=1 ; i< filecache.size(); i++){
+        if(filecache[i].value() < filecache[smallest].value())
+          smallest =i;
+      }
+      outputbuff[outputbuff_position++]=filecache[smallest].value();
+
+      if(!filecache[smallest].forward()){
+        filecache[smallest].clear();
+        filecache.erase(filecache.begin()+smallest);
+        if (filecache.size()==0) {
+        fwrite(outputbuff,sizeof(batch_index),outputbuff_position,outputfile);
+        break;
+        }
+      }
+
+      if(outputbuff_position == outputbuffsize){
+        fwrite(outputbuff,sizeof(batch_index),outputbuffsize,outputfile);
+        outputbuff_position=0;
+      }
+
+      }
+      fclose(outputfile);
+      //Finish external sort of index.
+
+      //Clean up.
+      for(int p=0; p< world.size();p++){
+        char file[5000];
+        sprintf (file, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm_index.", i, j,p,".bin");
+        boost::filesystem::remove(file);
+      }
+    }
+#else
+    char file[5000];
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/threepdm_index.", i, j,".bin");
+    FILE* outfile=fopen(file,"wb");
+    fwrite(&nonspin_batch[0],sizeof(batch_index),nonspin_batch.size(),outfile);
+    nonspin_batch.clear();
+#endif
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Threepdm_container::save_spatial_npdm_binary(const int &i, const int &j)
-{
-  if( mpigetrank() == 0)
+{ 
+  if(!dmrginp.spatpdm_disk_dump())
   {
-    char file[5000];
-    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j,".bin");
-    std::ofstream ofs(file, std::ios::binary);
-    boost::archive::binary_oarchive save(ofs);
-    save << spatial_threepdm;
-    ofs.close();
+    if( mpigetrank() == 0)
+    {
+      char file[5000];
+      sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.",i,j,".bin");
+      std::ofstream ofs(file, std::ios::binary);
+      boost::archive::binary_oarchive save(ofs);
+      save << spatial_threepdm;
+      ofs.close();
+    }
   }
+  else{
+    fclose(spatpdm_disk);
+    //When spatpdm_disk is opened, the state numbers, i and j, are not known. 
+    char oldfile[5000];
+    sprintf (oldfile, "%s%s%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.",mpigetrank(),".tmp");
+    char newfile[5000];
+    sprintf (newfile, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.",i,j,mpigetrank(),".bin");
+    boost::filesystem::rename(oldfile,newfile);
+    external_sort_index(i,j);
+}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -186,8 +301,7 @@ void Threepdm_container::accumulate_npdm()
     world.send(0, mpigetrank(), threepdm);
   }
 #endif
-}
-
+} 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Threepdm_container::accumulate_spatial_npdm()
@@ -285,6 +399,105 @@ void Threepdm_container::update_full_spatial_array( std::vector< std::pair< std:
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+long Threepdm_container::oneindex_spin(const std::vector<int> & orbital_element_index)
+{
+  // Take into account orbital reordering
+  const std::vector<int>& ro = dmrginp.reorder_vector();
+
+  assert( orbital_element_index.size() == 6);
+  long linearindex=0;
+  for(int i=0; i< 6; i++)
+    linearindex+=(ro.at(orbital_element_index[i]/2))*elements_stride_[i];
+  return linearindex;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+void Threepdm_container::dump_to_disk(std::vector< std::pair< std::vector<int>, double > > & spin_batch)
+{
+  long spatpdm_disk_position= ftell(spatpdm_disk);
+  std::map < long, double>  index_and_elements;
+  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
+    assert( (it->first).size() == 6 );
+
+    // Store significant elements only
+    if ( abs(it->second) > NUMERICAL_ZERO ) {
+      if ( it->first[0]%2 != it->first[5]%2 ) continue;
+      if ( it->first[1]%2 != it->first[4]%2 ) continue;
+      if ( it->first[2]%2 != it->first[3]%2 ) continue;
+      long linearindex = oneindex_spin(it->first);
+      std::map < long, double>::iterator findit= index_and_elements.find(linearindex);
+      if(findit == index_and_elements.end()){
+        index_and_elements.insert(std::pair<long,double>(linearindex,it->second));
+      }
+      else
+        findit->second += it->second;
+    }
+  }
+  if(index_and_elements.size()==0) return;
+  index_element index_elements[72];
+  assert(72>= index_and_elements.size());
+  int i=0;
+  for(auto it = index_and_elements.begin(); it!=index_and_elements.end();it++){
+    index_elements[i].index=it->first;
+    index_elements[i].element=it->second;
+    i++;
+  }
+  fwrite(index_elements,sizeof(index_element),index_and_elements.size(),spatpdm_disk);
+  batch_index onerecord(index_and_elements.begin()->first,spatpdm_disk_position/sizeof(index_element),index_and_elements.size(),mpigetrank());
+  nonspin_batch.push_back(onerecord);
+
+
+  //char file[5000];
+  //sprintf (file, "%s%s%d%s", dmrginp.save_prefix().c_str(),"/testspatial_threepdm.",mpigetrank(),".bin");
+  //std::ofstream spatpdm_disk(file, std::ios::ate| std::ios::binary);
+  //spatpdm_disk.open(file, std::ios::binary);
+  //boost::archive::binary_oarchive save(spatpdm_disk);
+  //for(auto it= index_elements.begin(); it!=index_elements.end(); it++)
+  //{
+  //  //cout <<"element:  "<<it-> index<< "\t\t"<<it->element<<endl;
+  //  save << *it;
+  //  //spatpdm_disk << it->index;
+  //  //spatpdm_disk << it->element;
+
+  //}
+  //spatpdm_disk.close();
+  
+#if 0
+#ifndef SERIAL
+  //mpi 
+  boost::mpi::communicator world;
+  std::vector<std::map < long, double>> indexelement_array;
+
+  // dump std::map of index and elements into disk;
+  if(mpigetrank()==0){
+    boost::mpi::gather(world, index_and_elements, indexelement_array, 0);
+    std::map < long, double> elements;
+    for(auto it = indexelement_array.begin(); it!=indexelement_array.end();it++)
+      elements.insert(it->begin(),it->end());
+
+    for(auto it = elements.begin(); it!=elements.end();it++)
+    {
+      spatialpdm_disk.seekp(it->first*sizeof(double),ios::beg);
+        spatialpdm_disk << it->second;
+    }
+  }
+  else
+    boost::mpi::gather(world, index_and_elements, 0);
+
+#else
+    for(auto it = index_and_elements.begin(); it!=index_and_elements.end();it++)
+    {
+     // spatialpdm_disk.seekp(it->first*sizeof(double),ios_base::beg);
+      spatialpdm_disk.seekp((it->first)*sizeof(double));
+      spatialpdm_disk << it->second;
+    }
+#endif
+#endif
+}
+
+
 void Threepdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
   assert( new_spin_orbital_elements.size() == 20 );
@@ -293,10 +506,17 @@ void Threepdm_container::store_npdm_elements( const std::vector< std::pair< std:
   // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
   perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
 
-  //FIXME add options to dump to disk if memory becomes bottleneck
-  if ( ! store_nonredundant_spin_elements_ ) nonredundant_elements.clear();
-  if ( store_full_spin_array_ ) update_full_spin_array( spin_batch );
-  if ( store_full_spatial_array_ ) update_full_spatial_array( spin_batch );
+  if ( dmrginp.store_spinpdm() ) update_full_spin_array( spin_batch );
+  if ( !dmrginp.spatpdm_disk_dump() ) update_full_spatial_array( spin_batch );
+  //TODO, it is feasible to dump only nonredundant elements.
+  //It will make the reading of data more complicate. 
+  else{
+    if(dmrginp.store_nonredundant_pdm()) 
+      dump_to_disk(nonredundant_elements);
+    else
+      dump_to_disk(spin_batch);
+  }
+  if ( ! dmrginp.store_nonredundant_pdm() || dmrginp.spatpdm_disk_dump() ) nonredundant_elements.clear();
 }
 
 //===========================================================================================================================================================

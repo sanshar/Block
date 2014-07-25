@@ -10,6 +10,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/format.hpp>
 #include "fourpdm_container.h"
 #include "npdm_permutations.h"
+#include <boost/range/algorithm.hpp>
+#include <boost/filesystem.hpp>
 
 namespace SpinAdapted{
 namespace Npdm{
@@ -18,18 +20,18 @@ namespace Npdm{
 
 Fourpdm_container::Fourpdm_container( int sites )
 {
-  store_nonredundant_spin_elements_ = true;
-  store_full_spin_array_ = false;
-  store_full_spatial_array_ = true;
+  elements_stride_.resize(8);
+  for(int i=0; i<8; i++ )
+    elements_stride_[i]=pow(sites,7-i);
 
-  if ( store_full_spin_array_ ) {
+  if ( dmrginp.store_spinpdm() ) {
     if(dmrginp.spinAdapted())
       fourpdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);
     else
       fourpdm.resize(sites,sites,sites,sites,sites,sites,sites,sites);
     fourpdm.Clear();
   } 
-  if ( store_full_spatial_array_ ) {
+  if ( !dmrginp.spatpdm_disk_dump() ){
     if(dmrginp.spinAdapted())
       spatial_fourpdm.resize(sites,sites,sites,sites,sites,sites,sites,sites);
     else
@@ -37,6 +39,16 @@ Fourpdm_container::Fourpdm_container( int sites )
     spatial_fourpdm.Clear();
   } 
 
+  else{
+    char file[5000];
+    sprintf (file, "%s%s%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",mpigetrank(),".tmp");
+    //std::ofstream spatpdm_disk(file, std::ios::binary);
+    spatpdm_disk=fopen(file,"wb");
+    //32M buffer;
+    setvbuf(spatpdm_disk,NULL,_IOFBF,1024*1024*32);
+    //spatpdm_disk.open(file, std::ios::binary);
+    //spatpdm_disk.close();
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -48,16 +60,16 @@ void Fourpdm_container::save_npdms(const int& i, const int& j)
   world.barrier();
 #endif
   Timer timer;
-  if ( store_full_spin_array_ ) {
+  if ( dmrginp.store_spinpdm() ) {
     accumulate_npdm();
     save_npdm_binary(i, j);
     save_npdm_text(i, j);
   } 
-  if ( store_full_spatial_array_ ) {
+  if ( !dmrginp.spatpdm_disk_dump() ) {
     accumulate_spatial_npdm();
-    save_spatial_npdm_binary(i, j);
     save_spatial_npdm_text(i, j);
   } 
+  save_spatial_npdm_binary(i, j);
     
 #ifndef SERIAL
   world.barrier();
@@ -143,17 +155,116 @@ void Fourpdm_container::save_npdm_binary(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+void Fourpdm_container::external_sort_index(const int &i, const int &j)
+{
+
+  boost::sort(nonspin_batch);
+#ifndef SERIAL
+  boost::mpi::communicator world;
+  if(mpigetrank() != 0){
+      world.send(0,0, nonspin_batch);
+  }
+  else{
+    //Store index from different processors on disk of root node.
+    for(int p=0; p< world.size();p++){
+      if(p!=0){
+        world.recv(p,0, nonspin_batch);
+      }
+      char file[5000];
+      //batch_index tmpbuffer[1000000];
+      //std::copy(nonspin_batch.begin(),nonspin_batch.end(),tmpbuffer);
+      sprintf (file, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm_index.", i, j,p,".bin");
+      FILE* inputfile=fopen(file,"wb");
+      fwrite(&nonspin_batch[0],sizeof(batch_index),nonspin_batch.size(),inputfile);
+      fclose(inputfile);
+      nonspin_batch.clear();
+    }
+    //external sort nonspin_batch
+    //TODO
+    //It is not parallel.
+    char outfilename[5000];
+    sprintf (outfilename, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm_index.",i,j,".bin");
+    FILE* outputfile = fopen(outfilename,"wb");
+    long sorting_buff= 1024*1024*(32/world.size());
+    //For batch_index, the sorting buff is about 96M/world.size();
+    std::vector<cache<batch_index>> filecache;
+    for(int p=0; p< world.size();p++){
+      char file[5000];
+      sprintf (file, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm_index.", i, j,p,".bin");
+      cache<batch_index> tmpcache( file, sorting_buff);
+      filecache.push_back(tmpcache);
+    }
+    long outputbuffsize=sorting_buff*4;
+    long outputbuff_position = 0;
+    batch_index outputbuff[outputbuffsize];
+    for(;;){
+      // select the smallest one in the current positions of different caches.
+      int smallest = 0;
+      for(int i=1 ; i< filecache.size(); i++){
+        if(filecache[i].value() < filecache[smallest].value())
+          smallest =i;
+      }
+      outputbuff[outputbuff_position++]=filecache[smallest].value();
+
+      if(!filecache[smallest].forward()){
+        filecache[smallest].clear();
+        filecache.erase(filecache.begin()+smallest);
+        if (filecache.size()==0) {
+        fwrite(outputbuff,sizeof(batch_index),outputbuff_position,outputfile);
+        break;
+        }
+      }
+
+      if(outputbuff_position == outputbuffsize){
+        fwrite(outputbuff,sizeof(batch_index),outputbuffsize,outputfile);
+        outputbuff_position=0;
+      }
+
+      }
+      fclose(outputfile);
+      //Finish external sort of index.
+
+      //Clean up.
+      for(int p=0; p< world.size();p++){
+        char file[5000];
+        sprintf (file, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm_index.", i, j,p,".bin");
+        boost::filesystem::remove(file);
+      }
+    }
+#else
+    char file[5000];
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/fourpdm_index.", i, j,".bin");
+    FILE* outfile=fopen(file,"wb");
+    fwrite(&nonspin_batch[0],sizeof(batch_index),nonspin_batch.size(),outfile);
+    nonspin_batch.clear();
+#endif
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void Fourpdm_container::save_spatial_npdm_binary(const int &i, const int &j)
 {
-  if( mpigetrank() == 0)
+  if(!dmrginp.spatpdm_disk_dump())
   {
-    char file[5000];
-    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.", i, j,".bin");
-    std::ofstream ofs(file, std::ios::binary);
-    boost::archive::binary_oarchive save(ofs);
-    save << spatial_fourpdm;
-    ofs.close();
+    if( mpigetrank() == 0)
+    {
+      char file[5000];
+      sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.", i, j,".bin");
+      std::ofstream ofs(file, std::ios::binary);
+      boost::archive::binary_oarchive save(ofs);
+      save << spatial_fourpdm;
+      ofs.close();
+    }
   }
+  else{
+    fclose(spatpdm_disk);
+    //When spatpdm_disk is opened, the state numbers, i and j, are not known. 
+    char oldfile[5000];
+    sprintf (oldfile, "%s%s%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",mpigetrank(),".tmp");
+    char newfile[5000];
+    sprintf (newfile, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",i,j,mpigetrank(),".bin");
+    boost::filesystem::rename(oldfile,newfile);
+    external_sort_index(i,j);
+}
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -374,6 +485,60 @@ void Fourpdm_container::update_full_spatial_array( std::vector< std::pair< std::
 //
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+long Fourpdm_container::oneindex_spin(const std::vector<int> & orbital_element_index)
+{
+  // Take into account orbital reordering
+  const std::vector<int>& ro = dmrginp.reorder_vector();
+
+  assert( orbital_element_index.size() == 8);
+  long linearindex=0;
+  for(int i=0; i< 8; i++)
+    linearindex+=(ro.at(orbital_element_index[i]/2))*elements_stride_[i];
+  return linearindex;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Fourpdm_container::dump_to_disk(std::vector< std::pair< std::vector<int>, double > > & spin_batch)
+{
+  long spatpdm_disk_position= ftell(spatpdm_disk);
+  std::map < long, double>  index_and_elements;
+  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
+    assert( (it->first).size() == 8 );
+
+    // Store significant elements only
+    if ( abs(it->second) > NUMERICAL_ZERO ) {
+      // Spin indices
+      if ( it->first[0]%2 != it->first[7]%2 ) continue;
+      if ( it->first[1]%2 != it->first[6]%2 ) continue;
+      if ( it->first[2]%2 != it->first[5]%2 ) continue;
+      if ( it->first[3]%2 != it->first[4]%2 ) continue;
+      long linearindex = oneindex_spin(it->first);
+      std::map < long, double>::iterator findit= index_and_elements.find(linearindex);
+      if(findit == index_and_elements.end()){
+        index_and_elements.insert(std::pair<long,double>(linearindex,it->second));
+      }
+      else
+        findit->second += it->second;
+    }
+  }
+  if(index_and_elements.size()==0) return;
+  index_element index_elements[1152];
+  // number of permutation is (4*3*2)*(4*3*2) , and then transpose(x2) .
+  assert(1152>= index_and_elements.size());
+  int i=0;
+  for(auto it = index_and_elements.begin(); it!=index_and_elements.end();it++){
+    index_elements[i].index=it->first;
+    index_elements[i].element=it->second;
+    i++;
+  }
+  fwrite(index_elements,sizeof(index_element),index_and_elements.size(),spatpdm_disk);
+  batch_index onerecord(index_and_elements.begin()->first,spatpdm_disk_position/sizeof(index_element),index_and_elements.size(),mpigetrank());
+  nonspin_batch.push_back(onerecord);
+}
+
+
+//===========================================================================================================================================================
 void Fourpdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
   assert( new_spin_orbital_elements.size() == 70 );
@@ -382,10 +547,15 @@ void Fourpdm_container::store_npdm_elements( const std::vector< std::pair< std::
   // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
   perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
 
-  //FIXME add options to dump to disk if memory becomes bottleneck
-  if ( ! store_nonredundant_spin_elements_ ) nonredundant_elements.clear();
-  if ( store_full_spin_array_ ) update_full_spin_array( spin_batch );
-  if ( store_full_spatial_array_ ) update_full_spatial_array( spin_batch );
+  if ( dmrginp.store_spinpdm() ) update_full_spin_array( spin_batch );
+  if ( !dmrginp.spatpdm_disk_dump() ) update_full_spatial_array( spin_batch );
+  else{
+    if(dmrginp.store_nonredundant_pdm()) 
+      dump_to_disk(nonredundant_elements);
+    else
+      dump_to_disk(spin_batch);
+  }
+  if ( ! dmrginp.store_nonredundant_pdm() || dmrginp.spatpdm_disk_dump() ) nonredundant_elements.clear();
 }
 
 //===========================================================================================================================================================

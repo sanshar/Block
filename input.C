@@ -107,6 +107,10 @@ void SpinAdapted::Input::initialize_defaults()
   m_do_npdm_ops = false;
   m_do_npdm_in_core = false;
   m_new_npdm_code = false;
+  m_store_spinpdm = false;
+  m_spatpdm_disk_dump = false;
+  m_store_nonredundant_pdm =false;
+ 
   m_maxiter = 10;
   m_oneindex_screen_tol = NUMERICAL_ZERO;
   m_twoindex_screen_tol = NUMERICAL_ZERO;
@@ -645,6 +649,18 @@ SpinAdapted::Input::Input(const string& config_name) {
       else if (boost::iequals(keyword,  "do_npdm_in_core"))
       {
         m_do_npdm_in_core = true;
+      }
+      else if (boost::iequals(keyword, "store_spinpdm"))
+      {
+        m_store_spinpdm = true;
+      }
+      else if (boost::iequals(keyword, "disk_dump_pdm"))
+      {
+        m_spatpdm_disk_dump = true;
+      }
+      else if (boost::iequals(keyword, "nonredundant_pdm"))
+      {
+        m_store_nonredundant_pdm = true;
       }
 
 

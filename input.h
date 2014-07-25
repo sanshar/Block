@@ -96,6 +96,9 @@ class Input {
   bool m_do_npdm_ops;
   bool m_do_npdm_in_core;
   bool m_new_npdm_code;
+  bool m_store_spinpdm;
+  bool m_spatpdm_disk_dump;
+  bool m_store_nonredundant_pdm;
   bool m_set_Sz;
   int m_maxiter;
   double m_oneindex_screen_tol;
@@ -134,6 +137,7 @@ class Input {
   bool m_reset_iterations;
   bool m_implicitTranspose;
 
+
   std::vector<int> m_spin_vector;
   std::vector<int> m_spin_orbs_symmetry;
   int m_num_spatial_orbs;
@@ -164,6 +168,7 @@ class Input {
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat ;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform ;
     ar & m_do_npdm_ops & m_do_npdm_in_core & m_new_npdm_code;
+    ar &  m_store_spinpdm &m_spatpdm_disk_dump;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_oneindex_screen_tol & m_twoindex_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type & m_warmup;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
@@ -392,6 +397,12 @@ class Input {
   bool &do_npdm_in_core() {return m_do_npdm_in_core;}
   const bool &new_npdm_code() const {return m_new_npdm_code;}
   bool &new_npdm_code() {return m_new_npdm_code;}
+  const bool &store_spinpdm() const {return m_store_spinpdm;}
+  bool &store_spinpdm() {return m_store_spinpdm;}
+  const bool &spatpdm_disk_dump() const {return m_spatpdm_disk_dump;}
+  bool &spatpdm_disk_dump() {return m_spatpdm_disk_dump;}
+  const bool &store_nonredundant_pdm() const { return m_store_nonredundant_pdm;}
+  bool &store_nonredundant_pdm() { return m_store_nonredundant_pdm;}
   int slater_size() const {return m_norbs;}
   const std::vector<int> &reorder_vector() {return m_reorder;}
   bool spinAdapted() {return m_spinAdapted;}
