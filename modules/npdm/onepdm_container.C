@@ -42,7 +42,10 @@ void Onepdm_container::save_npdms(const int& i, const int& j)
   accumulate_npdm();
   save_npdm_binary(i, j);
   save_npdm_text(i, j);
-  accumulate_spatial_npdm();
+  if(dmrginp.spinAdapted())
+    accumulate_spatial_npdm();
+  else
+    calculate_spatial_npdm();
   save_spatial_npdm_binary(i, j);
   save_spatial_npdm_text(i, j);
 #ifndef SERIAL
@@ -167,8 +170,23 @@ void Onepdm_container::accumulate_spatial_npdm()
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+void Onepdm_container::calculate_spatial_npdm()
+{
+  const std::vector<int>& ro = dmrginp.reorder_vector();
+  mpi::communicator world;
+  if( mpigetrank() == 0) {
+    for(int k=0;k<spatial_onepdm.dim1();++k)
+      for(int l=0;l<spatial_onepdm.dim2();++l)
+            spatial_onepdm(ro.at(k),ro.at(l))= onepdm(2*k,2*l)+onepdm(2*k+1,2*l+1);
+
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void Onepdm_container::update_full_spin_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
 {
+  const std::vector<int>& ro = dmrginp.reorder_vector();
   for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
     int i = (it->first)[0];
     int j = (it->first)[1];
@@ -178,7 +196,7 @@ void Onepdm_container::update_full_spin_array( std::vector< std::pair< std::vect
 //    std::cout << "so-onepdm val: i,j = " << i << "," << j << "\t\t" << val << endl;
 
     // Test for duplicates
-    if ( onepdm(i, j) != 0.0 ) {
+    if ( onepdm( ro.at(i/2), ro.at(j/2) ) != 0.0 ) {
       cout << "WARNING: Already calculated "<<i<<" "<<j<<endl;
       cout << "earlier value: "<<onepdm(i,j)<<endl<< "new value:     "<<val<<endl;
       abort();
@@ -248,8 +266,10 @@ void Onepdm_container::store_npdm_elements( const std::vector< std::pair< std::v
   // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
   perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
 
+  //if ( store_full_spin_array_ || !dmrginp.spinAdapted() ) update_full_spin_array( spin_batch );
   update_full_spin_array( spin_batch );
-  update_full_spatial_array( spin_batch );
+  if(dmrginp.spinAdapted())
+    update_full_spatial_array( spin_batch );
 }
 
 //===========================================================================================================================================================

@@ -53,7 +53,10 @@ void Twopdm_container::save_npdms(const int& i, const int& j)
     save_npdm_text(i, j);
   }
   if ( store_full_spatial_array_ ) {
-    accumulate_spatial_npdm();
+    if(dmrginp.spinAdapted())
+      accumulate_spatial_npdm();
+    else
+      calculate_spatial_npdm();
     save_spatial_npdm_binary(i, j);
     save_spatial_npdm_text(i, j);
   }
@@ -183,7 +186,11 @@ void Twopdm_container::accumulate_spatial_npdm()
             for(int n=0;n<spatial_twopdm.dim4();++n)
               if ( abs(tmp_recv(k,l,m,n)) > NUMERICAL_ZERO) {
                 // Test for duplicates
-                if ( abs(spatial_twopdm(k,l,m,n)) > NUMERICAL_ZERO ) abort();
+                if ( abs(spatial_twopdm(k,l,m,n)) > NUMERICAL_ZERO ){
+
+                abort();
+                cout << "duplicates"<<endl;
+                }
                 spatial_twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
               }
 	 }
@@ -218,6 +225,23 @@ void Twopdm_container::update_full_spin_array( std::vector< std::pair< std::vect
     twopdm(i,j,k,l) = val;
   }
 
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Twopdm_container::calculate_spatial_npdm()
+{
+  const std::vector<int>& ro = dmrginp.reorder_vector();
+  double factor = 0.5;
+  mpi::communicator world;
+  if( mpigetrank() == 0) {
+    for(int k=0;k<spatial_twopdm.dim1();++k)
+      for(int l=0;l<spatial_twopdm.dim2();++l)
+        for(int m=0;m<spatial_twopdm.dim3();++m)
+          for(int n=0;n<spatial_twopdm.dim4();++n)
+            spatial_twopdm(ro.at(k),ro.at(l),ro.at(m),ro.at(n))= factor*(twopdm(2*k,2*l,2*m,2*n)+ twopdm(2*k+1,2*l,2*m,2*n+1)+ twopdm(2*k,2*l+1,2*m+1,2*n)+ twopdm(2*k+1,2*l+1,2*m+1,2*n+1));
+
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -262,8 +286,8 @@ void Twopdm_container::store_npdm_elements( const std::vector< std::pair< std::v
 
   //FIXME add options to dump to disk if memory becomes bottleneck
   if ( ! store_nonredundant_spin_elements_ ) nonredundant_elements.clear();
-  if ( store_full_spin_array_ ) update_full_spin_array( spin_batch );
-  if ( store_full_spatial_array_ ) update_full_spatial_array( spin_batch );
+  if ( store_full_spin_array_ || !dmrginp.spinAdapted()) update_full_spin_array( spin_batch );
+  if ( store_full_spatial_array_ && dmrginp.spinAdapted()) update_full_spatial_array( spin_batch );
 }
 
 //===========================================================================================================================================================

@@ -602,6 +602,7 @@ calculation,  use the keywords \texttt{restart\_onepdm}
 Density matrices of the $n$th state are
 calculated and stored in a text file name \texttt{spatial\_onepdm.n.n}, 
 \texttt{spatial\_twopdm.n.n}, \texttt{spatial\_threepdm.n.n} and \texttt{spatial\_fourpdm.n.n} respectively, starting with $n=0$. 
+
 Transition density matrices between the $m$th state and $n$th state are calculated and 
 stored in a text file name \texttt{spatial\_onepdm.m.n} and \texttt{spatial\_onepdm.m.n}
 For example,
@@ -615,7 +616,14 @@ number is the density matrix element:
 a_j^\dag a_k a_l|\Psi_n>$\\ } 
 \\Note that the orbital labels start from 0.
 
-%\subsubsection{Restarting a calculation}
+For threepdm and fourpdm, there might be too many elements. \texttt{disk\_dump\_pdm} can be used to store npdm elements on disk, rather than in memory. It is in file \texttt{spatial\_threepdm.n.n.p.bin}. p is the processor number. The data structure is a long integer ( index) and a double float (npdm element). They are not ordered and elements with zero value are not stored. The index begins with 0 for (0,0,0,0,0,0) and 1 for (0,0,0,0,0,1). By default, threepdm and fourpdm without summing up the spins are not stored, since spatial pdm is enough for many situations. \texttt{store\_spinpdm} can be set to get them. 
+
+To calculate transition density matrix between states with different symmetry irrepresentation, several steps are needed. 
+
+1. Calculate these two states seperately. 
+
+2. Copy the temporary files from previous calculations into a folder. statefile, StateInfo, wave, Rotation files are needed. SpinBlock files are biggest. Fortunately, they are not needed here. Temporary files for different bra state and ket state might have the same name. The number before tmp in the file names stands for state numbers. It is convenient to change the number for tmporary files of bra as 0 and that of ket as 1. 
+
 \subsubsection{Restarting a calculation}
 Calculations can be restarted, using the scratch files generated in the
 previous calculation, by specifying the keyword \texttt{restart}.
