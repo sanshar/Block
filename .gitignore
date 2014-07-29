@@ -4,3 +4,4 @@ block.spin_adapted
 *.a
 *~
 *.swp
+*.pyc

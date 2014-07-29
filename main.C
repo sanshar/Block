@@ -26,6 +26,10 @@ int main(int argc, char* argv [])
 {
 #ifndef SERIAL
   boost::mpi::environment env(argc, argv);
+  boost::mpi::communicator world;
+  if (world.rank() == 0) {
+    cout << "Runing with " << world.size() << " processors" << endl;
+  }
 #endif
 
   //This needs to be added
