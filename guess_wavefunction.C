@@ -311,8 +311,11 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
 #ifndef SERIAL
   mpi::communicator world;
 #endif
-  if(!ket && dmrginp.transition_diff_irrep()){
-    solution.initialise(dmrginp.bra_quantum_vec(), &big, onedot);
+  if(!ket ){
+    if(dmrginp.transition_diff_irrep())
+      solution.initialisebra(dmrginp.bra_quantum_vec(), &big, onedot);
+    else 
+      solution.initialisebra(dmrginp.effective_molecule_quantum_vec(), &big, onedot);
   }
   else
     solution.initialise(dmrginp.effective_molecule_quantum_vec(), &big, onedot);
@@ -724,10 +727,11 @@ it's not necessary to take the pseudo inverse of right rotation matrix.
       LoadRotationMatrix(rotsites, rightRotationMatrix, state);
     }
     if(ket)
-    onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWave, leftRotationMatrix, rightRotationMatrix, trial, transpose_guess_wave);
+      onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWave, leftRotationMatrix, rightRotationMatrix, trial, transpose_guess_wave,ket);
     else 
-    onedot_transform_wavefunction(oldStateInfo, big.get_braStateInfo(), oldWave, leftRotationMatrix, rightRotationMatrix, trial, transpose_guess_wave);
+      onedot_transform_wavefunction(oldStateInfo, big.get_braStateInfo(), oldWave, leftRotationMatrix, rightRotationMatrix, trial, transpose_guess_wave,ket);
   }
+
 
 
   double norm = DotProduct(trial, trial);
@@ -748,7 +752,7 @@ it's not necessary to take the pseudo inverse of right rotation matrix.
 void GuessWave::onedot_transform_wavefunction(const StateInfo& oldstateinfo, const StateInfo& newstateinfo, 
 					      const Wavefunction& oldwavefunction, const vector<Matrix>& leftRotationMatrix, 
 					      const vector<Matrix>& rightRotationMatrix, Wavefunction& newwavefunction, 
-					      const bool& transpose_guess_wave)
+					      const bool& transpose_guess_wave, bool ket)
 {
   assert (oldwavefunction.get_deltaQuantum() == newwavefunction.get_deltaQuantum());
 
@@ -765,7 +769,10 @@ void GuessWave::onedot_transform_wavefunction(const StateInfo& oldstateinfo, con
   int aSz;
   int cSz;
   if (transpose_guess_wave){
-    TensorProduct (*(newstateinfo.rightStateInfo), *(newstateinfo.leftStateInfo->rightStateInfo), newenvstateinfo,
+    if(dmrginp.transition_diff_irrep() && (ket == false))
+      TensorProduct (*(newstateinfo.rightStateInfo), *(newstateinfo.leftStateInfo->rightStateInfo), dmrginp.bra_quantum(), LessThanQ, newenvstateinfo);
+    else
+      TensorProduct (*(newstateinfo.rightStateInfo), *(newstateinfo.leftStateInfo->rightStateInfo), newenvstateinfo,
 		   NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
     newenvstateinfo.CollectQuanta();
     tmpwavefunction.AllowQuantaFor (*(newstateinfo.leftStateInfo->leftStateInfo), newenvstateinfo, newwavefunction.get_deltaQuantum());
@@ -835,6 +842,8 @@ void GuessWave::onedot_transform_wavefunction(const StateInfo& oldstateinfo, con
   if (dmrginp.hamiltonian() == BCS)
     TensorProduct (*(newstateinfo.leftStateInfo->leftStateInfo), newenvstateinfo, tempoldStateInfo,
 		SPIN_NUMBER_CONSTRAINT);
+  else if (dmrginp.transition_diff_irrep() && (ket == false))
+    TensorProduct (*(newstateinfo.leftStateInfo->leftStateInfo), newenvstateinfo, dmrginp.bra_quantum(), EqualQ, tempoldStateInfo);
   else
     TensorProduct (*(newstateinfo.leftStateInfo->leftStateInfo), newenvstateinfo, tempoldStateInfo,
 		 PARTICLE_SPIN_NUMBER_CONSTRAINT);

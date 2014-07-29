@@ -63,7 +63,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
   system.addAdditionalCompOps();
-  if(dmrginp.setStateSpecific()){
+  if(dmrginp.setStateSpecific() || dmrginp.transition_diff_irrep()){
     InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, state, stateB,
                                    sweepParams.get_sys_add(), dmrginp.direct(), DISTRIBUTED_STORAGE, true, true);
     
@@ -217,7 +217,7 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
   pout << ((forward) ? "\t\t\t Starting renormalisation sweep in forwards direction" : "\t\t\t Starting renormalisation sweep in backwards direction") << endl;
   pout << "\t\t\t ============================================================================ " << endl;
   
-  if(dmrginp.setStateSpecific())
+  if(dmrginp.setStateSpecific() || dmrginp.transition_diff_irrep())
     InitBlocks::InitStartingBlock( system, forward, state, stateB, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
   else 
     InitBlocks::InitStartingBlock( system, forward, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
@@ -225,7 +225,7 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
   pout << "\t\t\t Starting block is :: " << endl << system << endl;
 
   if (!restart) sweepParams.set_block_iter() = 0;
-  if(dmrginp.setStateSpecific()){
+  if(dmrginp.setStateSpecific() || dmrginp.transition_diff_irrep()){
     if (!restart) SpinBlock::store (forward, system.get_sites(), system, state, stateB ); // if restart, just restoring an existing block --
   }
   else{
@@ -277,7 +277,7 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
 
     pout << system<<endl;
     
-    if(dmrginp.setStateSpecific())
+    if(dmrginp.setStateSpecific() || dmrginp.transition_diff_irrep())
       SpinBlock::store (forward, system.get_sites(), system, state, stateB);
     else
       SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root() );
