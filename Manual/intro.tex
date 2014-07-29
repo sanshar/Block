@@ -16,7 +16,7 @@
 \vfill
 {\LARGE
   \begin{center}
-{Block}
+{BLOCK}
 \end{center}
 }
 \vspace{0.5in}
@@ -24,7 +24,7 @@
 \end{center}
 \vspace{0.5in}
 \begin{center}
-{\Large \textsc{beta version}}
+{\Large \textsc{version 1.0.0}}
 \end{center}
 \vspace{1in}
 
@@ -49,7 +49,7 @@ Jonathan Dorando and Debashree Ghosh
 
 %\begin{comment}
 %\section{Introduction}
-Block implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry. 
+\texttt{BLOCK} implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry. 
 The DMRG is a variational wavefunction method. Compared to other quantum chemical methods, 
 {\it it  efficiently describes strong, multi-reference correlation in
  a large number of active orbitals (occupancies far from 0 or 2)}.
@@ -70,35 +70,41 @@ then the DMRG may be the right method for you.
 
 \section{Capabilities}
 
-As of the current beta release, Block implements the following features:
+As of the current 1.0.0 release, \texttt{BLOCK} implements the following features:
 \begin{itemize}
 \item DMRG sweep algorithm for quantum chemistry Hamiltonians,
+\item Efficient warm-up algorithm for large systems (\ref{sec:warmup}),
 \item Full spin-adaptation (SU(2) symmetry) and Abelian point-group symmetries,
-\item State-averaged excited states,
-\item Output of one- and two-particle density matrices,
-\item A convenient interface to the Molpro program package.
+\item State-averaged excited states (\ref{sec:AppSA}),
+\item State-specific calculation (\ref{sec:AppSS}),
+\item $n$-particle density matrices ($n\le4$) and transition density matrices ($n\le2$) (\ref{sec:AppNpdm}),
+\item A convenient interface to the Molpro, ORCA and Q-Chem program packages.
 \end{itemize}
 
 \section{Installation}\label{sec:install}
 
-Block can either be built as a standalone or through one of its interfaces to external programs. Please Sec.~\ref{sec:External} for including \texttt{BLOCK} as an external library.
+\texttt{BLOCK} can either be built as a standalone or through one of its interfaces to external programs. Please Sec.~\ref{sec:External} for including \texttt{BLOCK} as an external library.
 
-\subsection{Molpro}
+\subsection{MOLPRO}
 \texttt{MOLPRO} fetches a copy of the most recent stable \texttt{BLOCK}
 code, and compiles it. For this, the
 
 \begin{verbatim}
--Block
+-enable-Block
 \end{verbatim}
 
 flag must be called when running \begin{verbatim}./configure\end{verbatim}. Please refer to the Molpro manaul for more details.
 
-\subsection{Orca}
+\subsection{ORCA}
 
-\texttt{BLOCK} is enabled in \texttt{ORCA} by enabling the flag \texttt{USE\_DMRG = YES} in the Makefile
+\texttt{BLOCK} is enabled in \texttt{ORCA} by enabling the flag \texttt{USE\_DMRG = YES} in the Makefile.
+
+\subsection{Q-Chem}
+
+\texttt{BLOCK} has been merged into \texttt{Q-Chem} package and is built automatically by compiling \texttt{Q-Chem 4.2.2} or later version.
 
 \subsection{Standalone}
-Block is written in C++ and requires a C++ compiler. It has the following additional dependencies:
+\texttt{BLOCK} is written in C++ and requires a C++ compiler. It has the following additional dependencies:
 \begin{itemize}
 \item Complete BLAS, LAPACK, and Boost C++ libraries,
 \item For parallel execution MPI must be installed, and the Boost MPI library must have been compiled with the same version of MPI,
@@ -109,18 +115,18 @@ The program has been tested on Linux systems, although we expect it to run on ot
 
 %maybe switch to appendix
 \subsubsection{makefile}
-Block is compiled using the makefile supplied in the distribution. The following customizations need to be made to the makefile. More details follow in Sec.~\ref{sec:appInstall}
+\texttt{BLOCK} is compiled using the makefile supplied in the distribution. The following customizations need to be made to the makefile. More details follow in Sec.~\ref{sec:appInstall}
 \begin{itemize}
  \item \textbf{Boost}\\The variable \texttt{BOOST} should be set to the location of the Boost installation. 
 \item \textbf{Lapack and Blas}\\ The variable \texttt{LAPACKBLAS} should be
 set to the linking command for the BLAS and LAPACK libraries.
 \item \textbf{Compiler}\\
-   By default, Block is set up to use the gcc compiler. If you wish to use the Intel C++ compiler you should modify the variable \texttt{CXX} to \texttt{icpc}.
+   By default, \texttt{BLOCK} is set up to use the gcc compiler. If you wish to use the Intel C++ compiler you should modify the variable \texttt{CXX} to \texttt{icpc}.
 \item \textbf{Parallel execution}\\
-	is enabled by default. Make sure that the \texttt{MPI\_LIB} variable points to the location of the boost\_mpi library. If one wishes to use only the serial version of Block, modify the \texttt{USE\_MPI} variable to \texttt{false}.
+	is enabled by default. Make sure that the \texttt{MPI\_LIB} variable points to the location of the boost\_mpi library. If one wishes to use only the serial version of \texttt{BLOCK}, modify the \texttt{USE\_MPI} variable to \texttt{false}.
 	If an mpi enabled c++ wrapper compiler ``mpic++'' is available then no further changes are necessary. If this is not the case then \texttt{MPICXX} should be changed to the name of the parallel C++ compiler.  Also in absence of the wrapper compiler additional mpi libraries need to be specified manually using the variable \texttt{MPI\_LIB}. %\texttt{CXX} should be changed to the name of the parallel C++ compiler or wrapper (e.g. mpic++). In general, the parallel wrapper will automatically link the appropriate MPI libraries. However, if MPI libraries need to be linked manually, \texttt{MPI\_LIB} should be set to the appropriate linking command.
 %% To install the parallel version of the code the variable \textsf{USE\_MPI} should be set to \textsf{yes}. If an mpi enabled c++ wrapper compiler ``mpic++'' is available then no further changes are necessary. If this is not the case then one needs to manually change two entries, line 36 and line 37, of the makefile. Line 36 defines the variable \textsf{MPI\_LIB}. In addition to the linking Qcdmrg with the mpi boost library, additional mpi libraries need to be specified. The location of these will depend on the platform and also the flavor of mpi installed. Line 37 defines the variable \textsf{CXX} as \textsf{mpic++}; this has to be changed to the usual c++ compiler one is interested in using e.g. g++ for the case of gcc compiler.
-	\item \textbf{Custom malloc}\\
+\item \textbf{Custom malloc} \label{sec:appInstall}\\
 DMRG calculations allocate and deallocate small blocks of memory a large number of times during a single calculation. For large scale calculations,
 this can lead to significant memory fragmentation over time. In some cases, this can be significantly ameliorated by installing a
 custom memory allocator. The linking command for the memory allocator is given by the variable \texttt{MALLOC},
@@ -128,11 +134,6 @@ custom memory allocator. The linking command for the memory allocator is given b
 
 
 \section{Running and testing the code}
-Block can be tested by executing the script \texttt{runtest} in the  directory \texttt{dmrg\_tests}. The tests require Python to be installed on the system.
-\begin{verbatim}
-cd dmrg_tests
-./runtest
-\end{verbatim}
 
 The standalone code can be executed using the command
 \begin{verbatim}
@@ -140,6 +141,13 @@ block.spin_adapted input.dat > output.dat
 \end{verbatim}
 \texttt{input.dat} is the input file and the output of the program is piped 
 into the output file \texttt{output.dat}.
+
+\texttt{BLOCK} can be tested by executing the script \texttt{runtest} in the  directory \texttt{dmrg\_tests}. The tests require Python to be installed on the system.
+\begin{verbatim}
+cd dmrg_tests
+./runtest
+\end{verbatim}
+
 
 %% The variational freedom in the wavefunction is parameterized by $M$, the
 %% number of renormalized states. As $M$ is increased, the DMRG wavefunction becomes exact.
@@ -187,22 +195,21 @@ into the output file \texttt{output.dat}.
 %% dependent, and is intimately linked to the entanglement structure of the wavefunction.
 
 
-\section{Block input and calculations}
+\section{BLOCK input and calculations}
 
-\subsection{Molpro interface}
+\subsection{Molpro, ORCA and Q-Chem interfaces}
 
-If you have compiled \texttt{MOLPRO} with the \texttt{BLOCK} options, you can run DMRG calculations directly. Please refer to the \texttt{MOLPRO} manual for more details.
+If you have compiled \texttt{MOLPRO}, \texttt{ORCA} or \texttt{Q-Chem} successfully, you can run DMRG calculations directly. 
+Please refer to the manuals of respective packages for more details in preparing input files for \texttt{BLOCK} module.
 
 
 \subsection{Standalone}
 
-Block does not generate its own integrals and orbitals; these must be supplied
-externally. 
+\texttt{BLOCK} does not generate its own integrals and orbitals; these must be supplied externally. 
 \texttt{BLOCK} reads integrals in Molpro's \texttt{FCIDUMP} format. For more details
 on this format, see Sec.~\ref{sec:appFCIDUMP}.
 
-When running on standalone, this makes
-running a DMRG calculation for a chemical problem a simple two-step process,
+When running on standalone, this makes running a DMRG calculation for a chemical problem a simple two-step process,
 e.g.
 
 \begin{verbatim}
@@ -213,16 +220,16 @@ block.spin_adapted input.dat > output.dat
 For in depth detail to DMRG, Sec.~\ref{sec:appendix1}--\ref{sec:appendix2}
 refer to a discussion of the DMRG method.  In the following we provide the
 method necessary to run a DMRG calculation.  The rest of the details are
-available in Sec.~\ref{sec:appDetails}.  Several aspects of the Block input
+available in Sec.~\ref{sec:appDetails}.  Several aspects of the \texttt{BLOCK} input
 also directly refer to the concepts in the sections above.
 
 We can break down the tasks needed to successfully setup, run, and monitor a DMRG calculation as follows (bold indicates that the step is run by \texttt{BLOCK}):
 \begin{enumerate}
 \item  Generate orbitals and select an active space. 
 \item  Rotate/localize active space orbitals, if desired
-\item  Dump the integrals for the Block program
+\item  Dump the integrals for the \texttt{BLOCK} program
 \item {\bf Choose an orbital ordering }
-\item {\bf  Set up Block input, execute Block program}
+\item {\bf  Set up \texttt{BLOCK} input, execute \texttt{BLOCK} program}
 \item {\bf  Monitor DMRG energy convergence as a function of $M$}. For additional accuracy, extrapolate energy as a function of discarded weight 
 \end{enumerate}
 
@@ -232,29 +239,29 @@ We can break down the tasks needed to successfully setup, run, and monitor a DMR
 %in difficult molecules it is possible for a DMRG calculation to get stuck in a local minimum. The theoretical reasons for this are discussed in section \ref{sec:appendix1};
 %practical strategies to correct this are given in section \ref{sec:convergence1} and section \ref{sec:convergence2}.
 
-We now go through steps 1--6 in more detail. We will use the simple example of benzene in a minimal basis as our test example, and we will use Block
+We now go through steps 1--6 in more detail. We will use the simple example of benzene in a minimal basis as our test example, and we will use \texttt{BLOCK}
 to carry out a calculation in the CAS(6,6) space. As a more realistic application of the DMRG, we will next discuss a calculation on the Cr$_2$ molecule
 in a CAS(24,30) space and porphine in a CAS(24, 24) space.
 
-%% The current distribution of the Block program is provided with an interface to the Molpro package. Consequently, we shall
+%% The current distribution of the BLOCK program is provided with an interface to the Molpro package. Consequently, we shall
 %%  use Molpro in our examples below. 
 
 \subsubsection{Generating the orbitals and integrals using Molpro}
 
 We first generate the orbitals and integrals for DMRG using the Molpro 2012.2
 package. {Note, if you have the Molpro interface installed, you would normally
-run Block directly as part of Molpro. Here we are using Molpro only to generate
+run \texttt{BLOCK} directly as part of Molpro. Here we are using Molpro only to generate
 integrals for a subsequent standalone DMRG run, to illustrate how the
-standalone DMRG program can be used with a generic quantum chemistry code). }
+standalone DMRG program can be used with a generic quantum chemistry code. }
 
 We first identify
 the $\pi$ electron active space (step 1), localize the orbitals to make atomic
 like $p_z$, and dump the corresponding one- and two-electron integrals for the
-Block program (step 3). All this may be carried out using the Molpro input
+\texttt{BLOCK} program (step 3). All this may be carried out using the Molpro input
 file located in Sec.~\ref{sec:appMolprobenz}.
 
 
-\subsection{Block input file}
+\subsection{\texttt{BLOCK} input file}
 
 We are now ready to carry out a DMRG calculation. The simplest input file for our benzene example is shown below (note this is the input file for the standalone calculations):
 
@@ -293,12 +300,14 @@ around the ring) as 5, 2, 1, 4, 3, 6. A better ordering  is to arrange them
 such that they are centred around carbon atoms 1, 2, 6, 5, 3, 4.  To achieve
 this, in the reorder file (\texttt{reorder.dat} in the above input), we write
 the line 
-\begin{verbatim} 3 2 6 1 5 4 \end{verbatim}. 
+\begin{verbatim} 
+3 2 6 1 5 4 
+\end{verbatim}. 
 
 \subsubsection{Wavefunction specification}
 
 The point-group symmetry of the state is specified using the keyword \texttt{irrep} following the labels Table~\ref{tab:irrep}.
-If this is left blank, Block will assume that the wavefunction transforms according to the most symmetric representation.
+If this is left blank, \texttt{BLOCK} will assume that the wavefunction transforms according to the most symmetric representation.
 
 
 \subsubsection{Schedule}
@@ -341,7 +350,7 @@ If this is the case, we recommend two steps:
 	\label{tab:irrep} 
 	\begin{center} 
 		\caption{Labels corresponding to the irreps of the various
-		point groups allowed in Block.}
+		point groups allowed in \texttt{BLOCK}.}
 	\begin{tabular}{cllll} 
 		\hline \hline 
 		Label & \multicolumn{4}{c}{Point Groups}\\ 
@@ -370,7 +379,7 @@ is not a black-box technique. Understanding the theory is helpful
 to use the method in an optimal way. For further information, the
  user is referred to the papers listed in Section \ref{sec:papers}.
 
-\subsubsection{The DMRG wavefunction}
+\subsection{The DMRG wavefunction}
 
 In a nutshell, the DMRG wavefunction is a non-linear ansatz, known as a {\it
 matrix product state}.  There are a number of analogies between the matrix
@@ -407,7 +416,7 @@ one-site wavefunction description.
 %% wavefunction forms used: the one-site DMRG wavefunction and the two-site DMRG wavefunction. Note
 %% that the word site and orbital is synonymous in the DMRG terminology.
 %% Both 
-%% forms are implemented in the Block program. These wavefunctions
+%% forms are implemented in the BLOCK program. These wavefunctions
 %% are known in recent literature as matrix product states. Secondly, there is the language of the DMRG algorithm
 %% that uses terminology from the renormalization group, such as sweeping, blocking, and decimation.
 %% The DMRG sweep algorithm is an algorithm to efficiently {\it optimize} the DMRG wavefunction. However,
@@ -536,10 +545,10 @@ more general molecules, an optimal choice is less clear-cut, but there are sever
 
 \subsection{Licence and how to cite}\label{sec:papers}
 
-Block is distributed under the GNU GPL licence which is reproduced in the file \texttt{LICENSE}. In addition, Block contains a 
+\texttt{BLOCK} is distributed under the GNU GPL licence which is reproduced in the file \texttt{LICENSE}. In addition, \texttt{BLOCK} contains a 
 full copy of the Newmat C++ matrix library by Robert Davies.
 
-We would appreciate if you cite the following papers in publications resulting from the use of Block:
+We would appreciate if you cite the following papers in publications resulting from the use of \texttt{BLOCK}:
 \begin{itemize}
  \item G. K.-L. Chan and M. Head-Gordon, \emph{J. Chem. Phys.} \textbf{116}, 4462 (2002),
  \item G. K.-L. Chan, \emph{J. Chem. Phys.} \textbf{120}, 3172 (2004),
@@ -550,16 +559,16 @@ We would appreciate if you cite the following papers in publications resulting f
 In addition, a useful list of DMRG references relevant to quantum chemistry
 can be found in the article above by Sharma and Chan.
 
-\subsection{Calling Block as an external subroutine}
+\subsection{Calling \texttt{BLOCK} as an external subroutine}
 \label{sec:External}
-The makefile distributed with Block code can be used to generate a library file
-called \texttt{libqcdmrg.a}. To call Block as a subroutine from a C++ program,
+The makefile distributed with \texttt{BLOCK} code can be used to generate a library file
+called \texttt{libqcdmrg.a}. To call \texttt{BLOCK} as a subroutine from a C++ program,
 the library file has to be linked to the program. A DMRG calculation can be
 performed using the function call\\
 \texttt{
 callDMRG(inputf, outputf);\\
 } 
-where \texttt{inputf} and \texttt{outputf} are C-style character arrays specifying the Block input and output files respectively.
+where \texttt{inputf} and \texttt{outputf} are C-style character arrays specifying the \texttt{BLOCK} input and output files respectively.
 
 \subsection{Input and calculation details}
 \label{sec:appDetails}
@@ -567,18 +576,18 @@ We can break down the tasks needed to successfully setup, run, and monitor a DMR
 \begin{enumerate}
 \item {\bf Molpro} Generate orbitals and select an active space. 
 \item {\bf Molpro} Rotate the active space orbitals
-\item {\bf Molpro} Dump the integrals for the Block program.
-\item {\bf Block} Choose an orbital ordering (default)
-\item {\bf Block} Set up Block input, execute Block program.
-\item {\bf Block} Monitor DMRG energy convergence as a function of $M$. For additional accuracy, extrapolate energy as a function of discarded weight. 
+\item {\bf Molpro} Dump the integrals for the \texttt{BLOCK} program.
+\item {\bf \texttt{BLOCK}} Choose an orbital ordering (default)
+\item {\bf \texttt{BLOCK}} Set up \texttt{BLOCK} input, execute \texttt{BLOCK} program.
+\item {\bf \texttt{BLOCK}} Monitor DMRG energy convergence as a function of $M$. For additional accuracy, extrapolate energy as a function of discarded weight. 
 \end{enumerate}
 In the subsections below, we will detail several other capabilities of
 \texttt{BLOCK}. In Sec.~\ref{sec:appFCIDUMP}, we present the option of
 generating their own \texttt{FCIDUMP} file.
 
-\subsubsection{State-averaged calculations}
+\subsubsection{State-averaged calculations}\label{sec:AppSA}
 %\subsubsection{State-averaged calculations}
-Block is able to perform state-averaged calculations where more than a single
+\texttt{BLOCK} is able to perform state-averaged calculations where more than a single
 state can be targeted in the same calculation. Currently the states in the
 state-average must be \emph{of the same symmetry}. Once the symmetry of the
 states is specified using the keywords \texttt{nelec, spin} and \texttt{irrep}
@@ -589,11 +598,26 @@ weights, one uses \begin{verbatim} nroots 2 weights 0.5 0.5 \end{verbatim}
 Currently, the implementation of the Davidson algorithm is somewhat inefficient
 for a large number of roots.
 
+\subsubsection{State-specific calculations}\label{sec:AppSS}
+\texttt{BLOCK} allows a state-specific calculation where only one particular state is targeted 
+at a time of calculation.
+In the current release only one-dot algorithm is allowed.
+This is specified using the keyword \texttt{statespecific} and \texttt{nroots}.
+For example, to target two states explicitly, one uses
+\begin{verbatim} 
+statespecific 
+nroots 2 
+\end{verbatim}
+The state-specific calculation is implemented as a restart calculation which assumes 
+that a previous DMRG (e.g., state-average) calculation has been converged.
+The state-specific calculation will then take the previous wavefunction and refine them 
+for each root individually. The calculation will continue until all roots are converged.
+
 %\subsubsection{Particle density matrices (pdm)}
-\subsubsection{Particle density matrices (pdm)}
+\subsubsection{Particle density matrices (pdm)}\label{sec:AppNpdm}
 Up to four-paritcle density matrices and one-particle and two-particle transition density matrices can be calculated and output
 using the keywords \texttt{onepdm}, \texttt{twopdm}, \texttt{threepdm} , \texttt{fourpdm},\texttt{tran\_onepdm} or \texttt{tran\_twopdm}.  If a calculation has
-been completed, Block is able to use the scratch files from the previous
+been completed, \texttt{BLOCK} is able to use the scratch files from the previous
 calculation to compute the density matrices. To perform this kind of
 calculation,  use the keywords \texttt{restart\_onepdm}
 \texttt{restart\_twopdm}, \texttt{restart\_threepdm}, \texttt{restart\_fourpdm}, \texttt{restart\_tran\_onepdm} or \texttt{restart\_tran\_twopdm}.
@@ -624,7 +648,8 @@ To calculate transition density matrix between states with different symmetry ir
 
 2. Copy the temporary files from previous calculations into a folder. statefile, StateInfo, wave, Rotation files are needed. SpinBlock files are biggest. Fortunately, they are not needed here. Temporary files for different bra state and ket state might have the same name. The number before tmp in the file names stands for state numbers. It is convenient to change the number for tmporary files of bra as 0 and that of ket as 1. 
 
-\subsubsection{Restarting a calculation}
+%\subsubsection{Restarting a calculation}
+\subsubsection{Restarting a calculation}\label{sec:AppRest}
 Calculations can be restarted, using the scratch files generated in the
 previous calculation, by specifying the keyword \texttt{restart}.
 
@@ -634,7 +659,7 @@ The schedule defines the renormalised states $M$ used in successive DMRG
 sweeps. It is more economical to perform the initial sweeps with small $M$ and
 then to gradually increase $M$. The simplest option to select \texttt{schedule
 default} and the maximum number of renormalized states, \texttt{maxM} as in the
-input file above. Block will then automatically choose a sweep schedule as well
+input file above. \texttt{BLOCK} will then automatically choose a sweep schedule as well
 as set defaults for various tolerances.  The default sweep schedule for active
 spaces larger than 12 orbitals begins with $M$ at 500 (for 8 sweeps), then increases
 to a value of 1000 (8 sweeps) and then has a substantial increment of 1000
@@ -650,7 +675,7 @@ the Davidson algorithm is $1\times 10^{-5}$, the perturbative  noise is $1
 \texttt{maxiter} gives the maximum number of sweep iterations to be performed.
 In the above example, in sweep iterations 20 to 30, $M=2000$, the davidson
 tolerance is $1\times 10^{-9}$, and the noise is 0. Notice, that the noise
-should be turned off in the last line if one wishes to obtain a converged Block
+should be turned off in the last line if one wishes to obtain a converged \texttt{BLOCK}
 energy.
 
 \texttt{sweep\_tol} gives the final tolerance on the DMRG energy. It is
@@ -777,12 +802,12 @@ squares minimization of the last sweep for each $M$ (we currently use the last
 three of these $M$. This enables the user to see how after one is from
 convergence.}
 
-\subsubsection{Warm-up Scheme for Large Systems}
-Users who work with large systems may find that the first DMRG sweep, the warm-up sweep, takes much longer time than the subsequent ones using the default settings, sometimes half of the total computation time. This is because the BLOCK code needs to choose proper environment states as the initial guess. 
+\subsubsection{Warm-up Scheme for Large Systems}\label{sec:warmup}
+Users who work with large systems may find that the first DMRG sweep, the warm-up sweep, takes much longer time than the subsequent ones using the default settings, sometimes half of the total computation time. This is because the \texttt{BLOCK} code needs to choose proper environment states as the initial guess. 
 
-By default, BLOCK uses the a sophisticated warm-up method based on Wilson renormalisation group. It chooses the lowest-energy states for each possible quantum number in the environment. The scheme ensures good convergence of DMRG, and avoids getting stuck in a local minimum. However, it can take a huge amount of time in finding those environment configurations and building the operators for them. 
+By default, \texttt{BLOCK} uses the a sophisticated warm-up method based on Wilson renormalisation group. It chooses the lowest-energy states for each possible quantum number in the environment. The scheme ensures good convergence of DMRG, and avoids getting stuck in a local minimum. However, it can take a huge amount of time in finding those environment configurations and building the operators for them. 
 
-The new BLOCK version 1.00 introduces an alternative warm-up scheme called local warm-up scheme. In this scheme, the environment states are chosen as the full configuration space of the next X (X=2,3,4) sites and the Hartree-Fock configuration for the rest sites. It can be specified by using the keyword
+The new \texttt{BLOCK} version 1.0.0 introduces an alternative warm-up scheme called local warm-up scheme. In this scheme, the environment states are chosen as the full configuration space of the next X (X=2,3,4) sites and the Hartree-Fock configuration for the rest sites. It can be specified by using the keyword
 \begin{verbatim}
 warmup local_Xsite
 \end{verbatim}
@@ -912,7 +937,7 @@ the Cr$_2$ molecule using the Ahlrichs SVP basis set and an active space of
 (24e, 30o). The molpro input file that was used to generate the integrals is
 shown below. 
 
-The Block input file used to calculate the energies in the paper is shown below
+The \texttt{BLOCK} input file used to calculate the energies in the paper is shown below
 \begin{verbatim}
  nelec 24
 spin 0
@@ -956,7 +981,7 @@ We provide a \texttt{MOLPRO} input file for the porphine molecule in Sec.~\ref{s
 benzene case. We generate a (24e, 24o) active space. The energy is minimized to 
 below 0.1 m$E_h$ at M=2000.
 
-\textbf{BLOCK input file}
+\textbf{\texttt{BLOCK} input file}
 \begin{verbatim}
 nelec 24
 point_group c1
@@ -1017,7 +1042,7 @@ are $\pi*$ orbitals.  At this stage, all the orbitals are delocalized.
 \item The \texttt{fci} program is used to dump out one- and two-electron
 integrals and information on the irreducible representations of the orbitals.
 The resulting file is named \texttt{FCIDUMP}. This contains all the orbital
-information required by Block.  \end{enumerate}
+information required by \texttt{BLOCK}.  \end{enumerate}
 {
 \begin{verbatim}
 angstrom
