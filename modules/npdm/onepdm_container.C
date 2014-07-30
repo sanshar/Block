@@ -186,7 +186,6 @@ void Onepdm_container::calculate_spatial_npdm()
 
 void Onepdm_container::update_full_spin_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
 {
-  const std::vector<int>& ro = dmrginp.reorder_vector();
   for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
     int i = (it->first)[0];
     int j = (it->first)[1];
@@ -196,7 +195,7 @@ void Onepdm_container::update_full_spin_array( std::vector< std::pair< std::vect
 //    std::cout << "so-onepdm val: i,j = " << i << "," << j << "\t\t" << val << endl;
 
     // Test for duplicates
-    if ( onepdm( ro.at(i/2), ro.at(j/2) ) != 0.0 ) {
+    if ( onepdm( i, j ) != 0.0 ) {
       cout << "WARNING: Already calculated "<<i<<" "<<j<<endl;
       cout << "earlier value: "<<onepdm(i,j)<<endl<< "new value:     "<<val<<endl;
       abort();
