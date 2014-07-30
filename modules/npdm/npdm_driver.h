@@ -65,7 +65,11 @@ class Onepdm_driver : public Npdm_driver_base {
     void clear() { driver.clear(); }
     void save_data( const int i, const int j ) { driver.save_data(i,j); }
     void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos ) 
-      { driver.compute_npdm_elements(wavefunctions, big, sweepPos, endPos ); }
+      {
+        driver.compute_npdm_elements(wavefunctions, big, sweepPos, endPos );
+        // accumulate elements and clean-up temporary storage per site (?)
+        container.update_array_component();
+      }
   private:
     Onepdm_container container;
     Npdm_driver driver;
@@ -79,7 +83,11 @@ class Twopdm_driver : public Npdm_driver_base {
     void clear() { driver.clear(); }
     void save_data( const int i, const int j ) { driver.save_data(i,j); }
     void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos ) 
-      { driver.compute_npdm_elements(wavefunctions, big, sweepPos, endPos ); }
+      {
+        driver.compute_npdm_elements(wavefunctions, big, sweepPos, endPos);
+        // accumulate elements and clean-up temporary storage per site (?)
+        container.update_array_component();
+      }
   private:
     Twopdm_container container;
     Npdm_driver driver;
@@ -93,7 +101,11 @@ class Threepdm_driver : public Npdm_driver_base {
     void clear() { driver.clear(); }
     void save_data( const int i, const int j ) { driver.save_data(i,j); }
     void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos ) 
-      { driver.compute_npdm_elements(wavefunctions, big, sweepPos, endPos ); }
+      {
+        driver.compute_npdm_elements(wavefunctions, big, sweepPos, endPos);
+        // accumulate elements and clean-up temporary storage per site (?)
+        container.update_array_component();
+      }
   private:
     Threepdm_container container;
     Npdm_driver driver;
@@ -107,7 +119,11 @@ class Fourpdm_driver : public Npdm_driver_base {
     void clear() { driver.clear(); }
     void save_data( const int i, const int j ) { driver.save_data(i,j); }
     void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos ) 
-      { driver.compute_npdm_elements(wavefunctions, big, sweepPos, endPos ); }
+      {
+        driver.compute_npdm_elements(wavefunctions, big, sweepPos, endPos);
+        // accumulate elements and clean-up temporary storage per site (?)
+        container.update_array_component();
+      }
   private:
     Fourpdm_container container;
     Npdm_driver driver;

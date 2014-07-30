@@ -9,6 +9,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "global.h"
 #include "timer.h"
 #include <boost/format.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/utility.hpp>
 #include "onepdm_container.h"
 #include "npdm_permutations.h"
 
@@ -19,14 +21,26 @@ namespace Npdm{
 
 Onepdm_container::Onepdm_container( int sites )
 {
-  if(dmrginp.spinAdapted()){
-    onepdm.resize(2*sites,2*sites);
-    spatial_onepdm.resize(sites,sites);
+  store_full_spin_array_ = true;
+  store_full_spatial_array_ = true;
 
-  }
-  else{
-    onepdm.resize(sites,sites);
-    spatial_onepdm.resize(sites/2,sites/2);
+  if(mpigetrank() == 0) {
+    if(store_full_spin_array_) {
+      if(dmrginp.spinAdapted())
+        onepdm.resize(2*sites);
+      else
+        onepdm.resize(sites);
+
+      onepdm.fill(0.0);
+    }
+    if(store_full_spatial_array_) {
+      if(dmrginp.spinAdapted())
+        spatial_onepdm.resize(sites);
+      else
+        spatial_onepdm.resize(sites/2);
+
+      spatial_onepdm.fill(0.0);
+    }
   }
 }
 
@@ -39,34 +53,46 @@ void Onepdm_container::save_npdms(const int& i, const int& j)
   world.barrier();
 #endif
   Timer timer;
-  accumulate_npdm();
+
   save_npdm_binary(i, j);
   save_npdm_text(i, j);
-  accumulate_spatial_npdm();
-  save_spatial_npdm_binary(i, j);
-  save_spatial_npdm_text(i, j);
+
+  if(store_full_spatial_array_) {
+    build_full_spatial_array();
+    save_spatial_npdm_binary(i, j);
+    save_spatial_npdm_text(i, j);
+  }
+
 #ifndef SERIAL
   world.barrier();
 #endif
-  std::cout << "1PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+  pout << "1PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Onepdm_container::save_npdm_text(const int &i, const int &j)
 {
-  if( mpigetrank() == 0)
-  {
+  if(mpigetrank() == 0) {
     char file[5000];
-    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/onepdm.", i, j,".txt");
+    sprintf(file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/onepdm.", i, j,".txt");
     ofstream ofs(file);
-    ofs << onepdm.dim1() << endl;
+
+    size_t ext = onepdm.extent();
+
+    ofs << ext << endl;
     double trace = 0.0;
-    for(int k=0;k<onepdm.dim1();++k)
-      for(int l=0;l<onepdm.dim2();++l) {
-        ofs << boost::format("%d %d %20.14e\n") % k % l % onepdm(k,l);
-        if ( k==l ) trace += onepdm(k,l);
+    for(int i = 0; i < ext; ++i)
+      for(int j = 0; j < ext; ++j) {
+        double value = onepdm(i,j);
+        if(i == j) trace += value;
+
+        // printing non-redundant elements only
+        if(i > j && abs(value) > NUMERICAL_ZERO) {
+          ofs << boost::format("%d %d %20.14e\n") % i % j % value;
+        }
       }
+
     ofs.close();
     std::cout << "Spin-orbital 1PDM trace = " << trace << "\n";
   }
@@ -76,18 +102,35 @@ void Onepdm_container::save_npdm_text(const int &i, const int &j)
 
 void Onepdm_container::save_spatial_npdm_text(const int &i, const int &j)
 {
-  if( mpigetrank() == 0)
-  {
+  if(mpigetrank() == 0) {
     char file[5000];
     sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_onepdm.", i, j,".txt");
     ofstream ofs(file);
-    ofs << spatial_onepdm.dim1() << endl;
+
+    size_t ext = spatial_onepdm.extent();
+
+    ofs << ext << endl;
     double trace = 0.0;
-    for(int k=0;k<spatial_onepdm.dim1();++k)
-      for(int l=0;l<spatial_onepdm.dim2();++l) {
-        ofs << boost::format("%d %d %20.14e\n") % k % l % spatial_onepdm(k,l);
-        if ( k==l ) trace += spatial_onepdm(k,l);
+
+//  for(auto it = spatial_onepdm.begin(); it != spatial_onepdm.end(); ++it) {
+//    int i = it.index()[0];
+//    int j = it.index()[1];
+//    if(abs(*it) > NUMERICAL_ZERO) {
+//      ofs << boost::format("%d %d %20.14e\n") % i % j % (*it);
+//    }
+//  }
+
+    // printing full spatial array (no use of permutation symmetry)
+    for(int i = 0; i < ext; ++i)
+      for(int j = 0; j < ext; ++j) {
+        double value = spatial_onepdm(i,j);
+        if(i == j) trace += value;
+
+        if(abs(value) > NUMERICAL_ZERO)
+          ofs << boost::format("%d %d %20.14e\n") % i % j % value;
       }
+
+
     ofs.close();
     std::cout << "Spatial      1PDM trace = " << trace << "\n";
   }
@@ -97,8 +140,7 @@ void Onepdm_container::save_spatial_npdm_text(const int &i, const int &j)
 
 void Onepdm_container::save_npdm_binary(const int &i, const int &j)
 {
-  if( mpigetrank() == 0)
-  {
+  if(mpigetrank() == 0) {
     char file[5000];
     sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/onepdm.", i, j,".bin");
     std::ofstream ofs(file, std::ios::binary);
@@ -112,8 +154,7 @@ void Onepdm_container::save_npdm_binary(const int &i, const int &j)
 
 void Onepdm_container::save_spatial_npdm_binary(const int &i, const int &j)
 {
-  if( mpigetrank() == 0)
-  {
+  if(mpigetrank() == 0) {
     char file[5000];
     sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_onepdm.", i, j,".bin");
     std::ofstream ofs(file, std::ios::binary);
@@ -125,131 +166,79 @@ void Onepdm_container::save_spatial_npdm_binary(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Onepdm_container::accumulate_npdm()
+void Onepdm_container::build_full_spatial_array()
+{
+  if(mpigetrank() == 0) {
+    // Take into account orbital reordering
+    const std::vector<int>& ro = dmrginp.reorder_vector();
+
+    size_t ext = spatial_onepdm.extent();
+
+    for(int i = 0; i < ext; ++i) {
+      int i2 = 2*i;
+      for(int j = 0; j < ext; ++j) {
+        int j2 = 2*j;
+        double& value = spatial_onepdm(ro.at(i), ro.at(j));
+        if(abs(value) == 0.0) {
+          value = onepdm(i2  ,j2  ) + onepdm(i2+1,j2+1);
+        }
+      }
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Onepdm_container::update_array_component()
 {
 #ifndef SERIAL
-  array_2d<double> tmp_recv;
-  mpi::communicator world;
-  if( mpigetrank() == 0) {
-    for(int i=1;i<world.size();++i) {
-      world.recv(i, i, tmp_recv);
-      for(int k=0;k<onepdm.dim1();++k)
-        for(int l=0;l<onepdm.dim2();++l)
-          if( abs(tmp_recv(k,l)) > NUMERICAL_ZERO ) onepdm(k,l) = tmp_recv(k,l);
+  boost::mpi::communicator world;
+  if(world.rank() == 0) {
+#endif
+    for (auto it = tmp_store_.begin(); it != tmp_store_.end(); ++it) {
+      double value = it->second;
+      if(abs(value) < NUMERICAL_ZERO) continue;
+
+      assert(it->first.size() == 2);
+      int i = it->first[0];
+      int j = it->first[1];
+
+      onepdm(i,j) = value;
+    }
+#ifndef SERIAL
+    for(int iproc = 1; iproc < world.size(); ++iproc) {
+      std::vector<std::pair<std::vector<int>, double> > tmp_recv;
+      world.recv(iproc, iproc, tmp_recv);
+      for(auto it = tmp_recv.begin(); it != tmp_recv.end(); ++it) {
+        double value = it->second;
+        if(abs(value) < NUMERICAL_ZERO) continue;
+
+        assert(it->first.size() == 2);
+        int i = it->first[0];
+        int j = it->first[1];
+
+        onepdm(i,j) = value;
+      }
     }
   }
   else {
-    world.send(0, mpigetrank(), onepdm);
+    world.send(0, mpigetrank(), tmp_store_);
   }
 #endif
+  tmp_store_.clear();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Onepdm_container::accumulate_spatial_npdm()
+void Onepdm_container::store_npdm_elements(const std::vector<std::pair<std::vector<int>, double> > & in)
 {
-#ifndef SERIAL
-  array_2d<double> tmp_recv;
-  mpi::communicator world;
-  if( mpigetrank() == 0) {
-    for(int i=1;i<world.size();++i) {
-      world.recv(i, i, tmp_recv);
-      for(int k=0;k<spatial_onepdm.dim1();++k)
-        for(int l=0;l<spatial_onepdm.dim2();++l)
-          if( abs(tmp_recv(k,l)) > NUMERICAL_ZERO ) spatial_onepdm(k,l) = tmp_recv(k,l);
-    }
-  }
-  else {
-    world.send(0, mpigetrank(), spatial_onepdm);
-  }
-#endif
-}
+  // dims of spin-adapted -> non-spin-adapted transformation
+  if(dmrginp.spinAdapted())
+    assert(in.size() == 2);
+  else
+    assert(in.size() == 1);
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Onepdm_container::update_full_spin_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
-{
-  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
-    int i = (it->first)[0];
-    int j = (it->first)[1];
-
-    double val = it->second;
-//    if ( abs(val) > 1e-8 ) std::cout << "so-onepdm val: i,j = " << i << "," << j << "\t\t" << val << endl;
-//    std::cout << "so-onepdm val: i,j = " << i << "," << j << "\t\t" << val << endl;
-
-    // Test for duplicates
-    if ( onepdm(i, j) != 0.0 ) {
-      cout << "WARNING: Already calculated "<<i<<" "<<j<<endl;
-      cout << "earlier value: "<<onepdm(i,j)<<endl<< "new value:     "<<val<<endl;
-      abort();
-    }
-    if ( abs(val) > NUMERICAL_ZERO ) onepdm(i,j) = val;
-  }
-
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// This routine assumes that no spin-orbital indices are generated more than once
-
-void Onepdm_container::update_full_spatial_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
-{
-  // Take into account orbital reordering
-  const std::vector<int>& ro = dmrginp.reorder_vector();
-
-  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
-    assert( (it->first).size() == 2 );
-
-    // Store significant elements only
-    if ( abs(it->second) > NUMERICAL_ZERO ) {
-      // Spin indices
-      int i = (it->first)[0];
-      int j = (it->first)[1];
-      if ( i%2 != j%2 ) continue;
-      spatial_onepdm( ro.at(i/2), ro.at(j/2) ) += it->second;
-    }
-  }
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-//
-//void Onepdm_container::build_spatial_elements( std::map< std::vector<int>, double >& spin_batch, std::map< std::vector<int>, double >& spatial_batch )
-//{
-//  double factor = 1.0;
-//
-//  for (auto it = spatial_batch.begin(); it != spatial_batch.end(); ++it) {
-//    int i = (it->first)[0];
-//    int j = (it->first)[1];
-//    // Sum over spin indices 
-//    double val = 0.0;
-//    for (int s=0; s<2; s++) {
-//      std::vector<int> idx = { 2*i+s, 2*j+s };
-//      val += spin_batch[ idx ];
-//    }
-//    // Store significant elements only
-//    if ( abs(val) > NUMERICAL_ZERO ) {
-//      if ( abs( spatial_onepdm(i,j) ) > NUMERICAL_ZERO ) { 
-//        cout << "repeated spatial indices!\n";
-//        abort();
-//      }
-//      spatial_onepdm(i,j) = factor * val;
-//    }
-//  }
-//
-//}
-//
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Onepdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
-{
-  if(dmrginp.spinAdapted()) assert( new_spin_orbital_elements.size() == 2 );
-  else assert( new_spin_orbital_elements.size()==1);
-  Onepdm_permutations perm;
-  std::vector< std::pair< std::vector<int>, double > > spin_batch;
-  // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
-  perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
-
-  update_full_spin_array( spin_batch );
-  update_full_spatial_array( spin_batch );
+  if(store_full_spin_array_ || store_full_spatial_array_) tmp_store_.insert(tmp_store_.end(), in.begin(), in.end());
 }
 
 //===========================================================================================================================================================

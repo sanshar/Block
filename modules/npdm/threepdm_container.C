@@ -8,6 +8,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include "global.h"
 #include <boost/format.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/utility.hpp>
 #include "threepdm_container.h"
 #include "npdm_permutations.h"
 
@@ -16,27 +18,29 @@ namespace Npdm{
 
 //===========================================================================================================================================================
 
-Threepdm_container::Threepdm_container( int sites )
+Threepdm_container::Threepdm_container(int sites)
 {
-  store_nonredundant_spin_elements_ = true;
   store_full_spin_array_ = true;
   store_full_spatial_array_ = true;
 
-  if ( store_full_spin_array_ ) {
-    if(dmrginp.spinAdapted())
-      threepdm.resize(2*sites,2*sites,2*sites,2*sites,2*sites,2*sites);
-    else
-      threepdm.resize(sites,sites,sites,sites,sites,sites);
-    threepdm.Clear();
-  } 
-  if ( store_full_spatial_array_ ) {
-    if(dmrginp.spinAdapted())
-      spatial_threepdm.resize(sites,sites,sites,sites,sites,sites);
-    else
-      spatial_threepdm.resize(sites/2,sites/2,sites/2,sites/2,sites/2,sites/2);
-    spatial_threepdm.Clear();
-  }
+  if(mpigetrank() == 0) {
+    if(store_full_spin_array_) {
+      if(dmrginp.spinAdapted())
+        threepdm.resize(2*sites);
+      else
+        threepdm.resize(sites);
 
+      threepdm.fill(0.0);
+    }
+    if(store_full_spatial_array_) {
+      if(dmrginp.spinAdapted())
+        spatial_threepdm.resize(sites);
+      else
+        spatial_threepdm.resize(sites/2);
+
+      spatial_threepdm.fill(0.0);
+    }
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -48,47 +52,57 @@ void Threepdm_container::save_npdms(const int& i, const int& j)
   world.barrier();
 #endif
   Timer timer;
-  if ( store_full_spin_array_ ) {
-    accumulate_npdm();
-    save_npdm_binary(i, j);
-    save_npdm_text(i, j);
-  }
-  if ( store_full_spatial_array_ ) {
-    accumulate_spatial_npdm();
-    save_spatial_npdm_binary(i, j);
-    save_spatial_npdm_text(i, j);
+
+  save_npdm_binary(i,j);
+  save_npdm_text(i,j);
+
+  if(store_full_spatial_array_) {
+    build_full_spatial_array();
+    save_spatial_npdm_binary(i,j);
+    save_spatial_npdm_text(i,j);
   }
 
 #ifndef SERIAL
   world.barrier();
 #endif
   pout << "3PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
-
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Threepdm_container::save_npdm_text(const int &i, const int &j)
 {
-  if( mpigetrank() == 0)
-  {
+  if(mpigetrank() == 0) {
     char file[5000];
-    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/threepdm.", i, j,".txt");
+    sprintf(file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/threepdm.", i, j,".txt");
     ofstream ofs(file);
-    ofs << threepdm.dim1() << endl;
 
+    size_t ext = threepdm.extent();
+
+    ofs << ext << endl;
     double trace = 0.0;
-    for(int i=0; i<threepdm.dim1(); ++i)
-      for(int j=0; j<threepdm.dim2(); ++j)
-        for(int k=0; k<threepdm.dim3(); ++k)
-          for(int l=0; l<threepdm.dim4(); ++l)
-            for(int m=0; m<threepdm.dim5(); ++m)
-              for(int n=0; n<threepdm.dim6(); ++n) {
-                if ( abs(threepdm(i,j,k,l,m,n)) > NUMERICAL_ZERO ) {
-                  ofs << boost::format("%d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % threepdm(i,j,k,l,m,n);
-                  if ( (i==n) && (j==m) && (k==l) ) trace += threepdm(i,j,k,l,m,n);
+    for(int i = 0; i < ext; ++i)
+      for(int j = 0; j < ext; ++j)
+        for(int k = 0; k < ext; ++k)
+          for(int l = 0; l < ext; ++l)
+            for(int m = 0; m < ext; ++m)
+              for(int n = 0; n < ext; ++n) {
+                double value = threepdm(i,j,k,l,m,n);
+                if(i == n && j == m && k == l) trace += value;
+
+                // printing non-redundant elements only
+                if(i > j && j > k && l > m && m > n) {
+                  int ijk = i*(i-1)*(i-2)/6+j*(j-1)/2+k;
+                  int lmn = l*(l-1)*(l-2)/6+m*(m-1)/2+n;
+                  if(ijk > lmn && abs(value) > NUMERICAL_ZERO) {
+                    ofs << boost::format("%d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % value;
+                  }
                 }
+                // printing all elements for DEBUG
+//              if(abs(value) > NUMERICAL_ZERO)
+//                ofs << boost::format("%d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % value;
               }
+
     ofs.close();
     std::cout << "Spin-orbital 3PDM trace = " << trace << "\n";
   }
@@ -98,25 +112,45 @@ void Threepdm_container::save_npdm_text(const int &i, const int &j)
 
 void Threepdm_container::save_spatial_npdm_text(const int &i, const int &j)
 {
-  if( mpigetrank() == 0)
-  {
+  if(mpigetrank() == 0) {
     char file[5000];
-    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j,".txt");
+    sprintf(file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j,".txt");
     ofstream ofs(file);
-    ofs << spatial_threepdm.dim1() << endl;
 
+    size_t ext = spatial_threepdm.extent();
+
+    ofs << ext << endl;
     double trace = 0.0;
-    for(int i=0; i<spatial_threepdm.dim1(); ++i)
-      for(int j=0; j<spatial_threepdm.dim2(); ++j)
-        for(int k=0; k<spatial_threepdm.dim3(); ++k)
-          for(int l=0; l<spatial_threepdm.dim4(); ++l)
-            for(int m=0; m<spatial_threepdm.dim5(); ++m)
-              for(int n=0; n<spatial_threepdm.dim6(); ++n) {
-                if ( abs(spatial_threepdm(i,j,k,l,m,n)) > NUMERICAL_ZERO ) {
-                  ofs << boost::format("%d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % spatial_threepdm(i,j,k,l,m,n);
-                  if ( (i==n) && (j==m) && (k==l) ) trace += spatial_threepdm(i,j,k,l,m,n);
-                }
+
+//  TODO: NN prefers to following, symmetric_spatial_iterator is to be implemented.
+
+//  // printing spatial array (only non-redundant elements)
+//  for(auto it = spatial_threepdm.begin(); it != spatial_threepdm.end(); ++it) {
+//    int i = it.index()[0];
+//    int j = it.index()[1];
+//    int k = it.index()[2];
+//    int l = it.index()[3];
+//    int m = it.index()[4];
+//    int n = it.index()[5];
+//    if(abs(*it) > NUMERICAL_ZERO ) {
+//      ofs << boost::format("%d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % (*it);
+//    }
+//  }
+
+    // printing full all elements
+    for(int i = 0; i < ext; ++i)
+      for(int j = 0; j < ext; ++j)
+        for(int k = 0; k < ext; ++k)
+          for(int l = 0; l < ext; ++l)
+            for(int m = 0; m < ext; ++m)
+              for(int n = 0; n < ext; ++n) {
+                double& value = spatial_threepdm(i,j,k,l,m,n);
+                if(i == n  && j == m && k == l) trace += value;
+
+                if(abs(value) > NUMERICAL_ZERO)
+                  ofs << boost::format("%d %d %d %d %d %d %20.14e\n") % i % j % k % l % m % n % value;
               }
+
     ofs.close();
     std::cout << "Spatial      3PDM trace = " << trace << "\n";
   }
@@ -126,10 +160,9 @@ void Threepdm_container::save_spatial_npdm_text(const int &i, const int &j)
 
 void Threepdm_container::save_npdm_binary(const int &i, const int &j)
 {
-  if( mpigetrank() == 0)
-  {
+  if(mpigetrank() == 0) {
     char file[5000];
-    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/threepdm.", i, j,".bin");
+    sprintf(file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/threepdm.", i, j,".bin");
     std::ofstream ofs(file, std::ios::binary);
     boost::archive::binary_oarchive save(ofs);
     save << threepdm;
@@ -141,10 +174,9 @@ void Threepdm_container::save_npdm_binary(const int &i, const int &j)
 
 void Threepdm_container::save_spatial_npdm_binary(const int &i, const int &j)
 {
-  if( mpigetrank() == 0)
-  {
+  if(mpigetrank() == 0) {
     char file[5000];
-    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j,".bin");
+    sprintf(file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j,".bin");
     std::ofstream ofs(file, std::ios::binary);
     boost::archive::binary_oarchive save(ofs);
     save << spatial_threepdm;
@@ -158,145 +190,111 @@ void Threepdm_container::load_npdm_binary(const int &i, const int &j) { abort();
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_container::accumulate_npdm()
+void Threepdm_container::build_full_spatial_array()
+{
+  if(mpigetrank() == 0) {
+    // Take into account orbital reordering
+    const std::vector<int>& ro = dmrginp.reorder_vector();
+
+    size_t ext = spatial_threepdm.extent();
+
+    for(int i = 0; i < ext; ++i) {
+      int i2 = 2*i;
+      for(int j = 0; j < ext; ++j) {
+        int j2 = 2*j;
+        for(int k = 0; k < ext; ++k) {
+          int k2 = 2*k;
+          for(int l = 0; l < ext; ++l) {
+            int l2 = 2*l;
+            for(int m = 0; m < ext; ++m) {
+              int m2 = 2*m;
+              for(int n = 0; n < ext; ++n) {
+                int n2 = 2*n;
+                double& value = spatial_threepdm(ro.at(i), ro.at(j), ro.at(k), ro.at(l), ro.at(m), ro.at(n));
+                if(abs(value) == 0.0) {
+                  value = threepdm(i2  ,j2  ,k2  ,l2  ,m2  ,n2  )
+                        + threepdm(i2+1,j2  ,k2  ,l2  ,m2  ,n2+1)
+                        + threepdm(i2  ,j2+1,k2  ,l2  ,m2+1,n2  )
+                        + threepdm(i2  ,j2  ,k2+1,l2+1,m2  ,n2  )
+                        + threepdm(i2+1,j2+1,k2  ,l2  ,m2+1,n2+1)
+                        + threepdm(i2+1,j2  ,k2+1,l2+1,m2  ,n2+1)
+                        + threepdm(i2  ,j2+1,k2+1,l2+1,m2+1,n2  )
+                        + threepdm(i2+1,j2+1,k2+1,l2+1,m2+1,n2+1);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+/// this accumulates temporary storage to master process
+void Threepdm_container::update_array_component()
 {
 #ifndef SERIAL
-  array_6d<double> tmp_recv;
-  mpi::communicator world;
-  if( mpigetrank() == 0)
-  {
-    for(int p=1; p<world.size(); ++p) {
-      world.recv(p, p, tmp_recv);
-      for(int i=0; i<threepdm.dim1(); ++i)
-        for(int j=0; j<threepdm.dim2(); ++j)
-          for(int k=0; k<threepdm.dim3(); ++k)
-            for(int l=0; l<threepdm.dim4(); ++l)
-              for(int m=0; m<threepdm.dim5(); ++m)
-                for(int n=0; n<threepdm.dim6(); ++n) {
-                  if ( abs(tmp_recv(i,j,k,l,m,n)) > NUMERICAL_ZERO ) {
-                    // Test if any duplicate elements built on different processors
-                    if ( abs(threepdm(i,j,k,l,m,n)) > NUMERICAL_ZERO ) abort();
-                    threepdm(i,j,k,l,m,n) = tmp_recv(i,j,k,l,m,n);
-                  }
-                }
-    }
-  }
-  else 
-  {
-    world.send(0, mpigetrank(), threepdm);
-  }
+  boost::mpi::communicator world;
+  if(world.rank() == 0) {
 #endif
-}
+    for(auto it = tmp_store_.begin(); it != tmp_store_.end(); ++it) {
+      double value = it->second;
+      if(abs(value) < NUMERICAL_ZERO) continue;
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+      assert(it->first.size() == 6);
+      int i = it->first[0];
+      int j = it->first[1];
+      int k = it->first[2];
+      int l = it->first[3];
+      int m = it->first[4];
+      int n = it->first[5];
 
-void Threepdm_container::accumulate_spatial_npdm()
-{
+// DEBUG: whether or not duplication occurs
+//      : NN checked there's no duplication in case (8e, 8o)
+//    assert(abs(threepdm(i,j,k,l,m,n)) == 0.0);
+
+      threepdm(i,j,k,l,m,n) = value;
+    }
 #ifndef SERIAL
-  array_6d<double> tmp_recv;
-  mpi::communicator world;
-  if( mpigetrank() == 0)
-  {
-    for(int p=1; p<world.size(); ++p) {
-      world.recv(p, p, tmp_recv);
-      for(int i=0; i<spatial_threepdm.dim1(); ++i)
-        for(int j=0; j<spatial_threepdm.dim2(); ++j)
-          for(int k=0; k<spatial_threepdm.dim3(); ++k)
-            for(int l=0; l<spatial_threepdm.dim4(); ++l)
-              for(int m=0; m<spatial_threepdm.dim5(); ++m)
-                for(int n=0; n<spatial_threepdm.dim6(); ++n) {
-                  if( abs(tmp_recv(i,j,k,l,m,n)) > NUMERICAL_ZERO ) {
-                    // Test if any duplicate elements built on different processors
-                    if ( abs(spatial_threepdm(i,j,k,l,m,n)) > NUMERICAL_ZERO ) abort();
-                    spatial_threepdm(i,j,k,l,m,n) = tmp_recv(i,j,k,l,m,n);
-                  }
-                }
+    for(int iproc = 1; iproc < world.size(); ++iproc) {
+      std::vector<std::pair<std::vector<int>, double> > tmp_recv;
+      world.recv(iproc, iproc, tmp_recv);
+      for(auto it = tmp_recv.begin(); it != tmp_recv.end(); ++it) {
+        double value = it->second;
+        if(abs(value) < NUMERICAL_ZERO) continue;
+
+        assert(it->first.size() == 6);
+        int i = it->first[0];
+        int j = it->first[1];
+        int k = it->first[2];
+        int l = it->first[3];
+        int m = it->first[4];
+        int n = it->first[5];
+
+        threepdm(i,j,k,l,m,n) = value;
+      }
     }
   }
-  else 
-  {
-    world.send(0, mpigetrank(), spatial_threepdm);
+  else {
+    world.send(0, mpigetrank(), tmp_store_);
   }
 #endif
+  tmp_store_.clear();
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Threepdm_container::update_full_spin_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
+void Threepdm_container::store_npdm_elements(const std::vector<std::pair<std::vector<int>, double> >& in)
 {
+  // dims of spin-adapted -> non-spin-adapted transformation
+  if(dmrginp.spinAdapted())
+    assert(in.size() == 20);
+  else
+    assert(in.size() == 1);
 
-  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
-    double val = it->second;
-    if ( abs(val) < NUMERICAL_ZERO ) continue;
-
-    assert( (it->first).size() == 6 );
-    int i = (it->first)[0];
-    int j = (it->first)[1];
-    int k = (it->first)[2];
-    int l = (it->first)[3];
-    int m = (it->first)[4];
-    int n = (it->first)[5];
-
-    //if ( abs(val) > 1e-8 ) {
-    //  cout << "so-threepdm val: i,j,k,l,m,n = " 
-    //       << i << "," << j << "," << k << "," << l << "," << m << "," << n
-    //       << "\t\t" << val << endl;
-    //}
-
-    // Test for duplicates
-    if ( abs(threepdm(i,j,k,l,m,n)) != 0.0 ) {
-      cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<endl;
-      cout << "earlier value: " << threepdm(i,j,k,l,m,n) << endl << "new value:     " <<val<<endl;
-      abort();
-    }
-    threepdm(i,j,k,l,m,n) = val;
-  }
-
-}
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// This routine assumes that no spin-orbital indices are generated more than once
-
-void Threepdm_container::update_full_spatial_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
-{
-  // Take into account orbital reordering
-  const std::vector<int>& ro = dmrginp.reorder_vector();
-
-  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
-    assert( (it->first).size() == 6 );
-
-    // Store significant elements only
-    if ( abs(it->second) > NUMERICAL_ZERO ) {
-      // Spin indices
-      int i = (it->first)[0];
-      int j = (it->first)[1];
-      int k = (it->first)[2];
-      int l = (it->first)[3];
-      int m = (it->first)[4];
-      int n = (it->first)[5];
-
-      if ( i%2 != n%2 ) continue;
-      if ( j%2 != m%2 ) continue;
-      if ( k%2 != l%2 ) continue;
-
-      spatial_threepdm( ro.at(i/2), ro.at(j/2), ro.at(k/2), ro.at(l/2), ro.at(m/2), ro.at(n/2) ) += it->second;
-    }
-  }
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Threepdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
-{
-  assert( new_spin_orbital_elements.size() == 20 );
-  Threepdm_permutations perm;
-  std::vector< std::pair< std::vector<int>, double > > spin_batch;
-  // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
-  perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
-
-  //FIXME add options to dump to disk if memory becomes bottleneck
-  if ( ! store_nonredundant_spin_elements_ ) nonredundant_elements.clear();
-  if ( store_full_spin_array_ ) update_full_spin_array( spin_batch );
-  if ( store_full_spatial_array_ ) update_full_spatial_array( spin_batch );
+  if(store_full_spin_array_ || store_full_spatial_array_) tmp_store_.insert(tmp_store_.end(), in.begin(), in.end());
 }
 
 //===========================================================================================================================================================

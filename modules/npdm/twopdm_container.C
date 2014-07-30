@@ -7,7 +7,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include "global.h"
+#include "timer.h"
 #include <boost/format.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/utility.hpp>
 #include "twopdm_container.h"
 #include "npdm_permutations.h"
 
@@ -18,23 +21,26 @@ namespace Npdm{
 
 Twopdm_container::Twopdm_container( int sites )
 {
-  store_nonredundant_spin_elements_ = true;
   store_full_spin_array_ = true;
   store_full_spatial_array_ = true;
 
-  if ( store_full_spin_array_ ) {
-    if(dmrginp.spinAdapted())
-      twopdm.resize(2*sites,2*sites,2*sites,2*sites);
-    else
-      twopdm.resize(sites,sites,sites,sites);
-    twopdm.Clear();
-  }
-  if ( store_full_spatial_array_ ) {
-    if(dmrginp.spinAdapted())
-      spatial_twopdm.resize(sites,sites,sites,sites);
-    else
-      spatial_twopdm.resize(sites/2,sites/2,sites/2,sites/2);
-    spatial_twopdm.Clear();
+  if(mpigetrank() == 0) {
+    if(store_full_spin_array_) {
+      if(dmrginp.spinAdapted())
+        twopdm.resize(2*sites);
+      else
+        twopdm.resize(sites);
+
+      twopdm.fill(0.0);
+    }
+    if(store_full_spatial_array_) {
+      if(dmrginp.spinAdapted())
+        spatial_twopdm.resize(sites);
+      else
+        spatial_twopdm.resize(sites/2);
+
+      spatial_twopdm.fill(0.0);
+    }
   }
 }
 
@@ -47,13 +53,12 @@ void Twopdm_container::save_npdms(const int& i, const int& j)
   world.barrier();
 #endif
   Timer timer;
-  if ( store_full_spin_array_ ) {
-    accumulate_npdm();
-    save_npdm_binary(i, j);
-    save_npdm_text(i, j);
-  }
-  if ( store_full_spatial_array_ ) {
-    accumulate_spatial_npdm();
+
+  save_npdm_binary(i, j);
+  save_npdm_text(i, j);
+
+  if(store_full_spatial_array_) {
+    build_full_spatial_array();
     save_spatial_npdm_binary(i, j);
     save_spatial_npdm_text(i, j);
   }
@@ -68,20 +73,32 @@ void Twopdm_container::save_npdms(const int& i, const int& j)
 
 void Twopdm_container::save_npdm_text(const int &i, const int &j)
 {
-  if( mpigetrank() == 0)
-  {
+  if(mpigetrank() == 0) {
     char file[5000];
-    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/twopdm.", i, j,".txt");
+    sprintf(file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/twopdm.", i, j,".txt");
     ofstream ofs(file);
-    ofs << twopdm.dim1() << endl;
+
+    size_t ext = twopdm.extent();
+
+    ofs << ext << endl;
     double trace = 0.0;
-    for(int k=0; k<twopdm.dim1(); ++k)
-      for(int l=0; l<twopdm.dim2(); ++l)
-        for(int m=0; m<twopdm.dim3(); ++m)
-          for(int n=0; n<twopdm.dim4(); ++n) {
-            ofs << boost::format("%d %d %d %d %20.14e\n") % k % l % m % n % twopdm(k,l,m,n);
-            if ( (k==n) && (l==m) ) trace += twopdm(k,l,m,n);
+    for(int i = 0; i < ext; ++i)
+      for(int j = 0; j < ext; ++j)
+        for(int k = 0; k < ext; ++k)
+          for(int l = 0; l < ext; ++l) {
+            double value = twopdm(i,j,k,l);
+            if(i == l && j == k) trace += value;
+
+            // printing non-redundant elements only
+            if(i > j && k > l) {
+              int ij = i*(i-1)/2+j;
+              int kl = k*(k-1)/2+l;
+              if(ij > kl && abs(value) > NUMERICAL_ZERO) {
+                ofs << boost::format("%d %d %d %d %20.14e\n") % i % j % k % l % value;
+              }
+            }
           }
+
     ofs.close();
     std::cout << "Spin-orbital 2PDM trace = " << trace << "\n";
   }
@@ -91,20 +108,40 @@ void Twopdm_container::save_npdm_text(const int &i, const int &j)
 
 void Twopdm_container::save_spatial_npdm_text(const int &i, const int &j)
 {
-  if( mpigetrank() == 0)
-  {
+  if(mpigetrank() == 0) {
     char file[5000];
     sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j,".txt");
     ofstream ofs(file);
-    ofs << spatial_twopdm.dim1() << endl;
+
+    size_t ext = spatial_twopdm.extent();
+
+    ofs << ext << endl;
     double trace = 0.0;
-    for(int k=0; k<spatial_twopdm.dim1(); ++k)
-      for(int l=0; l<spatial_twopdm.dim2(); ++l)
-        for(int m=0; m<spatial_twopdm.dim3(); ++m)
-          for(int n=0; n<spatial_twopdm.dim4(); ++n) {
-            ofs << boost::format("%d %d %d %d %20.14e\n") % k % l % m % n % spatial_twopdm(k,l,m,n);
-            if ( (k==n) && (l==m) ) trace += spatial_twopdm(k,l,m,n);
+
+    ofs << spatial_twopdm.extent() << endl;
+
+//  for(auto it = spatial_twopdm.begin(); it != spatial_twopdm.end(); ++it) {
+//    int i = it.index()[0];
+//    int j = it.index()[1];
+//    int k = it.index()[2];
+//    int l = it.index()[3];
+//    if(abs(*it) > NUMERICAL_ZERO) {
+//      ofs << boost::format("%d %d %d %d %20.14e\n") % i % j % k % l % (*it);
+//    }
+//  }
+
+    // printing full spatial array (no use of permutation symmetry)
+    for(int i = 0; i < ext; ++i)
+      for(int j = 0; j < ext; ++j)
+        for(int k = 0; k < ext; ++k)
+          for(int l = 0; l < ext; ++l) {
+            double value = spatial_twopdm(i,j,k,l);
+            if(i == l  && j == k) trace += value;
+
+            if(abs(value) > NUMERICAL_ZERO)
+              ofs << boost::format("%d %d %d %d %20.14e\n") % i % j % k % l % value;
           }
+
     ofs.close();
     std::cout << "Spatial      2PDM trace = " << trace << "\n";
   }
@@ -114,8 +151,7 @@ void Twopdm_container::save_spatial_npdm_text(const int &i, const int &j)
 
 void Twopdm_container::save_npdm_binary(const int &i, const int &j)
 {
-  if( mpigetrank() == 0)
-  {
+  if(mpigetrank() == 0) {
     char file[5000];
     sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/twopdm.", i, j,".bin");
     std::ofstream ofs(file, std::ios::binary);
@@ -129,8 +165,7 @@ void Twopdm_container::save_npdm_binary(const int &i, const int &j)
 
 void Twopdm_container::save_spatial_npdm_binary(const int &i, const int &j)
 {
-  if( mpigetrank() == 0)
-  {
+  if(mpigetrank() == 0) {
     char file[5000];
     sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j,".bin");
     std::ofstream ofs(file, std::ios::binary);
@@ -142,128 +177,92 @@ void Twopdm_container::save_spatial_npdm_binary(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_container::accumulate_npdm()
+void Twopdm_container::build_full_spatial_array()
 {
-#ifndef SERIAL
-  array_4d<double> tmp_recv;
-  mpi::communicator world;
-  if( mpigetrank() == 0) {
-    for(int i=1;i<world.size();++i) {
-      world.recv(i, i, tmp_recv);
-      for(int k=0;k<twopdm.dim1();++k)
-        for(int l=0;l<twopdm.dim2();++l)
-          for(int m=0;m<twopdm.dim3();++m)
-            for(int n=0;n<twopdm.dim4();++n)
-              if ( abs(tmp_recv(k,l,m,n)) > NUMERICAL_ZERO) {
-                // Test for duplicates
-                if ( abs(twopdm(k,l,m,n)) > NUMERICAL_ZERO ) abort();
-                twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
-              }
-	 }
-  }
-  else {
-    world.send(0, mpigetrank(), twopdm);
-  }
-#endif
-}
+  if(mpigetrank() == 0) {
+    // Take into account orbital reordering
+    const std::vector<int>& ro = dmrginp.reorder_vector();
 
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+    size_t ext = spatial_twopdm.extent();
 
-void Twopdm_container::accumulate_spatial_npdm()
-{
-#ifndef SERIAL
-  array_4d<double> tmp_recv;
-  mpi::communicator world;
-  if( mpigetrank() == 0) {
-    for(int i=1;i<world.size();++i) {
-      world.recv(i, i, tmp_recv);
-      for(int k=0;k<spatial_twopdm.dim1();++k)
-        for(int l=0;l<spatial_twopdm.dim2();++l)
-          for(int m=0;m<spatial_twopdm.dim3();++m)
-            for(int n=0;n<spatial_twopdm.dim4();++n)
-              if ( abs(tmp_recv(k,l,m,n)) > NUMERICAL_ZERO) {
-                // Test for duplicates
-                if ( abs(spatial_twopdm(k,l,m,n)) > NUMERICAL_ZERO ) abort();
-                spatial_twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
-              }
-	 }
-  }
-  else {
-    world.send(0, mpigetrank(), spatial_twopdm);
-  }
-#endif
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void Twopdm_container::update_full_spin_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
-{
-  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
-    double val = it->second;
-    if ( abs(val) < NUMERICAL_ZERO ) continue;
-    int i = (it->first)[0];
-    int j = (it->first)[1];
-    int k = (it->first)[2];
-    int l = (it->first)[3];
-
-    //if ( abs(val) > 1e-8 ) pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
-    //pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
-
-    // Test for duplicates
-    if ( abs(twopdm(i, j, k, l)) != 0.0 ) {
-      cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<endl;
-      cout << "earlier value: "<<twopdm(i,j,k,l)<<endl<< "new value:     "<<val<<endl;
-      abort();
-    }
-    twopdm(i,j,k,l) = val;
-  }
-
-}
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------------------
-// This routine assumes that no spin-orbital indices are generated more than once
-
-void Twopdm_container::update_full_spatial_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
-{
-  // Take into account orbital reordering
-  const std::vector<int>& ro = dmrginp.reorder_vector();
-
-  // Note we multiply the spatial 2PDM by a factor of 1/2 to be consistent with the old BLOCK code, but this doesn't seem conventional?
-  double factor = 0.5;
-  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
-    assert( (it->first).size() == 4 );
-
-    // Store significant elements only
-    if ( abs(it->second) > NUMERICAL_ZERO ) {
-      // Spin indices
-      int i = (it->first)[0];
-      int j = (it->first)[1];
-      int k = (it->first)[2];
-      int l = (it->first)[3];
-
-      if ( i%2 != l%2 ) continue;
-      if ( j%2 != k%2 ) continue;
-
-      spatial_twopdm( ro.at(i/2), ro.at(j/2), ro.at(k/2), ro.at(l/2) ) += factor * (it->second);
+    for(int i = 0; i < ext; ++i) {
+      int i2 = 2*i;
+      for(int j = 0; j < ext; ++j) {
+        int j2 = 2*j;
+        for(int k = 0; k < ext; ++k) {
+          int k2 = 2*k;
+          for(int l = 0; l < ext; ++l) {
+            int l2 = 2*l;
+            double& value = spatial_twopdm(ro.at(i), ro.at(j), ro.at(k), ro.at(l));
+            if(abs(value) == 0.0) {
+              value = twopdm(i2  ,j2  ,k2  ,l2  )
+                    + twopdm(i2+1,j2  ,k2  ,l2+1)
+                    + twopdm(i2  ,j2+1,k2+1,l2  )
+                    + twopdm(i2+1,j2+1,k2+1,l2+1);
+            }
+          }
+        }
+      }
     }
   }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Twopdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
+void Twopdm_container::update_array_component()
 {
-  if(dmrginp.spinAdapted()) assert( new_spin_orbital_elements.size() == 6 );
-  else assert(new_spin_orbital_elements.size() == 1);
-  Twopdm_permutations perm;
-  std::vector< std::pair< std::vector<int>, double > > spin_batch;
-  // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
-  perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
+#ifndef SERIAL
+  boost::mpi::communicator world;
+  if(world.rank() == 0) {
+#endif
+    for (auto it = tmp_store_.begin(); it != tmp_store_.end(); ++it) {
+      double value = it->second;
+      if(abs(value) < NUMERICAL_ZERO) continue;
 
-  //FIXME add options to dump to disk if memory becomes bottleneck
-  if ( ! store_nonredundant_spin_elements_ ) nonredundant_elements.clear();
-  if ( store_full_spin_array_ ) update_full_spin_array( spin_batch );
-  if ( store_full_spatial_array_ ) update_full_spatial_array( spin_batch );
+      assert(it->first.size() == 4);
+      int i = it->first[0];
+      int j = it->first[1];
+      int k = it->first[2];
+      int l = it->first[3];
+
+      twopdm(i,j,k,l) = value;
+    }
+#ifndef SERIAL
+    for(int iproc = 1; iproc < world.size(); ++iproc) {
+      std::vector<std::pair<std::vector<int>, double> > tmp_recv;
+      world.recv(iproc, iproc, tmp_recv);
+      for(auto it = tmp_recv.begin(); it != tmp_recv.end(); ++it) {
+        double value = it->second;
+        if(abs(value) < NUMERICAL_ZERO) continue;
+
+        assert(it->first.size() == 4);
+        int i = it->first[0];
+        int j = it->first[1];
+        int k = it->first[2];
+        int l = it->first[3];
+
+        twopdm(i,j,k,l) = value;
+      }
+    }
+  }
+  else {
+    world.send(0, mpigetrank(), tmp_store_);
+  }
+#endif
+  tmp_store_.clear();
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Twopdm_container::store_npdm_elements(const std::vector<std::pair<std::vector<int>, double> > & in)
+{
+  // dims of spin-adapted -> non-spin-adapted transformation
+  if(dmrginp.spinAdapted())
+    assert(in.size() == 6);
+  else
+    assert(in.size() == 1);
+
+  if(store_full_spin_array_ || store_full_spatial_array_) tmp_store_.insert(tmp_store_.end(), in.begin(), in.end());
 }
 
 //===========================================================================================================================================================
