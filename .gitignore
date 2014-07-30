@@ -1,5 +1,6 @@
 *.o
 block.spin_adapted
+OH
 *.so
 *.a
 *~

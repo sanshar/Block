@@ -94,12 +94,15 @@ using namespace SpinAdapted;
 
 int calldmrg(char* input, char* output)
 {
-  license();
+  streambuf *backup;
+  backup = std::cout.rdbuf();
+  ofstream file;
   if (output != 0) {
-    ofstream file;
     file.open(output);
     cout.rdbuf(file.rdbuf());
   }
+
+  license();
   ReadInput(input);
   MAX_THRD = dmrginp.thrds_per_node()[mpigetrank()];
 #ifdef _OPENMP
@@ -259,6 +262,8 @@ int calldmrg(char* input, char* output)
     Npdm::npdm(2,true,true);
     break;
 
+  cout.rdbuf(backup);
+
   return 0;
   }
 }
@@ -274,8 +279,10 @@ void calldmrg_(char* input, char* output) {
 void fullrestartGenblock() {
   SweepParams sweepParams;
   bool direction; int restartsize;
-  sweepParams.restorestate(direction, restartsize);
+//sweepParams.restorestate(direction, restartsize);
   sweepParams.set_sweep_iter() = 0;
+  sweepParams.current_root() = -1;
+  direction = true;
   restartsize = 0;
 
   SweepGenblock::do_one(sweepParams, false, !direction, RESTART, restartsize, -1, -1);
