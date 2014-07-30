@@ -48,7 +48,8 @@ void test()
   MPS statea(0);
   double o, h;
   calcHamiltonianAndOverlap(statea, statea, h, o);
-  cout << o<<"  "<<h<<endl;
+  printf("overlap = %20.12e\n", o);
+  printf("helement = %20.12e\n", h);
   MPS stateb(1);
   calcHamiltonianAndOverlap(stateb, statea, h, o);
   cout << o<<"  "<<h<<endl;
