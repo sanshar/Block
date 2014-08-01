@@ -48,7 +48,7 @@ namespace GuessWave
   void onedot_transform_wavefunction(const StateInfo& oldstateinfo, const StateInfo& newstateinfo, const Wavefunction& oldwavefunction,
 				     const std::vector<Matrix>& inverseLeftRotationMatrix,
                                      const std::vector<Matrix>& rightRotationMatrix, Wavefunction& newwavefunction, 
-				     const bool& transpose_guess_wave);
+				     const bool& transpose_guess_wave, bool ket = true);
   void basic_guess_wavefunction(DiagonalMatrix& e, Wavefunction& trial, const StateInfo *stateinfo, const int state);
 
 }
