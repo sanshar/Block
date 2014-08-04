@@ -173,7 +173,7 @@ void Onepdm_container::accumulate_spatial_npdm()
 void Onepdm_container::calculate_spatial_npdm()
 {
   const std::vector<int>& ro = dmrginp.reorder_vector();
-  mpi::communicator world;
+  //mpi::communicator world;
   if( mpigetrank() == 0) {
     for(int k=0;k<spatial_onepdm.dim1();++k)
       for(int l=0;l<spatial_onepdm.dim2();++l)

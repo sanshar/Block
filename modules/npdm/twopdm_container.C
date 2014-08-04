@@ -233,7 +233,7 @@ void Twopdm_container::calculate_spatial_npdm()
 {
   const std::vector<int>& ro = dmrginp.reorder_vector();
   double factor = 0.5;
-  mpi::communicator world;
+  //mpi::communicator world;
   if( mpigetrank() == 0) {
     for(int k=0;k<spatial_twopdm.dim1();++k)
       for(int l=0;l<spatial_twopdm.dim2();++l)
