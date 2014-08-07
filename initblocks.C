@@ -42,6 +42,7 @@ void SpinAdapted::InitBlocks::InitStartingBlock (SpinBlock& startingBlock, const
       StateInfo addstate(ns, &s, &qs); 
       SpinBlock dummyblock(addstate, integralIndex);
       SpinBlock newstartingBlock;
+      newstartingBlock.set_integralIndex() = integralIndex;
       newstartingBlock.default_op_components(false, startingBlock, dummyblock, true, true, leftState==rightState);
       newstartingBlock.setstoragetype(LOCAL_STORAGE);
       newstartingBlock.BuildSumBlock(NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, startingBlock, dummyblock);

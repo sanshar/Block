@@ -145,11 +145,12 @@ SpinBlock::SpinBlock(int start, int finish, int p_integralIndex, bool implicitTr
 
 SpinBlock::SpinBlock (const SpinBlock& b) { *this = b; }
 
-SpinBlock::SpinBlock(const StateInfo& s, int integralIndex)
+SpinBlock::SpinBlock(const StateInfo& s, int pintegralIndex)
 {
   braStateInfo = s;
   ketStateInfo = s;
   sites.resize(0);
+  integralIndex = pintegralIndex;
 }
 
 

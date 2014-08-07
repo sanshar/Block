@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+  void initBoostMPI(int argc, char* argv[]) ;
   void ReadInputFromC(char* conf, int outputlevel);
   void readMPSFromDiskAndInitializeStaticVariables(int mpsindex);
   void evaluateOverlapAndHamiltonian(long *occ, int length, double* o, double* h);

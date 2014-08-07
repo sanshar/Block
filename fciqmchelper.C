@@ -3,6 +3,9 @@
 #include "operatorfunctions.h"
 #include "spinblock.h"
 #include "initblocks.h"
+#ifndef SERIAL
+#include <boost/mpi.hpp>
+#endif
 
 namespace SpinAdapted{
 
@@ -15,50 +18,58 @@ namespace SpinAdapted{
   //assumes that the state has been canonicalized in the left canonical form already and stored on disk
   MPS::MPS(int stateindex) {
 
-    std::vector<int> rotSites(2,0);
-    if (!dmrginp.spinAdapted()) {
-      rotSites[0] = 0; rotSites[1] = 3; //this should be 1 for spinadapted
-    }
-    else {
-      rotSites[0] = 0; rotSites[1] = 1; //this should be 1 for spinadapted
-    }
-
-    Matrix m(1,1); m=0;
-    std::vector<Matrix> rotMat;
-    if (!dmrginp.spinAdapted()) {
-      rotMat = std::vector<Matrix>(4,m);
-      rotMat[0](1,1) = 1.0;rotMat[1](1,1) = 1.0;rotMat[2](1,1) = 1.0;rotMat[3](1,1) = 1.0;
-    }
-    else {
-      if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0) {
+    if (mpigetrank() == 0) {
+      std::vector<int> rotSites(2,0);
+      if (!dmrginp.spinAdapted()) {
+	rotSites[0] = 0; rotSites[1] = 3; //this should be 1 for spinadapted
+      }
+      else {
+	rotSites[0] = 0; rotSites[1] = 1; //this should be 1 for spinadapted
+      }
+      
+      Matrix m(1,1); m=0;
+      std::vector<Matrix> rotMat;
+      if (!dmrginp.spinAdapted()) {
 	rotMat = std::vector<Matrix>(4,m);
 	rotMat[0](1,1) = 1.0;rotMat[1](1,1) = 1.0;rotMat[2](1,1) = 1.0;rotMat[3](1,1) = 1.0;
       }
       else {
-	rotMat = std::vector<Matrix>(3,m);
-	rotMat[0](1,1) = 1.0;rotMat[1](1,1) = 1.0;rotMat[2](1,1) = 1.0;
+	if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0) {
+	  rotMat = std::vector<Matrix>(4,m);
+	  rotMat[0](1,1) = 1.0;rotMat[1](1,1) = 1.0;rotMat[2](1,1) = 1.0;rotMat[3](1,1) = 1.0;
+	}
+	else {
+	  rotMat = std::vector<Matrix>(3,m);
+	  rotMat[0](1,1) = 1.0;rotMat[1](1,1) = 1.0;rotMat[2](1,1) = 1.0;
+	}
       }
-    }
-
-    SiteTensors.push_back(rotMat);
-
-    for (int i=0; i<MPS::sweepIters; i++) {
-      LoadRotationMatrix(rotSites, rotMat, stateindex);
+      
       SiteTensors.push_back(rotMat);
+      
+      for (int i=0; i<MPS::sweepIters; i++) {
+	LoadRotationMatrix(rotSites, rotMat, stateindex);
+	
+	SiteTensors.push_back(rotMat);
+	if (!dmrginp.spinAdapted())
+	  rotSites[1] += 2;
+	else
+	  rotSites[1] += 1;
+      }
+      
+      //loading the final wavefunction
       if (!dmrginp.spinAdapted())
-	rotSites[1] += 2;
+	rotSites[1] -=2;
       else
-	rotSites[1] += 1;
+	rotSites[1] -=1;
+      
+      StateInfo s;
+      w.LoadWavefunctionInfo(s, rotSites, stateindex);
     }
 
-    //loading the final wavefunction
-    if (!dmrginp.spinAdapted())
-      rotSites[1] -=2;
-    else
-      rotSites[1] -=1;
-
-    StateInfo s;
-    w.LoadWavefunctionInfo(s, rotSites, stateindex);
+#ifndef SERIAL
+    mpi::communicator world;
+    mpi::broadcast(world, *this, 0);
+#endif
   }
 
 
@@ -201,6 +212,8 @@ namespace SpinAdapted{
     InitBlocks::InitStartingBlock(system, forward, leftState, rightState, forward_starting_size, backward_starting_size, restartSize, restart, warmUp, 0); 
     SpinQuantum hq(0, SpinSpace(0), IrrepSpace(0));
 
+    if (dmrginp.outputlevel() > 0)
+      pout << system<<endl;
     system.transform_operators(const_cast<std::vector<Matrix>&>(statea.getSiteTensors(0)), 
 			       const_cast<std::vector<Matrix>&>(stateb.getSiteTensors(0)), false, false );
 
@@ -208,6 +221,7 @@ namespace SpinAdapted{
 
     for (int i=0; i<MPS::sweepIters-1; i++) {
       SpinBlock newSystem;
+      system.addAdditionalCompOps();
 
       InitBlocks::InitNewSystemBlock(system, MPS::siteBlocks[i+1], newSystem, 0, 1, sys_add, direct, 0, DISTRIBUTED_STORAGE, false, true);
 
@@ -218,19 +232,31 @@ namespace SpinAdapted{
     }
 
     SpinBlock newSystem, big;
+    system.addAdditionalCompOps();
     InitBlocks::InitNewSystemBlock(system, MPS::siteBlocks[MPS::sweepIters], newSystem, 0, 1, sys_add, direct, 0, DISTRIBUTED_STORAGE, false, true);
     
+    newSystem.set_loopblock(false); system.set_loopblock(false);
     InitBlocks::InitBigBlock(newSystem, MPS::siteBlocks[MPS::sweepIters+1], big); 
     
     Wavefunction temp = statea.getw();
     temp.Clear();
 
     big.multiplyH(const_cast<Wavefunction&>(stateb.getw()), &temp, 1);
-    h = DotProduct(statea.getw(), temp);
+
+    if (mpigetrank() == 0)
+      h = DotProduct(statea.getw(), temp);
 
     temp.Clear();
     big.multiplyOverlap(const_cast<Wavefunction&>(stateb.getw()), &temp, 1);
-    o = DotProduct(statea.getw(), temp);
+    if (mpigetrank() == 0)
+      o = DotProduct(statea.getw(), temp);
+
+#ifndef SERIAL
+    mpi::communicator world;
+    mpi::broadcast(world, h, 0);
+    mpi::broadcast(world, o, 0);
+#endif
+
     return;
   }
 

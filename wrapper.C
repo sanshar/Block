@@ -17,6 +17,12 @@ MPS globalMPS;
 }
 using namespace SpinAdapted;
 
+void initBoostMPI(int argc, char* argv[]) {
+#ifndef SERIAL
+  boost::mpi::environment env(argc, argv);
+#endif
+}
+
 void ReadInputFromC(char* conf, int outputlevel) {
   ReadInput(conf);
   dmrginp.setOutputlevel() = outputlevel;
@@ -31,16 +37,6 @@ void readMPSFromDiskAndInitializeStaticVariables(int mpsindex) {
   MPS::spinAdapted = false;
   for (int i=0; i<MPS::sweepIters+2; i++)
     MPS::siteBlocks.push_back(SpinBlock(i, i, 0, false)); //alway make transpose operators as well
-
-#ifndef SERIAL
-  if (mpigetrank() == 0)
-#endif
-    globalMPS = ::MPS(mpsindex);
-
-#ifndef SERIAL
-  mpi::communicator world;
-  mpi::broadcast(world, globalMPS, 0);
-#endif
 
 }
 
@@ -73,7 +69,6 @@ void writeFullMPS()
   //write ncore rotation matrices
   for (int i=2; i<ncore; i++) {
     sites[1] = i;
-    cout << "save rotation "<<i<<endl;
     SaveRotationMatrix(sites, rotMat_init, 0);
   }
 
@@ -94,7 +89,6 @@ void writeFullMPS()
   //write ncore rotation matrices
   for (int i=ncore+nactive; i<ncore+nactive+nvirt; i++) {
     sites[1] = i;
-    cout << "save virtual rotation "<<i<<endl;
     SaveRotationMatrix(sites, virtcorMat, 0);
   }
 
@@ -103,23 +97,30 @@ void writeFullMPS()
 
 void test()
 {
+  setbuf(stdout, NULL);
+  cout.precision(12);
   MPS statea(0);
   double o, h;
   calcHamiltonianAndOverlap(statea, statea, h, o);
-  cout.precision(12);
-  cout << o<<"  "<<h<<endl;
 
-  MPS stateb(1);
-  calcHamiltonianAndOverlap(stateb, stateb, h, o);
-  cout << o<<"  "<<h<<endl;
+  if (mpigetrank() == 0)
+    printf("<0|0> = %18.10f   <0|H|0> = %18.10f\n", o, h);
 
   MPS statec(2);
-  calcHamiltonianAndOverlap(statec, statea, h, o);
-  cout << o<<"  "<<h<<endl;
+  calcHamiltonianAndOverlap(statea, statec, h, o);
+  if (mpigetrank() == 0)
+    printf("<0|1> = %18.10f   <0|H|1> = %18.10f\n", o, h);
 
+
+  //MPS stateb(1);
+  //calcHamiltonianAndOverlap(stateb, stateb, h, o);
+  //cout << o<<"  "<<h<<endl;
 
   calcHamiltonianAndOverlap(statec, statec, h, o);
-  cout << o<<"  "<<h<<endl;
+  if (mpigetrank() == 0)
+    printf("<1|1> = %18.10f   <1|H|1> = %18.10f\n", o, h);
+
+
 
 }
 

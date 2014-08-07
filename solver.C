@@ -56,13 +56,20 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
   if (!haveEnoughStates) {
     //sometimes when you need many roots and at the start of the sweep the hilbert space is not big
     //enough to support all the roots
-
+    
     solution.resize(nroots);
 
-    for (int i=0; i<nroots; i++) {
-      solution[i].initialise(dmrginp.effective_molecule_quantum_vec(), &big, onedot);
-      solution[i].Randomise();
-      Normalise(solution[i]);
+    if (dmrginp.calc_type() != RESPONSE) {
+      for (int i=0; i<nroots; i++) {
+	solution[i].initialise(dmrginp.effective_molecule_quantum_vec(), &big, onedot);
+	solution[i].Randomise();
+	Normalise(solution[i]);
+      }
+    }
+    else {
+      solution.resize(1);
+      GuessWave::guess_wavefunctions(solution[0], e, big, guesswavetype, onedot, currentRoot, 
+				     dot_with_sys, 0.0); 
     }
   
   }
