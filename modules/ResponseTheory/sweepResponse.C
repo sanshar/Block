@@ -625,7 +625,16 @@ void SpinAdapted::SweepResponse::WavefunctionCanonicalize (SweepParams &sweepPar
       environmentDotEnd = environmentDotStart - environmentDotSize;
     }
   systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), true);
-  environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, system.get_integralIndex(), true);
+
+  vector<int> sitesenvdot(environmentDotSize+1, 0);
+  int index = 0;
+  for (int i=min(environmentDotStart, environmentDotEnd); i<max(environmentDotStart, environmentDotEnd)+1; i++) {
+    sitesenvdot[index] = (i);
+    index++;
+  }
+
+  SpinBlock::restore(!forward, sitesenvdot, environmentDot, targetState, targetState); 
+
   SpinBlock environment, newEnvironment;
   
   SpinBlock big;  // new_sys = sys+sys_dot; new_env = env+env_dot; big = new_sys + new_env then renormalize to find new_sys(new)
@@ -718,9 +727,12 @@ void SpinAdapted::SweepResponse::WavefunctionCanonicalize (SweepParams &sweepPar
     int perturbationIntegral = 1;
     
     SpinBlock overlapBig;
-    SpinBlock overlapsystem, overlapenvironment, overlapnewsystem, overlapnewenvironment;
+    SpinBlock overlapsystem, overlapenvironment, overlapnewsystem, overlapnewenvironment, overlapenvironmentDot;
     SpinBlock overlapsystemDot(systemDotStart, systemDotEnd, perturbationIntegral, true);
-    SpinBlock overlapenvironmentDot(environmentDotStart, environmentDotEnd, perturbationIntegral, true);
+
+    overlapenvironmentDot.set_integralIndex() = perturbationIntegral;
+    SpinBlock::restore(!forward, sitesenvdot, overlapenvironmentDot, targetState, baseState); 
+
     guessWaveTypes guesstype = sweepParams.get_block_iter() == 0 ? TRANSPOSE : TRANSFORM;
     
     DiagonalMatrix e;

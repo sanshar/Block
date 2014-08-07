@@ -62,7 +62,7 @@ void SpinAdapted::SweepCompress::BlockDecimateAndCompress (SweepParams &sweepPar
   systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), true);
   environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, system.get_integralIndex(), true);
 
-  Sweep::makeSystemEnvironmentBigBlocks(system, systemDot, newSystem, environment, environmentDot, newEnvironment, big, sweepParams, dot_with_sys, system.get_integralIndex(), useSlater, targetState, baseState);
+  Sweep::makeSystemEnvironmentBigBlocks(system, systemDot, newSystem, environment, environmentDot, newEnvironment, big, sweepParams, dot_with_sys, useSlater, system.get_integralIndex(), targetState, baseState);
 
 
   //analyse_operator_distribution(big);
@@ -101,7 +101,8 @@ void SpinAdapted::SweepCompress::BlockDecimateAndCompress (SweepParams &sweepPar
 
   davidson_f(solution[0], outputState[0]);
   double overlap = 1.0;
-  
+
+  SpinQuantum hq(0, SpinSpace(0), IrrepSpace(0));
   sweepParams.set_lowest_energy() = std::vector<double>(1,overlap);
 
   SpinBlock newbig;
@@ -133,9 +134,11 @@ void SpinAdapted::SweepCompress::BlockDecimateAndCompress (SweepParams &sweepPar
   if (sweepParams.get_noise() > NUMERICAL_ZERO) {
     pout << "adding noise  "<<trace(bratracedMatrix)<<"  "<<sweepiter<<"  "<<dmrginp.weights(sweepiter)[0]<<endl;
     bratracedMatrix.add_onedot_noise_forCompression(solution[0], newbig, sweepParams.get_noise()*max(1.0,trace(bratracedMatrix)));
+    if (trace(bratracedMatrix) <1e-14) 
+      bratracedMatrix.SymmetricRandomise();
+      
     pout << "after noise  "<<trace(bratracedMatrix)<<"  "<<sweepParams.get_noise()<<endl;
   }
-
   environment.clear();
   newEnvironment.clear();
 
@@ -258,7 +261,7 @@ double SpinAdapted::SweepCompress::do_one(SweepParams &sweepParams, const bool &
       if (warmUp )
 	Startup(sweepParams, system, newSystem, dot_with_sys, targetState, baseState);
       else {
-	BlockDecimateAndCompress (sweepParams, system, newSystem, warmUp, dot_with_sys, targetState, baseState);
+	BlockDecimateAndCompress (sweepParams, system, newSystem, false, dot_with_sys, targetState, baseState);
       }
       
       //Need to substitute by?
@@ -489,6 +492,7 @@ void SpinAdapted::SweepCompress::Startup (SweepParams &sweepParams, SpinBlock& s
     newbig = big;
 
 
+  SpinQuantum hq(0, SpinSpace(0), IrrepSpace(0));
 
   std::vector<Matrix> ketrotateMatrix, brarotateMatrix;
   DensityMatrix kettracedMatrix(newSystem.get_ketStateInfo());
@@ -500,7 +504,8 @@ void SpinAdapted::SweepCompress::Startup (SweepParams &sweepParams, SpinBlock& s
 
   bratracedMatrix.makedensitymatrix(solution, newbig, dmrginp.weights(0), 0.0, 
 				    0.0, true);
-  //bratracedMatrix.add_onedot_noise_forCompression(solution[0], newbig, sweepParams.get_noise()*trace(bratracedMatrix));
+  //bratracedMatrix.add_onedot_noise_forCompression(solution[0], newbig, sweepParams.get_noise()*max(1.0, trace(bratracedMatrix)));
+  //bratracedMatrix.add_twodot_noise(newbig, sweepParams.get_noise());
   environment.clear();
   newEnvironment.clear();
 

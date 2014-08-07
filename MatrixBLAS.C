@@ -60,6 +60,18 @@ void SpinAdapted::Randomise (Matrix& a)
     }
 }
 
+void SpinAdapted::SymmetricRandomise (Matrix& a)
+{
+  assert(a.Nrows() == a.Ncols());
+
+  for (int i=0; i<a.Nrows(); i++)
+  for (int j=0; j<i+1; j++) {
+    a(i+1, j+1) = double(rand())/RAND_MAX;
+    a(j+1, i+1) = a(i+1, j+1);
+  }
+
+}
+
 double SpinAdapted::dotproduct(const ColumnVector& a, const ColumnVector& b)
 {
   assert(a.Nrows() == b.Nrows());

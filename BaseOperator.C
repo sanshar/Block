@@ -213,6 +213,14 @@ void SparseMatrix::Randomise ()
 	    SpinAdapted::Randomise(operator_element(lQ, rQ));
 }
 
+void SparseMatrix::SymmetricRandomise ()
+{
+  for (int lQ = 0; lQ < nrows(); ++lQ)
+    for (int rQ = 0; rQ < ncols(); ++rQ)
+      if (allowed(lQ, rQ)) 
+	SpinAdapted::SymmetricRandomise(operator_element(lQ, rQ));
+}
+
 double trace(const SparseMatrix& lhs)
 {
   assert(lhs.nrows() == lhs.ncols());

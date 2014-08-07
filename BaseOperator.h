@@ -176,6 +176,7 @@ class SparseMatrix : public Baseoperator<Matrix>  // the sparse matrix represent
   std::vector<double> calcMatrixElements(Csf& c1, TensorOp& Top, Csf& c2);
   friend ostream& operator<<(ostream& os, const SparseMatrix& a);
   void Randomise();
+  void SymmetricRandomise();
   void Normalise(int* success);
   void Clear();
   void CleanUp();
