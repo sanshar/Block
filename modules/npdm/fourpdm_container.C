@@ -263,8 +263,34 @@ void Fourpdm_container::save_spatial_npdm_binary(const int &i, const int &j)
     char newfile[5000];
     sprintf (newfile, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",i,j,mpigetrank(),".bin");
     boost::filesystem::rename(oldfile,newfile);
-    external_sort_index(i,j);
-}
+
+    if(dmrginp.pdm_unsorted())
+      external_sort_index(i,j);
+    else{
+      boost::mpi::communicator world;
+      world.barrier();
+      Timer timer1;
+      char file[5000];
+      sprintf (file, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",i,j,mpigetrank(),".bin");
+      char tmpfile[5000];
+      sprintf (tmpfile, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",i,j,mpigetrank(),".tmp");
+      char sortedfile[5000];
+      sprintf (sortedfile, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",i,j,mpigetrank(),".bin");
+      char finalfile[5000];
+      sprintf (finalfile, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",i,j,".bin");
+
+      partition_data<index_element>((long)pow(dmrginp.last_site(),8),file,tmpfile);
+      externalsort<index_element>(tmpfile,sortedfile,(long)pow(dmrginp.last_site(),8));
+      world.barrier();
+      pout << "4PDM parallel external sort time " << timer1.elapsedwalltime() << " " << timer1.elapsedcputime() << endl;
+      Timer timer;
+      mergefile(sortedfile);
+      world.barrier();
+      if(mpigetrank()==0) boost::filesystem::rename(sortedfile,finalfile);
+      boost::filesystem::remove(tmpfile);
+      pout << "4PDM merge sorted file time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+    }
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -533,8 +559,10 @@ void Fourpdm_container::dump_to_disk(std::vector< std::pair< std::vector<int>, d
     i++;
   }
   fwrite(index_elements,sizeof(index_element),index_and_elements.size(),spatpdm_disk);
+  if(dmrginp.pdm_unsorted()){
   batch_index onerecord(index_and_elements.begin()->first,spatpdm_disk_position/sizeof(index_element),index_and_elements.size(),mpigetrank());
   nonspin_batch.push_back(onerecord);
+  }
 }
 
 

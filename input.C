@@ -110,6 +110,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_store_spinpdm = false;
   m_spatpdm_disk_dump = false;
   m_store_nonredundant_pdm =false;
+  m_pdm_unsorted = false;
  
   m_maxiter = 10;
   m_oneindex_screen_tol = NUMERICAL_ZERO;
@@ -488,7 +489,6 @@ SpinAdapted::Input::Input(const string& config_name) {
   if (tok.size()==2 )
 	  m_total_symmetry_number = IrrepSpace(atoi(tok[1].c_str())-1);
   else if (tok.size()==3 ){
-    cout << "here"<<endl;
 	  m_bra_symmetry_number = IrrepSpace(atoi(tok[1].c_str())-1);
 	  m_total_symmetry_number = IrrepSpace(atoi(tok[2].c_str())-1);
     m_transition_diff_spatial_irrep=true;
@@ -661,6 +661,10 @@ SpinAdapted::Input::Input(const string& config_name) {
       else if (boost::iequals(keyword, "nonredundant_pdm"))
       {
         m_store_nonredundant_pdm = true;
+      }
+      else if (boost::iequals(keyword, "pdm_unsorted"))
+      {
+        m_pdm_unsorted = true;
       }
 
 

@@ -1,9 +1,94 @@
 #ifndef EXTERNAL_SORT_H
 #define EXTERNAL_SORT_H
 
+#include "global.h"
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <vector> 
+#include <fstream>
+#include <iostream>
+#define Buff_SIZE 1024*1024*8
+#define merge_buff_size (Buff_SIZE*100) // during the merge of file, only one processor works. More momery available.
+
 namespace SpinAdapted{
 namespace Npdm{
 
+  using namespace std;
+
+template<class T>
+class has_index{
+  template<class U>
+  static std::true_type __test(typename U::indextype);
+  template<class >
+  static std::false_type __test(...);
+public:
+  static constexpr const bool value = std::is_same<std::true_type, decltype(__test<T>(0))>::value;
+};
+
+  class index_element{
+    public:
+    typedef long indextype ;
+    typedef double valuetype;
+    long index;
+    double element;
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+      ar & index;
+      ar &element;
+    }
+    friend ostream& operator<<(ostream& os, const index_element& onepiece) {
+      os << onepiece.index<< "\t\t\t" << onepiece.element;
+      return os;
+    }
+    bool operator<(const index_element& onepiece2) const{
+      if(index < onepiece2.index) return true;
+      if(index > onepiece2.index) return false;
+      if(index == onepiece2.index){
+        cout << "there are elements with same index"<<endl;
+        if(element !=onepiece2.element) 
+        {
+          cout << " and their values are different, abort"<<endl;
+          abort();
+        }
+
+      }
+    }
+  };
+
+//std::pair cannot be sent by boost mpi
+//I need a bool to tell receivers that this is the last data, prepare to close the receiving. 
+//Otherwise, the time that ending signal arrives cannot be made sure of. 
+//The receivers will always wait. Or checking the ending signal is needed.
+template< class T> 
+struct info_pair
+{
+  std::vector<T> first;
+  bool second;
+
+  info_pair() = default;
+  info_pair(const info_pair& x) = default;
+  info_pair& operator=(const info_pair& x) = default;
+  ~info_pair() = default;
+
+  friend class boost::serialization::access;
+  template<class Archive>
+  void serialize(Archive & ar, const unsigned int version)
+  {
+    ar & this->first;
+    ar & this->second;
+  }
+
+};
+
+template<class T>
+info_pair<T> make_infopair(const std::vector<T>& x, bool finished){
+  info_pair<T> pair;
+  pair.first=x;
+  pair.second=finished;
+  return pair;
+};
 
 template< class T> 
 class cache
@@ -117,23 +202,6 @@ class cache
 
 };
 
-class index_element{
-  public:
-  long index;
-  double element;
-  friend class boost::serialization::access;
-  template<class Archive>
-  void serialize(Archive & ar, const unsigned int version)
-  {
-    ar & index;
-    ar &element;
-  }
-  friend ostream& operator<<(ostream& os, const index_element& onepiece){
-    os << onepiece.index<< "\t\t\t" << onepiece.element;
-    return os;
-  }
-};
-
 class batch_index{
   public:
   batch_index(){}
@@ -181,6 +249,17 @@ class batch_index{
     ar & mpi_number;
   }
 };
+
+template<class T,class = typename std::enable_if<has_index<T>::value>::type> 
+void partition_data(long number_of_data, char* inputfilename, char* outputfilename);
+
+void mergefile(char* filename);
+
+//outfilename and inputfilename can be the same. There is no conflict.
+template<class T, bool amdzero=true > 
+void externalsort(char* inputfilename, char* outputfilename, long partition_index);
+
+void parallel_external_sort( char* filename);
 
 }
 }
