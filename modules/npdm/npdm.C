@@ -478,33 +478,33 @@ void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
       }
     }
   }
-    else{
-      for (int state=0; state<dmrginp.nroots(); state++) {
-        dmrginp.set_fullrestart() = true;
-        sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+  else{
+    for (int state=0; state<dmrginp.nroots(); state++) {
+      dmrginp.set_fullrestart() = true;
+      sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
 
-        if (mpigetrank() == 0) {
-          Sweep::InitializeStateInfo(sweepParams, direction, state);
-          Sweep::InitializeStateInfo(sweepParams, !direction, state);
-          Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
-          Sweep::CanonicalizeWavefunction(sweepParams, !direction, state);
-          Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
-        }
-        // Prepare NPDM operators
-        SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
-        dmrginp.set_fullrestart() = false;
-        // Do NPDM sweep
-        if ( dmrginp.new_npdm_code() ) {
-          npdm_driver->clear();
-          npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,state);
-        }
-        else {
-          if (npdm_order == 1) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);      // Compute onepdm with the original code
-          else if (npdm_order == 2) SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state); // Compute twopdm with the original code
-          else abort();
+      if (mpigetrank() == 0) {
+        Sweep::InitializeStateInfo(sweepParams, direction, state);
+        Sweep::InitializeStateInfo(sweepParams, !direction, state);
+        Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
+        Sweep::CanonicalizeWavefunction(sweepParams, !direction, state);
+        Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
       }
+      // Prepare NPDM operators
+      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
+      dmrginp.set_fullrestart() = false;
+      // Do NPDM sweep
+      if ( dmrginp.new_npdm_code() ) {
+        npdm_driver->clear();
+        npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,state);
+      }
+      else {
+        if (npdm_order == 1) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);      // Compute onepdm with the original code
+        else if (npdm_order == 2) SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state); // Compute twopdm with the original code
+        else abort();
     }
-    }
+   }
+  }
   
 }
 

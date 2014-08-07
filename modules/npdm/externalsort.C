@@ -23,7 +23,7 @@ void partition_data(long number_of_data, char* inputfilename, char* outputfilena
 {
   boost::mpi::communicator world;
   long partition_index=number_of_data/world.size();
-  std::cout << "begin partition\n";
+  //std::pout << "begin partition\n";
 
   std::vector<info_pair<T>> recv_buff(world.size());
   std::vector<std::vector<T>> send_buff(world.size());
@@ -314,7 +314,7 @@ void parallel_external_sort( char* filename){
   char sortedfilename[200];
   sprintf (sortedfilename, "%s%d.%d.%d%s", filename,0,0,world.rank(),".sorted");
   partition_data<index_element>((long)pow(6,6),inputfilename,tmpfilename);
-  std::cout << "finished partition_data" << world.rank()<<std::endl;
+  //std::pout << "finished partition_data" << world.rank()<<std::endl;
   externalsort<index_element>(tmpfilename,sortedfilename,(long)pow(6,6));
   mergefile(sortedfilename);
 
