@@ -175,7 +175,7 @@ void Fourpdm_container::external_sort_index(const int &i, const int &j)
       //std::copy(nonspin_batch.begin(),nonspin_batch.end(),tmpbuffer);
       sprintf (file, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm_index.", i, j,p,".bin");
       FILE* inputfile=fopen(file,"wb");
-      fwrite(&nonspin_batch[0],sizeof(batch_index),nonspin_batch.size(),inputfile);
+      fwrite(&nonspin_batch[0],sizeof(Sortpdm::batch_index),nonspin_batch.size(),inputfile);
       fclose(inputfile);
       nonspin_batch.clear();
     }
@@ -187,16 +187,16 @@ void Fourpdm_container::external_sort_index(const int &i, const int &j)
     FILE* outputfile = fopen(outfilename,"wb");
     long sorting_buff= 1024*1024*(32/world.size());
     //For batch_index, the sorting buff is about 96M/world.size();
-    std::vector<cache<batch_index>> filecache;
+    std::vector<Sortpdm::cache<Sortpdm::batch_index>> filecache;
     for(int p=0; p< world.size();p++){
       char file[5000];
       sprintf (file, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm_index.", i, j,p,".bin");
-      cache<batch_index> tmpcache( file, sorting_buff);
+      Sortpdm::cache<Sortpdm::batch_index> tmpcache( file, sorting_buff);
       filecache.push_back(tmpcache);
     }
     long outputbuffsize=sorting_buff*4;
     long outputbuff_position = 0;
-    batch_index outputbuff[outputbuffsize];
+    Sortpdm::batch_index outputbuff[outputbuffsize];
     for(;;){
       // select the smallest one in the current positions of different caches.
       int smallest = 0;
@@ -210,13 +210,13 @@ void Fourpdm_container::external_sort_index(const int &i, const int &j)
         filecache[smallest].clear();
         filecache.erase(filecache.begin()+smallest);
         if (filecache.size()==0) {
-        fwrite(outputbuff,sizeof(batch_index),outputbuff_position,outputfile);
+        fwrite(outputbuff,sizeof(Sortpdm::batch_index),outputbuff_position,outputfile);
         break;
         }
       }
 
       if(outputbuff_position == outputbuffsize){
-        fwrite(outputbuff,sizeof(batch_index),outputbuffsize,outputfile);
+        fwrite(outputbuff,sizeof(Sortpdm::batch_index),outputbuffsize,outputfile);
         outputbuff_position=0;
       }
 
@@ -235,7 +235,7 @@ void Fourpdm_container::external_sort_index(const int &i, const int &j)
     char file[5000];
     sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/fourpdm_index.", i, j,".bin");
     FILE* outfile=fopen(file,"wb");
-    fwrite(&nonspin_batch[0],sizeof(batch_index),nonspin_batch.size(),outfile);
+    fwrite(&nonspin_batch[0],sizeof(Sortpdm::batch_index),nonspin_batch.size(),outfile);
     nonspin_batch.clear();
 #endif
 }
@@ -267,28 +267,35 @@ void Fourpdm_container::save_spatial_npdm_binary(const int &i, const int &j)
     if(dmrginp.pdm_unsorted())
       external_sort_index(i,j);
     else{
+      char file[5000];
+      sprintf (file, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",i,j,mpigetrank(),".bin");
+      char finalfile[5000];
+      sprintf (finalfile, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",i,j,".bin");
+#ifndef SERIAL
       boost::mpi::communicator world;
       world.barrier();
       Timer timer1;
-      char file[5000];
-      sprintf (file, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",i,j,mpigetrank(),".bin");
       char tmpfile[5000];
       sprintf (tmpfile, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",i,j,mpigetrank(),".tmp");
       char sortedfile[5000];
       sprintf (sortedfile, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",i,j,mpigetrank(),".bin");
-      char finalfile[5000];
-      sprintf (finalfile, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",i,j,".bin");
 
-      partition_data<index_element>((long)pow(dmrginp.last_site(),8),file,tmpfile);
-      externalsort<index_element>(tmpfile,sortedfile,(long)pow(dmrginp.last_site(),8));
+      Sortpdm::partition_data<Sortpdm::index_element>((long)pow(dmrginp.last_site(),8),file,tmpfile);
+      Sortpdm::externalsort<Sortpdm::index_element>(tmpfile,sortedfile,(long)pow(dmrginp.last_site(),8));
       world.barrier();
       pout << "4PDM parallel external sort time " << timer1.elapsedwalltime() << " " << timer1.elapsedcputime() << endl;
       Timer timer;
-      mergefile(sortedfile);
+      Sortpdm::mergefile(sortedfile);
       world.barrier();
       if(mpigetrank()==0) boost::filesystem::rename(sortedfile,finalfile);
       boost::filesystem::remove(tmpfile);
       pout << "4PDM merge sorted file time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+#else
+      Timer timer2;
+      Sortpdm::externalsort<Sortpdm::index_element> (file,finalfile,(long)pow(dmrginp.last_site(),8));
+      boost::filesystem::remove(file);
+      pout << "4PDM external sort time " << timer2.elapsedwalltime() << " " << timer2.elapsedcputime() << endl;
+#endif
     }
   }
 }
@@ -549,7 +556,7 @@ void Fourpdm_container::dump_to_disk(std::vector< std::pair< std::vector<int>, d
     }
   }
   if(index_and_elements.size()==0) return;
-  index_element index_elements[1152];
+  Sortpdm::index_element index_elements[1152];
   // number of permutation is (4*3*2)*(4*3*2) , and then transpose(x2) .
   assert(1152>= index_and_elements.size());
   int i=0;
@@ -558,9 +565,9 @@ void Fourpdm_container::dump_to_disk(std::vector< std::pair< std::vector<int>, d
     index_elements[i].element=it->second;
     i++;
   }
-  fwrite(index_elements,sizeof(index_element),index_and_elements.size(),spatpdm_disk);
+  fwrite(index_elements,sizeof(Sortpdm::index_element),index_and_elements.size(),spatpdm_disk);
   if(dmrginp.pdm_unsorted()){
-  batch_index onerecord(index_and_elements.begin()->first,spatpdm_disk_position/sizeof(index_element),index_and_elements.size(),mpigetrank());
+  Sortpdm::batch_index onerecord(index_and_elements.begin()->first,spatpdm_disk_position/sizeof(Sortpdm::index_element),index_and_elements.size(),mpigetrank());
   nonspin_batch.push_back(onerecord);
   }
 }
