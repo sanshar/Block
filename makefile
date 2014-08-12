@@ -5,10 +5,10 @@
 
 ##BOOSTINCLUDE = /home/sandeep/Work/Programs/boost_1_54_0/
 #specify boost include file
-BOOSTINCLUDE = /home/shengg/opt/boost/include
+BOOSTINCLUDE = /home/juny/boost_1_55_0/install//include
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/home/shengg/opt/boost/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+BOOSTLIB = -L/home/juny/boost_1_55_0/install/lib/ -lboost_serialization -lboost_system -lboost_filesystem
 LAPACKBLAS =  -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 
