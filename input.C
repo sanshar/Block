@@ -144,7 +144,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_schedule_type_backward = false;
   m_maxM = 0;
   m_lastM = 500;
-  m_startM = 500;
+  m_startM = 250;
   m_core_energy = 0.0;
 
   //reorder options, by default it does fiedler
