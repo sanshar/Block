@@ -16,6 +16,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 namespace Npdm{
 
+  using namespace Sortpdm;
 //===========================================================================================================================================================
 
 class Threepdm_container : public Npdm_container {

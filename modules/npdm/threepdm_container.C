@@ -174,9 +174,10 @@ void Threepdm_container::external_sort_index(const int &i, const int &j)
       //std::copy(nonspin_batch.begin(),nonspin_batch.end(),tmpbuffer);
       sprintf (file, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm_index.", i, j,p,".bin");
       FILE* inputfile=fopen(file,"wb");
-      fwrite(&nonspin_batch[0],sizeof(batch_index),nonspin_batch.size(),inputfile);
+      fwrite(&nonspin_batch[0],sizeof(Sortpdm::batch_index),nonspin_batch.size(),inputfile);
       fclose(inputfile);
       nonspin_batch.clear();
+      if(world.size() == 0) return;
     }
     //external sort nonspin_batch
     //TODO
@@ -186,16 +187,16 @@ void Threepdm_container::external_sort_index(const int &i, const int &j)
     FILE* outputfile = fopen(outfilename,"wb");
     long sorting_buff= 1024*1024*(32/world.size());
     //For batch_index, the sorting buff is about 96M/world.size();
-    std::vector<cache<batch_index>> filecache;
+    std::vector<Sortpdm::cache<Sortpdm::batch_index>> filecache;
     for(int p=0; p< world.size();p++){
       char file[5000];
       sprintf (file, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm_index.", i, j,p,".bin");
-      cache<batch_index> tmpcache( file, sorting_buff);
+      Sortpdm::cache<Sortpdm::batch_index> tmpcache( file, sorting_buff);
       filecache.push_back(tmpcache);
     }
     long outputbuffsize=sorting_buff*4;
     long outputbuff_position = 0;
-    batch_index outputbuff[outputbuffsize];
+    Sortpdm::batch_index outputbuff[outputbuffsize];
     for(;;){
       // select the smallest one in the current positions of different caches.
       int smallest = 0;
@@ -209,13 +210,13 @@ void Threepdm_container::external_sort_index(const int &i, const int &j)
         filecache[smallest].clear();
         filecache.erase(filecache.begin()+smallest);
         if (filecache.size()==0) {
-        fwrite(outputbuff,sizeof(batch_index),outputbuff_position,outputfile);
+        fwrite(outputbuff,sizeof(Sortpdm::batch_index),outputbuff_position,outputfile);
         break;
         }
       }
 
       if(outputbuff_position == outputbuffsize){
-        fwrite(outputbuff,sizeof(batch_index),outputbuffsize,outputfile);
+        fwrite(outputbuff,sizeof(Sortpdm::batch_index),outputbuffsize,outputfile);
         outputbuff_position=0;
       }
 
@@ -234,7 +235,7 @@ void Threepdm_container::external_sort_index(const int &i, const int &j)
     char file[5000];
     sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/threepdm_index.", i, j,".bin");
     FILE* outfile=fopen(file,"wb");
-    fwrite(&nonspin_batch[0],sizeof(batch_index),nonspin_batch.size(),outfile);
+    fwrite(&nonspin_batch[0],sizeof(Sortpdm::batch_index),nonspin_batch.size(),outfile);
     nonspin_batch.clear();
 #endif
 }
@@ -263,8 +264,43 @@ void Threepdm_container::save_spatial_npdm_binary(const int &i, const int &j)
     char newfile[5000];
     sprintf (newfile, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.",i,j,mpigetrank(),".bin");
     boost::filesystem::rename(oldfile,newfile);
-    external_sort_index(i,j);
-}
+    if(dmrginp.pdm_unsorted())
+      external_sort_index(i,j);
+    
+    else{
+      char file[5000];
+      sprintf (file, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.",i,j,mpigetrank(),".bin");
+      char finalfile[5000];
+      sprintf (finalfile, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.",i,j,".bin");
+#ifndef SERIAL
+      boost::mpi::communicator world;
+      world.barrier();
+      Timer timer1;
+      char tmpfile[5000];
+      sprintf (tmpfile, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.",i,j,mpigetrank(),".tmp");
+      char sortedfile[5000];
+      sprintf (sortedfile, "%s%s%d.%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.",i,j,mpigetrank(),".bin");
+      Sortpdm::partition_data<Sortpdm::index_element>((long)pow(dmrginp.last_site(),6),file,tmpfile);
+      //TODO
+      //tmpfile and sortedfile can be the same file. Because tmpfile is divided into many small files. It can be overwritten by sortedfile.
+      //However, when they are different, it is a little faster. Maybe compiler can do some optimizations. 
+      Sortpdm::externalsort<Sortpdm::index_element>(tmpfile,sortedfile,(long)pow(dmrginp.last_site(),6));
+      world.barrier();
+      pout << "3PDM parallel external sort time " << timer1.elapsedwalltime() << " " << timer1.elapsedcputime() << endl;
+      Timer timer;
+      Sortpdm::mergefile(sortedfile);
+      world.barrier();
+      if(mpigetrank()==0) boost::filesystem::rename(sortedfile,finalfile);
+      boost::filesystem::remove(tmpfile);
+      pout << "3PDM merge sorted file time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+#else
+      Timer timer2;
+      Sortpdm::externalsort<Sortpdm::index_element>(file,finalfile,(long)pow(dmrginp.last_site(),6));
+      boost::filesystem::remove(file);
+      pout << "3PDM external sort time " << timer2.elapsedwalltime() << " " << timer2.elapsedcputime() << endl;
+#endif
+    }
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -436,7 +472,7 @@ void Threepdm_container::dump_to_disk(std::vector< std::pair< std::vector<int>, 
     }
   }
   if(index_and_elements.size()==0) return;
-  index_element index_elements[72];
+  Sortpdm::index_element index_elements[72];
   assert(72>= index_and_elements.size());
   int i=0;
   for(auto it = index_and_elements.begin(); it!=index_and_elements.end();it++){
@@ -444,9 +480,11 @@ void Threepdm_container::dump_to_disk(std::vector< std::pair< std::vector<int>, 
     index_elements[i].element=it->second;
     i++;
   }
-  fwrite(index_elements,sizeof(index_element),index_and_elements.size(),spatpdm_disk);
-  batch_index onerecord(index_and_elements.begin()->first,spatpdm_disk_position/sizeof(index_element),index_and_elements.size(),mpigetrank());
+  fwrite(index_elements,sizeof(Sortpdm::index_element),index_and_elements.size(),spatpdm_disk);
+  if(dmrginp.pdm_unsorted()){
+  Sortpdm::batch_index onerecord(index_and_elements.begin()->first,spatpdm_disk_position/sizeof(Sortpdm::index_element),index_and_elements.size(),mpigetrank());
   nonspin_batch.push_back(onerecord);
+  }
 
 
   //char file[5000];
@@ -507,15 +545,15 @@ void Threepdm_container::store_npdm_elements( const std::vector< std::pair< std:
   perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
 
   if ( dmrginp.store_spinpdm() ) update_full_spin_array( spin_batch );
-  if ( !dmrginp.spatpdm_disk_dump() ) update_full_spatial_array( spin_batch );
   //TODO, it is feasible to dump only nonredundant elements.
   //It will make the reading of data more complicate. 
-  else{
+  if(dmrginp.spatpdm_disk_dump() ){
     if(dmrginp.store_nonredundant_pdm()) 
       dump_to_disk(nonredundant_elements);
     else
       dump_to_disk(spin_batch);
   }
+  else update_full_spatial_array( spin_batch );
   if ( ! dmrginp.store_nonredundant_pdm() || dmrginp.spatpdm_disk_dump() ) nonredundant_elements.clear();
 }
 

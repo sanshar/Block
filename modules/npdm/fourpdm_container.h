@@ -37,7 +37,7 @@ class Fourpdm_container : public Npdm_container {
     array_8d<double> fourpdm;
     array_8d<double> spatial_fourpdm;
     std::vector<int> elements_stride_;
-    std::vector<batch_index> nonspin_batch;
+    std::vector<Sortpdm::batch_index> nonspin_batch;
     FILE* spatpdm_disk;
     FILE* batch_index_file;
 
