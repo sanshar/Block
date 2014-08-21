@@ -21,3 +21,6 @@ rm npdm_h2o_small/partial_A16_matrix.0.0.p0.n0.bin
 rm npdm_h2o_small/partial_A16_matrix.0.0.p1.n0.bin
 rm npdm_h2o_small/threepdm.0.0.bin
 rm npdm_h2o_small/threepdm.0.0.txt
+rm mpspt2/response.out
+rm mpspt2/compress.out
+

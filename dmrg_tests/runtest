@@ -148,9 +148,17 @@ python ../test_transitiononepdm.py spatial_onepdm.1.0.txt spat_onepdm.1.0.txt 1e
 echo " test transiton 1pdm with state specific..."
 srun ../../block.spin_adapted dmrg_onepdm.conf >dmrg_onepdm.out
 srun ../../block.spin_adapted dmrg_statespecific.conf >dmrg_statespecific.out
-python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
+python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-6
 python ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
 python ../test_transitiononepdm.py spatial_onepdm.1.0.txt spat_onepdm.1.0.txt 1e-7
+
+echo "testing MPSPT calculations"
+cd mpspt2
+srun ../../block.spin_adapted dmrg.conf >dmrg.out
+python ../test_energy.py 1 1e-6 -94.6312677977
+srun ../../block.spin_adapted compress.conf >compress.out
+srun ../../block.spin_adapted response.conf >response.out
+python ../test_energy.py 1 5e-4 -0.1488178755
 
 cd ../
 ./clean

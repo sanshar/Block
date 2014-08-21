@@ -458,6 +458,21 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
 
   ++sweepParams.set_sweep_iter();
 
+  if (mpigetrank()==0)
+  {
+    pout << "About to write dmrg energy"<<endl;
+    std::string efile;
+    efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
+    
+    
+    FILE* f = fopen(efile.c_str(), "wb");      
+    double e = finalEnergy[0]; //sweepParams.get_lowest_energy()[0]; //instead of the lowest energy of the sweep, we record the last energy of the sweep
+    fwrite( &e, 1, sizeof(double), f);
+    fclose(f);
+  }
+
+
+
   return finalError;
 }
 
