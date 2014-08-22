@@ -27,6 +27,7 @@ def run(file1, file2, tol):
   for i in xrange(0,sz):
     for j in xrange(0,sz):
       res = (mat1[i,j] - mat2[i,j])*(mat1[i,j] - mat2[i,j])
+      #res = (mat1[i,j] - mat2[j,i])*(mat1[i,j] - mat2[j,i])
       val = val + res
   if val > float(tol):
     print "FAILED ...."

@@ -387,7 +387,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       SpinBlock newSystem; // new system after blocking and decimating
 
       //Need to substitute by:
-      if (warmUp){// && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG)) {
+      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG)) {
 	useRGStartUp = true;
 	Startup(sweepParams, system, newSystem);
       }
@@ -523,12 +523,12 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   int systemDotSize = sweepParams.get_sys_add() - 1;
   if (forward)
   {
-    systemDotStart = *system.get_sites().rbegin () + 1;
+    systemDotStart = dmrginp.spinAdapted() ? *system.get_sites().rbegin () + 1 : (*system.get_sites().rbegin ())/2 + 1 ;
     systemDotEnd = systemDotStart + systemDotSize;
   }
   else
   {
-    systemDotStart = system.get_sites() [0] - 1;
+    systemDotStart = dmrginp.spinAdapted() ? system.get_sites()[0] - 1 : (system.get_sites()[0])/2 - 1 ;
     systemDotEnd = systemDotStart - systemDotSize;
   }
 

@@ -278,23 +278,29 @@ int calldmrg(char* input, char* output)
     break;
 
   case (RESTART_ONEPDM):
-    Npdm::npdm_restart(1);
+    Npdm::npdm(1,true);
     break;
 
   case (RESTART_TWOPDM):
-    Npdm::npdm_restart(2);
+    Npdm::npdm(2,true);
+    break;
+  case (RESTART_THREEPDM):
+    Npdm::npdm(3,true);
+    break;
+  case (RESTART_FOURPDM):
+    Npdm::npdm(4,true);
     break;
   case (TRANSITION_ONEPDM):
-    Npdm::transition_pdm(1);
+    Npdm::npdm(1,false,true);
     break;
   case (TRANSITION_TWOPDM):
-    Npdm::transition_pdm(2);
+    Npdm::npdm(2,false,true);
     break;
   case (RESTART_T_ONEPDM):
-    Npdm::transition_pdm_restart(1);
+    Npdm::npdm(1,true,true);
     break;
   case (RESTART_T_TWOPDM):
-    Npdm::transition_pdm_restart(2);
+    Npdm::npdm(2,true,true);
     break;
 
   return 0;

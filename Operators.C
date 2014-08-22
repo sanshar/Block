@@ -625,14 +625,14 @@ void SpinAdapted::DesCre::build(const SpinBlock& b)
   {
     const boost::shared_ptr<SparseMatrix> op1 = leftBlock->get_op_rep(DES, -getSpinQuantum(i), i);
     const boost::shared_ptr<SparseMatrix> op2 = rightBlock->get_op_rep(CRE, getSpinQuantum(j), j);
-    double parity = getCommuteParity(op1->get_deltaQuantum()[0], op2->get_deltaQuantum()[0], get_deltaQuantum()[0]);
-    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op2, *op1, &b, &(b.get_stateInfo()), *this, 1.0*parity);
+    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op2, *op1, &b, &(b.get_stateInfo()), *this, 1.0);
   }
   else if (rightBlock->get_op_array(DES).has(i))
   {
     const boost::shared_ptr<SparseMatrix> op1 = rightBlock->get_op_rep(DES, -getSpinQuantum(i), i);
     const boost::shared_ptr<SparseMatrix> op2 = leftBlock->get_op_rep(CRE, getSpinQuantum(j), j);
-    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, 1.0);
+    double parity = getCommuteParity(op1->get_deltaQuantum()[0], op2->get_deltaQuantum()[0], get_deltaQuantum()[0]);
+    SpinAdapted::operatorfunctions::TensorProduct(rightBlock, *op1, *op2, &b, &(b.get_stateInfo()), *this, 1.0*parity);
   }
   else
     abort();  

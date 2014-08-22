@@ -369,7 +369,18 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
   dmrginp.blocksites -> stop();
 
   dmrginp.statetensorproduct -> start();
-  TensorProduct (lBlock.braStateInfo, rBlock.braStateInfo, braStateInfo, condition, compState);
+  if(dmrginp.transition_diff_irrep()){
+    if( condition== PARTICLE_SPIN_NUMBER_CONSTRAINT)
+    // When bra and ket wavefuntion have different spatial or spin irrep,
+    // Bra Stateinfo for the big block should not be used with quantum number of effective_molecule_quantum
+      TensorProduct (lBlock.braStateInfo, rBlock.braStateInfo, dmrginp.bra_quantum(), EqualQ, braStateInfo);
+    else if (condition== NO_PARTICLE_SPIN_NUMBER_CONSTRAINT)
+      TensorProduct (lBlock.braStateInfo, rBlock.braStateInfo, dmrginp.bra_quantum(), LessThanQ, braStateInfo,compState);
+    // When bra and ket wavefuntion have different spatial or spin irrep,
+  }
+  else
+    TensorProduct (lBlock.braStateInfo, rBlock.braStateInfo, braStateInfo, condition, compState);
+
   TensorProduct (lBlock.ketStateInfo, rBlock.ketStateInfo, ketStateInfo, condition, compState);
   dmrginp.statetensorproduct -> stop();
 

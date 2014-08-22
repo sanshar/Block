@@ -112,6 +112,11 @@ void SpinAdapted::Input::initialize_defaults()
   m_do_npdm_ops = false;
   m_do_npdm_in_core = false;
   m_new_npdm_code = false;
+  m_store_spinpdm = false;
+  m_spatpdm_disk_dump = false;
+  m_store_nonredundant_pdm =false;
+  m_pdm_unsorted = false;
+ 
   m_maxiter = 10;
   m_oneindex_screen_tol = NUMERICAL_ZERO;
   m_twoindex_screen_tol = NUMERICAL_ZERO;
@@ -124,8 +129,8 @@ void SpinAdapted::Input::initialize_defaults()
   m_set_Sz = false;
 
   n_twodot_noise = 0;
-  m_twodot_noise = 0.0;
-  m_twodot_gamma = 0.0;
+  m_twodot_noise = 1.0-4;
+  m_twodot_gamma = 3.0e-1;
 
   m_sweep_tol = 1.0e-5;
   m_restart = false;
@@ -144,7 +149,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_schedule_type_backward = false;
   m_maxM = 0;
   m_lastM = 500;
-  m_startM = 500;
+  m_startM = 250;
   m_core_energy = 0.0;
 
   //reorder options, by default it does fiedler
@@ -496,13 +501,20 @@ SpinAdapted::Input::Input(const string& config_name) {
 	if(usedkey[IRREP] == 0) 
 	  usedkey_error(keyword, msg);
 	usedkey[IRREP] = 0;
-	if (tok.size() !=  2) {
-	  pout << "keyword irrep should be followed by a single number and then an end line"<<endl;
+  // When there are 2 irrep number, it means that calcultions of transition density matrix between wavefunctions with different irrep.
+  if (tok.size()==2 )
+	  m_total_symmetry_number = IrrepSpace(atoi(tok[1].c_str())-1);
+  else if (tok.size()==3 ){
+	  m_bra_symmetry_number = IrrepSpace(atoi(tok[1].c_str())-1);
+	  m_total_symmetry_number = IrrepSpace(atoi(tok[2].c_str())-1);
+    m_transition_diff_spatial_irrep=true;
+  }
+  else{
+	  pout << "keyword irrep should be followed by one or two numbers and then an end line"<<endl;
 	  pout << "error found in the following line "<<endl;
 	  pout << msg<<endl;
 	  abort();
 	}	
-	m_total_symmetry_number = IrrepSpace(atoi(tok[1].c_str())-1);
       }
       else if (boost::iequals(keyword,  "hubbard"))
 	m_ham_type = HUBBARD;
@@ -564,6 +576,10 @@ SpinAdapted::Input::Input(const string& config_name) {
 	m_calc_type = RESTART_ONEPDM;
       else if (boost::iequals(keyword,  "restart_twopdm") || boost::iequals(keyword,  "restart_twordm") || boost::iequals(keyword,  "restart_trdm"))
 	m_calc_type = RESTART_TWOPDM;
+      else if (boost::iequals(keyword,  "restart_threepdm") || boost::iequals(keyword,  "restart_threerdm") )
+	m_calc_type = RESTART_THREEPDM;
+      else if (boost::iequals(keyword,  "restart_fourpdm") || boost::iequals(keyword,  "restart_fourrdm") )
+	m_calc_type = RESTART_FOURPDM;
       else if (boost::iequals(keyword,  "transition_onepdm") || boost::iequals(keyword,  "transition_onerdm") || boost::iequals(keyword,  "tran_onepdm"))
 	m_calc_type = TRANSITION_ONEPDM;
       else if (boost::iequals(keyword,  "transition_twopdm") || boost::iequals(keyword,  "transition_twordm") || boost::iequals(keyword,  "tran_twopdm"))
@@ -672,6 +688,22 @@ SpinAdapted::Input::Input(const string& config_name) {
       else if (boost::iequals(keyword,  "do_npdm_in_core"))
       {
         m_do_npdm_in_core = true;
+      }
+      else if (boost::iequals(keyword, "store_spinpdm"))
+      {
+        m_store_spinpdm = true;
+      }
+      else if (boost::iequals(keyword, "disk_dump_pdm"))
+      {
+        m_spatpdm_disk_dump = true;
+      }
+      else if (boost::iequals(keyword, "nonredundant_pdm"))
+      {
+        m_store_nonredundant_pdm = true;
+      }
+      else if (boost::iequals(keyword, "pdm_unsorted"))
+      {
+        m_pdm_unsorted = true;
       }
 
 

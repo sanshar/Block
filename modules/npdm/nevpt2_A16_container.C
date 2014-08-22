@@ -107,7 +107,7 @@ void Nevpt2_A16_matrix::accumulate_files()
     // Read in and accumulate data from all files
     for ( auto& name : names ) {
       std::map< std::vector<int>, double > buff;
-      std::ifstream ifs(name.c_str(), std::ios::binary);
+      std::ifstream ifs(dir+string("/")+name.c_str(), std::ios::binary);
       boost::archive::binary_iarchive load(ifs);
       load >> buff;
       ifs.close();

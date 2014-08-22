@@ -11,10 +11,12 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include "multiarray.h"
 #include "npdm_container.h"
+#include "externalsort.h"
 
 namespace SpinAdapted{
 namespace Npdm{
 
+  using namespace Sortpdm;
 //===========================================================================================================================================================
 
 class Threepdm_container : public Npdm_container {
@@ -23,11 +25,12 @@ class Threepdm_container : public Npdm_container {
     Threepdm_container( int sites );
 //FIXME destructor?
 
+
     void save_npdms(const int &i, const int &j);
     void store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements );
     void clear() { threepdm.Clear(); spatial_threepdm.Clear(); nonredundant_elements.clear(); }
 
-    array_6d<double>& get_spatial_threepdm() { assert(store_full_spatial_array_); return spatial_threepdm; }
+    array_6d<double>& get_spatial_threepdm() { assert(dmrginp.store_spinpdm()); return spatial_threepdm; }
 
   private:
     // Vector to store nonredundant spin-orbital elements only
@@ -35,10 +38,11 @@ class Threepdm_container : public Npdm_container {
     // Optional arrays to store the full spin and/or spatial PDMs in core if memory allows.
     array_6d<double> threepdm;
     array_6d<double> spatial_threepdm;
-
-    bool store_full_spin_array_;
-    bool store_full_spatial_array_;
-    bool store_nonredundant_spin_elements_;
+    std::vector<int> elements_stride_;
+    std::vector<batch_index> nonspin_batch;
+    FILE* spatpdm_disk;
+    FILE* batch_index_file;
+    //long spatpdm_disk_position;
 
     void save_npdm_text(const int &i, const int &j);
     void save_npdm_binary(const int &i, const int &j);
@@ -47,10 +51,16 @@ class Threepdm_container : public Npdm_container {
     void load_npdm_binary(const int &i, const int &j);
     void accumulate_npdm();
     void accumulate_spatial_npdm();
+    void external_sort_index(const int &i, const int &j);
   
     void update_full_spin_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch );
     void update_full_spatial_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch );
+    long oneindex_spin(const std::vector<int> & orbital_element_index);
+    void dump_to_disk(std::vector< std::pair< std::vector<int>, double > > & spin_batch);
 
+
+
+    template<class U> friend class Npdm::cache;
 };
 
 //===========================================================================================================================================================
