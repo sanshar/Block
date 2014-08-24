@@ -48,9 +48,11 @@ class cumulTimer
 #ifdef _OPENMP
     if(!omp_get_thread_num()){
 #endif
-      if (localStart < 0) 
+      if (localStart < 0 || localStart > t->elapsed() +1 ) 
 	{
+	  
 	  cout << "local stop called without starting first"<<endl;
+	  cout << localStart<<"  "<<t->elapsed();
 	  throw 20;
 	  assert(1==2);
 	  abort();

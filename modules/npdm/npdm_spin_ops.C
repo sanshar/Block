@@ -17,7 +17,7 @@ namespace Npdm {
 boost::shared_ptr<SparseMatrix> NpdmSpinOps::build_compound_operator( bool is_fermion, int sign,
                                                                       boost::shared_ptr<SparseMatrix> lhsOp,
                                                                       boost::shared_ptr<SparseMatrix> rhsOp,
-                                                                      int ispin, std::vector<int> indices, bool transpose )
+                                                                      int ispin, std::vector<int> indices, bool transpose)
 {
   // Initialize new operator
   boost::shared_ptr<SparseMatrix> newOp (new Cre);

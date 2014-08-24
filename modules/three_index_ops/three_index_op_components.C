@@ -69,7 +69,10 @@ std::map< std::tuple<int,int,int>, int > get_local_3index_tuples(SpinBlock& b)
   SpinBlock* dotBlock = b.get_rightBlock();
   
   assert( dotBlock != NULL );
+  if(dmrginp.spinAdapted())
   assert( dotBlock->get_sites().size() == 1 );
+  if(!dmrginp.spinAdapted())
+  assert( dotBlock->get_sites().size() == 2 );
 
   bool forward = true;
   if ( sysBlock->get_sites()[0] > dotBlock->get_sites()[0] ) forward = false;
@@ -215,7 +218,14 @@ void Op_component<RI3index>::build_and_renormalise_operators(SpinBlock&b, const 
 template<>
 void Op_component<RI3index>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                              const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ abort(); }
+{ 
+  //FIXME
+  //No need to renormalise RI3index, since it is just gotten by product of two index operator and one operattor on single site.
+  //This is just for compatibility of transition pdm.
+  //abort(); 
+  return;
+}
+
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 

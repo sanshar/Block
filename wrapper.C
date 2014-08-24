@@ -9,12 +9,19 @@
 #include <pario.h>
 #include "spinblock.h"
 #include "wrapper.h"
+#include "rotationmat.h"
 
 void ReadInput(char* conf);
 namespace SpinAdapted{
 MPS globalMPS;
 }
 using namespace SpinAdapted;
+
+void initBoostMPI(int argc, char* argv[]) {
+#ifndef SERIAL
+  boost::mpi::environment env(argc, argv);
+#endif
+}
 
 void ReadInputFromC(char* conf, int outputlevel) {
   ReadInput(conf);
@@ -29,35 +36,89 @@ void readMPSFromDiskAndInitializeStaticVariables(int mpsindex) {
     MPS::sweepIters = dmrginp.last_site()-2;
   MPS::spinAdapted = false;
   for (int i=0; i<MPS::sweepIters+2; i++)
-    MPS::siteBlocks.push_back(SpinBlock(i, i, false)); //alway make transpose operators as well
+    MPS::siteBlocks.push_back(SpinBlock(i, i, 0, false)); //alway make transpose operators as well
 
-#ifndef SERIAL
-  if (mpigetrank() == 0)
-#endif
-    globalMPS = ::MPS(mpsindex);
+}
 
-#ifndef SERIAL
-  mpi::communicator world;
-  mpi::broadcast(world, globalMPS, 0);
-#endif
+void writeFullMPS()
+{
+  int ncore = 2;
+  int nactive = 8;
+  int nvirt = 18;
+
+  Matrix m(1,1); m(1,1)=1.0;
+  std::vector<Matrix> corerotMat, virtcorMat, firstactMat;
+  corerotMat.resize(3); virtcorMat.resize(3);firstactMat.resize(3);
+  corerotMat[2] = m; virtcorMat[0] = m;
+  firstactMat[0] = m; firstactMat[1] = m; firstactMat[2] = m;
+
+  std::vector<Matrix> rotMat_init;rotMat_init.resize(6);
+  rotMat_init[5] = m;
+
+  std::vector<int> readSites(2,0); 
+  std::vector< std::vector<Matrix> > activeRots; activeRots.resize(nactive);
+  for (int i=ncore+1; i<ncore+nactive-1; i++) {
+    readSites[1]++;
+    LoadRotationMatrix(readSites, activeRots[i-ncore-1], 0); 
+  }
+
+
+  std::vector<int> sites(2,0); sites[1] = 1;
+  SaveRotationMatrix(sites, rotMat_init, 0);
+
+  //write ncore rotation matrices
+  for (int i=2; i<ncore; i++) {
+    sites[1] = i;
+    SaveRotationMatrix(sites, rotMat_init, 0);
+  }
+
+
+  sites[1] = ncore;
+  SaveRotationMatrix(sites, firstactMat, 0);
+
+
+  //write ncore rotation matrices
+  for (int i=ncore+1; i<ncore+nactive-1; i++) {
+    sites[1] = i;
+    SaveRotationMatrix(sites, activeRots[i-ncore-1], 0);
+  }
+
+  sites[1] = ncore+nactive-1;
+  SaveRotationMatrix(sites, firstactMat, 0);
+
+  //write ncore rotation matrices
+  for (int i=ncore+nactive; i<ncore+nactive+nvirt; i++) {
+    sites[1] = i;
+    SaveRotationMatrix(sites, virtcorMat, 0);
+  }
+
 
 }
 
 void test()
 {
+  setbuf(stdout, NULL);
+  cout.precision(12);
   MPS statea(0);
   double o, h;
   calcHamiltonianAndOverlap(statea, statea, h, o);
-  printf("overlap = %20.12e\n", o);
-  printf("helement = %20.12e\n", h);
-  MPS stateb(1);
-  calcHamiltonianAndOverlap(stateb, statea, h, o);
-  cout << o<<"  "<<h<<endl;
-  stateb.normalize();
-  calcHamiltonianAndOverlap(stateb, stateb, h, o);
-  cout << o<<"  "<<h<<endl;
-  calcHamiltonianAndOverlap(stateb, statea, h, o);
-  cout << o<<"  "<<h<<endl;
+
+  if (mpigetrank() == 0)
+    printf("<0|0> = %18.10f   <0|H|0> = %18.10f\n", o, h);
+
+  MPS statec(2);
+  calcHamiltonianAndOverlap(statea, statec, h, o);
+  if (mpigetrank() == 0)
+    printf("<0|1> = %18.10f   <0|H|1> = %18.10f\n", o, h);
+
+
+  //MPS stateb(1);
+  //calcHamiltonianAndOverlap(stateb, stateb, h, o);
+  //cout << o<<"  "<<h<<endl;
+
+  calcHamiltonianAndOverlap(statec, statec, h, o);
+  if (mpigetrank() == 0)
+    printf("<1|1> = %18.10f   <1|H|1> = %18.10f\n", o, h);
 }
 
 void evaluateOverlapAndHamiltonian(long *occ, int length, double* o, double* h) {

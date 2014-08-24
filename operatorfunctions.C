@@ -130,9 +130,11 @@ void SpinAdapted::operatorfunctions::Product (const SpinBlock *ablock, const Bas
 	    int apj = astate->quanta[aprime].get_s().getirrep(), cqj = astate->quanta[cq].get_s().getirrep(), cqpj = astate->quanta[cqprime].get_s().getirrep();
 	    double factor = a.get_scaling(astate->quanta[cq], astate->quanta[aprime]);
 	    factor *= b.get_scaling(astate->quanta[aprime], astate->quanta[cqprime]);
+      if(dmrginp.spinAdapted()){
 
 	    factor *= racah(cqpj, b.get_spin().getirrep(), cqj, a.get_spin().getirrep(), apj, c.get_spin().getirrep()) * pow( (1.0*c.get_spin().getirrep()+1.0)*(1.0*apj+1.0), 0.5 )
 	            *pow(-1.0, static_cast<int>((b.get_spin().getirrep()+a.get_spin().getirrep()-c.get_spin().getirrep())/2.0));
+      }
 	    MatrixMultiply(a.operator_element(cq, aprime), a.conjugacy(), b.operator_element(aprime, cqprime), b.conjugacy(),
 			   c.operator_element(cq, cqprime), scale*factor, 1.0);
 
@@ -163,6 +165,8 @@ void SpinAdapted::operatorfunctions::TensorProduct (const SpinBlock *ablock, con
 
 void SpinAdapted::operatorfunctions::TensorProductElement(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const SpinBlock *cblock, const StateInfo *cstateinfo, Baseoperator<Matrix>& c, Matrix& cel, int cq, int cqprime, double scale)
 {
+  //cstateinfo is not used
+  //This function can be used for different bra and ket stateinfo.
   if (fabs(scale) < TINY) return;
   assert (a.get_initialised());
   assert (b.get_initialised());
@@ -248,8 +252,10 @@ void SpinAdapted::operatorfunctions::TensorProductElement(const SpinBlock *abloc
   
 }
 
+/*
 void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const SpinBlock *cblock, Wavefunction& c, Wavefunction& v, const SpinQuantum dQ, double scale, int num_thrds)
 {
+  // cannot be used for situation with different bra and ket
   const int leftOpSz = cblock->get_leftBlock()->get_stateInfo().quanta.size ();
   const int rightOpSz = cblock->get_rightBlock()->get_stateInfo().quanta.size ();
 
@@ -316,10 +322,87 @@ void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, con
       }
     }
 }
+*/
+
+
+void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const SpinBlock *cblock, Wavefunction& c, Wavefunction& v, const SpinQuantum dQ, double scale, int num_thrds)
+{
+  // cannot be used for situation with different bra and ket
+  const int leftBraOpSz = cblock->get_leftBlock()->get_braStateInfo().quanta.size ();
+  const int leftKetOpSz = cblock->get_leftBlock()->get_ketStateInfo().quanta.size ();
+  const int rightBraOpSz = cblock->get_rightBlock()->get_braStateInfo().quanta.size ();
+  const int rightKetOpSz = cblock->get_rightBlock()->get_ketStateInfo().quanta.size ();
+
+  const StateInfo* lbraS = cblock->get_braStateInfo().leftStateInfo, *lketS = cblock->get_ketStateInfo().leftStateInfo;
+  const StateInfo* rbraS = cblock->get_braStateInfo().rightStateInfo, *rketS = cblock->get_ketStateInfo().rightStateInfo;
+
+  assert (cblock->get_leftBlock() == ablock || cblock->get_rightBlock() == ablock);
+  if (cblock->get_leftBlock() == ablock)
+    {
+      //#pragma omp parallel default(shared)  num_threads(num_thrds)
+      {
+	//#pragma omp for schedule(dynamic)
+      for (int lQ = 0; lQ < leftBraOpSz; ++lQ) {
+	for (int lQPrime = 0; lQPrime < leftKetOpSz; ++lQPrime)
+	  {
+	    if (a.allowed(lQ, lQPrime))
+              {
+		const Matrix& aop = a.operator_element(lQ, lQPrime);
+		  for (int rQ = 0; rQ < rightKetOpSz; ++rQ) 
+		    if (c.allowed(lQPrime, rQ) && v.allowed(lQ, rQ))
+		    {
+		      scale *= dmrginp.get_ninej()(lketS->quanta[lQPrime].get_s().getirrep(), rketS->quanta[rQ].get_s().getirrep() , c.get_deltaQuantum(0).get_s().getirrep(), 
+						   a.get_spin().getirrep(), 0, a.get_spin().getirrep(),
+						   lbraS->quanta[lQ].get_s().getirrep(), rketS->quanta[rQ].get_s().getirrep() , v.get_deltaQuantum(0).get_s().getirrep());
+		      scale *= Symmetry::spatial_ninej(lketS->quanta[lQPrime].get_symm().getirrep() , rketS->quanta[rQ].get_symm().getirrep(), c.get_symm().getirrep(), 
+					   a.get_symm().getirrep(), 0, a.get_symm().getirrep(),
+					   lbraS->quanta[lQ].get_symm().getirrep() , rketS->quanta[rQ].get_symm().getirrep(), v.get_symm().getirrep());
+		      scale *= a.get_scaling(lbraS->quanta[lQ], lketS->quanta[lQPrime]);
+		      MatrixMultiply (aop, a.conjugacy(), c.operator_element(lQPrime, rQ), c.conjugacy(),
+				      v.operator_element(lQ, rQ), scale);
+		    }
+
+              }
+	  }
+      }
+      }
+    }
+  else
+    {
+      //#pragma omp parallel default(shared)  num_threads(num_thrds)
+      {
+	//#pragma omp for schedule(dynamic)
+      for (int rQ = 0; rQ < rightBraOpSz; ++rQ) {
+	for (int rQPrime = 0; rQPrime < rightKetOpSz; ++rQPrime)
+	  if (a.allowed(rQ, rQPrime))
+	    {
+	      const Matrix& aop = a.operator_element(rQ, rQPrime);
+	      for (int lQPrime = 0; lQPrime < leftKetOpSz; ++lQPrime) 
+		if (v.allowed(lQPrime, rQ) && c.allowed(lQPrime, rQPrime)) {
+		  scale *= dmrginp.get_ninej()(lketS->quanta[lQPrime].get_s().getirrep(), rketS->quanta[rQPrime].get_s().getirrep() , c.get_deltaQuantum(0).get_s().getirrep(), 
+					       0, a.get_spin().getirrep(), a.get_spin().getirrep(),
+					       lketS->quanta[lQPrime].get_s().getirrep(), rbraS->quanta[rQ].get_s().getirrep() , v.get_deltaQuantum(0).get_s().getirrep());
+		  scale *= Symmetry::spatial_ninej(lketS->quanta[lQPrime].get_symm().getirrep() , rketS->quanta[rQPrime].get_symm().getirrep(), c.get_symm().getirrep(), 
+				      0, a.get_symm().getirrep(), a.get_symm().getirrep(),
+				      lketS->quanta[lQPrime].get_symm().getirrep() , rbraS->quanta[rQ].get_symm().getirrep(), v.get_symm().getirrep());
+		  scale *= a.get_scaling(rbraS->quanta[rQ], rketS->quanta[rQPrime]);
+		  double parity = a.get_fermion() && IsFermion(lketS->quanta[lQPrime]) ? -1 : 1;
+
+		  MatrixMultiply (c.operator_element(lQPrime, rQPrime), c.conjugacy(),
+				  aop, TransposeOf(a.conjugacy()), v.operator_element(lQPrime, rQ), scale*parity);
+		}
+
+	    }
+      }
+      }
+    }
+}
+
 
 
 void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const SpinBlock *cblock, Wavefunction& c, Wavefunction& v, const SpinQuantum opQ, double scale)
 {
+  // can be used for situation with different bra and ket
   const int leftBraOpSz = cblock->get_leftBlock()->get_braStateInfo().quanta.size ();
   const int leftKetOpSz = cblock->get_leftBlock()->get_ketStateInfo().quanta.size ();
   const int rightBraOpSz = cblock->get_rightBlock()->get_braStateInfo().quanta.size ();
@@ -696,10 +779,14 @@ void SpinAdapted::operatorfunctions::TensorMultiply(const Baseoperator<Matrix>& 
 		{
 		  int lindex = lQ*leftKetOpSz+lQPrime;
 		  double factor = scale;
+      //if(dmrginp.spinAdapted()){
+      //ninej has already considered non spin-adapted
+      //it is just 1 in nonspin-adapted
 
 		  factor *= dmrginp.get_ninej()(lketS->quanta[lQPrime].get_s().getirrep(), rketS->quanta[rQPrime].get_s().getirrep() , c.get_deltaQuantum(0).get_s().getirrep(), 
 						leftOp.get_spin().getirrep(), rightOp.get_spin().getirrep(), opQ.get_s().getirrep(),
 						lbraS->quanta[lQ].get_s().getirrep(), rbraS->quanta[rQ].get_s().getirrep() , v.get_deltaQuantum(0).get_s().getirrep());
+      //}
 		  factor *= Symmetry::spatial_ninej(lketS->quanta[lQPrime].get_symm().getirrep() , rketS->quanta[rQPrime].get_symm().getirrep(), c.get_symm().getirrep(), 
 				       leftOp.get_symm().getirrep(), rightOp.get_symm().getirrep(), opQ.get_symm().getirrep(),
 				       lbraS->quanta[lQ].get_symm().getirrep() , rbraS->quanta[rQ].get_symm().getirrep(), v.get_symm().getirrep());

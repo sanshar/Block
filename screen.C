@@ -18,42 +18,40 @@ namespace SpinAdapted{
 vector<int, std::allocator<int> > screened_d_indices(const vector<int, std::allocator<int> >& indices,
 			       const vector<int, std::allocator<int> >& interactingix,
 			       const OneElectronArray& onee, const TwoElectronArray& twoe, double thresh) {
+  dmrginp.dscreen->start();
   vector<int, std::allocator<int> > screened_indices;
   for (int i = 0; i < indices.size(); ++i)
     if (dmrginp.use_partial_two_integrals() || screen_d_interaction(indices[i], interactingix, onee, twoe, thresh))
       screened_indices.push_back(indices[i]);
   //pout << "\t\t\tnumber of significant d and d_comp indices: " << screened_indices.size() << endl;
+  dmrginp.dscreen->stop();
   return screened_indices;
 }
 
 bool screen_d_interaction(int index, const vector<int, std::allocator<int> >& interactingix,
 			  const OneElectronArray& onee, const TwoElectronArray& twoe, double thresh) {
   if(dmrginp.spinAdapted()) {
+    int lxx = dmrginp.spatial_to_spin(index); 
+
     for (int i = 0; i < interactingix.size(); ++i) {
       const int ix = interactingix[i];
-      int xl = index;
-      for (int ixx = dmrginp.spatial_to_spin(ix); ixx <dmrginp.spatial_to_spin(ix+1); ixx++)
-	for (int lxx = dmrginp.spatial_to_spin(xl); lxx <dmrginp.spatial_to_spin(xl+1); lxx++)
-	  if (fabs(onee(lxx, ixx)) >= thresh)
-	    return true;
+      int ixx = dmrginp.spatial_to_spin(ix); 
+      if (fabs(onee(lxx, ixx)) >= thresh)
+	return true;
     }
     
-    for (int i = 0; i < interactingix.size(); ++i)
-      for (int j = 0; j < interactingix.size(); ++j)
-	for (int k = 0; k < interactingix.size(); ++k)
+    for (int i = 0; i < interactingix.size(); ++i) {
+      int ixx = dmrginp.spatial_to_spin(interactingix[i]); 
+      for (int j = 0; j < interactingix.size(); ++j) {
+	int jxx = dmrginp.spatial_to_spin(interactingix[j]); 
+	for (int k = i; k < interactingix.size(); ++k)
 	  {
-	    const int ix = interactingix[i];
-	    const int jx = interactingix[j];
-	    const int kx = interactingix[k];
-	    int xl = index;
-	    for (int ixx = dmrginp.spatial_to_spin(ix); ixx <dmrginp.spatial_to_spin(ix+1); ixx++)
-	      for (int jxx = dmrginp.spatial_to_spin(jx); jxx <dmrginp.spatial_to_spin(jx+1); jxx++)
-		for (int kxx = dmrginp.spatial_to_spin(kx); kxx <dmrginp.spatial_to_spin(kx+1); kxx++)
-		  for (int lxx = dmrginp.spatial_to_spin(xl); lxx <dmrginp.spatial_to_spin(xl+1); lxx++)
-		    if (fabs(twoe(lxx,ixx,jxx,kxx)) >= thresh)
-		      return true;
+	    int kxx = dmrginp.spatial_to_spin(interactingix[k]); 
+	    if (fabs(twoe(lxx,ixx,jxx,kxx)) >= thresh)
+	      return true;
 	  }
-    
+      }
+    }    
     if(interactingix.size() == 0)
       return true;
     else
@@ -85,13 +83,15 @@ bool screen_d_interaction(int index, const vector<int, std::allocator<int> >& in
 vector<int, std::allocator<int> > screened_cddcomp_indices(const vector<int, std::allocator<int> >& otherindices,
 				     const vector<int, std::allocator<int> >& selfindices,
 				     const OneElectronArray& onee, 
-				     const TwoElectronArray& twoe, double thresh)
+							   const TwoElectronArray& twoe, double thresh)
 {
-  vector<int, std::allocator<int> > screened_indices;
+  dmrginp.dscreen->start();
+ vector<int, std::allocator<int> > screened_indices;
   for (int i = 0; i < otherindices.size(); ++i)
     if (dmrginp.use_partial_two_integrals() || screen_cddcomp_interaction(otherindices[i], selfindices, onee, twoe, thresh))
       screened_indices.push_back(otherindices[i]);
   //pout << "\t\t\tnumber of significant cdd and cdd_comp indices: " << screened_indices.size() << endl;
+  dmrginp.dscreen->stop();
   return screened_indices;
 }
 
@@ -122,36 +122,32 @@ bool screen_cddcomp_interaction(int otherindex, const vector<int, std::allocator
     return (selfindices.size() == 0);
   }
   else {
+    int lxx = dmrginp.spatial_to_spin(otherindex);
     for (int i = 0; i < selfindices.size(); ++i)
       {
 	const int ix = selfindices[i];
-	int xl = otherindex;
-	for (int ixx = dmrginp.spatial_to_spin(ix); ixx <dmrginp.spatial_to_spin(ix+1); ixx++)
-	  for (int lxx = dmrginp.spatial_to_spin(xl); lxx <dmrginp.spatial_to_spin(xl+1); lxx++) {
-	    if (fabs(onee(lxx, ixx)) >= thresh)
+	int ixx = dmrginp.spatial_to_spin(ix);
+	if (fabs(onee(lxx, ixx)) >= thresh)
+	  return true;
+      }
+    
+    
+    for (int i = 0; i < selfindices.size(); ++i) {
+      int ixx = dmrginp.spatial_to_spin(selfindices[i]);
+      for (int j = 0; j < selfindices.size(); ++j) {
+	int jxx = dmrginp.spatial_to_spin(selfindices[j]);
+	for (int k = i; k < selfindices.size(); ++k)
+	  {
+	    int kxx = dmrginp.spatial_to_spin(selfindices[k]);
+	    if (fabs(twoe(lxx,ixx,jxx,kxx)) >= thresh)
 	      return true;
 	  }
       }
-    
-    for (int i = 0; i < selfindices.size(); ++i)
-      for (int j = 0; j < selfindices.size(); ++j)
-	for (int k = 0; k < selfindices.size(); ++k)
-	  {
-	    const int ix = selfindices[i];
-	    const int jx = selfindices[j];
-	    const int kx = selfindices[k];
-	    int xl = otherindex;
-	    for (int ixx = dmrginp.spatial_to_spin(ix); ixx <dmrginp.spatial_to_spin(ix+1); ixx++)
-	      for (int jxx = dmrginp.spatial_to_spin(jx); jxx <dmrginp.spatial_to_spin(jx+1); jxx++)
-		for (int kxx = dmrginp.spatial_to_spin(kx); kxx <dmrginp.spatial_to_spin(kx+1); kxx++)
-		  for (int lxx = dmrginp.spatial_to_spin(xl); lxx <dmrginp.spatial_to_spin(xl+1); lxx++)
-		    if (fabs(twoe(lxx,ixx,jxx,kxx)) >= thresh)
-		      return true;
-	  }
+    }
     return (selfindices.size() == 0);
   }
-
-    
+  
+  
 }
 
 /**
@@ -165,11 +161,13 @@ vector<pair<int, int> > screened_cd_indices(const vector<int, std::allocator<int
 					    const vector<int, std::allocator<int> >& interactingix,
 					    const TwoElectronArray& twoe, double thresh)
 {
+  dmrginp.cdscreen->start();
   vector<pair<int, int> > screened_indices;
   for (int i = 0; i < indices.size(); ++i)
     for (int j = 0; j <= i; ++j)
       if (dmrginp.use_partial_two_integrals() || screen_cd_interaction(indices[i], indices[j], interactingix, twoe, thresh))
-	    screened_indices.push_back(make_pair(indices[i], indices[j]));
+	screened_indices.push_back(make_pair(indices[i], indices[j]));
+  dmrginp.cdscreen->stop();
   return screened_indices;
 }
 
@@ -184,11 +182,13 @@ vector<pair<int, int> > screened_dd_indices(const vector<int, std::allocator<int
 					    const vector<int, std::allocator<int> >& interactingix,
 					    const TwoElectronArray& twoe, double thresh)
 {
+  dmrginp.ddscreen->start();
   vector<pair<int, int> > screened_indices;
   for (int i = 0; i < indices.size(); ++i)
   for (int j = 0; j <= i; ++j)
     if (dmrginp.use_partial_two_integrals() || screen_dd_interaction(indices[i], indices[j], interactingix, twoe, thresh))
 	screened_indices.push_back(make_pair(indices[i], indices[j]));
+  dmrginp.ddscreen->stop();
   return screened_indices;
 }
 
@@ -208,18 +208,18 @@ bool screen_cd_interaction(int ci, int dj, const vector<int, std::allocator<int>
     int ninter = interactingix.size();
     
     double twoeterm = 0.;
-    for (int k = 0; k < ninter; ++k)
+    int cix = dmrginp.spatial_to_spin(ci);
+    int djx = dmrginp.spatial_to_spin(dj);
+    for (int k = 0; k < ninter; ++k) {
+      int kxx = dmrginp.spatial_to_spin(interactingix[k]);
       for (int l = 0; l < ninter; ++l)
 	{
-	  int xk = interactingix[k];
-	  int xl = interactingix[l];
-	  for (int cix = dmrginp.spatial_to_spin(ci); cix <dmrginp.spatial_to_spin(ci+1); cix++)
-	    for (int djx = dmrginp.spatial_to_spin(dj); djx <dmrginp.spatial_to_spin(dj+1); djx++)
-	      for (int kxx = dmrginp.spatial_to_spin(xk); kxx <dmrginp.spatial_to_spin(xk+1); kxx++)
-		for (int lxx = dmrginp.spatial_to_spin(xl); lxx <dmrginp.spatial_to_spin(xl+1); lxx++)
-		  if (fabs(twoe(cix, kxx, lxx, djx))>=thresh || fabs(twoe(kxx, cix, lxx, djx)) >= thresh)
-		    return true; // there is a significant integral joining the two regions
+	  int lxx = dmrginp.spatial_to_spin(interactingix[l]);
+	  //if (fabs(twoe(cix, kxx, lxx, djx))>=thresh || fabs(twoe(kxx, cix, lxx, djx)) >= thresh)
+	  if (fabs(twoe(kxx, cix, djx, lxx))>=thresh || fabs(twoe(cix, kxx, djx, lxx)) >= thresh)
+	    return true; // there is a significant integral joining the two regions
 	}
+    }
     return (ninter == 0);
   }
   else {
@@ -243,21 +243,21 @@ bool screen_dd_interaction(int ci, int cj, const vector<int, std::allocator<int>
   if(dmrginp.spinAdapted()) {
     int ninter = interactingix.size();
     
-    for (int k = 0; k < ninter; ++k)
+    int cix = dmrginp.spatial_to_spin(ci);
+    int cjx = dmrginp.spatial_to_spin(cj);
+    for (int k = 0; k < ninter; ++k) {
+      int kxx = dmrginp.spatial_to_spin(interactingix[k]);
       for (int l = 0; l < ninter; ++l)
 	{
-	  int xk = interactingix[k];
-	  int xl = interactingix[l];
-	  for (int cix = dmrginp.spatial_to_spin(ci); cix <dmrginp.spatial_to_spin(ci+1); cix++)
-	    for (int cjx = dmrginp.spatial_to_spin(cj); cjx <dmrginp.spatial_to_spin(cj+1); cjx++)
-	      for (int kxx = dmrginp.spatial_to_spin(xk); kxx <dmrginp.spatial_to_spin(xk+1); kxx++)
-		for (int lxx = dmrginp.spatial_to_spin(xl); lxx <dmrginp.spatial_to_spin(xl+1); lxx++)
-		  if (fabs(twoe(cix, cjx, kxx, lxx))>=thresh)
-		    return true; // there is a significant integral joining the two regions
+	  int lxx = dmrginp.spatial_to_spin(interactingix[l]);
+	  if (fabs(twoe(cix, cjx, kxx, lxx))>=thresh)
+	    return true; // there is a significant integral joining the two regions
 	}
+    }
     return (ninter == 0);
   }
   else  {
+    if(ci==cj) return false;
     int ninter = interactingix.size();
     
     for (int k = 0; k < ninter; ++k)

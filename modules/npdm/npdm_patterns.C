@@ -21,6 +21,7 @@ Npdm_patterns::Npdm_patterns( int pdm_order, int sweep_pos, int end_pos )
   build_lhs_dot_rhs_types( sweep_pos, end_pos );
   build_cre_des_types( );
   build_ldr_cd_types( sweep_pos, end_pos );
+//  cout << "number of cre_des_pattern: " << cre_des_types_.size()<<endl;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -30,11 +31,22 @@ Npdm_patterns::Npdm_patterns( int pdm_order, int sweep_pos, int end_pos )
 
 bool Npdm_patterns::screen_2pdm_strings( const std::vector<int>& indices, const std::string& CD )
 {
-  if ( indices[0] == indices[1] ) {
-    std::string foo = { 'C', 'D', 'D', 'C' };
-    if ( CD == foo ) return true;
+  if(dmrginp.doimplicitTranspose()){
+    if ( indices[0] == indices[1] ) {
+      std::string foo = { 'C', 'D', 'D', 'C' };
+      if ( CD == foo ) return true;
+    }
+    return false;
   }
-  return false;
+  else{
+    if(indices[0] == indices[1]){
+      std::string foo= {'D','C','D','C'};
+      if( CD==foo) return true;
+      foo= {'D','C','C','D'};
+      if( CD==foo) return true;
+      }
+    return false;
+  }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -262,8 +274,21 @@ void Npdm_patterns::add_operator( int cre_ops1, int des_ops1, std::vector<CD> cd
   }
 
   // Add only leaves of tree to final possiblities
-  if ( cd_type1.size() == 2*pdm_order_ ) cre_des_types_.insert( cd_type1 );
-  if ( cd_type2.size() == 2*pdm_order_ ) cre_des_types_.insert( cd_type2 );
+  if ( cd_type1.size() == 2*pdm_order_ ){
+  cre_des_types_.insert( cd_type1 );
+//  cout << " cre_des_types1 \n";
+//  for(int i=0; i < cd_type1.size();i++)
+//    cout <<cd_type1[i];
+//  cout <<endl;
+  }
+  if ( cd_type2.size() == 2*pdm_order_ ){
+  cre_des_types_.insert( cd_type2 );
+//  cout << " cre_des_types2 \n";
+//  for(int i=0; i < cd_type2.size();i++)
+//    cout <<cd_type2[i];
+//  cout <<endl;
+
+  }
 
 }
 
@@ -279,8 +304,14 @@ void Npdm_patterns::build_cre_des_types()
 //  std::vector<CD> des_tank(pdm_order_, DESTRUCTION);
 
   // Build up tree of valid creation-destruction strings by recursion
-  cd_type.push_back( CREATION );
-  add_operator( pdm_order_-1, pdm_order_, cd_type );
+  if(dmrginp.doimplicitTranspose()){
+
+    cd_type.push_back( CREATION );
+    add_operator( pdm_order_-1, pdm_order_, cd_type );
+  }
+  else{
+    add_operator(pdm_order_,pdm_order_, cd_type);
+  }
 
   // Print out
   //std::cout << "=================================================================\n";
@@ -299,6 +330,45 @@ void Npdm_patterns::build_cre_des_types()
 bool Npdm_patterns::is_valid_dot_type( std::vector<CD> ops )
 {
   // No more than 2 creation or destrucution
+  if(!dmrginp.spinAdapted()){
+    if(ops.size()>4) return false;
+    int c = 0;
+    int d = 0;
+    for (auto op = ops.begin(); op != ops.end(); op++ ) {
+      if ( *op == CREATION ) c++;
+      if ( *op == DESTRUCTION ) d++;
+    }
+    if ( c > 2 ) return false;
+    if ( d > 2 ) return false;
+    //FIXME
+    //return true;
+    std::vector<int> ops_int;
+    for( int i=0;i<ops.size();i++)
+      ops_int.push_back(int(ops[i]));
+
+    std::vector<int> order={0,1,0,1};
+    if(ops_int.size()==4){
+      if(ops_int==order) return true;
+      return false;
+    }
+    if(ops_int.size()==3){
+      order={0,0,1};
+      if(ops_int==order) return true;
+      order={0,1,0};
+      if(ops_int==order) return true;
+      order={0,1,1};
+      if(ops_int==order) return true;
+      order={1,0,1};
+      if(ops_int==order) return true;
+      return false;
+    }
+    return true;
+    //std::vector<CD> sorted_ops( ops.begin(), ops.end() );
+    //bool valid = std::is_sorted( sorted_ops.begin(), sorted_ops.end() );
+    //if ( not valid ) return false;
+
+
+  }
   if (ops.size() > 4) return false;
   int c = 0;
   int d = 0;
@@ -369,7 +439,11 @@ bool Npdm_patterns::is_valid_ldr_type( std::map< char, std::vector<CD> > & cd_pa
 
   // Test if dvec >= cvec in sense of irreducible operator string generation (triangular loop)
   bool valid = is_rhs_gte_lhs( cvec, dvec );
-  if ( not valid ) return false;
+  if(dmrginp.doimplicitTranspose() && dmrginp.spinAdapted())
+    // if implicit Transpose is not used, lhs can be greater than rhs
+    // when spin-adpated is closed, dot site has more than one orbitals. Therefore, each orbital number in opstring is different.
+    // Since the first one must be creator. rhs is must large than lhs. 
+    if ( not valid ) return false;
 
   return true;
 }
@@ -421,6 +495,7 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
       if ( lhs_cd.size() != 0 ) lhs_cd_types_.insert( lhs_cd );
       if ( dot_cd.size() != 0 ) dot_cd_types_.insert( dot_cd );
       if ( rhs_cd.size() != 0 ) rhs_cd_types_.insert( rhs_cd );
+
 
     }
   }

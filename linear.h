@@ -27,7 +27,7 @@ namespace Linear
   void olsenPrecondition(Wavefunction& op, Wavefunction& C0, double e, DiagonalMatrix& diagonal, double levelshift=0.0);
   void block_davidson(vector<Wavefunction>& b, DiagonalMatrix& e, double normtol, const bool &warmUp, Davidson_functor& h_mult, bool& useprecond, int currentRoot, vector<Wavefunction>& lowerStates);
   void Lanczos(vector<Wavefunction>& b, DiagonalMatrix& e, double normtol, Davidson_functor& h_multiply, int nroots);
-  void ConjugateGradient(Wavefunction& xi, DiagonalMatrix& h_diag, double E0, double normtol, Davidson_functor& h_multiply, std::vector<Wavefunction> &lowerStates);
+  double ConjugateGradient(Wavefunction& xi, double normtol, Davidson_functor& h_multiply, std::vector<Wavefunction> &lowerStates);
 };
 }
 #endif

@@ -16,10 +16,11 @@ namespace SpinAdapted{
 class DensityMatrix : public SpinAdapted::SparseMatrix
 {
 private:
-  void add_twodot_noise(const SpinBlock &big, const double noise);
-  void add_onedot_noise(const std::vector<Wavefunction>& wave_solutions, SpinBlock& big, const double noise, bool act2siteops = true);
   void add_simulatedtwodot_noise(const std::vector<Wavefunction>& wave_solutions, SpinBlock& big, const double noise);
+  void add_onedot_noise(const Wavefunction& wave_solutions, SpinBlock& big, const double noise, bool act2siteops = true);
 public:
+  void add_twodot_noise(const SpinBlock &big, const double noise);
+  void add_onedot_noise_forCompression(const Wavefunction& wave_solutions, SpinBlock& big, const double noise);
   DensityMatrix()
   {
     orbs = std::vector<int>();
@@ -48,6 +49,7 @@ public:
   }
   void makedensitymatrix(const std::vector<Wavefunction>& wave_solutions, SpinBlock &big, const std::vector<double> &wave_weights,
 			 const double noise, const double additional_noise, bool warmup);
+  void makedensitymatrix(const Wavefunction& wave_solutions, SpinBlock &big, const double &wave_weight);
   DensityMatrix& operator+=(const DensityMatrix& other);
 
   boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block) {return boost::shared_ptr<SparseMatrix> (this);}

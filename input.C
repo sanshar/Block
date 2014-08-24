@@ -72,12 +72,17 @@ void SpinAdapted::Input::initialize_defaults()
   m_solve_type = DAVIDSON;
   m_stateSpecific = false;
   m_implicitTranspose = true; //dont make DD just use CC^T to evaluate it
-
+  m_baseEnergy = -1.e10;
+  m_occupied_orbitals = -1;
+  m_num_Integrals = 1;
+  v_2.resize(1, TwoElectronArray(TwoElectronArray::restrictedNonPermSymm));
+  v_1.resize(1);
+  
   m_spinAdapted = true;
   m_Bogoliubov = false;
   m_sys_add = 1;
   m_env_add = 1;
-
+  
   m_twodot_to_onedot_iter = 0;
   m_integral_disk_storage_thresh = 1000;
   m_max_lanczos_dimension = 5000;
@@ -107,6 +112,11 @@ void SpinAdapted::Input::initialize_defaults()
   m_do_npdm_ops = false;
   m_do_npdm_in_core = false;
   m_new_npdm_code = false;
+  m_store_spinpdm = false;
+  m_spatpdm_disk_dump = false;
+  m_store_nonredundant_pdm =false;
+  m_pdm_unsorted = false;
+ 
   m_maxiter = 10;
   m_oneindex_screen_tol = NUMERICAL_ZERO;
   m_twoindex_screen_tol = NUMERICAL_ZERO;
@@ -119,8 +129,8 @@ void SpinAdapted::Input::initialize_defaults()
   m_set_Sz = false;
 
   n_twodot_noise = 0;
-  m_twodot_noise = 0.0;
-  m_twodot_gamma = 0.0;
+  m_twodot_noise = 1.0-4;
+  m_twodot_gamma = 3.0e-1;
 
   m_sweep_tol = 1.0e-5;
   m_restart = false;
@@ -139,7 +149,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_schedule_type_backward = false;
   m_maxM = 0;
   m_lastM = 500;
-  m_startM = 500;
+  m_startM = 250;
   m_core_energy = 0.0;
 
   //reorder options, by default it does fiedler
@@ -167,6 +177,7 @@ SpinAdapted::Input::Input(const string& config_name) {
   sym = "c1";
   NonabelianSym = false;
   string orbitalfile;
+  string perturbationIntegralfile;
 
   if(mpigetrank() == 0)
   {
@@ -229,18 +240,6 @@ SpinAdapted::Input::Input(const string& config_name) {
 	m_add_noninteracting_orbs = false;
         m_spinAdapted = false;
       }
-      else if (boost::iequals(keyword, "bogoliubov")) {
-    if(usedkey[BOGOLIUBOV] == 0)
-      usedkey_error(keyword, msg);
-    usedkey[BOGOLIUBOV] = 0;
-	if (tok.size() !=  1) {
-	  pout << "keyword bogoliubov is a stand alone keyword"<<endl;
-	  pout << msg<<endl;
-	  abort();
-	}
-    m_Bogoliubov = true;
-    m_ham_type = BCS;
-      }
       else if (boost::iequals(keyword, "warmup")) {
         if (usedkey[WARMUP] == 0)
           usedkey_error(keyword, msg);
@@ -297,6 +296,16 @@ SpinAdapted::Input::Input(const string& config_name) {
 	pout<<"--------------------------------------------------------------------"<<endl;
 	m_implicitTranspose = false;
       }
+      else if (boost::iequals(keyword, "occ")) {
+	if (tok.size() != 2) {
+	  pout << "keyword occ should be followed by a single number and then an end line"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}	
+	m_occupied_orbitals = atoi(tok[1].c_str());
+      }
+
       else if (boost::iequals(keyword, "lastM")) {
 	if(usedkey[LASTM] == 0) 
 	  usedkey_error(keyword, msg);
@@ -492,13 +501,20 @@ SpinAdapted::Input::Input(const string& config_name) {
 	if(usedkey[IRREP] == 0) 
 	  usedkey_error(keyword, msg);
 	usedkey[IRREP] = 0;
-	if (tok.size() !=  2) {
-	  pout << "keyword irrep should be followed by a single number and then an end line"<<endl;
+  // When there are 2 irrep number, it means that calcultions of transition density matrix between wavefunctions with different irrep.
+  if (tok.size()==2 )
+	  m_total_symmetry_number = IrrepSpace(atoi(tok[1].c_str())-1);
+  else if (tok.size()==3 ){
+	  m_bra_symmetry_number = IrrepSpace(atoi(tok[1].c_str())-1);
+	  m_total_symmetry_number = IrrepSpace(atoi(tok[2].c_str())-1);
+    m_transition_diff_spatial_irrep=true;
+  }
+  else{
+	  pout << "keyword irrep should be followed by one or two numbers and then an end line"<<endl;
 	  pout << "error found in the following line "<<endl;
 	  pout << msg<<endl;
 	  abort();
 	}	
-	m_total_symmetry_number = IrrepSpace(atoi(tok[1].c_str())-1);
       }
       else if (boost::iequals(keyword,  "hubbard"))
 	m_ham_type = HUBBARD;
@@ -510,8 +526,31 @@ SpinAdapted::Input::Input(const string& config_name) {
 	m_calc_type = CALCOVERLAP;
       else if (boost::iequals(keyword,  "calchamiltonian"))
 	m_calc_type = CALCHAMILTONIAN;
+      else if (boost::iequals(keyword,  "response")) {
+	if (tok.size() != 2) {
+	  pout << "The keyword response should be followed by orbital file for the perturbation!"<<endl;
+	  abort();
+	}
+	perturbationIntegralfile = tok[1];
+	m_calc_type = RESPONSE;
+	m_solve_type = CONJUGATE_GRADIENT;
+	m_num_Integrals = 2;
+	
+      }
       else if (boost::iequals(keyword,  "compress"))
 	m_calc_type = COMPRESS;
+      else if (boost::iequals(keyword, "baseenergy")) {
+	if(usedkey[BASENERGY] == 0) 
+	  usedkey_error(keyword, msg);
+	usedkey[BASENERGY] = 0;
+	if (tok.size() !=  2) {
+	  pout << "keyword basenergy should be followed by a single number and then an end line"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}	
+        m_baseEnergy= atof(tok[1].c_str());
+      }
       else if (boost::iequals(keyword,  "maxj")) {
 	if (tok.size() !=  2) {
 	  pout << "keyword maxj should be followed by a single integer and then an end line."<<endl;
@@ -537,6 +576,18 @@ SpinAdapted::Input::Input(const string& config_name) {
 	m_calc_type = RESTART_ONEPDM;
       else if (boost::iequals(keyword,  "restart_twopdm") || boost::iequals(keyword,  "restart_twordm") || boost::iequals(keyword,  "restart_trdm"))
 	m_calc_type = RESTART_TWOPDM;
+      else if (boost::iequals(keyword,  "restart_threepdm") || boost::iequals(keyword,  "restart_threerdm") )
+	m_calc_type = RESTART_THREEPDM;
+      else if (boost::iequals(keyword,  "restart_fourpdm") || boost::iequals(keyword,  "restart_fourrdm") )
+	m_calc_type = RESTART_FOURPDM;
+      else if (boost::iequals(keyword,  "transition_onepdm") || boost::iequals(keyword,  "transition_onerdm") || boost::iequals(keyword,  "tran_onepdm"))
+	m_calc_type = TRANSITION_ONEPDM;
+      else if (boost::iequals(keyword,  "transition_twopdm") || boost::iequals(keyword,  "transition_twordm") || boost::iequals(keyword,  "tran_twopdm"))
+	m_calc_type = TRANSITION_TWOPDM;
+      else if (boost::iequals(keyword,  "restart_tran_onepdm") || boost::iequals(keyword,  "restart_tran_onerdm") || boost::iequals(keyword,  "restart_tran_ordm"))
+	m_calc_type = RESTART_T_ONEPDM;
+      else if (boost::iequals(keyword,  "restart_tran_twopdm") || boost::iequals(keyword,  "restart_tran_twordm") || boost::iequals(keyword,  "restart_tran_trdm"))
+	m_calc_type = RESTART_T_TWOPDM;
       else if(boost::iequals(keyword,  "prefix") || boost::iequals(keyword,  "scratch"))
       {
 	if(usedkey[PREFIX] == 0) 
@@ -637,6 +688,22 @@ SpinAdapted::Input::Input(const string& config_name) {
       else if (boost::iequals(keyword,  "do_npdm_in_core"))
       {
         m_do_npdm_in_core = true;
+      }
+      else if (boost::iequals(keyword, "store_spinpdm"))
+      {
+        m_store_spinpdm = true;
+      }
+      else if (boost::iequals(keyword, "disk_dump_pdm"))
+      {
+        m_spatpdm_disk_dump = true;
+      }
+      else if (boost::iequals(keyword, "nonredundant_pdm"))
+      {
+        m_store_nonredundant_pdm = true;
+      }
+      else if (boost::iequals(keyword, "pdm_unsorted"))
+      {
+        m_pdm_unsorted = true;
       }
 
 
@@ -830,9 +897,17 @@ SpinAdapted::Input::Input(const string& config_name) {
 
 #ifndef SERIAL
   boost::mpi::communicator world;
+  mpi::broadcast(world, m_num_Integrals, 0);
   mpi::broadcast(world, sym, 0);
   mpi::broadcast(world, m_Bogoliubov, 0);
 #endif
+  v_2.resize(m_num_Integrals, TwoElectronArray(TwoElectronArray::restrictedNonPermSymm));
+  v_1.resize(m_num_Integrals);
+
+  if (m_Bogoliubov && m_num_Integrals >1 ) {
+    pout << "Currently the response code does not work with non-particle number conserving hamiltonians!!";
+    abort();
+  }
     
   if (sym != "c1")
     Symmetry::InitialiseTable(sym);
@@ -841,40 +916,44 @@ SpinAdapted::Input::Input(const string& config_name) {
      CheckFileExistence(orbitalfile, "Orbital file ");
 
   //read the orbitals
-  v_1.rhf=true;
-  v_2.rhf=true;
-  if (sym != "lzsym" && sym != "dinfh_abelian" && !NonabelianSym) {
-    v_2.permSymm = true;
-  }
-  else
-    v_2.permSymm = false;
+  for (int integral=0; integral < m_num_Integrals; integral++) {
+    v_1[integral].rhf=true;
+    v_2[integral].rhf=true;
+    if (sym != "lzsym" && sym != "dinfh_abelian" && !NonabelianSym) {
+      v_2[integral].permSymm = true;
+    }
+    else
+      v_2[integral].permSymm = false;
 
+    
+    if (m_Bogoliubov) {
+      v_2[integral].permSymm = false;
+      v_cc.rhf = true;
+      v_cccc.rhf = true;
+      v_cccd.rhf = true;
+    }
+    
+    // Kij-based ordering by GA opt.
 #ifndef SERIAL
-mpi::broadcast(world, m_Bogoliubov,0);
+    mpi::broadcast(world,m_reorderType,0);
+    mpi::broadcast(world,m_add_noninteracting_orbs,0);
 #endif
-
-  if (m_Bogoliubov) {
-    v_2.permSymm = false;
-    v_cc.rhf = true;
-    v_cccc.rhf = true;
-    v_cccd.rhf = true;
+    
+    if (m_Bogoliubov) {
+      v_cc.rhf=true;
+      v_cccc.rhf=true;
+      v_cccd.rhf=true;
+      readorbitalsfile(orbitalfile, v_1[integral], v_2[integral], v_cc, v_cccc, v_cccd);
+      assert(!m_add_noninteracting_orbs);
+    } 
+    else {
+      if (integral == 0)
+	readorbitalsfile(orbitalfile, v_1[integral], v_2[integral], integral);
+      else
+	readorbitalsfile(perturbationIntegralfile, v_1[integral], v_2[integral], integral);
+    }
   }
-
-  // Kij-based ordering by GA opt.
-#ifndef SERIAL
-  mpi::broadcast(world,m_reorderType,0);
-  mpi::broadcast(world,m_add_noninteracting_orbs,0);
-#endif
-
-  if (m_Bogoliubov) {
-    v_cc.rhf=true;
-    v_cccc.rhf=true;
-    v_cccd.rhf=true;
-    readorbitalsfile(orbitalfile, v_1, v_2, v_cc, v_cccc, v_cccd);
-    assert(!m_add_noninteracting_orbs);
-  } else {
-    readorbitalsfile(orbitalfile, v_1, v_2);
-  }
+  
   m_molecule_quantum = SpinQuantum(m_alpha + m_beta, SpinSpace(m_alpha - m_beta), m_total_symmetry_number);
 
   if (mpigetrank() == 0) {
@@ -945,7 +1024,7 @@ void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& o
 
 }
 
-void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray& v1, TwoElectronArray& v2)
+void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray& v1, TwoElectronArray& v2, int integralIndex)
 {
   ifstream dumpFile; 
   dumpFile.open(orbitalfile.c_str(), ios::in);
@@ -1224,7 +1303,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
       }
       PartialTwoElectronArray vpart(orb);
       vpart.populate(v2);
-      vpart.Save(m_save_prefix);
+      vpart.Save(m_save_prefix, integralIndex);
     }
     v2.ReSize(0);
   }
@@ -1464,20 +1543,19 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
       m_core_energy += value;
       section += 1;
     } else if (RHF) {
-      // switch different sections for RHFB
-      if (section == 0) { // ccdd
+      if (section == 0) {
         v2(2*reorder.at(i), 2*reorder.at(k), 2*reorder.at(j),2*reorder.at(l)) = value;
-      } else if (section == 1) { // cccd
+      } else if (section == 1) {
         vcccd.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(k)+1, 2*reorder.at(l), value);
-      } else if (section == 2) { // cccc
+      } else if (section == 2) {
         vcccc.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(l)+1, 2*reorder.at(k)+1, value);
-      } else if (section == 3) { // cd
+      } else if (section == 3) {
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();
         }
         v1(2*reorder.at(i), 2*reorder.at(j)) = value;
-      } else if (section == 4) { // cc
+      } else if (section == 4) {
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();
@@ -1488,32 +1566,31 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
         abort();
       }
     } else {
-      // switch different sections for UHFB
-      if (section == 0) { // ccdd_aa
+      if (section == 0) {
         v2(2*reorder.at(i), 2*reorder.at(k), 2*reorder.at(j),2*reorder.at(l)) = value;
-      } else if (section == 1) { // ccdd_bb
+      } else if (section == 1) {
         v2(2*reorder.at(i)+1, 2*reorder.at(k)+1, 2*reorder.at(j)+1,2*reorder.at(l)+1) = value;
-      } else if (section == 2) { // ccdd_ab
+      } else if (section == 2) {
         v2(2*reorder.at(i), 2*reorder.at(k)+1, 2*reorder.at(j),2*reorder.at(l)+1) = value;
-      } else if (section == 3) { // cccd_a
+      } else if (section == 3) {
         vcccd.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(k)+1, 2*reorder.at(l), value);
-      } else if (section == 4) { // cccd_b
+      } else if (section == 4) {
         vcccd.set(2*reorder.at(i)+1, 2*reorder.at(j)+1, 2*reorder.at(k), 2*reorder.at(l)+1, value);
-      } else if (section == 5) { // cccc  w_{ijkl}C_ia C_ja C_kb C_lb
+      } else if (section == 5) {
         vcccc.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(l)+1, 2*reorder.at(k)+1, value);
-      } else if (section == 6) { // cd_a
+      } else if (section == 6) {
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();
         }
         v1(2*reorder.at(i), 2*reorder.at(j)) = value;
-      } else if (section == 7) { // cd_b
+      } else if (section == 7) {
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();
         }
         v1(2*reorder.at(i)+1, 2*reorder.at(j)+1) = value;
-      } else if (section == 8) { // cc
+      } else if (section == 8) {
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();
@@ -1708,6 +1785,11 @@ void SpinAdapted::Input::performSanityTest()
   else
     Symmetry::irrepAllowed(m_total_symmetry_number.getirrep());
 
+  if (m_calc_type == RESPONSE && m_occupied_orbitals == -1) {
+    pout << "For response type of calculation, number of occupied orbitals must be specified"<<endl;
+    abort();
+  }
+
   //this is important so the user cannot break the code
   if (m_schedule_type_default && !m_schedule_type_backward) {
     if (m_maxM == 0) {
@@ -1760,6 +1842,11 @@ void SpinAdapted::Input::performSanityTest()
   //Still part of the schedule. Might need to move to Schedule.C
   //if(m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter == 0)
   //  m_twodot_to_onedot_iter = min(m_sweep_iter_schedule.back()+2, m_maxiter-1);
+
+  if (m_calc_type == RESPONSE && fabs(m_baseEnergy+1.e10) < 1.0) {
+    pout << "When chosing RESPONSE calculation type base energy is needed"<<endl;
+    abort();
+  }
 
   if (m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter >= m_maxiter) {
     pout << "Switch from twodot to onedot algorithm cannot happen after maxiter"<<endl;
@@ -1821,7 +1908,7 @@ void SpinAdapted::Input::makeInitialHFGuess() {
     //arrange t(i,i) in a multimap and it will rearrange the ts in ascending order with i
     multimap<double, int> ele_map;
     for( int i = 0; i < m_norbs/2; ++i ){
-      ele_map.insert( pair<double, int>( v_1(2*i, 2*i), i ) );
+      ele_map.insert( pair<double, int>( v_1[0](2*i, 2*i), i ) );
     }
 
     multimap<double, int> :: iterator it_alpha = ele_map.begin();

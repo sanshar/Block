@@ -96,29 +96,55 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
   }
   else 
     pout << endl;
-  //now figure out number of iterations and starting size, during first call only
-  if (dmrginp.outputlevel() > 0) {
-    pout << "\t\t\t forward system starting size ... " << forward_starting_size << " " << n_iters << endl;
-    pout << "\t\t\t backward system starting size ... " << backward_starting_size << " " << n_iters << endl;
-    //pout << "onedot or twodot "<<dmrginp.algorithm_method()<<endl;
-  }
+
   if (dmrginp.algorithm_method() == ONEDOT) {
-    onedot = true;
-    env_add = 0;
-    //n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
-    pout << "\t\t\t Using the one dot algorithm ... " << endl;
-  }  
-  if(dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter() <= SpinAdapted::SweepParams::sweep_iter)
-  {
     onedot = true;
     env_add = 0;
     if(dmrginp.spinAdapted())
       n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
     else
       n_iters = (dmrginp.last_site() - 4*forward_starting_size - 2*sys_add - 2*env_add) / (2*sys_add) + 1;
-    if (dmrginp.twodot_to_onedot_iter() == SpinAdapted::SweepParams::sweep_iter)
-      pout << "\t\t\t Switching from two dot to one dot ... " << endl;
+    //n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+    pout << "\t\t\t Using the one dot algorithm ... " << endl;
+  }  
+  if(dmrginp.algorithm_method() == TWODOT_TO_ONEDOT) {
+    if(dmrginp.twodot_to_onedot_iter() <= SpinAdapted::SweepParams::sweep_iter)
+    {
+      onedot = true;
+      env_add = 0;
+      if(dmrginp.spinAdapted())
+	n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+      else
+	n_iters = (dmrginp.last_site() - 4*forward_starting_size - 2*sys_add - 2*env_add) / (2*sys_add) + 1;
+      if (dmrginp.twodot_to_onedot_iter() == SpinAdapted::SweepParams::sweep_iter)
+	pout << "\t\t\t Switching from two dot to one dot ... " << endl;
+    }
+    else {
+      onedot = false;
+      env_add = 1;
+      if(dmrginp.spinAdapted())
+	n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+      else
+	n_iters = (dmrginp.last_site() - 4*forward_starting_size - 2*sys_add - 2*env_add) / (2*sys_add) + 1;
+    }
   }
+  if(dmrginp.algorithm_method() == TWODOT) {
+    onedot = false;
+    env_add = 1;
+    if(dmrginp.spinAdapted())
+      n_iters = (dmrginp.last_site() - 2*forward_starting_size - sys_add - env_add) / sys_add + 1;
+    else
+      n_iters = (dmrginp.last_site() - 4*forward_starting_size - 2*sys_add - 2*env_add) / (2*sys_add) + 1;
+	pout << "\t\t\t Using the two dot algorithm ... " << endl;
+  }
+
+  //now figure out number of iterations and starting size, during first call only
+  if (dmrginp.outputlevel() > 0) {
+    pout << "\t\t\t forward system starting size ... " << forward_starting_size << " " << n_iters << endl;
+    pout << "\t\t\t backward system starting size ... " << backward_starting_size << " " << n_iters << endl;
+    //pout << "onedot or twodot "<<dmrginp.algorithm_method()<<endl;
+  }
+
 }
 
 

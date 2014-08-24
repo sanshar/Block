@@ -12,8 +12,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 namespace SpinAdapted{
 namespace Npdm{
 
-  void npdm(int npdm_order);
-  void npdm_restart(int npdm_order);
+  void npdm(int npdm_order, bool restartpdm=false, bool transitionpdm=false);
 
 }
 }

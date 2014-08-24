@@ -81,6 +81,8 @@ class TensorOp {
  
  TensorOp(int sgn, int pirrep, std::vector<int> ind) :empty(false)
   {
+    // This can only be used to initialize a cre or des operator. It could
+    // not be used to initialize crecre or credes ...
     if(dmrginp.spinAdapted()) {
       if (!(sgn == 1 || sgn == -1)) {
 	cerr<<"sign not correct";exit(0);}

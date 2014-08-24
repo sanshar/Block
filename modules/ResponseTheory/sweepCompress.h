@@ -12,16 +12,13 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "spinblock.h"
 #include "sweep_params.h"
 
-#ifdef USE_BTAS
-#include "btas/SPARSE/STArray.h"
-#endif
-
 namespace SpinAdapted{
 namespace SweepCompress
 {
   void BlockDecimateAndCompress (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys, int targetState, int baseState);
   double do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int targetState, int baseState);
   void Startup (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool& dot_with_sys, int targetState, int baseState);
+  void WavefunctionCanonicalize (SweepParams &sweepParams, SpinBlock& system, const bool &useSlater, const bool& dot_with_sys, int correctionVector, int baseState);
 };
 }
 #endif

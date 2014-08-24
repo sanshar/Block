@@ -7,7 +7,7 @@ import struct
 
 def run():
 
-  nelec = 6.0 #the number of electrons
+  nelec = 8.0 #the number of electrons
   fileint1 = open("qcdmrg.int1", "r")
   norb = int(fileint1.readline().split()[0])
   

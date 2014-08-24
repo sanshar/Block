@@ -13,9 +13,14 @@ find . -name "onepdm_fromtpdm" |xargs rm >/dev/null 2>&1
 find . -name "pairmat.*" |xargs rm >/dev/null 2>&1
 find . -name "dmrg.out" |xargs rm >/dev/null 2>&1
 find . -name "RI*tmp" |xargs rm >/dev/null 2>&1
-rm npdm_h2o_small/A16_matrix.0.0.txt
-rm npdm_h2o_small/partial_A16_matrix.0.0.p0.n0.bin
-rm npdm_h2o_small/partial_A16_matrix.0.0.p1.n0.bin
-rm npdm_h2o_small/threepdm.0.0.bin
-rm npdm_h2o_small/threepdm.0.0.txt
-rm npdm_h2o_small/*.tmp
+find . -name "*_*_p*.tmp" |xargs rm >/dev/null 2>&1
+find . -name "*.bin" |xargs rm >/dev/null 2>&1
+find . -name "partial_A16_matrix.*" |xargs rm >/dev/null 2>&1
+find . -name "onepdm.*" |xargs rm >/dev/null 2>&1
+find . -name "twopdm.*" |xargs rm >/dev/null 2>&1
+find . -name "threepdm.*" |xargs rm >/dev/null 2>&1
+find . -name "fourpdm.*" |xargs rm >/dev/null 2>&1
+find . -name "A16_matrix.*txt" |xargs rm >/dev/null 2>&1
+
+rm mpspt2/response.out >/dev/null 2>&1
+rm mpspt2/compress.out >/dev/null 2>&1

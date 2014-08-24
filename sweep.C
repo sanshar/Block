@@ -29,25 +29,57 @@ using namespace std;
 void SpinAdapted::Sweep::makeSystemEnvironmentBigOverlapBlocks(const std::vector<int>& systemSites, SpinBlock& systemDot, SpinBlock& environmentDot,
 							       SpinBlock& system, SpinBlock& newSystem, SpinBlock& environment, SpinBlock& newEnvironment,
 							       SpinBlock& big, SweepParams& sweepParams, const bool& dot_with_sys, const bool& useSlater,
-							       int braState, int ketState)
+							       int integralIndex, int braState, int ketState)
 {
   bool forward = (systemSites [0] == 0);
   
-  SpinBlock::restore(forward, systemSites, system, braState, ketState);
+  if (systemSites.size() == 1) {
+    int restartSize = 0; bool restart=false, warmUp = false;
+    InitBlocks::InitStartingBlock(system, forward, braState, ketState, 
+				  sweepParams.get_forward_starting_size(), 
+				  sweepParams.get_backward_starting_size(), restartSize, 
+				  restart, warmUp, integralIndex);
+  }
+  else {
+    system.set_integralIndex() = integralIndex;
+    SpinBlock::restore(forward, systemSites, system, braState, ketState);
+  }
+
   if (!sweepParams.get_onedot() || dot_with_sys) {
+    newSystem.set_integralIndex() = integralIndex;
     newSystem.initialise_op_array(OVERLAP, false);
     newSystem.setstoragetype(DISTRIBUTED_STORAGE);
-    newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, systemDot);
+    SpinQuantum moleculeQ = dmrginp.molecule_quantum();
+    if (dmrginp.calc_type() == RESPONSE && system.get_sites() [0] != 0 && system.get_sites()[0]  > dmrginp.num_occupied_orbitals()) {//response and forward and after active sites
+      dmrginp.set_molecule_quantum() = SpinQuantum(2, SpinSpace(0), IrrepSpace(0)); 
+      newSystem.BuildSumBlock (PARTICLE_NUMBER_CONSTRAINT, system, systemDot);
+    }
+    else
+      newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, systemDot);
+
+    dmrginp.set_molecule_quantum() = moleculeQ;
   }
 
   if (!dot_with_sys && sweepParams.get_onedot()) 
     InitBlocks::InitNewOverlapEnvironmentBlock(environment, systemDot, newEnvironment, system , systemDot,
 					       braState, ketState, sweepParams.get_sys_add(), sweepParams.get_env_add(), 
-					       forward, sweepParams.get_onedot(), dot_with_sys);
-  else
-    InitBlocks::InitNewOverlapEnvironmentBlock(environment, environmentDot, newEnvironment, system , systemDot,
-					       braState, ketState, sweepParams.get_sys_add(), sweepParams.get_env_add(), 
-					       forward, sweepParams.get_onedot(), dot_with_sys);
+					       forward, integralIndex, sweepParams.get_onedot(), dot_with_sys);
+  else {
+    SpinQuantum moleculeQ = dmrginp.molecule_quantum();
+    if (dmrginp.calc_type() == RESPONSE && system.get_sites() [0] == 0 && *system.get_sites().rbegin()  >= dmrginp.num_occupied_orbitals()){ //response and forward and after active sites
+      dmrginp.set_molecule_quantum() = SpinQuantum(2, SpinSpace(0), IrrepSpace(0));
+      InitBlocks::InitNewOverlapEnvironmentBlock(environment, environmentDot, newEnvironment, system , systemDot,
+						 braState, ketState, sweepParams.get_sys_add(), sweepParams.get_env_add(), 
+						 forward, integralIndex, sweepParams.get_onedot(), dot_with_sys, PARTICLE_NUMBER_CONSTRAINT);
+    }
+    else
+      InitBlocks::InitNewOverlapEnvironmentBlock(environment, environmentDot, newEnvironment, system , systemDot,
+						 braState, ketState, sweepParams.get_sys_add(), sweepParams.get_env_add(), 
+						 forward, integralIndex, sweepParams.get_onedot(), dot_with_sys);
+    
+
+    dmrginp.set_molecule_quantum() = moleculeQ;
+  }
 
   if (!dot_with_sys && sweepParams.get_onedot())
     InitBlocks::InitBigBlock(system, newEnvironment, big); 
@@ -58,23 +90,52 @@ void SpinAdapted::Sweep::makeSystemEnvironmentBigOverlapBlocks(const std::vector
 
 void SpinAdapted::Sweep::makeSystemEnvironmentBigBlocks(SpinBlock& system, SpinBlock& systemDot, SpinBlock& newSystem, 
 							SpinBlock& environment, SpinBlock& environmentDot, SpinBlock& newEnvironment,
-							SpinBlock& big, SweepParams& sweepParams, const bool& dot_with_sys, const bool& useSlater)
+							SpinBlock& big, SweepParams& sweepParams, const bool& dot_with_sys, const bool& useSlater, 
+							int integralIndex, int braState, int ketState)
 {
   bool forward = (system.get_sites() [0] == 0);
   bool haveNormOps = dot_with_sys, haveCompOps = true;
   system.addAdditionalCompOps();
 
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
-  if (!sweepParams.get_onedot() || dot_with_sys) 
-    InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), 
-				   DISTRIBUTED_STORAGE, haveNormOps, haveCompOps);
+  if (!sweepParams.get_onedot() || dot_with_sys) {
+    SpinQuantum moleculeQ = dmrginp.molecule_quantum();
+    if (dmrginp.calc_type() == RESPONSE && system.get_sites() [0] != 0 && system.get_sites()[0] > dmrginp.num_occupied_orbitals()){ //response and reverse and after active sites
+      dmrginp.set_molecule_quantum() = SpinQuantum(2, SpinSpace(0), IrrepSpace(0));
+
+      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, braState, ketState, sweepParams.get_sys_add(), dmrginp.direct(), 
+				     integralIndex, DISTRIBUTED_STORAGE, haveNormOps, haveCompOps, PARTICLE_NUMBER_CONSTRAINT);
+    }
+    else 
+      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, braState, ketState, sweepParams.get_sys_add(), dmrginp.direct(), 
+				     integralIndex, DISTRIBUTED_STORAGE, haveNormOps, haveCompOps);
+    
+    dmrginp.set_molecule_quantum() = moleculeQ;
+  }
 
   if (!dot_with_sys && sweepParams.get_onedot()) 
-    environmentDot = systemDot;
-  InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, sweepParams.current_root(), sweepParams.current_root(),
-				      sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-				      sweepParams.get_onedot(), nexact, useSlater, !haveNormOps, haveCompOps, dot_with_sys);
-  
+    InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, braState, ketState,
+					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
+					sweepParams.get_onedot(), nexact, useSlater, integralIndex, 
+					!haveNormOps, haveCompOps, dot_with_sys);
+  else {
+    SpinQuantum moleculeQ = dmrginp.molecule_quantum();
+    if (dmrginp.calc_type() == RESPONSE && system.get_sites() [0] == 0 && *system.get_sites().rbegin()  >= dmrginp.num_occupied_orbitals()) {//response and forward and after active sites
+      dmrginp.set_molecule_quantum() = SpinQuantum(2, SpinSpace(0), IrrepSpace(0));
+
+      InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, braState, ketState,
+					  sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
+					  sweepParams.get_onedot(), nexact, useSlater, integralIndex, 
+					  !haveNormOps, haveCompOps, dot_with_sys, PARTICLE_NUMBER_CONSTRAINT);
+    }
+    else
+      InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, braState, ketState,
+					  sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
+					  sweepParams.get_onedot(), nexact, useSlater, integralIndex, 
+					  !haveNormOps, haveCompOps, dot_with_sys);
+    
+    dmrginp.set_molecule_quantum() = moleculeQ;
+  }
 
 
   newSystem.set_loopblock(false); newEnvironment.set_loopblock(false); environment.set_loopblock(false); newEnvironment.set_loopblock(false);
@@ -115,11 +176,11 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     environmentDotStart = systemDotEnd - 1;
     environmentDotEnd = environmentDotStart - environmentDotSize;
   }
-  systemDot = SpinBlock(systemDotStart, systemDotEnd, true);
-  environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, true);
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), true);
+  environmentDot = SpinBlock(environmentDotStart, environmentDotEnd, system.get_integralIndex(), true);
   SpinBlock environment, newEnvironment;
   SpinBlock big;  // new_sys = sys+sys_dot; new_env = env+env_dot; big = new_sys + new_env then renormalize to find new_sys(new)
-  makeSystemEnvironmentBigBlocks(system, systemDot, newSystem, environment, environmentDot, newEnvironment, big, sweepParams, dot_with_sys, useSlater);
+  makeSystemEnvironmentBigBlocks(system, systemDot, newSystem, environment, environmentDot, newEnvironment, big, sweepParams, dot_with_sys, useSlater, system.get_integralIndex(), sweepParams.current_root(), sweepParams.current_root());
 
 
   //analyse_operator_distribution(big);
@@ -152,7 +213,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
       SpinBlock overlapsystem, overlapenvironment, overlapnewsystem, overlapnewenvironment;
       makeSystemEnvironmentBigOverlapBlocks(system.get_sites(), systemDot, environmentDot,
 					    overlapsystem, overlapenvironment, overlapnewsystem, overlapnewenvironment,
-					    overlapBig, sweepParams, dot_with_sys, useSlater,
+					    overlapBig, sweepParams, dot_with_sys, useSlater, system.get_integralIndex(), 
 					    sweepParams.current_root(), istate);
 
       GuessWave::guess_wavefunctions(lowerStates[istate], e, overlapBig, guesstype, sweepParams.get_onedot(), istate, dot_with_sys, 0.0);
@@ -194,14 +255,14 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     for (int istate = 0; istate<sweepParams.current_root(); istate++) {
       SpinBlock overlapBig;
       SpinBlock overlapsystem, overlapenvironment, overlapnewsystem, overlapnewenvironment;
-      SpinBlock overlapsystemDot(systemDotStart, systemDotEnd, true);
-      SpinBlock overlapenvironmentDot(environmentDotStart, environmentDotEnd, true);
+      SpinBlock overlapsystemDot(systemDotStart, systemDotEnd, newSystem.get_integralIndex(), true);
+      SpinBlock overlapenvironmentDot(environmentDotStart, environmentDotEnd, newSystem.get_integralIndex(), true);
       guessWaveTypes guesstype = sweepParams.get_block_iter() == 0 ? TRANSPOSE : TRANSFORM;
       
       DiagonalMatrix e;
       makeSystemEnvironmentBigOverlapBlocks(system.get_sites(), overlapsystemDot, overlapenvironmentDot,
 					    overlapsystem, overlapnewsystem, overlapenvironment, overlapnewenvironment,
-					    overlapBig, sweepParams, true, useSlater,
+					    overlapBig, sweepParams, true, useSlater, newSystem.get_integralIndex(), 
 					    sweepParams.current_root(), istate);
 
       Wavefunction iwave;
@@ -234,21 +295,23 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
     mcheck("after rotation and transformation of block");
 
   if (dmrginp.outputlevel() > 0){
-    pout << *dmrginp.guessgenT<<" "<<*dmrginp.multiplierT<<" "<<*dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+    pout << (*dmrginp.guessgenT)<<" "<<*(dmrginp.multiplierT)<<" "<<*(dmrginp.operrotT)<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
     pout << *dmrginp.makeopsT<<" makeops "<<endl;
     pout << *dmrginp.datatransfer<<" datatransfer "<<endl;
     pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
     pout << *dmrginp.oneelecT<<" "<<*dmrginp.twoelecT<<" "<<*dmrginp.hmultiply<<" "<<*dmrginp.couplingcoeff<<" hmult"<<endl;
     pout << *dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<" build block"<<endl;
+    pout << *dmrginp.blockintegrals<<"  "<<*dmrginp.blocksites<<"  "<<*dmrginp.statetensorproduct<<"  "<<*dmrginp.statecollectquanta<<"  "<<*dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<"  "<<*dmrginp.builditeratorsT<<" build sum block"<<endl;
+    pout << *dmrginp.dscreen<<"  "<<*dmrginp.ddscreen<<"  "<<*dmrginp.cdscreen<<"  screen time"<<endl;
     pout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
-    pout << *dmrginp.addnoise<<" "<<*dmrginp.s0time<<" "<<*dmrginp.s1time<<" "<<*dmrginp.s2time<<endl;
+    //pout << *dmrginp.addnoise<<" "<<*dmrginp.s0time<<" "<<*dmrginp.s1time<<" "<<*dmrginp.s2time<<endl;
   }
 
 }
 
 double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize)
 {
-
+  int integralIndex = 0; //By default we assume that we only have one set of integrals and its index is 0
   SpinBlock system;
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
 
@@ -270,7 +333,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
-  InitBlocks::InitStartingBlock (system,forward, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp);
+  InitBlocks::InitStartingBlock (system,forward, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex);
   if(!restart)
     sweepParams.set_block_iter() = 0;
 
@@ -292,6 +355,8 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   }
   if (dmrginp.outputlevel() > 0)
     mcheck("at the very start of sweep");  // just timer
+
+  bool useRGStartUp = false;
 
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) // get_n_iters() returns the number of blocking iterations needed in one sweep
     {
@@ -322,8 +387,10 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       SpinBlock newSystem; // new system after blocking and decimating
 
       //Need to substitute by:
-      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG))
-         Startup(sweepParams, system, newSystem);
+      if (warmUp && (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG)) {
+	useRGStartUp = true;
+	Startup(sweepParams, system, newSystem);
+      }
       else {
          if (sweepParams.set_sweep_iter() == 1 && sweepParams.get_block_iter() == 0)
            sweepParams.set_guesstype() = BASIC;
@@ -334,7 +401,8 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       
       //Need to substitute by?
 
-      if (!(warmUp && (sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG))){
+      //if (!(warmUp && (sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG))){
+      if (!useRGStartUp) {
 	for(int j=0;j<nroots;++j)
 	{
 	  int istate = dmrginp.setStateSpecific() ? sweepParams.current_root() : j;
@@ -411,7 +479,8 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   // update the static number of iterations
 
   ++sweepParams.set_sweep_iter();
-  if (!(warmUp && (sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG))){
+  //if (!(warmUp && (sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG))){
+  if (!useRGStartUp) {
     if (!mpigetrank())
     {
       std::string efile;
@@ -454,19 +523,19 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   int systemDotSize = sweepParams.get_sys_add() - 1;
   if (forward)
   {
-    systemDotStart = *system.get_sites().rbegin () + 1;
+    systemDotStart = dmrginp.spinAdapted() ? *system.get_sites().rbegin () + 1 : (*system.get_sites().rbegin ())/2 + 1 ;
     systemDotEnd = systemDotStart + systemDotSize;
   }
   else
   {
-    systemDotStart = system.get_sites() [0] - 1;
+    systemDotStart = dmrginp.spinAdapted() ? system.get_sites()[0] - 1 : (system.get_sites()[0])/2 - 1 ;
     systemDotEnd = systemDotStart - systemDotSize;
   }
 
   vector<int> spindotsites(2); 
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
-  systemDot = SpinBlock(systemDotStart, systemDotEnd, true); // default is_complement=false
+  systemDot = SpinBlock(systemDotStart, systemDotEnd, system.get_integralIndex(), true); // default is_complement=false
   
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
 
@@ -474,7 +543,7 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   system.addAdditionalCompOps(); // communicate between different processors, broadcast operators from system block
   dmrginp.datatransfer -> stop();
   InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), 
-				 DISTRIBUTED_STORAGE, true, true);
+				 system.get_integralIndex(), DISTRIBUTED_STORAGE, true, true);
 
   int nquanta = newSystem.get_stateInfo().quanta.size();
   std::vector<DiagonalMatrix > energies(nquanta);

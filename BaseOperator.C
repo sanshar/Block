@@ -156,7 +156,10 @@ const Transposeview Transpose(SparseMatrix& op) { return Transposeview(op); };
 
 ostream& operator<< (ostream& os, const SparseMatrix& a)
 {
-  assert (a.initialised);
+  if (!a.initialised){
+    os <<" not initialised"<<endl;
+    return os;
+  };
   os<<"indices : ";
   for(int i=0; i<a.orbs.size(); i++)
     os<<a.orbs[i]<<"  ";
@@ -208,6 +211,27 @@ void SparseMatrix::Randomise ()
     for (int rQ = 0; rQ < ncols(); ++rQ)
       if (allowed(lQ, rQ))
 	    SpinAdapted::Randomise(operator_element(lQ, rQ));
+}
+
+void SparseMatrix::SymmetricRandomise ()
+{
+  for (int lQ = 0; lQ < nrows(); ++lQ)
+    for (int rQ = 0; rQ < ncols(); ++rQ)
+      if (allowed(lQ, rQ)) 
+	SpinAdapted::SymmetricRandomise(operator_element(lQ, rQ));
+}
+
+double trace(const SparseMatrix& lhs)
+{
+  assert(lhs.nrows() == lhs.ncols());
+  double trace = 0.0;
+
+  for(int lQ=0;lQ<lhs.nrows();++lQ)
+    if(lhs.allowed(lQ,lQ))
+      for(int i=0;i<(lhs)(lQ,lQ).Nrows();++i)
+	trace += (lhs)(lQ,lQ)(i+1,i+1);
+
+  return trace;
 }
 
 double DotProduct(const SparseMatrix& lhs, const SparseMatrix& rhs)

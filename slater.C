@@ -112,7 +112,7 @@ void SpinAdapted::ConvertList (std::vector<int>& a, const std::vector<int>& b)
   a = tmp;
 }
 
-double SpinAdapted::det_energy (const Slater& s)
+double SpinAdapted::det_energy (const Slater& s, int integralIndex)
 {
   // energy of a single slater determinant, used in truncation                                                                            
   double energy = 0;
@@ -124,7 +124,7 @@ double SpinAdapted::det_energy (const Slater& s)
       ket = s;
       bra = s;
       energy += ket.trace (bra.d(i).c(i)) *
-        v_1 (i,i);
+        v_1[integralIndex] (i,i);
     }
 
   // diagonal                                                                                                                             
@@ -134,7 +134,7 @@ double SpinAdapted::det_energy (const Slater& s)
 	ket = s;
 	bra = s;
 	energy += .5 * ket.trace (bra.d(j).d(i).c(j).c(i))
-	  * (v_2 (i,j,j,i) - v_2 (i,j,i,j));
+	  * (v_2[integralIndex] (i,j,j,i) - v_2[integralIndex] (i,j,i,j));
       }
 
   return energy;

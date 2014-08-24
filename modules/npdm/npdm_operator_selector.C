@@ -278,10 +278,20 @@ boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::ve
     else abort();
   }
   else {
-    // Many-body basis is incomplete, so cannot exploit RI exactly
-    if      ( cd_type.size() == 3 ) ret = init_3_index_operators( spinBlock, cd_type );
-    else if ( cd_type.size() == 4 ) ret = init_4_index_operators( spinBlock, cd_type );
-    else abort();
+    //FIXME
+    if(!dmrginp.spinAdapted() && spinBlock->size()==2 ){
+      // Many-body basis is complete, so exploit RI to build many-index operators on fly (e.g. dot block)
+      if      ( cd_type.size() == 3 ) ret = init_RI_3_index_operators( spinBlock, cd_type );
+      else if ( cd_type.size() == 4 ) ret = init_RI_4_index_operators( spinBlock, cd_type );
+      else abort();
+
+    }
+    else{
+      // Many-body basis is incomplete, so cannot exploit RI exactly
+      if      ( cd_type.size() == 3 ) ret = init_3_index_operators( spinBlock, cd_type );
+      else if ( cd_type.size() == 4 ) ret = init_4_index_operators( spinBlock, cd_type );
+      else abort();
+    }
   }
 
   return ret;

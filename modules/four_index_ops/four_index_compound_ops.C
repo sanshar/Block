@@ -23,7 +23,7 @@ Npdm_op_compound_CCDD::Npdm_op_compound_CCDD( SpinBlock * spinBlock )
   is_local_ = true;
   factor_ = 1.0;
   transpose_ = false;
-  build_pattern_ = "";
+  build_pattern_ = "((CC)(DD))";
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -38,9 +38,23 @@ bool Npdm_op_compound_CCDD::set_local_ops( int idx )
   int jx = indices_[1];
   int kx = indices_[2];
   int lx = indices_[3];
+  if(!dmrginp.spinAdapted()){
+    // in nonspinAdapted situation, there are two sites in a dot block. Only one creator and one destructor on one sites. Creator is on the left of destructor.
+    if(ix==jx) return true;
+    if(kx==lx) return true;
+    //because of ix>=jx>=kx>=lx, no C1C0D1D0. 
+    //C1C0D1D0 is calculation in C1D1C0D0 in CDCD pattern
+    //build_pattern_ = "((CD)(CD))";
+    std::vector< boost::shared_ptr<SparseMatrix> > ijOps = spinBlock_->get_op_array(CRE_CRE).get_element(ix,jx);
+    std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(DES_DES).get_element(kx,lx);
+
+  opReps_.clear();
+  //non spin, only at(0) is needed.
+  opReps_.push_back( build_compound_operator( false, 1, ijOps.at(0), klOps.at(0), 0, indices_, false ) );
+  return false;
+  }
 //cout << "indices: " << ix << ", " << jx << ", " << kx << ", " << lx << endl;
 
-  build_pattern_ = "((CC)(DD))";
   // Get 2-index ops as RI building blocks
   std::vector< boost::shared_ptr<SparseMatrix> > ijOps = spinBlock_->get_op_array(CRE_CRE).get_element(ix,jx);
   std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(DES_DES).get_element(kx,lx);
@@ -311,6 +325,20 @@ bool Npdm_op_compound_CDCD::set_local_ops( int idx )
   int lx = indices_[3];
   if ( jx == kx ) {
      return true;
+  }
+  if(!dmrginp.spinAdapted()){
+    // only one creator on a site
+    if(ix==kx) return true;
+    if(jx==lx) return true;
+    // creator is before the destructor on a site
+    if(jx==kx) return true;
+
+  std::vector< boost::shared_ptr<SparseMatrix> > ijOps = spinBlock_->get_op_array(CRE_DES).get_element(ix,jx);
+  std::vector< boost::shared_ptr<SparseMatrix> > klOps = spinBlock_->get_op_array(CRE_DES).get_element(kx,lx);
+
+  opReps_.clear();
+  opReps_.push_back( build_compound_operator( false, 1, ijOps.at(0), klOps.at(0), 0, indices_, false ) );
+  return false;
   }
 
   // Get 2-index ops as RI building blocks

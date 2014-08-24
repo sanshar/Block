@@ -26,9 +26,9 @@ std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBloc
   std::string file;
 
   if (forward)
-    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." %b.integralIndex % "." % mpigetrank() % ".tmp" );
   else
-    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." %b.integralIndex % "." % mpigetrank() % ".tmp" );
   
   if (dmrginp.outputlevel() > 0) 
     pout << "\t\t\t Restoring block file :: " << file << endl;
@@ -63,15 +63,15 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b, int
   std::string file;
   if(dmrginp.spinAdapted()) {
     if (forward)
-      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." %b.integralIndex % "." % mpigetrank() % ".tmp" );
     else
-      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." %b.integralIndex % "." % mpigetrank() % ".tmp" );
   }
   else {
     if (forward)
-      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % left % "." % right % "." %b.integralIndex % "." % mpigetrank() % ".tmp" );
     else
-      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % left % "." % right % "." % mpigetrank() % ".tmp" );
+      file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % left % "." % right % "." %b.integralIndex % "." % mpigetrank() % ".tmp" );
   }
   
   if (dmrginp.outputlevel() > 0) 
@@ -95,15 +95,19 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b, int
 
 void SpinBlock::Save (std::ofstream &ofs)
 {
+  dmrginp.diskio->start();
   boost::archive::binary_oarchive save_block(ofs);
   save_block << *this;
+  dmrginp.diskio->stop();
 }
 
 //helper function
 void SpinBlock::Load (std::ifstream & ifs)
 {
+  dmrginp.diskio->start();
   boost::archive::binary_iarchive load_block(ifs);
   load_block >> *this;
+  dmrginp.diskio->stop();
 }
 
 
@@ -302,7 +306,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
 
 }
 
-  void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix, bool clearRightBlock)
+  void SpinBlock::transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix, bool clearRightBlock, bool clearLeftBlock)
 {
 
   StateInfo oldbraStateInfo=braStateInfo, oldketStateInfo=ketStateInfo;
@@ -340,13 +344,12 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   if (dmrginp.outputlevel() > 0)
     pout << "\t\t\t transform time " << transformtimer.elapsedwalltime() << " " << transformtimer.elapsedcputime() << endl;
 
-  if (leftBlock)
+  if (leftBlock && clearLeftBlock)
     leftBlock->clear();
   if (rightBlock && clearRightBlock)
     rightBlock->clear();
 
 
 }
-
 
 }

@@ -16,6 +16,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 void SpinAdapted::Wavefunction::initialise(const SpinQuantum dQ, const SpinBlock* b, const bool &onedot_)
 {
+  // initialized a ket wavefunction
   initialised = true;
   fermion = false;
   deltaQuantum.assign(1, dQ);
@@ -46,6 +47,43 @@ void SpinAdapted::Wavefunction::initialise(const SpinQuantum dQ, const SpinBlock
 	(*this)(lQ, rQ).ReSize (lBlock->get_stateInfo().quantaStates [lQ], rBlock->get_stateInfo().quantaStates [rQ]);//, &largeArray[usedindex]);
 	SpinAdapted::Clear ((*this)(lQ, rQ));
 	usedindex += lBlock->get_stateInfo().quantaStates [lQ]* rBlock->get_stateInfo().quantaStates [rQ];
+      }
+    }
+}
+
+void SpinAdapted::Wavefunction::initialisebra(const SpinQuantum dQ, const SpinBlock* b, const bool &onedot_)
+{
+  // initialized a bra wavefunction
+  initialised = true;
+  fermion = false;
+  deltaQuantum.assign(1, dQ);
+  onedot = onedot_; 
+  resize(b->get_leftBlock()->get_braStateInfo().quanta.size (), b->get_rightBlock()->get_braStateInfo().quanta.size ());
+
+  const SpinBlock* lBlock = b->get_leftBlock();
+  const SpinBlock* rBlock = b->get_rightBlock();
+
+  long totalmemory = 0;
+
+  for (int lQ = 0; lQ < lBlock->get_braStateInfo().quanta.size (); ++lQ)
+    for (int rQ = 0; rQ < rBlock->get_braStateInfo().quanta.size (); ++rQ)
+    {
+      for (int i = 0; i < deltaQuantum.size(); ++i)
+        allowedQuantaMatrix(lQ, rQ) = deltaQuantum[i].allow(lBlock->get_braStateInfo().quanta [lQ] , rBlock->get_braStateInfo().quanta [rQ]);
+      if (allowedQuantaMatrix(lQ, rQ))
+        totalmemory += lBlock->get_braStateInfo().quantaStates [lQ]* rBlock->get_braStateInfo().quantaStates [rQ];
+    }
+  //double* largeArray = new double[totalmemory];
+  long usedindex = 0;
+
+  for (int lQ = 0; lQ < lBlock->get_braStateInfo().quanta.size (); ++lQ)
+    for (int rQ = 0; rQ < rBlock->get_braStateInfo().quanta.size (); ++rQ)
+    {
+      if (allowedQuantaMatrix(lQ, rQ))
+      {
+	(*this)(lQ, rQ).ReSize (lBlock->get_braStateInfo().quantaStates [lQ], rBlock->get_braStateInfo().quantaStates [rQ]);//, &largeArray[usedindex]);
+	SpinAdapted::Clear ((*this)(lQ, rQ));
+	usedindex += lBlock->get_braStateInfo().quantaStates [lQ]* rBlock->get_braStateInfo().quantaStates [rQ];
       }
     }
 }
@@ -84,6 +122,44 @@ void SpinAdapted::Wavefunction::initialise(const vector<SpinQuantum>& dQ, const 
 	(*this)(lQ, rQ).ReSize (lBlock->get_stateInfo().quantaStates [lQ], rBlock->get_stateInfo().quantaStates [rQ]);//, &largeArray[usedindex]);
 	SpinAdapted::Clear ((*this)(lQ, rQ));
 	usedindex += lBlock->get_stateInfo().quantaStates [lQ]* rBlock->get_stateInfo().quantaStates [rQ];
+      }
+    }
+}
+
+void SpinAdapted::Wavefunction::initialisebra(const vector<SpinQuantum>& dQ, const SpinBlock* b, const bool &onedot_)
+{
+  initialised = true;
+  fermion = false;
+  deltaQuantum = dQ;
+  onedot = onedot_; 
+  resize(b->get_leftBlock()->get_braStateInfo().quanta.size (), b->get_rightBlock()->get_braStateInfo().quanta.size ());
+
+  const SpinBlock* lBlock = b->get_leftBlock();
+  const SpinBlock* rBlock = b->get_rightBlock();
+
+  long totalmemory = 0;
+  for (int lQ = 0; lQ < lBlock->get_braStateInfo().quanta.size (); ++lQ)
+    for (int rQ = 0; rQ < rBlock->get_braStateInfo().quanta.size (); ++rQ) {
+      allowedQuantaMatrix(lQ, rQ) = false;
+      for (int i = 0; i < deltaQuantum.size(); ++i)
+        if (deltaQuantum[i].allow(lBlock->get_braStateInfo().quanta [lQ] , rBlock->get_braStateInfo().quanta [rQ])) {
+          allowedQuantaMatrix(lQ, rQ) = true;
+          break;
+        }
+      if (allowedQuantaMatrix(lQ, rQ))
+	    totalmemory += lBlock->get_braStateInfo().quantaStates [lQ]* rBlock->get_braStateInfo().quantaStates [rQ];
+    }
+  //double* largeArray = new double[totalmemory];
+  long usedindex = 0;
+
+  for (int lQ = 0; lQ < lBlock->get_braStateInfo().quanta.size (); ++lQ)
+    for (int rQ = 0; rQ < rBlock->get_braStateInfo().quanta.size (); ++rQ)
+    {
+      if (allowedQuantaMatrix(lQ, rQ))
+      {
+	(*this)(lQ, rQ).ReSize (lBlock->get_braStateInfo().quantaStates [lQ], rBlock->get_braStateInfo().quantaStates [rQ]);//, &largeArray[usedindex]);
+	SpinAdapted::Clear ((*this)(lQ, rQ));
+	usedindex += lBlock->get_braStateInfo().quantaStates [lQ]* rBlock->get_braStateInfo().quantaStates [rQ];
       }
     }
 }

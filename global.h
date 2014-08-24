@@ -51,8 +51,8 @@ extern int MAX_THRD;
 
 extern Timer globaltimer;
 
-extern OneElectronArray v_1;
-extern TwoElectronArray v_2;
+extern std::vector<OneElectronArray> v_1;
+extern std::vector<TwoElectronArray> v_2;
 extern PairArray v_cc;
 extern CCCCArray v_cccc;
 extern CCCDArray v_cccd;

@@ -34,11 +34,11 @@ enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD, BCS, HEISENBERG};
 enum solveTypes {LANCZOS, DAVIDSON, CONJUGATE_GRADIENT};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
-enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPDM, RESTART_ONEPDM, TINYCALC, FCI, EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN, COMPRESS};
+ enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPDM, RESTART_ONEPDM, RESTART_THREEPDM, RESTART_FOURPDM, TINYCALC, FCI, EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN, COMPRESS, RESPONSE, TRANSITION_ONEPDM, TRANSITION_TWOPDM, RESTART_T_ONEPDM, RESTART_T_TWOPDM};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
-	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER,
+	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, BASENERGY,
 	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, BOGOLIUBOV, TWODOT_NOISE, WARMUP, NUMKEYWORDS};
 
 class Input {
@@ -53,11 +53,16 @@ class Input {
   bool m_Bogoliubov;
 
   IrrepSpace m_total_symmetry_number;
+  IrrepSpace m_bra_symmetry_number;// This is used when bra and ket have different spatial symmetry irrep;
+                                // It is only used for transition density matrix calculations.
+  bool m_transition_diff_spatial_irrep=false;
   SpinQuantum m_molecule_quantum;
   int m_total_spin;
   int m_guess_permutations;
   bool m_stateSpecific; //when targetting excited states we switch from state 
   //average to statespecific 
+  double m_baseEnergy;
+  int m_occupied_orbitals;
 
   std::vector<int> m_hf_occupancy;
   std::string m_hf_occ_user;
@@ -75,6 +80,7 @@ class Input {
   int m_startM;
   int m_maxM;
   int m_integral_disk_storage_thresh;
+  int m_num_Integrals;
 
   bool m_do_diis;
   double m_diis_error;
@@ -93,6 +99,10 @@ class Input {
   bool m_do_npdm_ops;
   bool m_do_npdm_in_core;
   bool m_new_npdm_code;
+  bool m_store_spinpdm;
+  bool m_spatpdm_disk_dump;
+  bool m_pdm_unsorted;
+  bool m_store_nonredundant_pdm;
   bool m_set_Sz;
   int m_maxiter;
   double m_oneindex_screen_tol;
@@ -131,6 +141,7 @@ class Input {
   bool m_reset_iterations;
   bool m_implicitTranspose;
 
+
   std::vector<int> m_spin_vector;
   std::vector<int> m_spin_orbs_symmetry;
   int m_num_spatial_orbs;
@@ -150,16 +161,18 @@ class Input {
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
   {
-    ar & m_thrds_per_node & m_spinAdapted & m_Bogoliubov & m_stateSpecific & m_implicitTranspose;
-    ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz;
+    ar & m_thrds_per_node & m_spinAdapted & m_Bogoliubov & m_stateSpecific & m_implicitTranspose & m_num_Integrals;
+    ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz & m_baseEnergy;
     ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occ_user & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule & m_reorder;
     ar & m_molecule_quantum & m_total_symmetry_number & m_total_spin & m_orbenergies & m_add_noninteracting_orbs;
+    ar & m_bra_symmetry_number;
     ar & m_save_prefix & m_load_prefix & m_direct & m_max_lanczos_dimension;
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat ;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform ;
-    ar & m_do_npdm_ops & m_do_npdm_in_core & m_new_npdm_code;
+    ar & m_do_npdm_ops & m_do_npdm_in_core & m_new_npdm_code & m_occupied_orbitals;
+    ar &  m_store_spinpdm &m_spatpdm_disk_dump & m_pdm_unsorted;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_oneindex_screen_tol & m_twoindex_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type & m_warmup;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
@@ -177,6 +190,12 @@ class Input {
   // ROA
   void initCumulTimer()
   {
+  ddscreen       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  cdscreen       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  dscreen       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  buildcsfops       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  sysdotmake       = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  initnewsystem       = boost::shared_ptr<cumulTimer> (new cumulTimer());
   guessgenT       = boost::shared_ptr<cumulTimer> (new cumulTimer());
   multiplierT     = boost::shared_ptr<cumulTimer> (new cumulTimer());
   operrotT        = boost::shared_ptr<cumulTimer> (new cumulTimer());
@@ -205,6 +224,12 @@ class Input {
   s0time          = boost::shared_ptr<cumulTimer> (new cumulTimer());
   s1time          = boost::shared_ptr<cumulTimer> (new cumulTimer());
   s2time          = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  blockintegrals  = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  blocksites      = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  statetensorproduct = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  statecollectquanta = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  builditeratorsT = boost::shared_ptr<cumulTimer> (new cumulTimer());
+  diskio = boost::shared_ptr<cumulTimer> (new cumulTimer());
   }
   void writeSummary();
 #ifdef MOLPRO
@@ -212,7 +237,7 @@ class Input {
 #endif
   void performSanityTest();
   void generateDefaultSchedule();
-  void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2);
+  void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, int integralIndex);
   void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, PairArray& vcc, CCCCArray& vcccc, CCCDArray& vcccd);  
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
   std::vector<int> getgaorder(ifstream& gaconfFile, string& orbitalfile, std::vector<int>& fiedlerorder);
@@ -222,6 +247,18 @@ class Input {
   void makeInitialHFGuess();
   static void ReadMeaningfulLine(ifstream&, string&, int);
 
+  boost::shared_ptr<cumulTimer> dscreen; 
+  boost::shared_ptr<cumulTimer> cdscreen; 
+  boost::shared_ptr<cumulTimer> ddscreen; 
+  boost::shared_ptr<cumulTimer> buildcsfops; 
+  boost::shared_ptr<cumulTimer> sysdotmake; 
+  boost::shared_ptr<cumulTimer> initnewsystem; 
+  boost::shared_ptr<cumulTimer> diskio; 
+  boost::shared_ptr<cumulTimer> builditeratorsT; 
+  boost::shared_ptr<cumulTimer> blockintegrals; 
+  boost::shared_ptr<cumulTimer> blocksites; 
+  boost::shared_ptr<cumulTimer> statetensorproduct; 
+  boost::shared_ptr<cumulTimer> statecollectquanta; 
   boost::shared_ptr<cumulTimer> guessgenT; 
   boost::shared_ptr<cumulTimer> multiplierT; 
   boost::shared_ptr<cumulTimer> operrotT; 
@@ -253,6 +290,8 @@ class Input {
 
   //const bool& doStateSpecific() const {return m_doStateSpecific;}
   //bool& doStateSpecific() {return m_doStateSpecific;}
+  const double& baseEnergy() const {return m_baseEnergy;}
+  const int& num_occupied_orbitals() const {return m_occupied_orbitals;}
   const bool& doimplicitTranspose() const {return m_implicitTranspose;}
   bool& setimplicitTranspose() {return m_implicitTranspose;}
   const bool& setStateSpecific() const {return m_stateSpecific;}
@@ -327,6 +366,7 @@ class Input {
   const bool &direct() const { return m_direct; }
   const int &deflation_max_size() const { return m_deflation_max_size; }
   const IrrepSpace &total_symmetry_number() const { return m_total_symmetry_number; }
+  const IrrepSpace &bra_symmetry_number() const { return m_bra_symmetry_number; }
   const SpinQuantum &molecule_quantum() const { return m_molecule_quantum; }
   const int &sys_add() const { return m_sys_add; }
   bool add_noninteracting_orbs() const {return m_add_noninteracting_orbs;}
@@ -342,11 +382,19 @@ class Input {
   const std::vector<int> &spin_vector() const { return m_spin_vector; }
   const std::string &save_prefix() const { return m_save_prefix; }
   const std::string &load_prefix() const { return m_load_prefix; }
+  SpinQuantum& set_molecule_quantum() {return m_molecule_quantum;}
   SpinQuantum effective_molecule_quantum() {
     if (!m_add_noninteracting_orbs) 
       return m_molecule_quantum;
     else 
-      return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), total_symmetry_number());
+      return SpinQuantum(m_molecule_quantum.particleNumber + m_molecule_quantum.totalSpin.getirrep(), SpinSpace(0), m_molecule_quantum.orbitalSymmetry);
+    //return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), total_symmetry_number());
+  }
+  SpinQuantum bra_quantum() {
+    if (!m_add_noninteracting_orbs) 
+      return SpinQuantum(total_particle_number(), SpinSpace(m_alpha - m_beta), bra_symmetry_number());
+    else 
+      return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), bra_symmetry_number());
   }
   vector<SpinQuantum> effective_molecule_quantum_vec() {
     vector<SpinQuantum> q;
@@ -359,6 +407,20 @@ class Input {
     }
     return q;
   }
+  vector<SpinQuantum> bra_quantum_vec() {
+    vector<SpinQuantum> q;
+    if (!m_Bogoliubov) q.push_back(bra_quantum());
+    else {
+      SpinQuantum q_max = bra_quantum();
+      for (int n = 0; n <= q_max.get_n(); n+=2) {
+        q.push_back(SpinQuantum(n, q_max.get_s(), q_max.get_symm()));
+      }
+    }
+    return q;
+  }
+  bool transition_diff_irrep(){
+    return m_transition_diff_spatial_irrep;
+  }
   std::vector<double>& get_orbenergies() {return m_orbenergies;}
   int getHFQuanta(const SpinBlock& b) const;
   const bool &do_npdm_ops() const {return m_do_npdm_ops;}
@@ -367,6 +429,14 @@ class Input {
   bool &do_npdm_in_core() {return m_do_npdm_in_core;}
   const bool &new_npdm_code() const {return m_new_npdm_code;}
   bool &new_npdm_code() {return m_new_npdm_code;}
+  const bool &store_spinpdm() const {return m_store_spinpdm;}
+  bool &store_spinpdm() {return m_store_spinpdm;}
+  const bool &spatpdm_disk_dump() const {return m_spatpdm_disk_dump;}
+  bool &spatpdm_disk_dump() {return m_spatpdm_disk_dump;}
+  const bool &pdm_unsorted() const {return m_pdm_unsorted;}
+  bool &pdm_unsorted(){return m_pdm_unsorted;}
+  const bool &store_nonredundant_pdm() const { return m_store_nonredundant_pdm;}
+  bool &store_nonredundant_pdm() { return m_store_nonredundant_pdm;}
   int slater_size() const {return m_norbs;}
   const std::vector<int> &reorder_vector() {return m_reorder;}
   bool spinAdapted() {return m_spinAdapted;}

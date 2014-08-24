@@ -44,6 +44,7 @@ class Onepdm_container : public Npdm_container {
   
     void update_full_spin_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch );
     void update_full_spatial_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch );
+    void calculate_spatial_npdm();
 
 };
 

@@ -28,6 +28,7 @@ void svd(Matrix& M, DiagonalMatrix& e, Matrix& U, Matrix& V);
 void xsolve_AxeqB(const Matrix& a, const ColumnVector& b, ColumnVector& x);
 
 void Randomise (Matrix& a);
+void SymmetricRandomise (Matrix& a);
 void MatrixTensorProduct (const Matrix& a, char conjA, Real scaleA, const Matrix& b, char conjB, Real scaleB, Matrix& c, int rostride, int colstride, bool allocate = false);
 void MatrixMultiply (const Matrix& a, char conjA, const Matrix& b, char conjB, Matrix& c, Real scale, double cfactor = 1.);
 void MatrixMultiply (double d, const Matrix& a, Matrix& b);
