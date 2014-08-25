@@ -159,7 +159,7 @@ void SpinAdapted::Input::initialize_defaults()
 
   m_orbformat=MOLPROFORM;
 
-  m_warmup = WILSON;
+  m_warmup = LOCAL0;
 }
 
 void SpinAdapted::Input::usedkey_error(string& key, string& line) {
@@ -251,6 +251,8 @@ SpinAdapted::Input::Input(const string& config_name) {
         }
         if (boost::iequals(tok[1], "wilson")) {
           m_warmup = WILSON; // default option select the lowest energy slater determinants
+        } else if (boost::iequals(tok[1], "local_0site")) {
+          m_warmup = LOCAL0;
         } else if (boost::iequals(tok[1], "local_2site")) {
           m_warmup = LOCAL2;
         } else if (boost::iequals(tok[1], "local_3site")) {

@@ -29,7 +29,7 @@ class PairArray;
 class CCCCArray;
 class CCCDArray;
 
-enum WarmUpTypes {WILSON, LOCAL2, LOCAL3, LOCAL4};
+enum WarmUpTypes {WILSON, LOCAL0, LOCAL2, LOCAL3, LOCAL4};
 enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD, BCS, HEISENBERG};
 enum solveTypes {LANCZOS, DAVIDSON, CONJUGATE_GRADIENT};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
