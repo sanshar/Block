@@ -42,6 +42,14 @@ $MPICOMMAND   ../../block.spin_adapted dmrg.conf >dmrg.out
 python ../test_energy.py 1  1.0e-6 -11.2284830996
 cd ../
 
+echo "performing bcs test..."
+cd bcs
+$MPICOMMAND ../../block.spin_adapted dmrg.conf > dmrg.out
+python ../test_energy.py 1  1e-6 -1.4816808342
+python ../test_onepdm.py ref_onepdm.0.0 spatial_onepdm.0.0.txt 1e-7
+python ../test_onepdm.py spat_pairmat.0.0 spatial_pairmat.0.0.txt 1e-7
+cd ../
+
 #this first calculated twopdm with a small M for two lowest states (so the energy is not converged)
 #checks if the twopdm traced with integrals matches the energies
 #then restarts the calculations to calculate the onepdm
