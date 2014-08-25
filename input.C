@@ -697,6 +697,10 @@ SpinAdapted::Input::Input(const string& config_name) {
       {
         m_do_npdm_ops = true;
       }
+      else if (boost::iequals(keyword,  "new_npdm_code"))
+      {
+        m_new_npdm_code = true;
+      }
       else if (boost::iequals(keyword,  "do_npdm_in_core"))
       {
         m_do_npdm_in_core = true;
