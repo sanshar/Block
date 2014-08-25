@@ -119,9 +119,6 @@ void test()
   calcHamiltonianAndOverlap(statec, statec, h, o);
   if (mpigetrank() == 0)
     printf("<1|1> = %18.10f   <1|H|1> = %18.10f\n", o, h);
-
-
-
 }
 
 void evaluateOverlapAndHamiltonian(long *occ, int length, double* o, double* h) {

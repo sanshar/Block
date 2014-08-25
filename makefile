@@ -11,7 +11,6 @@ BOOSTINCLUDE = /home/sandeep/apps/boost_1_55_0/
 BOOSTLIB =  -L/home/sandeep/apps/boost_1_55_0/lib -lboost_serialization -lboost_system -lboost_filesystem
 LAPACKBLAS =  -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
-
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
 USE_MKL = no
@@ -61,7 +60,7 @@ BTAS = $(BLOCKHOME)/btas
    
 MOLPROINCLUDE=.
 ifeq ($(MOLPRO), yes)
-   MOLPROINCLUDE=$(BLOCKHOME)/../
+   MOLPROINCLUDE=$(HOME)/../
    MOLPRO_BLOCK= -DMOLPRO
 endif
 
@@ -70,39 +69,35 @@ FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTI
          -I$(HOME)/modules/npdm -I$(HOME)/modules/two_index_ops -I$(HOME)/modules/three_index_ops -I$(HOME)/modules/four_index_ops -std=c++0x \
 	 -I$(HOME)/modules/ResponseTheory 
 
-
 LIBS +=  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp 
 MPI_OPT = -DSERIAL
 
-MPICOMPILER=
-ifeq ($(USE_MPI), yes)
-     MPI_OPT = 
-     MPI_LIB = -lboost_mpi
-     LIBS += $(MPI_LIB)
-     CXX = $(MPICXX)
-     MPICOMPILER=$(notdir $(firstword $(shell $(MPICXX) -showname)))
-endif
-
-ifeq (icpc, $(filter icpc, $(notdir $(firstword $(CXX))) $(MPICOMPILER)))
+ifeq ($(notdir $(firstword $(CXX))),icpc)
    ifeq ($(OPENMP), yes)
       OPENMP_FLAGS= -openmp -D_OPENMP 
    endif
 # Intel compiler
-   OPT = -DNDEBUG -O3 -funroll-loops  -fPIC
-#  OPT = -g 
-   ifeq ($(USE_MPI), no) 
-      CXX = icc
-   endif
+	OPT = -DNDEBUG -O3 -funroll-loops 
+#	OPT = -g 
+	CXX = icc
 endif
 
-ifeq (g++, $(filter g++, $(notdir $(firstword $(CXX))) $(MPICOMPILER)))
+ifeq ($(notdir $(firstword $(CXX))),g++)
    ifeq ($(OPENMP), yes)
       OPENMP_FLAGS= -fopenmp -D_OPENMP 
    endif
 # GNU compiler
-     OPT = -DNDEBUG -O3 -fPIC
-#    OPT = -g
+	OPT = -DNDEBUG -O3 -fPIC
+#	OPT = -g
 endif
+
+ifeq ($(USE_MPI), yes)
+	MPI_OPT = 
+	MPI_LIB = -lboost_mpi
+        LIBS += $(MPI_LIB)
+	CXX = $(MPICXX)
+endif
+
 
 OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)  -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL ${MKLOPT} ${UNITTEST}
 
@@ -125,16 +120,11 @@ OBJ_OH= OverlapHelement.o
 
 SRC_spin_library =  modules/ResponseTheory/sweepResponse.C modules/ResponseTheory/sweepCompress.C fciqmchelper.C dmrg.C fiedler.C least_squares.C sweep_mps.C set_spinblock_components.C linear.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C Schedule.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C $(SRC_genetic) SpinSpace.C include/IntegralMatrix.C $(SRC_npdm) 
 
-
-#SRC_spin_library =  fciqmchelper.C fiedler.C IrrepSpace.C least_squares.C sweep_mps.C dmrg.C readinput.C save_load_block.C timer.C SpinQuantum.C Symmetry.C input.C Schedule.C orbstring.C slater.C csf.C spinblock.C StateInfo.C set_spinblock_components.C op_components.C Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C linear.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C  modules/onepdm/sweep.C modules/onepdm/onepdm.C  modules/generate_blocks/sweep.C fci.C $(SRC_genetic) SpinSpace.C include/IntegralMatrix.C $(SRC_npdm)
-
 OBJ_OH+=$(SRC_OH:.C=.o)
 OBJ_spin_adapted=$(SRC_spin_adapted:.C=.o)
 OBJ_spin_library=$(SRC_spin_library:.C=.o)
 
 .C.o :
-	$(CXX)  $(FLAGS) $(OPT) -c $< -o $@
-.c.o :
 	$(CXX)  $(FLAGS) $(OPT) -c $< -o $@
 .cpp.o :
 	$(CXX) $(FLAGS) $(OPT) -c $< -o $@
@@ -143,7 +133,6 @@ all	: $(EXECUTABLE) libqcdmrg.a OH
 
 library : libqcdmrg.a $(NEWMATLIB)/libnewmat.a libqcdmrg.so
 
-
 libqcdmrg.a : $(OBJ_spin_library)
 	$(AR) $(ARFLAGS) $@ $^
 	$(RANLIB) $@
@@ -151,10 +140,10 @@ libqcdmrg.a : $(OBJ_spin_library)
 libqcdmrg.so : $(OBJ_spin_library)
 	$(CXX) -shared -o $@ $^ $(LIBS)
 
-$(EXECUTABLE) : $(OBJ_spin_adapted) $(NEWMATLIB)/libnewmat.a 
+$(EXECUTABLE) : $(OBJ_spin_adapted) $(NEWMATLIB)/libnewmat.a
 	$(CXX)   $(FLAGS) $(OPT) -o  $(EXECUTABLE) $(OBJ_spin_adapted) $(LIBS)
 
-OH : $(OBJ_OH) $(NEWMATLIB)/libnewmat.a 
+OH : $(OBJ_OH) $(NEWMATLIB)/libnewmat.a
 	$(CXX)   $(FLAGS) $(OPT) -o  OH $(OBJ_OH) $(LIBS)
 
 $(NEWMATLIB)/libnewmat.a : 
@@ -162,6 +151,7 @@ $(NEWMATLIB)/libnewmat.a :
 
 clean:
 	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o modules/npdm/*.o $(NEWMATLIB)*.o libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a genetic/gaopt genetic/*.o btas/lib/*.o btas/lib/libbtas.a modules/two_index_ops/*.o modules/three_index_ops/*.o modules/four_index_ops/*.o modules/ResponseTheory/*.o
+>>>>>>> 0933993b4025b1dd77116ef3c4f39c7109d2b616
 
 # DO NOT DELETE
 

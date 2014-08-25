@@ -240,6 +240,18 @@ SpinAdapted::Input::Input(const string& config_name) {
 	m_add_noninteracting_orbs = false;
         m_spinAdapted = false;
       }
+      else if (boost::iequals(keyword, "bogoliubov")) {
+    if(usedkey[BOGOLIUBOV] == 0)
+      usedkey_error(keyword, msg);
+    usedkey[BOGOLIUBOV] = 0;
+	if (tok.size() !=  1) {
+	  pout << "keyword bogoliubov is a stand alone keyword"<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}
+    m_Bogoliubov = true;
+    m_ham_type = BCS;
+      }
       else if (boost::iequals(keyword, "warmup")) {
         if (usedkey[WARMUP] == 0)
           usedkey_error(keyword, msg);
@@ -686,6 +698,10 @@ SpinAdapted::Input::Input(const string& config_name) {
       else if (boost::iequals(keyword,  "docd") || boost::iequals(keyword,  "do_npdm_ops"))
       {
         m_do_npdm_ops = true;
+      }
+      else if (boost::iequals(keyword,  "new_npdm_code"))
+      {
+        m_new_npdm_code = true;
       }
       else if (boost::iequals(keyword,  "do_npdm_in_core"))
       {
@@ -1545,19 +1561,19 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
       m_core_energy += value;
       section += 1;
     } else if (RHF) {
-      if (section == 0) {
+      if (section == 0) { // ccdd
         v2(2*reorder.at(i), 2*reorder.at(k), 2*reorder.at(j),2*reorder.at(l)) = value;
-      } else if (section == 1) {
+      } else if (section == 1) { // cccd
         vcccd.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(k)+1, 2*reorder.at(l), value);
-      } else if (section == 2) {
+      } else if (section == 2) { // cccc
         vcccc.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(l)+1, 2*reorder.at(k)+1, value);
-      } else if (section == 3) {
+      } else if (section == 3) { // cd
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();
         }
         v1(2*reorder.at(i), 2*reorder.at(j)) = value;
-      } else if (section == 4) {
+      } else if (section == 4) { // cc
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();
@@ -1568,31 +1584,31 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
         abort();
       }
     } else {
-      if (section == 0) {
+      if (section == 0) { // ccdd_aa
         v2(2*reorder.at(i), 2*reorder.at(k), 2*reorder.at(j),2*reorder.at(l)) = value;
-      } else if (section == 1) {
+      } else if (section == 1) { // ccdd_bb
         v2(2*reorder.at(i)+1, 2*reorder.at(k)+1, 2*reorder.at(j)+1,2*reorder.at(l)+1) = value;
-      } else if (section == 2) {
+      } else if (section == 2) { // ccdd_ab
         v2(2*reorder.at(i), 2*reorder.at(k)+1, 2*reorder.at(j),2*reorder.at(l)+1) = value;
-      } else if (section == 3) {
+      } else if (section == 3) { // cccd_a
         vcccd.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(k)+1, 2*reorder.at(l), value);
-      } else if (section == 4) {
+      } else if (section == 4) { // cccd_b
         vcccd.set(2*reorder.at(i)+1, 2*reorder.at(j)+1, 2*reorder.at(k), 2*reorder.at(l)+1, value);
-      } else if (section == 5) {
+      } else if (section == 5) { // cccc  w_{ijkl}C_ia C_ja C_kb C_lb
         vcccc.set(2*reorder.at(i), 2*reorder.at(j), 2*reorder.at(l)+1, 2*reorder.at(k)+1, value);
-      } else if (section == 6) {
+      } else if (section == 6) { // cd_a
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();
         }
         v1(2*reorder.at(i), 2*reorder.at(j)) = value;
-      } else if (section == 7) {
+      } else if (section == 7) { // cd_b
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();
         }
         v1(2*reorder.at(i)+1, 2*reorder.at(j)+1) = value;
-      } else if (section == 8) {
+      } else if (section == 8) { // cc
         if (!(k==-1 && l==-1)) {
           pout << "Orbital file error" << endl;
           abort();

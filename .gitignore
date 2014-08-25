@@ -1,6 +1,8 @@
 *.o
+OH
 block.spin_adapted
 *.so
 *.a
 *~
 *.swp
+*.pyc

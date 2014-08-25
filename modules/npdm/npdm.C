@@ -316,6 +316,7 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
 
 void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
 {
+  bool new_npdm_code;
   double sweep_tol = 1e-7;
   sweep_tol = dmrginp.get_sweep_tol();
   bool direction;
@@ -363,7 +364,10 @@ void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
   boost::shared_ptr<Npdm_driver_base> npdm_driver;
   //if ( (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) && dmrginp.spinAdapted() ) {
   if ( (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) ) {
-    dmrginp.new_npdm_code() = true;
+    if((npdm_order == 1 || npdm_order == 2) && transitionpdm == false  && dmrginp.spinAdapted() == true)
+      new_npdm_code = dmrginp.new_npdm_code();
+    else 
+      new_npdm_code = true;
     if      (npdm_order == 1) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Onepdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == 2) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Twopdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == 3) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Threepdm_driver( dmrginp.last_site() ) );
@@ -423,7 +427,7 @@ void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
     else {
       for (int state=0; state<dmrginp.nroots(); state++) {
         sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-        if ( dmrginp.new_npdm_code() ) {
+        if ( new_npdm_code ) {
           Timer timerX;
           npdm_driver->clear();
           npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,state);
@@ -495,15 +499,8 @@ void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
       dmrginp.set_fullrestart() = false;
       // Do NPDM sweep
-      if ( dmrginp.new_npdm_code() ) {
-        npdm_driver->clear();
-        npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,state);
-      }
-      else {
-        if (npdm_order == 1) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);      // Compute onepdm with the original code
-        else if (npdm_order == 2) SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state); // Compute twopdm with the original code
-        else abort();
-    }
+      npdm_driver->clear();
+      npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,state);
    }
   }
   
