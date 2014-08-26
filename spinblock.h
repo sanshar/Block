@@ -153,6 +153,7 @@ class SpinBlock
   //void makeCCD_comp_ops();
 
   void initialise_op_array(opTypes optype, bool is_core);
+  void erase(opTypes optype) {assert(has(optype)); ops.erase(optype);}
   boost::shared_ptr<Op_component_base>& set_op_array(opTypes optype){assert(has(optype));return ops.find(optype)->second;}
   Op_component_base& get_op_array(opTypes optype){assert(has(optype));return *(ops.find(optype)->second);}
   const Op_component_base& get_op_array(opTypes optype) const {assert(has(optype));return *(ops.find(optype)->second);}

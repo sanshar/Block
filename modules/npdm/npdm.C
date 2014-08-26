@@ -366,8 +366,10 @@ void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
   if ( (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) ) {
     if((npdm_order == 1 || npdm_order == 2) && transitionpdm == false  && dmrginp.spinAdapted() == true)
       new_npdm_code = dmrginp.new_npdm_code();
-    else 
+    else {
+      dmrginp.new_npdm_code() = true;
       new_npdm_code = true;
+    }
     if      (npdm_order == 1) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Onepdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == 2) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Twopdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == 3) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Threepdm_driver( dmrginp.last_site() ) );

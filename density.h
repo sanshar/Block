@@ -16,7 +16,6 @@ namespace SpinAdapted{
 class DensityMatrix : public SpinAdapted::SparseMatrix
 {
 private:
-  void add_simulatedtwodot_noise(const std::vector<Wavefunction>& wave_solutions, SpinBlock& big, const double noise);
   void add_onedot_noise(const Wavefunction& wave_solutions, SpinBlock& big, const double noise, bool act2siteops = true);
 public:
   void add_twodot_noise(const SpinBlock &big, const double noise);

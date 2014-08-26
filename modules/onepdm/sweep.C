@@ -44,11 +44,22 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
   
-  InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), DISTRIBUTED_STORAGE_FOR_ONEPDM, true, true);
+  newSystem.set_integralIndex() = system.get_integralIndex();
+  newSystem.default_op_components(dmrginp.direct(), system, systemDot, false, false, true);
+  newSystem.erase(CRE_CRE_DESCOMP);
+  newSystem.erase(CRE_CRE);
+  newSystem.erase(HAM);
+  newSystem.setstoragetype(DISTRIBUTED_STORAGE_FOR_ONEPDM);
+  newSystem.BuildSumBlock (NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, system, systemDot);
+  if (dmrginp.outputlevel() > 0) {
+    pout << "\t\t\t NewSystem block " << endl << newSystem << endl;
+    newSystem.printOperatorSummary();
+  }
+
   
   InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, sweepParams.current_root(), sweepParams.current_root(),
 				      sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
-				      sweepParams.get_onedot(), nexact, useSlater, system.get_integralIndex(), true, true, true);
+				      sweepParams.get_onedot(), nexact, useSlater, system.get_integralIndex(), false, false, true);
   SpinBlock big;
   newSystem.set_loopblock(true);
   system.set_loopblock(false);
