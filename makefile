@@ -5,11 +5,11 @@
 
 ##BOOSTINCLUDE = /home/sandeep/Work/Programs/boost_1_54_0/
 #specify boost include file
-BOOSTINCLUDE = /home/sandeep/apps/boost_1_55_0/
+BOOSTINCLUDE = /home/juny/boost_1_55_0/install/include
 
 #specify boost and lapack-blas library locations
-BOOSTLIB =  -L/home/sandeep/apps/boost_1_55_0/lib -lboost_serialization -lboost_system -lboost_filesystem
-LAPACKBLAS =  -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+BOOSTLIB =  -L/home/juny/boost_1_55_0/install/lib -lboost_serialization -lboost_system -lboost_filesystem
+LAPACKBLAS = -L/opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/ -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
@@ -151,7 +151,6 @@ $(NEWMATLIB)/libnewmat.a :
 
 clean:
 	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o modules/npdm/*.o $(NEWMATLIB)*.o libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a genetic/gaopt genetic/*.o btas/lib/*.o btas/lib/libbtas.a modules/two_index_ops/*.o modules/three_index_ops/*.o modules/four_index_ops/*.o modules/ResponseTheory/*.o
->>>>>>> 0933993b4025b1dd77116ef3c4f39c7109d2b616
 
 # DO NOT DELETE
 
