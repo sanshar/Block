@@ -316,7 +316,6 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
 
 void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
 {
-  bool new_npdm_code;
   double sweep_tol = 1e-7;
   sweep_tol = dmrginp.get_sweep_tol();
   bool direction;
@@ -353,6 +352,8 @@ void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
   if(transitionpdm)
     dmrginp.setimplicitTranspose() = false;
 
+  dmrginp.do_pdm() = true;
+
   // Screening can break things for NPDM (e.g. smaller operators won't be available from which to build larger ones etc...?)
   dmrginp.oneindex_screen_tol() = 0.0; //need to turn screening off for one index ops
   dmrginp.twoindex_screen_tol() = 0.0; //need to turn screening off for two index ops
@@ -364,18 +365,20 @@ void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
   boost::shared_ptr<Npdm_driver_base> npdm_driver;
   //if ( (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) && dmrginp.spinAdapted() ) {
   if ( (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) ) {
-    if((npdm_order == 1 || npdm_order == 2) && transitionpdm == false  && dmrginp.spinAdapted() == true)
-      new_npdm_code = dmrginp.new_npdm_code();
-    else {
+    //By default, new_npdm_code is false.
+    //For npdm_order 1 or 2. new_npdm_code is determined by default or manual setting.
+    //For the other situation, only old or new code is suitable.
+    if(npdm_order == 3 || npdm_order == 4 || npdm_order ==0  ||  transitionpdm == true  || dmrginp.spinAdapted() == false || dmrginp.setStateSpecific())
       dmrginp.new_npdm_code() = true;
-      new_npdm_code = true;
-    }
+
+    if(dmrginp.new_npdm_code()){
     if      (npdm_order == 1) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Onepdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == 2) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Twopdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == 3) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Threepdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == 4) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Fourpdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == 0) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Nevpt2_npdm_driver( dmrginp.last_site() ) );
     else abort();
+    }
   }
 
 
@@ -429,7 +432,7 @@ void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
     else {
       for (int state=0; state<dmrginp.nroots(); state++) {
         sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-        if ( new_npdm_code ) {
+        if ( dmrginp.new_npdm_code() ) {
           Timer timerX;
           npdm_driver->clear();
           npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,state);

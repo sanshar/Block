@@ -69,9 +69,9 @@ void Threepdm_container::save_npdms(const int& i, const int& j)
   }
   if ( !dmrginp.spatpdm_disk_dump() ) {
     accumulate_spatial_npdm();
+    save_spatial_npdm_text(i, j);
   }
   save_spatial_npdm_binary(i, j);
-  save_spatial_npdm_text(i, j);
 
 #ifndef SERIAL
   world.barrier();

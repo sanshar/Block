@@ -112,6 +112,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_do_npdm_ops = false;
   m_do_npdm_in_core = false;
   m_new_npdm_code = false;
+  m_do_pdm = false;
   m_store_spinpdm = false;
   m_spatpdm_disk_dump = false;
   m_store_nonredundant_pdm =false;
