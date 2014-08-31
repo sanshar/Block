@@ -14,6 +14,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "sweeptwopdm.h"  // For legacy version of 2pdm
 #include "npdm_driver.h"
 #include "nevpt2_npdm_driver.h"
+#include "pario.h"
 
 void dmrg(double sweep_tol);
 void restart(double sweep_tol, bool reset_iter);

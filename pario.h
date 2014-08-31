@@ -12,7 +12,7 @@
 //#define pout if (mpigetrank() == 0) xout
 #define pout if ((mpigetrank() == 0) && (dmrginp.outputlevel() != 0)) xout
 #define dout if ((mpigetrank() == 0) && (dmrginp.outputlevel() != 0)) xout
-#define cout xout
+extern std::ostream &xout, &xerr;
 #endif
 
 #endif

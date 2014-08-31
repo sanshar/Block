@@ -6,6 +6,7 @@
 #include "npdm_driver.h"
 #include "npdm_patterns.h"
 #include "npdm_expectations.h"
+#include "pario.h"
 
 namespace SpinAdapted{
 namespace Npdm{

@@ -12,6 +12,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "pario.h"
 #include "npdm_expectations_engine.h"
 #include "npdm_expectations.h"
+#include "pario.h"
 
 namespace SpinAdapted{
 namespace Npdm{
