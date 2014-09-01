@@ -20,11 +20,11 @@ SpinAdapted::Csf::Csf( const map<Slater, double>& p_dets, const int p_n, const S
   for (; it!= det_rep.end(); it++)
     if ((*it).first.n != n || (*it).first.Sz != Sz )
       {
-	cout << it->first<<endl;
-	cout << (*it).first.n<<" "<<n<<endl;
-	cout << (*it).first.Sz<<" "<<Sz<<endl;
-	cout<<" all slaters in Csf do not have the same n, spin or symmetry"<<endl;
-	cout << *this<<endl;
+	pout << it->first<<endl;
+	pout << (*it).first.n<<" "<<n<<endl;
+	pout << (*it).first.Sz<<" "<<Sz<<endl;
+	pout<<" all slaters in Csf do not have the same n, spin or symmetry"<<endl;
+	pout << *this<<endl;
 	throw 20;
       }
 } 
@@ -150,7 +150,7 @@ vector<SpinAdapted::Csf> SpinAdapted::Csf::spinLadder(int k)
     else if (j== 1 && Symmetry::sizeofIrrep(irrep.getirrep()) != 1) {
       Csf sLminus;
       vector< vector<int> > partitions = CSFUTIL::generate_partitions( irrep.getirrep() );
-      if (partitions.size() == 0) {cout << "big trouble"<<endl;exit(0);}
+      if (partitions.size() == 0) {pout << "big trouble"<<endl;exit(0);}
       for (int vec=0; vec<partitions.size(); vec++) {
 	Csf stemp;
 	s = *this;

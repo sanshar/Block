@@ -167,10 +167,10 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 {
   int integralIndex = 0;
   if (dmrginp.hamiltonian() == BCS) {
-    cout << "Two PDM with BCS calculations is not implemented" << endl;
+    pout << "Two PDM with BCS calculations is not implemented" << endl;
     exit(0);
   }
-  cout.precision(12);
+  pout.precision(12);
   SpinBlock system;
   const int nroots = dmrginp.nroots();
   std::vector<double> finalEnergy(nroots,0.);

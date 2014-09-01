@@ -10,6 +10,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "BaseOperator.h"
 #include "spinblock.h"
 #include "operatorfunctions.h"
+#include "pario.h"
 
 namespace SpinAdapted{
 namespace Three_index_ops{
@@ -301,7 +302,7 @@ void build_3index_ops( const opTypes& optype, SpinBlock& big,
                        const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo )
 {
   // 3-index output file
-//cout << "build_3index_op, ofs =" <<  big.get_op_array(optype).get_filename() << endl;
+//pout << "build_3index_op, ofs =" <<  big.get_op_array(optype).get_filename() << endl;
   std::ofstream ofs;
   if ( ! dmrginp.do_npdm_in_core() ) ofs.open( big.get_op_array(optype).get_filename().c_str(), std::ios::binary );
 

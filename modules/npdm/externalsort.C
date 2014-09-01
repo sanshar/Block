@@ -100,13 +100,13 @@ template< class T,class = typename std::enable_if<has_index<T>::value>::type >
 void partition_data_sendthread(char* inputfilename, long partition_index){
   mpi::communicator world;
 
-  std::cout << world.size()<<endl;
+  pout << world.size()<<endl;
   std::vector<std::vector<T>> send_buff;
   send_buff.resize(world.size());
   //std::vector<info_pair<T>> send_buff;
   FILE* inputfile = fopen(inputfilename,"rb");
   if(inputfile==NULL){
-    std::cout << " cannot open "<<inputfilename<<endl;
+    pout << " cannot open "<<inputfilename<<endl;
     abort();
   }
   T inputbuff[Buff_SIZE];
@@ -119,13 +119,13 @@ void partition_data_sendthread(char* inputfilename, long partition_index){
     return;
   }
   bool finished= realsize==Buff_SIZE? false: true;// finished means this is the last piece of data.
- // std::cout <<"partition_index "<< partition_index<<endl;
+ // pout <<"partition_index "<< partition_index<<endl;
   for(;;){
     for(int i=0; i< realsize; i++)
     {
-//      std::cout <<"send elements: "<<i<<"  "<< inputbuff[i]<<endl;
+//      pout <<"send elements: "<<i<<"  "<< inputbuff[i]<<endl;
 
-      if(inputbuff[i].index>= partition_index*world.size()) std::cout << " too big index"<<endl;
+      if(inputbuff[i].index>= partition_index*world.size()) pout << " too big index"<<endl;
       send_buff[(int) floor(inputbuff[i].index/partition_index)].push_back(inputbuff[i]);
     }
 
@@ -166,7 +166,7 @@ void partition_data_sendthread(char* inputfilename, long partition_index){
 template< class T,class = typename std::enable_if<has_index<T>::value>::type > 
 void partition_data_recvthread(char* outputfilename){
   mpi::communicator world;
-  std::cout << world.size()<<endl;
+  pout << world.size()<<endl;
   
   std::vector<info_pair<T>> recv_buff;
   recv_buff.resize(world.size());
@@ -244,7 +244,7 @@ void partition_data_multithread(long number_of_data, char* inputfilename, char* 
 {
   mpi::communicator world;
   long partition_index = number_of_data/world.size();
-  std::cout << "begin partition\n";
+  pout << "begin partition\n";
   std::thread datasend(partition_data_sendthread<T>,inputfilename,partition_index);
   std::thread datarecv(partition_data_recvthread<T>,outputfilename);
 

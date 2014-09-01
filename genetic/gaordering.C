@@ -9,6 +9,7 @@
 #include "GAInput.h"
 #include "GAOptimize.h"
 #include "ReadIntegral.h"
+#include "pario.h"
 using namespace std;
 
 #ifndef SERIAL
@@ -25,20 +26,20 @@ namespace genetic
 void gaordering(ifstream& confFile, ifstream& dumpFile, vector<int>& reorder, vector<int>& oldtonew)
 {
   srand(genetic::gainput.random_seed);
-  cout << "Random Seed = " << genetic::gainput.random_seed << endl;
+  pout << "Random Seed = " << genetic::gainput.random_seed << endl;
 
   ifstream fdump(dumpFile.c_str());
   Matrix K; genetic::ReadIntegral(fdump, K);
 
   genetic::Cell final = genetic::Optimize(K);
-  cout << "##################### MINIMUM GENE REP. #####################" << endl;
-  cout << "Gene with MinValue = " << final << endl;
-  cout << "Effective Distance = " << sqrt(final.Fitness()) << endl;
+  pout << "##################### MINIMUM GENE REP. #####################" << endl;
+  pout << "Gene with MinValue = " << final << endl;
+  pout << "Effective Distance = " << sqrt(final.Fitness()) << endl;
 
-  cout << "#################### DMRG REORDER FORMAT ####################" << endl;
+  pout << "#################### DMRG REORDER FORMAT ####################" << endl;
   vector<int> ordering(final.Gen().Sequence());
-  for(int i = 0; i < genetic::Gene::Length()-1; ++i) cout << ordering[i] + 1 << ",";
-  cout << ordering[genetic::Gene::Length()-1] + 1 << endl;
+  for(int i = 0; i < genetic::Gene::Length()-1; ++i) pout << ordering[i] + 1 << ",";
+  pout << ordering[genetic::Gene::Length()-1] + 1 << endl;
 
   return 0;
 }

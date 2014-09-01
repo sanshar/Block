@@ -7,6 +7,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include "npdm_spin_ops.h"
+#include "pario.h"
 
 namespace SpinAdapted {
 namespace Npdm {
@@ -29,10 +30,10 @@ boost::shared_ptr<SparseMatrix> NpdmSpinOps::build_compound_operator( bool is_fe
   if (sign == 1) newOp->set_deltaQuantum( 1,  ( lhsOp->get_deltaQuantum(0) + rhsOp->get_deltaQuantum(0) ).at(ispin) );
   else           newOp->set_deltaQuantum( 1,  ( lhsOp->get_deltaQuantum(0) - rhsOp->get_deltaQuantum(0) ).at(ispin) );
 
-//cout << "Building compound operator.......................................................\n";
-//cout << "2*lhs spin = " << lhsOp->get_deltaQuantum().get_s() << std::endl;
-//cout << "2*rhs spin = " << rhsOp->get_deltaQuantum().get_s() << std::endl;
-//cout << "2*total spin = " << newOp->get_deltaQuantum().get_s() << std::endl;
+//pout << "Building compound operator.......................................................\n";
+//pout << "2*lhs spin = " << lhsOp->get_deltaQuantum().get_s() << std::endl;
+//pout << "2*rhs spin = " << rhsOp->get_deltaQuantum().get_s() << std::endl;
+//pout << "2*total spin = " << newOp->get_deltaQuantum().get_s() << std::endl;
   newOp->allocate( spinBlock_->get_stateInfo() );
 
   if (transpose) {
@@ -43,8 +44,8 @@ boost::shared_ptr<SparseMatrix> NpdmSpinOps::build_compound_operator( bool is_fe
     // Build compound operator as product of LHS and RHS
     operatorfunctions::Product(spinBlock_, *lhsOp, *rhsOp, *newOp, 1.0 );
   }
-//cout << *newOp;
-//cout << "Done Building compound operator.......................................................\n";
+//pout << *newOp;
+//pout << "Done Building compound operator.......................................................\n";
 
   return newOp;
 }

@@ -15,6 +15,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "ObjectMatrix.h"
 #include <iostream>
 #include <fstream>
+#include "pario.h"
 
 //using namespace std;
 
@@ -87,7 +88,7 @@ namespace SpinAdapted {
 	for (int j=0; j<loopOver; j++)
 	  for (int k=0; k<loopOver; k++) {
 	    instream >> CGcoeffs(i,j,k);
-	    //cout << i<<"  "<<j<<"  "<<k<<"  "<<CGcoeffs(i,j,k)<<endl;
+	    //pout << i<<"  "<<j<<"  "<<k<<"  "<<CGcoeffs(i,j,k)<<endl;
 	  }
 
 
@@ -148,7 +149,7 @@ namespace SpinAdapted {
 	for (int j=0; j<loopOver; j++)
 	  for (int k=0; k<loopOver; k++) {
 	    instream >> CGcoeffs(i,j,k);
-	    //cout << i<<"  "<<j<<"  "<<k<<"  "<<CGcoeffs(i,j,k)<<endl;
+	    //pout << i<<"  "<<j<<"  "<<k<<"  "<<CGcoeffs(i,j,k)<<endl;
 	  }
 
 
@@ -266,7 +267,7 @@ namespace SpinAdapted {
 	for (int j=0; j<loopOver; j++)
 	  for (int k=0; k<loopOver; k++) {
 	    instream >> CGcoeffs(i,j,k);
-	    //cout << i<<"  "<<j<<"  "<<k<<"  "<<CGcoeffs(i,j,k)<<endl;
+	    //pout << i<<"  "<<j<<"  "<<k<<"  "<<CGcoeffs(i,j,k)<<endl;
 	  }
 
 
@@ -421,7 +422,7 @@ namespace SpinAdapted {
 	for (int j=0; j<loopOver; j++)
 	  for (int k=0; k<loopOver; k++) {
 	    instream >> CGcoeffs(i,j,k);
-	    //cout << i<<"  "<<j<<"  "<<k<<"  "<<CGcoeffs(i,j,k)<<endl;
+	    //pout << i<<"  "<<j<<"  "<<k<<"  "<<CGcoeffs(i,j,k)<<endl;
 	  }
 
 

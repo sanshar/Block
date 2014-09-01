@@ -349,9 +349,9 @@ SpinAdapted::Input::Input(const string& config_name) {
       else if (boost::iequals(keyword,  "gaopt"))
       {
         if (tok.size() != 2) {
-          cerr << "keyword gaopt should be followed by the filename and then an end line"<<endl;
-          cerr << "error found in the following line "<<endl;
-          cerr << msg<<endl;
+          perr << "keyword gaopt should be followed by the filename and then an end line"<<endl;
+          perr << "error found in the following line "<<endl;
+          perr << msg<<endl;
           abort();
         }       
 	m_reorderType = GAOPT;
@@ -359,9 +359,9 @@ SpinAdapted::Input::Input(const string& config_name) {
       }
       else if (boost::iequals(keyword, "fiedler")){
         if (tok.size() != 1) {
-          cerr << "keyword fiedler should not be followed by anything"<<endl;
-          cerr << "error found in the following line "<<endl;
-          cerr << msg<<endl;
+          perr << "keyword fiedler should not be followed by anything"<<endl;
+          perr << "error found in the following line "<<endl;
+          perr << msg<<endl;
           abort();
         }       
 	m_reorderType = FIEDLER;
@@ -1709,7 +1709,7 @@ void SpinAdapted::Input::writeSummary()
   if (sym != "c1") {
     printf("%-50s :   ", "Irreducible representations of the orbitals");
     for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) 
-      cout << Symmetry::stringOfIrrep(m_spin_orbs_symmetry[i])<<"  ";
+      pout << Symmetry::stringOfIrrep(m_spin_orbs_symmetry[i])<<"  ";
     printf("\n");
   }
 

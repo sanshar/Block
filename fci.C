@@ -52,7 +52,7 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
 
   SpinBlock environment;
   InitBlocks::InitStartingBlock(environment, false, 0, 0, sweepParams.get_forward_starting_size(),  sweepParams.get_backward_starting_size(), 0, false, true, integralIndex);
-  cout << environment<<endl;
+  pout << environment<<endl;
   for (int i=0;i <backwardsites-1; i++) {
     SpinBlock envdot(numsites-2-i, numsites-2-i, integralIndex, true);
     SpinBlock newEnvironment;

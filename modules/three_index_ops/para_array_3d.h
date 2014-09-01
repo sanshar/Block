@@ -240,9 +240,9 @@ public:
       local_indices_map_.at( local_indices_.at(i) ) = local_indices_.at(i);
     }
 
-//if (stored_local_) cout << "3-index stored_local = true!\n";
+//if (stored_local_) pout << "3-index stored_local = true!\n";
 //for (auto it = local_index_tuple_.begin(); it != local_index_tuple_.end(); ++it) {
-//  cout << "para_array, p" << mpigetrank() << ": " << it->at(0) << "," << it->at(1) << "," << it->at(2) << "; local_size = " << local_indices_.size()<<endl;
+//  pout << "para_array, p" << mpigetrank() << ": " << it->at(0) << "," << it->at(1) << "," << it->at(2) << "; local_size = " << local_indices_.size()<<endl;
 //}
 
   }

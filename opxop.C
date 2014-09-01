@@ -9,6 +9,7 @@
 #define omp_get_thread_num() 0 
 #endif
 #include "guess_wavefunction.h"
+#include "pario.h"
 
 //using namespace operatorfunctions;
 
@@ -535,7 +536,7 @@ void SpinAdapted::opxop::dxcccomp(const SpinBlock* otherBlock, std::vector<boost
 	if (loopblock == b->get_leftBlock()) //this is because you have CC_{ji} d_j 
 	  parity*= getCommuteParity(-iq, top.get_deltaQuantum(0), kq); 
 	
-	//cout << k<<"  "<<i<<"  "<<factor<<"  "<<scale<<"  "<<parity<<endl;
+	//pout << k<<"  "<<i<<"  "<<factor<<"  "<<scale<<"  "<<parity<<endl;
 	SpinAdapted::operatorfunctions::TensorProduct(otherBlock, top, Transposeview(op1), b, &(b->get_stateInfo()), o[ilock], parity*factor*scale, numthrds);
       }
     }

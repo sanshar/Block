@@ -570,7 +570,7 @@ double Symmetry::spatial_ninej(int j1, int j2, int j12, int j3, int j4, int j34,
 		      spatial_cg(j13, j24, j, m13, m24, m) ;
 		  } 
 	      out += first*second;
-	      //cout << m1<<" "<<m2<<" "<<m3<<" "<<m4<<" "<<first<<"  "<<second<<" "<<out<<endl;
+	      //pout << m1<<" "<<m2<<" "<<m3<<" "<<m4<<" "<<first<<"  "<<second<<" "<<out<<endl;
 	    }
     return out;
 }

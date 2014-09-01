@@ -206,7 +206,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
 double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams, const bool &warmUp, const bool &forward, 
                          const bool &restart, const int &restartSize, const int state, const int stateB)
 {
-  cout.precision(12);
+  pout.precision(12);
   SpinBlock system;
   const int nroots = dmrginp.nroots();
   std::vector<double> finalEnergy(nroots,0.);

@@ -86,7 +86,7 @@ void Twopdm_container::save_npdm_text(const int &i, const int &j)
             if ( (k==n) && (l==m) ) trace += twopdm(k,l,m,n);
           }
     ofs.close();
-    std::cout << "Spin-orbital 2PDM trace = " << trace << "\n";
+    pout << "Spin-orbital 2PDM trace = " << trace << "\n";
   }
 }
 
@@ -109,7 +109,7 @@ void Twopdm_container::save_spatial_npdm_text(const int &i, const int &j)
             if ( (k==n) && (l==m) ) trace += spatial_twopdm(k,l,m,n);
           }
     ofs.close();
-    std::cout << "Spatial      2PDM trace = " << trace << "\n";
+    pout << "Spatial      2PDM trace = " << trace << "\n";
   }
 }
 
@@ -189,7 +189,7 @@ void Twopdm_container::accumulate_spatial_npdm()
                 if ( abs(spatial_twopdm(k,l,m,n)) > NUMERICAL_ZERO ){
 
                 abort();
-                cout << "duplicates"<<endl;
+                pout << "duplicates"<<endl;
                 }
                 spatial_twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
               }
@@ -218,8 +218,8 @@ void Twopdm_container::update_full_spin_array( std::vector< std::pair< std::vect
 
     // Test for duplicates
     if ( abs(twopdm(i, j, k, l)) != 0.0 ) {
-      cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<endl;
-      cout << "earlier value: "<<twopdm(i,j,k,l)<<endl<< "new value:     "<<val<<endl;
+      pout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<endl;
+      pout << "earlier value: "<<twopdm(i,j,k,l)<<endl<< "new value:     "<<val<<endl;
       abort();
     }
     twopdm(i,j,k,l) = val;

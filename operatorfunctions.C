@@ -13,6 +13,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+#include "pario.h"
 
 
 void SpinAdapted::operatorfunctions::TensorTrace(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const SpinBlock *cblock, const StateInfo *cstateinfo, Baseoperator<Matrix>& c, double scale, int num_thrds)
@@ -188,7 +189,7 @@ void SpinAdapted::operatorfunctions::TensorProductElement(const SpinBlock *abloc
 
   int aq, aqprime, bq, bqprime;
 
-  //cout << "old to new size "<<oldToNewI.size()<<" "<<oldToNewJ.size()<<endl;
+  //pout << "old to new size "<<oldToNewI.size()<<" "<<oldToNewJ.size()<<endl;
   for (int oldi =0; oldi < oldToNewI.size(); oldi++) {
     colstride = 0;
     for (int oldj = 0; oldj < oldToNewJ.size(); oldj++)
@@ -661,7 +662,7 @@ void SpinAdapted::operatorfunctions::TensorProductElement(const Baseoperator<Mat
 
   int aq, aqprime, bq, bqprime;
 
-  //cout << "old to new size "<<oldToNewI.size()<<" "<<oldToNewJ.size()<<endl;
+  //pout << "old to new size "<<oldToNewI.size()<<" "<<oldToNewJ.size()<<endl;
   for (int oldi =0; oldi < oldToNewI.size(); oldi++) {
     colstride = 0;
     for (int oldj = 0; oldj < oldToNewJ.size(); oldj++)

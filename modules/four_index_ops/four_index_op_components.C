@@ -20,6 +20,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "spinblock.h"
 #include "op_components.h"
 #include "build_4index_ops.h"
+#include "pario.h"
 
 namespace SpinAdapted {
 
@@ -305,7 +306,7 @@ void Op_component<CreCreDesDes>::build_iterators(SpinBlock& b)
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
 //pout << "New set of CCDD operators:  " << i << std::endl;
-//cout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
+//pout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
     std::vector<boost::shared_ptr<CreCreDesDes> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = getSpinQuantum(orbs[0]);
@@ -376,7 +377,7 @@ void Op_component<CreCreDesDes>::build_iterators(SpinBlock& b)
 
     // Create (C)(C(DD)) structure
     //----------------------------------------
-//cout << "((C)(C(DD))) spin components\n";
+//pout << "((C)(C(DD))) spin components\n";
     std::vector< std::vector<SpinQuantum> > c__c_dd_quantum_ladder;
     // (DD)
     for (int p=0; p < spinvec34.size(); p++) {
@@ -387,10 +388,10 @@ void Op_component<CreCreDesDes>::build_iterators(SpinBlock& b)
         // Store (DD) first, then C(DD), then 4-index spin quantums
         for (int t=0; t < spinvec1234.size(); t++) {
           std::vector<SpinQuantum> tmp = { spinvec34[p], spinvec234[q], spinvec1234[t] };
-//cout << "spin34   = " << spinvec34[p] << endl;
-//cout << "spin234  = " << spinvec234[q] << endl;
-//cout << "spin1234 = " << spinvec1234[t] << endl;
-//cout << "------\n";
+//pout << "spin34   = " << spinvec34[p] << endl;
+//pout << "spin234  = " << spinvec234[q] << endl;
+//pout << "spin1234 = " << spinvec1234[t] << endl;
+//pout << "------\n";
           c__c_dd_quantum_ladder.push_back( tmp );
           assert( spinvec1234[t].particleNumber == 0 );
         }
@@ -400,7 +401,7 @@ void Op_component<CreCreDesDes>::build_iterators(SpinBlock& b)
 
     // Create (C)((CD)D) structure
     //----------------------------------------
-//cout << "((C)((CD)D)) spin components\n";
+//pout << "((C)((CD)D)) spin components\n";
     std::vector< std::vector<SpinQuantum> > c__cd_d_quantum_ladder;
     // (CD)
     for (int p=0; p < spinvec23.size(); p++) {
@@ -411,10 +412,10 @@ void Op_component<CreCreDesDes>::build_iterators(SpinBlock& b)
         // Store (CD) first, then (CD)D, then 4-index spin quantums
         for (int t=0; t < spinvec1234.size(); t++) {
           std::vector<SpinQuantum> tmp = { spinvec23[p], spinvec234[q], spinvec1234[t] };
-//cout << "spin23   = " << spinvec23[p] << endl;
-//cout << "spin234  = " << spinvec234[q] << endl;
-//cout << "spin1234 = " << spinvec1234[t] << endl;
-//cout << "------\n";
+//pout << "spin23   = " << spinvec23[p] << endl;
+//pout << "spin234  = " << spinvec234[q] << endl;
+//pout << "spin1234 = " << spinvec1234[t] << endl;
+//pout << "------\n";
           c__cd_d_quantum_ladder.push_back( tmp );
           assert( spinvec1234[t].particleNumber == 0 );
         }
@@ -476,7 +477,7 @@ void Op_component<CreDesCreDes>::build_iterators(SpinBlock& b)
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
 //pout << "New set of CDCD operators:  " << i << std::endl;
-//cout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
+//pout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
     std::vector<boost::shared_ptr<CreDesCreDes> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = getSpinQuantum(orbs[0]);
@@ -1289,7 +1290,7 @@ void Op_component<CreDesCreCre>::build_iterators(SpinBlock& b)
     orbs = m_op.unmap_local_index(i);
 //pout << "New set of CDCC operators:  " << i << std::endl;
 //pout << "Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
-//cout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
+//pout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << " " << orbs[3] << std::endl;
     std::vector<boost::shared_ptr<CreDesCreCre> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = getSpinQuantum(orbs[0]);

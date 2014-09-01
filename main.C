@@ -28,7 +28,7 @@ int main(int argc, char* argv [])
   boost::mpi::environment env(argc, argv);
   boost::mpi::communicator world;
   if (world.rank() == 0) {
-    cout << "Runing with " << world.size() << " processors" << endl;
+    pout << "Runing with " << world.size() << " processors" << endl;
   }
 #endif
 
@@ -36,7 +36,7 @@ int main(int argc, char* argv [])
   //SpinAdapted::dmrginp.initCumulTimer();
 
   if (argc == 1 && mpigetrank() == 0) {
-    cout << "No command line argument found, expects an input file"<<endl;
+    pout << "No command line argument found, expects an input file"<<endl;
     abort();
   }
   char* output = 0;

@@ -19,6 +19,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "spinblock.h"
 #include "op_components.h"
 #include "build_3index_ops.h"
+#include "pario.h"
 
 namespace SpinAdapted {
   
@@ -394,17 +395,17 @@ void Op_component<CreCreCre>::build_iterators(SpinBlock& b)
   std::map< std::tuple<int,int,int>, int > tuples = get_3index_tuples(b);
 //pout << "CCC indices\n";
 //for (auto it = tuples.begin(); it != tuples.end(); ++it) {
-//cout << "p" << mpigetrank() << ": " << std::get<0>(it->first) << "," << std::get<1>(it->first) << "," << std::get<2>(it->first) << " ; mode = " << it->second << endl;
+//pout << "p" << mpigetrank() << ": " << std::get<0>(it->first) << "," << std::get<1>(it->first) << "," << std::get<2>(it->first) << " ; mode = " << it->second << endl;
 //}
   m_op.set_tuple_indices( tuples, dmrginp.last_site() );
 
   // Allocate new set of operators for each set of spatial orbitals
 //FIXME remove this
-//cout << "New set of CCC operators: p" << mpigetrank() << "; local size = " << m_op.local_nnz() << "; global size = " << m_op.global_nnz() << "; is local " << m_op.is_local() << std::endl;
+//pout << "New set of CCC operators: p" << mpigetrank() << "; local size = " << m_op.local_nnz() << "; global size = " << m_op.global_nnz() << "; is local " << m_op.is_local() << std::endl;
   std::vector<int> orbs(3);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);
-//cout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << std::endl;
+//pout << "p" << mpigetrank() << "; Orbs = " << orbs[0] << " " << orbs[1] << " " << orbs[2] << std::endl;
     std::vector<boost::shared_ptr<CreCreCre> >& spin_ops = m_op.get_local_element(i);
 
     SpinQuantum spin1 = getSpinQuantum(orbs[0]);
@@ -502,7 +503,7 @@ void Op_component<CreCreDes>::build_iterators(SpinBlock& b)
   m_op.set_tuple_indices( tuples, dmrginp.last_site() );
 
   // Allocate new set of operators for each set of spatial orbitals
-//cout << "New set of CCD operators: p" << mpigetrank() << "; local size = " << m_op.local_nnz() << "; global size = " << m_op.global_nnz() << "; is local " << m_op.is_local() << std::endl;
+//pout << "New set of CCD operators: p" << mpigetrank() << "; local size = " << m_op.local_nnz() << "; global size = " << m_op.global_nnz() << "; is local " << m_op.is_local() << std::endl;
   std::vector<int> orbs(3);
   for (int i = 0; i < m_op.local_nnz(); ++i) {
     orbs = m_op.unmap_local_index(i);

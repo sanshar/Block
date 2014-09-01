@@ -35,7 +35,7 @@ Npdm_op_wrapper_CCDD::Npdm_op_wrapper_CCDD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CCDD::set_local_ops( int idx )
 {
-//cout << "getting CCDD operator...\n";
+//pout << "getting CCDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx, lx;
@@ -45,7 +45,7 @@ bool Npdm_op_wrapper_CCDD::set_local_ops( int idx )
     opReps_ = spinBlock_->get_op_array(CRE_CRE_DES_DES).get_local_element(idx);
   }
   else {
-//cout << "...from disk...\n";
+//pout << "...from disk...\n";
     if( ! check_file_open(idx) ) abort();
 //FIXME combine 3-index and 4-indexx read from disk.... UNIFY......
     int size = spinBlock_->get_op_array(CRE_CRE_DES_DES).get_local_element(idx).size();
@@ -96,7 +96,7 @@ Npdm_op_wrapper_CDCD::Npdm_op_wrapper_CDCD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CDCD::set_local_ops( int idx )
 {
-//cout << "getting CDCD operator...\n";
+//pout << "getting CDCD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx, lx;
@@ -106,7 +106,7 @@ bool Npdm_op_wrapper_CDCD::set_local_ops( int idx )
     opReps_ = spinBlock_->get_op_array(CRE_DES_CRE_DES).get_local_element(idx);
   }
   else {
-//cout << "...from disk...\n";
+//pout << "...from disk...\n";
     if( ! check_file_open(idx) ) abort();
 //FIXME
     int size = spinBlock_->get_op_array(CRE_DES_CRE_DES).get_local_element(idx).size();
@@ -160,7 +160,7 @@ Npdm_op_wrapper_CDDC::Npdm_op_wrapper_CDDC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CDDC::set_local_ops( int idx )
 {
-//cout << "getting CDDC operator...\n";
+//pout << "getting CDDC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx, lx;
@@ -170,7 +170,7 @@ bool Npdm_op_wrapper_CDDC::set_local_ops( int idx )
     opReps_ = spinBlock_->get_op_array(CRE_DES_DES_CRE).get_local_element(idx);
   }
   else {
-//cout << "...from disk...\n";
+//pout << "...from disk...\n";
     if( ! check_file_open(idx) ) abort();
 //FIXME
     int size = spinBlock_->get_op_array(CRE_DES_DES_CRE).get_local_element(idx).size();
@@ -224,7 +224,7 @@ Npdm_op_wrapper_CDDD::Npdm_op_wrapper_CDDD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CDDD::set_local_ops( int idx )
 {
-//cout << "getting CDDD operator...\n";
+//pout << "getting CDDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx, lx;
@@ -234,7 +234,7 @@ bool Npdm_op_wrapper_CDDD::set_local_ops( int idx )
     opReps_ = spinBlock_->get_op_array(CRE_DES_DES_DES).get_local_element(idx);
   }
   else {
-//cout << "...from disk...\n";
+//pout << "...from disk...\n";
     if( ! check_file_open(idx) ) abort();
 //FIXME
     int size = spinBlock_->get_op_array(CRE_DES_DES_DES).get_local_element(idx).size();
@@ -288,7 +288,7 @@ Npdm_op_wrapper_CCCD::Npdm_op_wrapper_CCCD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CCCD::set_local_ops( int idx )
 {
-//cout << "getting CCCD operator...\n";
+//pout << "getting CCCD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx, lx;
@@ -298,7 +298,7 @@ bool Npdm_op_wrapper_CCCD::set_local_ops( int idx )
     opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE_DES).get_local_element(idx);
   }
   else {
-//cout << "...from disk...\n";
+//pout << "...from disk...\n";
     if( ! check_file_open(idx) ) abort();
 //FIXME
     int size = spinBlock_->get_op_array(CRE_CRE_CRE_DES).get_local_element(idx).size();
@@ -352,7 +352,7 @@ Npdm_op_wrapper_CCDC::Npdm_op_wrapper_CCDC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CCDC::set_local_ops( int idx )
 {
-//cout << "getting CCDC operator...\n";
+//pout << "getting CCDC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx, lx;
@@ -362,7 +362,7 @@ bool Npdm_op_wrapper_CCDC::set_local_ops( int idx )
     opReps_ = spinBlock_->get_op_array(CRE_CRE_DES_CRE).get_local_element(idx);
   }
   else {
-//cout << "...from disk...\n";
+//pout << "...from disk...\n";
     if( ! check_file_open(idx) ) abort();
 //FIXME
     int size = spinBlock_->get_op_array(CRE_CRE_DES_CRE).get_local_element(idx).size();
@@ -416,7 +416,7 @@ Npdm_op_wrapper_CDCC::Npdm_op_wrapper_CDCC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CDCC::set_local_ops( int idx )
 {
-//cout << "getting CDCC operator...\n";
+//pout << "getting CDCC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx, lx;
@@ -426,7 +426,7 @@ bool Npdm_op_wrapper_CDCC::set_local_ops( int idx )
     opReps_ = spinBlock_->get_op_array(CRE_DES_CRE_CRE).get_local_element(idx);
   }
   else {
-//cout << "...from disk...\n";
+//pout << "...from disk...\n";
     if( ! check_file_open(idx) ) abort();
 //FIXME
     int size = spinBlock_->get_op_array(CRE_DES_CRE_CRE).get_local_element(idx).size();
@@ -480,7 +480,7 @@ Npdm_op_wrapper_CCCC::Npdm_op_wrapper_CCCC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CCCC::set_local_ops( int idx )
 {
-//cout << "getting CCCC operator...\n";
+//pout << "getting CCCC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx, lx;
@@ -490,7 +490,7 @@ bool Npdm_op_wrapper_CCCC::set_local_ops( int idx )
     opReps_ = spinBlock_->get_op_array(CRE_CRE_CRE_CRE).get_local_element(idx);
   }
   else {
-//cout << "...from disk...\n";
+//pout << "...from disk...\n";
     if( ! check_file_open(idx) ) abort();
 //FIXME combine 3-index and 4-indexx read from disk.... UNIFY......
     int size = spinBlock_->get_op_array(CRE_CRE_CRE_CRE).get_local_element(idx).size();

@@ -5,6 +5,7 @@
 #include "GAInput.h"
 #include "GAOptimize.h"
 #include "fiedler.h"
+#include "pario.h"
 using namespace std;
 
 #ifndef SERIAL
@@ -17,7 +18,7 @@ int main(int argc, char* argv[])
 #ifndef SERIAL
   mpi::environment env(argc, argv);
   mpi::communicator world;
-  if(world.rank() == 0) cout << "Parallel GA simulation" << endl;
+  if(world.rank() == 0) pout << "Parallel GA simulation" << endl;
 #endif
 
   string confFileName;
@@ -40,16 +41,16 @@ int main(int argc, char* argv[])
   if(world.rank() == 0)
 #endif
   {
-    cout << "##################### MINIMUM GENE REP. #####################" << endl;
-    cout << "Gene with MinValue = " << final << endl;
-    cout << "Effective Distance = " << sqrt(final.Fitness()) << endl;
+    pout << "##################### MINIMUM GENE REP. #####################" << endl;
+    pout << "Gene with MinValue = " << final << endl;
+    pout << "Effective Distance = " << sqrt(final.Fitness()) << endl;
 
-    cout << "#################### DMRG REORDER FORMAT ####################" << endl;
+    pout << "#################### DMRG REORDER FORMAT ####################" << endl;
     int n = genetic::Gene::Length() - 1;
     vector<int> gaorder(final.Gen().Sequence());
 
-    for(int i = 0; i < n; ++i) cout << gaorder[i] + 1 << ",";
-    cout << gaorder[n] + 1 << endl;
+    for(int i = 0; i < n; ++i) pout << gaorder[i] + 1 << ",";
+    pout << gaorder[n] + 1 << endl;
   }
 
   return 0;

@@ -42,7 +42,7 @@ void SpinAdapted::Input::generateDefaultSchedule(){
       for (int i=0; i<nSched;++i){
          if (firstSched==0){
             if (m_startM == m_maxM){
-               //cout << sweepCount << " " << m_startM << " " << defTol[i] << " " << defNoise[i] << endl;
+               //pout << sweepCount << " " << m_startM << " " << defTol[i] << " " << defNoise[i] << endl;
                m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(1E-5);  m_sweep_noise_schedule.push_back(1E-4);
                sweepCount += 8;
                m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(5E-6);  m_sweep_noise_schedule.push_back(5E-5);
@@ -50,31 +50,31 @@ void SpinAdapted::Input::generateDefaultSchedule(){
             }
 
             else if ((m_startM == defM[i])){
-               //cout << sweepCount << " " << defM[i] << " " << defTol[i] << " " << defNoise[i] << endl;
+               //pout << sweepCount << " " << defM[i] << " " << defTol[i] << " " << defNoise[i] << endl;
                firstSched = 1;
                m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(defTol[i]);  m_sweep_noise_schedule.push_back(defNoise[i]);
                sweepCount += defIter[i];
             }
             else if ((m_startM < defM[i])){
                firstSched = 1;
-               //cout << sweepCount << " " << m_startM << " " << defTol[i-1] << " " << defNoise[i-1] << endl;
+               //pout << sweepCount << " " << m_startM << " " << defTol[i-1] << " " << defNoise[i-1] << endl;
                m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_startM); m_sweep_tol_schedule.push_back(defTol[i-1]);  m_sweep_noise_schedule.push_back(defNoise[i-1]);
                sweepCount += defIter[i-1];
 
-               //cout << sweepCount << " " << defM[i] << " " << defTol[i] << " " << defNoise[i] << endl;
+               //pout << sweepCount << " " << defM[i] << " " << defTol[i] << " " << defNoise[i] << endl;
                m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(defTol[i]);  m_sweep_noise_schedule.push_back(defNoise[i]);
                sweepCount += defIter[i];
             }
          }
          else{//After first iteration
             if (defM[i]>=m_maxM){
-               //cout << sweepCount << " " << m_maxM << " " << defTol[i] << " " << defNoise[i] << endl;
+               //pout << sweepCount << " " << m_maxM << " " << defTol[i] << " " << defNoise[i] << endl;
                m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(m_maxM); m_sweep_tol_schedule.push_back(defTol[i]);  m_sweep_noise_schedule.push_back(defNoise[i]);
                sweepCount += defIter[i];
                break;
             }
             else{
-               //cout << sweepCount << " " << defM[i] << " " << defTol[i] << " " << defNoise[i] << endl;
+               //pout << sweepCount << " " << defM[i] << " " << defTol[i] << " " << defNoise[i] << endl;
                m_sweep_iter_schedule.push_back(sweepCount); m_sweep_state_schedule.push_back(defM[i]); m_sweep_tol_schedule.push_back(defTol[i]);  m_sweep_noise_schedule.push_back(defNoise[i]);
                sweepCount += defIter[i];
             }

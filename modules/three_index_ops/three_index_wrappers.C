@@ -9,6 +9,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "global.h"
 #include "npdm_patterns.h"
 #include "npdm_operators.h"
+#include "pario.h"
 
 namespace SpinAdapted{
 namespace Npdm{
@@ -35,7 +36,7 @@ Npdm_op_wrapper_CCC::Npdm_op_wrapper_CCC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CCC::set_local_ops( int idx )
 {
-//cout << "getting CCC operator...\n";
+//pout << "getting CCC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -63,14 +64,14 @@ bool Npdm_op_wrapper_CCC::set_local_ops( int idx )
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
-//cout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
-//cout << "2a CCC operator elements:\n";
-//cout << *(opReps_[0]);
-//cout << "2b CCC operator elements:\n";
-//cout << *(opReps_[1]);
-//cout << "4  CCC operator elements:\n";
-//cout << *(opReps_[2]);
+//pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//pout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
+//pout << "2a CCC operator elements:\n";
+//pout << *(opReps_[0]);
+//pout << "2b CCC operator elements:\n";
+//pout << *(opReps_[1]);
+//pout << "4  CCC operator elements:\n";
+//pout << *(opReps_[2]);
 //  assert( build_pattern_ == opReps_.at(0)->get_build_pattern() );
 
   indices_.push_back( ix );
@@ -78,7 +79,7 @@ bool Npdm_op_wrapper_CCC::set_local_ops( int idx )
   indices_.push_back( kx );
   if ( (ix == jx) && (jx == kx) ) {
     //FIXME This operator should not be built; it's zero as we cannot create 3 spin-1/2 particles with different spins
-    //cout << "WARNING: skipping this operator\n";
+    //pout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -131,14 +132,14 @@ bool Npdm_op_wrapper_CCD::set_local_ops( int idx )
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
-//cout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
-//cout << "2a CCD operator elements:\n";
-//cout << *(opReps_[0]);
-//cout << "2b CCD operator elements:\n";
-//cout << *(opReps_[1]);
-//cout << "4  CCD operator elements:\n";
-//cout << *(opReps_[2]);
+//pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//pout << "build pattern " << opReps_.at(0)->get_build_pattern() << std::endl;
+//pout << "2a CCD operator elements:\n";
+//pout << *(opReps_[0]);
+//pout << "2b CCD operator elements:\n";
+//pout << *(opReps_[1]);
+//pout << "4  CCD operator elements:\n";
+//pout << *(opReps_[2]);
 //  assert( build_pattern_ == opReps_.at(0)->get_build_pattern() );
 
   indices_.push_back( ix );
@@ -167,7 +168,7 @@ Npdm_op_wrapper_CDD::Npdm_op_wrapper_CDD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CDD::set_local_ops( int idx )
 {
-//cout << "getting CDD operator...\n";
+//pout << "getting CDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -225,7 +226,7 @@ Npdm_op_wrapper_CDC::Npdm_op_wrapper_CDC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CDC::set_local_ops( int idx )
 {
-//cout << "getting CDC operator...\n";
+//pout << "getting CDC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -253,14 +254,14 @@ bool Npdm_op_wrapper_CDC::set_local_ops( int idx )
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
   if ( jx == kx ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    //cout << "WARNING: skipping this operator\n";
+    //pout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -288,7 +289,7 @@ Npdm_op_wrapper_DCD::Npdm_op_wrapper_DCD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_DCD::set_local_ops( int idx )
 {
-//cout << "getting DCD operator...\n";
+//pout << "getting DCD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -316,14 +317,14 @@ bool Npdm_op_wrapper_DCD::set_local_ops( int idx )
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
   if ( ix == jx ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    //cout << "WARNING: skipping this operator\n";
+    //pout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -349,7 +350,7 @@ Npdm_op_wrapper_DDC::Npdm_op_wrapper_DDC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
 {
-//cout << "getting DDC operator...\n";
+//pout << "getting DDC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -378,14 +379,14 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
   kx = opReps_.at(0)->get_orbs(2);
-//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
   indices_.push_back( ix );
   indices_.push_back( jx );
   indices_.push_back( kx );
   if ( (jx == kx) || (ix == kx) ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    //cout << "WARNING: skipping this operator\n";
+    //pout << "WARNING: skipping this operator\n";
     return true;
   }
   return false;
@@ -412,7 +413,7 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
 ////
 ////bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
 ////{
-////cout << "getting DCC operator...\n";
+////pout << "getting DCC operator...\n";
 ////  // Spatial orbital indices
 ////  indices_.clear();
 ////  int ix, jx, kx;
@@ -451,7 +452,7 @@ bool Npdm_op_wrapper_DDC::set_local_ops( int idx )
 ////  indices_.push_back( ix );
 ////  if ( (jx == kx) || (ix == kx) ) {
 ////    //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-////    //cout << "WARNING: skipping this operator\n";
+////    //pout << "WARNING: skipping this operator\n";
 ////    return true;
 ////  }
 ////  return false;
@@ -477,7 +478,7 @@ Npdm_op_wrapper_DCC::Npdm_op_wrapper_DCC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
 {
-//cout << "getting DCC operator...\n";
+//pout << "getting DCC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -514,7 +515,7 @@ bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
   indices_.push_back( kx );
   if ( (ix == jx) || (ix == kx) ) {
 ////    //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    //cout << "WARNING: skipping this operator\n";
+    //pout << "WARNING: skipping this operator\n";
     return true;
   }
 
@@ -543,7 +544,7 @@ bool Npdm_op_wrapper_DCC::set_local_ops( int idx )
 ////
 ////bool Npdm_op_wrapper_DDD::set_local_ops( int idx )
 ////{
-//////cout << "getting DDD operator...\n";
+//////pout << "getting DDD operator...\n";
 ////  // Spatial orbital indices
 ////  indices_.clear();
 ////  int ix, jx, kx;
@@ -608,7 +609,7 @@ Npdm_op_wrapper_DDD::Npdm_op_wrapper_DDD( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_DDD::set_local_ops( int idx )
 {
-//cout << "getting DDD operator...\n";
+//pout << "getting DDD operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;

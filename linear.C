@@ -147,7 +147,7 @@ void SpinAdapted::Linear::Lanczos(vector<Wavefunction>& b, DiagonalMatrix& e, do
       }
 
 
-      //cout << offdiagonal[iter-1]<<"  "<<iter<<endl;                                                                                                                       
+      //pout << offdiagonal[iter-1]<<"  "<<iter<<endl;                                                                                                                       
       if(!notconverged) {
 	for (int i=0; i<nroots; i++)
 	  e(i+1) = diagonal_temporary[i];
@@ -253,8 +253,8 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 
       h_multiply(*bptr, *sigmaptr);
       //if (mpigetrank() == 0) {
-      //  cout << *bptr << endl;
-      //  cout << *sigmaptr << endl;
+      //  pout << *bptr << endl;
+      //  pout << *sigmaptr << endl;
       //}
 	}
     dmrginp.hmultiply -> stop();

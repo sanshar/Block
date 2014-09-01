@@ -121,7 +121,7 @@ void compute_pair_2_0_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBloc
     double sum = sqrt(2.0)*DotProduct(wave1, opw2);
 
     if(dmrginp.spinAdapted()) {
-      cout << "BCS with spin adaption not implemented yet." << endl;
+      pout << "BCS with spin adaption not implemented yet." << endl;
     }
     else {
       onepdm(ix+1, jx+1) = -sum/sqrt(2.0);
@@ -199,7 +199,7 @@ void compute_pair_0_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBloc
     double sum = sqrt(2.0)*DotProduct(wave1, opw2);
 
     if(dmrginp.spinAdapted()) {
-      cout << "BCS with spin adaption not implemented yet." << endl;      
+      pout << "BCS with spin adaption not implemented yet." << endl;      
     }
     else {
       onepdm(ix+1, jx+1) = -sum/sqrt(2.0);
@@ -282,7 +282,7 @@ void compute_pair_1_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinBloc
     double sum = sqrt(2.0)*DotProduct(wave1, opw2);
 
     if(dmrginp.spinAdapted()) {
-      cout << "BCS with spin adaption not implemented yet." << endl;
+      pout << "BCS with spin adaption not implemented yet." << endl;
     }
     else {
       onepdm(ix+1, jx+1) = sum/sqrt(2.0);
@@ -344,7 +344,7 @@ void compute_pair_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock&
     double sum = sqrt(2.0)*DotProduct(wave1, opw2);
 
     if(dmrginp.spinAdapted()) {
-      cout << "BCS with spin adaption not implemented yet." << endl;
+      pout << "BCS with spin adaption not implemented yet." << endl;
     }
     else {
       onepdm(ix+1, jx+1) = -sum/sqrt(2.0);
@@ -410,7 +410,7 @@ void compute_pair_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock&
       double sum = sqrt(2.0)*DotProduct(wave1, opw2);
 
       if(dmrginp.spinAdapted()) {
-        cout << "BCS with spin adaption not implemented yet." << endl;
+        pout << "BCS with spin adaption not implemented yet." << endl;
       }
       else {
         onepdm(ix+1, jx+1) = sum/sqrt(2.0);

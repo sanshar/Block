@@ -19,6 +19,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "operatorfunctions.h"
 #include "tensor_operator.h"
 #include "three_index_ops.h"
+#include "pario.h"
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  (Des,Des,Des)
@@ -98,7 +99,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::DesDesDes::getworkingr
 
 double SpinAdapted::CreCreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
-//cout << "building CreCreDes explicitly from CSF..\n";
+//pout << "building CreCreDes explicitly from CSF..\n";
   assert( build_pattern == "((CC)(D))" );
   double element = 0.0;
   int I = get_orbs()[0]; 
@@ -171,7 +172,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreDes::getworkingr
 
 double SpinAdapted::CreDesDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
-//cout << "building CreDesDes explicitly from CSF..\n";
+//pout << "building CreDesDes explicitly from CSF..\n";
   assert( build_pattern == "((CD)(D))" );
   double element = 0.0;
   int I = get_orbs()[0]; 
@@ -245,7 +246,7 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesDes::getworkingr
 
 double SpinAdapted::CreDesCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
-//cout << "building CreDesCre in CSF space explicitly..\n";
+//pout << "building CreDesCre in CSF space explicitly..\n";
   assert( build_pattern == "((CD)(C))" );
   double element = 0.0;
   int I = get_orbs()[0]; 
@@ -317,14 +318,14 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesCre::getworkingr
 
 double SpinAdapted::CreCreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
-//cout << "building CreCreCre explicitly from CSF..\n";
-//cout << "mpirank = " << mpigetrank() << endl;
+//pout << "building CreCreCre explicitly from CSF..\n";
+//pout << "mpirank = " << mpigetrank() << endl;
   assert( build_pattern == "((CC)(C))" );
   double element = 0.0;
   int I = get_orbs()[0]; 
   int J = get_orbs()[1];
   int K = get_orbs()[2];
-//cout << "i,j,k = " << I << " " << J << " " << K << endl;
+//pout << "i,j,k = " << I << " " << J << " " << K << endl;
 
   // Must take into account how the 3-index is built from a combination of 2-index and 1-index
   std::vector<SpinQuantum> quantum_ladder = get_quantum_ladder().at("((CC)(C))");

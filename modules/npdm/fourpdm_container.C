@@ -104,7 +104,7 @@ void Fourpdm_container::save_npdm_text(const int &i, const int &j)
                     }
                   }
     ofs.close();
-    std::cout << "Spin-orbital 4PDM trace = " << trace << "\n";
+    pout << "Spin-orbital 4PDM trace = " << trace << "\n";
   }
 }
 
@@ -134,7 +134,7 @@ void Fourpdm_container::save_spatial_npdm_text(const int &i, const int &j)
                     }
                   }
     ofs.close();
-    std::cout << "Spatial      4PDM trace = " << trace << "\n";
+    pout << "Spatial      4PDM trace = " << trace << "\n";
   }
 }
 
@@ -399,8 +399,8 @@ void Fourpdm_container::update_full_spin_array( std::vector< std::pair< std::vec
 
     // Test for duplicates
     if ( abs(fourpdm(i,j,k,l,m,n,p,q)) != 0.0 ) {
-      cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<" "<<p<<" "<<q<<endl;
-      cout << "earlier value: " << fourpdm(i,j,k,l,m,n,p,q) << endl << "new value:     " <<val<<endl;
+      pout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<" "<<p<<" "<<q<<endl;
+      pout << "earlier value: " << fourpdm(i,j,k,l,m,n,p,q) << endl << "new value:     " <<val<<endl;
       abort();
     }
     fourpdm(i,j,k,l,m,n,p,q) = val;
@@ -475,7 +475,7 @@ void Fourpdm_container::update_full_spatial_array( std::vector< std::pair< std::
 //      if ( store_sparse_spatial_array_ ) sparse_spatial_pdm[ it->first ] = factor * val;
 //      if ( store_full_spatial_array_ ) {
 //        if ( abs( spatial_fourpdm(i,j,k,l,m,n,p,q) ) > 1e-14 ) {
-//          cout << "repeated spatial indices!\n";
+//          pout << "repeated spatial indices!\n";
 //          abort();
 //        }
 //        spatial_fourpdm(i,j,k,l,m,n,p,q) = factor * val;

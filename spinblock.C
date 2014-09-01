@@ -36,9 +36,9 @@ void SpinBlock::printOperatorSummary()
     for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core())
-         cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";
+         pout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";
       else
-         cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
+         pout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
       
       vector<int> numops(world.size(), 0);
       for (int proc = 0; proc <world.size(); proc++) {
@@ -46,17 +46,17 @@ void SpinBlock::printOperatorSummary()
             receiveobject(numops[proc],proc);
          else 
             numops[proc] = it->second->get_size();
-         cout <<numops[proc]<<"  ";
+         pout <<numops[proc]<<"  ";
       }
-      cout << endl;
+      pout << endl;
       /*
       if(it->second->is_core()) { 
         for (int i = 0; i < it->second->size(); ++i) {
            std::vector<boost::shared_ptr<SparseMatrix> > global_element = it->second->get_global_element(i);
-           cout << "Element " << i  << " has " << global_element.size() << " operators" << endl;
+           pout << "Element " << i  << " has " << global_element.size() << " operators" << endl;
            for (int j = 0; j < global_element.size(); ++j) {
-             cout << "Operator " << j << endl; 
-             cout << *(global_element[j]) << endl;
+             pout << "Operator " << j << endl; 
+             pout << *(global_element[j]) << endl;
            }
         }
       }
@@ -67,10 +67,10 @@ void SpinBlock::printOperatorSummary()
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
   {
     if(it->second->is_core()) 
-      cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
+      pout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
     else
-      cout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
-    cout << endl;
+      pout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
+    pout << endl;
   }
 #endif
   
@@ -117,7 +117,7 @@ SpinBlock::SpinBlock(int start, int finish, int p_integralIndex, bool implicitTr
   std::vector<int> sites; 
   if (dmrginp.use_partial_two_integrals()) {
     if (start != finish) {
-      cout << "Cannot use partial two electron integrals, when making spin block with more than two orbitals"<<endl;
+      pout << "Cannot use partial two electron integrals, when making spin block with more than two orbitals"<<endl;
       abort();
     }
     std::vector<int> o;
@@ -346,7 +346,7 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
 #endif
 
     }
-    //cout << "Cannot use partial two electron integrals, when the dot block has more than one orbital"<<endl;
+    //pout << "Cannot use partial two electron integrals, when the dot block has more than one orbital"<<endl;
     //abort();
 
   }

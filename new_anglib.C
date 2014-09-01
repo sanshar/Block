@@ -54,8 +54,8 @@ double nine_j(int na, int nb, int nc, int nd, int ne, int nf, int ng, int nh, in
    int kmin =  max(max(abs(h-d), abs(b-f)), abs(a-i));
    int kmax =  min(min( h + d, b + f), a + i);
    int k;
-   //cout << "kmin " << kmin << endl;
-   //cout << "kmax " << kmax << endl;
+   //pout << "kmin " << kmin << endl;
+   //pout << "kmax " << kmax << endl;
 
    for (k = kmin; k <= kmax; k++) {
       num1 = k+1;
@@ -177,8 +177,8 @@ double clebsch(int nj1, int nm1, int nj2, int nm2, int nj3, int nm3) {
       double mint = max(max(0., j1-m1-(j3-m3)), j2 + m2 - (j3 + m3)); 
       double maxt = min(min(j1-m1, j2+m2),j1+j2-j3);
       
-      //cout << "mint " << mint << endl;
-      //cout << "maxt " << maxt << endl;
+      //pout << "mint " << mint << endl;
+      //pout << "maxt " << maxt << endl;
       double bin1;
       double bin2;
       double bin3;
@@ -188,17 +188,17 @@ double clebsch(int nj1, int nm1, int nj2, int nm2, int nj3, int nm3) {
          bin3=fbinom(j3+m3,     j2+m2-t);
          sum = sum + mone(t)*bin1*bin2*bin3;
 
-         //cout << "t " << t << endl;
-         //cout << "sum " << sum << endl;
-         //cout << "bin1 " << bin1 << endl;
-         //cout << "bin2 " << bin2 << endl;
-         //cout << "bin3 " << bin3 << endl;
+         //pout << "t " << t << endl;
+         //pout << "sum " << sum << endl;
+         //pout << "bin1 " << bin1 << endl;
+         //pout << "bin2 " << bin2 << endl;
+         //pout << "bin3 " << bin3 << endl;
       }
 
       cleb = factor*sum;
-      //cout << "factor: " << factor << endl;
-      //cout << "sum: " << sum << endl;
-      //cout << "Clebsch: " << cleb << endl;
+      //pout << "factor: " << factor << endl;
+      //pout << "sum: " << sum << endl;
+      //pout << "Clebsch: " << cleb << endl;
    }
       return cleb;
 }
@@ -280,7 +280,7 @@ int mone(double n) {
 	int value;
    int nint;
    nint = get_cast(n);
-   //cout << "nint %2 " << nint %2 << endl;
+   //pout << "nint %2 " << nint %2 << endl;
 	if (nint % 2 == 0)
 		value = 1;
 	else
@@ -292,7 +292,7 @@ int get_cast(double x) {
    int i;
    //i = (x / (int) x >= 1) ? (int) x : (int) x + 1 ;
    i = (int) x;
-   //cout << "x " << x << " i " << i << endl;
+   //pout << "x " << x << " i " << i << endl;
    return i;
 }
 
@@ -311,7 +311,7 @@ double fbinom(double dn, double dr)
     res = n;
   else
     res = 1.0*n/(n-r)*fbinom((double)n-1,(double)r);
-//    cout << n << " " << r<< " -> " << res << endl;
+//    pout << n << " " << r<< " -> " << res << endl;
   return res;
 }
 

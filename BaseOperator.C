@@ -12,6 +12,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "distribute.h"
 #include "tensor_operator.h"
 #include "blas_calls.h"
+#include "pario.h"
 
 namespace SpinAdapted{
 
@@ -45,8 +46,8 @@ double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
       return parity*spinscale*spatscale;
     }
   }
-  cout << "Major trouble, getCommuteParity asked for three inappropriate operators"<<endl;
-  cout << a<<"  "<<b<<"  "<<c<<endl;
+  pout << "Major trouble, getCommuteParity asked for three inappropriate operators"<<endl;
+  pout << a<<"  "<<b<<"  "<<c<<endl;
   return 1.0;
 }
 
@@ -77,12 +78,12 @@ double Transposeview::get_scaling(SpinQuantum leftq, SpinQuantum rightq) const
       return spinscale*spatscale;
     }
   }
-  cout << "Major trouble, inappropriate arguments to get_scaling!!!"<<endl;
-  cout << leftq<<"  ";
+  pout << "Major trouble, inappropriate arguments to get_scaling!!!"<<endl;
+  pout << leftq<<"  ";
   for (int i = 0; i < get_deltaQuantum_size(); ++i) {
-    cout <<get_deltaQuantum(i)<<"  ";
+    pout <<get_deltaQuantum(i)<<"  ";
   }
-  cout <<rightq<<endl;
+  pout <<rightq<<endl;
   exit(0);
   return 1.0;
 }
@@ -260,7 +261,7 @@ void ScaleAdd(double d, const SparseMatrix& a, SparseMatrix& b)
       if (a.allowed(lQ, rQ))
       {
 	    if (!b.allowed(lQ, rQ))
-	      cout <<"Not a valid addition"<<endl;
+	      pout <<"Not a valid addition"<<endl;
         assert(b.allowed(lQ, rQ));
         MatrixScaleAdd(d, a.operator_element(lQ, rQ), b.operator_element(lQ, rQ));
       }

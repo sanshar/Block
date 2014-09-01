@@ -4,6 +4,7 @@
 #include "npdm_spin_adaptation.h"
 #include "MatrixBLAS.h"
 #include "npdm_spin_transformation.h"
+#include "pario.h"
 
 namespace SpinAdapted {
 namespace Npdm {
@@ -22,7 +23,7 @@ std::map< std::vector<int>, double > Npdm_spin_adaptation::get_matrix_row ( cons
   if (op.Spin%2 == 0) {
     for (int ilz = 0; ilz<op.rows; ilz++){
       //int lz = op.lz[ilz];
-      //cout <<"printing operator with Sz = "<<0<<" and row = "<< ilz<<" and total spin "<<op.Spin<<" and irrep "<<op.irrep<<endl;;
+      //pout <<"printing operator with Sz = "<<0<<" and row = "<< ilz<<" and total spin "<<op.Spin<<" and irrep "<<op.irrep<<endl;;
       for (int i=0; i<op.Szops[op.Spin/2].size(); i++) {
         if (op.Szops[ilz*(op.Spin+1)+op.Spin/2][i] != 0.0) {
           coeff = op.Szops[ilz*(op.Spin+1)+op.Spin/2][i];
@@ -39,7 +40,7 @@ std::map< std::vector<int>, double > Npdm_spin_adaptation::get_matrix_row ( cons
   else {
     for (int ilz = 0; ilz<op.rows; ilz++){
       //int lz = op.lz[ilz];
-      //cout <<"printing operator with Sz = "<<-op.Spin<<" and row = "<< ilz<<" and total spin "<<op.Spin<<" and irrep "<<op.irrep<<endl;;
+      //pout <<"printing operator with Sz = "<<-op.Spin<<" and row = "<< ilz<<" and total spin "<<op.Spin<<" and irrep "<<op.irrep<<endl;;
       for (int i=0; i<op.Szops[op.Spin].size(); i++) {
         if (op.Szops[ilz*(op.Spin+1)+op.Spin][i] != 0.0) {
           coeff = op.Szops[ilz*(op.Spin+1)+op.Spin][i];
@@ -76,8 +77,8 @@ std::map< std::vector<int>, int > Npdm_spin_adaptation::get_map_to_int( std::vec
   for ( auto it = indices_set.begin(); it != indices_set.end(); ++it ) {
     map_to_int[*it] = k;
     k++; 
-    //cout << "spin indices = ";
-    //for (auto itt = it->begin(); itt != it->end(); ++itt) { cout << *itt << " "; } cout << std::endl;
+    //pout << "spin indices = ";
+    //for (auto itt = it->begin(); itt != it->end(); ++itt) { pout << *itt << " "; } pout << std::endl;
   }
 
   return map_to_int;

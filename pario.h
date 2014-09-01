@@ -18,7 +18,7 @@ class blockout {
    public:
       std::ostream *outstream;
       char* output;
-      blockout(char* output_=0, std::ostream *outstream_ = &std::cout): output(output_),outstream(outstream_)
+      blockout(std::ostream *outstream_ = &std::cout, char* output_=0): output(output_),outstream(outstream_)
       {
        if(output!=0) {
         std::ofstream file(output);
@@ -31,7 +31,7 @@ class blockerr {
    public:
       std::ostream *errstream;
       char* output;
-      blockerr(char* output_=0, std::ostream *errstream_ = &std::cerr): output(output_),errstream(errstream_)
+      blockerr(std::ostream *errstream_ = &std::cerr, char* output_=0): output(output_),errstream(errstream_)
       {
        if(output!=0) {
         std::ofstream file(output);

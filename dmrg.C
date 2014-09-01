@@ -101,7 +101,7 @@ int calldmrg(char* input, char* output)
   if (output != 0) {
     ofstream file;
     file.open(output);
-    cout.rdbuf(file.rdbuf());
+    pout.rdbuf(file.rdbuf());
   }
   ReadInput(input);
   MAX_THRD = dmrginp.thrds_per_node()[mpigetrank()];

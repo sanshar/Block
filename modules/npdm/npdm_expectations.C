@@ -71,10 +71,10 @@ void Npdm_expectations::get_full_op_string( NpdmSpinOps_base & lhsOps, NpdmSpinO
   indices.insert( indices.end(), lhsOps.indices_.begin(), lhsOps.indices_.end() );
   indices.insert( indices.end(), dotOps.indices_.begin(), dotOps.indices_.end() );
   indices.insert( indices.end(), rhsOps.indices_.begin(), rhsOps.indices_.end() );
-  //cout << "lhs indices = "; for (auto it = lhsOps.indices_.begin(); it != lhsOps.indices_.end(); ++it) { cout << *it << " "; } cout << std::endl;
-  //cout << "dot indices = "; for (auto it = dotOps.indices_.begin(); it != dotOps.indices_.end(); ++it) { cout << *it << " "; } cout << std::endl;
-  //cout << "rhs indices = "; for (auto it = rhsOps.indices_.begin(); it != rhsOps.indices_.end(); ++it) { cout << *it << " "; } cout << std::endl;
-  //cout << "spatial indices = "; for (auto it = indices.begin(); it != indices.end(); ++it) { cout << *it << " "; } cout << std::endl;
+  //pout << "lhs indices = "; for (auto it = lhsOps.indices_.begin(); it != lhsOps.indices_.end(); ++it) { pout << *it << " "; } pout << std::endl;
+  //pout << "dot indices = "; for (auto it = dotOps.indices_.begin(); it != dotOps.indices_.end(); ++it) { pout << *it << " "; } pout << std::endl;
+  //pout << "rhs indices = "; for (auto it = rhsOps.indices_.begin(); it != rhsOps.indices_.end(); ++it) { pout << *it << " "; } pout << std::endl;
+  //pout << "spatial indices = "; for (auto it = indices.begin(); it != indices.end(); ++it) { pout << *it << " "; } pout << std::endl;
 
   // Record how tensor operator is constructed from (compound) block operators
   std::string build_pattern = "(";
@@ -95,7 +95,7 @@ void Npdm_expectations::get_full_op_string( NpdmSpinOps_base & lhsOps, NpdmSpinO
       idx.erase( idx.begin() );  
     }
   }
-//cout << op_string << std::endl;
+//pout << op_string << std::endl;
 
 }
 
@@ -235,13 +235,13 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_bas
   }
 
   assert (expectations_.size() > 0);
-//cout << "---------------------------------\n";
-//cout << "spin-adapted expectations =\n";
-////cout << "mpirank = " << mpigetrank() << endl;
+//pout << "---------------------------------\n";
+//pout << "spin-adapted expectations =\n";
+////pout << "mpirank = " << mpigetrank() << endl;
 //for (auto it = expectations_.begin(); it != expectations_.end(); ++it) {
-//  cout << "p" << mpigetrank() << ":  " << *it << std::endl;
+//  pout << "p" << mpigetrank() << ":  " << *it << std::endl;
 //}
-//cout << "---------------------------------\n";
+//pout << "---------------------------------\n";
 
 }
 
@@ -275,10 +275,10 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
   get_full_op_string( lhsOps, rhsOps, dotOps, op_string, indices );
 
   // Screen away unwanted strings (e.g. those that produce duplicate NPDM elements)
-  //cout << op_string<<endl;
+  //pout << op_string<<endl;
   //for( int i=0;i<indices.size();i++)
-  //  cout << indices[i]<<',';
-  //cout <<endl;
+  //  pout << indices[i]<<',';
+  //pout <<endl;
   if ( screen_op_string_for_duplicates( op_string, indices ) ) return new_pdm_elements;
 
 
@@ -321,15 +321,15 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
       else
         sz+=1;
     }
-//    cout << "nonspinadapted spinorbital ordered: ";
+//    pout << "nonspinadapted spinorbital ordered: ";
 //    for( int i=0;i<cd_order.size();i++)
-//      cout << cd_order[i]<<',';
-//    cout <<endl;
-//    cout <<"sz: " <<sz<<endl;
+//      pout << cd_order[i]<<',';
+//    pout <<endl;
+//    pout <<"sz: " <<sz<<endl;
     if(sz!=0) return new_pdm_elements;
     double nonspinvalue;
 
-   // cout <<"size of operator: " <<lhsOps.opReps_.size()<<','<<rhsOps.opReps_.size()<<','<<dotOps.opReps_.size()<<endl;
+   // pout <<"size of operator: " <<lhsOps.opReps_.size()<<','<<rhsOps.opReps_.size()<<','<<dotOps.opReps_.size()<<endl;
       nonspinvalue=contract_spin_adapted_operators( 0, 0, 0, lhsOps, rhsOps, dotOps );
 
     new_pdm_elements.push_back(std::make_pair(cd_order,nonspinvalue*parity));

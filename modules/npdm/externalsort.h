@@ -50,10 +50,10 @@ public:
       if(index < onepiece2.index) return true;
       if(index > onepiece2.index) return false;
       if(index == onepiece2.index){
-        cout << "there are elements with same index"<<endl;
+        pout << "there are elements with same index"<<endl;
         if(element !=onepiece2.element) 
         {
-          cout << " and their values are different, abort"<<endl;
+          pout << " and their values are different, abort"<<endl;
           abort();
         }
 
@@ -126,14 +126,14 @@ class cache
     cache_size=buffer_size;
     begin_pointer=(valuetype*) malloc(sizeof(valuetype)*cache_size);
     if(begin_pointer==NULL){
-      cout << "cannot allocate memory for cache, abort\n";
+      pout << "cannot allocate memory for cache, abort\n";
       abort();
     }
 
     inputfile=fopen(filename,"rb"); 
     if(inputfile==NULL){
       current_pointer = NULL;
-      cout << "cannot open :"<<filename<<endl;
+      pout << "cannot open :"<<filename<<endl;
       return;
     }
     //fseek(inputfile,sizeof(valuetype)*seek_set_of_file,SEEK_SET);
@@ -154,7 +154,7 @@ class cache
   ~cache(){
     //FIXME
     //std::vector:push_back creat and delete objects serveral times. Why?
-    //cout << "deleted"<<endl;
+    //pout << "deleted"<<endl;
     //FIXME, if it is clear here, there are problems in the copy of cache.
     //free(begin_pointer);
     //fclose(inputfile);
@@ -227,9 +227,9 @@ class batch_index{
     if(element_index< x.element_index) return true;
     else if(element_index> x.element_index) return false;
     else{
-      cout << " Warning: one nonspinbatch are calculated twice."<<endl;
+      pout << " Warning: one nonspinbatch are calculated twice."<<endl;
       if(batch_size!= x.batch_size){
-        cout << " And their size are different, abort."<<endl;
+        pout << " And their size are different, abort."<<endl;
         abort();
       }
     }
@@ -288,12 +288,12 @@ void externalsort(char* inputfilename, char* outputfilename, long number_of_data
     //file >> onepiece.index;
     //file >> onepiece.element;
     //for(int i =0 ; i< Buff_SIZE;i++)
-    //  std::cout << onepiece[i]<<std::endl;
+    //  pout << onepiece[i]<<std::endl;
     //data.push_back(onepiece[0]);
     fwrite(onepiece,sizeof(T),read_size,outputfile);
     piecesnumber++;
     fclose(outputfile);
-    //std::cout << "piecenumber: "<<piecesnumber<<std::endl;
+    //pout << "piecenumber: "<<piecesnumber<<std::endl;
 
   };
   fclose(datafile);
@@ -316,7 +316,7 @@ void externalsort(char* inputfilename, char* outputfilename, long number_of_data
       //filecache.emplace_back(tmpcache);
 
   }
-  //std::cout <<"cachesize"<< filecache.size()<<std::endl;
+  //pout <<"cachesize"<< filecache.size()<<std::endl;
   char sortedfile[100];
 
 #ifndef SERIAL
@@ -413,7 +413,7 @@ void partition_data(long number_of_data, char* inputfilename, char* outputfilena
   //std::vector<info_pair<T>> send_buff;
   FILE* inputfile = fopen(inputfilename,"rb");
   if(inputfile==NULL){
-    std::cout <<"processor "<<world.rank()<< " cannot open "<<inputfilename<<std::endl;
+    pout <<"processor "<<world.rank()<< " cannot open "<<inputfilename<<std::endl;
     abort();
   }
   T inputbuff[Buff_SIZE];
@@ -427,7 +427,7 @@ void partition_data(long number_of_data, char* inputfilename, char* outputfilena
     send_end= true;
   }
   bool finished= realsize==Buff_SIZE? false: true;// finished means this is the last piece of data.
- // std::cout <<"partition_index "<< partition_index<<std::endl;
+ // pout <<"partition_index "<< partition_index<<std::endl;
   std::vector<boost::mpi::request> sendreq(world.size());
   std::vector<boost::mpi::request> recvreq(activeworld.size());
   for(;;){
@@ -441,7 +441,7 @@ void partition_data(long number_of_data, char* inputfilename, char* outputfilena
         send_buff[i].clear();
       for(int i=0; i< realsize; i++)
       {
-        if(inputbuff[i].index>= partition_index*world.size()) std::cout << " too big index"<<std::endl;
+        if(inputbuff[i].index>= partition_index*world.size()) pout << " too big index"<<std::endl;
         send_buff[(int) floor(inputbuff[i].index/partition_index)].push_back(inputbuff[i]);
       }
 

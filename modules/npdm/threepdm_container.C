@@ -104,7 +104,7 @@ void Threepdm_container::save_npdm_text(const int &i, const int &j)
                 }
               }
     ofs.close();
-    std::cout << "Spin-orbital 3PDM trace = " << trace << "\n";
+    pout << "Spin-orbital 3PDM trace = " << trace << "\n";
   }
 }
 
@@ -132,7 +132,7 @@ void Threepdm_container::save_spatial_npdm_text(const int &i, const int &j)
                 }
               }
     ofs.close();
-    std::cout << "Spatial      3PDM trace = " << trace << "\n";
+    pout << "Spatial      3PDM trace = " << trace << "\n";
   }
 }
 
@@ -388,15 +388,15 @@ void Threepdm_container::update_full_spin_array( std::vector< std::pair< std::ve
     int n = (it->first)[5];
 
     //if ( abs(val) > 1e-8 ) {
-    //  cout << "so-threepdm val: i,j,k,l,m,n = " 
+    //  pout << "so-threepdm val: i,j,k,l,m,n = " 
     //       << i << "," << j << "," << k << "," << l << "," << m << "," << n
     //       << "\t\t" << val << endl;
     //}
 
     // Test for duplicates
     if ( abs(threepdm(i,j,k,l,m,n)) != 0.0 ) {
-      cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<endl;
-      cout << "earlier value: " << threepdm(i,j,k,l,m,n) << endl << "new value:     " <<val<<endl;
+      pout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<endl;
+      pout << "earlier value: " << threepdm(i,j,k,l,m,n) << endl << "new value:     " <<val<<endl;
       abort();
     }
     threepdm(i,j,k,l,m,n) = val;
@@ -494,7 +494,7 @@ void Threepdm_container::dump_to_disk(std::vector< std::pair< std::vector<int>, 
   //boost::archive::binary_oarchive save(spatpdm_disk);
   //for(auto it= index_elements.begin(); it!=index_elements.end(); it++)
   //{
-  //  //cout <<"element:  "<<it-> index<< "\t\t"<<it->element<<endl;
+  //  //pout <<"element:  "<<it-> index<< "\t\t"<<it->element<<endl;
   //  save << *it;
   //  //spatpdm_disk << it->index;
   //  //spatpdm_disk << it->element;

@@ -156,7 +156,7 @@ void SpinAdapted::Slater::outerProd(const Slater& s, Slater& output) const
   for (int i=0; i<Slater().size(); i++)
   {
     if (s.alpha.get_occ_rep()[i] == 1 && alpha.get_occ_rep()[i]==1) {
-      cout <<"cannot get outerprod of slater determinants\ndet1: "<<s<<"\ndet2: "<<*this<<endl;
+      pout <<"cannot get outerprod of slater determinants\ndet1: "<<s<<"\ndet2: "<<*this<<endl;
       throw 20;
     }
     occ[i] = s.alpha.get_occ_rep()[i] + alpha.get_occ_rep()[i];

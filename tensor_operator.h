@@ -85,7 +85,7 @@ class TensorOp {
     // not be used to initialize crecre or credes ...
     if(dmrginp.spinAdapted()) {
       if (!(sgn == 1 || sgn == -1)) {
-	cerr<<"sign not correct";exit(0);}
+	perr<<"sign not correct";exit(0);}
       Spin = 1;
       if (sgn == -1)
 	irrep = (-IrrepSpace(pirrep)).getirrep();
@@ -200,8 +200,8 @@ class TensorOp {
       if(pspin != Spin+op1.Spin) {
 	empty = true;
 	return *this;
-	cerr <<"incorrect spin is chosen"<<endl;
-	cerr <<"cannot combine "<<Spin<<" and "<<op1.Spin<<" to form "<<pspin<<endl;
+	perr <<"incorrect spin is chosen"<<endl;
+	perr <<"cannot combine "<<Spin<<" and "<<op1.Spin<<" to form "<<pspin<<endl;
 	abort();
       }
       Spin = pspin;
@@ -212,8 +212,8 @@ class TensorOp {
     identical=false;
 
     if (pspin < abs(Spin - op1.Spin) || pspin > Spin+op1.Spin) {
-      cerr <<"incorrect spin is chosen"<<endl;
-      cerr <<"cannot combine "<<Spin<<" and "<<op1.Spin<<" to form "<<pspin<<endl;
+      perr <<"incorrect spin is chosen"<<endl;
+      perr <<"cannot combine "<<Spin<<" and "<<op1.Spin<<" to form "<<pspin<<endl;
       abort();
     }
 

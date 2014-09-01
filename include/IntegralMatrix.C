@@ -155,14 +155,14 @@ void SpinAdapted::OneElectronArray::ReadFromDumpFile(ifstream& dumpFile, int nor
 	vector<string> tok;
 	boost::split(tok, msg, is_any_of(" \t"), token_compress_on);
 	if (tok.size() != 1) {
-	  cerr << "The first line of one electron integral file should be number of orbitals"<<endl;
-	  cerr << "Error at line :"<<msg<<endl;
+	  perr << "The first line of one electron integral file should be number of orbitals"<<endl;
+	  perr << "Error at line :"<<msg<<endl;
 	  abort();
 	}
 	if (atoi(tok[0].c_str()) != norbs) {
-	  cerr << "Number of orbitals in one electron integral file should be equal to one given in input file"<<endl;
-	  cerr << "# orbs in input file : "<<norbs<<endl;
-	  cerr << "# orbs in one electron integral file : "<<atoi(tok[0].c_str())/2<<endl;
+	  perr << "Number of orbitals in one electron integral file should be equal to one given in input file"<<endl;
+	  perr << "# orbs in input file : "<<norbs<<endl;
+	  perr << "# orbs in one electron integral file : "<<atoi(tok[0].c_str())/2<<endl;
 	  abort();
 	}
 	n = norbs;
@@ -180,15 +180,15 @@ void SpinAdapted::OneElectronArray::ReadFromDumpFile(ifstream& dumpFile, int nor
 	{
 	  boost::split(tok, msg, is_any_of(" \t"), token_compress_on);
 	  if (tok.size() != 3) {
-	    cerr<< "The format of one electron integral file incorrect"<<endl;
-	    cerr <<"error at this line: "<<msg<<endl;
+	    perr<< "The format of one electron integral file incorrect"<<endl;
+	    perr <<"error at this line: "<<msg<<endl;
 	    abort();
 	  }
 	  i = atoi(tok[0].c_str());
 	  j = atoi(tok[1].c_str());
 	  if (i >= n || j >= n) {
-	    cerr << "index of orbitals in one electron integral file cannot be bigger than "<<n<<endl;
-	    cerr<< "error at this line: "<<msg<<endl;
+	    perr << "index of orbitals in one electron integral file cannot be bigger than "<<n<<endl;
+	    perr<< "error at this line: "<<msg<<endl;
 	    abort();
 	  }
 	  if (rhf)
@@ -239,7 +239,7 @@ SpinAdapted::TwoElectronArray::TwoElectronArray(TwoEType twoetype) : dummyZero(0
 }
 
 void SpinAdapted::TwoElectronArray::ReSize(int n) {
-  //cout << "resizing 2e by n " << n << endl;
+  //pout << "resizing 2e by n " << n << endl;
   dim = n;
   // dim is the dimension of the spinorbital-space
 
@@ -339,14 +339,14 @@ void SpinAdapted::TwoElectronArray::ReadFromDumpFile(ifstream& dumpFile, int nor
   vector<string> tok;
   boost::split(tok, msg, is_any_of(" \t"), token_compress_on);
   if (tok.size() != 1) {
-    cerr << "The first line of two electron integral file should be number of orbitals"<<endl;
-    cerr << "Error at line :"<<msg<<endl;
+    perr << "The first line of two electron integral file should be number of orbitals"<<endl;
+    perr << "Error at line :"<<msg<<endl;
     abort();
   }
   if (atoi(tok[0].c_str()) != norbs) {
-    cerr << "Number of orbitals in two electron integral file should be equal to one given in input file"<<endl;
-    cerr << "# orbs in input file : "<<norbs<<endl;
-    cerr << "# orbs in two electron integral file : "<<atoi(tok[0].c_str())<<endl;
+    perr << "Number of orbitals in two electron integral file should be equal to one given in input file"<<endl;
+    perr << "# orbs in input file : "<<norbs<<endl;
+    perr << "# orbs in two electron integral file : "<<atoi(tok[0].c_str())<<endl;
     abort();
   }
 
@@ -361,8 +361,8 @@ void SpinAdapted::TwoElectronArray::ReadFromDumpFile(ifstream& dumpFile, int nor
   while (msg.size() != 0) {
       boost::split(tok, msg, is_any_of(" \t"), token_compress_on);
     if (tok.size() != 5) {
-      cerr<< "The format of two electron integral file incorrect"<<endl;
-      cerr <<"error at this line: "<<msg<<endl;
+      perr<< "The format of two electron integral file incorrect"<<endl;
+      perr <<"error at this line: "<<msg<<endl;
       abort();
     }
     a = atoi(tok[0].c_str());
@@ -370,8 +370,8 @@ void SpinAdapted::TwoElectronArray::ReadFromDumpFile(ifstream& dumpFile, int nor
     c = atoi(tok[2].c_str());
     d = atoi(tok[3].c_str());
     if (a >= n || b >= n || c >= n || d >= n) {
-      cerr << "index of orbitals in two electron integral file cannot be bigger than "<<n<<endl;
-      cerr<< "error at this line: "<<msg<<endl;
+      perr << "index of orbitals in two electron integral file cannot be bigger than "<<n<<endl;
+      perr<< "error at this line: "<<msg<<endl;
       abort();
     }
     
@@ -414,7 +414,7 @@ void SpinAdapted::PartialTwoElectronArray::Load(std::string prefix, int index) {
   char file [5000];
   sprintf (file, "%s%s%d%s%d%d%s%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", index, ".", mpigetrank(), ".tmp");
   if(mpigetrank() == 0) {
-    cout << "\t\t\t Reading Integral file "<<file <<endl;
+    pout << "\t\t\t Reading Integral file "<<file <<endl;
     std::ifstream ifs(file, std::ios::binary);
     boost::archive::binary_iarchive load_integral(ifs);
     load_integral >> *this ;
@@ -425,7 +425,7 @@ void SpinAdapted::PartialTwoElectronArray::Save(std::string prefix, int index) {
   char file [5000];
   sprintf (file, "%s%s%d%s%d%d%s%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", index, ".", mpigetrank(), ".tmp");
   if(mpigetrank() == 0) {
-    cout << "\t\t\t Saving Integral file "<<file <<endl;
+    pout << "\t\t\t Saving Integral file "<<file <<endl;
     std::ofstream ofs(file, std::ios::binary);
     boost::archive::binary_oarchive save_integral(ofs);
     save_integral << *this ;
@@ -460,7 +460,7 @@ double SpinAdapted::PartialTwoElectronArray::operator () (int i, int j, int k, i
 	  else if (l == OrbIndex[orb])
 	    return rep[orb][k*dim*dim+j*dim+i];
 	}
-	cout << "OrbIndex = "<< OrbIndex[0]<< " does not match any of the indices "<<i<<"  "<<j<<"  "<<k<<"  "<<l<<endl;
+	pout << "OrbIndex = "<< OrbIndex[0]<< " does not match any of the indices "<<i<<"  "<<j<<"  "<<k<<"  "<<l<<endl;
 	abort();
 }
 
@@ -494,7 +494,7 @@ double& SpinAdapted::PartialTwoElectronArray::operator () (int i, int j, int k, 
     else if (l == OrbIndex[orb])
       return rep[orb][k*dim*dim+j*dim+i];
   }
-  cout << "OrbIndex = "<< OrbIndex[0]<< " does not match any of the indices "<<i<<"  "<<j<<"  "<<k<<"  "<<l<<endl;
+  pout << "OrbIndex = "<< OrbIndex[0]<< " does not match any of the indices "<<i<<"  "<<j<<"  "<<k<<"  "<<l<<endl;
   abort();
 }
 

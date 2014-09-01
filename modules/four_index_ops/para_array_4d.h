@@ -215,9 +215,9 @@ public:
         }
       }
     }
-//cout << "local index tuples:\n";
+//pout << "local index tuples:\n";
 //for (auto it = local_index_tuple_.begin(); it != local_index_tuple_.end(); ++it) {
-//  cout << "p" << mpigetrank() << ": " << it->at(0) << "," << it->at(1) << "," << it->at(2) << endl;
+//  pout << "p" << mpigetrank() << ": " << it->at(0) << "," << it->at(1) << "," << it->at(2) << endl;
 //}
 
     // Global indices map

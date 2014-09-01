@@ -33,7 +33,7 @@ Npdm_op_wrapper_DC::Npdm_op_wrapper_DC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_DC::set_local_ops( int idx )
 {
-//cout << "getting DC operator...\n";
+//pout << "getting DC operator...\n";
 
   // Spatial orbital indices
   indices_.clear();
@@ -42,17 +42,17 @@ bool Npdm_op_wrapper_DC::set_local_ops( int idx )
   opReps_ = spinBlock_->get_op_array(DES_CRE).get_local_element(idx);
   ix = opReps_.at(0)->get_orbs(0);
   jx = opReps_.at(0)->get_orbs(1);
-//cout << "singlet DC operator elements:\n";
-//cout << *(opReps_[0]);
-//cout << "triplet DC operator elements:\n";
-//cout << *(opReps_[1]);
+//pout << "singlet DC operator elements:\n";
+//pout << *(opReps_[0]);
+//pout << "triplet DC operator elements:\n";
+//pout << *(opReps_[1]);
 
   indices_.push_back( ix );
   indices_.push_back( jx );
-//cout << "indices  " << ix << " " << jx << std::endl;
+//pout << "indices  " << ix << " " << jx << std::endl;
 if ( ix == jx ) {
   //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-  //cout << "WARNING: skipping this operator\n";
+  //pout << "WARNING: skipping this operator\n";
   return true;
 }
   return false;
@@ -96,7 +96,7 @@ if ( ix == jx ) {
 ////
 ////if ( i == j ) {
 ////  //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-////  cout << "WARNING: skipping this operator\n";
+////  pout << "WARNING: skipping this operator\n";
 ////  return true;
 ////}
 ////  return false;
@@ -123,7 +123,7 @@ Npdm_op_wrapper_CC::Npdm_op_wrapper_CC( SpinBlock * spinBlock )
 
 bool Npdm_op_wrapper_CC::set_local_ops( int idx )
 {
-//cout << "getting CC operator...\n";
+//pout << "getting CC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx;

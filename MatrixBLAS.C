@@ -13,7 +13,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include "MatrixBLAS.h"
-#include "pario.h"
 #include "global.h"
 #ifdef BLAS
 #include "blas_calls.h"
@@ -587,11 +586,11 @@ void SpinAdapted::Load(Matrix& a, std::ifstream &ifs)
 void SpinAdapted::DebugPrint (vector<int>& v)
 {
   for (int i = 0; i < v.size(); ++i)
-    cout << v[i] << endl;
+    pout << v[i] << endl;
 }
 void SpinAdapted::DebugPrint (vector<double>& v)
 {
   for (int i = 0; i < v.size(); ++i)
-    cout << v[i] << endl;
+    pout << v[i] << endl;
 }
 

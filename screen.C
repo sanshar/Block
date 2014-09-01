@@ -284,7 +284,7 @@ std::vector<int, std::allocator<int> > screened_d_indices(const std::vector<int,
 
 bool screen_d_interaction(int index, const std::vector<int, std::allocator<int> >& interactingix, const OneElectronArray& onee, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh) {
   if (dmrginp.spinAdapted()) {
-    cout << "BCS with spin adaption not implemented!" << endl;
+    pout << "BCS with spin adaption not implemented!" << endl;
     abort();
   } else {
     for (int i = 0; i < interactingix.size(); ++i) {
@@ -321,7 +321,7 @@ std::vector<std::pair<int, int> > screened_cd_indices(const std::vector<int, std
 
 bool screen_cd_interaction(int ci, int dj, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh) {
   if (dmrginp.spinAdapted()) {
-    cout << "BCS with spin adaption not implemented!" << endl;
+    pout << "BCS with spin adaption not implemented!" << endl;
     abort();
   } else {
     int ninter = interactingix.size();
@@ -347,7 +347,7 @@ std::vector<std::pair<int, int> > screened_dd_indices(const std::vector<int, std
 
 bool screen_dd_interaction(int ci, int cj, const std::vector<int, std::allocator<int> >& interactingix, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh) {
   if (dmrginp.spinAdapted()) {
-    cout << "BCS with spin adaption not implemented!" << endl;
+    pout << "BCS with spin adaption not implemented!" << endl;
     abort();
   } else {
     int ninter = interactingix.size();
@@ -374,7 +374,7 @@ std::vector<int, std::allocator<int> > screened_cddcomp_indices(const std::vecto
 
 bool screen_cddcomp_interaction(int otherindex, const std::vector<int, std::allocator<int> >& selfindices, const OneElectronArray& onee, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh) {
   if (dmrginp.spinAdapted()) {
-    cout << "BCS with spin adaption not implemented!" << endl;
+    pout << "BCS with spin adaption not implemented!" << endl;
     abort();
   } else {
     for (int i = 0; i < selfindices.size(); ++i) {

@@ -8,6 +8,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include <boost/format.hpp>
 #include "nevpt2_npdm_matrices.h"
+#include "pario.h"
 
 namespace SpinAdapted {
 namespace Npdm {
@@ -18,7 +19,7 @@ array_6d<double> Nevpt2_npdm::compute_EEE_matrix( array_2d<double>& onepdm, arra
 {
 if( mpigetrank() == 0 ) {
 
-  std::cout << "Building spatial <0|EEE|0>\n";
+  pout << "Building spatial <0|EEE|0>\n";
 
   int dim = threepdm.dim1(); 
   assert( onepdm.dim1() == twopdm.dim1() );
@@ -83,7 +84,7 @@ array_8d<double> Nevpt2_npdm::compute_EEEE_matrix(array_2d<double>& onepdm, arra
 {
 if( mpigetrank() == 0 ) {
 
-  std::cout << "Building spatial <0|EEEE|0>\n";
+  pout << "Building spatial <0|EEEE|0>\n";
 
   int dim = threepdm.dim1(); 
   assert( onepdm.dim1() == twopdm.dim1() );
@@ -166,7 +167,7 @@ void Nevpt2_npdm::compute_A16_matrix( array_8d<double>& eeee )
 { 
 if( mpigetrank() == 0 ) {
 
-  std::cout << "Building NEVPT2 A16 matrix\n";
+  pout << "Building NEVPT2 A16 matrix\n";
 
   int dim = eeee.dim1();
   const TwoElectronArray& twoInt = v_2[0];
@@ -213,7 +214,7 @@ void Nevpt2_npdm::compute_A22_matrix( array_6d<double>& eee, array_8d<double>& e
 { 
 if( mpigetrank() == 0 ) {
 
-  std::cout << "Building NEVPT2 A22 matrix\n";
+  pout << "Building NEVPT2 A22 matrix\n";
 
   int dim = eee.dim1();
   const TwoElectronArray& twoInt = v_2[0];

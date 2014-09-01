@@ -17,6 +17,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "distribute.h"
 #include "tensor_operator.h"
 #include "SpinQuantum.h"
+#include "pario.h"
 
 //using namespace SpinAdapted::operatorfunctions;
 
@@ -244,7 +245,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, CompType comp, int op2index, const CCCDArray& vcccd) {
   if(!dmrginp.spinAdapted())
     return calcCompfactor(op1, op2, comp, vcccd);
-  cout << "Sorry, SpinAdapted BCS calculation not implemented" << endl;
+  pout << "Sorry, SpinAdapted BCS calculation not implemented" << endl;
   abort();
   return 0.;
 }
@@ -288,7 +289,7 @@ double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, C
 double SpinAdapted::SparseMatrix::calcCompfactor(TensorOp& op1, TensorOp& op2, CompType comp, int op2index, const CCCCArray& vcccc) {
   if(!dmrginp.spinAdapted())
     return calcCompfactor(op1, op2, comp, vcccc);
-  cout << "Sorry, SpinAdapted BCS calculation not implemented" << endl;
+  pout << "Sorry, SpinAdapted BCS calculation not implemented" << endl;
   abort();
   return 0.;
 }
@@ -1680,7 +1681,7 @@ void SpinAdapted::CreCreDesComp::build(const SpinBlock& b)
 
     } 
     else if (otherBlock->has(CRE_DESCOMP)) {
-      cout << "I should not be here"<<endl;
+      pout << "I should not be here"<<endl;
       exit(0);
     } 
   }
@@ -1895,7 +1896,7 @@ void SpinAdapted::CreDesDesComp::build(const SpinBlock& b)
       }
     else if (otherBlock->has(CRE_DESCOMP))
       {
-	cout << "I should not be here"<<endl;exit(0);
+	pout << "I should not be here"<<endl;exit(0);
      }
   }
   dmrginp.makeopsT -> stop();
@@ -2211,7 +2212,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
           matrixE += factor * (v_cc(cI,cJ)-v_cc(cJ,cI));
           // from v_cccd
           if (dmrginp.spinAdapted()) {
-            cout << "Oops... BCS+SpinAdaption not implemented yet!" << endl;
+            pout << "Oops... BCS+SpinAdaption not implemented yet!" << endl;
             abort();
           } else {
             for (int kl = 0; kl < b->get_sites().size(); ++kl) {
@@ -2231,7 +2232,7 @@ double SpinAdapted::Ham::redMatrixElement(Csf c1, vector<Csf>& ladder, const Spi
           matrixE += factor * (v_cc(dI,dJ)-v_cc(dJ,dI));
           // from v_cccd
           if (dmrginp.spinAdapted()) {
-            cout << "Oops... BCS+SpinAdaption not implemented yet!" << endl;
+            pout << "Oops... BCS+SpinAdaption not implemented yet!" << endl;
             abort();
           } else {
             for (int kl = 0; kl < b->get_sites().size(); ++kl) {

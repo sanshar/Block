@@ -8,6 +8,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include "npdm_operators.h"
 #include "npdm_spin_ops.h"
+#include "pario.h"
 
 //FIXME update all these to allow RI with any orbitals, not just 1-site
 
@@ -36,8 +37,8 @@ Npdm_op_compound_CCD::Npdm_op_compound_CCD( SpinBlock * spinBlock )
 bool Npdm_op_compound_CCD::set_local_ops( int idx )
 {
   if(dmrginp.doimplicitTranspose()){
-//cout << "getting compound CCD operator...\n";
-//cout << "size_ = " << size_ << endl;
+//pout << "getting compound CCD operator...\n";
+//pout << "size_ = " << size_ << endl;
 //assert( idx == 0 );
   // Spatial orbital indices
 //FIXME don't need to keep reconstructing whole array!
@@ -45,7 +46,7 @@ bool Npdm_op_compound_CCD::set_local_ops( int idx )
   int ix = indices_[0];
   int jx = indices_[1];
   int kx = indices_[2];
-  //cout <<ix<<','<<jx<<','<<kx<<endl;
+  //pout <<ix<<','<<jx<<','<<kx<<endl;
   if(!dmrginp.spinAdapted()){
     // only suitble for single site block. ( there are two sites in single site block in non-spinadapted dmrg.)
     if(ix==jx) return true;
@@ -69,7 +70,7 @@ bool Npdm_op_compound_CCD::set_local_ops( int idx )
 ////  indices_.push_back( ix );
 ////  indices_.push_back( jx );
 ////  indices_.push_back( kx );
-////cout << "CCD indices = " << ix << ", " << jx << ", " << kx << endl;
+////pout << "CCD indices = " << ix << ", " << jx << ", " << kx << endl;
 
   // Allocate and build operator representation on the fly as RI tensor product for each spin component
   opReps_.clear();
@@ -144,7 +145,7 @@ Npdm_op_compound_CDD::Npdm_op_compound_CDD( SpinBlock * spinBlock )
 bool Npdm_op_compound_CDD::set_local_ops( int idx )
 {
   if(dmrginp.doimplicitTranspose()){
-//cout << "getting compound CDD operator...\n";
+//pout << "getting compound CDD operator...\n";
 //assert( idx == 0 );
   // Spatial orbital indices
 //FIXME don't need to keep reconstructing whole array!
@@ -172,7 +173,7 @@ bool Npdm_op_compound_CDD::set_local_ops( int idx )
 ////  indices_.push_back( ix );
 ////  indices_.push_back( jx );
 ////  indices_.push_back( kx );
-////cout << "CDD indices = " << ix << ", " << jx << ", " << kx << endl;
+////pout << "CDD indices = " << ix << ", " << jx << ", " << kx << endl;
 
   opReps_.clear();
   if(dmrginp.spinAdapted()){
@@ -218,12 +219,12 @@ bool Npdm_op_compound_CDD::set_local_ops( int idx )
 //  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 1, indices_, true ) );
 
 // PRINT
-//cout << "2a CDD operator elements:\n";
-//cout << *(opReps_[0]);
-//cout << "2b CDD operator elements:\n";
-//cout << *(opReps_[1]);
-//cout << "4  CDD operator elements:\n";
-//cout << *(opReps_[2]);
+//pout << "2a CDD operator elements:\n";
+//pout << *(opReps_[0]);
+//pout << "2b CDD operator elements:\n";
+//pout << *(opReps_[1]);
+//pout << "4  CDD operator elements:\n";
+//pout << *(opReps_[2]);
   return false;
   }
   else{
@@ -284,12 +285,12 @@ bool Npdm_op_compound_CDD::set_local_ops( int idx )
 //  opReps_.push_back( build_compound_operator( true, -1, twoOps.at(1), oneOp.at(0), 1, indices_, true ) );
 
 // PRINT
-//cout << "2a CDD operator elements:\n";
-//cout << *(opReps_[0]);
-//cout << "2b CDD operator elements:\n";
-//cout << *(opReps_[1]);
-//cout << "4  CDD operator elements:\n";
-//cout << *(opReps_[2]);
+//pout << "2a CDD operator elements:\n";
+//pout << *(opReps_[0]);
+//pout << "2b CDD operator elements:\n";
+//pout << *(opReps_[1]);
+//pout << "4  CDD operator elements:\n";
+//pout << *(opReps_[2]);
   return false;
   }
 }
@@ -318,10 +319,10 @@ Npdm_op_compound_CDC::Npdm_op_compound_CDC( SpinBlock * spinBlock )
 
 bool Npdm_op_compound_CDC::set_local_ops( int idx )
 {
-//cout << "getting compound CDC operator...\n";
+//pout << "getting compound CDC operator...\n";
   // Spatial orbital indices
   if(!dmrginp.spinAdapted()){
-    //cout << spinBlock_->get_op_array(RI_3INDEX).get_array().size();
+    //pout << spinBlock_->get_op_array(RI_3INDEX).get_array().size();
     indices_ = spinBlock_->get_op_array(RI_3INDEX).get_array().at(idx);
     int ix = indices_[0];
     int jx = indices_[1];
@@ -347,12 +348,12 @@ bool Npdm_op_compound_CDC::set_local_ops( int idx )
   jx = twoOps.at(0)->get_orbs(1);
   std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_local_element(idx);
   kx = oneOp.at(0)->get_orbs(0);
-//cout << "singlet CD operator elements:\n";
-//cout << *(twoOps[0]);
-//cout << "triplet CD operator elements:\n";
-//cout << *(twoOps[1]);
-//cout << "half C operator elements:\n";
-//cout << *(oneOp[0]);
+//pout << "singlet CD operator elements:\n";
+//pout << *(twoOps[0]);
+//pout << "triplet CD operator elements:\n";
+//pout << *(twoOps[1]);
+//pout << "half C operator elements:\n";
+//pout << *(oneOp[0]);
 
     // Assumed single site (i=j=k)
     assert ( ix == jx );
@@ -362,10 +363,10 @@ bool Npdm_op_compound_CDC::set_local_ops( int idx )
   indices_.push_back( kx );
   if ( jx == kx ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    //cout << "WARNING: skipping this operator\n";
+    //pout << "WARNING: skipping this operator\n";
     return true;
   }
-//cout << "indices  " << ix << " " << jx << " " << kx << std::endl;
+//pout << "indices  " << ix << " " << jx << " " << kx << std::endl;
 
 //----------
 // 1st way
@@ -434,8 +435,8 @@ bool Npdm_op_compound_CDC::set_local_ops( int idx )
 //  cdOp->set_deltaQuantum() = ( oneOp.at(0)->get_deltaQuantum() - oneOp.at(0)->get_deltaQuantum() ).at(0);
 //  cdOp->allocate( spinBlock_->get_stateInfo() );
 //  operatorfunctions::Product(spinBlock_, *oneOp.at(0), Transposeview(*oneOp.at(0)), *cdOp, 1.0 );
-//cout << "singlet CD operator elements (built by me):\n";
-//cout << *cdOp;
+//pout << "singlet CD operator elements (built by me):\n";
+//pout << *cdOp;
 //  // S=0 (+) S=1/2  =>  S=1/2
 //  boost::shared_ptr<SparseMatrix> cdcOp (new Cre);
 //  cdcOp->set_orbs() = indices_;
@@ -445,14 +446,14 @@ bool Npdm_op_compound_CDC::set_local_ops( int idx )
 //  cdcOp->allocate( spinBlock_->get_stateInfo() );
 //  operatorfunctions::Product(spinBlock_, *cdOp, *oneOp.at(0), *cdcOp, 1.0 );
 //  opReps_.push_back( cdcOp );
-////cout << *cdcOp;
+////pout << *cdcOp;
 //
 //  // CD s=1
 //  cdOp->set_deltaQuantum() = ( oneOp.at(0)->get_deltaQuantum() - oneOp.at(0)->get_deltaQuantum() ).at(1);
 //  cdOp->allocate( spinBlock_->get_stateInfo() );
 //  operatorfunctions::Product(spinBlock_, *oneOp.at(0), Transposeview(*oneOp.at(0)), *cdOp, 1.0 );
-//cout << "triplet CD operator elements (built by me):\n";
-//cout << *cdOp;
+//pout << "triplet CD operator elements (built by me):\n";
+//pout << *cdOp;
 //  // S=1 (+) S=1/2  =>  S=1/2
 //  boost::shared_ptr<SparseMatrix> cdcOp2 (new Cre);
 //  cdcOp2->set_orbs() = indices_;
@@ -473,13 +474,13 @@ bool Npdm_op_compound_CDC::set_local_ops( int idx )
 //  opReps_.push_back( cdcOp3 );
 
 // PRINT
-//cout << "CDC operator elements (built by me):\n";
-//cout << "2a CDC operator elements:\n";
-//cout << *(opReps_[0]);
-//cout << "2b CDC operator elements:\n";
-//cout << *(opReps_[1]);
-//cout << "4  CDC operator elements:\n";
-//cout << *(opReps_[2]);
+//pout << "CDC operator elements (built by me):\n";
+//pout << "2a CDC operator elements:\n";
+//pout << *(opReps_[0]);
+//pout << "2b CDC operator elements:\n";
+//pout << *(opReps_[1]);
+//pout << "4  CDC operator elements:\n";
+//pout << *(opReps_[2]);
 
   return false;
   }
@@ -506,7 +507,7 @@ abort(); // << this operator should always be zero on one site!
 
 bool Npdm_op_compound_CCC::set_local_ops( int idx )
 {
-//cout << "getting compound CCC operator...\n";
+//pout << "getting compound CCC operator...\n";
   // Spatial orbital indices
   indices_.clear();
   int ix, jx, kx;
@@ -571,7 +572,7 @@ bool Npdm_op_compound_DCD::set_local_ops( int idx )
 
     std::vector< boost::shared_ptr<SparseMatrix> > oneOp = spinBlock_->get_op_array(CRE).get_element(ix);
     boost::shared_ptr<SparseMatrix>  t_oneOp(new Transposeview(*oneOp.at(0)));
-    //cout << Transposeview(*oneOp.at(0));
+    //pout << Transposeview(*oneOp.at(0));
     //*t_oneOp = Transposeview(*oneOp.at(0));
     std::vector< boost::shared_ptr<SparseMatrix> > twoOps = spinBlock_->get_op_array(CRE_DES).get_element(jx,kx);
 
@@ -600,7 +601,7 @@ bool Npdm_op_compound_DCD::set_local_ops( int idx )
   indices_.push_back( kx );
   if ( ix == jx ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    //cout << "WARNING: skipping this operator\n";
+    //pout << "WARNING: skipping this operator\n";
     return true;
   }
 
@@ -653,7 +654,7 @@ bool Npdm_op_compound_DCD::set_local_ops( int idx )
   indices_.push_back( kx );
   if ( ix == jx ) {
     //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-    //cout << "WARNING: skipping this operator\n";
+    //pout << "WARNING: skipping this operator\n";
     return true;
   }
 
@@ -690,7 +691,7 @@ abort();
 
 bool Npdm_op_compound_DDC::set_local_ops( int idx )
 {
-//cout << "getting compound DDC operator...\n";
+//pout << "getting compound DDC operator...\n";
   // Spatial orbital indices
   // FIXME, really no DDC ? 
 abort();
@@ -711,7 +712,7 @@ abort();
 //  indices_.push_back( kx );
 //  if ( ix == jx ) {
 //    //FIXME I think this fails because of potential problems commuting operators with same indices in spin-transformation
-//    //cout << "WARNING: skipping this operator\n";
+//    //pout << "WARNING: skipping this operator\n";
 //    return true;
 //  }
 //
@@ -746,7 +747,7 @@ Npdm_op_compound_DCC::Npdm_op_compound_DCC( SpinBlock * spinBlock )
 
 bool Npdm_op_compound_DCC::set_local_ops( int idx )
 {
-//cout << "getting compound DCC operator...\n";
+//pout << "getting compound DCC operator...\n";
   // Spatial orbital indices
 //FIXME don't need to keep reconstructing whole array!
 //

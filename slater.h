@@ -142,7 +142,7 @@ public:
 
 inline IrrepSpace AbelianSymmetryOf (const Slater& s)
 {
-  if(sym == "dinfh") {cerr <<"dinfh is not abelian"<<endl;exit(0);}
+  if(sym == "dinfh") {perr <<"dinfh is not abelian"<<endl;exit(0);}
   IrrepSpace symmetry = IrrepSpace(0), tempsym;
   for (int i=0; i<s.alpha.size(); ++i) {
     if (s.alpha[i]) {

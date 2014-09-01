@@ -603,8 +603,8 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   pout << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
   pout << dmrginp.makeopsT<<" makeops "<<endl;
   pout << dmrginp.datatransfer<<" datatransfer "<<endl;
-  //cout << dmrginp.justmultiply<<" just multiply "<<endl;
-  //cout << dmrginp.otherrotation<<" "<<dmrginp.spinrotation<<" "<<dmrginp.operrotT<<" rotations time "<<endl; 
+  //pout << dmrginp.justmultiply<<" just multiply "<<endl;
+  //pout << dmrginp.otherrotation<<" "<<dmrginp.spinrotation<<" "<<dmrginp.operrotT<<" rotations time "<<endl; 
   pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
   pout << dmrginp.oneelecT<<" "<<dmrginp.twoelecT<<" "<<dmrginp.hmultiply<<" "<<dmrginp.couplingcoeff<<" hmult"<<endl;
   pout << dmrginp.buildsumblock<<" "<<dmrginp.buildblockops<<" build block"<<endl;

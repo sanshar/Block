@@ -16,6 +16,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <omp.h>
 #endif
 #include <boost/shared_ptr.hpp>
+#include "pario.h"
 
 
 /**
@@ -47,7 +48,7 @@ template<class A> void singlethread_build(A& array, SpinBlock& b, std::vector< C
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
     for (int j=0; j<vec.size(); j++) {
       vec[j]->buildUsingCsf(b, ladders, s);
-      //cout << *vec[j]<<endl;
+      //pout << *vec[j]<<endl;
     }
   }
 }
@@ -64,7 +65,7 @@ template<class A> void singlethread_build(A& array, SpinBlock& b)
     std::vector<boost::shared_ptr<SparseMatrix> > vec = array.get_local_element(i);
     for (int j=0; j<vec.size(); j++) {
       vec[j]->build(b);
-      //cout << *vec[j]<<endl;
+      //pout << *vec[j]<<endl;
     }
   }
 }

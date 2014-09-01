@@ -36,7 +36,7 @@ vector<SpinQuantum> SpinQuantum::spinToNonSpin() const
 {
   vector<SpinQuantum> quanta;
   if(totalSpin.getirrep() < 0 ) {
-    cout << "The quanta is already nonspinAdapted"<<endl;
+    pout << "The quanta is already nonspinAdapted"<<endl;
     exit(0);
   }
   if (dmrginp.spinAdapted()) {

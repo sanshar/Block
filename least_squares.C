@@ -65,7 +65,7 @@ void least_squares(vector<double> x, vector<double> y){
    }
 
    r2 = 1. - sserr/sstot;
-   //cout << "beta " << beta << " alpha " << alpha << " r2 " << r2 << endl;
+   //pout << "beta " << beta << " alpha " << alpha << " r2 " << r2 << endl;
    //pout << "Extrapolated energy: " << alpha << " a.u." << endl;
    pout << "\n\t\t\tExtrapolated Energy = " << fixed << setprecision(10) << alpha << " a.u." << endl << endl;
 }

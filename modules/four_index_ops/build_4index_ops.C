@@ -10,6 +10,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "BaseOperator.h"
 #include "spinblock.h"
 #include "operatorfunctions.h"
+#include "pario.h"
 
 namespace SpinAdapted{
 namespace Four_index_ops{
@@ -113,7 +114,7 @@ void do_4index_tensor_trace( const opTypes& optype, SpinBlock& big, SpinBlock* s
     int k = sysdot_ops[0]->get_orbs()[2]; int l = sysdot_ops[0]->get_orbs()[3];
     // In parallel calculations not all operators are built on each proc
     if ( ! big.get_op_array(optype).has_local_index(i,j,k,l) ) continue;
-//cout << "p" << mpigetrank() << "; i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
+//pout << "p" << mpigetrank() << "; i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
     std::vector<boost::shared_ptr<SparseMatrix> > new_ops = big.get_op_array(optype).get_element(i,j,k,l);
     for (int jdx=0; jdx < sysdot_ops.size(); jdx++) {
       boost::shared_ptr<SparseMatrix>& sysdot_op = sysdot_ops[jdx];
@@ -165,7 +166,7 @@ void do_4index_2_2_tensor_products( bool forwards, const opTypes& optype, const 
       int k = lhs_ops[0]->get_orbs()[0]; int l = lhs_ops[0]->get_orbs()[1];
       // In parallel calculations not all operators are built on each proc
       if ( ! big.get_op_array(optype).has_local_index(i,j,k,l) ) continue;
-//cout << "p" << mpigetrank() << "; i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
+//pout << "p" << mpigetrank() << "; i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
       std::vector<boost::shared_ptr<SparseMatrix> > vec = big.get_op_array(optype).get_element(i,j,k,l);
 
       // Loop over rhs spin-op components
@@ -235,7 +236,7 @@ void do_4index_1_3_tensor_products( bool forwards, const opTypes& optype, const 
       int j = lhs_ops[0]->get_orbs()[0]; int k = lhs_ops[0]->get_orbs()[1]; int l = lhs_ops[0]->get_orbs()[2];
       // In parallel calculations not all operators are built on each proc
       if ( ! big.get_op_array(optype).has_local_index(i,j,k,l) ) continue;
-//cout << "p" << mpigetrank() << "; i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
+//pout << "p" << mpigetrank() << "; i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
       std::vector<boost::shared_ptr<SparseMatrix> > vec = big.get_op_array(optype).get_element(i,j,k,l);
 
       // Loop over lhs spin-op components
@@ -303,7 +304,7 @@ void do_4index_3_1_tensor_products( bool forwards, const opTypes& optype, const 
       int l = lhs_ops[0]->get_orbs()[0];
       // In parallel calculations not all operators are built on each proc
       if ( ! big.get_op_array(optype).has_local_index(i,j,k,l) ) continue;
-//cout << "p" << mpigetrank() << "; i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
+//pout << "p" << mpigetrank() << "; i,j,k,l = " << i << "," << j << "," << k << "," << l << endl;
       std::vector<boost::shared_ptr<SparseMatrix> > vec = big.get_op_array(optype).get_element(i,j,k,l);
 
       // Loop over rhs spin-op components
@@ -350,7 +351,7 @@ void build_4index_ops( const opTypes& optype, SpinBlock& big,
                        const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo )
 {
   // 4-index output file
-//cout << "build_4index_op, ofs =" <<  big.get_op_array(optype).get_filename() << endl;
+//pout << "build_4index_op, ofs =" <<  big.get_op_array(optype).get_filename() << endl;
   std::ofstream ofs;
   if ( ! dmrginp.do_npdm_in_core() ) ofs.open( big.get_op_array(optype).get_filename().c_str(), std::ios::binary );
 

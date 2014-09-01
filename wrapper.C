@@ -6,7 +6,6 @@
 #include "global.h"
 #include "fciqmchelper.h"
 #include "input.h"
-#include <pario.h>
 #include "spinblock.h"
 #include "wrapper.h"
 #include "rotationmat.h"
@@ -98,7 +97,7 @@ void writeFullMPS()
 void test()
 {
   setbuf(stdout, NULL);
-  cout.precision(12);
+  pout.precision(12);
   MPS statea(0);
   double o, h;
   calcHamiltonianAndOverlap(statea, statea, h, o);
@@ -114,7 +113,7 @@ void test()
 
   //MPS stateb(1);
   //calcHamiltonianAndOverlap(stateb, stateb, h, o);
-  //cout << o<<"  "<<h<<endl;
+  //pout << o<<"  "<<h<<endl;
 
   calcHamiltonianAndOverlap(statec, statec, h, o);
   if (mpigetrank() == 0)

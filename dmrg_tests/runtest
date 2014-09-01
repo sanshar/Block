@@ -1,5 +1,7 @@
 #change this depending on your architechture
-MPICOMMAND=srun
+#MPICOMMAND=srun
+MPICOMMAND="mpirun -np 2"
+
 
 
 #this is just a simple test, calculate energy of two lowest states and see if the twopdms are calculated

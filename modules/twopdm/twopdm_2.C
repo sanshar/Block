@@ -17,6 +17,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #endif
 #include "operatorfunctions.h"
 #include "execinfo.h"
+#include "pario.h"
 
 namespace SpinAdapted{
 
@@ -378,9 +379,9 @@ void assign_antisymmetric(array_4d<double>& twopdm, const int i, const int j, co
       void *array[10];
       size_t size;
       size = backtrace(array, 10);
-      cout << "Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<endl;
+      pout << "Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<endl;
       //backtrace_symbols_fd(array, size, 2);
-      cout << "earlier value: "<<twopdm(i,j,k,l)<<endl<<"new value: "<<val<<endl;
+      pout << "earlier value: "<<twopdm(i,j,k,l)<<endl<<"new value: "<<val<<endl;
       assert(1 == 0);
     }
 

@@ -18,6 +18,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "new_anglib.h"
 #include <stdlib.h>
 #include <cmath>
+#include "pario.h"
 
 namespace SpinAdapted {
 namespace Npdm {
@@ -94,7 +95,7 @@ class TensorOp {
  TensorOp(int sgn, int pirrep, std::vector<int> ind) :empty(false)
   {
     if (!(sgn == 1 || sgn == -1)) {
-      cerr<<"sign not correct";exit(0);}
+      perr<<"sign not correct";exit(0);}
     Spin = 1;
     if (sgn == -1)
       irrep = (-IrrepSpace(pirrep)).getirrep();
@@ -137,8 +138,8 @@ class TensorOp {
     identical=false;
 
     if (pspin < abs(Spin - op1.Spin) || pspin > Spin+op1.Spin) {
-      cerr <<"incorrect spin is chosen"<<endl;
-      cerr <<"cannot combine "<<Spin<<" and "<<op1.Spin<<" to form "<<pspin<<endl;
+      perr <<"incorrect spin is chosen"<<endl;
+      perr <<"cannot combine "<<Spin<<" and "<<op1.Spin<<" to form "<<pspin<<endl;
     }
 
     std::vector<IrrepSpace> spinvec = IrrepSpace(irrep)+IrrepSpace(op1.irrep);

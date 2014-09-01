@@ -51,7 +51,7 @@ void Onepdm_container::save_npdms(const int& i, const int& j)
 #ifndef SERIAL
   world.barrier();
 #endif
-  std::cout << "1PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+  pout << "1PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ void Onepdm_container::save_npdm_text(const int &i, const int &j)
         if ( k==l ) trace += onepdm(k,l);
       }
     ofs.close();
-    std::cout << "Spin-orbital 1PDM trace = " << trace << "\n";
+    pout << "Spin-orbital 1PDM trace = " << trace << "\n";
   }
 }
 
@@ -92,7 +92,7 @@ void Onepdm_container::save_spatial_npdm_text(const int &i, const int &j)
         if ( k==l ) trace += spatial_onepdm(k,l);
       }
     ofs.close();
-    std::cout << "Spatial      1PDM trace = " << trace << "\n";
+    pout << "Spatial      1PDM trace = " << trace << "\n";
   }
 }
 
@@ -191,13 +191,13 @@ void Onepdm_container::update_full_spin_array( std::vector< std::pair< std::vect
     int j = (it->first)[1];
 
     double val = it->second;
-//    if ( abs(val) > 1e-8 ) std::cout << "so-onepdm val: i,j = " << i << "," << j << "\t\t" << val << endl;
-//    std::cout << "so-onepdm val: i,j = " << i << "," << j << "\t\t" << val << endl;
+//    if ( abs(val) > 1e-8 ) pout << "so-onepdm val: i,j = " << i << "," << j << "\t\t" << val << endl;
+//    pout << "so-onepdm val: i,j = " << i << "," << j << "\t\t" << val << endl;
 
     // Test for duplicates
     if ( onepdm( i, j ) != 0.0 ) {
-      cout << "WARNING: Already calculated "<<i<<" "<<j<<endl;
-      cout << "earlier value: "<<onepdm(i,j)<<endl<< "new value:     "<<val<<endl;
+      pout << "WARNING: Already calculated "<<i<<" "<<j<<endl;
+      pout << "earlier value: "<<onepdm(i,j)<<endl<< "new value:     "<<val<<endl;
       abort();
     }
     if ( abs(val) > NUMERICAL_ZERO ) onepdm(i,j) = val;
@@ -245,7 +245,7 @@ void Onepdm_container::update_full_spatial_array( std::vector< std::pair< std::v
 //    // Store significant elements only
 //    if ( abs(val) > NUMERICAL_ZERO ) {
 //      if ( abs( spatial_onepdm(i,j) ) > NUMERICAL_ZERO ) { 
-//        cout << "repeated spatial indices!\n";
+//        pout << "repeated spatial indices!\n";
 //        abort();
 //      }
 //      spatial_onepdm(i,j) = factor * val;
