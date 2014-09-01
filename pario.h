@@ -9,6 +9,11 @@
 #include "global/CxOutputStream.h"
 #endif
 
+#define pout if (mpigetrank() == 0) bout
+#define perr if (mpigetrank() == 0) berr
+
+extern std::ostream &bout, &berr;
+
 class blockout {
    public:
       std::ostream *outstream;
@@ -34,12 +39,6 @@ class blockerr {
        }
       }
 };
-
-
-extern std::ostream &bout, &berr;
-
-#define pout if (mpigetrank() == 0 && dmrginp.outputlevel() >= 0) bout
-#define perr if (mpigetrank() == 0 && dmrginp.outputlevel() >= 0) berr
 
 #endif
 

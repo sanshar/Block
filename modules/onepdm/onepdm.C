@@ -33,11 +33,7 @@ void compute_onepdm(std::vector<Wavefunction>& wavefunctions, const SpinBlock& s
 	Wavefunction &wavefunction1 = wavefunctions[i];
 	Wavefunction &wavefunction2 = wavefunctions[j];
 
-#ifndef MOLPRO
 	pout <<"Performing sweep calculation: 1PDM "<<endl;
-#else
-	xout <<"Performing sweep calculation: 1PDM "<<endl;
-#endif
 
 	//if (big.get_leftBlock()->size() == 2) {
 	pout << "compute 2_0 "<<mpigetrank()<<endl;

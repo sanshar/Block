@@ -361,7 +361,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) // get_n_iters() returns the number of blocking iterations needed in one sweep
     {
       pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
-      pout << "\t\t\t ----------------------------" << endl;
+      pout << "\t\t\t ============================" << endl;
       if (dmrginp.outputlevel() > 0) {
 	    if (forward)
 	      pout << "\t\t\t Current direction is :: Forwards " << endl;
@@ -468,9 +468,9 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       printf("\t\t\t M = %6i  state = %4i  Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), istate, finalError, finalEnergy[j]+dmrginp.get_coreenergy());
 #else 
       //printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
-      xout << "\t\t\t M = " <<  setw(6) << sweepParams.get_keep_states() ; 
-      xout << "\t Largest Discarded Weight = " << scientific << setprecision(3) << finalError ;
-      xout << "\t Sweep Energy = " << fixed << setprecision(10) << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
+      pout << "\t\t\t M = " <<  setw(6) << sweepParams.get_keep_states() ; 
+      pout << "\t Largest Discarded Weight = " << scientific << setprecision(3) << finalError ;
+      pout << "\t Sweep Energy = " << fixed << setprecision(10) << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
 #endif
     }
   }

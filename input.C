@@ -1088,28 +1088,15 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     boost::filesystem::path ReorderFilePath(ReorderFileName);
     
     if(!boost::filesystem::exists(ReorderFilePath)) {
-#ifndef MOLPRO
-      pout << "---------------"<<endl;
+      pout << "==============="<<endl;
       pout << "This is a restart job and the reorder file "<<ReorderFileName<<" should be present"<<endl;
       abort();
-#else
-      xout << "---------------"<<endl;
-      xout << "This is a restart job and the reorder file "<<ReorderFileName<<" should be present"<<endl;
-      abort();
-#endif
     }
     else {
-#ifndef MOLPRO
-      pout << "----------------"<<endl;
+      pout << "================"<<endl;
       pout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
       pout << "Using the reorder file " << ReorderFileName << endl;
-      pout << "----------------"<<endl;
-#else
-      xout << "----------------"<<endl;
-      xout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
-      xout << "Using the reorder file " << ReorderFileName << endl;
-      xout << "----------------"<<endl;
-#endif
+      pout << "================"<<endl;
       m_reorder.resize(m_norbs/2);
       for (int i=0; i<m_norbs/2; i++)
 	ReorderFileInput >> m_reorder[i];
@@ -1374,27 +1361,14 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     if (mpigetrank() == 0) {
     ReorderFileInput.open(ReorderFileName);
     if(!boost::filesystem::exists(p)) {
-#ifndef MOLPRO
-      pout << "---------------"<<endl;
+      pout << "==============="<<endl;
       pout << "This is a restart job and the reorder file "<<ReorderFileName<<" should be present"<<endl;
       abort();
-#else
-      xout << "---------------"<<endl;
-      xout << "This is a restart job and the reorder file "<<ReorderFileName<<" should be present"<<endl;
-      abort();
-#endif
     } else {
-#ifndef MOLPRO
-      pout << "----------------"<<endl;
+      pout << "================"<<endl;
       pout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
       pout << "Using the reorder file " << ReorderFileName << endl;
       pout << "----------------"<<endl;
-#else
-      xout << "----------------"<<endl;
-      xout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
-      xout << "Using the reorder file " << ReorderFileName << endl;
-      xout << "----------------"<<endl;
-#endif
       m_reorder.resize(m_norbs/2);
       for (int i=0; i<m_norbs/2; i++)
 	ReorderFileInput >> m_reorder[i];
@@ -1673,51 +1647,44 @@ std::vector<int> SpinAdapted::Input::getgaorder(ifstream& gaconfFile, string& or
 #ifdef MOLPRO
 void SpinAdapted::Input::writeSummaryForMolpro()
 {
-#ifndef SERIAL
-  if (mpigetrank() == 0) {
-#endif
-     xout << setw(50) << "Total number of orbitals : "  ;
-     xout << m_norbs/2 << endl;
-     xout << setw(50) << "Symmetry of targeted wavefunctions : " ;
-     xout << m_alpha + m_beta << ":" << m_alpha-m_beta << ":" << m_total_symmetry_number.getirrep()+1 << endl;
-     xout << setw(50) << "Number of wavefunctions targeted : " ;
-     xout << m_nroots << endl;
-     if (m_nroots >1) {
-        xout << setw(50) << "The weights of the wavefunctions : ";
-    for (int i=0; i<m_nroots; i++) 
-       xout << setprecision(2) << m_weights[i];
-    xout << endl;
-     }
-     xout << setw(50) << "Symmetry of the molecule : " ;
-     xout << sym << endl;
-     if (sym != "c1") {
-       xout << setw(50) << "Irreducible representation of the orbitals : " ;
-       for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) 
-          xout << Symmetry::stringOfIrrep(m_spin_orbs_symmetry[i])<<"  "; 
-       xout << endl;
-     }
+   pout << setw(50) << "Total number of orbitals : "  ;
+   pout << m_norbs/2 << endl;
+   pout << setw(50) << "Symmetry of targeted wavefunctions : " ;
+   pout << m_alpha + m_beta << ":" << m_alpha-m_beta << ":" << m_total_symmetry_number.getirrep()+1 << endl;
+   pout << setw(50) << "Number of wavefunctions targeted : " ;
+   pout << m_nroots << endl;
+   if (m_nroots >1) {
+      pout << setw(50) << "The weights of the wavefunctions : ";
+  for (int i=0; i<m_nroots; i++) 
+     pout << setprecision(2) << m_weights[i];
+  pout << endl;
+   }
+   pout << setw(50) << "Symmetry of the molecule : " ;
+   pout << sym << endl;
+   if (sym != "c1") {
+     pout << setw(50) << "Irreducible representation of the orbitals : " ;
+     for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) 
+        pout << Symmetry::stringOfIrrep(m_spin_orbs_symmetry[i])<<"  "; 
+     pout << endl;
+   }
 
 
-    xout << endl << "Schedule" << endl;
-    xout << "--------" << endl;
-   // Need to add proper spacing here, with setw( n);
-    xout << setw(10) << "Iter" ;
-    xout << setw(20) <<  "# States" ;
-    xout << setw(20) <<  "Davidson_tol" ;
-    xout << setw(20) << "Random_noise" << endl;
-    for (int i=0; i<m_sweep_iter_schedule.size(); i++) {
-       xout << setw(10) << m_sweep_iter_schedule[i]; 
-       xout << setw(20) << m_sweep_state_schedule[i];
-       xout << setw(20) << setprecision(4) << m_sweep_tol_schedule[i] ;
-       xout << setw(20) << scientific << setprecision(4) << m_sweep_noise_schedule[i] << endl;
-    }
-    if (m_algorithm_type == TWODOT_TO_ONEDOT) 
-       xout << setw(50) << "Switching from twodot to onedot algorithm : " << m_twodot_to_onedot_iter << endl << endl;
-    xout << setw(50) << "Maximum sweep iterations : " << m_maxiter << endl << endl;
-
-#ifndef SERIAL
+  pout << endl << "Schedule" << endl;
+  pout << "========" << endl;
+ // Need to add proper spacing here, with setw( n);
+  pout << setw(10) << "Iter" ;
+  pout << setw(20) <<  "# States" ;
+  pout << setw(20) <<  "Davidson_tol" ;
+  pout << setw(20) << "Random_noise" << endl;
+  for (int i=0; i<m_sweep_iter_schedule.size(); i++) {
+     pout << setw(10) << m_sweep_iter_schedule[i]; 
+     pout << setw(20) << m_sweep_state_schedule[i];
+     pout << setw(20) << setprecision(4) << m_sweep_tol_schedule[i] ;
+     pout << setw(20) << scientific << setprecision(4) << m_sweep_noise_schedule[i] << endl;
   }
-#endif
+  if (m_algorithm_type == TWODOT_TO_ONEDOT) 
+     pout << setw(50) << "Switching from twodot to onedot algorithm : " << m_twodot_to_onedot_iter << endl << endl;
+  pout << setw(50) << "Maximum sweep iterations : " << m_maxiter << endl << endl;
 }
 #endif
 

@@ -102,11 +102,7 @@ void compute_twopdm_initial(std::vector<Wavefunction>& wavefunctions, const Spin
 	load_twopdm_binary(twopdm, i ,j);
 	const std::vector<int> distribute_work = distribute_procs(numprocs,3);
 
-#ifndef MOLPRO
 	pout <<"Performing sweep calculation: 2PDM "<<endl;
-#else
-	xout <<"Performing sweep calculation: 2PDM "<<endl;
-#endif
 
 	pout << "compute 4_0_0"<<endl;	
 	if(mpigetrank() == distribute_work[0])

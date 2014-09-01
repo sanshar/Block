@@ -459,11 +459,7 @@ void restart(double sweep_tol, bool reset_iter)
 
 
   if(dmrginp.max_iter() <= sweepParams.get_sweep_iter()){
-#ifndef MOLPRO
     pout << "Maximum sweep iterations achieved " << std::endl;
-#else
-    xout << "Maximum sweep iterations achieved " << std::endl;
-#endif
   }
 
 }
