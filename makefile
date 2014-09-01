@@ -5,23 +5,22 @@
 
 ##BOOSTINCLUDE = /home/sandeep/Work/Programs/boost_1_54_0/
 #specify boost include file
-BOOSTINCLUDE = /home/juny/boost_1_55_0/install/include
+BOOSTINCLUDE = /home/juny/boost_1_55_0/install/include/
 
 #specify boost and lapack-blas library locations
-BOOSTLIB =  -L/home/juny/boost_1_55_0/install/lib -lboost_serialization -lboost_system -lboost_filesystem
-LAPACKBLAS = -L/opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/ -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+BOOSTLIB = -L/home/juny/boost_1_55_0/install/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+LAPACKBLAS =  -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+
 
 #use these variable to set if we will use mpi or not 
 USE_MPI = yes
-USE_MKL = no
+USE_MKL = yes
 
 ifeq ($(USE_MKL), yes)
 MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/
 LAPACKBLAS = -L${MKLLIB} -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 MKLFLAGS = /opt/intel/composer_xe_2013_sp1.0.080/mkl/include
 MKLOPT = -D_HAS_INTEL_MKL
-else
-MKLFLAGS=.
 endif
 
 RUN_UNITTEST=no
@@ -47,7 +46,7 @@ EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
 CXX =  g++
-MPICXX = mpicxx
+MPICXX = /usr/lib64/openmpi/bin/mpicxx
 BLOCKHOME = .
 HOME = .
 NEWMATINCLUDE = $(BLOCKHOME)/newmat10/
@@ -60,44 +59,47 @@ BTAS = $(BLOCKHOME)/btas
    
 MOLPROINCLUDE=.
 ifeq ($(MOLPRO), yes)
-   MOLPROINCLUDE=/home/juny/MolproGit/src
+   MOLPROINCLUDE=$(BLOCKHOME)/../
    MOLPRO_BLOCK= -DMOLPRO
 endif
 
-FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE)  -I$(MOLPROINCLUDE) \
+FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(MOLPROINCLUDE) \
          -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(HOME)/modules/twopdm/ \
          -I$(HOME)/modules/npdm -I$(HOME)/modules/two_index_ops -I$(HOME)/modules/three_index_ops -I$(HOME)/modules/four_index_ops -std=c++0x \
-	 -I$(HOME)/modules/ResponseTheory
+	 -I$(HOME)/modules/ResponseTheory 
 
 LIBS +=  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp 
 MPI_OPT = -DSERIAL
 
-ifeq ($(notdir $(firstword $(CXX))),icpc)
+MPICOMPILER=
+ifeq ($(USE_MPI), yes)
+     MPI_OPT = 
+     MPI_LIB = -lboost_mpi
+     LIBS += $(MPI_LIB)
+     CXX = $(MPICXX)
+     MPICOMPILER=$(notdir $(firstword $(shell $(MPICXX) -showname)))
+endif
+
+ifeq (icpc, $(filter icpc, $(notdir $(firstword $(CXX))) $(MPICOMPILER)))
    ifeq ($(OPENMP), yes)
       OPENMP_FLAGS= -openmp -D_OPENMP 
    endif
 # Intel compiler
-	OPT = -DNDEBUG -O3 -funroll-loops 
-#	OPT = -g 
-	CXX = icc
+   OPT = -DNDEBUG -O3 -funroll-loops  -fPIC
+#  OPT = -g 
+   ifeq ($(USE_MPI), no) 
+      CXX = icc
+   endif
 endif
 
-ifeq ($(notdir $(firstword $(CXX))),g++)
+ifeq (g++, $(filter g++, $(notdir $(firstword $(CXX))) $(MPICOMPILER)))
    ifeq ($(OPENMP), yes)
       OPENMP_FLAGS= -fopenmp -D_OPENMP 
    endif
 # GNU compiler
-	OPT = -DNDEBUG -O3 -fPIC
-#	OPT = -g
+      OPT = -DNDEBUG -O3 -fPIC
+#   OPT = -g
 endif
-
-ifeq ($(USE_MPI), yes)
-	MPI_OPT = 
-	MPI_LIB = -lboost_mpi
-        LIBS += $(MPI_LIB)
-	CXX = $(MPICXX)
-endif
-
 
 OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(MOLPRO_BLOCK)  -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL ${MKLOPT} ${UNITTEST}
 
