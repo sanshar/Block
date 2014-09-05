@@ -152,6 +152,14 @@ void SpinAdapted::Input::initialize_defaults()
   m_lastM = 500;
   m_startM = 250;
   m_core_energy = 0.0;
+  
+  m_calc_ri_4pdm=false;
+  m_store_ripdm_readable=false;
+  m_nevpt2 = false;
+  m_conventional_nevpt2 = false;
+  m_kept_nevpt2_states = -1;
+  NevPrint.first=false;
+  NevPrint.second=0;
 
   //reorder options, by default it does fiedler
   m_reorderType = FIEDLER;
@@ -580,7 +588,7 @@ SpinAdapted::Input::Input(const string& config_name) {
       else if (boost::iequals(keyword,  "onepdm") || boost::iequals(keyword,  "onerdm") || boost::iequals(keyword,  "ordm"))
 	m_calc_type = ONEPDM;
       else if (boost::iequals(keyword,  "twopdm") || boost::iequals(keyword,  "twordm") || boost::iequals(keyword,  "trdm"))
-	m_calc_type = TWOPDM;
+        m_calc_type = TWOPDM;
       else if (boost::iequals(keyword,  "threepdm"))
 	m_calc_type = THREEPDM;
       else if (boost::iequals(keyword,  "fourpdm"))
@@ -603,6 +611,49 @@ SpinAdapted::Input::Input(const string& config_name) {
 	m_calc_type = RESTART_T_ONEPDM;
       else if (boost::iequals(keyword,  "restart_tran_twopdm") || boost::iequals(keyword,  "restart_tran_twordm") || boost::iequals(keyword,  "restart_tran_trdm"))
 	m_calc_type = RESTART_T_TWOPDM;
+      else if (boost::iequals(keyword,  "nevpt2") || boost::iequals(keyword,  "pt2")){
+	m_calc_type = NEVPT2;
+        m_nevpt2 = true;
+        m_transition_diff_spatial_irrep=false;
+      }
+      else if (boost::iequals(keyword,  "ripdm")){
+	m_calc_type = NEVPT2;
+        m_nevpt2 = false;
+        m_transition_diff_spatial_irrep=false;
+      }
+      else if (boost::iequals(keyword,  "restart_nevpt2") || boost::iequals(keyword,  "restart_pt2")){
+        m_calc_type = RESTART_NEVPT2;
+        m_nevpt2 = true;
+        m_transition_diff_spatial_irrep=false;
+      }
+      else if (boost::iequals(keyword,  "restart_ripdm")){
+        m_calc_type = RESTART_NEVPT2;
+        m_nevpt2 = false;
+        m_transition_diff_spatial_irrep=false;
+      }
+      else if (boost::iequals(keyword,  "calc_ri4pdm") || boost::iequals(keyword,  "ri4pdm"))
+      {
+        m_calc_ri_4pdm = true;
+      }
+      else if (boost::iequals(keyword,  "ripdm_readable"))
+      {
+        m_store_ripdm_readable = true;
+      }
+      else if (boost::iequals(keyword, "conventional_nevpt2"))
+      {
+        m_conventional_nevpt2 = true;
+      }
+      else if (boost::iequals(keyword,  "M_nevpt2")){
+	if (tok.size() != 2) {
+	  pout << "keyword M_nevpt2 should be followed by a single float and then an end line."<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
+          abort();
+        }
+        m_kept_nevpt2_states = atof(tok[1].c_str());
+      }
+      
+
       else if(boost::iequals(keyword,  "prefix") || boost::iequals(keyword,  "scratch"))
       {
 	if(usedkey[PREFIX] == 0) 

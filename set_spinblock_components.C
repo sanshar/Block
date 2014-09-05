@@ -155,7 +155,7 @@ void SpinBlock::setstoragetype(Storagetype st)
   //the system and j is on the environment
   else if (st == DISTRIBUTED_STORAGE_FOR_ONEPDM)
   {
-    if ( dmrginp.new_npdm_code() ) assert(false);
+    if ( dmrginp.new_npdm_code() && !dmrginp.nevpt2() ) assert(false);
     localstorage = false;
     if (has(CRE))
       set_op_array(CRE)->set_local() = true;

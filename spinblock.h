@@ -199,6 +199,7 @@ class SpinBlock
   void set_loopblock(bool p_loopblock){loopblock = p_loopblock;}
   friend ostream& operator<< (ostream& os, const SpinBlock& b);
   void multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) const;
+  void multiplyH_Q(Wavefunction& c, Wavefunction* v, int num_threads, SpinQuantum &Q) const;
   void multiplyOverlap(Wavefunction& c, Wavefunction* v, int num_threads) const;
   void diagonalH(DiagonalMatrix& e) const;
   void clear();

@@ -157,6 +157,12 @@ python ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
 python ../test_transitiononepdm.py spatial_onepdm.1.0.txt spat_onepdm.1.0.txt 1e-7
 cd ../
 
+echo "testing NEVPT2 calculations"
+cd h2o_nevpt2/
+$MPICOMMAND ../../block.spin_adapted dmrg.conf >dmrg.out
+python ../test_nevpt2_energy.py Reference.dat 1e-6 
+cd ../
+
 echo "testing MPSPT calculations"
 cd mpspt2
 $MPICOMMAND ../../block.spin_adapted dmrg.conf >dmrg.out

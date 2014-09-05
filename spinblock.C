@@ -517,6 +517,69 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
 
 }
 
+void SpinBlock::multiplyH_Q(Wavefunction& c, Wavefunction* v, int num_threads, SpinQuantum &Q) const
+{
+
+  SpinBlock* loopBlock=(leftBlock->is_loopblock()) ? leftBlock : rightBlock;
+  SpinBlock* otherBlock = loopBlock == leftBlock ? rightBlock : leftBlock;
+
+  Wavefunction *v_array=0, *v_distributed=0, *v_add=0;
+
+  int maxt = 1;
+  initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
+  dmrginp.oneelecT -> start();
+  dmrginp.s0time -> start();
+
+  //if (mpigetrank() == 0) {
+    boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
+    boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+    TensorMultiply(leftBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0) ,1.0);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
+    
+    overlap = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
+    op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+    TensorMultiply(rightBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0), 1.0);  
+    //}
+
+  dmrginp.s0time -> stop();
+#ifndef SERIAL
+  boost::mpi::communicator world;
+  int size = world.size();
+#endif
+
+  dmrginp.s1time -> start();
+  v_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
+  Functor f = boost::bind(&opxop::cxcddcomp, leftBlock, _1, this, boost::ref(c), v_add, Q ); 
+  for_all_multithread(rightBlock->get_op_array(CRE), f);
+
+  v_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
+  f = boost::bind(&opxop::cxcddcomp, rightBlock, _1, this, boost::ref(c), v_add, Q ); 
+  for_all_multithread(leftBlock->get_op_array(CRE), f);  
+
+  dmrginp.s1time -> stop();
+
+  dmrginp.oneelecT -> stop();
+
+  dmrginp.twoelecT -> start();
+
+  if (dmrginp.hamiltonian() != HUBBARD) {
+    
+    dmrginp.s0time -> start();
+    v_add =  otherBlock->get_op_array(CRE_DESCOMP).is_local() ? v_array : v_distributed;
+    f = boost::bind(&opxop::cdxcdcomp, otherBlock, _1, this, boost::ref(c), v_add, Q );
+    for_all_multithread(loopBlock->get_op_array(CRE_DES), f);
+    
+    v_add =  otherBlock->get_op_array(DES_DESCOMP).is_local() ? v_array : v_distributed;
+    f = boost::bind(&opxop::ddxcccomp, otherBlock, _1, this, boost::ref(c), v_add, Q );
+    for_all_multithread(loopBlock->get_op_array(CRE_CRE), f);
+    dmrginp.s0time -> stop();
+  }
+  
+  dmrginp.twoelecT -> stop();
+
+  accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
+
+}
+
 
 void SpinBlock::diagonalH(DiagonalMatrix& e) const
 {

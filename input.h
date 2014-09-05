@@ -34,7 +34,11 @@ enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD, BCS, HEISENBERG};
 enum solveTypes {LANCZOS, DAVIDSON, CONJUGATE_GRADIENT};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
- enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPDM, RESTART_ONEPDM, RESTART_THREEPDM, RESTART_FOURPDM, TINYCALC, FCI, EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN, COMPRESS, RESPONSE, TRANSITION_ONEPDM, TRANSITION_TWOPDM, RESTART_T_ONEPDM, RESTART_T_TWOPDM};
+enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPDM,
+               RESTART_ONEPDM, RESTART_THREEPDM, RESTART_FOURPDM, TINYCALC, FCI,
+               EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN, COMPRESS, RESPONSE,
+               TRANSITION_ONEPDM, TRANSITION_TWOPDM, RESTART_T_ONEPDM, RESTART_T_TWOPDM,
+               NEVPT2,RESTART_NEVPT2};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
@@ -157,6 +161,13 @@ class Input {
   string m_reorderfile;
   std::vector<int> m_reorder;//this can be manual, fiedler, gaopt or noreorder
   string m_gaconffile;
+  
+  bool m_calc_ri_4pdm;
+  bool m_store_ripdm_readable;
+  bool m_nevpt2;
+  bool m_conventional_nevpt2;
+  int m_kept_nevpt2_states;
+  pair<bool,int> NevPrint;
 
   friend class boost::serialization::access;
   template<class Archive>
@@ -179,6 +190,7 @@ class Input {
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
     ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_backward & m_schedule_type_default & m_core_energy &m_integral_disk_storage_thresh;
     ar & n_twodot_noise & m_twodot_noise & m_twodot_gamma;
+    ar & m_calc_ri_4pdm & m_store_ripdm_readable & m_nevpt2 & m_conventional_nevpt2 & m_kept_nevpt2_states & NevPrint;
   }
 
 
@@ -354,6 +366,14 @@ class Input {
   int nroots() const {return m_nroots;}
   int real_particle_number() const { return (m_alpha + m_beta);}
   int total_particle_number() const { if(!m_add_noninteracting_orbs) return (m_alpha + m_beta); else return (2*m_alpha); }
+  bool calc_ri_4pdm() const {return m_calc_ri_4pdm;}
+  bool store_ripdm_readable() const {return m_store_ripdm_readable;}
+  bool nevpt2() const {return m_nevpt2;}
+  bool read_higherpdm() const {return m_conventional_nevpt2;}
+  int kept_nevpt2_states() const {return m_kept_nevpt2_states;}
+  bool Print() const {return NevPrint.first;}
+  int PrintIndex() const{return NevPrint.second;}
+  void SetPrint(bool p, int i=0){NevPrint.first = p;NevPrint.second=i;}
   const SpinSpace total_spin_number() const { if (!m_add_noninteracting_orbs) return SpinSpace(m_alpha - m_beta); else return SpinSpace(0); }
   int last_site() const 
   { 

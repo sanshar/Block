@@ -128,80 +128,162 @@ void TensorProduct (StateInfo& a, StateInfo& b, const SpinQuantum q, const int c
   c.totalStates = 0;
   c.initialised = true;
 
+  //if non-conventional nevpt2 is invoked, states with up to 2 particles more 
+  //are required to be generated.
+  bool DoNonConvNevpt2 = ((dmrginp.nevpt2())&&(!dmrginp.read_higherpdm()));
+  
+  if (DoNonConvNevpt2){
+    for (int i = 0; i < a.quanta.size (); ++i)
+      for (int j = 0; j < b.quanta.size (); ++j)
+        if (  constraint == LessThanQ && 
+              (  a.quanta [i].get_n() + b.quanta [j].get_n() > q.get_n() ))
 
-  for (int i = 0; i < a.quanta.size (); ++i)
-    for (int j = 0; j < b.quanta.size (); ++j)
-      if (constraint == LessThanQ && 
-	      (a.quanta [i].get_n() + b.quanta [j].get_n() > q.get_n() )) {	  
-	    continue;
-	  } else if (constraint == EqualQ && q.allow(a.quanta [i] , b.quanta [j]) ) {
-	    c.quantaMap(i,j).resize(1);
-	    c.quanta.push_back(q);
-	    c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
-	    c.totalStates += a.quantaStates[i]*b.quantaStates[j];
-	    c.allowedQuanta(i,j) = true;
-	    c.quantaMap(i,j)[0] = c.quanta.size() - 1;
-	    c.leftUnMapQuanta.push_back(i);
-	    c.rightUnMapQuanta.push_back(j);
-      } 
-      else if (constraint == EqualS) {
-        vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
-        for (int vq=0; vq<v.size(); vq++) {
-          if (v[vq].get_n() > q.get_n() || v[vq].get_s() != q.get_s() || v[vq].get_s().getirrep() != q.get_s().getirrep() || v[vq].get_symm() != q.get_symm())
-            continue;
-          
-          c.quanta.push_back(v[vq]);
-	      c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
-	      c.totalStates += a.quantaStates[i]*b.quantaStates[j];
-	      c.allowedQuanta(i,j) = true;
-	      c.quantaMap(i,j).push_back(c.quanta.size() - 1);
-	      c.leftUnMapQuanta.push_back(i);
-	      c.rightUnMapQuanta.push_back(j);
+          {
+          if ((  a.quanta [i].get_n() + b.quanta [j].get_n() > q.get_n() + 2 ))continue;
+          else{
+              vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
+              for (int vq=0; vq< v.size(); vq++) {
+                bool include = false;
+                if (compState != 0) {
+                  for (int k=0; k<compState->quanta.size(); k++)
+                  {
+                    if (q.allow(v[vq], compState->quanta[k])){
+                      include = true;
+                      break;
+                    }
+                  }
+                }
+                else
+                  include = true;
+                if (!include) continue;
+                c.quanta.push_back(v[vq]);
+                c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
+                c.totalStates += a.quantaStates[i]*b.quantaStates[j];
+                c.allowedQuanta(i,j) = true;
+                c.quantaMap(i,j).push_back(c.quanta.size() - 1);
+                c.leftUnMapQuanta.push_back(i);
+                c.rightUnMapQuanta.push_back(j);
+              }//vk
+            //continue;
+            }
+          }
+        else if (constraint == EqualQ && q.allow(a.quanta [i] , b.quanta [j]) )
+        {
+          c.quantaMap(i,j).resize(1);
+
+          c.quanta.push_back(q);
+          c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
+          c.totalStates += a.quantaStates[i]*b.quantaStates[j];
+          c.allowedQuanta(i,j) = true;
+          c.quantaMap(i,j)[0] = c.quanta.size() - 1;
+          c.leftUnMapQuanta.push_back(i);
+          c.rightUnMapQuanta.push_back(j);
         }
-      } 
-      else if (constraint == LessThanN) {
-        vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
-        for (int vq=0; vq<v.size(); vq++) {
-          if (v[vq].get_n() > q.get_n())
-            continue;
-          
-          c.quanta.push_back(v[vq]);
-	  c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
-	  c.totalStates += a.quantaStates[i]*b.quantaStates[j];
-	  c.allowedQuanta(i,j) = true;
-	  c.quantaMap(i,j).push_back(c.quanta.size() - 1);
-	  c.leftUnMapQuanta.push_back(i);
-	  c.rightUnMapQuanta.push_back(j);
+        else if (constraint == LessThanQ)
+        {
+          vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
+          for (int vq=0; vq< v.size(); vq++) {
+            if ( (v[vq].get_n() > q.get_n()+2)
+                 || ( abs(v[vq].get_s().getirrep()-q.get_s().getirrep()) > (q.get_n()+2-v[vq].get_n())  ))
+                 continue;
+            bool include = false;
+            if (compState != 0) {
+              for (int k=0; k<compState->quanta.size(); k++)
+              {
+                if (q.allow(v[vq], compState->quanta[k])){
+                  include = true;
+                  break;
+                }
+              }
+            }
+            else
+              include = true;
+            if (!include) continue;
+            c.quanta.push_back(v[vq]);
+            c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
+            c.totalStates += a.quantaStates[i]*b.quantaStates[j];
+            c.allowedQuanta(i,j) = true;
+            c.quantaMap(i,j).push_back(c.quanta.size() - 1);
+            c.leftUnMapQuanta.push_back(i);
+            c.rightUnMapQuanta.push_back(j);
+            }
         }
-      } 
-      else if (constraint == LessThanQ) {
-	    vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
-	    for (int vq=0; vq< v.size(); vq++) {
-	      if ( (v[vq].get_n() > q.get_n()) || (v[vq].get_n()==q.get_n() && v[vq].get_s() != q.get_s())
-	        || ( abs(v[vq].get_s().getirrep()-q.get_s().getirrep()) > (q.get_n()-v[vq].get_n())  )
-	        || (v[vq].get_n() == q.get_n() && v[vq].get_symm() != q.get_symm()) )
-	        continue;
-	      bool include = false;
-	      if (compState != 0) {
-	        for (int k=0; k<compState->quanta.size(); k++) {
-	          if (q.allow(v[vq], compState->quanta[k])){
-		        include = true;
-		        break;
-	          }
-	        }
-	      } else
-	        include = true;
-	      if (!include)
-            continue;
-	      c.quanta.push_back(v[vq]);
-	      c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
-	      c.totalStates += a.quantaStates[i]*b.quantaStates[j];
-	      c.allowedQuanta(i,j) = true;
-	      c.quantaMap(i,j).push_back(c.quanta.size() - 1);
-	      c.leftUnMapQuanta.push_back(i);
-	      c.rightUnMapQuanta.push_back(j);
-	    }
-      }
+  }//non-conventional nevpt2 invoked
+  else{
+    for (int i = 0; i < a.quanta.size (); ++i)
+      for (int j = 0; j < b.quanta.size (); ++j)
+        if (constraint == LessThanQ && 
+                (a.quanta [i].get_n() + b.quanta [j].get_n() > q.get_n() )) {	  
+              continue;
+            } else if (constraint == EqualQ && q.allow(a.quanta [i] , b.quanta [j]) ) {
+              c.quantaMap(i,j).resize(1);
+              c.quanta.push_back(q);
+              c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
+              c.totalStates += a.quantaStates[i]*b.quantaStates[j];
+              c.allowedQuanta(i,j) = true;
+              c.quantaMap(i,j)[0] = c.quanta.size() - 1;
+              c.leftUnMapQuanta.push_back(i);
+              c.rightUnMapQuanta.push_back(j);
+        } 
+        else if (constraint == EqualS) {
+          vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
+          for (int vq=0; vq<v.size(); vq++) {
+            if (v[vq].get_n() > q.get_n() || v[vq].get_s() != q.get_s() || v[vq].get_s().getirrep() != q.get_s().getirrep() || v[vq].get_symm() != q.get_symm())
+              continue;
+
+            c.quanta.push_back(v[vq]);
+                c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
+                c.totalStates += a.quantaStates[i]*b.quantaStates[j];
+                c.allowedQuanta(i,j) = true;
+                c.quantaMap(i,j).push_back(c.quanta.size() - 1);
+                c.leftUnMapQuanta.push_back(i);
+                c.rightUnMapQuanta.push_back(j);
+          }
+        } 
+        else if (constraint == LessThanN) {
+          vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
+          for (int vq=0; vq<v.size(); vq++) {
+            if (v[vq].get_n() > q.get_n())
+              continue;
+
+            c.quanta.push_back(v[vq]);
+            c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
+            c.totalStates += a.quantaStates[i]*b.quantaStates[j];
+            c.allowedQuanta(i,j) = true;
+            c.quantaMap(i,j).push_back(c.quanta.size() - 1);
+            c.leftUnMapQuanta.push_back(i);
+            c.rightUnMapQuanta.push_back(j);
+          }
+        } 
+        else if (constraint == LessThanQ) {
+              vector<SpinQuantum> v = a.quanta[i] + b.quanta[j];
+              for (int vq=0; vq< v.size(); vq++) {
+                if ( (v[vq].get_n() > q.get_n()) || (v[vq].get_n()==q.get_n() && v[vq].get_s() != q.get_s())
+                  || ( abs(v[vq].get_s().getirrep()-q.get_s().getirrep()) > (q.get_n()-v[vq].get_n())  )
+                  || (v[vq].get_n() == q.get_n() && v[vq].get_symm() != q.get_symm()) )
+                  continue;
+                bool include = false;
+                if (compState != 0) {
+                  for (int k=0; k<compState->quanta.size(); k++) {
+                    if (q.allow(v[vq], compState->quanta[k])){
+                          include = true;
+                          break;
+                    }
+                  }
+                } else
+                  include = true;
+                if (!include)
+              continue;
+                c.quanta.push_back(v[vq]);
+                c.quantaStates.push_back(a.quantaStates[i] * b.quantaStates[j]);
+                c.totalStates += a.quantaStates[i]*b.quantaStates[j];
+                c.allowedQuanta(i,j) = true;
+                c.quantaMap(i,j).push_back(c.quanta.size() - 1);
+                c.leftUnMapQuanta.push_back(i);
+                c.rightUnMapQuanta.push_back(j);
+              }
+        }
+  }//regular DMRG
   c.UnBlockIndex ();
 }
 
@@ -390,7 +472,7 @@ void SpinAdapted::StateInfo::store(bool forward, const vector<int>& sites, State
 
   std::ofstream ofs(file.c_str(), std::ios::binary);
   boost::archive::binary_oarchive save_state(ofs);
-
+  
   save_state << stateInfo;
   
   ofs.close();

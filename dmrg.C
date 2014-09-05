@@ -49,6 +49,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/mpi.hpp>
 #endif
 #include "pario.h"
+#include "modules/nevpt2/sweep_nevpt2.h"
 
 
 #ifdef USE_BTAS
@@ -124,7 +125,7 @@ int calldmrg(char* input, char* output)
 
 
 
-
+  
   switch(dmrginp.calc_type()) {
 
   case (COMPRESS):
@@ -277,6 +278,10 @@ int calldmrg(char* input, char* output)
     Npdm::npdm(0);
     break;
 
+  case(NEVPT2):
+    nevpt2::nevpt2();
+    break;
+    
   case (RESTART_ONEPDM):
     Npdm::npdm(1,true);
     break;
@@ -302,6 +307,10 @@ int calldmrg(char* input, char* output)
   case (RESTART_T_TWOPDM):
     Npdm::npdm(2,true,true);
     break;
+   case(RESTART_NEVPT2):
+    nevpt2::nevpt2_restart();
+    break;
+    
 
   return 0;
   }
