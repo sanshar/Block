@@ -522,15 +522,26 @@ namespace SpinAdapted{
       abort();
     }
     
+    dmrginp.do_npdm_ops() = true;
+    dmrginp.do_pdm() = true;
+    dmrginp.oneindex_screen_tol() = 0.0; 
+    dmrginp.twoindex_screen_tol() = 0.0;
+    dmrginp.Sz() = dmrginp.total_spin_number().getirrep();
+
     //first generate the 1- and 2-pdm
+    sweep_copy.restorestate(direction_copy, restartsize_copy);
+    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+    dmrginp.set_fullrestart()=true;
+
     for (int istate=0;istate<dmrginp.nroots();istate++){
-      SweepOnepdm::do_one(sweepParams, false, direction, true, 0, istate);
-      SweepTwopdm::do_one(sweepParams, false, !direction, true, 0, istate);
+      SweepOnepdm::do_one(sweepParams, false, !direction, true, restartsize, istate);
     }
     
-    //dmrginp.screen_tol() = 0.0; //need to turn screening off for nevpt2
-    dmrginp.Sz() = dmrginp.total_spin_number().getirrep();
-    //dmrginp.do_cd() = true;
+    sweep_copy.restorestate(direction_copy, restartsize_copy);
+    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+    for (int istate=0;istate<dmrginp.nroots();istate++){
+      SweepTwopdm::do_one(sweepParams, false, direction,true, restartsize, istate);
+    }
 
     //Do a sweep that generates the operators and the rotation matrices
     sweep_copy.restorestate(direction_copy, restartsize_copy);
