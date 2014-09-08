@@ -86,7 +86,7 @@ def run(args):
           print "PASSED ...."  
     #E(i)
     if len(linesp)==3:
-      if linesp[0]=="E(0,i)":
+      if linesp[0]=="E(1,i)":
         calc_e = float(linesp[2])
         if abs(calc_e-RefValues[7]) > tol:
           print calc_e,"-", RefValues[7], " > ", tol
