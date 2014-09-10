@@ -15,7 +15,6 @@
 #include <boost/mpi.hpp>
 #endif
 
-
 namespace SpinAdapted{
   //===================
   //print the StateInfo
@@ -1990,11 +1989,11 @@ namespace SpinAdapted{
           }//sender
           else{
             if (iquanta==0){
-              v = make_shared<Wavefunction> (VQSing[0],&big,true);
+              v = boost::make_shared<Wavefunction> (VQSing[0],&big,true);
             }//singlet
             else{
               int itmp = iquanta-1;
-              v = make_shared<Wavefunction> (VQTrip[itmp],&big,true);
+              v = boost::make_shared<Wavefunction> (VQTrip[itmp],&big,true);
             }//triplet
           }//receiver
 #ifndef SERIAL
@@ -2013,14 +2012,14 @@ namespace SpinAdapted{
             boost::shared_ptr<Wavefunction> sigma;
             if (iquanta==0){
               //singlet functions
-              sigma=make_shared<Wavefunction> (VQSing[0],&big,true);
+              sigma=boost::make_shared<Wavefunction> (VQSing[0],&big,true);
               //calculate the action of the Hamiltonian on V(tu)
               big.multiplyH_Q(*v,sigma.get(),MAX_THRD,VQSing[0]);
             }
             else{
               //triplet functions
               int itmp = iquanta-1;
-              sigma=make_shared<Wavefunction> (VQTrip[itmp],&big,true);
+              sigma=boost::make_shared<Wavefunction> (VQTrip[itmp],&big,true);
               //calculate the action of the Hamiltonian on V(tu)
               big.multiplyH_Q(*v,sigma.get(),MAX_THRD,VQTrip[itmp]);
             }

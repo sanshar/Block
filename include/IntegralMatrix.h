@@ -54,9 +54,9 @@ class OneElectronArray
     bool rhf;
     bool bin; //if the file is binary
     vector<double> Occnum;
-  OneElectronArray() : dim(0), rhf(false), bin(false), dummyZero(0.0)
+  OneElectronArray() : dim(0), dummyZero(0.0), rhf(false), bin(false)
     {}
-  OneElectronArray(int n, bool rhf_=false, bool bin_=false): rhf(rhf_), bin(bin_), dummyZero(0.0)
+  OneElectronArray(int n, bool rhf_=false, bool bin_=false):dummyZero(0.0), rhf(rhf_), bin(bin_)
     {
       ReSize(n);
     }

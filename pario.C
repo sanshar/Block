@@ -2,7 +2,7 @@
 #include <iostream>
 #include "pario.h"
 
-#ifdef MOLPRO
+#ifdef MOLPRO_I8
 #include "global/CxOutputStream.h"
 blockout Bout(&xout);
 blockerr Berr(&xerr);

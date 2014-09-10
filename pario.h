@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 
-#ifdef MOLPRO
+#ifdef MOLPRO_I8
 #include "global/CxOutputStream.h"
 #endif
 
@@ -18,7 +18,7 @@ class blockout {
    public:
       std::ostream *outstream;
       char* output;
-      blockout(std::ostream *outstream_ = &std::cout, char* output_=0): output(output_),outstream(outstream_)
+      blockout(std::ostream *outstream_ = &std::cout, char* output_=0): outstream(outstream_),output(output_)
       {
        if(output!=0) {
         std::ofstream file(output);
@@ -31,7 +31,7 @@ class blockerr {
    public:
       std::ostream *errstream;
       char* output;
-      blockerr(std::ostream *errstream_ = &std::cerr, char* output_=0): output(output_),errstream(errstream_)
+      blockerr(std::ostream *errstream_ = &std::cerr, char* output_=0):errstream(errstream_), output(output_)
       {
        if(output!=0) {
         std::ofstream file(output);

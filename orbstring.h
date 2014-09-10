@@ -21,9 +21,9 @@ namespace SpinAdapted{
 class Orbstring
 {
 private:
+  std::vector<bool> occ_rep;
   int sign;
   bool empty;
-  std::vector<bool> occ_rep;
 
 public:
   static void init (const int o);

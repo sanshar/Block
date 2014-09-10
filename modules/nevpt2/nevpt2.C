@@ -17,7 +17,6 @@
 #include <boost/mpi.hpp>
 #endif
 
-
 #define _NEV_ZERO 1e-14
 
 namespace SpinAdapted{
@@ -3115,7 +3114,7 @@ namespace SpinAdapted{
             Vi = T[iquanta].GetOpFromBuffer(dummy,i,EndOfArray);
           }//sender
           else {
-            Vi = make_shared<Wavefunction>(VQ[iquanta],&big,true);
+            Vi = boost::make_shared<Wavefunction>(VQ[iquanta],&big,true);
           }//receiver
 #ifndef SERIAL
           mpi::communicator world;
@@ -3223,7 +3222,7 @@ namespace SpinAdapted{
             Va = T[iquanta].GetOpFromBuffer(dummy,a,EndOfArray);
           }//sender
           else {
-            Va = make_shared<Wavefunction>(VQ[iquanta],&big,true);
+            Va = boost::make_shared<Wavefunction>(VQ[iquanta],&big,true);
           }//receiver
 #ifndef SERIAL
           mpi::communicator world;

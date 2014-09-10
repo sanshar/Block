@@ -9,7 +9,6 @@
 #include <boost/mpi.hpp>
 #endif
 
-
 namespace SpinAdapted{
   
     //============================================================================
@@ -18,7 +17,7 @@ namespace SpinAdapted{
   void AddPalWavefunction(Wavefunction &WF){
 #ifndef SERIAL
     //copy the original wavefunction to the receive buffer
-    boost::shared_ptr<Wavefunction> tmp_recv = make_shared<Wavefunction>(WF);
+    boost::shared_ptr<Wavefunction> tmp_recv = boost::make_shared<Wavefunction>(WF);
     boost::shared_ptr<Wavefunction> tmp_send;
     
     //the communicator
@@ -46,7 +45,7 @@ namespace SpinAdapted{
     //start the loop over steps in the circle
     for (int istep=0;istep<WorldSize-1;istep++){
       //copy the receive buffer into the send buffer
-      tmp_send = make_shared<Wavefunction> (*tmp_recv);
+      tmp_send = boost::make_shared<Wavefunction> (*tmp_recv);
       //send and receive the data
       mpi::request reqs[2];
       reqs[0] = world.isend(next,rank,tmp_send);
@@ -74,13 +73,13 @@ namespace SpinAdapted{
     //copy the original Wavefunctions to the receive vector
     vector<boost::shared_ptr<Wavefunction> >tmp_recv;
     vector<boost::shared_ptr<Wavefunction> >tmp_send;
-    tmp_recv.push_back(make_shared<Wavefunction> (*VSing));
-    tmp_recv.push_back(make_shared<Wavefunction> (*SigmaSing));
+    tmp_recv.push_back(boost::make_shared<Wavefunction> (*VSing));
+    tmp_recv.push_back(boost::make_shared<Wavefunction> (*SigmaSing));
     for (int i=0;i<VTrip.size();i++){
-      tmp_recv.push_back(make_shared<Wavefunction> (*VTrip[i]));
+      tmp_recv.push_back(boost::make_shared<Wavefunction> (*VTrip[i]));
     }
     for (int i=0;i<SigmaTrip.size();i++){
-      tmp_recv.push_back(make_shared<Wavefunction> (*SigmaTrip[i]));
+      tmp_recv.push_back(boost::make_shared<Wavefunction> (*SigmaTrip[i]));
     }
     
     //the communicator
@@ -100,7 +99,7 @@ namespace SpinAdapted{
       tmp_send.clear();
       //copy the receive buffer into the send buffer
       for (int i=0;i<tmp_recv.size();i++){
-        tmp_send.push_back(make_shared<Wavefunction> (*tmp_recv[i]));
+        tmp_send.push_back(boost::make_shared<Wavefunction> (*tmp_recv[i]));
       }
       
       //clear the recv buffer
@@ -157,13 +156,13 @@ namespace SpinAdapted{
       vector<vector<boost::shared_ptr<Wavefunction> > >tmp_send;
       tmp_recv.resize(batchsize);
       for (int b=0;b<batchsize;b++){
-        tmp_recv[b].push_back(make_shared<Wavefunction>(*VSing[b]));
-        tmp_recv[b].push_back(make_shared<Wavefunction> (*SigmaSing[b]));
+        tmp_recv[b].push_back(boost::make_shared<Wavefunction>(*VSing[b]));
+        tmp_recv[b].push_back(boost::make_shared<Wavefunction> (*SigmaSing[b]));
         for (int i=0;i<VTrip[b].size();i++){
-          tmp_recv[b].push_back(make_shared<Wavefunction> (*VTrip[b][i]));
+          tmp_recv[b].push_back(boost::make_shared<Wavefunction> (*VTrip[b][i]));
         }
         for (int i=0;i<SigmaTrip[b].size();i++){
-          tmp_recv[b].push_back(make_shared<Wavefunction> (*SigmaTrip[b][i]));
+          tmp_recv[b].push_back(boost::make_shared<Wavefunction> (*SigmaTrip[b][i]));
         }
       }//b
 
@@ -188,7 +187,7 @@ namespace SpinAdapted{
         tmp_send.resize(batchsize);
         for (int b=0;b<batchsize;b++){
           for (int i=0;i<tmp_recv[b].size();i++){
-            tmp_send[b].push_back(make_shared<Wavefunction> (*tmp_recv[b][i]));
+            tmp_send[b].push_back(boost::make_shared<Wavefunction> (*tmp_recv[b][i]));
           }
         }
 

@@ -12,7 +12,6 @@
 #include "nevpt2_operators.h"
 #include <boost/serialization/serialization.hpp>
 
-
 namespace SpinAdapted{
   //============================================================================
   // Add all contributions from different processes to a wavefunction
@@ -102,10 +101,10 @@ namespace SpinAdapted{
       Packet(const Packet &P){
           clear();
           for (int i=0;i<P.SizeWF();i++){
-              WF.push_back(make_shared<Wavefunction>(*(P.GetWF(i))));
+              WF.push_back(boost::make_shared<Wavefunction>(*(P.GetWF(i))));
           }
           for (int i=0;i<P.SizeM();i++){
-              M.push_back(make_shared<Matrix>(*(P.GetM(i))));
+              M.push_back(boost::make_shared<Matrix>(*(P.GetM(i))));
           }
           Dummy = P.dummy();
           t = P.get_t();
@@ -116,12 +115,12 @@ namespace SpinAdapted{
              const Matrix &m1, const Matrix &m2, const Matrix &m3,
              const int &T, const int &U, const int V, bool d){
           clear();
-          WF.push_back(make_shared<Wavefunction>(wf1));
-          WF.push_back(make_shared<Wavefunction>(wf2));
-          WF.push_back(make_shared<Wavefunction>(wf3));
-          M.push_back(make_shared<Matrix>(m1));
-          M.push_back(make_shared<Matrix>(m2));
-          M.push_back(make_shared<Matrix>(m3));
+          WF.push_back(boost::make_shared<Wavefunction>(wf1));
+          WF.push_back(boost::make_shared<Wavefunction>(wf2));
+          WF.push_back(boost::make_shared<Wavefunction>(wf3));
+          M.push_back(boost::make_shared<Matrix>(m1));
+          M.push_back(boost::make_shared<Matrix>(m2));
+          M.push_back(boost::make_shared<Matrix>(m3));
           t = T;
           u = U;
           v = V;
@@ -131,12 +130,12 @@ namespace SpinAdapted{
              const Wavefunction &wf4, const Matrix &m1, const Matrix &m2,
              const int &U, const int V, bool d){
           clear();
-          WF.push_back(make_shared<Wavefunction>(wf1));
-          WF.push_back(make_shared<Wavefunction>(wf2));
-          WF.push_back(make_shared<Wavefunction>(wf3));
-          WF.push_back(make_shared<Wavefunction>(wf4));
-          M.push_back(make_shared<Matrix>(m1));
-          M.push_back(make_shared<Matrix>(m2));
+          WF.push_back(boost::make_shared<Wavefunction>(wf1));
+          WF.push_back(boost::make_shared<Wavefunction>(wf2));
+          WF.push_back(boost::make_shared<Wavefunction>(wf3));
+          WF.push_back(boost::make_shared<Wavefunction>(wf4));
+          M.push_back(boost::make_shared<Matrix>(m1));
+          M.push_back(boost::make_shared<Matrix>(m2));
           u = U;
           v = V;
           Dummy = d;
@@ -145,9 +144,9 @@ namespace SpinAdapted{
              const Matrix &m1,
              const int &V, bool d){
           clear();
-          WF.push_back(make_shared<Wavefunction>(wf1));
-          WF.push_back(make_shared<Wavefunction>(wf2));
-          M.push_back(make_shared<Matrix>(m1));
+          WF.push_back(boost::make_shared<Wavefunction>(wf1));
+          WF.push_back(boost::make_shared<Wavefunction>(wf2));
+          M.push_back(boost::make_shared<Matrix>(m1));
           v = V;
           Dummy = d;
       }
@@ -155,10 +154,10 @@ namespace SpinAdapted{
              const Matrix &m1, const Matrix &m2,
              const int &T, const int &U, bool d){
           clear();
-          WF.push_back(make_shared<Wavefunction>(wf1));
-          WF.push_back(make_shared<Wavefunction>(wf2));
-          M.push_back(make_shared<Matrix>(m1));
-          M.push_back(make_shared<Matrix>(m2));
+          WF.push_back(boost::make_shared<Wavefunction>(wf1));
+          WF.push_back(boost::make_shared<Wavefunction>(wf2));
+          M.push_back(boost::make_shared<Matrix>(m1));
+          M.push_back(boost::make_shared<Matrix>(m2));
           t = T;
           u = U;
           Dummy = d;
@@ -167,8 +166,8 @@ namespace SpinAdapted{
              const Matrix &m1,
              const int &T, bool d){
           clear();
-          WF.push_back(make_shared<Wavefunction>(wf1));
-          M.push_back(make_shared<Matrix>(m1));
+          WF.push_back(boost::make_shared<Wavefunction>(wf1));
+          M.push_back(boost::make_shared<Matrix>(m1));
           t = T;
           Dummy = d;
       }
@@ -197,10 +196,10 @@ namespace SpinAdapted{
       void operator=(const Packet &P){
           clear();
           for (int i=0;i<P.SizeWF();i++){
-              WF.push_back(make_shared<Wavefunction>(*(P.GetWF(i))));
+              WF.push_back(boost::make_shared<Wavefunction>(*(P.GetWF(i))));
           }
           for (int i=0;i<P.SizeM();i++){
-              M.push_back(make_shared<Matrix>(*(P.GetM(i))));
+              M.push_back(boost::make_shared<Matrix>(*(P.GetM(i))));
           }
           Dummy = P.dummy();
           t = P.get_t();

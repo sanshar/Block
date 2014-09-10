@@ -1039,7 +1039,7 @@ SpinAdapted::Input::Input(const string& config_name) {
     //add twodot_toonedot(bla bla bla)
     pout << "Summary of input"<<endl;
     pout << "----------------"<<endl;
-#ifndef MOLPRO
+#ifndef MOLPRO_I8
     writeSummary();
 #else
     writeSummaryForMolpro();
@@ -1695,7 +1695,7 @@ std::vector<int> SpinAdapted::Input::getgaorder(ifstream& gaconfFile, string& or
    return genetic::gaordering(gaconfFile, dumpFile, fiedlerorder).Gen().Sequence();
 }
 
-#ifdef MOLPRO
+#ifdef MOLPRO_I8
 void SpinAdapted::Input::writeSummaryForMolpro()
 {
    pout << setw(50) << "Total number of orbitals : "  ;

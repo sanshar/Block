@@ -5,11 +5,19 @@
 #include <limits>
 #include <iterator>
 #include <boost/spirit/include/qi.hpp>
+#ifndef BOOST_1_56_0
 #include <boost/spirit/home/phoenix/container.hpp>
 #include <boost/spirit/home/phoenix/operator.hpp>
 #include <boost/spirit/home/phoenix/object/construct.hpp>
 #include <boost/spirit/home/phoenix/function/function.hpp>
 #include <boost/spirit/home/phoenix/bind/bind_function.hpp>
+#else
+#include <boost/phoenix/stl/container.hpp>
+#include <boost/phoenix/operator.hpp>
+#include <boost/phoenix/object/construct.hpp>
+#include <boost/phoenix/function/function.hpp>
+#include <boost/phoenix/bind/bind_function.hpp>
+#endif
 //FIXME
 #include "npdm_tensor_operator.h"
 //#include "tensor_operator.h"

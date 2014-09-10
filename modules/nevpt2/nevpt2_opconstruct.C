@@ -1044,7 +1044,7 @@ namespace SpinAdapted{
       else{
         //if this is a dummy iteration, generate an empty dummy operator
         NeedTensorTrace=false;
-        Otuv = make_shared<Cre> ();
+        Otuv = boost::make_shared<Cre> ();
         Otuv->set_initialised() = true;
         Otuv->resize_deltaQuantum(1);
         Otuv->set_deltaQuantum(0) = SpinQuantum(1,SpinSpace(1),IrrepSpace(0));
@@ -1144,7 +1144,7 @@ namespace SpinAdapted{
       else{
         //if this is a dummy iteration, generate an empty dummy operator
         NeedTensorTrace=false;
-        Otuv = make_shared<Cre> ();
+        Otuv = boost::make_shared<Cre> ();
         Otuv->set_initialised() = true;
         Otuv->resize_deltaQuantum(1);
         Otuv->set_deltaQuantum(0) = SpinQuantum(1,SpinSpace(1),IrrepSpace(0));
@@ -1271,8 +1271,8 @@ namespace SpinAdapted{
       }
       else{
         //if this is a dummy iteration generate dummy operators
-        LeftOpSing = make_shared<Cre>();
-        LeftOpTrip = make_shared<Cre>();
+        LeftOpSing = boost::make_shared<Cre>();
+        LeftOpTrip = boost::make_shared<Cre>();
         LeftOpSing->set_orbs().push_back(-1);
         LeftOpSing->set_orbs().push_back(-1);
         LeftOpTrip->set_orbs().push_back(-1);
@@ -1378,8 +1378,8 @@ namespace SpinAdapted{
         }
         else{
           //if this is a dummy iteration generate dummy operators
-          RightOpSing = make_shared<Cre>();
-          RightOpTrip = make_shared<Cre>();
+          RightOpSing = boost::make_shared<Cre>();
+          RightOpTrip = boost::make_shared<Cre>();
           RightOpSing->set_orbs().push_back(-1);
           RightOpSing->set_orbs().push_back(-1);
           RightOpTrip->set_orbs().push_back(-1);
@@ -1499,8 +1499,8 @@ namespace SpinAdapted{
       }
       else{
         //if this is a dummy iteration generate dummy operators
-        LeftOpSing = make_shared<Cre>();
-        LeftOpTrip = make_shared<Cre>();
+        LeftOpSing = boost::make_shared<Cre>();
+        LeftOpTrip = boost::make_shared<Cre>();
         LeftOpSing->set_orbs().push_back(-1);
         LeftOpSing->set_orbs().push_back(-1);
         LeftOpTrip->set_orbs().push_back(-1);
@@ -1636,8 +1636,8 @@ namespace SpinAdapted{
         }
         else{
           //if this is a dummy iteration generate dummy operators
-          RightOpSing = make_shared<Cre>();
-          RightOpTrip = make_shared<Cre>();
+          RightOpSing = boost::make_shared<Cre>();
+          RightOpTrip = boost::make_shared<Cre>();
           RightOpSing->set_orbs().push_back(-1);
           RightOpSing->set_orbs().push_back(-1);
           RightOpTrip->set_orbs().push_back(-1);
@@ -2583,8 +2583,8 @@ namespace SpinAdapted{
       }
       else{
         //if this is a dummy iteration generate dummy oeprators
-        LeftOpSing = make_shared<Cre>();
-        LeftOpTrip = make_shared<Cre>();
+        LeftOpSing = boost::make_shared<Cre>();
+        LeftOpTrip = boost::make_shared<Cre>();
         LeftOpSing->set_orbs().push_back(-1);
         LeftOpSing->set_orbs().push_back(-1);
         LeftOpTrip->set_orbs().push_back(-1);
@@ -2695,8 +2695,8 @@ namespace SpinAdapted{
         }//regular iteration
         else{
           //if this is a dummy iteration generate dummy oeprators
-          RightOpSing = make_shared<Cre>();
-          RightOpTrip = make_shared<Cre>();
+          RightOpSing = boost::make_shared<Cre>();
+          RightOpTrip = boost::make_shared<Cre>();
           RightOpSing->set_orbs().push_back(-1);
           RightOpSing->set_orbs().push_back(-1);
           RightOpTrip->set_orbs().push_back(-1);
@@ -2818,8 +2818,8 @@ namespace SpinAdapted{
       }//regular iteration
       else{
         //if this is a dummy iteration generate dummy oeprators
-        LeftOpSing = make_shared<Cre>();
-        LeftOpTrip = make_shared<Cre>();
+        LeftOpSing = boost::make_shared<Cre>();
+        LeftOpTrip = boost::make_shared<Cre>();
         LeftOpSing->set_orbs().push_back(-1);
         LeftOpSing->set_orbs().push_back(-1);
         LeftOpTrip->set_orbs().push_back(-1);
@@ -2966,8 +2966,8 @@ namespace SpinAdapted{
         }//regular iteration
         else{
           //if this is a dummy iteration generate dummy oeprators
-          RightOpSing = make_shared<Cre>();
-          RightOpTrip = make_shared<Cre>();
+          RightOpSing = boost::make_shared<Cre>();
+          RightOpTrip = boost::make_shared<Cre>();
           RightOpSing->set_orbs().push_back(-1);
           RightOpSing->set_orbs().push_back(-1);
           RightOpTrip->set_orbs().push_back(-1);
@@ -3417,7 +3417,7 @@ namespace SpinAdapted{
       else{
         //if this is a dummy iteration, generate an empty dummy operator
         NeedTensorTrace=false;
-        Otuv = make_shared<Cre> ();
+        Otuv = boost::make_shared<Cre> ();
         Otuv->set_initialised() = true;
         Otuv->resize_deltaQuantum(1);
         Otuv->set_deltaQuantum(0) = SpinQuantum(-1,SpinSpace(1),IrrepSpace(0));
@@ -3513,7 +3513,7 @@ namespace SpinAdapted{
       else{
         //if this is a dummy iteration, generate an empty dummy operator
         NeedTensorTrace=false;
-        Otuv = make_shared<Cre> ();
+        Otuv = boost::make_shared<Cre> ();
         Otuv->set_initialised() = true;
         Otuv->resize_deltaQuantum(1);
         Otuv->set_deltaQuantum(0) = SpinQuantum(-1,SpinSpace(1),IrrepSpace(0));
