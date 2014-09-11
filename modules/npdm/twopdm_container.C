@@ -205,14 +205,18 @@ void Twopdm_container::accumulate_spatial_npdm()
 
 void Twopdm_container::update_full_spin_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
 {
+  const std::vector<int>& ro = dmrginp.reorder_vector();  
   for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
     double val = it->second;
     if ( abs(val) < NUMERICAL_ZERO ) continue;
-    int i = (it->first)[0];
-    int j = (it->first)[1];
-    int k = (it->first)[2];
-    int l = (it->first)[3];
-
+    int i0 = (it->first)[0];
+    int j0 = (it->first)[1];
+    int k0 = (it->first)[2];
+    int l0 = (it->first)[3];
+    int i = ro.at(i0/2)*2+i0%2;
+    int j = ro.at(j0/2)*2+j0%2;
+    int k = ro.at(k0/2)*2+k0%2;
+    int l = ro.at(l0/2)*2+l0%2;
     //if ( abs(val) > 1e-8 ) pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
     //pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
 
@@ -239,7 +243,7 @@ void Twopdm_container::calculate_spatial_npdm()
       for(int l=0;l<spatial_twopdm.dim2();++l)
         for(int m=0;m<spatial_twopdm.dim3();++m)
           for(int n=0;n<spatial_twopdm.dim4();++n)
-            spatial_twopdm(ro.at(k),ro.at(l),ro.at(m),ro.at(n))= factor*(twopdm(2*k,2*l,2*m,2*n)+ twopdm(2*k+1,2*l,2*m,2*n+1)+ twopdm(2*k,2*l+1,2*m+1,2*n)+ twopdm(2*k+1,2*l+1,2*m+1,2*n+1));
+            spatial_twopdm(k,l,m,n)= factor*(twopdm(2*k,2*l,2*m,2*n)+ twopdm(2*k+1,2*l,2*m,2*n+1)+ twopdm(2*k,2*l+1,2*m+1,2*n)+ twopdm(2*k+1,2*l+1,2*m+1,2*n+1));
 
   }
 }
@@ -287,7 +291,7 @@ void Twopdm_container::store_npdm_elements( const std::vector< std::pair< std::v
   //FIXME add options to dump to disk if memory becomes bottleneck
   if ( ! store_nonredundant_spin_elements_ ) nonredundant_elements.clear();
   if ( store_full_spin_array_ || !dmrginp.spinAdapted()) update_full_spin_array( spin_batch );
-  if ( store_full_spatial_array_ && dmrginp.spinAdapted()) update_full_spatial_array( spin_batch );
+  else update_full_spatial_array( spin_batch );
 }
 
 //===========================================================================================================================================================
