@@ -154,9 +154,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
 
   int sweepPos = sweepParams.get_block_iter();
   int endPos = sweepParams.get_n_iters()-1;
-
   npdm_driver.compute_npdm_elements(solution, big, sweepPos, endPos);
-
   SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
   solution[0].SaveWavefunctionInfo (big.get_braStateInfo(), big.get_leftBlock()->get_sites(), state);
 
@@ -365,11 +363,11 @@ void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
   // Initialize npdm_driver
   boost::shared_ptr<Npdm_driver_base> npdm_driver;
   //if ( (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) && dmrginp.spinAdapted() ) {
-  if ( (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) ) {
+  if ( (dmrginp.hamiltonian() == QUANTUM_CHEMISTRY) || (dmrginp.hamiltonian() == BCS)) {
     //By default, new_npdm_code is false.
     //For npdm_order 1 or 2. new_npdm_code is determined by default or manual setting.
     //For the other situation, only old or new code is suitable.
-    if(npdm_order == 3 || npdm_order == 4 || npdm_order ==0  ||  transitionpdm == true  || dmrginp.spinAdapted() == false || dmrginp.setStateSpecific())
+    if(npdm_order == -1 || npdm_order == 3 || npdm_order == 4 || npdm_order ==0  ||  transitionpdm == true  || dmrginp.spinAdapted() == false || dmrginp.setStateSpecific())
       dmrginp.new_npdm_code() = true;
 
     if(dmrginp.new_npdm_code()){
@@ -378,6 +376,7 @@ void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
     else if (npdm_order == 3) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Threepdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == 4) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Fourpdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == 0) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Nevpt2_npdm_driver( dmrginp.last_site() ) );
+    else if (npdm_order == -1) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Pairpdm_driver( dmrginp.last_site() ) );
     else abort();
     }
   }

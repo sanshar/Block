@@ -160,13 +160,14 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
   // General case
   //---------------
   int lhs, rhs, dot, dotmax;
-  for (lhs = pdm_order_; lhs >= 0; lhs--) {
-    dotmax = 2*pdm_order_ - lhs;
+  for (lhs = abs(pdm_order_); lhs >= 0; lhs--) {
+    dotmax = 2*abs(pdm_order_) - lhs;
     for (dot = dotmax; dot >= 1; dot--) {
       // Can have no more than 4 on the dot block
       if (dot > 4) continue;
-      rhs = 2*pdm_order_ - dot - lhs;
-      if ( rhs < pdm_order_ ) {
+      rhs = 2*abs(pdm_order_) - dot - lhs;
+      if ( rhs < abs(pdm_order_) ) {
+        //pout << lhs << " " << dot << " " << rhs << endl;
         lhs_dot_rhs_types_.insert( std::make_tuple(lhs,dot,rhs) );
       }
     }
@@ -175,8 +176,8 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
   //---------------
   // Edge cases 
   //---------------
-  // 1PDM
-  if (pdm_order_ == 1) {
+  // 1PDM and pair matrix
+  if (abs(pdm_order_) == 1) {
     if ( sweep_pos == 0 ) {
       lhs_dot_rhs_types_.insert( std::make_tuple(2,0,0) );
     }
@@ -263,30 +264,30 @@ void Npdm_patterns::add_operator( int cre_ops1, int des_ops1, std::vector<CD> cd
   if (cre_ops1 > 0) {
     cre_ops1--;
     cd_type1.push_back( CREATION );
-    if ( cd_type1.size() < 2*pdm_order_ ) add_operator( cre_ops1, des_ops1, cd_type1 ) ;
+    if ( cd_type1.size() < 2*abs(pdm_order_) ) add_operator( cre_ops1, des_ops1, cd_type1 ) ;
   }
 
   // Add destruction operator as second tree branch
   if (des_ops2 > 0) {
     des_ops2--;
     cd_type2.push_back( DESTRUCTION );
-    if ( cd_type2.size() < 2*pdm_order_ ) add_operator( cre_ops2, des_ops2, cd_type2 );
+    if ( cd_type2.size() < 2*abs(pdm_order_) ) add_operator( cre_ops2, des_ops2, cd_type2 );
   }
 
   // Add only leaves of tree to final possiblities
-  if ( cd_type1.size() == 2*pdm_order_ ){
-  cre_des_types_.insert( cd_type1 );
-//  pout << " cre_des_types1 \n";
-//  for(int i=0; i < cd_type1.size();i++)
-//    pout <<cd_type1[i];
-//  pout <<endl;
+  if ( cd_type1.size() == 2*abs(pdm_order_) ){
+    cre_des_types_.insert( cd_type1 );
+  //pout << " cre_des_types1 \n";
+  //for(int i=0; i < cd_type1.size();i++)
+  //  pout <<cd_type1[i];
+  //pout <<endl;
   }
-  if ( cd_type2.size() == 2*pdm_order_ ){
+  if ( cd_type2.size() == 2*abs(pdm_order_) ){
   cre_des_types_.insert( cd_type2 );
-//  pout << " cre_des_types2 \n";
-//  for(int i=0; i < cd_type2.size();i++)
-//    pout <<cd_type2[i];
-//  pout <<endl;
+  //pout << " cre_des_types2 \n";
+  //for(int i=0; i < cd_type2.size();i++)
+  //  pout <<cd_type2[i];
+  //pout <<endl;
 
   }
 
@@ -304,13 +305,16 @@ void Npdm_patterns::build_cre_des_types()
 //  std::vector<CD> des_tank(pdm_order_, DESTRUCTION);
 
   // Build up tree of valid creation-destruction strings by recursion
-  if(dmrginp.doimplicitTranspose()){
-
-    cd_type.push_back( CREATION );
-    add_operator( pdm_order_-1, pdm_order_, cd_type );
-  }
-  else{
-    add_operator(pdm_order_,pdm_order_, cd_type);
+  if (pdm_order_ == -1) {
+    add_operator(0, 2, cd_type);
+  } else {
+    if(dmrginp.doimplicitTranspose()){
+      cd_type.push_back( CREATION );
+      add_operator( pdm_order_-1, pdm_order_, cd_type );
+    }
+    else{
+      add_operator(pdm_order_,pdm_order_, cd_type);
+    }
   }
 
   // Print out
@@ -430,11 +434,17 @@ bool Npdm_patterns::is_valid_ldr_type( std::map< char, std::vector<CD> > & cd_pa
 
   // Split into creation and destruction halves
   std::vector<int> cvec, dvec;
-  for (auto it = opstring.begin(); it != opstring.begin() + pdm_order_; it++) {
-    cvec.push_back( it->second );
-  }
-  for (auto it = opstring.begin() + pdm_order_; it != opstring.end(); it++ ) {
-    dvec.push_back( it->second );
+  if (pdm_order_ == -1) {
+    for (auto it = opstring.begin() + 2; it != opstring.end(); it++ ) {
+      dvec.push_back( it->second );
+    }
+  } else {
+    for (auto it = opstring.begin(); it != opstring.begin() + pdm_order_; it++) {
+      cvec.push_back( it->second );
+    }
+    for (auto it = opstring.begin() + pdm_order_; it != opstring.end(); it++ ) {
+      dvec.push_back( it->second );
+    }
   }
 
   // Test if dvec >= cvec in sense of irreducible operator string generation (triangular loop)
@@ -463,7 +473,6 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
     int idot = std::get<1>(*ldr_iter);
     int irhs = std::get<2>(*ldr_iter);
     //pout << ilhs << "," << idot << "," << irhs << "\n";
-
     // Loop over creation-destruction patterns
     for (auto cd_iter = cre_des_types_.begin(); cd_iter != cre_des_types_.end(); cd_iter++) {
 

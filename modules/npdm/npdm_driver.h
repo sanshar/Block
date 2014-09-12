@@ -7,6 +7,7 @@
 #include "twopdm_container.h"
 #include "threepdm_container.h"
 #include "fourpdm_container.h"
+#include "pairpdm_container.h"
 
 namespace SpinAdapted{
 namespace Npdm{
@@ -114,6 +115,18 @@ class Fourpdm_driver : public Npdm_driver_base {
 };
 
 //===========================================================================================================================================================
+
+class Pairpdm_driver : public Npdm_driver_base {
+  public:
+    explicit Pairpdm_driver( int sites ) : container( Pairpdm_container(sites) ), driver( Npdm_driver(-1, container) ) {}
+    void clear() { driver.clear(); }
+    void save_data( const int i, const int j ) { driver.save_data(i,j); }
+    void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos ) 
+      { driver.compute_npdm_elements(wavefunctions, big, sweepPos, endPos ); }
+  private:
+    Pairpdm_container container;
+    Npdm_driver driver;
+};
 
 }
 }

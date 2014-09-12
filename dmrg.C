@@ -260,6 +260,9 @@ int calldmrg(char* input, char* output)
     break;
   case (ONEPDM):
     Npdm::npdm(1);
+    if (dmrginp.hamiltonian() == BCS) {
+      Npdm::npdm(-1,true);
+    }
     break;
 
   case (TWOPDM):
@@ -284,6 +287,9 @@ int calldmrg(char* input, char* output)
     
   case (RESTART_ONEPDM):
     Npdm::npdm(1,true);
+    if (dmrginp.hamiltonian() == BCS) {
+      Npdm::npdm(-1,true);
+    }
     break;
 
   case (RESTART_TWOPDM):
@@ -297,12 +303,18 @@ int calldmrg(char* input, char* output)
     break;
   case (TRANSITION_ONEPDM):
     Npdm::npdm(1,false,true);
+    if (dmrginp.hamiltonian() == BCS) {
+      Npdm::npdm(-1,true,true);      
+    }
     break;
   case (TRANSITION_TWOPDM):
     Npdm::npdm(2,false,true);
     break;
   case (RESTART_T_ONEPDM):
     Npdm::npdm(1,true,true);
+    if (dmrginp.hamiltonian() == BCS) {
+      Npdm::npdm(-1,true,true);      
+    }
     break;
   case (RESTART_T_TWOPDM):
     Npdm::npdm(2,true,true);

@@ -1539,4 +1539,24 @@ void Fourpdm_permutations::get_spin_permutations( std::vector<std::pair<std::vec
 
 //===========================================================================================================================================================
 
+void Pairpdm_permutations::get_spin_permutations( std::vector<std::pair<std::vector<int>,double> >& spin_batch, 
+                                                 const std::vector<int>& indices, const double& val )
+{
+  assert( indices.size() == 2 );
+  std::vector<int> idx;
+  int i = indices[0];
+  int j = indices[1];
+
+  idx = { i, j };
+  spin_batch.push_back( std::make_pair( idx, val ) );
+  // Transpose is same 
+  if ( i != j ) {
+    idx = { j, i };
+    spin_batch.push_back( std::make_pair( idx, -val ) );
+    // <m|a_ia_j|n>=-<m|a_ja_i|n>
+  }
+
+}
+//===========================================================================================================================================================
+
 }

@@ -58,6 +58,10 @@ class Fourpdm_permutations : public Npdm_permutations {
 
 //===========================================================================================================================================================
 
+class Pairpdm_permutations : public Npdm_permutations {
+  private:
+    void get_spin_permutations( std::vector<std::pair<std::vector<int>,double> >& spin_batch, const std::vector<int>& indices, const double& val );
+};
 }
 
 #endif

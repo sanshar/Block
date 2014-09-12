@@ -306,26 +306,21 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
     //change cd_order back to spinorbital number
     //And check whether total S_z of operator is zero
     int sz=0;
-    for(int i=0;i<cd_order.size()/2;i++){
-      if(cd_order[i]%2)
-        sz+=1;
-      else 
-        sz+=-1;
-
+    for(int i=0;i<cd_order.size();i++){
+      if (cd_order[i] < 1000) {
+        if(cd_order[i]%2) sz+=1;
+        else sz+=-1;
+      } else {
+        cd_order[i]-=1000;
+        if(cd_order[i]%2) sz+=-1;
+        else sz+=1;
+      }
     }
-    for(int i=cd_order.size()/2; i<cd_order.size() ;i++){
-      assert(cd_order[i]>=1000);
-      cd_order[i]-=1000;
-      if(cd_order[i]%2)
-        sz+=-1;
-      else
-        sz+=1;
-    }
-//    pout << "nonspinadapted spinorbital ordered: ";
-//    for( int i=0;i<cd_order.size();i++)
-//      pout << cd_order[i]<<',';
-//    pout <<endl;
-//    pout <<"sz: " <<sz<<endl;
+    //pout << "nonspinadapted spinorbital ordered: ";
+    //for( int i=0;i<cd_order.size();i++)
+    //  pout << cd_order[i]<<',';
+    //pout <<endl;
+    //pout <<"sz: " <<sz<<endl;
     if(sz!=0) return new_pdm_elements;
     double nonspinvalue;
 

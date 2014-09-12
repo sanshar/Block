@@ -170,7 +170,9 @@ void Npdm_driver::par_loop_over_block_operators( const char inner, Npdm::Npdm_ex
     if ( ilhs < lhsOps.size() ) skip_op = lhsOps.set_local_ops( ilhs );
 
     if ( skip_parallel( lhsOps, rhsOps, lhsrhsdot ) ) {
-      if ( ! skip_op ) do_inner_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps );
+      if ( ! skip_op ) {
+        do_inner_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps );
+      }
     }
     else {
       // Parallelize by broadcasting LHS ops
@@ -199,8 +201,12 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
     // This should always work out as calling in order (lhs,rhs,dot)
     if ( inner == 'r' )
       new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( outerOps, innerOps, dotOps );
-    else if ( inner == 'l' )
+    else if ( inner == 'l' ) {
       new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( innerOps, outerOps, dotOps );
+      //for (int i = 0; i < new_spin_orbital_elements.size(); ++i) {
+      //  pout << new_spin_orbital_elements[i].first[0] << " " << new_spin_orbital_elements[i].first[1] << " " << new_spin_orbital_elements[i].second << endl;
+      //}
+    }
     else
       abort();
 
@@ -251,13 +257,13 @@ void Npdm_driver::loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Np
     pout.flush();
     world.barrier();
 #endif
-    //pout << "-------------------------------------------------------------------------------------------\n";
-    //pout << "Doing pattern " << count << " of " << patterns.size() << endl;
-    //patterns.print_cd_string( pattern->at('l') );
-    //patterns.print_cd_string( pattern->at('d') );
-    //patterns.print_cd_string( pattern->at('r') );
-    //pout << std::endl; 
-    //pout.flush();
+//    pout << "-------------------------------------------------------------------------------------------\n";
+//    pout << "Doing pattern " << count << " of " << patterns.size() << endl;
+//    patterns.print_cd_string( pattern->at('l') );
+//    patterns.print_cd_string( pattern->at('d') );
+//    patterns.print_cd_string( pattern->at('r') );
+//    pout << std::endl; 
+//    pout.flush();
 
     // Choice of read from disk or not done inside the wrapper
     std::vector<Npdm::CD> lhs_cd_type = pattern->at('l');
@@ -306,9 +312,9 @@ void Npdm_driver::loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Np
       if ( broadcast_lhs( lhsOps->size(), rhsOps->size() ) ) {
 //pout << "broadcast lhs\n";
 //pout.flush();
-        par_loop_over_block_operators( 'r', expectations, *lhsOps, *rhsOps, *dotOps, lhs_or_rhs_dot );
-      }
-      else {
+      par_loop_over_block_operators( 'r', expectations, *lhsOps, *rhsOps, *dotOps, lhs_or_rhs_dot );
+    }
+    else {
 //pout << "broadcast rhs\n";
 //pout.flush();
         par_loop_over_block_operators( 'l', expectations, *rhsOps, *lhsOps, *dotOps, lhs_or_rhs_dot );
@@ -340,7 +346,6 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
 
   // Loop over NPDM operator patterns
   Npdm_patterns npdm_patterns( npdm_order_, sweepPos, endPos );
-
   if(wavefunctions.size()==2){
     Npdm_expectations npdm_expectations( spin_adaptation_, npdm_patterns, npdm_order_, wavefunctions.at(0), wavefunctions.at(1), big );
   //    for(auto pattern=npdm_patterns.ldr_cd_begin();pattern!=npdm_patterns.ldr_cd_end();++pattern){
