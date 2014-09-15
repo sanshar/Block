@@ -343,12 +343,19 @@ namespace SpinAdapted {
       std::vector<SpinQuantum> spinvec = spin1-spin2;
       vec.resize(spinvec.size());
       for (int j=0; j<spinvec.size(); j++) {
-	vec[j]=boost::shared_ptr<DesCreComp>(new DesCreComp);
-	SparseMatrix& op = *vec[j];
-	op.set_orbs() = orbs;
-	op.set_initialised() = true;
-	op.set_fermion() = false;
-	op.set_deltaQuantum(1, spinvec[j]);
+	    vec[j]=boost::shared_ptr<DesCreComp>(new DesCreComp);
+	    SparseMatrix& op = *vec[j];
+	    op.set_orbs() = orbs;
+	    op.set_initialised() = true;
+	    op.set_fermion() = false;
+        if (dmrginp.hamiltonian() == BCS) {
+          op.resize_deltaQuantum(3);
+          op.set_deltaQuantum(0) = spinvec[j];
+          op.set_deltaQuantum(1) = SpinQuantum(-2, spinvec[j].get_s(), spinvec[j].get_symm());
+          op.set_deltaQuantum(2) = SpinQuantum(2, spinvec[j].get_s(), spinvec[j].get_symm());
+        } else {
+	      op.set_deltaQuantum(1, spinvec[j]);
+        }
       }
     }
   }
@@ -451,9 +458,14 @@ namespace SpinAdapted {
 	    op.set_orbs() = orbs;
 	    op.set_initialised() = true;
 	    op.set_fermion() = false;
-        
+        if (dmrginp.hamiltonian() == BCS) {
+          op.resize_deltaQuantum(3);          
+          op.set_deltaQuantum(0) = spinvec[j];
+          op.set_deltaQuantum(1) = SpinQuantum(0, spinvec[j].get_s(), spinvec[j].get_symm());
+          op.set_deltaQuantum(2) = SpinQuantum(-2, spinvec[j].get_s(), spinvec[j].get_symm());
+        } else {
 	      op.set_deltaQuantum(1, spinvec[j]);
-
+        }
 	  }
 	}
       
@@ -496,7 +508,6 @@ namespace SpinAdapted {
 	  op.set_orbs() = orbs;
 	  op.set_initialised() = true;
 	  op.set_fermion() = true;
-	  //op.set_deltaQuantum() = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOfSpatialOrb(orbs[0]) );
       if (dmrginp.hamiltonian() == BCS) {
         op.resize_deltaQuantum(4);
         SpinQuantum qorb = getSpinQuantum(orbs[0]);
@@ -546,8 +557,16 @@ namespace SpinAdapted {
 	  op.set_orbs() = orbs;
 	  op.set_initialised() = true;
 	  op.set_fermion() = true;
-	  //op.set_deltaQuantum() = SpinQuantum(1, SpinOf(orbs[0]), SymmetryOfSpatialOrb(orbs[0]) );      
-	  op.set_deltaQuantum(1, -getSpinQuantum(orbs[0]));//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]) );      
+      if (dmrginp.hamiltonian() == BCS) {
+        op.resize_deltaQuantum(4);
+        SpinQuantum qorb = getSpinQuantum(orbs[0]);
+        op.set_deltaQuantum(0) = -qorb;
+        op.set_deltaQuantum(1) = -SpinQuantum(3, qorb.get_s(), qorb.get_symm());
+        op.set_deltaQuantum(2) = -SpinQuantum(-1, qorb.get_s(), qorb.get_symm());
+        op.set_deltaQuantum(3) = -SpinQuantum(-3, qorb.get_s(), qorb.get_symm());
+      } else {
+	    op.set_deltaQuantum(1, -getSpinQuantum(orbs[0]));//SpinQuantum(1, 1, SymmetryOfSpatialOrb(orbs[0]) );
+      }     
 	}
     }
   
