@@ -9,47 +9,47 @@ MPICOMMAND="mpirun -np 2"
 echo "testing energy for c2_d2h..."
 cd c2_d2h
 $MPICOMMAND ../../block.spin_adapted dmrg.conf >dmrg.out
-python ../test_energy.py 2  1.0e-6 -75.4844085040 -74.9778423596
+python2.7 ../test_energy.py 2  1.0e-6 -75.4844085040 -74.9778423596
 
 echo "testing 2-pdm for c2_d2h..."
-python ../test_twopdm.py spatial_twopdm.0.0.txt spatial_twopdm.0.0.txt 1e-7
-python ../test_twopdm.py spatial_twopdm.1.1.txt spatial_twopdm.1.1.txt 1e-7
+python2.7 ../test_twopdm.py spatial_twopdm.0.0.txt spatial_twopdm.0.0.txt 1e-7
+python2.7 ../test_twopdm.py spatial_twopdm.1.1.txt spatial_twopdm.1.1.txt 1e-7
 cd ../
 
 #this just tests the lowest energy calculation. The run here uses no symmetry
 echo "performing energy test on h2o..."
 cd h2o_nosym
 $MPICOMMAND  ../../block.spin_adapted dmrg.conf >dmrg.out
-python ../test_energy.py 1  1.0e-6 -76.11460447
+python2.7 ../test_energy.py 1  1.0e-6 -76.11460447
 cd ../
 
 #test for hubbard model and also calculate the onepdm
 echo "performing reorder, 1-pdm test on hubbard..."
 cd hubbard
 $MPICOMMAND   ../../block.spin_adapted dmrg.conf >dmrg.out
-python ../test_energy.py 1  1.0e-6 -6.56819216
-python ../test_onepdm.py spatial_onepdm.0.0.txt spatial_onepdm.0.0.txt 1e-7
+python2.7 ../test_energy.py 1  1.0e-6 -6.56819216
+python2.7 ../test_onepdm.py spatial_onepdm.0.0.txt spatial_onepdm.0.0.txt 1e-7
 cd ../
 
 echo "performing nonspinadapted test on hubbard..."
 cd hubbard_nospin
 $MPICOMMAND   ../../block.spin_adapted dmrg.conf >dmrg.out
-python ../test_energy.py 1  1.0e-6 -6.56819216
-python ../test_onepdm.py spatial_onepdm.0.0.txt spatial_onepdm.0.0.txt 1e-7
+python2.7 ../test_energy.py 1  1.0e-6 -6.56819216
+python2.7 ../test_onepdm.py spatial_onepdm.0.0.txt spatial_onepdm.0.0.txt 1e-7
 cd ../
 
 echo "performing heisenberg test..."
 cd heisenberg_2d
 $MPICOMMAND   ../../block.spin_adapted dmrg.conf >dmrg.out
-python ../test_energy.py 1  1.0e-6 -11.2284830996
+python2.7 ../test_energy.py 1  1.0e-6 -11.2284830996
 cd ../
 
 echo "performing bcs test..."
 cd bcs
 $MPICOMMAND ../../block.spin_adapted dmrg.conf > dmrg.out
-python ../test_energy.py 1  1e-6 -1.4816808342
-python ../test_onepdm.py ref_onepdm.0.0 onepdm.0.0.txt 1e-7
-python ../test_onepdm.py spat_pairmat.0.0 spatial_pairmat.0.0.txt 1e-7
+python2.7 ../test_energy.py 1  1e-6 -1.4816808342
+python2.7 ../test_onepdm.py ref_onepdm.0.0 onepdm.0.0.txt 1e-7
+python2.7 ../test_onepdm.py spat_pairmat.0.0 spatial_pairmat.0.0.txt 1e-7
 cd ../
 
 #this first calculated twopdm with a small M for two lowest states (so the energy is not converged)
@@ -59,118 +59,135 @@ cd ../
 echo "testing energy, 1- and 2-pdm for c2_d2h_smallM..."
 cd c2_d2h_smallM
 $MPICOMMAND ../../block.spin_adapted dmrg.conf >dmrg.out
-python test_twopdm_withe.py 
+python2.7 test_twopdm_withe.py 
 $MPICOMMAND ../../block.spin_adapted dmrg_fullrestart.conf >dmrg.out
-python test_onepdm_withtwopdm.py 
+python2.7 test_onepdm_withtwopdm.py 
 cd ../
 
 echo "testing state specific excited states..."
 cd hubbard_stateSpecific
 $MPICOMMAND ../../block.spin_adapted dmrg.conf >dmrg.out
-python ../test_energy.py 20  1.0e-6  -2.5065432138	 -2.1684123422	 -2.1684123422	 -1.4755687956	 -1.4755687956	 -1.4142135624  -1.4142135624  -1.2897006828  -0.8284271247 -0.5180081887 -0.5180081887 -0.4079274397 -0.4079274397 0 0 0.1224001196 0.1224001196 0.5857864376 0.5857864376 0.5857864376 0.5857864376 1.0754964003
+python2.7 ../test_energy.py 20  1.0e-6  -2.5065432138	 -2.1684123422	 -2.1684123422	 -1.4755687956	 -1.4755687956	 -1.4142135624  -1.4142135624  -1.2897006828  -0.8284271247 -0.5180081887 -0.5180081887 -0.4079274397 -0.4079274397 0 0 0.1224001196 0.1224001196 0.5857864376 0.5857864376 0.5857864376 0.5857864376 1.0754964003
 $MPICOMMAND ../../block.spin_adapted dmrg_statespecific.conf >dmrg.out
-python ../test_energy.py 20  1.0e-6  -2.5065432138	 -2.1684123422	 -2.1684123422	 -1.4755687956	 -1.4755687956	 -1.4142135624  -1.4142135624  -1.2897006828  -0.8284271247 -0.5180081887 -0.5180081887 -0.4079274397 -0.4079274397 0 0 0.1224001196 0.1224001196 0.5857864376 0.5857864376 0.5857864376 0.5857864376 1.0754964003
+python2.7 ../test_energy.py 20  1.0e-6  -2.5065432138	 -2.1684123422	 -2.1684123422	 -1.4755687956	 -1.4755687956	 -1.4142135624  -1.4142135624  -1.2897006828  -0.8284271247 -0.5180081887 -0.5180081887 -0.4079274397 -0.4079274397 0 0 0.1224001196 0.1224001196 0.5857864376 0.5857864376 0.5857864376 0.5857864376 1.0754964003
 cd ../
 
 
 cd c2_dinfh
 echo "testing dinfh irrep1 state..."
 $MPICOMMAND ../../block.spin_adapted dmrg_irrep1.conf >dmrg.out
-python ../test_energy.py 2 1e-6 -75.5720477277 -75.4863972517 
+python2.7 ../test_energy.py 2 1e-6 -75.5720477277 -75.4863972517 
 
 echo "testing dinfh irrep4 state..."
 $MPICOMMAND ../../block.spin_adapted dmrg_irrep4.conf >dmrg.out
-python ../test_energy.py 2 1e-6 -75.2687246202 -75.2467228544
+python2.7 ../test_energy.py 2 1e-6 -75.2687246202 -75.2467228544
 
 echo "testing dinfh irrep5 state..."
 $MPICOMMAND ../../block.spin_adapted dmrg_irrep5.conf >dmrg.out
-python ../test_energy.py 2 1e-6 -75.4013432124  -75.2436463006
+python2.7 ../test_energy.py 2 1e-6 -75.4013432124  -75.2436463006
 cd ../
 
 cd NH5_c5v
 echo "testing C5v irrep1 state..."
 $MPICOMMAND ../../block.spin_adapted dmrg_irrep1.conf >dmrg.out
-python ../test_energy.py 2 1e-6 -56.7961231188 -56.6905104971 
+python2.7 ../test_energy.py 2 1e-6 -56.7961231188 -56.6905104971 
 
 echo "testing C5v irrep2 state..."
 $MPICOMMAND ../../block.spin_adapted dmrg_irrep2.conf >dmrg.out
-python ../test_energy.py 2 1e-6 -56.4273946835 -56.3058905887
+python2.7 ../test_energy.py 2 1e-6 -56.4273946835 -56.3058905887
 
 
 echo "testing C5v irrep3 state..."
 $MPICOMMAND ../../block.spin_adapted dmrg_irrep3.conf >dmrg.out
-python ../test_energy.py 2 1e-6 -56.7418081993 -56.6801099069
+python2.7 ../test_energy.py 2 1e-6 -56.7418081993 -56.6801099069
 
 echo "testing C5v irrep4 state..."
 $MPICOMMAND ../../block.spin_adapted dmrg_irrep4.conf >dmrg.out
-python ../test_energy.py 2 1e-6 -56.7534043147 -56.6097283628
+python2.7 ../test_energy.py 2 1e-6 -56.7534043147 -56.6097283628
 cd ../
 
 echo "testing 3pdm, 4pdm and NEVPT2 A16_matrix for h2o_small"
 cd npdm_h2o_small
 echo "testing 3pdm..."
 $MPICOMMAND ../../block.spin_adapted dmrg3.conf >dmrg3.out
-python ../test_threepdm.py spatial_threepdm.0.0.txt spat_threepdm.0.0.txt 1e-7
+python2.7 ../test_threepdm.py spatial_threepdm.0.0.txt spat_threepdm.0.0.txt 1e-7
 echo "testing 4pdm..."
 $MPICOMMAND ../../block.spin_adapted dmrg4.conf >dmrg.out
-python ../test_fourpdm.py spatial_fourpdm.0.0.txt spat_fourpdm.0.0.txt 1e-7
+python2.7 ../test_fourpdm.py spatial_fourpdm.0.0.txt spat_fourpdm.0.0.txt 1e-7
 echo "testing A16_matrix..."
 rm -f partial*bin A16_matrix*txt
 $MPICOMMAND ../../block.spin_adapted dmrgA16.conf >dmrg.out
-python ../test_threepdm.py A16_matrix.0.0.txt A16_matrix.0.0.ref 1e-7
+python2.7 ../test_threepdm.py A16_matrix.0.0.txt A16_matrix.0.0.ref 1e-7
 cd ../
 
 echo "testing 1pdm and 2pdm in non-spinAdapted calcultions"
 cd hubbard_nonspinpdm
 echo " test 1pdm..."
 $MPICOMMAND ../../block.spin_adapted dmrg_onepdm.conf >dmrg.out
-python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
+python2.7 ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
 echo " test 2pdm..."
 $MPICOMMAND ../../block.spin_adapted dmrg_twopdm.conf >dmrg.out
-python ../test_onepdm.py spatial_twopdm.0.0.txt spat_twopdm.0.0.txt 1e-7
+python2.7 ../test_onepdm.py spatial_twopdm.0.0.txt spat_twopdm.0.0.txt 1e-7
 cd ../
 
 echo "testing transition 1pdm and 2pdm for hubbard model"
 cd hubbard_transition_pdm
 echo " test transiton 1pdm..."
 $MPICOMMAND ../../block.spin_adapted dmrg_onepdm.conf >dmrg.out
-python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
-python ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
+python2.7 ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
+python2.7 ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
 echo " test transition 2pdm..."
 $MPICOMMAND ../../block.spin_adapted dmrg_twopdm.conf >dmrg.out
-python ../test_onepdm.py spatial_twopdm.0.0.txt spat_twopdm.0.0.txt 1e-7
-python ../test_onepdm.py spatial_twopdm.1.1.txt spat_twopdm.1.1.txt 1e-7
+python2.7 ../test_onepdm.py spatial_twopdm.0.0.txt spat_twopdm.0.0.txt 1e-7
+python2.7 ../test_onepdm.py spatial_twopdm.1.1.txt spat_twopdm.1.1.txt 1e-7
 cd ../
 
 echo "testing transition 1pdm for h2o"
 cd h2o_transitionpdm
 echo " test transiton 1pdm with state average..."
 $MPICOMMAND ../../block.spin_adapted dmrg_onepdm.conf >dmrg_onepdm.out
-python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
-python ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
-python ../test_transitiononepdm.py spatial_onepdm.1.0.txt spat_onepdm.1.0.txt 1e-7
+python2.7 ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-7
+python2.7 ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
+python2.7 ../test_transitiononepdm.py spatial_onepdm.1.0.txt spat_onepdm.1.0.txt 1e-7
 echo " test transiton 1pdm with state specific..."
 $MPICOMMAND ../../block.spin_adapted dmrg_onepdm.conf >dmrg_onepdm.out
 $MPICOMMAND ../../block.spin_adapted dmrg_statespecific.conf >dmrg_statespecific.out
-python ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-6
-python ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
-python ../test_transitiononepdm.py spatial_onepdm.1.0.txt spat_onepdm.1.0.txt 1e-7
+python2.7 ../test_onepdm.py spatial_onepdm.0.0.txt spat_onepdm.0.0.txt 1e-6
+python2.7 ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
+python2.7 ../test_transitiononepdm.py spatial_onepdm.1.0.txt spat_onepdm.1.0.txt 1e-7
+cd ../
+
+echo "testing transition 1pdm for bcs hamiltonian"
+cd bcs_transitionpdm/M300
+$MPICOMMAND ../../../block.spin_adapted dmrg.conf > dmrg.out
+python2.7 move.py
+cd ../M400
+$MPICOMMAND ../../../block.spin_adapted dmrg.conf > dmrg.out
+python2.7 move.py
+cd ..
+$MPICOMMAND ../../block.spin_adapted dmrg.conf > dmrg.out
+python2.7 ../test_onepdm.py onepdm.0.0.txt M300/onepdm.0.0.txt 1e-7
+python2.7 ../test_onepdm.py onepdm.1.1.txt M400/onepdm.0.0.txt 1e-7
+python2.7 ../test_onepdm.py spatial_pairmat.0.0.txt M300/spatial_pairmat.0.0.txt 1e-7
+python2.7 ../test_onepdm.py spatial_pairmat.1.1.txt M400/spatial_pairmat.0.0.txt 1e-7
+python2.7 ../test_onepdm.py onepdm.1.0.txt ref_onepdm.1.0.txt 1e-7
+python2.7 ../test_onepdm.py spatial_pairmat.1.0.txt spat_pairmat.1.0.txt 1e-7
 cd ../
 
 echo "testing NEVPT2 calculations"
 cd h2o_nevpt2/
 $MPICOMMAND ../../block.spin_adapted dmrg.conf >dmrg.out
-python ../test_nevpt2_energy.py Reference.dat 1e-6 
+python2.7 ../test_nevpt2_energy.py Reference.dat 1e-6 
 cd ../
 
 echo "testing MPSPT calculations"
 cd mpspt2
 $MPICOMMAND ../../block.spin_adapted dmrg.conf >dmrg.out
-python ../test_energy.py 1 1e-6 -94.6312677977
+python2.7 ../test_energy.py 1 1e-6 -94.6312677977
 $MPICOMMAND ../../block.spin_adapted compress.conf >compress.out
 $MPICOMMAND ../../block.spin_adapted response.conf >response.out
-python ../test_energy.py 1 5e-4 -0.1488178755
-
+python2.7 ../test_energy.py 1 5e-4 -0.1488178755
 cd ../
+
 ./clean
 
