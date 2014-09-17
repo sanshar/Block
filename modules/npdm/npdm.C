@@ -313,7 +313,7 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
+void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
 {
   double sweep_tol = 1e-7;
   sweep_tol = dmrginp.get_sweep_tol();
@@ -367,16 +367,16 @@ void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
     //By default, new_npdm_code is false.
     //For npdm_order 1 or 2. new_npdm_code is determined by default or manual setting.
     //For the other situation, only old or new code is suitable.
-    if(npdm_order == -1 || npdm_order == 3 || npdm_order == 4 || npdm_order ==0  ||  transitionpdm == true  || dmrginp.spinAdapted() == false || dmrginp.setStateSpecific())
+    if(npdm_order == NPDM_PAIRMATRIX || npdm_order == NPDM_THREEPDM || npdm_order == NPDM_FOURPDM || npdm_order == NPDM_NEVPT2 ||  transitionpdm == true  || dmrginp.spinAdapted() == false || dmrginp.setStateSpecific())
       dmrginp.new_npdm_code() = true;
 
     if(dmrginp.new_npdm_code()){
-    if      (npdm_order == 1) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Onepdm_driver( dmrginp.last_site() ) );
-    else if (npdm_order == 2) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Twopdm_driver( dmrginp.last_site() ) );
-    else if (npdm_order == 3) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Threepdm_driver( dmrginp.last_site() ) );
-    else if (npdm_order == 4) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Fourpdm_driver( dmrginp.last_site() ) );
-    else if (npdm_order == 0) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Nevpt2_npdm_driver( dmrginp.last_site() ) );
-    else if (npdm_order == -1) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Pairpdm_driver( dmrginp.last_site() ) );
+    if      (npdm_order == NPDM_ONEPDM) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Onepdm_driver( dmrginp.last_site() ) );
+    else if (npdm_order == NPDM_TWOPDM) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Twopdm_driver( dmrginp.last_site() ) );
+    else if (npdm_order == NPDM_THREEPDM) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Threepdm_driver( dmrginp.last_site() ) );
+    else if (npdm_order == NPDM_FOURPDM) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Fourpdm_driver( dmrginp.last_site() ) );
+    else if (npdm_order == NPDM_NEVPT2) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Nevpt2_npdm_driver( dmrginp.last_site() ) );
+    else if (npdm_order == NPDM_PAIRMATRIX) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Pairpdm_driver( dmrginp.last_site() ) );
     else abort();
     }
   }
@@ -439,8 +439,8 @@ void npdm( int npdm_order , bool restartpdm, bool transitionpdm)
           pout << "NPDM sweep time " << timerX.elapsedwalltime() << " " << timerX.elapsedcputime() << endl;
         } 
         else{
-          if (npdm_order == 1) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);     
-          else if (npdm_order == 2) SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
+          if (npdm_order == NPDM_ONEPDM) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);     
+          else if (npdm_order == NPDM_TWOPDM) SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
           else abort();
         }
        }

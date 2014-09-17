@@ -20,7 +20,7 @@ namespace Npdm{
 //===========================================================================================================================================================
 
 Npdm_expectations::Npdm_expectations( Npdm_spin_adaptation& spin_adaptation, Npdm_patterns& npdm_patterns, 
-                                      const int order, Wavefunction & wavefunction0, Wavefunction & wavefunction1, const SpinBlock & big )
+                                      const NpdmOrder order, Wavefunction & wavefunction0, Wavefunction & wavefunction1, const SpinBlock & big )
 : spin_adaptation_(spin_adaptation),
   npdm_patterns_(npdm_patterns),
   npdm_order_(order),
@@ -253,10 +253,10 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
   // Initialize dimension of spin-adapted to non-spin-adapted transformation
   int dim = 0;
   if(dmrginp.spinAdapted()){
-  if ( npdm_order_ == 1 ) dim = 2;
-  else if ( npdm_order_ == 2 ) dim = 6;
-  else if ( npdm_order_ == 3 ) dim = 20;
-  else if ( npdm_order_ == 4 ) dim = 70;
+  if ( npdm_order_ == NPDM_ONEPDM ) dim = 2;
+  else if ( npdm_order_ == NPDM_TWOPDM ) dim = 6;
+  else if ( npdm_order_ == NPDM_THREEPDM ) dim = 20;
+  else if ( npdm_order_ == NPDM_FOURPDM ) dim = 70;
   else abort();
   }
   else{

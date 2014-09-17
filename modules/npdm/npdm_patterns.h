@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "npdm.h"
 
 namespace SpinAdapted {
 namespace Npdm {
@@ -18,8 +19,8 @@ class Npdm_patterns
 {
 
   public:
-    Npdm_patterns() { pdm_order_=0; };
-    Npdm_patterns( int pdm_order, int sweep_pos, int end_pos );
+    Npdm_patterns() { pdm_order_=NPDM_EMPTY; };
+    Npdm_patterns( NpdmOrder pdm_order, int sweep_pos, int end_pos );
 
     const int size() { return ldr_cd_types_.size(); };
     std::set< std::map< char, std::vector<CD> > >::const_iterator ldr_cd_begin() { return ldr_cd_types_.begin(); };
@@ -40,7 +41,7 @@ class Npdm_patterns
 
     //FIXME
 //  private:
-    int pdm_order_;
+    NpdmOrder pdm_order_;
     // Operator dimensions on LHS, RHS and Dot (add up to 2*order of PDM)
     std::set< std::tuple<int,int,int> > lhs_dot_rhs_types_;
     // Creation/destruction patterns for a given operator string to map to all irreducible permutations

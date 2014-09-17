@@ -8,6 +8,7 @@
 #include "threepdm_container.h"
 #include "fourpdm_container.h"
 #include "pairpdm_container.h"
+#include "npdm.h"
 
 namespace SpinAdapted{
 namespace Npdm{
@@ -28,14 +29,14 @@ class Npdm_driver_base {
 class Npdm_driver {
 
   public:
-    explicit Npdm_driver(int order, Npdm_container& container) : npdm_order_(order), container_(container) {}
+    explicit Npdm_driver(NpdmOrder order, Npdm_container& container) : npdm_order_(order), container_(container) {}
     ~Npdm_driver() {}
    void clear() { container_.clear(); }
    void save_data( const int i, const int j ) { container_.save_npdms(i,j); }
    void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos );
 
   private:
-    int npdm_order_;
+    NpdmOrder npdm_order_;
     Npdm_container& container_;
     Npdm_spin_adaptation spin_adaptation_;
 
@@ -62,7 +63,7 @@ class Npdm_driver {
 
 class Onepdm_driver : public Npdm_driver_base {
   public:
-    explicit Onepdm_driver( int sites ) : container( Onepdm_container(sites) ), driver( Npdm_driver(1, container) ) {}
+    explicit Onepdm_driver( int sites ) : container( Onepdm_container(sites) ), driver( Npdm_driver(NPDM_ONEPDM, container) ) {}
     void clear() { driver.clear(); }
     void save_data( const int i, const int j ) { driver.save_data(i,j); }
     void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos ) 
@@ -76,7 +77,7 @@ class Onepdm_driver : public Npdm_driver_base {
 
 class Twopdm_driver : public Npdm_driver_base {
   public:
-    explicit Twopdm_driver( int sites ) : container( Twopdm_container(sites) ), driver( Npdm_driver(2, container) ) {}
+    explicit Twopdm_driver( int sites ) : container( Twopdm_container(sites) ), driver( Npdm_driver(NPDM_TWOPDM, container) ) {}
     void clear() { driver.clear(); }
     void save_data( const int i, const int j ) { driver.save_data(i,j); }
     void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos ) 
@@ -90,7 +91,7 @@ class Twopdm_driver : public Npdm_driver_base {
 
 class Threepdm_driver : public Npdm_driver_base {
   public:
-    explicit Threepdm_driver( int sites ) : container( Threepdm_container(sites) ), driver( Npdm_driver(3, container) ) {}
+    explicit Threepdm_driver( int sites ) : container( Threepdm_container(sites) ), driver( Npdm_driver(NPDM_THREEPDM, container) ) {}
     void clear() { driver.clear(); }
     void save_data( const int i, const int j ) { driver.save_data(i,j); }
     void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos ) 
@@ -104,7 +105,7 @@ class Threepdm_driver : public Npdm_driver_base {
 
 class Fourpdm_driver : public Npdm_driver_base {
   public:
-    explicit Fourpdm_driver( int sites ) : container( Fourpdm_container(sites) ), driver( Npdm_driver(4, container) ) {}
+    explicit Fourpdm_driver( int sites ) : container( Fourpdm_container(sites) ), driver( Npdm_driver(NPDM_FOURPDM, container) ) {}
     void clear() { driver.clear(); }
     void save_data( const int i, const int j ) { driver.save_data(i,j); }
     void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos ) 
@@ -118,7 +119,7 @@ class Fourpdm_driver : public Npdm_driver_base {
 
 class Pairpdm_driver : public Npdm_driver_base {
   public:
-    explicit Pairpdm_driver( int sites ) : container( Pairpdm_container(sites) ), driver( Npdm_driver(-1, container) ) {}
+    explicit Pairpdm_driver( int sites ) : container( Pairpdm_container(sites) ), driver( Npdm_driver(NPDM_PAIRMATRIX, container) ) {}
     void clear() { driver.clear(); }
     void save_data( const int i, const int j ) { driver.save_data(i,j); }
     void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos ) 

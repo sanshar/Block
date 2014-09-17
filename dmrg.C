@@ -259,26 +259,26 @@ int calldmrg(char* input, char* output)
     Sweep::tiny(sweep_tol);
     break;
   case (ONEPDM):
-    Npdm::npdm(1);
+    Npdm::npdm(NPDM_ONEPDM);
     if (dmrginp.hamiltonian() == BCS) {
-      Npdm::npdm(-1,true);
+      Npdm::npdm(NPDM_PAIRMATRIX,true);
     }
     break;
 
   case (TWOPDM):
-    Npdm::npdm(2);
+    Npdm::npdm(NPDM_TWOPDM);
     break;
 
   case (THREEPDM):
-    Npdm::npdm(3);
+    Npdm::npdm(NPDM_THREEPDM);
     break;
 
   case (FOURPDM):
-    Npdm::npdm(4);
+    Npdm::npdm(NPDM_FOURPDM);
     break;
 
   case (NEVPT2PDM):
-    Npdm::npdm(0);
+    Npdm::npdm(NPDM_NEVPT2);
     break;
 
   case(NEVPT2):
@@ -286,38 +286,38 @@ int calldmrg(char* input, char* output)
     break;
     
   case (RESTART_ONEPDM):
-    Npdm::npdm(1,true);
+    Npdm::npdm(NPDM_ONEPDM,true);
     if (dmrginp.hamiltonian() == BCS) {
-      Npdm::npdm(-1,true);
+      Npdm::npdm(NPDM_PAIRMATRIX,true);
     }
     break;
 
   case (RESTART_TWOPDM):
-    Npdm::npdm(2,true);
+    Npdm::npdm(NPDM_TWOPDM,true);
     break;
   case (RESTART_THREEPDM):
-    Npdm::npdm(3,true);
+    Npdm::npdm(NPDM_THREEPDM,true);
     break;
   case (RESTART_FOURPDM):
-    Npdm::npdm(4,true);
+    Npdm::npdm(NPDM_FOURPDM,true);
     break;
   case (TRANSITION_ONEPDM):
-    Npdm::npdm(1,false,true);
+    Npdm::npdm(NPDM_ONEPDM,false,true);
     if (dmrginp.hamiltonian() == BCS) {
-      Npdm::npdm(-1,true,true);      
+      Npdm::npdm(NPDM_PAIRMATRIX,true,true);      
     }
     break;
   case (TRANSITION_TWOPDM):
-    Npdm::npdm(2,false,true);
+    Npdm::npdm(NPDM_TWOPDM,false,true);
     break;
   case (RESTART_T_ONEPDM):
-    Npdm::npdm(1,true,true);
+    Npdm::npdm(NPDM_ONEPDM,true,true);
     if (dmrginp.hamiltonian() == BCS) {
-      Npdm::npdm(-1,true,true);      
+      Npdm::npdm(NPDM_PAIRMATRIX,true,true);      
     }
     break;
   case (RESTART_T_TWOPDM):
-    Npdm::npdm(2,true,true);
+    Npdm::npdm(NPDM_TWOPDM,true,true);
     break;
    case(RESTART_NEVPT2):
     nevpt2::nevpt2_restart();

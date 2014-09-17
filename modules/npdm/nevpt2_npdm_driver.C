@@ -24,10 +24,10 @@ Nevpt2_npdm_driver::Nevpt2_npdm_driver( int sites ) :
 #else
   // Build A-matrices on the fly
   nevpt2_A16_matrix( Nevpt2_A16_matrix( sites ) ), 
-  onepdm_driver( Npdm_driver(1, nevpt2_A16_matrix ) ),
-  twopdm_driver( Npdm_driver(2, nevpt2_A16_matrix ) ),
-  threepdm_driver( Npdm_driver(3, nevpt2_A16_matrix ) ),
-  fourpdm_driver( Npdm_driver(4, nevpt2_A16_matrix ) )
+  onepdm_driver( Npdm_driver(NPDM_ONEPDM, nevpt2_A16_matrix ) ),
+  twopdm_driver( Npdm_driver(NPDM_TWOPDM, nevpt2_A16_matrix ) ),
+  threepdm_driver( Npdm_driver(NPDM_THREEPDM, nevpt2_A16_matrix ) ),
+  fourpdm_driver( Npdm_driver(NPDM_FOURPDM, nevpt2_A16_matrix ) )
 #endif
 { }
 

@@ -10,9 +10,10 @@ Sandeep Sharma and Garnet K.-L. Chan
 #define NPDM_HEADER
 
 namespace SpinAdapted{
+enum NpdmOrder{NPDM_NEVPT2, NPDM_ONEPDM, NPDM_TWOPDM, NPDM_THREEPDM, NPDM_FOURPDM, NPDM_PAIRMATRIX, NPDM_OVERLAP, NPDM_EMPTY};
 namespace Npdm{
 
-  void npdm(int npdm_order, bool restartpdm=false, bool transitionpdm=false);
+  void npdm(NpdmOrder npdm_order, bool restartpdm=false, bool transitionpdm=false);
 
 }
 }

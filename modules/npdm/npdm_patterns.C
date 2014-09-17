@@ -15,7 +15,7 @@ namespace Npdm {
 
 //===========================================================================================================================================================
 
-Npdm_patterns::Npdm_patterns( int pdm_order, int sweep_pos, int end_pos )
+Npdm_patterns::Npdm_patterns( NpdmOrder pdm_order, int sweep_pos, int end_pos )
 : pdm_order_(pdm_order)
 {
   build_lhs_dot_rhs_types( sweep_pos, end_pos );
@@ -160,13 +160,21 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
   // General case
   //---------------
   int lhs, rhs, dot, dotmax;
-  for (lhs = abs(pdm_order_); lhs >= 0; lhs--) {
-    dotmax = 2*abs(pdm_order_) - lhs;
+  int order_;
+  if (pdm_order_ == NPDM_PAIRMATRIX) {
+    order_ = 1;
+  } else if (pdm_order_ >= NPDM_ONEPDM || pdm_order_ <= NPDM_FOURPDM) {
+    order_ = pdm_order_ - NPDM_ONEPDM + 1;
+  } else {
+    abort();
+  }
+  for (lhs = order_; lhs >= 0; lhs--) {
+    dotmax = 2*order_ - lhs;
     for (dot = dotmax; dot >= 1; dot--) {
       // Can have no more than 4 on the dot block
       if (dot > 4) continue;
-      rhs = 2*abs(pdm_order_) - dot - lhs;
-      if ( rhs < abs(pdm_order_) ) {
+      rhs = 2*order_ - dot - lhs;
+      if ( rhs < order_ ) {
         //pout << lhs << " " << dot << " " << rhs << endl;
         lhs_dot_rhs_types_.insert( std::make_tuple(lhs,dot,rhs) );
       }
@@ -177,7 +185,7 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
   // Edge cases 
   //---------------
   // 1PDM and pair matrix
-  if (abs(pdm_order_) == 1) {
+  if (pdm_order_ == NPDM_ONEPDM || pdm_order_ == NPDM_PAIRMATRIX) {
     if ( sweep_pos == 0 ) {
       lhs_dot_rhs_types_.insert( std::make_tuple(2,0,0) );
     }
@@ -188,7 +196,7 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
     }
   }
   // 2PDM
-  else if (pdm_order_ == 2) {
+  else if (pdm_order_ == NPDM_TWOPDM) {
     if ( sweep_pos == 0 ) {
       lhs_dot_rhs_types_.insert( std::make_tuple(4,0,0) );
       lhs_dot_rhs_types_.insert( std::make_tuple(3,1,0) );
@@ -205,7 +213,7 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
     }
   }
   // 3PDM
-  else if (pdm_order_ == 3) {
+  else if (pdm_order_ == NPDM_THREEPDM) {
     if ( sweep_pos == 0 ) {
       lhs_dot_rhs_types_.insert( std::make_tuple(4,2,0) );
       lhs_dot_rhs_types_.insert( std::make_tuple(4,0,2) );
@@ -223,7 +231,7 @@ void Npdm_patterns::build_lhs_dot_rhs_types( int sweep_pos, int end_pos )
     }
   }
   // 4PDM
-  else if (pdm_order_ == 4) {
+  else if (pdm_order_ == NPDM_FOURPDM) {
     if ( sweep_pos == 0 ) {
       // Nothing extra needed
     }
@@ -259,30 +267,38 @@ void Npdm_patterns::add_operator( int cre_ops1, int des_ops1, std::vector<CD> cd
   std::vector<CD> cd_type2 (cd_type1.begin(), cd_type1.end());
   int cre_ops2 = cre_ops1;
   int des_ops2 = des_ops1;
+  int order_;
+  if (pdm_order_ == NPDM_PAIRMATRIX) {
+    order_ = 1;
+  } else if (pdm_order_ >= NPDM_ONEPDM || pdm_order_ <= NPDM_FOURPDM) {
+    order_ = pdm_order_ - NPDM_ONEPDM + 1;
+  } else {
+    abort();
+  }
 
   // Add creation operator as first tree branch
   if (cre_ops1 > 0) {
     cre_ops1--;
     cd_type1.push_back( CREATION );
-    if ( cd_type1.size() < 2*abs(pdm_order_) ) add_operator( cre_ops1, des_ops1, cd_type1 ) ;
+    if ( cd_type1.size() < 2*order_ ) add_operator( cre_ops1, des_ops1, cd_type1 ) ;
   }
 
   // Add destruction operator as second tree branch
   if (des_ops2 > 0) {
     des_ops2--;
     cd_type2.push_back( DESTRUCTION );
-    if ( cd_type2.size() < 2*abs(pdm_order_) ) add_operator( cre_ops2, des_ops2, cd_type2 );
+    if ( cd_type2.size() < 2*order_ ) add_operator( cre_ops2, des_ops2, cd_type2 );
   }
 
   // Add only leaves of tree to final possiblities
-  if ( cd_type1.size() == 2*abs(pdm_order_) ){
+  if ( cd_type1.size() == 2*order_ ){
     cre_des_types_.insert( cd_type1 );
   //pout << " cre_des_types1 \n";
   //for(int i=0; i < cd_type1.size();i++)
   //  pout <<cd_type1[i];
   //pout <<endl;
   }
-  if ( cd_type2.size() == 2*abs(pdm_order_) ){
+  if ( cd_type2.size() == 2*order_ ){
   cre_des_types_.insert( cd_type2 );
   //pout << " cre_des_types2 \n";
   //for(int i=0; i < cd_type2.size();i++)
@@ -305,16 +321,18 @@ void Npdm_patterns::build_cre_des_types()
 //  std::vector<CD> des_tank(pdm_order_, DESTRUCTION);
 
   // Build up tree of valid creation-destruction strings by recursion
-  if (pdm_order_ == -1) {
+  if (pdm_order_ == NPDM_PAIRMATRIX) {
     add_operator(0, 2, cd_type);
-  } else {
+  } else if (pdm_order_ >= NPDM_ONEPDM || pdm_order_ <= NPDM_FOURPDM){
     if(dmrginp.doimplicitTranspose()){
       cd_type.push_back( CREATION );
-      add_operator( pdm_order_-1, pdm_order_, cd_type );
+      add_operator( pdm_order_-NPDM_ONEPDM, pdm_order_-NPDM_ONEPDM+1, cd_type );
     }
     else{
-      add_operator(pdm_order_,pdm_order_, cd_type);
+      add_operator(pdm_order_-NPDM_ONEPDM+1,pdm_order_-NPDM_ONEPDM+1, cd_type);
     }
+  } else {
+    abort();
   }
 
   // Print out
@@ -434,17 +452,19 @@ bool Npdm_patterns::is_valid_ldr_type( std::map< char, std::vector<CD> > & cd_pa
 
   // Split into creation and destruction halves
   std::vector<int> cvec, dvec;
-  if (pdm_order_ == -1) {
+  if (pdm_order_ == NPDM_PAIRMATRIX) {
     for (auto it = opstring.begin() + 2; it != opstring.end(); it++ ) {
       dvec.push_back( it->second );
     }
-  } else {
-    for (auto it = opstring.begin(); it != opstring.begin() + pdm_order_; it++) {
+  } else if (pdm_order_ >= NPDM_ONEPDM || pdm_order_ <= NPDM_FOURPDM) {
+    for (auto it = opstring.begin(); it != opstring.begin() + pdm_order_-NPDM_ONEPDM+1; it++) {
       cvec.push_back( it->second );
     }
     for (auto it = opstring.begin() + pdm_order_; it != opstring.end(); it++ ) {
       dvec.push_back( it->second );
     }
+  } else {
+    abort();
   }
 
   // Test if dvec >= cvec in sense of irreducible operator string generation (triangular loop)
