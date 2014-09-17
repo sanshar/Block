@@ -5,11 +5,11 @@
 
 ##BOOSTINCLUDE = /home/sandeep/Work/Programs/boost_1_54_0/
 #specify boost include file
-BOOSTINCLUDE = /home/juny/boost_1_55_0/install/include/
+BOOSTINCLUDE = /usr/local/include/boost
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/home/juny/boost_1_55_0/install/lib/ -lboost_serialization -lboost_system -lboost_filesystem
-LAPACKBLAS =  -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+BOOSTLIB = -lboost_serialization -lboost_system -lboost_filesystem
+LAPACKBLAS = -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 
 #use these variable to set if we will use mpi or not 
@@ -17,9 +17,9 @@ USE_MPI = yes
 USE_MKL = yes
 
 ifeq ($(USE_MKL), yes)
-MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/
+MKLLIB = /opt/intel/mkl/lib/intel64
 LAPACKBLAS = -L${MKLLIB} -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
-MKLFLAGS = /opt/intel/composer_xe_2013_sp1.0.080/mkl/include
+MKLFLAGS = /opt/intel/mkl/include
 MKLOPT = -D_HAS_INTEL_MKL
 endif
 
@@ -46,7 +46,7 @@ EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
 CXX =  g++
-MPICXX = /usr/lib64/openmpi/bin/mpicxx
+MPICXX = /usr/local/bin/mpicxx
 BLOCKHOME = .
 HOME = .
 NEWMATINCLUDE = $(BLOCKHOME)/newmat10/

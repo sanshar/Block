@@ -61,11 +61,11 @@ genetic::Cell genetic::gaordering(ifstream& confFile, ifstream& dumpFile, std::v
   int ntask = 1 + gainput.max_community / world.size();
 
   Cell comm_best = gaoptimize(genetic::gainput.random_seed+world.rank(), fiedlerorder);
-  pout << "Order #" << world.rank() << ": " << comm_best << endl;
+  cout << "Order #" << world.rank() << ": " << comm_best << endl;
   for(int i = 1; i < ntask; ++i)
   {
     Cell comm_cell = gaoptimize(genetic::gainput.random_seed + i * world.size() + world.rank(), fiedlerorder);
-    pout << "Order #" << i * world.size() + world.rank() << ": " << comm_cell << endl;
+    cout << "Order #" << i * world.size() + world.rank() << ": " << comm_cell << endl;
     if(comm_cell < comm_best) comm_best = comm_cell;
   }
 
@@ -77,11 +77,11 @@ genetic::Cell genetic::gaordering(ifstream& confFile, ifstream& dumpFile, std::v
 #else
   int ntask = gainput.max_community;
   best = gaoptimize(genetic::gainput.random_seed, fiedlerorder);
-  pout << "Order #" << 0 << ": " << best << endl;
+  cout << "Order #" << 0 << ": " << best << endl;
   for(int i = 1; i < ntask; ++i)
   {
     Cell comm_cell = gaoptimize(genetic::gainput.random_seed+i, fiedlerorder);
-    pout << "Order #" << i << ": " << comm_cell << endl;
+    cout << "Order #" << i << ": " << comm_cell << endl;
     if(comm_cell < best) best = comm_cell;
   }
 

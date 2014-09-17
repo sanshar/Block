@@ -1744,36 +1744,90 @@ void SpinAdapted::Input::writeSummary()
 #ifndef SERIAL
   if (mpigetrank() == 0) {
 #endif
-  printf("%-50s :   %-i\n", "Total number of orbitals", m_norbs/2);
+//printf("%-50s :   %-i\n", "Total number of orbitals", m_norbs/2);
+//if (m_Bogoliubov)
+//  printf("%-50s :   even:%-i:%-i\n", "Symmetry of the targeted wavefunctions", m_alpha - m_beta, m_total_symmetry_number.getirrep()+1);    
+//else
+//  printf("%-50s :   %-i:%-i:%-i\n", "Symmetry of the targeted wavefunctions",m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number.getirrep()+1);
+//printf("%-50s :   %-i\n", "Number of wavefunctions targeted", m_nroots);
+//if (m_nroots >1) {
+//  printf("%-50s :   ", "The weights of the wavefunctions");
+//  for (int i=0; i<m_nroots; i++) 
+//    printf("%-10.2e", m_weights[i]);
+//  printf("\n");
+//}
+//printf("%-50s :   %s\n", "Symmetry of the molecule", sym.c_str());
+//if (sym != "c1") {
+//  printf("%-50s :   ", "Irreducible representations of the orbitals");
+//  for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) 
+//    pout << Symmetry::stringOfIrrep(m_spin_orbs_symmetry[i])<<"  ";
+//  printf("\n");
+//}
+
+
+//  printf("\nSchedule\n");
+//  printf("--------\n");
+//  printf("%-10s : %-20s  %-20s  %-20s\n", "Iter", "# States", "Davidson_tol",  "Random_noise");
+//  for (int i=0; i<m_sweep_iter_schedule.size(); i++)
+//    printf("%-10i : %-20i  %-20.4e  %-20.4e\n", m_sweep_iter_schedule[i], m_sweep_state_schedule[i], m_sweep_tol_schedule[i], m_sweep_noise_schedule[i]);
+//  if (m_algorithm_type == TWODOT_TO_ONEDOT) 
+//    printf("%-50s :   %-i\n", "Switching from twodot to onedot algorithm", m_twodot_to_onedot_iter);
+//  
+//  printf("%-50s :   %-i\n", "Maximum sweep iterations", m_maxiter);
+
+  // removed printf dependencies
+  pout << setw(50) << left << "Total number of orbitals"
+       << " :   " << left << m_norbs/2 << endl;
   if (m_Bogoliubov)
-    printf("%-50s :   even:%-i:%-i\n", "Symmetry of the targeted wavefunctions", m_alpha - m_beta, m_total_symmetry_number.getirrep()+1);    
+  {
+     pout << setw(50) << left << "Symmetry of the targeted wavefunctions"
+          << " :   even:" << m_alpha-m_beta << ":" << m_total_symmetry_number.getirrep()+1 << endl;
+  }
   else
-    printf("%-50s :   %-i:%-i:%-i\n", "Symmetry of the targeted wavefunctions",m_alpha + m_beta, m_alpha - m_beta, m_total_symmetry_number.getirrep()+1);
-  printf("%-50s :   %-i\n", "Number of wavefunctions targeted", m_nroots);
-  if (m_nroots >1) {
-    printf("%-50s :   ", "The weights of the wavefunctions");
-    for (int i=0; i<m_nroots; i++) 
-      printf("%-10.2e", m_weights[i]);
-    printf("\n");
+  {
+     pout << setw(50) << left << "Symmetry of the targeted wavefunctions"
+          << " :   " << m_alpha+m_beta << ":" << m_alpha-m_beta << ":" << m_total_symmetry_number.getirrep()+1 << endl;
   }
-  printf("%-50s :   %s\n", "Symmetry of the molecule", sym.c_str());
-  if (sym != "c1") {
-    printf("%-50s :   ", "Irreducible representations of the orbitals");
-    for (int i=0; i<m_spin_orbs_symmetry.size(); i+=2) 
-      pout << Symmetry::stringOfIrrep(m_spin_orbs_symmetry[i])<<"  ";
-    printf("\n");
+  pout << setw(50) << left << "Number of wavefunctions targeted"
+       << " :   " << m_nroots << endl;
+  if (m_nroots > 1)
+  {
+     pout << setw(50) << left << "The weights of the wavefunctions" << " :   ";
+     for (int i = 0; i < m_nroots; ++i) pout << left << setprecision(2) << setw(10) << scientific << m_weights[i];
+     pout << endl;
+  }
+  pout << setw(50) << left << "Symmetry of the molecule" << " :   "
+       << sym.c_str() << endl;
+  if (sym != "c1")
+  {
+     pout << setw(50) << left << "Irreducible representations of the orbitals" << " :   ";
+     for (int i = 0; i < m_spin_orbs_symmetry.size(); i+=2)
+     {
+        pout << Symmetry::stringOfIrrep(m_spin_orbs_symmetry[i]) << "  ";
+     }
+     pout << endl;
   }
 
+  pout << endl << "Schedule" << endl;
+  pout << "--------" << endl;
+  pout << setw(10) << left << "Iter" << " : "
+       << setw(20) << left << "# States" << "  "
+       << setw(20) << left << "Davidson_tol" << "  "
+       << setw(20) << left << "Random_noise" << endl;
 
-    printf("\nSchedule\n");
-    printf("--------\n");
-    printf("%-10s : %-20s  %-20s  %-20s\n", "Iter", "# States", "Davidson_tol",  "Random_noise");
-    for (int i=0; i<m_sweep_iter_schedule.size(); i++)
-      printf("%-10i : %-20i  %-20.4e  %-20.4e\n", m_sweep_iter_schedule[i], m_sweep_state_schedule[i], m_sweep_tol_schedule[i], m_sweep_noise_schedule[i]);
-    if (m_algorithm_type == TWODOT_TO_ONEDOT) 
-      printf("%-50s :   %-i\n", "Switching from twodot to onedot algorithm", m_twodot_to_onedot_iter);
-    
-    printf("%-50s :   %-i\n", "Maximum sweep iterations", m_maxiter);
+  for (int i = 0; i < m_sweep_iter_schedule.size(); ++i)
+  {
+     pout << setw(10) << left << m_sweep_iter_schedule[i] << " : "
+          << setw(20) << left << m_sweep_state_schedule[i] << "  "
+          << setw(20) << left << scientific << m_sweep_tol_schedule[i] << "  "
+          << setw(20) << left << scientific << m_sweep_noise_schedule[i] << endl;
+  }
+  if (m_algorithm_type == TWODOT_TO_ONEDOT) 
+  {
+     pout << setw(50) << left << "Switching from twodot to onedot algorithm" << " :   "
+          << m_twodot_to_onedot_iter << endl;
+  }
+  pout << setw(50) << left << "Maximum sweep iterations" << " :   " << m_maxiter << endl;
 
 #ifndef SERIAL
   }
