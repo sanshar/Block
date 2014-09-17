@@ -191,8 +191,12 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   if (dmrginp.outputlevel() > 0)
     mcheck(""); 
   if (dmrginp.outputlevel() == 0) {
-    if (!dot_with_sys && sweepParams.get_onedot()) pout << "\t\t\t System  Block"<<system;    
-    else pout << "\t\t\t System  Block"<<newSystem;
+    if (!dot_with_sys && sweepParams.get_onedot()) {
+      pout << "\t\t\t System  Block"<<system;    
+    }
+    else {
+      pout << "\t\t\t System  Block"<<newSystem;
+    }
     pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
     pout << "\t\t\t Solving wavefunction "<<endl;
   }
@@ -327,10 +331,12 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   sweepParams.set_sweep_parameters();
   // a new renormalisation sweep routine
   pout << endl;
-  if (forward)
+  if (forward) {
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in forwards direction"<<endl;
-  else
+  }
+  else {
     pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
+  }
   pout << "\t\t\t ============================================================================ " << endl;
 
   InitBlocks::InitStartingBlock (system,forward, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex);
@@ -363,10 +369,12 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ============================" << endl;
       if (dmrginp.outputlevel() > 0) {
-	    if (forward)
+	    if (forward) {
 	      pout << "\t\t\t Current direction is :: Forwards " << endl;
-	    else
+       }
+	    else {
 	      pout << "\t\t\t Current direction is :: Backwards " << endl;
+       }
       }
 
       if (dmrginp.no_transform() || (sweepParams.get_sweep_iter()-sweepParams.get_restart_iter() == 0 && sweepParams.get_block_iter() == 0))
@@ -465,7 +473,12 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     int istate = dmrginp.setStateSpecific() ? sweepParams.current_root() : j;
     if (mpigetrank() == 0) {
 #ifndef MOLPRO
-      printf("\t\t\t M = %6i  state = %4i  Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), istate, finalError, finalEnergy[j]+dmrginp.get_coreenergy());
+//    printf("\t\t\t M = %6i  state = %4i  Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), istate, finalError, finalEnergy[j]+dmrginp.get_coreenergy());
+      pout << "\t\t\t M = " << setw(6) << sweepParams.get_keep_states()
+           << "  state = " << setw(4) << istate
+           << "  Largest Discarded Weight = " << setw(8) << setprecision(3) << scientific << finalError
+           << "  Sweep Energy = " << setw(20) << setprecision(10) << fixed << finalEnergy[j]+dmrginp.get_coreenergy()
+           << " " << endl;
 #else 
       //printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
       pout << "\t\t\t M = " <<  setw(6) << sweepParams.get_keep_states() ; 
