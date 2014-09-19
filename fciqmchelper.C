@@ -312,6 +312,7 @@ void LoadQSTensor(const int& site, QSTensor& m, int state) {
       vector<QSTensor> A(statep.quanta.size(), QSTensor(statel.quanta, stater.quanta));
       for (int r_idx = 0; r_idx < stater.oldToNewState.size(); ++r_idx) { // index of qr
         auto OldtoNew = stater.oldToNewState[r_idx];
+        int temp = 0;
         for (int k = 0; k < OldtoNew.size(); ++k) {
           int l_idx = stater.leftUnMapQuanta[OldtoNew[k]];
           int p_idx = stater.rightUnMapQuanta[OldtoNew[k]];
@@ -319,7 +320,9 @@ void LoadQSTensor(const int& site, QSTensor& m, int state) {
           A[p_idx](l_idx, r_idx).ReSize(statel.quantaStates[l_idx], stater.quantaStates[r_idx]);
           A[p_idx](l_idx, r_idx) = 0.;
           IdentityMatrix I(statel.quantaStates[l_idx]);
-          A[p_idx](l_idx, r_idx).Columns(k*statel.quantaStates[l_idx]+1, (k+1)*statel.quantaStates[l_idx]) = I;
+          int temp_new = temp + statel.quantaStates[l_idx];
+          A[p_idx](l_idx, r_idx).Columns(temp+1, temp_new) = I;
+          temp = temp_new;
         }
       }
       for (int j = 0; j < A.size(); ++j) {
@@ -359,6 +362,7 @@ void LoadQSTensor(const int& site, QSTensor& m, int state) {
     vector<QSTensor> A(statep.quanta.size(), QSTensor(statel.quanta, stater.quanta));
     for (int r_idx = 0; r_idx < stater.oldToNewState.size(); ++r_idx) { // index of qr
       auto OldtoNew = stater.oldToNewState[r_idx];
+      int temp = 0;
       for (int k = 0; k < OldtoNew.size(); ++k) {
         int l_idx = stater.leftUnMapQuanta[OldtoNew[k]];
         int p_idx = stater.rightUnMapQuanta[OldtoNew[k]];
@@ -366,7 +370,9 @@ void LoadQSTensor(const int& site, QSTensor& m, int state) {
         A[p_idx](l_idx, r_idx).ReSize(statel.quantaStates[l_idx], stater.quantaStates[r_idx]);
         A[p_idx](l_idx, r_idx) = 0.;
         IdentityMatrix I(statel.quantaStates[l_idx]);
-        A[p_idx](l_idx, r_idx).Columns(k*statel.quantaStates[l_idx]+1, (k+1)*statel.quantaStates[l_idx]) = I;
+        int temp_new = temp + statel.quantaStates[l_idx];
+        A[p_idx](l_idx, r_idx).Columns(temp+1, temp_new) = I;
+        temp = temp_new;
       }
     }
     for (int j = 0; j < A.size(); ++j) {
