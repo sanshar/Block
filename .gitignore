@@ -1,4 +1,5 @@
 *.o
+COEF
 OH
 block.spin_adapted
 *.so
