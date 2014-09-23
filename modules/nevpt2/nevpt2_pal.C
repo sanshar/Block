@@ -3,6 +3,8 @@
 #include "MatrixBLAS.h"
 #include <boost/serialization/serialization.hpp>
 #include "nevpt2_operators.h"
+#include "distribute.h"
+
 #ifndef SERIAL
 #include <boost/mpi/environment.hpp>
 #include <boost/mpi/communicator.hpp>
@@ -25,37 +27,24 @@ namespace SpinAdapted{
     int WorldSize=world.size();
     if (WorldSize==1) return;
     int rank = world.rank();
-    int next = (rank+1)%WorldSize;
-    int prev = (rank+WorldSize-1)%WorldSize;
     
-    /*
-    if (world.rank()==0){
-      for (int iproc=1;iproc<WorldSize;iproc++){
-        world.recv(iproc,iproc,tmp_recv);
-        ScaleAdd(1.0,tmp_recv,WF);
-        tmp_recv.Clear();
-      }//iproc
-    }//master
-    else{
-      world.send(0,world.rank(),WF);
-    }//slave
-    mpi::broadcast(world,WF,0);
-     */
-    
-    //start the loop over steps in the circle
-    for (int istep=0;istep<WorldSize-1;istep++){
-      //copy the receive buffer into the send buffer
-      tmp_send = boost::make_shared<Wavefunction> (*tmp_recv);
-      //send and receive the data
-      mpi::request reqs[2];
-      reqs[0] = world.isend(next,rank,tmp_send);
-      reqs[1] = world.irecv(prev,prev,tmp_recv);
-      mpi::wait_all(reqs,reqs+2);
-      //add them up;
-      ScaleAdd(1.0,*tmp_recv,WF);
-      world.barrier();
-    }
-    
+    //determine the send-recv structure
+    std::vector<int> sendlist;
+    makesendlist(sendlist);
+
+    //receive and accumulate the data
+    for (int isender=0;isender<sendlist.size();isender++){
+      //receive
+      world.recv(sendlist[isender],0,tmp_recv);
+      //accumulate
+      ScaleAdd(1.0,*(tmp_recv),WF);
+    }//isender
+      
+    //send the data
+    if (rank!=0) world.send(receivefrom(),0,WF);
+
+    //broadcast the accumulated result
+    boost::mpi::broadcast(world,WF,0);
 #endif
   }
 
@@ -70,51 +59,25 @@ namespace SpinAdapted{
     int VTripSize = VTrip.size();
     int STripSize = SigmaTrip.size();
     
-    //copy the original Wavefunctions to the receive vector
+    //the send and recv packets
     vector<boost::shared_ptr<Wavefunction> >tmp_recv;
     vector<boost::shared_ptr<Wavefunction> >tmp_send;
-    tmp_recv.push_back(boost::make_shared<Wavefunction> (*VSing));
-    tmp_recv.push_back(boost::make_shared<Wavefunction> (*SigmaSing));
-    for (int i=0;i<VTrip.size();i++){
-      tmp_recv.push_back(boost::make_shared<Wavefunction> (*VTrip[i]));
-    }
-    for (int i=0;i<SigmaTrip.size();i++){
-      tmp_recv.push_back(boost::make_shared<Wavefunction> (*SigmaTrip[i]));
-    }
     
     //the communicator
     mpi::communicator world;
     int WorldSize=world.size();
     if (WorldSize==1) return;
     int rank = world.rank();
-    int next = (rank+1)%WorldSize;
-    int prev = (rank+WorldSize-1)%WorldSize;
-    
-    //start the loop over steps in the circle
-    for (int istep=0;istep<WorldSize-1;istep++){
-      //clear the send buffer
-      for (int i=0;i<tmp_send.size();i++){
-        tmp_send[i]->Clear();
-      }//i
-      tmp_send.clear();
-      //copy the receive buffer into the send buffer
-      for (int i=0;i<tmp_recv.size();i++){
-        tmp_send.push_back(boost::make_shared<Wavefunction> (*tmp_recv[i]));
-      }
-      
-      //clear the recv buffer
-      for (int i=0;i<tmp_recv.size();i++){
-        tmp_recv[i]->Clear();
-      }//i
-      tmp_recv.clear();
-      
-      //send and receive the data
-      mpi::request reqs[2];
-      reqs[0] = world.isend(next,rank,tmp_send);
-      reqs[1] = world.irecv(prev,prev,tmp_recv);
-      mpi::wait_all(reqs,reqs+2);
-      
-      //add them up
+
+    //determine the send-recv structure
+    std::vector<int> sendlist;
+    makesendlist(sendlist);
+
+    //receive and accumulate the data
+    for (int isender=0;isender<sendlist.size();isender++){
+      //receive
+      world.recv(sendlist[isender],0,tmp_recv);
+      //accumulate
       ScaleAdd(1.0,*(tmp_recv[0]),*VSing);
       ScaleAdd(1.0,*(tmp_recv[1]),*SigmaSing);
       for (int i=0;i<VTripSize;i++){
@@ -123,14 +86,25 @@ namespace SpinAdapted{
       for (int i=0;i<STripSize;i++){
         ScaleAdd(1.0,*(tmp_recv[i+VTripSize+2]),*(SigmaTrip[i]));
       }
-      world.barrier();
-    }//istep
-    
+    }//isender
+      
+    //generate a packet to be send
+    tmp_send.push_back(make_shared<Wavefunction>(*VSing));
+    tmp_send.push_back(make_shared<Wavefunction> (*SigmaSing));
+    for (int i=0;i<VTrip.size();i++){
+      tmp_send.push_back(make_shared<Wavefunction> (*VTrip[i]));
+    }
+    for (int i=0;i<SigmaTrip.size();i++){
+      tmp_send.push_back(make_shared<Wavefunction> (*SigmaTrip[i]));
+    }
+
+    //send the data
+    if (rank!=0) world.send(receivefrom(),0,tmp_send);
+
+    //broadcast the accumulated result
+    boost::mpi::broadcast(world,tmp_send,0);
+
     //clear the memory
-    for (int i=0;i<tmp_recv.size();i++){
-      tmp_recv[i]->Clear();
-      tmp_send[i]->Clear();
-    }//i
     tmp_recv.clear();
     tmp_send.clear();
     
@@ -151,62 +125,25 @@ namespace SpinAdapted{
       int VTripSize = VTrip[0].size();
       int STripSize = SigmaTrip[0].size();
 
-      //copy the original Wavefunctions to the receive vector
+      //the send and recv packets
       vector<vector<boost::shared_ptr<Wavefunction> > >tmp_recv;
       vector<vector<boost::shared_ptr<Wavefunction> > >tmp_send;
-      tmp_recv.resize(batchsize);
-      for (int b=0;b<batchsize;b++){
-        tmp_recv[b].push_back(boost::make_shared<Wavefunction>(*VSing[b]));
-        tmp_recv[b].push_back(boost::make_shared<Wavefunction> (*SigmaSing[b]));
-        for (int i=0;i<VTrip[b].size();i++){
-          tmp_recv[b].push_back(boost::make_shared<Wavefunction> (*VTrip[b][i]));
-        }
-        for (int i=0;i<SigmaTrip[b].size();i++){
-          tmp_recv[b].push_back(boost::make_shared<Wavefunction> (*SigmaTrip[b][i]));
-        }
-      }//b
 
       //the communicator
       mpi::communicator world;
       int WorldSize=world.size();
       if (WorldSize==1) return;
       int rank = world.rank();
-      int next = (rank+1)%WorldSize;
-      int prev = (rank+WorldSize-1)%WorldSize;
       
-      //start the loop over steps in the circle
-      for (int istep=0;istep<WorldSize-1;istep++){
-        //clear the send buffer
-        for (int b=0;b<tmp_send.size();b++){
-          for (int i=0;i<tmp_send[b].size();i++){
-            tmp_send[b][i]->Clear();
-          }//i
-          tmp_send[b].clear();
-        }//b
-        //copy the receive buffer into the send buffer
-        tmp_send.resize(batchsize);
-        for (int b=0;b<batchsize;b++){
-          for (int i=0;i<tmp_recv[b].size();i++){
-            tmp_send[b].push_back(boost::make_shared<Wavefunction> (*tmp_recv[b][i]));
-          }
-        }
+      //determine the send-recv structure
+      std::vector<int> sendlist;
+      makesendlist(sendlist);
 
-        //clear the recv buffer
-        for (int b=0;b<tmp_recv.size();b++){
-          for (int i=0;i<tmp_recv[b].size();i++){
-            tmp_recv[b][i]->Clear();
-          }//i
-          tmp_recv[b].clear();
-        }//b
-        tmp_recv.clear();
-
-        //send and receive the data
-        mpi::request reqs[2];
-        reqs[0] = world.isend(next,rank,tmp_send);
-        reqs[1] = world.irecv(prev,prev,tmp_recv);
-        mpi::wait_all(reqs,reqs+2);
-
-        //add them up
+      //receive and accumulate the data
+      for (int isender=0;isender<sendlist.size();isender++){
+        //receive
+        world.recv(sendlist[isender],0,tmp_recv);
+        //accumulate
         for (int b=0;b<batchsize;b++){
           ScaleAdd(1.0,*(tmp_recv[b][0]),*(VSing[b]));
           ScaleAdd(1.0,*(tmp_recv[b][1]),*(SigmaSing[b]));
@@ -217,16 +154,30 @@ namespace SpinAdapted{
             ScaleAdd(1.0,*(tmp_recv[b][i+VTripSize+2]),*(SigmaTrip[b][i]));
           }
         }//b
-        world.barrier();
-      }//istep
 
-      //clear the memory
+      }//isender
+
+      //generate a packet to be send
+      tmp_send.resize(batchsize);
       for (int b=0;b<batchsize;b++){
-        for (int i=0;i<tmp_recv[b].size();i++){
-          tmp_recv[b][i]->Clear();
-          tmp_send[b][i]->Clear();
-        }//i
+        tmp_send[b].push_back(make_shared<Wavefunction>(*VSing[b]));
+        tmp_send[b].push_back(make_shared<Wavefunction> (*SigmaSing[b]));
+        for (int i=0;i<VTrip[b].size();i++){
+          tmp_send[b].push_back(make_shared<Wavefunction> (*VTrip[b][i]));
+        }
+        for (int i=0;i<SigmaTrip[b].size();i++){
+          tmp_send[b].push_back(make_shared<Wavefunction> (*SigmaTrip[b][i]));
+        }
       }//b
+      
+      //send the data
+      if (rank!=0) world.send(receivefrom(),0,tmp_send);
+      //mpi_barrier();  
+      
+      //broadcast the accumulated result
+      boost::mpi::broadcast(world,tmp_send,0);
+      
+      //clear the memory
       tmp_recv.clear();
       tmp_send.clear();
     }//VSing.size()>0
