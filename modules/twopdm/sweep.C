@@ -59,7 +59,7 @@ void calcenergy(array_4d<double>& twopdm, int state)
   for (int j=0; j<dmrginp.last_site()*2; j++)
     energy += v_1[0](i,j) * onepdm(i+1,j+1);
 
-  pout << "energy of state "<< state <<" = "<< energy+dmrginp.get_coreenergy()<<endl;
+  pout << "energy of state "<< state <<" = "<< energy<<endl;
 
   ofstream out("onepdm_fromtpdm");
   for (int i=0; i<dmrginp.last_site()*2; i++)
@@ -228,7 +228,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
       for(int j=0;j<nroots;++j)
         pout << "\t\t\t Total block energy for State [ " << j << 
-	  " ] with " << sweepParams.get_keep_states()<<" :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+	  " ] with " << sweepParams.get_keep_states()<<" :: " << sweepParams.get_lowest_energy()[j] <<endl;              
 
       finalEnergy_spins = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy_spins() : finalEnergy_spins);
       finalEnergy = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy() : finalEnergy);
@@ -247,7 +247,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   //for(int j=0;j<nroots;++j)
   {int j = state;
     pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
-	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
+	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j] << endl;
   }
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
   pout << "\t\t\t ============================================================================ " << endl;

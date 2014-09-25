@@ -96,8 +96,8 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
     }
     else if (dmrginp.solve_method() == CONJUGATE_GRADIENT) {
       solution.resize(1);
-      double E0_base = dmrginp.baseEnergy();
-      multiply_h_e davidson_f(big, onedot, E0_base);
+
+      multiply_h davidson_f(big, onedot);
 
       if (mpigetrank()!=0) 
 	e.ReSize(0);
@@ -108,13 +108,6 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
       if (guesswavetype == BASIC)
 	solution[0].Clear();
 
-      //calculate H^T Q |cV>, |cV> is lowerStates[0];
-      if(mpigetrank() == 0) {
-	double overlap = DotProduct(lowerStates[1], lowerStates[0]);
-	double overlap2 = DotProduct(lowerStates[0], lowerStates[0]);
-	if (fabs(overlap2) > NUMERICAL_ZERO) 
-	  ScaleAdd(-overlap/overlap2, lowerStates[0], lowerStates[1]);
-      }
 
       double functional = Linear::ConjugateGradient(solution[0], tol, davidson_f, lowerStates);
       if (mpigetrank() == 0)

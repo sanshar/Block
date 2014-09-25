@@ -77,8 +77,8 @@ void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const SpinB
 	  Matrix tmp = oldWave(j, i);
 	  tmp = tmp.t(); // this is really a transpose, not a hermitian conjugate...
 	  trial(i, j) = tmp;
-	  int parity = getCommuteParity(s->leftStateInfo->quanta[i],
-					s->rightStateInfo->quanta[j],
+	  int parity = getCommuteParity(oldStateInfo.rightStateInfo->quanta[i],
+					oldStateInfo.leftStateInfo->quanta[j],
 					oldWave.get_deltaQuantum(0));
 	  if (parity == -1)
 	    trial(i,j) *= -1.0;
@@ -384,7 +384,7 @@ void GuessWave::guess_wavefunctions(std::vector<Wavefunction>& solution, Diagona
   const int nroots = solution.size();
 
   for(int i=0;i<nroots;++i) {
-    int state = dmrginp.setStateSpecific() ? currentState : i;
+    int state = (dmrginp.setStateSpecific() || dmrginp.calc_type() == COMPRESS) ? currentState : i;
     guess_wavefunctions(solution[i], e, big, guesswavetype, onedot, state, transpose_guess_wave, additional_noise);
   }
 }

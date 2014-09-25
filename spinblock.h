@@ -210,7 +210,7 @@ class SpinBlock
                         const int keptstates, const int keptqstates, const double tol, SpinBlock& big,
                         const guessWaveTypes &guesswavetype, const double noise, const double additional_noise, const bool &onedot, SpinBlock& system, 
 			SpinBlock& sysDot, SpinBlock& environment, const bool& dot_with_sys, const bool& warmUp, int sweepiter, 
-			int currenroot, std::vector<Wavefunction>& lowerStates, int correctionVector=-1);
+			int currenroot, std::vector<Wavefunction>& lowerStates);
 
   void transform_operators(std::vector<Matrix>& rotateMatrix);
   void transform_operators(std::vector<Matrix>& leftrotateMatrix, std::vector<Matrix>& rightrotateMatrix, bool clearRightBlock = true, bool clearLeftBlock = true);

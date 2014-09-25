@@ -83,7 +83,7 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   std::vector<Wavefunction> lowerStates;
   Solver::solve_wavefunction(solution, energies, big, tol, BASIC, false, true, false, sweepParams.get_additional_noise(), currentState, lowerStates);
   for (int i=0; i<nroots; i++) {
-    pout << "fullci energy "<< energies[i]+dmrginp.get_coreenergy()<<endl;
+    pout << "fullci energy "<< energies[i]<<endl;
   }
   if (!mpigetrank())
   {
@@ -96,7 +96,7 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
 #endif
     
     for(int j=0;j<nroots;++j) {
-      double e = energies[j]+dmrginp.get_coreenergy(); 
+      double e = energies[j]; 
       fwrite( &e, 1, sizeof(double), f);
     }
     fclose(f);
@@ -125,7 +125,7 @@ void SpinAdapted::Sweep::tiny(double sweep_tol)
       diagonalise(h, energies, vec);
       
       for (int x=0; x<nroots; x++) 
-	pout << "fullci energy  "<< energies(x+1)+dmrginp.get_coreenergy()<<endl;
+	pout << "fullci energy  "<< energies(x+1)<<endl;
 
       if (mpigetrank() == 0)
       {
@@ -138,7 +138,7 @@ void SpinAdapted::Sweep::tiny(double sweep_tol)
 #endif
 	
 	for(int j=0;j<nroots;++j) {
-	  double e = energies(j+1)+dmrginp.get_coreenergy(); 
+	  double e = energies(j+1); 
 	  fwrite( &e, 1, sizeof(double), f);
 	}
 	fclose(f);

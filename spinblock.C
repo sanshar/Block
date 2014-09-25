@@ -467,6 +467,14 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   dmrginp.oneelecT -> start();
   dmrginp.s0time -> start();
 
+  //coreEnergy
+  if (fabs(coreEnergy[integralIndex]) > TINY && mpigetrank() == 0) {
+    Wavefunction vtemp = *v;
+    vtemp.Clear();
+    multiplyOverlap(c, &vtemp, num_threads);
+    ScaleAdd(coreEnergy[integralIndex], vtemp, *v);
+  }
+
   //if (mpigetrank() == 0) {
     boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
     boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
@@ -595,6 +603,8 @@ void SpinBlock::diagonalH(DiagonalMatrix& e) const
   
   op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
   TensorTrace(rightBlock, *op, this, &(get_stateInfo()), e, 1.0);  
+  for (int i=0; i<e.Nrows(); i++)
+    e(i+1) += coreEnergy[integralIndex];
 
 
 #ifndef SERIAL

@@ -417,12 +417,12 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 	  
 #ifndef MOLPRO_I8
 	  pout << "\t\t\t Total block energy for State [ " << istate << 
-	    " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+	    " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j] <<endl;              
 #else 
 	  //We might want to relax the output restrictions here, so it prints out with outputlevel=0
 	  if (dmrginp.outputlevel() < 0) {
 	    pout << "\t\t\t Total block energy for State [ " << istate << 
-	      " ] with " << sweepParams.get_keep_states()<<" States :: " << fixed << setprecision(10) << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+	      " ] with " << sweepParams.get_keep_states()<<" States :: " << fixed << setprecision(10) << sweepParams.get_lowest_energy()[j] <<endl;              
 	  }
 #endif
 	}
@@ -463,7 +463,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   for(int j=0;j<nroots;++j) {
     int istate = dmrginp.setStateSpecific() ? sweepParams.current_root() : j;
     pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << istate 
-	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
+	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j] << endl;
   }
 
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
@@ -477,13 +477,13 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       pout << "\t\t\t M = " << setw(6) << sweepParams.get_keep_states()
            << "  state = " << setw(4) << istate
            << "  Largest Discarded Weight = " << setw(8) << setprecision(3) << scientific << finalError
-           << "  Sweep Energy = " << setw(20) << setprecision(10) << fixed << finalEnergy[j]+dmrginp.get_coreenergy()
+           << "  Sweep Energy = " << setw(20) << setprecision(10) << fixed << finalEnergy[j]
            << " " << endl;
 #else 
       //printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
       pout << "\t\t\t M = " <<  setw(6) << sweepParams.get_keep_states() ; 
       pout << "\t Largest Discarded Weight = " << scientific << setprecision(3) << finalError ;
-      pout << "\t Sweep Energy = " << fixed << setprecision(10) << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
+      pout << "\t Sweep Energy = " << fixed << setprecision(10) << finalEnergy[j] << endl;
 #endif
     }
   }
@@ -508,14 +508,14 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 	  double e;
 	  fread( &e, 1, sizeof(double), fin);
 	  if (j != sweepParams.current_root())
-	    sweepParams.set_lowest_energy()[j] = e - dmrginp.get_coreenergy();
+	    sweepParams.set_lowest_energy()[j] = e;
 	}
 	fclose(fin);
       }
 
       FILE* f = fopen(efile.c_str(), "wb");      
       for(int j=0;j<dmrginp.nroots();++j) {
-	double e = sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy(); //instead of the lowest energy of the sweep, we record the last energy of the sweep
+	double e = sweepParams.get_lowest_energy()[j]; //instead of the lowest energy of the sweep, we record the last energy of the sweep
 	fwrite( &e, 1, sizeof(double), f);
       }
       fclose(f);
@@ -567,8 +567,9 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
 
   //if (mpigetrank() == 0) {
   double minval = 1e12;
+  boost::shared_ptr<SparseMatrix> h = newSystem.get_op_rep(HAM, q);
   for (int i=0; i<nquanta; i++) {
-    diagonalise(newSystem.get_op_rep(HAM,q)->operator_element(i,i), energies[i], transformmatrix(i,i));
+    diagonalise(h->operator_element(i,i), energies[i], transformmatrix(i,i));
     for (int j=0; j<energies[i].Nrows(); j++) 
       if (minval > energies[i](j+1))
 	minval = energies[i](j+1);
