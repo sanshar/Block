@@ -337,7 +337,7 @@ namespace SpinAdapted{
     sweepParams.savestate(forward, system.get_sites().size());
     
     pout.precision(12);
-    pout << "\t\t\t The lowest sweep energy : "<< sweepParams.get_lowest_energy()[0]+dmrginp.get_coreenergy()<<endl;
+    pout << "\t\t\t The lowest sweep energy : "<< sweepParams.get_lowest_energy()[0]<<endl;
     pout << "\t\t\t ============================================================================ " << endl;
   }//blockiter
   
@@ -411,7 +411,7 @@ namespace SpinAdapted{
     sweepParams.savestate(!forward, system.get_sites().size());
     
     pout.precision(12);
-    pout << "\t\t\t The lowest sweep energy : "<< sweepParams.get_lowest_energy()[0]+dmrginp.get_coreenergy()<<endl;
+    pout << "\t\t\t The lowest sweep energy : "<< sweepParams.get_lowest_energy()[0]<<endl;
     pout << "\t\t\t ============================================================================ " << endl;
   }//blockiter
   //increment the sweep counter

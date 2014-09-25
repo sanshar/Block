@@ -43,7 +43,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 				const double additional_noise, const bool &onedot, SpinBlock& System,
 				SpinBlock& sysDot, SpinBlock& environment, const bool& dot_with_sys,
 				const bool& warmUp, int sweepiter, int currentRoot, 
-				std::vector<Wavefunction>& lowerStates, int correctionVector)
+				std::vector<Wavefunction>& lowerStates)
 {
   int nroots = dmrginp.nroots(sweepiter);
   vector<Wavefunction> wave_solutions(nroots);

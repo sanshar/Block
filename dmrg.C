@@ -57,8 +57,7 @@ void calculateOverlap();
 #endif
 void dmrg(double sweep_tol);
 void compress(double sweep_tol, int targetState, int baseState);
-void responseSweep(double sweep_tol, int targetState, int correctionVector, int baseState);
-void restartResponseSweep(double sweep_tol, int targetState, int correctionVector, int baseState);
+void responseSweep(double sweep_tol, int targetState, vector<int>& correctionVector, vector<int>& baseState);
 void restart(double sweep_tol, bool reset_iter);
 void dmrg_stateSpecific(double sweep_tol, int targetState);
 void ReadInput(char* conf);
@@ -81,6 +80,7 @@ namespace SpinAdapted{
   double NUMERICAL_ZERO = 1e-15;
   std::vector<OneElectronArray> v_1;
   std::vector<TwoElectronArray> v_2;
+  std::vector<double> coreEnergy;
   PairArray v_cc;
   CCCCArray v_cccc;
   CCCDArray v_cccd;
@@ -98,6 +98,7 @@ using namespace SpinAdapted;
 
 int calldmrg(char* input, char* output)
 {
+  //sleep(15);
   streambuf *backup;
   backup = cout.rdbuf();
   ofstream file;
@@ -137,30 +138,38 @@ int calldmrg(char* input, char* output)
     //sweepParams.set_sweep_iter() = 0;
     restartsize = 0;
 
+    int targetState, baseState, correctionVector, firstorderstate;
     {
       direction = true;
-      int istate = 0;
+
+      //base state is always defined
+      baseState = dmrginp.baseStates()[0];
+
+      //if targetstate is given use it otherwise use basestate+1
+      if(dmrginp.targetState() == -1)
+	targetState = dmrginp.baseStates()[0]+1;
+      else
+	targetState = dmrginp.targetState();
+
       algorithmTypes atype = dmrginp.algorithm_method();
       dmrginp.set_algorithm_method() = ONEDOT;
       //initialize state info and canonicalize wavefunction is always done using onedot algorithm
       if (mpigetrank()==0) {
-	Sweep::InitializeStateInfo(sweepParams, direction, istate);
-	Sweep::InitializeStateInfo(sweepParams, !direction, istate);
-	Sweep::CanonicalizeWavefunction(sweepParams, direction, istate);
-	Sweep::CanonicalizeWavefunction(sweepParams, !direction, istate);
-	Sweep::CanonicalizeWavefunction(sweepParams, direction, istate);
+	Sweep::InitializeStateInfo(sweepParams, direction, baseState);
+	Sweep::InitializeStateInfo(sweepParams, !direction, baseState);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, baseState);
+	Sweep::CanonicalizeWavefunction(sweepParams, !direction, baseState);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, baseState);
       }
       dmrginp.set_algorithm_method() = atype;
     }
 
     //this genblock is required to generate all the nontranspose operators
     dmrginp.setimplicitTranspose() = false;
-    SweepGenblock::do_one(sweepParams, false, false, false, restartsize, 0, 0);
+    SweepGenblock::do_one(sweepParams, false, false, false, restartsize, baseState, baseState);
 
-    int targetState, baseState, correctionVector;
-    targetState=2;correctionVector = 1; baseState = 0;
 
-    compress(sweep_tol, correctionVector, baseState);
+    compress(sweep_tol, targetState, baseState);
 
     break;
   case (RESPONSE):
@@ -169,19 +178,31 @@ int calldmrg(char* input, char* output)
     //its product with V will have a larger bond dimension and is being compressed
     //it is called the target state
     dmrginp.setimplicitTranspose() = false;
-    targetState=2;correctionVector = 1; baseState = 0;
-    if (RESTART && !FULLRESTART)
-      restartResponseSweep(sweep_tol, targetState, correctionVector, baseState);
-    else if (FULLRESTART) {
-      fullrestartGenblock();
-      restartResponseSweep(sweep_tol, targetState, correctionVector, baseState);
+
+
+    sweepParams.restorestate(direction, restartsize);
+    if (mpigetrank()==0) {
+      for (int l=0; l<dmrginp.projectorStates().size(); l++) {
+	Sweep::InitializeStateInfo(sweepParams, direction, dmrginp.projectorStates()[l]);
+	Sweep::InitializeStateInfo(sweepParams, !direction, dmrginp.projectorStates()[l]);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, dmrginp.projectorStates()[l]);
+	Sweep::CanonicalizeWavefunction(sweepParams, !direction, dmrginp.projectorStates()[l]);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, dmrginp.projectorStates()[l]);
+      }
+      for (int l=0; l<dmrginp.baseStates().size(); l++) {
+	Sweep::InitializeStateInfo(sweepParams, direction, dmrginp.baseStates()[l]);
+	Sweep::InitializeStateInfo(sweepParams, !direction, dmrginp.baseStates()[l]);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, dmrginp.baseStates()[l]);
+	Sweep::CanonicalizeWavefunction(sweepParams, !direction, dmrginp.baseStates()[l]);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, dmrginp.baseStates()[l]);
+      }
     }
-    else { 
-      pout << "DONE COMPRESSING THE CORRECTION VECTOR"<<endl;
-      pout << "NOW WE WILL OPTIMIZE THE RESPONSE WAVEFUNCTION"<<endl;
-      //finally now calculate the response state
-      responseSweep(sweep_tol, targetState, correctionVector, baseState);
-    }
+
+    
+    pout << "DONE COMPRESSING THE CORRECTION VECTOR"<<endl;
+    pout << "NOW WE WILL OPTIMIZE THE RESPONSE WAVEFUNCTION"<<endl;
+    //finally now calculate the response state
+    responseSweep(sweep_tol, dmrginp.targetState(), dmrginp.projectorStates(), dmrginp.baseStates());
 
     break;
   case (CALCOVERLAP):
@@ -348,10 +369,7 @@ void fullrestartGenblock() {
   direction = true;
   restartsize = 0;
 
-  if (dmrginp.calc_type() == RESPONSE) 
-    SweepResponse::do_one(sweepParams, true, !direction, false, restartsize, 2, 2, 0);
-  else
-    SweepGenblock::do_one(sweepParams, false, !direction, RESTART, restartsize, -1, -1);
+  SweepGenblock::do_one(sweepParams, false, !direction, RESTART, restartsize, -1, -1);
   
   sweepParams.restorestate(direction, restartsize);
   sweepParams.set_sweep_iter()=0;
@@ -606,7 +624,7 @@ void dmrg(double sweep_tol)
   }
 }
 
-void responseSweep(double sweep_tol, int targetState, int correctionVector, int baseState)
+void responseSweep(double sweep_tol, int targetState, vector<int>& projectors, vector<int>& baseStates)
 {
   double last_fe = 10.e6;
   double last_be = 10.e6;
@@ -626,9 +644,8 @@ void responseSweep(double sweep_tol, int targetState, int correctionVector, int 
   dmrginp.set_algorithm_method() = ONEDOT;
 
   //the baseState is the initial guess for the targetState
-  last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, correctionVector, baseState);
+  last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates);
   dmrginp.set_algorithm_method() = atype;
-
   warmUp = false;
   while ( true)
     {
@@ -637,7 +654,7 @@ void responseSweep(double sweep_tol, int targetState, int correctionVector, int 
       old_be = last_be;
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
-      last_be = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, correctionVector, baseState);
+      last_be = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates);
       if (dmrginp.outputlevel() > 0) 
 	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       
@@ -645,7 +662,7 @@ void responseSweep(double sweep_tol, int targetState, int correctionVector, int 
 	break;
       
       direction = true;
-      last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, correctionVector, baseState);
+      last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates);
 
       
       if (dmrginp.outputlevel() > 0)
@@ -655,7 +672,7 @@ void responseSweep(double sweep_tol, int targetState, int correctionVector, int 
   
 }
 
-
+/*
 void restartResponseSweep(double sweep_tol, int targetState, int correctionVector, int baseState)
 {
   double last_fe = 10.e6;
@@ -697,7 +714,7 @@ void restartResponseSweep(double sweep_tol, int targetState, int correctionVecto
     }
   
 }
-
+*/
 
 
 void compress(double sweep_tol, int targetState, int baseState)
@@ -800,7 +817,7 @@ void dmrg_stateSpecific(double sweep_tol, int targetState)
          pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
 
     }
-  pout << "Converged Energy  " << sweepParams.get_lowest_energy()[0]+dmrginp.get_coreenergy()<< std::endl;
+  pout << "Converged Energy  " << sweepParams.get_lowest_energy()[0]<< std::endl;
   if(dmrginp.max_iter() <= sweepParams.get_sweep_iter()) {
     
     pout << "Maximum sweep iterations achieved " << std::endl;

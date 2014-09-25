@@ -133,7 +133,7 @@ void SpinAdapted::Linear::Lanczos(vector<Wavefunction>& b, DiagonalMatrix& e, do
         if (iter > 1)
           notconverged = false;
         for (int i = 1; i <= min(iter-1, nroots); ++i) {
-          pout << "\t\t\t " << i << " ::  " << diagonal_temporary[i-1]+dmrginp.get_coreenergy() <<"  "<<pow(offdiagonal[iter-1]*alpha(iter,i),2)<<endl;
+          pout << "\t\t\t " << i << " ::  " << diagonal_temporary[i-1] <<"  "<<pow(offdiagonal[iter-1]*alpha(iter,i),2)<<endl;
           if (pow(offdiagonal[iter-1]*alpha(iter,i),2) >= normtol) {
             notconverged = true;
             break;
@@ -275,7 +275,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	
 	if (dmrginp.outputlevel() > 0) {
 	  for (int i = 1; i <= subspace_eigenvalues.Ncols (); ++i)
-	    pout << "\t\t\t " << i << " ::  " << subspace_eigenvalues(i,i)+dmrginp.get_coreenergy() << endl;
+	    pout << "\t\t\t " << i << " ::  " << subspace_eigenvalues(i,i) << endl;
 	}	
 	
 	//now calculate the ritz vectors which are approximate eigenvectors
@@ -393,6 +393,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 
 //solves the equation (H-E)^T(H-E)|psi_1> = -(H-E)^TQV|\Psi_0>  where lowerState[0] contains |\Psi_0> to enforce orthogonality (Q), and lowerState[1] contains V|\Psi_0> so we can calculate its projection in the krylov space 
 //the algorithm is taken from wikipedia page
+//the algorithm is taken from wikipedia page
 double SpinAdapted::Linear::ConjugateGradient(Wavefunction& xi, double normtol, Davidson_functor& h_multiply, std::vector<Wavefunction>& lowerStates)
 {
   setbuf(stdout, NULL);
@@ -400,13 +401,16 @@ double SpinAdapted::Linear::ConjugateGradient(Wavefunction& xi, double normtol, 
   int iter = 0, maxIter = 100;
   double levelshift = 0.0, overlap2 = 0.0, oldError=0.0, functional=0.0, Error=0.0;
 
+  Wavefunction& targetState = lowerStates[0];
   if (mpigetrank() == 0) {
-    overlap2 = DotProduct(lowerStates[0], lowerStates[0]);
-    if (fabs(overlap2) > NUMERICAL_ZERO) { 
-      ScaleAdd(-DotProduct(lowerStates[1], lowerStates[0])/DotProduct(lowerStates[0], lowerStates[0]), 
-	       lowerStates[0], lowerStates[1]);
-      ScaleAdd(-DotProduct(xi, lowerStates[0])/DotProduct(lowerStates[0], lowerStates[0]), 
-	       lowerStates[0], xi);
+    for (int i=1; i<lowerStates.size(); i++) {
+      overlap2 = pow(DotProduct(lowerStates[i], lowerStates[i]), 0.5);
+      if (fabs(overlap2) > NUMERICAL_ZERO) { 
+	ScaleAdd(-DotProduct(targetState, lowerStates[i])/overlap2, 
+		 lowerStates[i], targetState);
+	ScaleAdd(-DotProduct(xi, lowerStates[i])/overlap2, 
+		 lowerStates[i], xi);
+      }
     }
   }
 
@@ -420,14 +424,16 @@ double SpinAdapted::Linear::ConjugateGradient(Wavefunction& xi, double normtol, 
   h_multiply(xi, ri);  
 
   if (mpigetrank() == 0) {
-    ScaleAdd(-1.0, lowerStates[1], ri);
+    ScaleAdd(-1.0, targetState, ri);
     Scale(-1.0, ri);
     
-    double overlap = DotProduct(xi, lowerStates[0]);
-    
-    if (fabs(overlap2) > NUMERICAL_ZERO) 
-      ScaleAdd(-DotProduct(ri, lowerStates[0])/DotProduct(lowerStates[0], lowerStates[0]), 
-	       lowerStates[0], ri);
+    for (int i=1; i<lowerStates.size(); i++) {
+      overlap2 = pow(DotProduct(lowerStates[i], lowerStates[i]),0.5);
+      if (fabs(overlap2) > NUMERICAL_ZERO) { 
+	ScaleAdd(-DotProduct(ri, lowerStates[i])/overlap2, 
+		 lowerStates[i], ri);
+      }
+    }
     
     pi = ri;
 
@@ -447,18 +453,22 @@ double SpinAdapted::Linear::ConjugateGradient(Wavefunction& xi, double normtol, 
     h_multiply(pi, Hp);
 
     if (mpigetrank() == 0) {
-      if (fabs(overlap2) > NUMERICAL_ZERO) 
-	ScaleAdd(-DotProduct(Hp, lowerStates[0])/DotProduct(lowerStates[0], lowerStates[0]), 
-		 lowerStates[0], Hp);
-      
-      
+
+      for (int i=1; i<lowerStates.size(); i++) {
+	overlap2 = pow(DotProduct(lowerStates[i], lowerStates[i]),0.5);
+	if (fabs(overlap2) > NUMERICAL_ZERO) { 
+	  ScaleAdd(-DotProduct(Hp, lowerStates[i])/overlap2, 
+		   lowerStates[i], Hp);
+	}
+      }
+
       double alpha = oldError/DotProduct(pi, Hp);
       
       ScaleAdd(alpha, pi, xi);
       ScaleAdd(-alpha, Hp, ri);
       
       Error = DotProduct(ri, ri);
-      functional = -DotProduct(xi, ri) - DotProduct(xi, lowerStates[1]);
+      functional = -DotProduct(xi, ri) - DotProduct(xi, targetState);
       printf("\t\t\t %15i  %15.8e  %15.8e\n", iter, functional, Error);
     }
 
@@ -477,9 +487,13 @@ double SpinAdapted::Linear::ConjugateGradient(Wavefunction& xi, double normtol, 
 	ScaleAdd(1.0/beta, ri, pi);
 	Scale(beta, pi);
 	
-	if (fabs(overlap2) > NUMERICAL_ZERO)  
-	  ScaleAdd(-DotProduct(pi, lowerStates[0])/DotProduct(lowerStates[0], lowerStates[0]), 
-		   lowerStates[0], pi);
+	for (int i=1; i<lowerStates.size(); i++) {
+	  overlap2 = pow(DotProduct(lowerStates[i], lowerStates[i]),0.5);
+	  if (fabs(overlap2) > NUMERICAL_ZERO) { 
+	    ScaleAdd(-DotProduct(pi, lowerStates[i])/overlap2, 
+		     lowerStates[i], pi);
+	  }
+	}
       }
       iter ++;
     }

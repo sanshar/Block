@@ -65,8 +65,11 @@ class Input {
   int m_guess_permutations;
   bool m_stateSpecific; //when targetting excited states we switch from state 
   //average to statespecific 
-  double m_baseEnergy;
   int m_occupied_orbitals;
+
+  vector<int> m_baseState;
+  vector<int> m_projectorState;
+  int m_targetState;
 
   std::vector<int> m_hf_occupancy;
   std::string m_hf_occ_user;
@@ -154,7 +157,6 @@ class Input {
   std::vector<int> m_spin_to_spatial;
 
   int m_outputlevel;
-  double m_core_energy;
   orbitalFormat m_orbformat;
 
   int m_reorderType;
@@ -174,7 +176,7 @@ class Input {
   void serialize(Archive & ar, const unsigned int version)
   {
     ar & m_thrds_per_node & m_spinAdapted & m_Bogoliubov & m_stateSpecific & m_implicitTranspose & m_num_Integrals;
-    ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz & m_baseEnergy;
+    ar & m_norbs & m_alpha & m_beta & m_solve_type & m_Sz & m_set_Sz & m_baseState& m_projectorState& m_targetState;
     ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occ_user & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule & m_reorder;
     ar & m_molecule_quantum & m_total_symmetry_number & m_total_spin & m_orbenergies & m_add_noninteracting_orbs;
@@ -188,7 +190,7 @@ class Input {
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_oneindex_screen_tol & m_twoindex_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type & m_warmup;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
-    ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_backward & m_schedule_type_default & m_core_energy &m_integral_disk_storage_thresh;
+    ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_backward & m_schedule_type_default &m_integral_disk_storage_thresh;
     ar & n_twodot_noise & m_twodot_noise & m_twodot_gamma;
     ar & m_calc_ri_4pdm & m_store_ripdm_readable & m_nevpt2 & m_conventional_nevpt2 & m_kept_nevpt2_states & NevPrint;
   }
@@ -250,8 +252,8 @@ class Input {
 #endif
   void performSanityTest();
   void generateDefaultSchedule();
-  void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, int integralIndex);
-  void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, PairArray& vcc, CCCCArray& vcccc, CCCDArray& vcccd);  
+  void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, double& coreEnergy, int integralIndex);
+  void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, double& coreEnergy, PairArray& vcc, CCCCArray& vcccc, CCCDArray& vcccd);  
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
   std::vector<int> getgaorder(ifstream& gaconfFile, string& orbitalfile, std::vector<int>& fiedlerorder);
   std::vector<int> get_fiedler(string& dumpname);
@@ -301,9 +303,14 @@ class Input {
   boost::shared_ptr<cumulTimer> s1time; 
   boost::shared_ptr<cumulTimer> s2time; 
 
-  //const bool& doStateSpecific() const {return m_doStateSpecific;}
-  //bool& doStateSpecific() {return m_doStateSpecific;}
-  const double& baseEnergy() const {return m_baseEnergy;}
+  const std::vector<int>& baseStates() const {return m_baseState;}
+  const int& targetState() const {return m_targetState;}
+  const std::vector<int>& projectorStates() const {return m_projectorState;}
+
+  std::vector<int>& baseStates() {return m_baseState;}
+  int& targetState() {return m_targetState;}
+  std::vector<int>& projectorStates() {return m_projectorState;}
+
   const int& num_occupied_orbitals() const {return m_occupied_orbitals;}
   const bool& doimplicitTranspose() const {return m_implicitTranspose;}
   bool& setimplicitTranspose() {return m_implicitTranspose;}
@@ -323,7 +330,6 @@ class Input {
 
   bool use_partial_two_integrals() const {return (m_norbs/2 >= m_integral_disk_storage_thresh);}
   bool& set_fullrestart() {return m_fullrestart;}
-  const double& get_coreenergy() const {return m_core_energy;}
   const bool& get_fullrestart() const {return m_fullrestart;}
   const bool& get_backward() const {return m_backward;}
   const double& get_sweep_tol() const {return m_sweep_tol;}

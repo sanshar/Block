@@ -48,6 +48,7 @@ double getCommuteParity(SpinQuantum a, SpinQuantum b, SpinQuantum c)
   }
   pout << "Major trouble, getCommuteParity asked for three inappropriate operators"<<endl;
   pout << a<<"  "<<b<<"  "<<c<<endl;
+  abort();
   return 1.0;
 }
 

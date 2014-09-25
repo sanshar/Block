@@ -72,11 +72,14 @@ void SpinAdapted::Input::initialize_defaults()
   m_solve_type = DAVIDSON;
   m_stateSpecific = false;
   m_implicitTranspose = true; //dont make DD just use CC^T to evaluate it
-  m_baseEnergy = -1.e10;
   m_occupied_orbitals = -1;
   m_num_Integrals = 1;
   v_2.resize(1, TwoElectronArray(TwoElectronArray::restrictedNonPermSymm));
   v_1.resize(1);
+  coreEnergy.resize(1);
+  m_baseState.resize(1,0);
+  m_projectorState.resize(0);
+  m_targetState = -1;
   
   m_spinAdapted = true;
   m_Bogoliubov = false;
@@ -151,7 +154,6 @@ void SpinAdapted::Input::initialize_defaults()
   m_maxM = 0;
   m_lastM = 500;
   m_startM = 250;
-  m_core_energy = 0.0;
   
   m_calc_ri_4pdm=false;
   m_store_ripdm_readable=false;
@@ -185,8 +187,8 @@ SpinAdapted::Input::Input(const string& config_name) {
   int n_spin = -1;
   sym = "c1";
   NonabelianSym = false;
-  string orbitalfile;
-  string perturbationIntegralfile;
+  std::vector<string> orbitalfile;
+
 
   if(mpigetrank() == 0)
   {
@@ -209,13 +211,16 @@ SpinAdapted::Input::Input(const string& config_name) {
 	if(usedkey[ORBS] == 0) 
 	  usedkey_error(keyword, msg);
 	usedkey[ORBS] = 0;
-	if (tok.size() != 2) {
-	  pout << "keyword orbs should be followed by a single filename and then an end line"<<endl;
+	if (tok.size() < 2) {
+	  pout << "keyword orbs should be followed by atleast a single filename and then an end line"<<endl;
 	  pout << "error found in the following line "<<endl;
 	  pout << msg<<endl;
 	  abort();
 	}
-	orbitalfile = tok[1];
+	m_num_Integrals = tok.size()-1;
+	orbitalfile.resize(m_num_Integrals);
+	for (int l=0; l<m_num_Integrals; l++) 	  
+	  orbitalfile[l] = tok[l+1];
       }
       else if (boost::iequals(keyword, "maxM")) {
 	if(usedkey[MAXM] == 0) 
@@ -550,29 +555,26 @@ SpinAdapted::Input::Input(const string& config_name) {
       else if (boost::iequals(keyword,  "calchamiltonian"))
 	m_calc_type = CALCHAMILTONIAN;
       else if (boost::iequals(keyword,  "response")) {
-	if (tok.size() != 2) {
-	  pout << "The keyword response should be followed by orbital file for the perturbation!"<<endl;
+	if (tok.size() != 1) {
+	  pout << "The keyword response should not be followed by anything!"<<endl;
 	  abort();
 	}
-	perturbationIntegralfile = tok[1];
 	m_calc_type = RESPONSE;
 	m_solve_type = CONJUGATE_GRADIENT;
-	m_num_Integrals = 2;
+	if(m_targetState == -1)
+	  m_targetState = 2;
 	
       }
-      else if (boost::iequals(keyword,  "compress"))
+      else if (boost::iequals(keyword,  "compress")) {
 	m_calc_type = COMPRESS;
-      else if (boost::iequals(keyword, "baseenergy")) {
-	if(usedkey[BASENERGY] == 0) 
-	  usedkey_error(keyword, msg);
-	usedkey[BASENERGY] = 0;
 	if (tok.size() !=  2) {
-	  pout << "keyword basenergy should be followed by a single number and then an end line"<<endl;
+	  pout << "keyword compression should be followed by a single number and then an end line"<<endl;
 	  pout << "error found in the following line "<<endl;
 	  pout << msg<<endl;
 	  abort();
 	}	
-        m_baseEnergy= atof(tok[1].c_str());
+	m_baseState.resize(1, atoi(tok[1].c_str()));
+
       }
       else if (boost::iequals(keyword,  "maxj")) {
 	if (tok.size() !=  2) {
@@ -711,8 +713,13 @@ SpinAdapted::Input::Input(const string& config_name) {
 	vector<string> weighttoken;
 	boost::split(weighttoken, msg, is_any_of(" \t"), token_compress_on);
 	
-	if (!boost::iequals(weighttoken[0],  "weights")) 
+	if (!boost::iequals(weighttoken[0],  "weights")) {
+	  //manually make all the weights equal
+	  m_weights.resize(m_nroots);
+	  for (int i=0; i<m_nroots; i++)
+	    m_weights[i] = 1.0/m_nroots;
 	  continue;
+	}
 	PROVIDED_WEIGHTS = true;
 
         m_weights.resize(m_nroots);
@@ -786,6 +793,40 @@ SpinAdapted::Input::Input(const string& config_name) {
 	  abort();
 	}
         m_deflation_max_size = atoi(tok[1].c_str());
+      }
+      else if(boost::iequals(keyword,  "ProjectorStates") )
+      {
+	if (tok.size() < 2) {
+	  pout << "keyword projectorstates should be followed by atleast a single number and then an endline"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}
+	m_projectorState.resize(tok.size()-1);
+	for (int l=0; l<tok.size()-1; l++)
+	  m_projectorState[l] = atoi(tok[l+1].c_str());
+      }
+      else if(boost::iequals(keyword,  "TargetState") )
+      {
+	if (tok.size() !=  2) {
+	  pout << "keyword "<<keyword<<" should be followed by a single number and then an endline"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}
+        m_targetState = atoi(tok[1].c_str());
+      }
+      else if(boost::iequals(keyword,  "BaseStates") )
+      {
+	if (tok.size() < 2) {
+	  pout << "keyword basestate should be followed by a single number and then an endline"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}
+	m_baseState.resize(tok.size()-1);
+	for (int l=0; l<tok.size()-1; l++)
+	  m_baseState[l] = atoi(tok[l+1].c_str());
       }
 
 
@@ -970,9 +1011,16 @@ SpinAdapted::Input::Input(const string& config_name) {
   mpi::broadcast(world, m_num_Integrals, 0);
   mpi::broadcast(world, sym, 0);
   mpi::broadcast(world, m_Bogoliubov, 0);
+  mpi::broadcast(world, orbitalfile, 0);
 #endif
   v_2.resize(m_num_Integrals, TwoElectronArray(TwoElectronArray::restrictedNonPermSymm));
   v_1.resize(m_num_Integrals);
+  coreEnergy.resize(m_num_Integrals);
+  if ( (m_calc_type==RESPONSE) && m_num_Integrals != m_baseState.size() + 1) {
+    pout << "number of integrals should be 1 more than the number of base states"<<endl;
+    pout << "about to exit"<<endl;
+    abort();
+  }
 
   if (m_Bogoliubov && m_num_Integrals >1 ) {
     pout << "Currently the response code does not work with non-particle number conserving hamiltonians!!";
@@ -982,8 +1030,10 @@ SpinAdapted::Input::Input(const string& config_name) {
   if (sym != "c1")
     Symmetry::InitialiseTable(sym);
 
-  if (mpigetrank() == 0) 
-     CheckFileExistence(orbitalfile, "Orbital file ");
+  if (mpigetrank() == 0) {
+    for (int l=0; l<orbitalfile.size(); l++)
+      CheckFileExistence(orbitalfile[l], "Orbital file");
+  }
 
   //read the orbitals
   for (int integral=0; integral < m_num_Integrals; integral++) {
@@ -1013,14 +1063,11 @@ SpinAdapted::Input::Input(const string& config_name) {
       v_cc.rhf=true;
       v_cccc.rhf=true;
       v_cccd.rhf=true;
-      readorbitalsfile(orbitalfile, v_1[integral], v_2[integral], v_cc, v_cccc, v_cccd);
+      readorbitalsfile(orbitalfile[integral], v_1[integral], v_2[integral], coreEnergy[integral], v_cc, v_cccc, v_cccd);
       assert(!m_add_noninteracting_orbs);
     } 
     else {
-      if (integral == 0)
-	readorbitalsfile(orbitalfile, v_1[integral], v_2[integral], integral);
-      else
-	readorbitalsfile(perturbationIntegralfile, v_1[integral], v_2[integral], integral);
+      readorbitalsfile(orbitalfile[integral], v_1[integral], v_2[integral], coreEnergy[integral], integral);
     }
   }
   
@@ -1051,6 +1098,7 @@ SpinAdapted::Input::Input(const string& config_name) {
   mpi::broadcast(world, *this,0);
   mpi::broadcast(world, v_1,0);
   mpi::broadcast(world, v_2,0);
+  mpi::broadcast(world, coreEnergy,0);
   mpi::broadcast(world, v_cc,0);
   mpi::broadcast(world, v_cccc,0);
   mpi::broadcast(world, v_cccd,0);
@@ -1094,7 +1142,7 @@ void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& o
 
 }
 
-void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray& v1, TwoElectronArray& v2, int integralIndex)
+void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray& v1, TwoElectronArray& v2, double& coreEnergy, int integralIndex)
 {
   ifstream dumpFile; 
   dumpFile.open(orbitalfile.c_str(), ios::in);
@@ -1331,7 +1379,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     i = atoi(tok[1].c_str())-offset;j = atoi(tok[2].c_str())-offset;k = atoi(tok[3].c_str())-offset;l = atoi(tok[4].c_str())-offset;
 
     if (i==-1 && j==-1 && k==-1 && l==-1) {
-      m_core_energy += value;
+      coreEnergy += value;
       if (AOrbOffset == 0 && BOrbOffset == 0) //AA
 	{AOrbOffset = 1; BOrbOffset = 1;} //got to BB}
       else if (AOrbOffset == 1 && BOrbOffset == 1) //BB
@@ -1369,7 +1417,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
   }
 }
 
-void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray& v1, TwoElectronArray& v2, PairArray& vcc, CCCCArray& vcccc, CCCDArray& vcccd) {
+void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray& v1, TwoElectronArray& v2, double& coreEnergy, PairArray& vcc, CCCCArray& vcccc, CCCDArray& vcccd) {
 
   ifstream dumpFile;
   dumpFile.open(orbitalfile.c_str(), ios::in);
@@ -1584,7 +1632,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     value = atof(tok[0].c_str());
     i = atoi(tok[1].c_str())-offset;j = atoi(tok[2].c_str())-offset;k = atoi(tok[3].c_str())-offset;l = atoi(tok[4].c_str())-offset;
     if (i==-1 && j==-1 && k==-1 && l==-1) {
-      m_core_energy += value;
+      coreEnergy += value;
       section += 1;
     } else if (RHF) {
       if (section == 0) { // ccdd
@@ -1934,10 +1982,6 @@ void SpinAdapted::Input::performSanityTest()
   //if(m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter == 0)
   //  m_twodot_to_onedot_iter = min(m_sweep_iter_schedule.back()+2, m_maxiter-1);
 
-  if (m_calc_type == RESPONSE && fabs(m_baseEnergy+1.e10) < 1.0) {
-    pout << "When chosing RESPONSE calculation type base energy is needed"<<endl;
-    abort();
-  }
 
   if (m_algorithm_type == TWODOT_TO_ONEDOT && m_twodot_to_onedot_iter >= m_maxiter) {
     pout << "Switch from twodot to onedot algorithm cannot happen after maxiter"<<endl;
