@@ -25,6 +25,8 @@ MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/
 LAPACKBLAS = -L${MKLLIB} -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 MKLFLAGS = /opt/intel/composer_xe_2013_sp1.0.080/mkl/include
 MKLOPT = -D_HAS_INTEL_MKL
+end
+MKLFLAGS = .
 endif
 
 RUN_UNITTEST=no
