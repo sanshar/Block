@@ -49,6 +49,8 @@ class cumulTimer
 #ifdef _OPENMP
     if(!omp_get_thread_num()){
 #endif
+
+#ifndef SERIAL
       if (localStart < 0 || localStart > t->elapsed() +1 ) 
 	{
 	  
@@ -58,9 +60,19 @@ class cumulTimer
 	  assert(1==2);
 	  abort();
 	}
-#ifndef SERIAL
+
       cumulativeSum = cumulativeSum + t->elapsed() - localStart;
 #else
+      if (localStart < 0 || localStart > clock() +1 ) 
+	{
+	  
+	  pout << "local stop called without starting first"<<endl;
+	  pout << localStart<<"  "<<clock();
+	  throw 20;
+	  assert(1==2);
+	  abort();
+	}
+
       cumulativeSum = cumulativeSum + clock() - localStart;
 #endif
       localStart = 0;
