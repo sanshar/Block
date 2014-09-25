@@ -81,7 +81,9 @@ namespace SpinAdapted {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       int integralIndex = b.get_integralIndex();
       const double screen_tol = dmrginp.oneindex_screen_tol();
-      std::vector<int> screened_d_ix = screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1[integralIndex], *b.get_twoInt(), screen_tol); 
+      std::vector<int> screened_d_ix = (dmrginp.hamiltonian() == BCS) ? 
+        screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1[integralIndex], *b.get_twoInt(), v_cc, v_cccc, v_cccd, screen_tol) : 
+        screened_d_indices(b.get_sites(), b.get_complementary_sites(), v_1[integralIndex], *b.get_twoInt(), screen_tol);
       m_op.set_indices(screened_d_ix, dmrginp.last_site());  
       std::vector<int> orbs(1);
       
@@ -351,10 +353,10 @@ namespace SpinAdapted {
         if (dmrginp.hamiltonian() == BCS) {
           op.resize_deltaQuantum(3);
           op.set_deltaQuantum(0) = spinvec[j];
-          op.set_deltaQuantum(1) = SpinQuantum(-2, spinvec[j].get_s(), spinvec[j].get_symm());
-          op.set_deltaQuantum(2) = SpinQuantum(2, spinvec[j].get_s(), spinvec[j].get_symm());
+          op.set_deltaQuantum(1) = SpinQuantum(2, spinvec[j].get_s(), spinvec[j].get_symm());
+          op.set_deltaQuantum(2) = SpinQuantum(-2, spinvec[j].get_s(), spinvec[j].get_symm());
         } else {
-	      op.set_deltaQuantum(1, spinvec[j]);
+          op.set_deltaQuantum(1, spinvec[j]);
         }
       }
     }
@@ -545,7 +547,9 @@ namespace SpinAdapted {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.oneindex_screen_tol();
       int integralIndex = b.get_integralIndex();
-      vector< int > screened_cdd_ix = screened_cddcomp_indices(b.get_complementary_sites(), b.get_sites(), v_1[integralIndex], *b.get_twoInt(), screen_tol);
+      vector< int > screened_cdd_ix = (dmrginp.hamiltonian() == BCS) ?
+        screened_cddcomp_indices(b.get_complementary_sites(), b.get_sites(), v_1[integralIndex], *b.get_twoInt(), v_cc, v_cccc, v_cccd, screen_tol) :
+        screened_cddcomp_indices(b.get_complementary_sites(), b.get_sites(), v_1[integralIndex], *b.get_twoInt(), screen_tol);
       m_op.set_indices(screened_cdd_ix, dmrginp.last_site());      
       std::vector<int> orbs(1);
       for (int i = 0; i < m_op.local_nnz(); ++i)

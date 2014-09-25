@@ -37,9 +37,8 @@ void SpinAdapted::opxop::cdxcdcomp(const SpinBlock* otherblock, std::vector<boos
       //If we have all the operators we dont have to take transposes, useful for <bra|H|ket> evaluation
       if (otherblock->has(DES_CRECOMP)) {
 	    op1 = loopblock->get_op_array(DES_CRE).get_element(i,j).at(opind)->getworkingrepresentation(loopblock);
-	    double parity = getCommuteParity(-getSpinQuantum(i), getSpinQuantum(j), op1->get_deltaQuantum()[0]);
 	    op2 = otherblock->get_op_array(DES_CRECOMP).get_element(i,j).at(opind)->getworkingrepresentation(otherblock);
-	    SpinAdapted::operatorfunctions::TensorProduct(otherblock, *op2, *op1, b, &(b->get_stateInfo()), o[ilock], factor*parity, numthrds);
+	    SpinAdapted::operatorfunctions::TensorProduct(otherblock, *op2, *op1, b, &(b->get_stateInfo()), o[ilock], factor, numthrds);
       } else {
 	    SpinAdapted::operatorfunctions::TensorProduct(otherblock, Transposeview(*op2), Transposeview(*op1), b, &(b->get_stateInfo()), o[ilock], factor, numthrds);
       }
@@ -171,9 +170,9 @@ void SpinAdapted::opxop::cdxcdcomp(const SpinBlock* otherblock, std::vector<boos
       //If we have all the operators we dont have to take transposes, useful for <bra|H|ket> evaluation
       if (otherblock->has(DES_CRECOMP)) {
 	    op1 = loopblock->get_op_array(DES_CRE).get_element(i,j).at(opind)->getworkingrepresentation(loopblock);
-	    double parity = getCommuteParity(-getSpinQuantum(i), getSpinQuantum(j), op1->get_deltaQuantum()[0]);
 	    op2 = otherblock->get_op_array(DES_CRECOMP).get_element(i,j).at(opind)->getworkingrepresentation(otherblock);
-	    SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, *op1, b, c, v[ilock], hq, parity*factor);
+	    double parity = 1.0;
+        SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, *op1, b, c, v[ilock], hq, parity*factor);
       }
       else 
 	    SpinAdapted::operatorfunctions::TensorMultiply(otherblock, Transposeview(*op2), Transposeview(*op1), b, c, v[ilock], hq, factor);
