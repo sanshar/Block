@@ -9,10 +9,10 @@ BOOSTINCLUDE = /home/juny/boost_1_55_0/install/include/
 
 #specify boost and lapack-blas library locations
 BOOSTLIB = -L/home/juny/boost_1_55_0/install/lib/ -lboost_serialization -lboost_system -lboost_filesystem
-LAPACKBLAS = -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+LAPACKBLAS = -lblas -llapack
 
-Iboost56 = no
-ifeq ($(Iboost56), yes)
+USE_BOOST56 = no
+ifeq ($(USE_BOOST56), yes)
 	B56 = -DBOOST_1_56_0
 endif
 
@@ -25,7 +25,7 @@ MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/
 LAPACKBLAS = -L${MKLLIB} -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 MKLFLAGS = /opt/intel/composer_xe_2013_sp1.0.080/mkl/include
 MKLOPT = -D_HAS_INTEL_MKL
-end
+else
 MKLFLAGS = .
 endif
 
