@@ -249,17 +249,7 @@ template <class Op> class Op_component : public Op_component_base
 
   void build_csf_operators(std::vector< Csf >& c, vector< vector<Csf> >& ladders, SpinBlock& b) 
   {
-    if ( (m_op.num_indices() > 2) && ( ! dmrginp.do_npdm_in_core()) ) {
-      // Build on disk (assume we are building from scratch)
-      std::string ofile = get_filename();
-      std::ofstream ofs(ofile.c_str(), std::ios::binary);
-      for_all_operators_to_disk( *this, b, ofs, bind(&SparseMatrix::buildUsingCsf, _1,boost::ref(b), boost::ref(ladders), boost::ref(c)) );
-      ofs.close();
-    }
-    else {
-      // Build in core
-      for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsf, _1, boost::ref(b), boost::ref(ladders), boost::ref(c)) );
-    }
+    for_all_operators_multithread( *this, bind(&SparseMatrix::buildUsingCsf, _1, boost::ref(b), boost::ref(ladders), boost::ref(c)) );
   }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

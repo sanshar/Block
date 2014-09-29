@@ -100,14 +100,14 @@ void do_3index_tensor_trace( const opTypes& optype, SpinBlock& big, SpinBlock* s
   Op_component_base& sysdot_array = sysdot->get_op_array(optype);
   // Open filesystem if necessary
   std::ifstream ifs;
-  if ( ! dmrginp.do_npdm_in_core() ) ifs.open( sysdot_array.get_filename().c_str(), std::ios::binary );
+  if ( (! dmrginp.do_npdm_in_core()) && sysdot->size() > 1 ) ifs.open( sysdot_array.get_filename().c_str(), std::ios::binary );
 
 //FIXME need reference?  don't want to copy?
   // Loop over all operator indices
   std::vector<boost::shared_ptr<SparseMatrix> > sysdot_ops;
 //pout << "trace array.size = " << sysdot_array.get_size() << endl;
   for (int idx = 0; idx < sysdot_array.get_size(); ++idx) {
-    if ( dmrginp.do_npdm_in_core() ) 
+    if ( dmrginp.do_npdm_in_core() || sysdot->size() <= 1) 
       sysdot_ops = sysdot_array.get_local_element(idx);
     else
 //FIXME size
@@ -162,7 +162,7 @@ void do_3index_1_2_tensor_products( bool forwards, const opTypes& optype, const 
 
   // Initialize filesystem
   std::ifstream lhsifs;
-  if ( ! dmrginp.do_npdm_in_core() ) lhsifs.open( lhs_array.get_filename().c_str(), std::ios::binary );
+  if (( ! dmrginp.do_npdm_in_core()) && lhsBlock->size() > 1) lhsifs.open( lhs_array.get_filename().c_str(), std::ios::binary );
 
   // Loop over all lhs operator indices
   for (int idx = 0; idx < lhs_array.get_size(); ++idx) {
@@ -234,7 +234,7 @@ void do_3index_2_1_tensor_products( bool forwards, const opTypes& optype, const 
 
   // Initialize filesystem
   std::ifstream rhsifs;
-  if ( ! dmrginp.do_npdm_in_core() ) rhsifs.open( rhs_array.get_filename().c_str(), std::ios::binary );
+  if ( (! dmrginp.do_npdm_in_core()) && rhsBlock->size() > 1 ) rhsifs.open( rhs_array.get_filename().c_str(), std::ios::binary );
 //pout << "tensor_2_1: rhs_size = " << rhs_array.get_size() << "; op = " << rhs_array.get_op_string() << endl;
 //pout << "tensor_2_1: lhs_size = " << lhs_array.get_size() << "; op = " << lhs_array.get_op_string() << endl;
 

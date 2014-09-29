@@ -97,13 +97,13 @@ void do_4index_tensor_trace( const opTypes& optype, SpinBlock& big, SpinBlock* s
   Op_component_base& sysdot_array = sysdot->get_op_array(optype);
   // Open filesystem if necessary
   std::ifstream ifs;
-  if ( ! dmrginp.do_npdm_in_core() ) ifs.open( sysdot_array.get_filename().c_str(), std::ios::binary );
+  if ( (! dmrginp.do_npdm_in_core()) && sysdot->size() > 1 ) ifs.open( sysdot_array.get_filename().c_str(), std::ios::binary );
 
 //FIXME need reference?  don't want to copy?
   // Loop over all operator indices
   std::vector<boost::shared_ptr<SparseMatrix> > sysdot_ops;
   for (int idx = 0; idx < sysdot_array.get_size(); ++idx) {
-    if ( dmrginp.do_npdm_in_core() ) 
+    if ( dmrginp.do_npdm_in_core() || sysdot->size() <= 1) 
       sysdot_ops = sysdot_array.get_local_element(idx);
     else
 //FIXME size
@@ -219,12 +219,12 @@ void do_4index_1_3_tensor_products( bool forwards, const opTypes& optype, const 
 
   // Initialize filesystem
   std::ifstream lhsifs;
-  if ( ! dmrginp.do_npdm_in_core() ) lhsifs.open( lhs_array.get_filename().c_str(), std::ios::binary );
+  if ( (! dmrginp.do_npdm_in_core())  && lhsBlock->size() > 1) lhsifs.open( lhs_array.get_filename().c_str(), std::ios::binary );
 
   // Loop over all lhs operator indices
   for (int idx = 0; idx < lhs_array.get_size(); ++idx) {
     std::vector<boost::shared_ptr<SparseMatrix> > lhs_ops;
-    if ( dmrginp.do_npdm_in_core() )
+    if ( dmrginp.do_npdm_in_core() || lhsBlock->size() <=1)
       lhs_ops = lhs_array.get_local_element(idx);
     else
       lhs_ops = get_ops_from_disk( lhsifs, lhs_array.get_local_element(0).size() );
@@ -287,12 +287,12 @@ void do_4index_3_1_tensor_products( bool forwards, const opTypes& optype, const 
 
   // Initialize filesystem
   std::ifstream rhsifs;
-  if ( ! dmrginp.do_npdm_in_core() ) rhsifs.open( rhs_array.get_filename().c_str(), std::ios::binary );
+  if ( (! dmrginp.do_npdm_in_core()) && rhsBlock->size() > 1 ) rhsifs.open( rhs_array.get_filename().c_str(), std::ios::binary );
 
   // Loop over all rhs operator indices
   for (int idx = 0; idx < rhs_array.get_size(); ++idx) {
     std::vector<boost::shared_ptr<SparseMatrix> > rhs_ops;
-    if ( dmrginp.do_npdm_in_core() )
+    if ( dmrginp.do_npdm_in_core() || rhsBlock->size() <= 1 )
       rhs_ops = rhs_array.get_local_element(idx);
     else
       rhs_ops = get_ops_from_disk( rhsifs, rhs_array.get_local_element(0).size() );

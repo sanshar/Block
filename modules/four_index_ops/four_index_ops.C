@@ -23,6 +23,28 @@ Sandeep Sharma and Garnet K.-L. Chan
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  (Cre,Cre,Des,Des)
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+ void SpinAdapted::CreCreDesDes::build(const SpinBlock& b) { 
+      dmrginp.makeopsT -> start();
+      built = true;
+      allocate(b.get_braStateInfo(), b.get_ketStateInfo());
+    
+      const int i = get_orbs()[0];
+      const int j = get_orbs()[1];
+      const int k = get_orbs()[2];
+      const int l = get_orbs()[3];
+      SpinBlock* leftBlock = b.get_leftBlock();
+      SpinBlock* rightBlock = b.get_rightBlock();
+    
+      if (leftBlock->get_op_array(CRE_CRE_DES_DES).has(i,j,k,l))
+      {      
+        const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DES_DES, deltaQuantum, i,j,k,l);
+        if (rightBlock->get_sites().size() == 0) 
+          SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+        dmrginp.makeopsT -> stop();
+        return;
+      }
+      assert(false && "Only build CRECREDESDES in the starting block when spin-embeding is used");
+    }
 
 double SpinAdapted::CreCreDesDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
@@ -101,6 +123,28 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreDesDes::getworki
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  (Cre,Des,Cre,Des)
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void SpinAdapted::CreDesCreDes::build(const SpinBlock& b) { 
+  dmrginp.makeopsT -> start();
+  built = true;
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+  const int k = get_orbs()[2];
+  const int l = get_orbs()[3];
+  SpinBlock* leftBlock = b.get_leftBlock();
+  SpinBlock* rightBlock = b.get_rightBlock();
+
+  if (leftBlock->get_op_array(CRE_DES_CRE_DES).has(i,j,k,l))
+  {      
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES_CRE_DES, deltaQuantum, i,j,k,l);
+    if (rightBlock->get_sites().size() == 0) 
+      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    dmrginp.makeopsT -> stop();
+    return;
+  }
+  assert(false && "Only build CREDESCREDES in the starting block when spin-embeding is used");
+}
 
 double SpinAdapted::CreDesCreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
@@ -176,6 +220,28 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesCreDes::getworki
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  (Cre,Des,Des,Cre)
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void SpinAdapted::CreDesDesCre::build(const SpinBlock& b) { 
+  dmrginp.makeopsT -> start();
+  built = true;
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+  const int k = get_orbs()[2];
+  const int l = get_orbs()[3];
+  SpinBlock* leftBlock = b.get_leftBlock();
+  SpinBlock* rightBlock = b.get_rightBlock();
+
+  if (leftBlock->get_op_array(CRE_DES_DES_CRE).has(i,j,k,l))
+  {      
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES_DES_CRE, deltaQuantum, i,j,k,l);
+    if (rightBlock->get_sites().size() == 0) 
+      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    dmrginp.makeopsT -> stop();
+    return;
+  }
+  assert(false && "Only build CREDESDESCRE in the starting block when spin-embeding is used");
+}
 
 double SpinAdapted::CreDesDesCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
@@ -251,6 +317,28 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesDesCre::getworki
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  (Cre,Des,Des,Des)
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void SpinAdapted::CreDesDesDes::build(const SpinBlock& b) { 
+  dmrginp.makeopsT -> start();
+  built = true;
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+  const int k = get_orbs()[2];
+  const int l = get_orbs()[3];
+  SpinBlock* leftBlock = b.get_leftBlock();
+  SpinBlock* rightBlock = b.get_rightBlock();
+
+  if (leftBlock->get_op_array(CRE_DES_DES_DES).has(i,j,k,l))
+  {      
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES_DES_DES, deltaQuantum, i,j,k,l);
+    if (rightBlock->get_sites().size() == 0) 
+      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    dmrginp.makeopsT -> stop();
+    return;
+  }
+  assert(false && "Only build CREDESDESDES in the starting block when spin-embeding is used");
+}
 
 double SpinAdapted::CreDesDesDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
@@ -326,6 +414,28 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesDesDes::getworki
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  (Cre,Cre,Cre,Des)
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void SpinAdapted::CreCreCreDes::build(const SpinBlock& b) { 
+  dmrginp.makeopsT -> start();
+  built = true;
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+  const int k = get_orbs()[2];
+  const int l = get_orbs()[3];
+  SpinBlock* leftBlock = b.get_leftBlock();
+  SpinBlock* rightBlock = b.get_rightBlock();
+
+  if (leftBlock->get_op_array(CRE_CRE_CRE_DES).has(i,j,k,l))
+  {      
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_CRE_DES, deltaQuantum, i,j,k,l);
+    if (rightBlock->get_sites().size() == 0) 
+      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    dmrginp.makeopsT -> stop();
+    return;
+  }
+  assert(false && "Only build CRECRECREDES in the starting block when spin-embeding is used");
+}
 
 double SpinAdapted::CreCreCreDes::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
@@ -401,6 +511,28 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreCreDes::getworki
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  (Cre,Cre,Des,Cre)
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void SpinAdapted::CreCreDesCre::build(const SpinBlock& b) { 
+  dmrginp.makeopsT -> start();
+  built = true;
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+  const int k = get_orbs()[2];
+  const int l = get_orbs()[3];
+  SpinBlock* leftBlock = b.get_leftBlock();
+  SpinBlock* rightBlock = b.get_rightBlock();
+
+  if (leftBlock->get_op_array(CRE_CRE_DES_CRE).has(i,j,k,l))
+  {      
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DES_CRE, deltaQuantum, i,j,k,l);
+    if (rightBlock->get_sites().size() == 0) 
+      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    dmrginp.makeopsT -> stop();
+    return;
+  }
+  assert(false && "Only build CRECREDESCRE in the starting block when spin-embeding is used");
+}
 
 double SpinAdapted::CreCreDesCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
@@ -476,6 +608,28 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreCreDesCre::getworki
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  (Cre,Des,Cre,Cre)
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void SpinAdapted::CreDesCreCre::build(const SpinBlock& b) { 
+  dmrginp.makeopsT -> start();
+  built = true;
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+  const int k = get_orbs()[2];
+  const int l = get_orbs()[3];
+  SpinBlock* leftBlock = b.get_leftBlock();
+  SpinBlock* rightBlock = b.get_rightBlock();
+
+  if (leftBlock->get_op_array(CRE_DES_CRE_CRE).has(i,j,k,l))
+  {      
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES_CRE_CRE, deltaQuantum, i,j,k,l);
+    if (rightBlock->get_sites().size() == 0) 
+      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    dmrginp.makeopsT -> stop();
+    return;
+  }
+  assert(false && "Only build CREDESCRECRE in the starting block when spin-embeding is used");
+}
 
 double SpinAdapted::CreDesCreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
@@ -551,6 +705,28 @@ boost::shared_ptr<SpinAdapted::SparseMatrix> SpinAdapted::CreDesCreCre::getworki
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  (Cre,Cre,Cre,Cre)
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------
+void SpinAdapted::CreCreCreCre::build(const SpinBlock& b) { 
+  dmrginp.makeopsT -> start();
+  built = true;
+  allocate(b.get_braStateInfo(), b.get_ketStateInfo());
+
+  const int i = get_orbs()[0];
+  const int j = get_orbs()[1];
+  const int k = get_orbs()[2];
+  const int l = get_orbs()[3];
+  SpinBlock* leftBlock = b.get_leftBlock();
+  SpinBlock* rightBlock = b.get_rightBlock();
+
+  if (leftBlock->get_op_array(CRE_CRE_CRE_CRE).has(i,j,k,l))
+  {      
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_CRE_CRE, deltaQuantum, i,j,k,l);
+    if (rightBlock->get_sites().size() == 0) 
+      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    dmrginp.makeopsT -> stop();
+    return;
+  }
+  assert(false && "Only build CRECRECRECRE in the starting block when spin-embeding is used");
+}
 
 double SpinAdapted::CreCreCreCre::redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b)
 {
