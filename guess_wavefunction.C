@@ -304,7 +304,7 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
       noiseMatrix.Randomise();
       double norm = DotProduct(noiseMatrix, noiseMatrix);
       if (abs(norm) >= 1e-14) {
-	ScaleAdd(1e-6/sqrt(norm), noiseMatrix, solution);
+	ScaleAdd(1e-3/sqrt(norm), noiseMatrix, solution);
       }
       Normalise(solution);
     }
