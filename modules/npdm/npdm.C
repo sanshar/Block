@@ -368,7 +368,7 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
     //For npdm_order 1 or 2. new_npdm_code is determined by default or manual setting.
     //For the other situation, only old or new code is suitable.
     if(npdm_order == NPDM_PAIRMATRIX || npdm_order == NPDM_THREEPDM || npdm_order == NPDM_FOURPDM || npdm_order == NPDM_NEVPT2 ||  transitionpdm == true  || dmrginp.spinAdapted() == false || dmrginp.setStateSpecific())
-      dmrginp.new_npdm_code() = true;
+      dmrginp.set_new_npdm_code();
 
     if(dmrginp.new_npdm_code()){
     if      (npdm_order == NPDM_ONEPDM) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Onepdm_driver( dmrginp.last_site() ) );

@@ -460,7 +460,7 @@ class Input {
     if( m_do_pdm) return m_new_npdm_code;
     else return false;
   }
-  bool &new_npdm_code() {return m_new_npdm_code;}
+  void set_new_npdm_code(){ m_new_npdm_code= true;}
   const bool &store_spinpdm() const {return m_store_spinpdm;}
   bool &store_spinpdm() {return m_store_spinpdm;}
   const bool &spatpdm_disk_dump() const {return m_spatpdm_disk_dump;}
