@@ -374,6 +374,8 @@ void Threepdm_container::accumulate_spatial_npdm()
 
 void Threepdm_container::update_full_spin_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
 {
+
+  // Take into account orbital reordering
   const std::vector<int>& ro = dmrginp.reorder_vector();
   for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
     double val = it->second;
@@ -386,12 +388,12 @@ void Threepdm_container::update_full_spin_array( std::vector< std::pair< std::ve
     int l0 = (it->first)[3];
     int m0 = (it->first)[4];
     int n0 = (it->first)[5];
-    int i = ro.at(i0/2)*2+i0%2;
-    int j = ro.at(j0/2)*2+j0%2;
-    int k = ro.at(k0/2)*2+k0%2;
-    int l = ro.at(l0/2)*2+l0%2;
-    int m = ro.at(m0/2)*2+m0%2;
-    int n = ro.at(n0/2)*2+n0%2;
+    int i = ro.at(i0/2)*2 + i0%2;
+    int j = ro.at(j0/2)*2 + j0%2;
+    int k = ro.at(k0/2)*2 + k0%2;
+    int l = ro.at(l0/2)*2 + l0%2;
+    int m = ro.at(m0/2)*2 + m0%2;
+    int n = ro.at(n0/2)*2 + n0%2;
 
     //if ( abs(val) > 1e-8 ) {
     //  pout << "so-threepdm val: i,j,k,l,m,n = " 

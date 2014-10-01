@@ -376,7 +376,8 @@ void Fourpdm_container::accumulate_spatial_npdm()
 
 void Fourpdm_container::update_full_spin_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch )
 {
-  const std::vector<int>& ro = dmrginp.reorder_vector();  
+  // Take into account orbital reordering
+  const std::vector<int>& ro = dmrginp.reorder_vector();
   for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
     double val = it->second;
     if ( abs(val) < NUMERICAL_ZERO ) continue;
@@ -391,14 +392,14 @@ void Fourpdm_container::update_full_spin_array( std::vector< std::pair< std::vec
     int n0 = (it->first)[5];
     int p0 = (it->first)[6];
     int q0 = (it->first)[7];
-    int i = ro.at(i0/2)*2+i0%2;
-    int j = ro.at(j0/2)*2+j0%2;
-    int k = ro.at(k0/2)*2+k0%2;
-    int l = ro.at(l0/2)*2+l0%2;
-    int m = ro.at(m0/2)*2+m0%2;
-    int n = ro.at(n0/2)*2+n0%2;
-    int p = ro.at(p0/2)*2+p0%2;
-    int q = ro.at(q0/2)*2+q0%2;
+    int i = ro.at(i0/2)*2 + i0%2;
+    int j = ro.at(j0/2)*2 + j0%2;
+    int k = ro.at(k0/2)*2 + k0%2;
+    int l = ro.at(l0/2)*2 + l0%2;
+    int m = ro.at(m0/2)*2 + m0%2;
+    int n = ro.at(n0/2)*2 + n0%2;
+    int p = ro.at(p0/2)*2 + p0%2;
+    int q = ro.at(q0/2)*2 + q0%2;
 
     //if ( abs(val) > 1e-8 ) {
     //  pout << "so-fourpdm val: i,j,k,l,m,n,p,q = " 

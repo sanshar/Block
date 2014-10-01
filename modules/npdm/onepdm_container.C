@@ -190,12 +190,13 @@ void Onepdm_container::update_full_spin_array( std::vector< std::pair< std::vect
   for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
     int i0 = (it->first)[0];
     int j0 = (it->first)[1];
-    int i = ro.at(i0/2)*2+i0%2;
-    int j = ro.at(j0/2)*2+j0%2;
+    int i= ro.at(i0/2)*2 + i0%2;
+    int j= ro.at(j0/2)*2 + j0%2;
+
     double val = it->second;
-    //if ( abs(val) > 1e-8 ) pout << "so-onepdm val: i,j = " << i << "," << j << "\t\t" << val << endl;
-    //pout << "so-onepdm val: i,j = " << i << "," << j << "\t\t" << val << endl;
-    
+//    if ( abs(val) > 1e-8 ) pout << "so-onepdm val: i,j = " << i << "," << j << "\t\t" << val << endl;
+//    pout << "so-onepdm val: i,j = " << i << "," << j << "\t\t" << val << endl;
+
     // Test for duplicates
     if ( onepdm( i, j ) != 0.0 ) {
       pout << "WARNING: Already calculated "<<i<<" "<<j<<endl;
@@ -267,8 +268,10 @@ void Onepdm_container::store_npdm_elements( const std::vector< std::pair< std::v
   // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
   perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
 
-  if (!dmrginp.spinAdapted() ) update_full_spin_array( spin_batch );
-  else update_full_spatial_array( spin_batch );
+  //if ( store_full_spin_array_ || !dmrginp.spinAdapted() ) update_full_spin_array( spin_batch );
+  update_full_spin_array( spin_batch );
+  if(dmrginp.spinAdapted())
+    update_full_spatial_array( spin_batch );
 }
 
 //===========================================================================================================================================================

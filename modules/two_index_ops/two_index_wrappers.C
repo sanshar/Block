@@ -25,6 +25,8 @@ Npdm_op_wrapper_DC::Npdm_op_wrapper_DC( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(DES_CRE).get_size();
   is_local_ = spinBlock_->get_op_array(DES_CRE).is_local();
   factor_ = 1.0;
+  //Definition of DC is CD.
+  if(!dmrginp.spinAdapted()) factor_*=-1;
   transpose_ = false;
   build_pattern_ = "(DC)";
 }
