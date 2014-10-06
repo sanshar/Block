@@ -25,7 +25,11 @@ Npdm_op_wrapper_DC::Npdm_op_wrapper_DC( SpinBlock * spinBlock )
   size_ = spinBlock_->get_op_array(DES_CRE).get_size();
   is_local_ = spinBlock_->get_op_array(DES_CRE).is_local();
   factor_ = 1.0;
-  //Definition of DC is CD.
+  //Definition of D_iC_j is C_jD_i.
+  //In npdm code, it is used as D_iC_j.
+  //For spin adapted npdm, this difference can be detected by the solver of linear equation of spin coupling. 
+  //However, for non spin adapted npdm, there is only a simply way to determine the sign before elements. It can not be detected. 
+  //Therefore, -1 is necessary. 
   if(!dmrginp.spinAdapted()) factor_*=-1;
   transpose_ = false;
   build_pattern_ = "(DC)";
