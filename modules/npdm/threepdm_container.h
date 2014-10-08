@@ -60,7 +60,7 @@ class Threepdm_container : public Npdm_container {
 
 
 
-    template<class U> friend class Npdm::cache;
+    template<class U> friend class Npdm::Sortpdm::cache;
 };
 
 //===========================================================================================================================================================
