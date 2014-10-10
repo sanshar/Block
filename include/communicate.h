@@ -10,6 +10,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef COMMUNICATE_HEADER_H
 #define COMMUNICATE_HEADER_H
 #ifndef SERIAL
+#include <boost/mpi.hpp>
 #include <boost/mpi/communicator.hpp>
 
 inline int mpigetrank() { boost::mpi::communicator world;  return world.rank(); }

@@ -1,0 +1,18 @@
+----------------------------------------------------------------------------------------------------
+BLOCK-MOLCAS interface written by N. Nakatani, Sep. 2014
+----------------------------------------------------------------------------------------------------
+This contains only Block-side interface.
+Molcas should also be changed with another part of this interface.
+
+Finished contents:
+- SS-CASSCF / SA-CASSCF
+- Enables localized MOs for RASSCF routine
+- cu4-SS-CASPT2
+
+ToDo contents:
+- CASPT2 intermediates from DMRG sweep
+- MS-CASPT2 with transition RDMs
+- Analytical gradient
+- Reaction field
+- Spin-orbit coupling
+

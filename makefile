@@ -20,6 +20,9 @@ endif
 USE_MPI = yes
 USE_MKL = yes
 
+#add Molcas interface to libqcdmrg.so
+MOLCAS_INTERFACE = yes
+
 ifeq ($(USE_MKL), yes)
 MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/
 LAPACKBLAS = -L${MKLLIB} -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
@@ -72,7 +75,7 @@ endif
 FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(MOLPROINCLUDE) \
          -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(HOME)/modules/twopdm/ \
          -I$(HOME)/modules/npdm -I$(HOME)/modules/two_index_ops -I$(HOME)/modules/three_index_ops -I$(HOME)/modules/four_index_ops -std=c++0x \
-	 -I$(HOME)/modules/ResponseTheory -I$(HOME)/modules/nevpt2
+	 -I$(HOME)/modules/ResponseTheory -I$(HOME)/modules/nevpt2 -I$(HOME)/molcas
 
 LIBS +=  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp 
 MPI_OPT = -DSERIAL
@@ -137,26 +140,31 @@ SRC_nevpt2 = modules/nevpt2/nevpt2.C modules/nevpt2/nevpt2_info.C modules/nevpt2
              modules/nevpt2/nevpt2_util.C modules/nevpt2/ripdm.C modules/nevpt2/sweep_gen_nevpt2.C \
              modules/nevpt2/sweep_nevpt2.C
 
+SRC_molcas = molcas/block_calldmrg.C molcas/block_densi_rasscf.C molcas/loadNpdm.C molcas/molpro_fcidump.C molcas/tranNpdm.C
+
 OBJ_OH+=$(SRC_OH:.C=.o)
 OBJ_COEF+=$(SRC_COEF:.C=.o)
 OBJ_spin_adapted=$(SRC_spin_adapted:.C=.o)
 OBJ_spin_library=$(SRC_spin_library:.C=.o)
 OBJ_nevpt2=$(SRC_nevpt2:.C=.o)
+ifeq ($(MOLCAS_INTERFACE), yes)
+	OBJ_spin_library+=$(SRC_molcas:.C=.o)
+endif
 
 .C.o :
 	$(CXX)  $(FLAGS) $(OPT) -c $< -o $@
 .cpp.o :
 	$(CXX) $(FLAGS) $(OPT) -c $< -o $@
 
-all	: $(EXECUTABLE) libqcdmrg.a OH COEF
+all	: library $(EXECUTABLE) OH COEF
 
 library : libqcdmrg.a $(NEWMATLIB)/libnewmat.a libqcdmrg.so
 
-libqcdmrg.a : $(OBJ_spin_library)
+libqcdmrg.a : $(OBJ_spin_library) $(OBJ_molcas)
 	$(AR) $(ARFLAGS) $@ $^
 	$(RANLIB) $@
 
-libqcdmrg.so : $(OBJ_spin_library)
+libqcdmrg.so : $(OBJ_spin_library) $(OBJ_molcas)
 	$(CXX) -shared -o $@ $^ $(LIBS)
 
 $(EXECUTABLE) : $(OBJ_spin_adapted) $(NEWMATLIB)/libnewmat.a
@@ -172,7 +180,7 @@ $(NEWMATLIB)/libnewmat.a :
 	cd $(NEWMATLIB) && $(MAKE) -f makefile libnewmat.a
 
 clean:
-	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o modules/npdm/*.o $(NEWMATLIB)*.o libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a genetic/gaopt genetic/*.o btas/lib/*.o btas/lib/libbtas.a modules/two_index_ops/*.o modules/three_index_ops/*.o modules/four_index_ops/*.o modules/ResponseTheory/*.o modules/nevpt2/*.o
+	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o modules/npdm/*.o $(NEWMATLIB)*.o libqcdmrg.a libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a genetic/gaopt genetic/*.o btas/lib/*.o btas/lib/libbtas.a modules/two_index_ops/*.o modules/three_index_ops/*.o modules/four_index_ops/*.o modules/ResponseTheory/*.o modules/nevpt2/*.o
 
 # DO NOT DELETE
 

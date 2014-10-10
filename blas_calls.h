@@ -39,6 +39,8 @@ extern "C"
   void dgemm(char *transa, char *transb, int *m, int *n, int *k, double *alpha,
 	     double *A, int *lda, double *B, int *ldb, double *beta, double *C,
 	     int *ldc);
+  void dgemv(char *trans, int *m, int *n, double *alpha,
+             double *a, int *lda, double *x, int *incx, double *beta, double *y, int *incy);
   void dscal(int *size,double *coeff,double *matrix,int *inc);
 
   void saxpy(int *ntot, float *coeff, float *copy_from, int *inc1,
@@ -65,6 +67,8 @@ extern "C"
   void dgemm_(char *transa, char *transb, FORTINT *m, FORTINT *n, FORTINT *k, double *alpha,
 	     double *A, FORTINT *lda, double *B, FORTINT *ldb, double *beta, double *C,
 	     FORTINT *ldc);
+  void dgemv_(char *trans, FORTINT *m, FORTINT *n, double *alpha,
+              double *a, FORTINT *lda, double *x, FORTINT *incx, double *beta, double *y, FORTINT *incy);
   void dscal_(FORTINT *size, double *coeff, double *matrix,FORTINT *inc);
 
   void saxpy_(FORTINT *ntot, float *coeff, float *copy_from, FORTINT *inc1,
@@ -231,6 +235,16 @@ inline void DGEMM(char transa, char transb, FORTINT m, FORTINT n, FORTINT k, dou
   dgemm(&transa,&transb,&m,&n,&k,&alpha,A,&lda,B,&ldb,&beta,C,&ldc);
 #else
   dgemm_(&transa,&transb,&m,&n,&k,&alpha,A,&lda,B,&ldb,&beta,C,&ldc);
+#endif
+}
+
+inline void DGEMV(char trans, FORTINT m, FORTINT n, double alpha,
+	   double *A, FORTINT lda, double *X, FORTINT incx, double beta, double *Y, FORTINT incy)
+{
+#ifdef AIX
+  dgemv(&trans,&m,&n,&alpha,A,&lda,X,&incx,&beta,Y,&incy);
+#else
+  dgemv_(&trans,&m,&n,&alpha,A,&lda,X,&incx,&beta,Y,&incy);
 #endif
 }
 
