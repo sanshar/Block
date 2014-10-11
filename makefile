@@ -140,7 +140,7 @@ SRC_nevpt2 = modules/nevpt2/nevpt2.C modules/nevpt2/nevpt2_info.C modules/nevpt2
              modules/nevpt2/nevpt2_util.C modules/nevpt2/ripdm.C modules/nevpt2/sweep_gen_nevpt2.C \
              modules/nevpt2/sweep_nevpt2.C
 
-SRC_molcas = molcas/block_calldmrg.C molcas/block_densi_rasscf.C molcas/loadNpdm.C molcas/molpro_fcidump.C molcas/tranNpdm.C
+SRC_molcas = molcas/block_calldmrg.C molcas/molpro_fcidump.C molcas/loadNpdm.C molcas/sortNpdm.C molcas/tranNpdm.C
 
 OBJ_OH+=$(SRC_OH:.C=.o)
 OBJ_COEF+=$(SRC_COEF:.C=.o)

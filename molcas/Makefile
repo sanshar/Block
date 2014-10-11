@@ -10,7 +10,7 @@ INCLUDEFLAGS=-I. -I$(BLOCKROOT) -I$(BLOCKROOT)/include -I$(BOOSTROOT)/include -I
 
 LIBS=-L$(BLOCKROOT) -lqcdmrg -L$(BLOCKROOT)/newmat10 -lnewmat -L$(BOOSTROOT)/lib -lboost_serialization -lboost_system -lboost_filesystem -lboost_mpi -L$(INTELROOT)/lib/intel64 -L$(INTELROOT)/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -liomp5 -lpthread
 
-SRC_LIBDMRG = block_calldmrg.C block_densi_rasscf.C loadNpdm.C molpro_fcidump.C tranNpdm.C
+SRC_LIBDMRG = block_calldmrg.C molpro_fcidump.C loadNpdm.C sortNpdm.C tranNpdm.C
 OBJ_LIBDMRG = $(SRC_LIBDMRG:.C=.o)
 
 .C.o:

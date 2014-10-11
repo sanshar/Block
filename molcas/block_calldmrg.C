@@ -1,5 +1,6 @@
 #include "block_calldmrg.h"
 #include "molpro_fcidump.h"
+#include "sortNpdm.h"
 
 /// Fortran wrapper
 void block_calldmrg_ (
@@ -201,86 +202,21 @@ void block_calldmrg (
     E_sweep[i] = param.get_lowest_energy()[i];
 
   // Sorting NPDMs as Chemist's order
-  // TODO: This should be re-implemented as seperate subroutines
-  if(N_pdm == 3 && mpigetrank() == 0) // branch by mpi rank == 0
-  {
-    boost::filesystem::path path_to_3pdm("./spatial_threepdm.0.0.bin");
-    assert(boost::filesystem::exists(path_to_3pdm));
-
-    int N1 = N_act;
-    int N2 = N1*N1;
-    int N3 = N2*N1;
-    int N4 = N3*N1;
-    int N5 = N4*N1;
-
-    // sort 3pdm as chemist's notation in column-major order
-    FILE *ifp = fopen("spatial_threepdm.0.0.bin","rb");
-    FILE *ofp = fopen("SORTED3PDM.0","wb");
-
-    // sort <i,j,k,l,m,n> (in row-major) to G(i,n,j,m,k,l) (in col-major)
-    // i.e. G(i,j,k,l,m,n) = <i,k,m,n,l,j>
-
-    // O(N^4) memory is allocated as buffer (lower overheads?)
-    double *vbuf = new double[N4];
-    for(int n = 0; n < N_act; ++n) {
-      size_t Lxxxnxx = N2*n;
-      for(int m = 0; m < N_act; ++m) {
-        size_t Lxxmnxx = Lxxxnxx + N3*m;
-        double *p = vbuf;
-        for(int l = 0; l < N_act; ++l) {
-          size_t Lxxmnlx = Lxxmnxx + N1*l;
-          for(int k = 0; k < N_act; ++k) {
-            size_t Lxkmnlx = Lxxmnlx + N4*k;
-            for(int j = 0; j < N_act; ++j) {
-              size_t Lxkmnlj = Lxkmnlx + j;
-              for(int i = 0; i < N_act; ++i, ++p) {
-                size_t Likmnlx = Lxkmnlj + N5*i;
-                fseek(ifp,sizeof(double)*Likmnlx,SEEK_SET);
-                fread(p,sizeof(double),1,ifp);
-              }
-            }
-          }
-        }
-        fwrite(vbuf,sizeof(double),N4,ofp);
-      }
+  for(int i = 0; i < N_roots; ++i) {
+    switch (N_pdm) {
+      case 1:
+        sort1pdm(N_act,i,i);
+        break;
+      case 2:
+        sort2pdm(N_act,i,i);
+        break;
+      case 3:
+        sort3pdm(N_act,i,i);
+        break;
+      default:
+        exit(1); // sorting RDMs are implemented up to 3RDM
     }
-    // O(N^4+N^2) memory is allocated as buffer (least overheads?)
-//  double *vbuf = new double[N4];
-//  double *xbuf = new double[N2];
-//  for(int n = 0; n < N_act; ++n) {
-//    size_t Lxxxnxx = N2*n;
-//    for(int m = 0; m < N_act; ++m) {
-//      size_t Lxxmnxx = Lxxxnxx + N3*m;
-//      double *p = vbuf;
-//      for(int k = 0; k < N_act; ++k) {
-//        size_t Lxkmnxx = Lxxmnxx + N4*k;
-//        size_t Gxxkx = N2*k;
-//        for(int i = 0; i < N_act; ++i) {
-//          size_t Likmnxx = Lxkmnxx + N5*i;
-//          size_t Gixkx = Gxxkx + i;
-//          fseek(ifp,sizeof(double)*Likmnxx,SEEK_SET);
-//          fread(xbuf,sizeof(double),N2,ifp);
-//          double *p = xbuf;
-//          for(int l = 0; l < N_act; ++l) {
-//            size_t Gixkl = Gixkx + N3*l;
-//            for(int j = 0; j < N_act; ++j, ++p) {
-//              size_t Gijkl = Gixkx + N1*j;
-//              vbuf[Gijkl] = *p;
-//            }
-//          }
-//        }
-//      }
-//      fwrite(vbuf,sizeof(double),N4,ofp);
-//    }
-//  }
-//  delete [] xbuf;
-    delete [] vbuf;
-
-    fclose(ifp);
-    fclose(ofp);
-
-    boost::filesystem::remove(path_to_3pdm);
-  } // if(N_pdm == 3 && mpigetrank() == 0)
+  }
 
   std::cout.rdbuf(backup);
   fout.close();
