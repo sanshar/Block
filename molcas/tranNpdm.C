@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <sstream>
+#include <iostream>
 
 //#include <mkl_cblas.h>
 
@@ -27,14 +28,10 @@ void tran1pdm (int N, double* X, int iRoot, int jRoot)
 
     size_t N2 = N *N;
 
-    FILE *ifp, *ofp;
+    FILE *ifp = fopen(filestr.str().c_str(), "rb");
 
-    double *V1, *G1;
-
-    ifp = fopen(filestr.str().c_str(), "rb");
-
-    V1 = (double*) malloc(sizeof(double)*N2);
-    G1 = (double*) malloc(sizeof(double)*N2);
+    double *V1 = new double[N2];
+    double *G1 = new double[N2];
 
     if(fread(G1, sizeof(double), N2, ifp) != N2) exit(1);
 
@@ -43,14 +40,14 @@ void tran1pdm (int N, double* X, int iRoot, int jRoot)
 
     fclose(ifp);
 
-    ofp = fopen(filestr.str().c_str(), "wb");
+    FILE *ofp = fopen(filestr.str().c_str(), "wb");
 
     fwrite(G1, sizeof(double), N2, ofp);
 
     fclose(ofp);
 
-    free(G1);
-    free(V1);
+    delete [] G1;
+    delete [] V1;
   }
 }
 
@@ -88,14 +85,10 @@ void SF_tran2pdm (int N, double* X, int iRoot, int jRoot)
 
     size_t i,j,k,l,p;
 
-    FILE *ifp, *ofp;
+    FILE *ifp = fopen(filestr.str().c_str(), "rb");
 
-    double *V2, *G2;
-
-    ifp = fopen(filestr.str().c_str(), "rb");
-
-    V2 = (double*) malloc(sizeof(double)*N4);
-    G2 = (double*) malloc(sizeof(double)*N);
+    double *V2 = new double[N4];
+    double *G2 = new double[N];
 
     p = 0;
 
@@ -108,14 +101,14 @@ void SF_tran2pdm (int N, double* X, int iRoot, int jRoot)
 
     fclose(ifp);
 
-    ofp = fopen(filestr.str().c_str(), "wb");
+    FILE *ofp = fopen(filestr.str().c_str(), "wb");
 
     fwrite(V2, sizeof(double), N4, ofp);
 
     fclose(ofp);
 
-    free(G2);
-    free(V2);
+    delete [] G2;
+    delete [] V2;
   }
 }
 
@@ -127,18 +120,17 @@ void SF_tran3pdm (int N, double* X, int iRoot, int jRoot)
 
   if(mpigetrank() == 0) {
 
-    FILE *ifp, *ofp;
     int istat;
 
     std::ostringstream ifname;
     ifname << "./SORTED3PDM." << iRoot << "." << jRoot << "." << mpigetrank();
 
-    ifp = fopen(ifname.str().c_str(),"rb");
+    FILE *ifp = fopen(ifname.str().c_str(),"rb");
 
     std::ostringstream ofname;
     ofname << "./SORTED3PDM." << iRoot << "." << jRoot << "." << mpigetrank() << ".scr";
 
-    ofp = fopen(ofname.str().c_str(),"wb");
+    FILE *ofp = fopen(ofname.str().c_str(),"wb");
 
     int pOff = N*N*N*N*N-1;
 

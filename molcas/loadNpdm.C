@@ -4,6 +4,8 @@
 #include <string>
 #include <sstream>
 
+#include <boost/filesystem.hpp>
+
 #include <communicate.h> // enable Boost MPI wrappers if defined SERIAL
 
 #include "loadNpdm.h"
@@ -36,6 +38,9 @@ void load1pdm (int N, double* V, int iRoot, int jRoot)
     std::ostringstream filestr;
     filestr << "./SORTED1PDM." << iRoot << "." << jRoot << ".0";
 
+//  boost::filesystem::path path_to_1pdm(filestr.str().c_str());
+//  assert(boost::filesystem::exists(path_to_1pdm));
+
     FILE *fp = fopen(filestr.str().c_str(),"rb");
     fread(V,sizeof(double),N2,fp);
     fclose(fp);
@@ -56,6 +61,9 @@ void load2pdm (int N, double* V, int iRoot, int jRoot)
     std::ostringstream filestr;
     filestr << "./SORTED2PDM." << iRoot << "." << jRoot << ".0";
 
+//  boost::filesystem::path path_to_2pdm(filestr.str().c_str());
+//  assert(boost::filesystem::exists(path_to_2pdm));
+
     FILE *fp = fopen(filestr.str().c_str(),"rb");
     fread(V,sizeof(double),N4,fp);
     fclose(fp);
@@ -74,6 +82,9 @@ void load2pdm2f (int N, double* V, int iRoot, int jRoot, int iP, int iQ)
   if(mpigetrank() == 0) {
     std::ostringstream filestr;
     filestr << "./SORTED2PDM." << iRoot << "." << jRoot << ".0";
+
+//  boost::filesystem::path path_to_2pdm(filestr.str().c_str());
+//  assert(boost::filesystem::exists(path_to_2pdm));
 
     FILE *fp = fopen(filestr.str().c_str(),"rb");
     int iOffSet = iP+iQ*N;
@@ -98,6 +109,9 @@ void load3pdm (int N, double* V, int iRoot, int jRoot)
     std::ostringstream filestr;
     filestr << "./SORTED3PDM." << iRoot << "." << jRoot << ".0";
 
+//  boost::filesystem::path path_to_3pdm(filestr.str().c_str());
+//  assert(boost::filesystem::exists(path_to_3pdm));
+
     FILE *fp = fopen(filestr.str().c_str(),"rb");
     fread(V,sizeof(double),N6,fp);
     fclose(fp);
@@ -117,6 +131,9 @@ void load3pdm2f (int N, double* V, int iRoot, int jRoot, int iP, int iQ)
   if(mpigetrank() == 0) {
     std::ostringstream filestr;
     filestr << "./SORTED3PDM." << iRoot << "." << jRoot << ".0";
+
+//  boost::filesystem::path path_to_3pdm(filestr.str().c_str());
+//  assert(boost::filesystem::exists(path_to_3pdm));
 
     FILE *fp = fopen(filestr.str().c_str(),"rb");
     int iOffSet = iP+iQ*N;
@@ -139,6 +156,9 @@ void load3pdm4f (int N, double* V, int iRoot, int jRoot, int iP, int iQ, int jP,
   if(mpigetrank() == 0) {
     std::ostringstream filestr;
     filestr << "./SORTED3PDM." << iRoot << "." << jRoot << ".0";
+
+//  boost::filesystem::path path_to_3pdm(filestr.str().c_str());
+//  assert(boost::filesystem::exists(path_to_3pdm));
 
     FILE *fp = fopen(filestr.str().c_str(),"rb");
     int iOffSet = iP+iQ*N+jP*N2+jQ*N3;
