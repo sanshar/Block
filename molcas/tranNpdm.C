@@ -28,15 +28,15 @@ void tran1pdm (int N, double* X, int iRoot, int jRoot)
 
     size_t N2 = N *N;
 
-    FILE *ifp = fopen(filestr.str().c_str(), "rb");
+    FILE *ifp = fopen(filestr.str().c_str(),"rb");
 
     double *V1 = new double[N2];
     double *G1 = new double[N2];
 
     if(fread(G1, sizeof(double), N2, ifp) != N2) exit(1);
 
-    DGEMM('T', 'N', N, N, N, 1.0, X, N, G1, N, 0.0, V1, N);
-    DGEMM('N', 'N', N, N, N, 1.0, V1, N, X, N, 0.0, G1, N);
+    DGEMM('T','N',N,N,N,1.0,X,N,G1,N,0.0,V1,N);
+    DGEMM('N','N',N,N,N,1.0,V1,N,X,N,0.0,G1,N);
 
     fclose(ifp);
 
@@ -85,7 +85,7 @@ void SF_tran2pdm (int N, double* X, int iRoot, int jRoot)
 
     size_t i,j,k,l,p;
 
-    FILE *ifp = fopen(filestr.str().c_str(), "rb");
+    FILE *ifp = fopen(filestr.str().c_str(),"rb");
 
     double *V2 = new double[N4];
     double *G2 = new double[N];
@@ -95,15 +95,15 @@ void SF_tran2pdm (int N, double* X, int iRoot, int jRoot)
     for(i = 0; i < N; ++i)
       for(j = 0; j < N; ++j)
         for(k = 0; k < N; ++k, ++p) {
-          if(fread(G2, sizeof(double), N, ifp) != N) exit(1);
-          DGEMV('T', N, N, 1.0, X, N, G2, 1, 0.0, V2+p, N3);
+          if(fread(G2,sizeof(double),N,ifp) != N) exit(1);
+          DGEMV('T',N,N,1.0,X,N,G2,1,0.0,V2+p,N3);
         }
 
     fclose(ifp);
 
-    FILE *ofp = fopen(filestr.str().c_str(), "wb");
+    FILE *ofp = fopen(filestr.str().c_str(),"wb");
 
-    fwrite(V2, sizeof(double), N4, ofp);
+    fwrite(V2,sizeof(double),N4,ofp);
 
     fclose(ofp);
 

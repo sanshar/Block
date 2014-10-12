@@ -99,7 +99,8 @@ void sort2pdm (int N_act, int iRoot, int jRoot)
           size_t Lxklj = Lxklx + j;
           for(int i = 0; i < N_act; ++i, ++p) {
             size_t Liklj = Lxklj + N3*i;
-            *p = xbuf[Liklj];
+            // Re-scale by 2, because twopdm module computes (1/2) d_iklj
+            *p = 2.0*xbuf[Liklj];
           }
         }
         fwrite(vbuf,sizeof(double),N2,ofp);
