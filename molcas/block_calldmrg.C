@@ -4,22 +4,24 @@
 
 /// Fortran wrapper
 void block_calldmrg_ (
-      const int* Restart,
-//    const char* Sym,
-      const int* N_roots,
-      const int* N_act,
-      const int* N_elec,
-      const int* M_s,
+      const FORTINT* Restart,
+      const FORTINT* N_roots,
+      const FORTINT* N_act,
+      const FORTINT* N_elec,
+      const FORTINT* M_s,
+      const char* Sym,
+      const FORTINT* iSym,
+      const FORTINT* OrbSym,
       const double* E_core,
       const double* h0,
       const double* tuvx,
-      const int* M_state,
-      const int* N_pdm,
+      const FORTINT* M_state,
+      const FORTINT* N_pdm,
       const double* T_sweep,
       const double* T_noise,
             double* E_sweep)
 {
-  block_calldmrg(*Restart, *N_roots, *N_act, *N_elec, *M_s, *E_core, h0, tuvx, *M_state, *N_pdm, *T_sweep, *T_noise, E_sweep);
+  block_calldmrg(*Restart, *N_roots, *N_act, *N_elec, *M_s, Sym, *iSym, OrbSym, *E_core, h0, tuvx, *M_state, *N_pdm, *T_sweep, *T_noise, E_sweep);
 }
 
 extern int calldmrg(char*, char*);
@@ -41,17 +43,19 @@ using std::vector;
 
 /// Dump 2-el integrals to formatted file
 void block_calldmrg (
-      const int& Restart,
-//    const char* Sym,
-      const int& N_roots,
-      const int& N_act,
-      const int& N_elec,
-      const int& M_s,
+      const FORTINT& Restart,
+      const FORTINT& N_roots,
+      const FORTINT& N_act,
+      const FORTINT& N_elec,
+      const FORTINT& M_s,
+      const char* Sym,
+      const FORTINT& iSym,
+      const FORTINT* OrbSym,
       const double& E_core,
       const double* h0,
       const double* tuvx,
-      const int& M_state,
-      const int& N_pdm,
+      const FORTINT& M_state,
+      const FORTINT& N_pdm,
       const double& T_sweep,
       const double& T_noise,
             double* E_sweep)
@@ -88,14 +92,14 @@ void block_calldmrg (
   if(1) // create config file for every procs/nodes
   {
     /// Dump integrals as MOLPRO format
-    molpro_fcidump(N_act,N_elec,M_s,E_core,h0,tuvx);
+    molpro_fcidump(N_act,N_elec,M_s,iSym,OrbSym,E_core,h0,tuvx);
 
     /// Create config file
     std::ofstream fcon(input);
 
     fcon << "nelec " << setw(2) << N_elec << endl;
     fcon << "spin  " << setw(2) << M_s << endl;
-    fcon << "irrep  1" << endl; // nosymm for the meanwhile
+    fcon << "irrep  " << iSym << endl;
 
     int N_sweep = 0;
     int M_start = (Restart == 1) ? M_state : 250;
@@ -109,7 +113,7 @@ void block_calldmrg (
     }
     while(T_start > 1.0e-6) {
       fcon << setw(2) << N_sweep << setw(5) << M_state << " " << T_start << " " << T_start << endl;
-      N_sweep += 4;
+      N_sweep += 2;
       T_start /= 10;
     }
     while(T_start > T_sweep) {
@@ -161,7 +165,8 @@ void block_calldmrg (
 //  fcon << "store_spinpdm" << endl;
 //  fcon << "prefix " << prefix << endl;
     fcon << "orbitals FCIDUMP" << endl;
-//  fcon << "symmetry " << symlab << endl;
+    std::string symlab(Sym,3);
+    fcon << "symmetry " << symlab << endl;
     fcon << "gaopt default" << endl;
     fcon << "hf_occ integral" << endl;
 

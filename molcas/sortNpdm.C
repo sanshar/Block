@@ -6,7 +6,7 @@
 
 #include "sortNpdm.h"
 
-void sort1pdm (int N_act, int iRoot, int jRoot)
+void sort1pdm (FORTINT N_act, FORTINT iRoot, FORTINT jRoot)
 {
   // Sorting 3PDMs as Chemist's order
   if(mpigetrank() == 0) {
@@ -56,7 +56,7 @@ void sort1pdm (int N_act, int iRoot, int jRoot)
   }
 }
 
-void sort2pdm (int N_act, int iRoot, int jRoot)
+void sort2pdm (FORTINT N_act, FORTINT iRoot, FORTINT jRoot)
 {
   // Sorting 3PDMs as Chemist's order
   if(mpigetrank() == 0) {
@@ -117,7 +117,7 @@ void sort2pdm (int N_act, int iRoot, int jRoot)
   }
 }
 
-void sort3pdm (int N_act, int iRoot, int jRoot)
+void sort3pdm (FORTINT N_act, FORTINT iRoot, FORTINT jRoot)
 {
   // Sorting 3PDMs as Chemist's order
   if(mpigetrank() == 0) {

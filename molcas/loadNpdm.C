@@ -10,25 +10,25 @@
 
 #include "loadNpdm.h"
 
-void block_load1pdm_   (const int* N, double* V, const int* iRoot, const int* jRoot)
+void block_load1pdm_   (const FORTINT* N, double* V, const FORTINT* iRoot, const FORTINT* jRoot)
 { load1pdm(*N,V,*iRoot-1,*jRoot-1); }
 
-void block_load2pdm_   (const int* N, double* V, const int* iRoot, const int* jRoot)
+void block_load2pdm_   (const FORTINT* N, double* V, const FORTINT* iRoot, const FORTINT* jRoot)
 { load2pdm(*N,V,*iRoot-1,*jRoot-1); }
 
-void block_load2pdm2f_ (const int* N, double* V, const int* iRoot, const int* jRoot, const int* iP, const int* iQ)
+void block_load2pdm2f_ (const FORTINT* N, double* V, const FORTINT* iRoot, const FORTINT* jRoot, const FORTINT* iP, const FORTINT* iQ)
 { load2pdm2f(*N,V,*iRoot-1,*jRoot-1,*iP-1,*iQ-1); }
 
-void block_load3pdm_   (const int* N, double* V, const int* iRoot, const int* jRoot)
+void block_load3pdm_   (const FORTINT* N, double* V, const FORTINT* iRoot, const FORTINT* jRoot)
 { load3pdm(*N,V,*iRoot-1,*jRoot-1); }
 
-void block_load3pdm2f_ (const int* N, double* V, const int* iRoot, const int* jRoot, const int* iP, const int* iQ)
+void block_load3pdm2f_ (const FORTINT* N, double* V, const FORTINT* iRoot, const FORTINT* jRoot, const FORTINT* iP, const FORTINT* iQ)
 { load3pdm2f(*N,V,*iRoot-1,*jRoot-1,*iP-1,*iQ-1); }
 
-void block_load3pdm4f_ (const int* N, double* V, const int* iRoot, const int* jRoot, const int* iP, const int* iQ, const int* jP, const int* jQ)
+void block_load3pdm4f_ (const FORTINT* N, double* V, const FORTINT* iRoot, const FORTINT* jRoot, const FORTINT* iP, const FORTINT* iQ, const FORTINT* jP, const FORTINT* jQ)
 { load3pdm4f(*N,V,*iRoot-1,*jRoot-1,*iP-1,*iQ-1,*jP-1,*jQ-1); }
 
-void load1pdm (int N, double* V, int iRoot, int jRoot)
+void load1pdm (FORTINT N, double* V, FORTINT iRoot, FORTINT jRoot)
 {
 #ifndef SERIAL
   boost::mpi::communicator world;
@@ -50,7 +50,7 @@ void load1pdm (int N, double* V, int iRoot, int jRoot)
 #endif
 }
 
-void load2pdm (int N, double* V, int iRoot, int jRoot)
+void load2pdm (FORTINT N, double* V, FORTINT iRoot, FORTINT jRoot)
 {
 #ifndef SERIAL
   boost::mpi::communicator world;
@@ -73,7 +73,7 @@ void load2pdm (int N, double* V, int iRoot, int jRoot)
 #endif
 }
 
-void load2pdm2f (int N, double* V, int iRoot, int jRoot, int iP, int iQ)
+void load2pdm2f (FORTINT N, double* V, FORTINT iRoot, FORTINT jRoot, FORTINT iP, FORTINT iQ)
 {
 #ifndef SERIAL
   boost::mpi::communicator world;
@@ -97,7 +97,7 @@ void load2pdm2f (int N, double* V, int iRoot, int jRoot, int iP, int iQ)
 #endif
 }
 
-void load3pdm (int N, double* V, int iRoot, int jRoot)
+void load3pdm (FORTINT N, double* V, FORTINT iRoot, FORTINT jRoot)
 {
 #ifndef SERIAL
   boost::mpi::communicator world;
@@ -121,7 +121,7 @@ void load3pdm (int N, double* V, int iRoot, int jRoot)
 #endif
 }
 
-void load3pdm2f (int N, double* V, int iRoot, int jRoot, int iP, int iQ)
+void load3pdm2f (FORTINT N, double* V, FORTINT iRoot, FORTINT jRoot, FORTINT iP, FORTINT iQ)
 {
 #ifndef SERIAL
   boost::mpi::communicator world;
@@ -146,7 +146,7 @@ void load3pdm2f (int N, double* V, int iRoot, int jRoot, int iP, int iQ)
 #endif
 }
 
-void load3pdm4f (int N, double* V, int iRoot, int jRoot, int iP, int iQ, int jP, int jQ)
+void load3pdm4f (FORTINT N, double* V, FORTINT iRoot, FORTINT jRoot, FORTINT iP, FORTINT iQ, FORTINT jP, FORTINT jQ)
 {
 #ifndef SERIAL
   boost::mpi::communicator world;

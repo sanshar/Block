@@ -20,8 +20,15 @@ endif
 USE_MPI = yes
 USE_MKL = yes
 
-#add Molcas interface to libqcdmrg.so
-MOLCAS_INTERFACE = yes
+# use this variable to set if we will use integer size of 8 or not.
+# molpro compilation requires I8, since their integers are long
+I8_OPT = yes
+MOLPRO = no
+OPENMP = no
+
+# add Molcas interface to libqcdmrg.so
+# molcas compilation w/ -64 option requires I8 as well
+MOLCAS = yes
 
 ifeq ($(USE_MKL), yes)
 MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/
@@ -41,14 +48,8 @@ AR=ar
 ARFLAGS=-qs
 RANLIB=ranlib
 
-# use this variable to set if we will use integer size of 8 or not.
-# molpro compilation requires I8, since their integers are long
-I8_OPT = no
-MOLPRO = no
-OPENMP = no
-
 ifeq ($(I8_OPT), yes)
-	I8 = -DMolpro_I8
+	I8 = -D_FORTINT_64
 endif
 
 EXECUTABLE = block.spin_adapted
@@ -147,7 +148,7 @@ OBJ_COEF+=$(SRC_COEF:.C=.o)
 OBJ_spin_adapted=$(SRC_spin_adapted:.C=.o)
 OBJ_spin_library=$(SRC_spin_library:.C=.o)
 OBJ_nevpt2=$(SRC_nevpt2:.C=.o)
-ifeq ($(MOLCAS_INTERFACE), yes)
+ifeq ($(MOLCAS), yes)
 	OBJ_spin_library+=$(SRC_molcas:.C=.o)
 endif
 

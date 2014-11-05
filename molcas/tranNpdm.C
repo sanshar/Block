@@ -12,11 +12,11 @@
 
 #include "tranNpdm.h"
 
-void block_tran1pdm_ (const int* N, double* X, const int* iRoot, const int* jRoot) { tran1pdm(*N, X, *iRoot-1, *jRoot-1); }
-void block_tran2pdm_ (const int* N, double* X, const int* iRoot, const int* jRoot) { tran2pdm(*N, X, *iRoot-1, *jRoot-1); }
-void block_tran3pdm_ (const int* N, double* X, const int* iRoot, const int* jRoot) { tran3pdm(*N, X, *iRoot-1, *jRoot-1); }
+void block_tran1pdm_ (const FORTINT* N, double* X, const FORTINT* iRoot, const FORTINT* jRoot) { tran1pdm(*N, X, *iRoot-1, *jRoot-1); }
+void block_tran2pdm_ (const FORTINT* N, double* X, const FORTINT* iRoot, const FORTINT* jRoot) { tran2pdm(*N, X, *iRoot-1, *jRoot-1); }
+void block_tran3pdm_ (const FORTINT* N, double* X, const FORTINT* iRoot, const FORTINT* jRoot) { tran3pdm(*N, X, *iRoot-1, *jRoot-1); }
 
-void tran1pdm (int N, double* X, int iRoot, int jRoot)
+void tran1pdm (FORTINT N, double* X, FORTINT iRoot, FORTINT jRoot)
 {
 #ifndef SERIAL
   boost::mpi::communicator world;
@@ -51,7 +51,7 @@ void tran1pdm (int N, double* X, int iRoot, int jRoot)
   }
 }
 
-void tran2pdm (int N, double* X, int iRoot, int jRoot)
+void tran2pdm (FORTINT N, double* X, FORTINT iRoot, FORTINT jRoot)
 {
   SF_tran2pdm(N, X, iRoot, jRoot);
   SF_tran2pdm(N, X, iRoot, jRoot);
@@ -59,7 +59,7 @@ void tran2pdm (int N, double* X, int iRoot, int jRoot)
   SF_tran2pdm(N, X, iRoot, jRoot);
 }
 
-void tran3pdm (int N, double* X, int iRoot, int jRoot)
+void tran3pdm (FORTINT N, double* X, FORTINT iRoot, FORTINT jRoot)
 {
   SF_tran3pdm(N, X, iRoot, jRoot);
   SF_tran3pdm(N, X, iRoot, jRoot);
@@ -69,7 +69,7 @@ void tran3pdm (int N, double* X, int iRoot, int jRoot)
   SF_tran3pdm(N, X, iRoot, jRoot);
 }
 
-void SF_tran2pdm (int N, double* X, int iRoot, int jRoot)
+void SF_tran2pdm (FORTINT N, double* X, FORTINT iRoot, FORTINT jRoot)
 {
 #ifndef SERIAL
   boost::mpi::communicator world;
@@ -112,7 +112,7 @@ void SF_tran2pdm (int N, double* X, int iRoot, int jRoot)
   }
 }
 
-void SF_tran3pdm (int N, double* X, int iRoot, int jRoot)
+void SF_tran3pdm (FORTINT N, double* X, FORTINT iRoot, FORTINT jRoot)
 {
 #ifndef SERIAL
   boost::mpi::communicator world;
@@ -170,7 +170,7 @@ void SF_tran3pdm (int N, double* X, int iRoot, int jRoot)
 }
 
 /*
-void para_SF3_tran3pdm (int N, double* X, int iRoot, int jRoot)
+void para_SF3_tran3pdm (FORTINT N, double* X, FORTINT iRoot, FORTINT jRoot)
 {
   boost::mpi::communicator world;
 
