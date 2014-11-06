@@ -415,7 +415,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 	{
 	  int istate = dmrginp.setStateSpecific() ? sweepParams.current_root() : j;
 	  
-#ifndef MOLPRO_I8
+#ifndef MOLPRO
 	  pout << "\t\t\t Total block energy for State [ " << istate << 
 	    " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j] <<endl;              
 #else 
@@ -472,7 +472,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
   for(int j=0;j<nroots;++j){
     int istate = dmrginp.setStateSpecific() ? sweepParams.current_root() : j;
     if (mpigetrank() == 0) {
-#ifndef MOLPRO_I8
+#ifndef MOLPRO
 //    printf("\t\t\t M = %6i  state = %4i  Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), istate, finalError, finalEnergy[j]+dmrginp.get_coreenergy());
       pout << "\t\t\t M = " << setw(6) << sweepParams.get_keep_states()
            << "  state = " << setw(4) << istate

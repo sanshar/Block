@@ -63,7 +63,7 @@ void dmrg_stateSpecific(double sweep_tol, int targetState);
 void ReadInput(char* conf);
 void fullrestartGenblock();
 void license() {
-#ifndef MOLPRO_I8
+#ifndef MOLPRO
   pout << "Block  Copyright (C) 2012  Garnet K.-L. Chan"<<endl;
   pout << "This program comes with ABSOLUTELY NO WARRANTY; for details see license file."<<endl;
   pout << "This is free software, and you are welcome to redistribute it"<<endl;

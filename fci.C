@@ -87,7 +87,7 @@ void SpinAdapted::Sweep::fullci(double sweep_tol)
   }
   if (!mpigetrank())
   {
-#ifndef MOLPRO_I8
+#ifndef MOLPRO
     FILE* f = fopen("dmrg.e", "wb");
 #else
     std::string efile;
@@ -129,7 +129,7 @@ void SpinAdapted::Sweep::tiny(double sweep_tol)
 
       if (mpigetrank() == 0)
       {
-#ifndef MOLPRO_I8
+#ifndef MOLPRO
 	FILE* f = fopen("dmrg.e", "wb");
 #else
 	std::string efile;

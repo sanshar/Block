@@ -142,6 +142,10 @@ void block_calldmrg (
 
       fcon << "reset_iter" << endl;
     }
+    else {
+      // FIXME: not sure whether this is the best choice
+      fcon << "warmup local_2site" << endl;
+    }
 
     switch (N_pdm) {
       case 1:

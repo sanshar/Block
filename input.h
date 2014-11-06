@@ -247,7 +247,7 @@ class Input {
   diskio = boost::shared_ptr<cumulTimer> (new cumulTimer());
   }
   void writeSummary();
-#ifdef MOLPRO_I8
+#ifdef MOLPRO
   void writeSummaryForMolpro();
 #endif
   void performSanityTest();

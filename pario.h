@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 
-#ifdef MOLPRO_I8
+#ifdef MOLPRO
 #include "global/CxOutputStream.h"
 #endif
 
