@@ -231,11 +231,29 @@ void LoadQSTensor(const int& site, QSTensor& m, int state) {
     Matrix dummy;
 
     //first rotation matrix 
-    std::vector<Matrix> rotMat; rotMat.resize(4, dummy);
+    std::vector<Matrix> rotMat; 
     int index = occnum[0]*2+occnum[1];
-    rotMat[index]=m;
+
+    if (!dmrginp.spinAdapted()) {
+      rotMat.resize(4, dummy);
+      rotMat[index] = m;
+    }
+    else {
+      if (dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0) {
+	rotMat.resize(4, dummy);
+	rotMat[index] = m;
+      }
+      else {
+	if (index != 0) index--;
+	rotMat.resize(3, dummy);
+	rotMat[index] = m;
+      }
+    }
+
     SiteTensors.push_back(rotMat);
     SpinQuantum sTotal = MPS::siteBlocks[0].get_stateInfo().quanta[index];
+    //cout << "0 "<<sTotal<<endl;
+
     for (int i=0; i<MPS::sweepIters-1; i++) {
       //stateinfo of in incoming bond of dimension 1
       SpinQuantum sq[] = {sTotal}; int qs[] = {1}; int n = 1;
@@ -243,10 +261,16 @@ void LoadQSTensor(const int& site, QSTensor& m, int state) {
       TensorProduct(stateTotal, const_cast<StateInfo&>(MPS::siteBlocks[i+1].get_stateInfo()), currentState, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
       std::vector<Matrix> rotMat; rotMat.resize(currentState.quanta.size(), dummy);
       int index = occnum[2*i+2]*2+occnum[2*i+3];
-      index = currentState.quantaMap(0, index)[0];
+
+
+      if (dmrginp.spinAdapted() && currentState.quanta.size() == 3 ) assert(index != 1);
+
+      if (dmrginp.spinAdapted() && currentState.quanta.size() == 3 && index != 0) index--;
       rotMat[index]=m;
 
       sTotal = currentState.quanta[index];
+
+      //cout << i+1<<" "<<sTotal<<endl;
       SiteTensors.push_back(rotMat);
     }
     
@@ -258,13 +282,17 @@ void LoadQSTensor(const int& site, QSTensor& m, int state) {
     TensorProduct(stateTotal, const_cast<StateInfo&>(MPS::siteBlocks[MPS::sweepIters].get_stateInfo()), 
 		  secondLastState, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
     int index1 =  occnum[2*MPS::sweepIters]*2+occnum[2*MPS::sweepIters+1];
-    index1 = secondLastState.quantaMap(0, index1)[0];
+
+    if (dmrginp.spinAdapted() && secondLastState.quanta.size() == 3 && index1 != 0) index1--;
+
 
     //now make wavefunction with the big state A
     w.AllowQuantaFor(secondLastState, MPS::siteBlocks[MPS::sweepIters+1].get_stateInfo(), 
 		     dmrginp.effective_molecule_quantum_vec());
 
     int index2 = occnum[2*MPS::sweepIters+2]*2+occnum[2*MPS::sweepIters+3];
+    if (dmrginp.spinAdapted() && index2 != 0) index2--;
+
     w(index1, index2) = m;
   }
 
@@ -272,27 +300,31 @@ void LoadQSTensor(const int& site, QSTensor& m, int state) {
   //this is a helper function to make a MPS from a occupation number representation of determinant
   //this representation is slightly different than the usual occupation, here each integer
   //element is a spatial orbital which can have a value 0, -1, 1, or 2.
-  MPS::MPS(long *occnum, int length)
+  MPS::MPS(ulong *occnum, int length)
   {
     assert(length*64 >= dmrginp.last_site());
-
+    
     //convert the int array into a vector<bool>
     std::vector<bool> occ(dmrginp.last_site(), 0);
-
+    
     ulong temp = 1;
     int index = 0;
-    for (int i=0; i <length ; i++) 
+    for (int i=0; i <length ; i++) {
+      long occtemp = occnum[i];
       for (int j=63; j>=0; j--) {
-	if (index >=dmrginp.last_site()) break;
-
-	occ[index] = occnum[i] & ( temp << j ) ;
+	if (dmrginp.spinAdapted() && index >=2*dmrginp.last_site()) break;
+	if (!dmrginp.spinAdapted() && index >=dmrginp.last_site()) break;
+	
+	occ[index] = (occnum[i]>>j) & temp  ;
+	
 	index++;
       }
-
+    }
+    
     Init(occ);
   }
-
-
+  
+  
   MPS::MPS(std::vector<bool>& occ) {
     Init(occ);
   }

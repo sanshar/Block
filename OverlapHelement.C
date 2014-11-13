@@ -4,7 +4,9 @@
 #endif
 #include "stdio.h"
 #include "stdlib.h"
-#include <sstream>
+#include <string>
+
+using namespace std;
 
 int main(int argc, char* argv []) {
 
@@ -26,25 +28,28 @@ int main(int argc, char* argv []) {
   //exit(0);
   //
   //
+
   /*
   double overlap, hvalue;
 
-  long temp=1, occ=0;
+  unsigned long temp=1, occ=0;
 
-  string occstring = "11 00 11 00 11 00 00 11";
-  stringstream stream(occstring);
-  int n, i=0;
-  while (strem >>n) {
-    if (n==1)
-      occ = occ | temp <<(63-i);
-    i++;
-  }
+  string occstring = "1 1 0 0 1 1 0 0 1 1 0 0 0 0 1 1";
+  intFromString(occ, occstring.c_str());
 
   evaluateOverlapAndHamiltonian(&occ, 1, &overlap, &hvalue);
+
+  printf("<D|0> = %18.10f   <D|H|0> = %18.10f   <D|H|0>/<D|0> = %18.10f \n", overlap, hvalue, hvalue/overlap);
  
-  printf("overlap = %15.8e  %i\n", overlap, rank);
-  printf("helement = %15.8e  %i\n", hvalue, rank);
-  */
+  occstring = "1 0 0 1 1 1 0 0 1 1 0 0 0 0 1 1";
+  intFromString(occ, occstring.c_str());
+
+  evaluateOverlapAndHamiltonian(&occ, 1, &overlap, &hvalue);
+
+  printf("<D|0> = %18.10f   <D|H|0> = %18.10f   <D|H|0>/<D|0> = %18.10f \n", overlap, hvalue, hvalue/overlap);
+  */ 
+
+
 
 #ifndef SERIAL
   MPI_Finalize();

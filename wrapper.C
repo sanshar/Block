@@ -9,6 +9,8 @@
 #include "spinblock.h"
 #include "wrapper.h"
 #include "rotationmat.h"
+#include <sstream>
+
 
 void ReadInput(char* conf);
 namespace SpinAdapted{
@@ -36,6 +38,7 @@ void readMPSFromDiskAndInitializeStaticVariables(int mpsindex) {
   MPS::spinAdapted = false;
   for (int i=0; i<MPS::sweepIters+2; i++)
     MPS::siteBlocks.push_back(SpinBlock(i, i, 0, false)); //alway make transpose operators as well
+  SpinAdapted::globalMPS = MPS(mpsindex);
 }
 
 void writeFullMPS()
@@ -121,9 +124,22 @@ void test()
   */
 }
 
-void evaluateOverlapAndHamiltonian(long *occ, int length, double* o, double* h) {
+void evaluateOverlapAndHamiltonian(unsigned long *occ, int length, double* o, double* h) {
   MPS dmrgc(occ, length);
-  calcHamiltonianAndOverlap(globalMPS, dmrgc, *h, *o);
+  calcHamiltonianAndOverlap(SpinAdapted::globalMPS, dmrgc, *h, *o);
 }
 
 
+void intFromString(unsigned long &occ, const char* s) {
+  occ = 0;
+  long temp = 1;
+  string ss(s);
+  stringstream stream(ss);
+  int n, i=0;
+  while (stream >>n) {
+    if (n==1)
+      occ = occ | temp <<(63-i);
+    i++;
+  }
+  return;
+}

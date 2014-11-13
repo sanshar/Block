@@ -96,7 +96,7 @@ class MPS{
   MPS() {};
   MPS(int stateindex); 
   MPS(std::vector<bool>& occ);
-  MPS(long* occnum, int length);
+  MPS(ulong* occnum, int length);
   void buildMPSrep();
   std::vector<Matrix>& getSiteTensors(int i) {return SiteTensors[i];}
   const std::vector<Matrix>& getSiteTensors(int i) const {return SiteTensors[i];}
