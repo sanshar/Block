@@ -36,7 +36,6 @@ void readMPSFromDiskAndInitializeStaticVariables(int mpsindex) {
   MPS::spinAdapted = false;
   for (int i=0; i<MPS::sweepIters+2; i++)
     MPS::siteBlocks.push_back(SpinBlock(i, i, 0, false)); //alway make transpose operators as well
-
 }
 
 void writeFullMPS()
@@ -105,6 +104,7 @@ void test()
   if (mpigetrank() == 0)
     printf("<0|0> = %18.10f   <0|H|0> = %18.10f\n", o, h);
 
+  /*
   MPS statec(2);
   calcHamiltonianAndOverlap(statea, statec, h, o);
   if (mpigetrank() == 0)
@@ -118,6 +118,7 @@ void test()
   calcHamiltonianAndOverlap(statec, statec, h, o);
   if (mpigetrank() == 0)
     printf("<1|1> = %18.10f   <1|H|1> = %18.10f\n", o, h);
+  */
 }
 
 void evaluateOverlapAndHamiltonian(long *occ, int length, double* o, double* h) {

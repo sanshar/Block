@@ -4,6 +4,7 @@
 #endif
 #include "stdio.h"
 #include "stdlib.h"
+#include <sstream>
 
 int main(int argc, char* argv []) {
 
@@ -25,20 +26,25 @@ int main(int argc, char* argv []) {
   //exit(0);
   //
   //
-  //double overlap, hvalue;
+  /*
+  double overlap, hvalue;
 
-  //long temp=1, occ=0;
-  //
-  ////11 00 11 11  11 11
-  //occ = temp<<63 | temp<<62 | temp<<61 | temp<<60;// | temp<<57 | temp<<56 | temp<<55 | temp<<54 | temp<<53 | temp<<52;
+  long temp=1, occ=0;
 
-  ////11 11 11 00  11 11
-  ////occ = temp<<63 | temp<<62 | temp<<61 | temp<<60 | temp<<59 | temp<<58  | temp<<55 | temp<<54 | temp<<53 | temp<<52;
+  string occstring = "11 00 11 00 11 00 00 11";
+  stringstream stream(occstring);
+  int n, i=0;
+  while (strem >>n) {
+    if (n==1)
+      occ = occ | temp <<(63-i);
+    i++;
+  }
 
-  //evaluateOverlapAndHamiltonian(&occ, 1, &overlap, &hvalue);
+  evaluateOverlapAndHamiltonian(&occ, 1, &overlap, &hvalue);
  
-  //printf("overlap = %15.8e  %i\n", overlap, rank);
-  //printf("helement = %15.8e  %i\n", hvalue, rank);
+  printf("overlap = %15.8e  %i\n", overlap, rank);
+  printf("helement = %15.8e  %i\n", hvalue, rank);
+  */
 
 #ifndef SERIAL
   MPI_Finalize();
