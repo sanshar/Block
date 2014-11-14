@@ -5,10 +5,11 @@
 
 ##BOOSTINCLUDE = /home/sandeep/Work/Programs/boost_1_54_0/
 #specify boost include file
-BOOSTINCLUDE = /home/juny/boost_1_55_0/install/include/
+BOOSTINCLUDE = /home/sharma/apps/boost/boost_1_55_0/
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/home/juny/boost_1_55_0/install/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+BOOSTLIB = -L/home/sharma/apps/boost/boost_1_55_0/stage/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+#BOOSTLIB = -lboost_serialization -lboost_system -lboost_filesystem
 LAPACKBLAS = -lblas -llapack
 
 USE_BOOST56 = no
@@ -55,8 +56,8 @@ endif
 EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
-CXX =  g++
-MPICXX = /usr/lib64/openmpi/bin/mpicxx
+CXX =  icpc
+MPICXX = mpiicpc
 BLOCKHOME = .
 HOME = .
 NEWMATINCLUDE = $(BLOCKHOME)/newmat10/
@@ -81,37 +82,39 @@ FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTI
 LIBS +=  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp 
 MPI_OPT = -DSERIAL
 
-MPICOMPILER=
-ifeq ($(USE_MPI), yes)
-     MPI_OPT = 
-     MPI_LIB = -lboost_mpi
-     LIBS += $(MPI_LIB)
-     CXX = $(MPICXX)
-     MPICOMPILER=$(notdir $(firstword $(shell $(MPICXX) -showname)))
-endif
 
-ifeq (icpc, $(filter icpc, $(notdir $(firstword $(CXX))) $(MPICOMPILER)))
+
+
+ifeq (icpc, $(CXX))
    ifeq ($(OPENMP), yes)
       OPENMP_FLAGS= -openmp -D_OPENMP 
    endif
 # Intel compiler
-   OPT = -DNDEBUG -O3 -funroll-loops  -fPIC
+   OPT = -DNDEBUG -O3 -funroll-loops  
 #  OPT = -g -fPIC
    ifeq ($(USE_MPI), no) 
       CXX = icc
    endif
 endif
 
-ifeq (g++, $(filter g++, $(notdir $(firstword $(CXX))) $(MPICOMPILER)))
+ifeq (g++, $(CXX))
    ifeq ($(OPENMP), yes)
       OPENMP_FLAGS= -fopenmp -D_OPENMP 
    endif
 # GNU compiler
-      OPT = -DNDEBUG -O3 -fPIC
+      OPT = -DNDEBUG -O3 
 #   OPT = -g -fPIC
 endif
 
-OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(B56) $(MOLPRO_BLOCK)  -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL ${MKLOPT} ${UNITTEST}
+ifeq ($(USE_MPI), yes)
+     MPI_OPT = 
+     MPI_LIB = -lboost_mpi
+     LIBS += $(MPI_LIB)
+     CXX = $(MPICXX)
+endif
+
+
+OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(B56) $(MOLPRO_BLOCK)  -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL ${MKLOPT} ${UNITTEST} -fPIC
 
 SRC_genetic = genetic/CrossOver.C genetic/Evaluate.C genetic/GAInput.C genetic/GAOptimize.C genetic/Generation.C genetic/Mutation.C genetic/RandomGenerator.C genetic/ReadIntegral.C
 

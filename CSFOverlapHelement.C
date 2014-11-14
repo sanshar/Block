@@ -26,8 +26,8 @@ int main(int argc, char* argv []) {
   int mpsstate=0;
   
   dmrginp.add_noninteracting_orbs() = false;
-  readMPSFromDiskAndInitializeStaticVariables(mpsstate);
-
+  readMPSFromDiskAndInitializeStaticVariables();
+  //initializeGlobalMPS(mpsstate);
 
 
   double overlap, hvalue;

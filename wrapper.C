@@ -30,7 +30,11 @@ void ReadInputFromC(char* conf, int outputlevel) {
   dmrginp.initCumulTimer();
 }
 
-void readMPSFromDiskAndInitializeStaticVariables(int mpsindex) {
+void initializeGlobalMPS(int mpsindex) {
+  SpinAdapted::globalMPS = MPS(mpsindex);
+}
+
+void readMPSFromDiskAndInitializeStaticVariables() {
   if(!dmrginp.spinAdapted())
     MPS::sweepIters = dmrginp.last_site()/2-2;
   else
@@ -49,14 +53,11 @@ void readMPSFromDiskAndInitializeStaticVariables(int mpsindex) {
       newstartingBlock.default_op_components(false, s, dummyblock, true, true, false);
       newstartingBlock.setstoragetype(LOCAL_STORAGE);
       newstartingBlock.BuildSumBlock(NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, s, dummyblock);
-      cout << newstartingBlock<<endl;
-      cout << newstartingBlock.get_stateInfo()<<endl;
       MPS::siteBlocks.push_back(newstartingBlock); //alway make transpose operators as well
     }
     else
       MPS::siteBlocks.push_back(SpinBlock(i, i, 0, false)); //alway make transpose operators as well
   }
-  SpinAdapted::globalMPS = MPS(mpsindex);
 }
 
 void writeFullMPS()

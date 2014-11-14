@@ -21,8 +21,8 @@ int main(int argc, char* argv []) {
 
   int mpsstate=0;
   
-  readMPSFromDiskAndInitializeStaticVariables(mpsstate);
-
+  readMPSFromDiskAndInitializeStaticVariables();
+  initializeGlobalMPS(mpsstate);
 
   test();
   //exit(0);
