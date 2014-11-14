@@ -41,7 +41,8 @@ int main(int argc, char* argv[]) {
   #endif
   initBoostMPI(argc, argv);
   ReadInputFromC(argv[1], -1);
-  readMPSFromDiskAndInitializeStaticVariables(0);  
+  readMPSFromDiskAndInitializeStaticVariables();  
+  initializeGlobalMPS(0);  
   if (mpigetrank() == 0) {
     MPS state(0);
     auto coefs = ReadCoefFile();
