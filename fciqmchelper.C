@@ -251,8 +251,9 @@ void LoadQSTensor(const int& site, QSTensor& m, int state) {
     }
 
     SiteTensors.push_back(rotMat);
-    SpinQuantum sTotal = MPS::siteBlocks[0].get_stateInfo().quanta[index];
-    //cout << "0 "<<sTotal<<endl;
+    //cout << MPS::siteBlocks[0]<<endl;
+    SpinQuantum sTotal = MPS::siteBlocks[0].get_stateInfo().quanta.at(index);
+    
 
     for (int i=0; i<MPS::sweepIters-1; i++) {
       //stateinfo of in incoming bond of dimension 1
@@ -262,10 +263,7 @@ void LoadQSTensor(const int& site, QSTensor& m, int state) {
       std::vector<Matrix> rotMat; rotMat.resize(currentState.quanta.size(), dummy);
       int index = occnum[2*i+2]*2+occnum[2*i+3];
 
-
-      if (dmrginp.spinAdapted() && currentState.quanta.size() == 3 ) assert(index != 1);
-
-      if (dmrginp.spinAdapted() && currentState.quanta.size() == 3 && index != 0) index--;
+      if (dmrginp.spinAdapted() && currentState.quanta.size() <= 3 && index > 1) index--;
       rotMat[index]=m;
 
       sTotal = currentState.quanta[index];
@@ -283,7 +281,7 @@ void LoadQSTensor(const int& site, QSTensor& m, int state) {
 		  secondLastState, NO_PARTICLE_SPIN_NUMBER_CONSTRAINT);
     int index1 =  occnum[2*MPS::sweepIters]*2+occnum[2*MPS::sweepIters+1];
 
-    if (dmrginp.spinAdapted() && secondLastState.quanta.size() == 3 && index1 != 0) index1--;
+    if (dmrginp.spinAdapted() && secondLastState.quanta.size() <= 3 && index1 > 1) index1--;
 
 
     //now make wavefunction with the big state A
@@ -291,7 +289,7 @@ void LoadQSTensor(const int& site, QSTensor& m, int state) {
 		     dmrginp.effective_molecule_quantum_vec());
 
     int index2 = occnum[2*MPS::sweepIters+2]*2+occnum[2*MPS::sweepIters+3];
-    if (dmrginp.spinAdapted() && index2 != 0) index2--;
+    if (dmrginp.spinAdapted() && index2 > 1) index2--;
 
     w(index1, index2) = m;
   }

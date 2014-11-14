@@ -396,7 +396,8 @@ class Input {
   const IrrepSpace &bra_symmetry_number() const { return m_bra_symmetry_number; }
   const SpinQuantum &molecule_quantum() const { return m_molecule_quantum; }
   const int &sys_add() const { return m_sys_add; }
-  bool add_noninteracting_orbs() const {return m_add_noninteracting_orbs;}
+  const bool &add_noninteracting_orbs() const {return m_add_noninteracting_orbs;}
+  bool &add_noninteracting_orbs() {return m_add_noninteracting_orbs;}
   const int &nquanta() const { return m_nquanta; }
   const int &env_add() const { return m_env_add; }
   const bool &do_fci() const { return m_do_fci; }

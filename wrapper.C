@@ -36,8 +36,26 @@ void readMPSFromDiskAndInitializeStaticVariables(int mpsindex) {
   else
     MPS::sweepIters = dmrginp.last_site()-2;
   MPS::spinAdapted = false;
-  for (int i=0; i<MPS::sweepIters+2; i++)
-    MPS::siteBlocks.push_back(SpinBlock(i, i, 0, false)); //alway make transpose operators as well
+  for (int i=0; i<MPS::sweepIters+2; i++) {
+    if (i==0 && dmrginp.spinAdapted() && dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0 ) {
+      SpinBlock s(i, i, 0, false);
+      SpinQuantum sq = dmrginp.molecule_quantum();
+      sq = SpinQuantum(sq.get_s().getirrep(), sq.get_s(), IrrepSpace(0));
+      int qs = 1, ns = 1;
+      StateInfo addstate(ns, &sq, &qs); 
+      SpinBlock dummyblock(addstate, 0);
+      SpinBlock newstartingBlock;
+      newstartingBlock.set_integralIndex() = 0;
+      newstartingBlock.default_op_components(false, s, dummyblock, true, true, false);
+      newstartingBlock.setstoragetype(LOCAL_STORAGE);
+      newstartingBlock.BuildSumBlock(NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, s, dummyblock);
+      cout << newstartingBlock<<endl;
+      cout << newstartingBlock.get_stateInfo()<<endl;
+      MPS::siteBlocks.push_back(newstartingBlock); //alway make transpose operators as well
+    }
+    else
+      MPS::siteBlocks.push_back(SpinBlock(i, i, 0, false)); //alway make transpose operators as well
+  }
   SpinAdapted::globalMPS = MPS(mpsindex);
 }
 

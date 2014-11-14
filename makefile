@@ -96,7 +96,7 @@ ifeq (icpc, $(filter icpc, $(notdir $(firstword $(CXX))) $(MPICOMPILER)))
    endif
 # Intel compiler
    OPT = -DNDEBUG -O3 -funroll-loops  -fPIC
-#  OPT = -g 
+#  OPT = -g -fPIC
    ifeq ($(USE_MPI), no) 
       CXX = icc
    endif
@@ -108,7 +108,7 @@ ifeq (g++, $(filter g++, $(notdir $(firstword $(CXX))) $(MPICOMPILER)))
    endif
 # GNU compiler
       OPT = -DNDEBUG -O3 -fPIC
-#   OPT = -g
+#   OPT = -g -fPIC
 endif
 
 OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(B56) $(MOLPRO_BLOCK)  -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL ${MKLOPT} ${UNITTEST}
@@ -130,6 +130,9 @@ SRC_spin_adapted =  modules/ResponseTheory/sweepResponse.C modules/ResponseTheor
 SRC_OH = modules/ResponseTheory/sweepResponse.C modules/ResponseTheory/sweepCompress.C wrapper.C fciqmchelper.C pario.C dmrg.C fiedler.C least_squares.C sweep_mps.C set_spinblock_components.C linear.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C Schedule.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C $(SRC_genetic) SpinSpace.C include/IntegralMatrix.C $(SRC_npdm) $(SRC_nevpt2)
 OBJ_OH= OverlapHelement.o
 
+SRC_CSFOH = CSFOverlapHelement.C modules/ResponseTheory/sweepResponse.C modules/ResponseTheory/sweepCompress.C wrapper.C fciqmchelper.C pario.C dmrg.C fiedler.C least_squares.C sweep_mps.C set_spinblock_components.C linear.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C Schedule.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C $(SRC_genetic) SpinSpace.C include/IntegralMatrix.C $(SRC_npdm) $(SRC_nevpt2)
+
+
 SRC_COEF= modules/ResponseTheory/sweepResponse.C modules/ResponseTheory/sweepCompress.C wrapper.C fciqmchelper.C pario.C dmrg.C fiedler.C least_squares.C sweep_mps.C set_spinblock_components.C linear.C readinput.C  save_load_block.C timer.C SpinQuantum.C Symmetry.C Schedule.C input.C orbstring.C slater.C csf.C StateInfo.C  Operators.C BaseOperator.C screen.C MatrixBLAS.C operatorfunctions.C opxop.C wavefunction.C solver.C davidson.C sweep_params.C sweep.C initblocks.C guess_wavefunction.C density.C rotationmat.C renormalise.C couplingCoeffs.C distribute.C new_anglib.C fci.C spinblock.C op_components.C IrrepSpace.C modules/generate_blocks/sweep.C modules/onepdm/sweep.C modules/onepdm/onepdm.C modules/twopdm/sweep.C modules/twopdm/twopdm.C modules/twopdm/twopdm_2.C $(SRC_genetic) SpinSpace.C include/IntegralMatrix.C $(SRC_npdm) $(SRC_nevpt2)
 OBJ_COEF= Coefficients.o
 
@@ -144,6 +147,7 @@ SRC_nevpt2 = modules/nevpt2/nevpt2.C modules/nevpt2/nevpt2_info.C modules/nevpt2
 SRC_molcas = molcas/block_calldmrg.C molcas/molpro_fcidump.C molcas/loadNpdm.C molcas/sortNpdm.C molcas/tranNpdm.C
 
 OBJ_OH+=$(SRC_OH:.C=.o)
+OBJ_CSFOH+=$(SRC_CSFOH:.C=.o)
 OBJ_COEF+=$(SRC_COEF:.C=.o)
 OBJ_spin_adapted=$(SRC_spin_adapted:.C=.o)
 OBJ_spin_library=$(SRC_spin_library:.C=.o)
@@ -157,7 +161,7 @@ endif
 .cpp.o :
 	$(CXX) $(FLAGS) $(OPT) -c $< -o $@
 
-all	: library $(EXECUTABLE) OH COEF
+all	: library $(EXECUTABLE) OH COEF CSFOH
 
 library : libqcdmrg.a $(NEWMATLIB)/libnewmat.a libqcdmrg.so
 
@@ -173,6 +177,9 @@ $(EXECUTABLE) : $(OBJ_spin_adapted) $(NEWMATLIB)/libnewmat.a
 
 OH : $(OBJ_OH) $(NEWMATLIB)/libnewmat.a
 	$(CXX)   $(FLAGS) $(OPT) -o  OH $(OBJ_OH) $(LIBS)
+
+CSFOH : $(OBJ_CSFOH) $(NEWMATLIB)/libnewmat.a
+	$(CXX)   $(FLAGS) $(OPT) -o  CSFOH $(OBJ_CSFOH) $(LIBS)
 
 COEF : $(OBJ_COEF) $(NEWMATLIB)/libnewmat.a
 	$(CXX)   $(FLAGS) $(OPT) -o  COEF $(OBJ_COEF) $(LIBS)
