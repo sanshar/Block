@@ -137,7 +137,16 @@ template <> struct ChooseArray<CreDesCreCre> {
 template <> struct ChooseArray<CreCreCreCre> {
   typedef para_array_4d<std::vector<boost::shared_ptr<CreCreCreCre> > > ArrayType;
 };
-
+// mps_nevpt
+template <> struct ChooseArray<CDD_sum> {
+  typedef para_array_0d<std::vector<boost::shared_ptr<CDD_sum> > > ArrayType;
+};
+template <> struct ChooseArray<CDD_CreDesComp> {
+  typedef para_array_1d<std::vector<boost::shared_ptr<CDD_CreDesComp> > > ArrayType;
+};
+template <> struct ChooseArray<CDD_DesDesComp> {
+  typedef para_array_1d<std::vector<boost::shared_ptr<CDD_DesDesComp> > > ArrayType;
+};
 //===========================================================================================================================================================
 
 class Op_component_base

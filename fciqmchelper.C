@@ -13,6 +13,7 @@ namespace SpinAdapted{
   int MPS::sweepIters ;
   bool MPS::spinAdapted ;
   std::vector<SpinBlock> MPS::siteBlocks;
+  std::vector<SpinBlock> MPS::siteBlocks_noDES;
 
 void QSTensor::remove_empty() {
   for (int i = 0; i < nl; ++i) {

@@ -92,6 +92,8 @@ class MPS{
   static int sweepIters;
   static bool spinAdapted;
   static std::vector<SpinBlock> siteBlocks;
+  static std::vector<SpinBlock> siteBlocks_noDES;
+  // It is the site block with implicit transpose.
 
   MPS() {};
   MPS(int stateindex); 

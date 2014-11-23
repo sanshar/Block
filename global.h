@@ -34,6 +34,7 @@ using namespace std;
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+//#include "dyall_integral.h"
 #include "Symmetry.h"
 #include "input.h"
 #include <ctime>
@@ -46,6 +47,7 @@ class TwoElectronArray;
 class PairArray;
 class CCCCArray;
 class CCCDArray;
+//Perturb subspace in nevpt2.
 
 extern int MAX_THRD;
 
@@ -53,6 +55,16 @@ extern Timer globaltimer;
 
 extern std::vector<OneElectronArray> v_1;
 extern std::vector<TwoElectronArray> v_2;
+extern std::map<TwoPerturbType,PerturbTwoElectronArray> vpt_2;
+extern OneElectronArray vpt_1;
+//extern OneElectronArray vpt_1;
+//TODO
+//Now, just use 4d vector to store perturb integral. Change it inot a better one latter. 
+//extern std::map<OnePerturbType,PerturbOneElectronArray> vpt_1;
+//extern std::map<TwoPerturbType,PerturbTwoElectronArray> vpt_2;
+//extern std::vector<OnePerturbArray> vpt_1;
+//extern std::vector<TwoPerturbArray> vpt_2;
+extern OneElectronArray fock;
 extern std::vector<double> coreEnergy;
 extern PairArray v_cc;
 extern CCCCArray v_cccc;
