@@ -97,12 +97,14 @@ void block_calldmrg (
     /// Create config file
     std::ofstream fcon(input);
 
+    std::string symlab(Sym,3);
+
     fcon << "nelec " << setw(2) << N_elec << endl;
     fcon << "spin  " << setw(2) << M_s << endl;
     fcon << "irrep  " << iSym << endl;
 
     int N_sweep = 0;
-    int M_start = (Restart == 1) ? M_state : 250;
+    int M_start = (Restart == 0) ? 250 : M_state;
     double T_start = T_noise;
 
     fcon << "schedule" << endl;
@@ -111,41 +113,65 @@ void block_calldmrg (
       N_sweep += 2;
       M_start *= 2;
     }
-    while(T_start > 1.0e-6) {
+//  while(T_start > T_sweep && T_start > 1.0e-6) {
+//    fcon << setw(2) << N_sweep << setw(5) << M_state << " " << T_start << " " << T_start << endl;
+//    N_sweep += 2;
+//    T_start /= 10;
+//  }
+    while(T_start >= T_sweep) {
       fcon << setw(2) << N_sweep << setw(5) << M_state << " " << T_start << " " << T_start << endl;
       N_sweep += 2;
       T_start /= 10;
     }
-    while(T_start > T_sweep) {
-      fcon << setw(2) << N_sweep << setw(5) << M_state << " " << T_start << " " << 0.0 << endl;
-      N_sweep += 2;
-      T_start /= 10;
-    }
-    fcon << setw(2) << N_sweep << setw(5) << M_state << " " << T_sweep << " 0.0" << endl;
+    fcon << setw(2) << N_sweep << setw(5) << M_state << " " << T_sweep/10 << " 0.0" << endl;
     fcon << "end" << endl;
     fcon << "maxiter 100" << endl;
 
-    if(N_sweep > 0)
+    fcon << "sweep_tol " << T_sweep << endl;
+
+    switch (Restart) {
+      // No restart
+      case 0:
+        // FIXME: not sure whether this is the best choice
+        //        in practice, i found that guess calc. often fails for high-spin state with symmetry
+        if(M_s > 2 && symlab != "c1 ") {
+          // use wilson guess to avoid the bug for the time
+          // since this makes slower convergence, perform 4 extra sweeps w/ twodot
+          N_sweep += 4;
+          fcon << "warmup wilson" << endl;
+        }
+        else {
+          fcon << "warmup local_3site" << endl;
+        }
+        break;
+
+      // Restart from onedot
+      case 1:
+        // FIXME:
+        // when using restart for N_roots = 1, energy oscillation occurs somehow...
+        // it might be a bug for restart at restoring previous state info?
+        // fullrestart with SA-DMRG and onedot fails
+        if(N_roots == 1)
+          fcon << "fullrestart" << endl;
+        else
+          fcon << "restart" << endl;
+        fcon << "reset_iter" << endl;
+        break;
+
+      // Full-Restart
+      case 2:
+        fcon << "fullrestart" << endl;
+        fcon << "reset_iter" << endl;
+        break;
+
+      default:
+        abort();
+    }
+
+    if(Restart != 1)
       fcon << "twodot_to_onedot " << N_sweep+4 << endl;
     else
       fcon << "onedot" << endl;
-
-    fcon << "sweep_tol " << T_sweep << endl;
-    if(Restart == 1) {
-      // FIXME:
-      // when using restart for N_roots = 1, energy oscillation occurs somehow...
-      // fullrestart with SA-DMRG and onedot fails
-      if(N_sweep > 0 || N_roots == 1)
-        fcon << "fullrestart" << endl;
-      else
-        fcon << "restart" << endl;
-
-      fcon << "reset_iter" << endl;
-    }
-    else {
-      // FIXME: not sure whether this is the best choice
-      fcon << "warmup local_2site" << endl;
-    }
 
     switch (N_pdm) {
       case 1:
@@ -169,7 +195,6 @@ void block_calldmrg (
 //  fcon << "store_spinpdm" << endl;
 //  fcon << "prefix " << prefix << endl;
     fcon << "orbitals FCIDUMP" << endl;
-    std::string symlab(Sym,3);
     fcon << "symmetry " << symlab << endl;
     fcon << "gaopt default" << endl;
     fcon << "hf_occ integral" << endl;
