@@ -27,16 +27,6 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
 
   //calculating <wave1| Oa*Ob | wave2>
   // do transpose specifies if we want  <wave1| Oa^T*Ob |wave2> separately. This can be avoided in some sitations if wave1 and wave2 are the same functions
-  int leftindices=0, dotindices=0, rightindices=0;
-
-  leftindices = &leftOp ? leftOp.get_orbs().size() : 0;
-  dotindices = &dotOp ? dotOp.get_orbs().size() : 0;
-  rightindices = &rightOp ? rightOp.get_orbs().size() : 0;
-
-  int Aindices, Bindices;
-  Aindices = leftindices+dotindices;
-  Bindices = rightindices;
-
   Wavefunction opw2;
   vector<SpinQuantum> dQ = wave1.get_deltaQuantum();
   if(dmrginp.setStateSpecific() || !dmrginp.doimplicitTranspose()) opw2.initialisebra(dQ, &big, true);
@@ -53,41 +43,12 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
   else
     totalspin = (&rightOp) ? -(rightOp.get_spin().getirrep()) : 0;
 
-  if (Aindices != 0) {
-    FormLeftOp(leftBlock, leftOp, dotOp, AOp, totalspin);
-  }
+  FormLeftOp(leftBlock, leftOp, dotOp, AOp, totalspin);
+  SpinQuantum hq(0,SpinSpace(0),IrrepSpace(0));
 
-  // When bra and ket are different, their basis are different. DotProduct between them cannot be used. 
-  // Overlap operator changes the basis of ket wavefunction, overlap = \sum c_{i,j} |\phi>_i<\psi|_j
-  // After multipling Overlap, bra and ket wavefunction have the same basis.
-  // When some cd operators between bra and ket, the basis of ket are also changed. There is no need to use OVERLAP
-  // Only when no operator in left or right block, overlap operators are used.
-  //different cases
-  if (Aindices == 0 && Bindices != 0)
-  {
-    if(!dmrginp.setStateSpecific() && dmrginp.doimplicitTranspose())
-      operatorfunctions::TensorMultiply(rightBlock, rightOp, &big, wave2, opw2, dQ[0], 1.0);
-    else{
-      boost::shared_ptr<SparseMatrix> overlap=leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
-      operatorfunctions::TensorMultiply(leftBlock,*overlap, rightOp, &big, wave2, opw2, dQ[0], 1.0);
-    }
-  }
-  else if (Aindices != 0 && Bindices == 0)
-  { 
-    if(!dmrginp.setStateSpecific() && dmrginp.doimplicitTranspose())
-      operatorfunctions::TensorMultiply(leftBlock, AOp, &big, wave2, opw2, dQ[0], 1.0);
-    else{
-      boost::shared_ptr<SparseMatrix> overlap=rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
-    operatorfunctions::TensorMultiply(leftBlock, AOp,*overlap,&big, wave2, opw2, dQ[0], 1.0);
-    }
-  }
-  else if (Aindices != 0 && Bindices != 0)
-  { 
-    operatorfunctions::TensorMultiply(leftBlock, AOp, rightOp, &big, wave2, opw2, dQ[0], 1.0);
-  }
-  else abort();
+  operatorfunctions::TensorMultiply(leftBlock, AOp, rightOp, &big, wave2, opw2, hq, 1.0);
 
-  return DotProduct(wave1, opw2, dmrginp.Sz(), big);
+  return DotProduct(wave1, opw2, big) ;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -95,79 +56,47 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
 void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const SparseMatrix& dotOp, SparseMatrix& Aop, int totalspin)
 {
   //Cre is just a class..it is not actually cre
-  int leftindices=0, dotindices=0, rightindices=0;
+  int leftindices=0, dotindices=0;
 
-  leftindices = &leftOp ? leftOp.get_orbs().size() : 0;
-  dotindices = &dotOp ? dotOp.get_orbs().size() : 0;
+  leftindices = leftOp.get_orbs().size() ;
+  dotindices =  dotOp.get_orbs().size() ;
   
-  int Aindices, Bindices;
+  int Aindices;
   Aindices = leftindices+dotindices;
 
   Aop.CleanUp();
   Aop.set_initialised() = true;
   Aop.set_fermion() = Aindices%2==1 ? true : false;
-  if (dotindices == 0)
-    { //FIXME
-      // Why set fermion false? 
-      //Aop.set_fermion() = false;
-      Aop.set_orbs() = leftOp.get_orbs();
-      Aop.set_deltaQuantum(1, leftOp.get_deltaQuantum(0)); // FIXME does leftOp always has only one dQ?
-      //Aop.allocate(leftBlock->get_stateInfo());
-      Aop.allocate(leftBlock->get_braStateInfo(),leftBlock->get_ketStateInfo());
-      if(!dmrginp.setStateSpecific() && dmrginp.doimplicitTranspose())
-        operatorfunctions::TensorTrace(leftBlock->get_leftBlock(), leftOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
-      else{
-        boost::shared_ptr<SparseMatrix> overlap=leftBlock->get_rightBlock()->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock->get_rightBlock());
-        operatorfunctions::TensorProduct(leftBlock->get_leftBlock(),leftOp, *overlap, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
-      }
-    }
-  else if (leftindices == 0)
-    {
-      //Aop.set_fermion() = false;
-      Aop.set_orbs() = dotOp.get_orbs();
-      Aop.set_deltaQuantum(1, dotOp.get_deltaQuantum(0));
-      //Aop.allocate(leftBlock->get_stateInfo());
-      Aop.allocate(leftBlock->get_braStateInfo(),leftBlock->get_ketStateInfo());
-      if(!dmrginp.setStateSpecific() && dmrginp.doimplicitTranspose())
-        operatorfunctions::TensorTrace(leftBlock->get_rightBlock(), dotOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
-      else{
-        boost::shared_ptr<SparseMatrix> overlap=leftBlock->get_leftBlock()->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock->get_leftBlock());
-        operatorfunctions::TensorProduct(leftBlock->get_leftBlock(),*overlap, dotOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);
-      }
-    }
+  Aop.set_orbs() = leftOp.get_orbs(); copy(dotOp.get_orbs().begin(), dotOp.get_orbs().end(), back_inserter(Aop.set_orbs()));
+  //Aop.set_fermion() = Aop.set_orbs().size() == 2 ? true : false;
+  //Aop.set_fermion() = Aop.set_orbs().size() == 2 ? true : false;
+  vector<SpinQuantum> spins = (dotOp.get_deltaQuantum(0) + leftOp.get_deltaQuantum(0));
+  SpinQuantum dQ;
+  for (int i=0; i< spins.size(); i++) {
+    if (spins[i].get_s().getirrep() == totalspin) { dQ = spins[i]; break; }
+  }
+  if(dmrginp.spinAdapted())
+    Aop.set_deltaQuantum(1, dQ);
+  //FIXME
+  // Above expression should also works for non-spinAdapted
+  // I do not know why it does not work.
   else
-    {
-      Aop.set_orbs() = leftOp.get_orbs(); copy(dotOp.get_orbs().begin(), dotOp.get_orbs().end(), back_inserter(Aop.set_orbs()));
-      //Aop.set_fermion() = Aop.set_orbs().size() == 2 ? true : false;
-      //Aop.set_fermion() = Aop.set_orbs().size() == 2 ? true : false;
-      vector<SpinQuantum> spins = (dotOp.get_deltaQuantum(0) + leftOp.get_deltaQuantum(0));
-      SpinQuantum dQ;
-      for (int i=0; i< spins.size(); i++) {
-	if (spins[i].get_s().getirrep() == totalspin) { dQ = spins[i]; break; }
-      }
-      if(dmrginp.spinAdapted())
-        Aop.set_deltaQuantum(1, dQ);
-      //FIXME
-      // Above expression should also works for non-spinAdapted
-      // I do not know why it does not work.
-      else
-        Aop.set_deltaQuantum(1, spins[0]);
-      //Aop.allocate(leftBlock->get_stateInfo());
-      Aop.allocate(leftBlock->get_braStateInfo(),leftBlock->get_ketStateInfo());
-      operatorfunctions::TensorProduct(leftBlock->get_leftBlock(), leftOp, dotOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);      
-    }
+    Aop.set_deltaQuantum(1, spins[0]);
+  //Aop.allocate(leftBlock->get_stateInfo());
+  Aop.allocate(leftBlock->get_braStateInfo(),leftBlock->get_ketStateInfo());
+  operatorfunctions::TensorProduct(leftBlock->get_leftBlock(), leftOp, dotOp, leftBlock, &(leftBlock->get_stateInfo()), Aop, 1.0);      
 } 
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-double DotProduct(const Wavefunction& w1, const Wavefunction& w2, double Sz, const SpinBlock& big)
+double DotProduct(const Wavefunction& w1, const Wavefunction& w2, const SpinBlock& big)
 {
   // After multipling ket by cd operator, it has the same basis with ket
   int leftOpSz = big.get_leftBlock()->get_braStateInfo().quanta.size ();
   int rightOpSz = big.get_rightBlock()->get_braStateInfo().quanta.size ();
   const StateInfo* rS = big.get_braStateInfo().rightStateInfo, *lS = big.get_braStateInfo().leftStateInfo;
-
   double output = 0.0;
+  SpinQuantum Q= w1.get_deltaQuantum(0);
   for (int lQ =0; lQ < leftOpSz; lQ++)
     for (int rQ = 0; rQ < rightOpSz; rQ++) {
       if (w1.allowed(lQ, rQ) && w2.allowed(lQ, rQ))

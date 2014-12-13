@@ -7,6 +7,7 @@
 #include "npdm_patterns.h"
 #include "npdm_expectations.h"
 #include "pario.h"
+#include <stdio.h>
 
 namespace SpinAdapted{
 namespace Npdm{
@@ -16,7 +17,7 @@ std::vector<double> DEBUG_COMM_TIME(1000);
 std::vector<int> DEBUG_CALL_GET_EXPECT(1000);
 
 // Forward declaration
-boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::vector<Npdm::CD> & cd_type );
+boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock,const std::vector<Npdm::CD> & cd_type );
 
 //===========================================================================================================================================================
 
@@ -329,6 +330,85 @@ void Npdm_driver::loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Np
   }
 }
 
+bool Npdm_driver::screen(const std::vector<CD> &lhs_cd_type,const std::vector<CD> &dot_cd_type)
+{
+  int cre_num=0;
+  int des_num=0;
+  for(auto i:lhs_cd_type)
+  {
+    if(i== CREATION) cre_num++;
+    else if (i== DESTRUCTION) des_num++;
+  }
+
+  for(auto i:dot_cd_type)
+  {
+    if(i== CREATION) cre_num++;
+    else if (i== DESTRUCTION) des_num++;
+  }
+  if(cre_num> npdm_order_) return true;
+  if(des_num> npdm_order_) return true;
+  return false;
+
+}
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_driver::loop_over_operator_patterns_store( Npdm::Npdm_patterns& patterns, Npdm::Npdm_expectations& expectations, const SpinBlock& big )
+{
+#ifndef SERIAL
+  boost::mpi::communicator world;
+#endif
+
+  // Get LHS, Dot and RHS spin-blocks
+  SpinBlock* rhsBlock = big.get_rightBlock();
+  SpinBlock* lhsdotBlock = big.get_leftBlock();
+  SpinBlock* lhsBlock = lhsdotBlock->get_leftBlock();
+  SpinBlock* dotBlock = lhsdotBlock->get_rightBlock();
+
+  for (auto dot_cd_type = patterns.dot_cd_begin(); dot_cd_type != patterns.dot_cd_end(); ++dot_cd_type) {
+    //Loop lhs
+    boost::shared_ptr<NpdmSpinOps> dotOps = select_op_wrapper( dotBlock, *dot_cd_type );
+    for ( int idot = 0; idot < dotOps->size(); ++idot ) {
+      bool skip_op = dotOps->set_local_ops( idot );
+      if ( skip_op ) continue;
+      for (auto lhs_cd_type= patterns.lhs_cd_begin(); lhs_cd_type!= patterns.lhs_cd_end(); ++lhs_cd_type) {
+        if(screen(*lhs_cd_type,*dot_cd_type)) continue;
+        boost::shared_ptr<NpdmSpinOps> lhsOps = select_op_wrapper( lhsBlock, *lhs_cd_type );
+        for ( int ilhs = 0; ilhs < lhsOps->size(); ++ilhs ) {
+          bool skip_op = lhsOps->set_local_ops( ilhs );
+          assert(dotOps->is_local_);
+          if(lhsOps->is_local_)
+          {
+            if(mpigetrank() == 0 && (! skip_op)) expectations.store( *lhsOps, *dotOps );
+          }
+          else{
+            if ( ! skip_op ) expectations.store( *lhsOps, *dotOps );
+          }
+        }
+      }
+    }
+  }
+
+  //Loop rhs
+  for (auto rhs_cd_type= patterns.rhs_cd_begin(); rhs_cd_type!= patterns.rhs_cd_end(); ++rhs_cd_type) {
+    boost::shared_ptr<NpdmSpinOps> rhsOps = select_op_wrapper( rhsBlock, *rhs_cd_type );
+    for ( int irhs = 0; irhs < rhsOps->size(); ++irhs ) {
+      bool skip_op = rhsOps->set_local_ops( irhs );
+      if(rhsOps->is_local_)
+        { if(mpigetrank() == 0 && (! skip_op)) expectations.store( *rhsOps);}
+      else 
+        {if ( ! skip_op ) expectations.store( *rhsOps );}
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+void Npdm_driver::clear_npdm_intermediate(Npdm::Npdm_expectations& expectations)
+{
+  for(std::string filename: expectations.intermediate_filenames)
+    remove(filename.c_str());
+  expectations.intermediate_filenames.clear();
+
+}
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos)
@@ -344,28 +424,32 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
   pout << "===========================================================================================\n";
   pout << "Current NPDM sweep position = "<< sweepPos+1 << " of " << endPos+1 << "\n";
 
+  //TODO
+  //Store intermidiate of O_l|\Psi> and <\Psi|O_r
+  
   // Loop over NPDM operator patterns
   Npdm_patterns npdm_patterns( npdm_order_, sweepPos, endPos );
-  if(wavefunctions.size()==2){
-    Npdm_expectations npdm_expectations( spin_adaptation_, npdm_patterns, npdm_order_, wavefunctions.at(0), wavefunctions.at(1), big );
+  Wavefunction& wave1= wavefunctions.size()==2? wavefunctions.at(1): wavefunctions.at(0);
+  Npdm_expectations npdm_expectations( spin_adaptation_, npdm_patterns, npdm_order_, wavefunctions.at(0), wave1, big );
   //    for(auto pattern=npdm_patterns.ldr_cd_begin();pattern!=npdm_patterns.ldr_cd_end();++pattern){
   //      npdm_patterns.print_cd_string(pattern->at('l'));
   //      npdm_patterns.print_cd_string(pattern->at('d'));
   //      npdm_patterns.print_cd_string(pattern->at('r'));
   //      pout << endl;
   //    }
-    loop_over_operator_patterns( npdm_patterns, npdm_expectations, big );
+  if(dmrginp.npdm_intermediate() && (npdm_order_== NPDM_NEVPT2 || npdm_order_== NPDM_THREEPDM || npdm_order_== NPDM_FOURPDM))
+  {
+    loop_over_operator_patterns_store( npdm_patterns, npdm_expectations, big );
+#ifndef SERIAL
+  world.barrier();
+#endif
   }
-  else{
-    Npdm_expectations npdm_expectations( spin_adaptation_, npdm_patterns, npdm_order_, wavefunctions.at(0), wavefunctions.at(0), big );
-  //    for(auto pattern=npdm_patterns.ldr_cd_begin();pattern!=npdm_patterns.ldr_cd_end();++pattern){
-  //      npdm_patterns.print_cd_string(pattern->at('l'));
-  //      npdm_patterns.print_cd_string(pattern->at('d'));
-  //      npdm_patterns.print_cd_string(pattern->at('r'));
-  //      pout << endl;
-  //    }
-    loop_over_operator_patterns( npdm_patterns, npdm_expectations, big );
-  }
+  loop_over_operator_patterns( npdm_patterns, npdm_expectations, big );
+#ifndef SERIAL
+  world.barrier();
+#endif
+  if(dmrginp.npdm_intermediate() && (npdm_order_== NPDM_NEVPT2 || npdm_order_== NPDM_THREEPDM || npdm_order_== NPDM_FOURPDM))
+    clear_npdm_intermediate(npdm_expectations);
 
   // Print outs
 #ifndef SERIAL

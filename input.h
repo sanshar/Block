@@ -43,7 +43,7 @@ enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
 	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, BASENERGY,
-	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, BOGOLIUBOV, TWODOT_NOISE, WARMUP, NUMKEYWORDS};
+	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, BOGOLIUBOV, TWODOT_NOISE, WARMUP, NPDM_INTERMEDIATE, NUMKEYWORDS};
 
 class Input {
 
@@ -111,6 +111,7 @@ class Input {
   bool m_spatpdm_disk_dump;
   bool m_pdm_unsorted;
   bool m_store_nonredundant_pdm;
+  bool m_npdm_intermediate;
   bool m_set_Sz;
   int m_maxiter;
   double m_oneindex_screen_tol;
@@ -473,6 +474,8 @@ class Input {
   int slater_size() const {return m_norbs;}
   const std::vector<int> &reorder_vector() {return m_reorder;}
   bool spinAdapted() {return m_spinAdapted;}
+  bool &npdm_intermediate() { return m_npdm_intermediate; }
+  const bool &npdm_intermediate() const { return m_npdm_intermediate; }
 };
 }
 #endif

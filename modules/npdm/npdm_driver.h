@@ -41,6 +41,7 @@ class Npdm_driver {
     Npdm_spin_adaptation spin_adaptation_;
 
     void loop_over_operator_patterns( Npdm_patterns& patterns, Npdm_expectations& expectations, const SpinBlock& big );
+    void loop_over_operator_patterns_store( Npdm::Npdm_patterns& patterns, Npdm::Npdm_expectations& expectations, const SpinBlock& big );
     void do_inner_loop( const char inner, Npdm_expectations & npdm_expectations, 
                         NpdmSpinOps_base & outerOps, NpdmSpinOps & innerOps, NpdmSpinOps & dotOps );
     void loop_over_block_operators( Npdm_expectations& npdm_expectations, NpdmSpinOps& lhsOps, NpdmSpinOps& rhsOps, NpdmSpinOps& dotOps );
@@ -55,6 +56,8 @@ class Npdm_driver {
     bool broadcast_lhs( int lhs_size, int rhs_size );
     bool skip_this_mpi_rank( NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps );
     bool skip_parallel( NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, bool lhsrhsdot );
+    bool screen(const std::vector<CD> &lhs_cd_type,const std::vector<CD> &dot_cd_type);
+    void clear_npdm_intermediate(Npdm::Npdm_expectations& expectations);
 
 };
   
