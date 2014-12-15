@@ -395,7 +395,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       SpinBlock newSystem; // new system after blocking and decimating
 
       //Need to substitute by:
-      if (warmUp && (dmrginp.warmup() == WILSON || (sym=="dinfh" || sym=="trans" || sym == "dinfh_abelian" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG))) {
+      if (warmUp && (dmrginp.warmup() == WILSON || (sym=="dinfh" || sym=="trans" || NonabelianSym || dmrginp.hamiltonian()==HEISENBERG))) {
 	useRGStartUp = true;
 	Startup(sweepParams, system, newSystem);
       }

@@ -130,7 +130,7 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
     Wavefunction iwave;
     GuessWave::guess_wavefunctions(iwave, e, perturbationBig, guesstype, 
 				   sweepParams.get_onedot(), firstOrderState, dot_with_sys, 0.0);
-    
+
 #ifndef SERIAL
     mpi::communicator world;
     broadcast(world, iwave, 0);
@@ -149,15 +149,15 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
       ScaleAdd(1.0, temp, lowerStates[0]);
 
 
-    if (mpigetrank() != 0) {
-      lowerStates[0].CleanUp();
-    }
-
     perturbationsystem.clear(); perturbationenvironment.clear(); 
     perturbationnewsystem.clear(); perturbationnewenvironment.clear();  
   }
+  if (mpigetrank() != 0) {
+    lowerStates[0].CleanUp();
+  }
 
-  //<target|O|baseState>
+
+  //<target|O|projectors>
   for (int l=0; l<projectors.size(); l++)
   {  
     
@@ -283,15 +283,18 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
 #endif
     dmrginp.setOutputlevel() = 10;
     pout << "noise "<<sweepParams.get_noise()<<endl;
-    if (sweepParams.get_noise() > NUMERICAL_ZERO) {
+    if (sweepParams.get_noise() > NUMERICAL_ZERO && l == 0) { //only add noise using one basestate
       int sweepiter = sweepParams.get_sweep_iter();
       pout << "adding noise  "<<trace(bratracedMatrix)<<"  "<<sweepiter<<"  "<<dmrginp.weights(sweepiter)[0]<<endl;
       bratracedMatrix.add_onedot_noise_forCompression(iwave, perturbationnewbig, sweepParams.get_noise()*max(1e-5,trace(bratracedMatrix)));
       pout << "after noise  "<<trace(bratracedMatrix)<<endl;
     }
-    dmrginp.setOutputlevel() = -1;
-    double braerror = makeRotateMatrix(bratracedMatrix, rotatematrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
-    
+
+    if (l == 0) {//make rotation matrices just once
+      dmrginp.setOutputlevel() = -1;
+      double braerror = makeRotateMatrix(bratracedMatrix, rotatematrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
+    }
+
     std::vector<Matrix> ketrotatematrix;
     DensityMatrix tracedMatrix;
     tracedMatrix.allocate(perturbationnewbig.get_leftBlock()->get_ketStateInfo());
@@ -388,6 +391,7 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
     broadcast(world, rotatematrix, 0);
 #endif
 
+
   dmrginp.setOutputlevel() = originalOutputlevel;
 
   dmrginp.operrotT -> start();
@@ -419,8 +423,11 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
 					    vector<int>& projectors, vector<int>& baseStates)
 {
   SpinBlock system;
-  int activeSpaceIntegral = 0, perturbationIntegral = 1;
-  std::vector<double> finalEnergy(1,1.0e10);
+  int activeSpaceIntegral = 0;
+  std::vector<int> perturbationIntegral(dmrginp.getNumIntegrals()-1,0);
+  for (int i=0; i<perturbationIntegral.size(); i++)
+    perturbationIntegral[i] = i+1;
+  std::vector<double> finalEnergy(1,1.0e100);
   double finalError = 0.;
 
   if (restart) {
@@ -457,7 +464,7 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
     overlapSystem.set_integralIndex() = l+1;
     InitBlocks::InitStartingBlock (overlapSystem,forward, targetState, baseStates[l],
 				   sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), 
-				   restartSize, restart, warmUp, perturbationIntegral);
+				   restartSize, restart, warmUp, perturbationIntegral[l]);
     SpinBlock::store (forward, system.get_sites(), overlapSystem, targetState, baseStates[l]);
   }
 
@@ -583,7 +590,7 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
   sweepParams.set_largest_dw() = finalError;
   
   if (mpigetrank() == 0)
-    printf("\t\t\t M = %6i  state = %4i  Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), 0, finalError, finalEnergy[0]);
+    printf("\t\t\t M = %6i  state = %4i  Largest Discarded Weight = %8.3e  Sweep Energy = %20.10e \n",sweepParams.get_keep_states(), 0, finalError, finalEnergy[0]);
 
   pout << "\t\t\t ============================================================================ " << endl;
 
@@ -964,7 +971,7 @@ void SpinAdapted::SweepResponse::WavefunctionCanonicalize (SweepParams &sweepPar
   //save the updated overlap spinblock
   for (int l=0; l<projectors.size(); l++)
   {
-    int perturbationIntegral = l+1;
+    int perturbationIntegral = 0;
     
     SpinBlock overlapBig;
     SpinBlock overlapsystem, overlapenvironment, overlapnewsystem, overlapnewenvironment, overlapenvironmentDot;
