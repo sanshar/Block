@@ -302,9 +302,10 @@ bool Npdm_op_wrapper_D::set_local_ops( int idx )
 
 //===========================================================================================================================================================
 
-Npdm_op_wrapper_NULL::Npdm_op_wrapper_NULL()
+Npdm_op_wrapper_NULL::Npdm_op_wrapper_NULL(SpinBlock * spinBlock)
 {
   // Null operator
+  spinBlock_ = spinBlock;
   opReps_.clear();
   indices_.clear();
   size_ = 1; // For compatibility with rest of code
@@ -320,7 +321,7 @@ bool Npdm_op_wrapper_NULL::set_local_ops( int idx )
 {
   // Null operator
   indices_.clear();
-  opReps_.clear();
+  opReps_ = spinBlock_->get_op_array(OVERLAP).get_local_element(idx);
   return false;
 }
 

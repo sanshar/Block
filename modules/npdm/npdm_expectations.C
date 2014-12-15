@@ -8,6 +8,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 #include <algorithm>
 #include <boost/lexical_cast.hpp>
+#include <boost/serialization/map.hpp>
 #include "MatrixBLAS.h"
 #include "pario.h"
 #include "npdm_expectations_engine.h"
@@ -109,9 +110,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
   double expectation = 0;
 
   boost::shared_ptr<SparseMatrix> lhsOp, dotOp, rhsOp;
-  if ( lhsOps.opReps_.size() > 0 ) lhsOp = lhsOps.opReps_.at(ilhs);
-  if ( dotOps.opReps_.size() > 0 ) dotOp = dotOps.opReps_.at(idot);
-  if ( rhsOps.opReps_.size() > 0 ) rhsOp = rhsOps.opReps_.at(irhs);
+  if ( lhsOps.opReps_.size() > 0 ) lhsOp = lhsOps.opReps_.at(ilhs); if ( dotOps.opReps_.size() > 0 ) dotOp = dotOps.opReps_.at(idot); if ( rhsOps.opReps_.size() > 0 ) rhsOp = rhsOps.opReps_.at(irhs);
 
   if(SpinAdapted::dmrginp.doimplicitTranspose()==false){
     if(lhsOps.transpose_ || dotOps.transpose_ || rhsOps.transpose_)
@@ -214,7 +213,100 @@ bool Npdm_expectations::test_for_singlet( int ilhs, int idot, int irhs, NpdmSpin
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps )
+double DotProduct_spincorrection(const Wavefunction& w1, const Wavefunction& w2, const SpinBlock& big)
+{
+  // After multipling ket by cd operator, it has the same basis with ket
+  int leftOpSz = big.get_leftBlock()->get_braStateInfo().quanta.size ();
+  int rightOpSz = big.get_rightBlock()->get_braStateInfo().quanta.size ();
+  const StateInfo* rS = big.get_braStateInfo().rightStateInfo, *lS = big.get_braStateInfo().leftStateInfo;
+
+  double output = 0.0;
+  SpinQuantum Q= w1.get_deltaQuantum(0);
+  for (int lQ =0; lQ < leftOpSz; lQ++)
+    for (int rQ = 0; rQ < rightOpSz; rQ++) {
+      if (w1.allowed(lQ, rQ) && w2.allowed(lQ, rQ))
+      {
+	      double b1b2 = MatrixDotProduct(w1(lQ, rQ), w2(lQ, rQ));
+
+              if(abs(b1b2) > NUMERICAL_ZERO )
+              {
+
+	        b1b2 *= dmrginp.get_ninej()(lS->quanta[lQ].get_s().getirrep(), (-lS->quanta[lQ].get_s()).getirrep() , 0, 
+	          				Q.get_s().getirrep(), (-Q.get_s()).getirrep(), 0,
+	          				(-rS->quanta[rQ].get_s()).getirrep(), rS->quanta[rQ].get_s().getirrep() , 0);
+	        b1b2 *= Symmetry::spatial_ninej(lS->quanta[lQ].get_symm().getirrep(), (-lS->quanta[lQ].get_symm()).getirrep() , 0, 
+	          				Q.get_symm().getirrep(), (-Q.get_symm()).getirrep(), 0,
+	          				(-rS->quanta[rQ].get_symm()).getirrep(), rS->quanta[rQ].get_symm().getirrep() , 0);
+	        b1b2 /= dmrginp.get_ninej()((-rS->quanta[rQ].get_s()).getirrep(), rS->quanta[rQ].get_s().getirrep() , 0, 
+	          				Q.get_s().getirrep(), 0, Q.get_s().getirrep(),
+	          				lS->quanta[lQ].get_s().getirrep(), rS->quanta[rQ].get_s().getirrep() , Q.get_s().getirrep());
+	        b1b2 /= Symmetry::spatial_ninej((-rS->quanta[rQ].get_symm()).getirrep(), rS->quanta[rQ].get_symm().getirrep() , 0, 
+	          				Q.get_symm().getirrep(), 0, Q.get_symm().getirrep(),
+	          				lS->quanta[lQ].get_symm().getirrep(), rS->quanta[rQ].get_symm().getirrep() , Q.get_symm().getirrep());
+	        b1b2 /= dmrginp.get_ninej()(lS->quanta[lQ].get_s().getirrep(), (-lS->quanta[lQ].get_s()).getirrep() , 0, 
+	          				0, Q.get_s().getirrep(), Q.get_s().getirrep(),
+	          				lS->quanta[lQ].get_s().getirrep(), rS->quanta[rQ].get_s().getirrep() , Q.get_s().getirrep());
+	        b1b2 /= Symmetry::spatial_ninej(lS->quanta[lQ].get_symm().getirrep(), (-lS->quanta[lQ].get_symm()).getirrep() , 0, 
+						0, Q.get_symm().getirrep(), Q.get_symm().getirrep(),
+						lS->quanta[lQ].get_symm().getirrep(), rS->quanta[rQ].get_symm().getirrep() , Q.get_symm().getirrep());
+
+              //  b1b2 *=Aop.get_scaling(rS->quanta[rQ],lS->quanta[lQ]);
+              //  b1b2 /=Transposeview(Aop).get_scaling(lS->quanta[lQ],rS->quanta[rQ]);
+              }
+	      output += b1b2;
+       
+      }	
+    }
+
+  return output;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+double Npdm_expectations::build_nonspin_adapted_singlet_expectations( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps)
+{
+
+  // IMPORTANT: generate spin-components in the same order as RHS of linear equation solver in npdm_set_up_linear_equations routine
+  // i.e. in accordance with the operator string build_pattern
+  if(dmrginp.npdm_intermediate() && (npdm_order_== NPDM_NEVPT2 || npdm_order_== NPDM_THREEPDM || npdm_order_== NPDM_FOURPDM))
+  {
+    std::map<std::vector<int>, Wavefunction> leftwaves;
+    std::map<std::vector<int>, Wavefunction> rightwaves;
+    std::string op_string;
+    get_op_string(lhsOps,dotOps,op_string);
+    std::string file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string % ".tmp" );
+    ifstream ifs1(file,std::ios::binary);
+    boost::archive::binary_iarchive load_waves(ifs1);
+    load_waves >> leftwaves;
+    ifs1.close();
+
+    get_op_string(rhsOps,op_string);
+    file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % ".tmp" );
+    ifstream ifs2(file,std::ios::binary);
+    boost::archive::binary_iarchive load_waves2(ifs2);
+    load_waves2 >> rightwaves;
+    ifs2.close();
+
+    std::vector<int> spin;
+    //spin.push_back(!lhsOps.transpose_? lhsOps.opReps_.at(0)->get_deltaQuantum(0).get_s().getirrep(): (-lhsOps.opReps_.at(0)->get_deltaQuantum(0).get_s()).getirrep());
+    //spin.push_back(!dotOps.transpose_? dotOps.opReps_.at(0)->get_deltaQuantum(0).get_s().getirrep(): (-dotOps.opReps_.at(0)->get_deltaQuantum(0).get_s()).getirrep());
+    //spin.push_back(!rhsOps.transpose_? (-rhsOps.opReps_.at(0)->get_deltaQuantum(0).get_s()).getirrep(): rhsOps.opReps_.at(0)->get_deltaQuantum(0).get_s().getirrep());
+    spin.push_back(0);
+    spin.push_back(0);
+    spin.push_back(!rhsOps.transpose_? (-rhsOps.opReps_.at(0)->get_deltaQuantum(0).get_s()).getirrep(): rhsOps.opReps_.at(0)->get_deltaQuantum(0).get_s().getirrep());
+    Wavefunction& lw= leftwaves.at(spin);
+    Wavefunction& rw= rightwaves.at(std::vector<int>(1,0));
+    return DotProduct_spincorrection(lw,rw,big_);
+          
+  }
+  else
+   return contract_spin_adapted_operators( 0, 0, 0, lhsOps, rhsOps, dotOps) ; 
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps)
 {
   expectations_.clear();
 
@@ -223,13 +315,52 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_bas
   int hilhs = lhsOps.opReps_.size();
   int hirhs = rhsOps.opReps_.size();
   int hidot = dotOps.opReps_.size();
+  std::map<std::vector<int>, Wavefunction> leftwaves;
+  std::map<std::vector<int>, Wavefunction> rightwaves;
+  if(dmrginp.npdm_intermediate() && (npdm_order_== NPDM_NEVPT2 || npdm_order_== NPDM_THREEPDM || npdm_order_== NPDM_FOURPDM))
+  {
+    std::string op_string;
+    get_op_string(lhsOps,dotOps,op_string);
+    std::string file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string % ".tmp" );
+    ifstream ifs1(file,std::ios::binary);
+    boost::archive::binary_iarchive load_waves(ifs1);
+    load_waves >> leftwaves;
+    ifs1.close();
+
+    get_op_string(rhsOps,op_string);
+    file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % ".tmp" );
+    ifstream ifs2(file,std::ios::binary);
+    boost::archive::binary_iarchive load_waves2(ifs2);
+    load_waves2 >> rightwaves;
+    ifs2.close();
+
+  }
   for (int irhs = 0; irhs < std::max(1,hirhs); ++irhs) {
     for (int idot = 0; idot < std::max(1,hidot); ++idot) {
       for (int ilhs = 0; ilhs < std::max(1,hilhs); ++ilhs) {
         // Screen operator combinations that do not combine to give a singlet
         bool singlet = test_for_singlet( ilhs, idot, irhs, lhsOps, rhsOps, dotOps );
         // Contract operators to produce spin-adapted expectation value
-        if ( singlet ) expectations_.push_back( contract_spin_adapted_operators( ilhs, idot, irhs, lhsOps, rhsOps, dotOps ) );
+        if ( singlet ) 
+        {
+          if(dmrginp.npdm_intermediate() && (npdm_order_== NPDM_NEVPT2 || npdm_order_== NPDM_THREEPDM || npdm_order_== NPDM_FOURPDM))
+          {
+            std::vector<int> spin;
+            //spin.push_back(hilhs==0? 0 : lhsOps.opReps_.at(ilhs)->get_deltaQuantum(0).get_s().getirrep());
+            //spin.push_back(hidot==0? 0 : dotOps.opReps_.at(idot)->get_deltaQuantum(0).get_s().getirrep());
+            //spin.push_back(hirhs==0? 0 : (-(rhsOps.opReps_.at(irhs)->get_deltaQuantum(0).get_s())).getirrep());
+            spin.push_back(ilhs);
+            spin.push_back(idot);
+            spin.push_back((-(rhsOps.opReps_.at(irhs)->get_deltaQuantum(0).get_s())).getirrep());
+            Wavefunction& lw= leftwaves.at(spin);
+            {
+              assert(hirhs>0);
+              Wavefunction& rw= rightwaves.at(std::vector<int>(1,irhs));
+              expectations_.push_back(DotProduct_spincorrection(lw,rw,big_));
+            }
+          }
+          else
+            expectations_.push_back( contract_spin_adapted_operators( ilhs, idot, irhs, lhsOps, rhsOps, dotOps) ); }
       }
     }
   }
@@ -275,7 +406,6 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
   get_full_op_string( lhsOps, rhsOps, dotOps, op_string, indices );
 
   // Screen away unwanted strings (e.g. those that produce duplicate NPDM elements)
-  //pout << op_string<<endl;
   //for( int i=0;i<indices.size();i++)
   //  pout << indices[i]<<',';
   //pout <<endl;
@@ -325,14 +455,44 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
     double nonspinvalue;
 
    // pout <<"size of operator: " <<lhsOps.opReps_.size()<<','<<rhsOps.opReps_.size()<<','<<dotOps.opReps_.size()<<endl;
-      nonspinvalue=contract_spin_adapted_operators( 0, 0, 0, lhsOps, rhsOps, dotOps );
+      nonspinvalue=build_nonspin_adapted_singlet_expectations( lhsOps, rhsOps, dotOps);
+      {
+
+        boost::shared_ptr<SparseMatrix> lhsOp, dotOp, rhsOp;
+          if(lhsOps.transpose_) lhsOp=boost::shared_ptr<SparseMatrix>(new Transposeview(*lhsOps.opReps_.at(0)));
+          else lhsOp= lhsOps.opReps_.at(0);
+
+          if(dotOps.transpose_) dotOp=boost::shared_ptr<SparseMatrix>(new Transposeview(*dotOps.opReps_.at(0)));
+          else dotOp= dotOps.opReps_.at(0);
+
+          if(rhsOps.transpose_) rhsOp=boost::shared_ptr<SparseMatrix>(new Transposeview(*rhsOps.opReps_.at(0)));
+          else rhsOp= rhsOps.opReps_.at(0);
+
+      int ls= !lhsOps.transpose_? lhsOps.opReps_.at(0)->get_deltaQuantum(0).get_s().getirrep(): (-lhsOps.opReps_.at(0)->get_deltaQuantum(0).get_s()).getirrep();
+      int ds= !dotOps.transpose_? dotOps.opReps_.at(0)->get_deltaQuantum(0).get_s().getirrep(): (-dotOps.opReps_.at(0)->get_deltaQuantum(0).get_s()).getirrep();
+          int total_spin= ls+ds;
+          Cre AOp;
+          FormLeftOp(big_.get_leftBlock(), *lhsOp, *dotOp, AOp, total_spin);
+          Wavefunction opw2, opw_0, opw3;
+          vector<SpinQuantum> dQ = wavefunction_0.get_deltaQuantum();
+          opw_0.initialise(dQ[0], &big_, true);
+          operatorfunctions::TensorMultiply(big_.get_leftBlock(), AOp, *rhsOp, &big_, wavefunction_0, opw_0,dQ[0], lhsOps.factor_*dotOps.factor_*rhsOps.factor_);
+
+
+
+          opw2.initialise(dQ[0]-AOp.get_deltaQuantum(0), &big_, true);
+          opw3.initialise(dQ[0]+rhsOp->get_deltaQuantum(0), &big_, true);
+          //Left part of intermediate wavefuntion should multiply transpose of left ops.
+          operatorfunctions::TensorMultiply(big_.get_leftBlock(), Transposeview(AOp), &big_, wavefunction_1, opw2,-AOp.get_deltaQuantum(0), lhsOps.factor_*dotOps.factor_);
+          operatorfunctions::TensorMultiply(big_.get_rightBlock(), *rhsOp, &big_, wavefunction_1, opw3,-AOp.get_deltaQuantum(0), lhsOps.factor_*dotOps.factor_);
+      }
 
     new_pdm_elements.push_back(std::make_pair(cd_order,nonspinvalue*parity));
     return new_pdm_elements;
   }
   
   // Contract spin-adapted spatial operators and build singlet expectation values
-  build_spin_adapted_singlet_expectations( lhsOps, rhsOps, dotOps );
+  build_spin_adapted_singlet_expectations( lhsOps, rhsOps, dotOps);
 
   // Now transform to non-spin-adapted spin-orbital representation
   // b holds the spin-adapted expectation values (we only care about the singlets)
@@ -364,6 +524,163 @@ Npdm_expectations::get_nonspin_adapted_expectations( NpdmSpinOps_base & lhsOps, 
   
   return new_pdm_elements;
 }
+
+void Npdm_expectations::store( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dotOps )
+{
+  std::map<std::vector<int>, Wavefunction> waves_;
+
+  SparseMatrix* null = 0; 
+  vector<SpinQuantum> dQ = wavefunction_1.get_deltaQuantum();
+  assert(dQ.size()==1 );
+  assert(dQ[0].totalSpin.getirrep()== 0);
+  int lindices= &lhsOps ? lhsOps.indices_.size(): 0;
+  int dindices= &dotOps ? dotOps.indices_.size(): 0;
+  int rindices= 2*npdm_order_-lindices- dindices;
+  int hilhs = lhsOps.opReps_.size();
+  int hidot = dotOps.opReps_.size();
+  for (int idot = 0; idot < std::max(1,hidot); ++idot) {
+    for (int ilhs = 0; ilhs < std::max(1,hilhs); ++ilhs) {
+     // int ls= hilhs? lhsOps.opReps_.at(ilhs)->get_deltaQuantum(0).get_s().getirrep(): 0;
+     // int ds= hidot? dotOps.opReps_.at(idot)->get_deltaQuantum(0).get_s().getirrep(): 0;
+      int ls= !lhsOps.transpose_? lhsOps.opReps_.at(ilhs)->get_deltaQuantum(0).get_s().getirrep(): (-lhsOps.opReps_.at(ilhs)->get_deltaQuantum(0).get_s()).getirrep();
+      int ds= !dotOps.transpose_? dotOps.opReps_.at(idot)->get_deltaQuantum(0).get_s().getirrep(): (-dotOps.opReps_.at(idot)->get_deltaQuantum(0).get_s()).getirrep();
+      if((!dmrginp.spinAdapted()? std::abs(ls+ds): std::abs(ls-ds)) <= rindices )
+      {
+        boost::shared_ptr<SparseMatrix> lhsOp, dotOp;
+        {
+          assert(lhsOps.opReps_.size() > 0);
+          if(lhsOps.transpose_) lhsOp=boost::shared_ptr<SparseMatrix>(new Transposeview(*lhsOps.opReps_.at(ilhs)));
+          else lhsOp= lhsOps.opReps_.at(ilhs);
+        }
+
+        {
+          assert(dotOps.opReps_.size() > 0);
+          if(dotOps.transpose_) dotOp=boost::shared_ptr<SparseMatrix>(new Transposeview(*dotOps.opReps_.at(idot)));
+          else dotOp= dotOps.opReps_.at(idot);
+        }
+        for(int total_spin= !dmrginp.spinAdapted()? ls+ds: std::abs(ls-ds);total_spin<= std::min(ls+ds,rindices); total_spin+=2)
+        {
+          Cre AOp;
+          FormLeftOp(big_.get_leftBlock(), *lhsOp, *dotOp, AOp, total_spin);
+          Wavefunction opw2;
+          opw2.AllowQuantaFor(big_.get_leftBlock()->get_ketStateInfo(),big_.get_rightBlock()->get_braStateInfo(),dQ[0]-AOp.get_deltaQuantum(0));
+          //Left part of intermediate wavefuntion should multiply transpose of left ops.
+          operatorfunctions::braTensorMultiply(big_.get_leftBlock(), AOp, &big_, wavefunction_1, opw2, lhsOps.factor_*dotOps.factor_);
+          std::vector<int> spin;
+          //spin.push_back(lhsOp->get_deltaQuantum(0).get_s().getirrep()); spin.push_back(dotOp->get_deltaQuantum(0).get_s().getirrep());spin.push_back(total_spin);
+          spin.push_back(ilhs); spin.push_back(idot);spin.push_back(total_spin);
+          waves_.emplace(spin,opw2);
+        }
+      }
+    }
+  }
+  std::string file;
+  std::string op_string;
+  get_op_string(lhsOps,dotOps,op_string);
+  file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string % ".tmp" );
+  ofstream ofs(file,std::ios::binary);
+  boost::archive::binary_oarchive save_waves(ofs);
+  save_waves << waves_;
+  ofs.close();
+  intermediate_filenames.push_back(file);
+
+}
+
+void Npdm_expectations::store( NpdmSpinOps_base & rhsOps )
+{
+  std::map<std::vector<int>, Wavefunction> waves_;
+
+  SparseMatrix* null = 0; 
+  vector<SpinQuantum> dQ = wavefunction_0.get_deltaQuantum();
+  assert(dQ.size()==1 );
+  assert(dQ[0].totalSpin.getirrep()== 0);
+  int rindices= &rhsOps ? rhsOps.indices_.size(): 0;
+  int hirhs = rhsOps.opReps_.size();
+  for (int irhs = 0; irhs < hirhs; ++irhs) {
+    int rs= !rhsOps.transpose_? rhsOps.opReps_.at(irhs)->get_deltaQuantum(0).get_s().getirrep(): (-rhsOps.opReps_.at(irhs)->get_deltaQuantum(0).get_s()).getirrep();
+    if(std::abs(rs)<= 2*npdm_order_-rindices )
+    {
+      boost::shared_ptr<SparseMatrix> rhsOp;
+      if(rhsOps.transpose_) rhsOp=boost::shared_ptr<SparseMatrix>(new Transposeview(*rhsOps.opReps_.at(irhs)));
+      else rhsOp= rhsOps.opReps_.at(irhs);
+      rs = rhsOp->get_deltaQuantum(0).get_s().getirrep();
+      Wavefunction opw2;
+      opw2.AllowQuantaFor(big_.get_leftBlock()->get_ketStateInfo(),big_.get_rightBlock()->get_braStateInfo(),dQ[0]+rhsOp->get_deltaQuantum(0));
+          //Left part of intermediate wavefuntion should multiply transpose of left ops.
+      operatorfunctions::TensorMultiply(big_.get_rightBlock(), *rhsOp, &big_, wavefunction_0, opw2, rhsOp->get_deltaQuantum(0), rhsOps.factor_);
+      std::vector<int> spin;
+      spin.push_back(irhs);
+      waves_.emplace(spin,opw2);
+    }
+
+  }
+  std::string file;
+  std::string op_string;
+  get_op_string(rhsOps,op_string);
+  file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % ".tmp" );
+  ofstream ofs(file,std::ios::binary);
+  boost::archive::binary_oarchive save_waves(ofs);
+  save_waves << waves_;
+  ofs.close();
+  intermediate_filenames.push_back(file);
+
+}
+
+void Npdm_expectations::get_op_string( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dotOps, 
+                                            std::string& op_string )
+{
+
+  // Set up npdm element indices
+  std::vector<int> indices;
+  indices.insert( indices.end(), lhsOps.indices_.begin(), lhsOps.indices_.end() );
+  indices.insert( indices.end(), dotOps.indices_.begin(), dotOps.indices_.end() );
+
+  // Record how tensor operator is constructed from (compound) block operators
+  std::string build_pattern;
+  build_pattern.reserve( lhsOps.build_pattern_.size() + dotOps.build_pattern_.size() );
+  build_pattern.insert( build_pattern.end(), lhsOps.build_pattern_.begin(), lhsOps.build_pattern_.end() );
+  build_pattern.insert( build_pattern.end(), dotOps.build_pattern_.begin(), dotOps.build_pattern_.end() );
+
+  // Combine indices and build_pattern into one string
+  op_string.clear();
+  std::vector<int> idx = indices;
+  for (auto it = build_pattern.begin(); it != build_pattern.end(); ++it) {
+    op_string.push_back(*it);
+    if ( (*it == 'C') || (*it == 'D') ) {
+      std::string index = boost::lexical_cast<string>( idx.at(0) );
+      op_string.append(index);
+      idx.erase( idx.begin() );  
+    }
+  }
+//pout << op_string << std::endl;
+
+}
+
+void Npdm_expectations::get_op_string( NpdmSpinOps_base & rhsOps, 
+                                            std::string& op_string)
+{
+
+  // Set up npdm element indices
+  std::vector<int> indices;
+  indices.insert( indices.end(), rhsOps.indices_.begin(), rhsOps.indices_.end() );
+
+
+  // Combine indices and build_pattern into one string
+  op_string.clear();
+  std::vector<int> idx = indices;
+  for (auto it = rhsOps.build_pattern_.begin(); it != rhsOps.build_pattern_.end(); ++it) {
+    op_string.push_back(*it);
+    if ( (*it == 'C') || (*it == 'D') ) {
+      std::string index = boost::lexical_cast<string>( idx.at(0) );
+      op_string.append(index);
+      idx.erase( idx.begin() );  
+    }
+  }
+//pout << op_string << std::endl;
+
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //===========================================================================================================================================================
 

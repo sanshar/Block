@@ -403,6 +403,84 @@ void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, con
     }
 }
 
+void SpinAdapted::operatorfunctions::braTensorMultiply(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const SpinBlock *cblock, Wavefunction& c, Wavefunction& v, double scale, int num_thrds)
+{
+  //It get a result of <\Psi|O. 
+  //It is similar to Transposeview(O)|\Psi>
+  //However, spin coupling coefficients is different for transpose.
+  //It is convenient for npdm with intermediate.
+  const int leftBraOpSz = cblock->get_leftBlock()->get_braStateInfo().quanta.size ();
+  const int leftKetOpSz = cblock->get_leftBlock()->get_ketStateInfo().quanta.size ();
+  const int rightBraOpSz = cblock->get_rightBlock()->get_braStateInfo().quanta.size ();
+  const int rightKetOpSz = cblock->get_rightBlock()->get_ketStateInfo().quanta.size ();
+
+  const StateInfo* lbraS = cblock->get_braStateInfo().leftStateInfo, *lketS = cblock->get_ketStateInfo().leftStateInfo;
+  const StateInfo* rbraS = cblock->get_braStateInfo().rightStateInfo, *rketS = cblock->get_ketStateInfo().rightStateInfo;
+
+  assert (cblock->get_leftBlock() == ablock || cblock->get_rightBlock() == ablock);
+  if (cblock->get_leftBlock() == ablock)
+    {
+      //#pragma omp parallel default(shared)  num_threads(num_thrds)
+      {
+	//#pragma omp for schedule(dynamic)
+      for (int lQ = 0; lQ < leftKetOpSz; ++lQ) {
+	for (int lQPrime = 0; lQPrime < leftBraOpSz; ++lQPrime)
+	  {
+	    if (a.allowed(lQPrime, lQ))
+              {
+		const Matrix& aop = a.operator_element(lQPrime, lQ);
+		  for (int rQ = 0; rQ < rightKetOpSz; ++rQ) 
+		    if (c.allowed(lQPrime, rQ) && v.allowed(lQ, rQ))
+		    {
+                      double fac=scale;
+		      fac *= dmrginp.get_ninej()(lbraS->quanta[lQPrime].get_s().getirrep(), rbraS->quanta[rQ].get_s().getirrep() , c.get_deltaQuantum(0).get_s().getirrep(), 
+						   (-a.get_spin()).getirrep(), 0, (-a.get_spin()).getirrep(),
+						   lketS->quanta[lQ].get_s().getirrep(), rbraS->quanta[rQ].get_s().getirrep() , v.get_deltaQuantum(0).get_s().getirrep());
+		      fac *= Symmetry::spatial_ninej(lbraS->quanta[lQPrime].get_symm().getirrep() , rbraS->quanta[rQ].get_symm().getirrep(), c.get_symm().getirrep(), 
+					   (-a.get_symm()).getirrep(), 0, (-a.get_symm()).getirrep(),
+					   lketS->quanta[lQ].get_symm().getirrep() , rbraS->quanta[rQ].get_symm().getirrep(), v.get_symm().getirrep());
+		      fac *= a.get_scaling(lbraS->quanta[lQPrime], lketS->quanta[lQ]);
+		      MatrixMultiply (aop, TransposeOf(a.conjugacy()), c.operator_element(lQPrime, rQ), c.conjugacy(),
+				      v.operator_element(lQ, rQ), fac);
+		    }
+
+              }
+	  }
+      }
+      }
+    }
+  else
+    {
+      //#pragma omp parallel default(shared)  num_threads(num_thrds)
+      {
+	//#pragma omp for schedule(dynamic)
+      for (int rQ = 0; rQ < rightKetOpSz; ++rQ) {
+	for (int rQPrime = 0; rQPrime < rightBraOpSz; ++rQPrime)
+	  if (a.allowed(rQPrime, rQ))
+	    {
+	      const Matrix& aop = a.operator_element(rQ, rQPrime);
+	      for (int lQPrime = 0; lQPrime < leftBraOpSz; ++lQPrime) 
+		if (v.allowed(lQPrime, rQ) && c.allowed(lQPrime, rQPrime)) {
+                  double fac = scale;
+		  fac *= dmrginp.get_ninej()(lbraS->quanta[lQPrime].get_s().getirrep(), rbraS->quanta[rQPrime].get_s().getirrep() , c.get_deltaQuantum(0).get_s().getirrep(), 
+					       0, (-a.get_spin()).getirrep(), (-a.get_spin()).getirrep(),
+					       lbraS->quanta[lQPrime].get_s().getirrep(), rketS->quanta[rQ].get_s().getirrep() , v.get_deltaQuantum(0).get_s().getirrep());
+		  fac *= Symmetry::spatial_ninej(lbraS->quanta[lQPrime].get_symm().getirrep() , rbraS->quanta[rQPrime].get_symm().getirrep(), c.get_symm().getirrep(), 
+				      0, (-a.get_symm()).getirrep(), (-a.get_symm()).getirrep(),
+				      lbraS->quanta[lQPrime].get_symm().getirrep() , rketS->quanta[rQ].get_symm().getirrep(), v.get_symm().getirrep());
+		  fac *= a.get_scaling(rbraS->quanta[rQPrime], rketS->quanta[rQ]);
+		  double parity = a.get_fermion() && IsFermion(lbraS->quanta[lQPrime]) ? -1 : 1;
+
+		  MatrixMultiply (c.operator_element(lQPrime, rQPrime), c.conjugacy(),
+				  aop, a.conjugacy(), v.operator_element(lQPrime, rQ), fac*parity);
+		}
+
+	    }
+      }
+      }
+    }
+}
+
 
 
 void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const SpinBlock *cblock, Wavefunction& c, Wavefunction& v, const SpinQuantum opQ, double scale)

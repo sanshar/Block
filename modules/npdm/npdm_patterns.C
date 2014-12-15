@@ -521,9 +521,12 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
       //print_cd_string( rhs_cd ); pout << "\n";
 
       ldr_cd_types_.insert( cd_pattern );
-      if ( lhs_cd.size() != 0 ) lhs_cd_types_.insert( lhs_cd );
-      if ( dot_cd.size() != 0 ) dot_cd_types_.insert( dot_cd );
-      if ( rhs_cd.size() != 0 ) rhs_cd_types_.insert( rhs_cd );
+      //if ( lhs_cd.size() != 0 ) lhs_cd_types_.insert( lhs_cd );
+      //if ( dot_cd.size() != 0 ) dot_cd_types_.insert( dot_cd );
+      //if ( rhs_cd.size() != 0 ) rhs_cd_types_.insert( rhs_cd );
+      lhs_cd_types_.insert( lhs_cd );
+      dot_cd_types_.insert( dot_cd );
+      rhs_cd_types_.insert( rhs_cd );
 
 
     }

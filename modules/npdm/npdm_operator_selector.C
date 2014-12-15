@@ -15,7 +15,7 @@ namespace Npdm{
 
 //===========================================================================================================================================================
 // Initialize 4-index operators built using RI approximation (exact on 1-site block)
-boost::shared_ptr<NpdmSpinOps> init_RI_4_index_operators( SpinBlock * spinBlock, std::vector<CD> & cd_type ) {
+boost::shared_ptr<NpdmSpinOps> init_RI_4_index_operators( SpinBlock * spinBlock,const std::vector<CD> & cd_type ) {
 
   std::vector<CD> op;
 
@@ -64,7 +64,7 @@ boost::shared_ptr<NpdmSpinOps> init_RI_4_index_operators( SpinBlock * spinBlock,
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize 4-index operators
-boost::shared_ptr<NpdmSpinOps> init_4_index_operators( SpinBlock * spinBlock, std::vector<CD> & cd_type ) {
+boost::shared_ptr<NpdmSpinOps> init_4_index_operators( SpinBlock * spinBlock,const std::vector<CD> & cd_type ) {
 
   std::vector<CD> op;
 
@@ -113,7 +113,7 @@ boost::shared_ptr<NpdmSpinOps> init_4_index_operators( SpinBlock * spinBlock, st
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize 3-index operators built using RI approximation (exact on 1-site block)
-boost::shared_ptr<NpdmSpinOps> init_RI_3_index_operators( SpinBlock * spinBlock, std::vector<CD> & cd_type ) {
+boost::shared_ptr<NpdmSpinOps> init_RI_3_index_operators( SpinBlock * spinBlock,const std::vector<CD> & cd_type ) {
 
   std::vector<CD> op;
 
@@ -157,7 +157,7 @@ boost::shared_ptr<NpdmSpinOps> init_RI_3_index_operators( SpinBlock * spinBlock,
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize 3-index operators
-boost::shared_ptr<NpdmSpinOps> init_3_index_operators( SpinBlock * spinBlock, std::vector<CD> & cd_type ) {
+boost::shared_ptr<NpdmSpinOps> init_3_index_operators( SpinBlock * spinBlock,const std::vector<CD> & cd_type ) {
 
   std::vector<CD> op;
 
@@ -208,7 +208,7 @@ boost::shared_ptr<NpdmSpinOps> init_3_index_operators( SpinBlock * spinBlock, st
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize 2-index operators
-boost::shared_ptr<NpdmSpinOps> init_2_index_operators( SpinBlock * spinBlock, std::vector<CD> & cd_type ) {
+boost::shared_ptr<NpdmSpinOps> init_2_index_operators( SpinBlock * spinBlock, const std::vector<CD> & cd_type ) {
 
   std::vector<CD> op;
 
@@ -237,7 +237,7 @@ boost::shared_ptr<NpdmSpinOps> init_2_index_operators( SpinBlock * spinBlock, st
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize 1-index operators
-boost::shared_ptr<NpdmSpinOps> init_1_index_operators( SpinBlock * spinBlock, std::vector<CD> & cd_type ) {
+boost::shared_ptr<NpdmSpinOps> init_1_index_operators( SpinBlock * spinBlock,const std::vector<CD> & cd_type ) {
 
   std::vector<CD> op;
 
@@ -256,18 +256,18 @@ boost::shared_ptr<NpdmSpinOps> init_1_index_operators( SpinBlock * spinBlock, st
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 // Initialize NULL operators
-boost::shared_ptr<NpdmSpinOps> init_0_index_operators() {
-  boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_NULL() );
+boost::shared_ptr<NpdmSpinOps> init_0_index_operators(SpinBlock * spinBlock) {
+  boost::shared_ptr<NpdmSpinOps> ret( new Npdm_op_wrapper_NULL(spinBlock) );
   return ret;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock, std::vector<CD> & cd_type ) {
+boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock,const std::vector<CD> & cd_type ) {
 
   boost::shared_ptr<NpdmSpinOps> ret;
 
-  if ( cd_type.size() == 0 ) { ret = init_0_index_operators(); return ret; }
+  if ( cd_type.size() == 0 ) { ret = init_0_index_operators( spinBlock); return ret; }
   if ( cd_type.size() == 1 ) { ret = init_1_index_operators( spinBlock, cd_type ); return ret; }
   if ( cd_type.size() == 2 ) { ret = init_2_index_operators( spinBlock, cd_type ); return ret; }
 

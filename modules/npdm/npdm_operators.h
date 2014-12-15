@@ -415,7 +415,7 @@ class Npdm_op_wrapper_D : public NpdmSpinOps {
 
 class Npdm_op_wrapper_NULL : public NpdmSpinOps {
   public:
-    Npdm_op_wrapper_NULL();
+    Npdm_op_wrapper_NULL(SpinBlock * spinBlock);
     bool set_local_ops( int idx );
 };
 

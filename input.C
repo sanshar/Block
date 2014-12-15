@@ -120,6 +120,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_spatpdm_disk_dump = false;
   m_store_nonredundant_pdm =false;
   m_pdm_unsorted = false;
+  m_npdm_intermediate= true;
  
   m_maxiter = 10;
   m_oneindex_screen_tol = NUMERICAL_ZERO;
@@ -782,6 +783,15 @@ SpinAdapted::Input::Input(const string& config_name) {
       {
         m_pdm_unsorted = true;
       }
+      else if (boost::iequals(keyword, "npdm_intermediate"))
+      {
+        m_npdm_intermediate = true;
+      }
+      else if (boost::iequals(keyword, "npdm_no_intermediate"))
+      {
+        m_npdm_intermediate = false;
+      }
+
 
 
       else if(boost::iequals(keyword,  "deflation_max_size") || boost::iequals(keyword,  "max_deflation_size"))
