@@ -199,6 +199,8 @@ class Input {
 
   void initialize_defaults();
 
+  std::vector<int> hfOccGenerator_ ();
+
  public:
   //Input() : m_ninej(ninejCoeffs::getinstance()){}
   Input() {}

@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <tuple>
 #include "npdm.h"
 
 namespace SpinAdapted {

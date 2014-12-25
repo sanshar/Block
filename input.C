@@ -2051,19 +2051,20 @@ void SpinAdapted::Input::makeInitialHFGuess() {
   else if (m_hf_occ_user == "integral") { 
 
     //arrange t(i,i) in a multimap and it will rearrange the ts in ascending order with i
-    multimap<double, int> ele_map;
-    for( int i = 0; i < m_norbs/2; ++i ){
-      ele_map.insert( pair<double, int>( v_1[0](2*i, 2*i), i ) );
-    }
+//  multimap<double, int> ele_map;
+//  for( int i = 0; i < m_norbs/2; ++i ){
+//    ele_map.insert( pair<double, int>( v_1[0](2*i, 2*i), i ) );
+//  }
 
-    multimap<double, int> :: iterator it_alpha = ele_map.begin();
-    for( int i = 0; i < m_alpha; ++i ){
-      int ia = it_alpha->second;
-      hf_occupancy_tmp.at( 2*ia ) = 1;
-      if (i < m_beta)
-	hf_occupancy_tmp.at( 2*ia+1 ) = 1;
-      ++it_alpha;
-    }
+//  multimap<double, int> :: iterator it_alpha = ele_map.begin();
+//  for( int i = 0; i < m_alpha; ++i ){
+//    int ia = it_alpha->second;
+//    hf_occupancy_tmp.at( 2*ia ) = 1;
+//    if (i < m_beta)
+//    hf_occupancy_tmp.at( 2*ia+1 ) = 1;
+//    ++it_alpha;
+//  }
+    hf_occupancy_tmp = this->hfOccGenerator_();
   }
   else {
     pout << "currently other options besides manual, integral  and canonical are not implemented."<<endl;

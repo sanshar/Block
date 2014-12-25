@@ -134,15 +134,15 @@ void block_calldmrg (
       case 0:
         // FIXME: not sure whether this is the best choice
         //        in practice, i found that guess calc. often fails for high-spin state with symmetry
-        if(M_s > 2 && symlab != "c1 ") {
-          // use wilson guess to avoid the bug for the time
-          // since this makes slower convergence, perform 4 extra sweeps w/ twodot
-          N_sweep += 4;
-          fcon << "warmup wilson" << endl;
-        }
-        else {
+//      if(M_s > 2 && symlab != "c1 ") {
+//        // use wilson guess to avoid the bug for the time
+//        // since this makes slower convergence, perform 4 extra sweeps w/ twodot
+//        N_sweep += 4;
+//        fcon << "warmup wilson" << endl;
+//      }
+//      else {
           fcon << "warmup local_3site" << endl;
-        }
+//      }
         break;
 
       // Restart from onedot
