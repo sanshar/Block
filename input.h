@@ -43,7 +43,7 @@ enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
 	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, BASENERGY,
-	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, BOGOLIUBOV, TWODOT_NOISE, WARMUP, NUMKEYWORDS};
+	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, BOGOLIUBOV, TWODOT_NOISE, WARMUP, NPDM_INTERMEDIATE, NUMKEYWORDS};
 
 class Input {
 
@@ -111,6 +111,7 @@ class Input {
   bool m_spatpdm_disk_dump;
   bool m_pdm_unsorted;
   bool m_store_nonredundant_pdm;
+  bool m_npdm_intermediate;
   bool m_set_Sz;
   int m_maxiter;
   double m_oneindex_screen_tol;
@@ -186,7 +187,7 @@ class Input {
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat ;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform ;
     ar & m_do_pdm & m_do_npdm_ops & m_do_npdm_in_core & m_new_npdm_code & m_occupied_orbitals;
-    ar &  m_store_spinpdm &m_spatpdm_disk_dump & m_pdm_unsorted;
+    ar &  m_store_spinpdm &m_spatpdm_disk_dump & m_pdm_unsorted & m_npdm_intermediate;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_oneindex_screen_tol & m_twoindex_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type & m_warmup;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
@@ -254,6 +255,7 @@ class Input {
   void generateDefaultSchedule();
   void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, double& coreEnergy, int integralIndex);
   void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, double& coreEnergy, PairArray& vcc, CCCCArray& vcccc, CCCDArray& vcccd);  
+  int getNumIntegrals() { return m_num_Integrals;}
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
   std::vector<int> getgaorder(ifstream& gaconfFile, string& orbitalfile, std::vector<int>& fiedlerorder);
   std::vector<int> get_fiedler(string& dumpname);
@@ -473,6 +475,8 @@ class Input {
   int slater_size() const {return m_norbs;}
   const std::vector<int> &reorder_vector() {return m_reorder;}
   bool spinAdapted() {return m_spinAdapted;}
+  bool &npdm_intermediate() { return m_npdm_intermediate; }
+  const bool &npdm_intermediate() const { return m_npdm_intermediate; }
 };
 }
 #endif
