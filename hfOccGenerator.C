@@ -18,22 +18,24 @@ std::vector<int> SpinAdapted::Input::hfOccGenerator_ ()
   typedef std::multimap<double,int>::iterator mapIter;
 
   int irep = m_total_symmetry_number.getirrep();
-  int norbs_spac = m_norbs/2;
+  int spac_norbs = m_norbs/2;
 
   // Sorting orbitals by 1-el. Hamiltonian, i.e. h(i, i)
-  std::vector<int> reorder(norbs_spac,0);
+  std::vector<int> reorder(spac_norbs,0);
   {
+    // NOTE: v_1 in lattice order
     std::multimap<double,int> orbMap;
-    for(int i = 0; i < norbs_spac; ++i)
+    for(int i = 0; i < spac_norbs; ++i)
       orbMap.insert(std::make_pair(v_1[0](2*i, 2*i), i));
 
     mapIter it = orbMap.begin();
-    for(int i = 0; i < norbs_spac; ++i, ++it)
+    for(int i = 0; i < spac_norbs; ++i, ++it)
       reorder[i] = it->second;
   }
 
   int refIrep = 0;
 
+  // NOTE: m_spin_orbs_symmetry in lattice order
   std::vector<int> refOcc(m_norbs,0);
   for(int i = 0; i < m_alpha; ++i) {
     int ir = reorder[i];
@@ -45,12 +47,7 @@ std::vector<int> SpinAdapted::Input::hfOccGenerator_ ()
     }
   }
 
-  std::vector<int> hfOcc;
-
-  if(refIrep == irep) {
-    hfOcc = refOcc;
-  }
-  else {
+  if(refIrep != irep) {
     std::vector<std::vector<int>> exOccs;
     // beta el. excitation
     // --- ---     --- ---
@@ -64,11 +61,13 @@ std::vector<int> SpinAdapted::Input::hfOccGenerator_ ()
     // -o- -o-     -o- -o-
     //  a   b       a   b
     for(int i = 0; i < m_beta; ++i) {
+      int ir = reorder[i];
       for(int j = m_beta; j < m_alpha; ++j) {
-        int exIrep = groupTable(m_spin_orbs_symmetry[2*i+1],m_spin_orbs_symmetry[2*j+1]);
+        int jr = reorder[j];
+        int exIrep = groupTable(m_spin_orbs_symmetry[2*ir+1],m_spin_orbs_symmetry[2*jr+1]);
         if(groupTable(refIrep,exIrep) == irep) {
           std::vector<int> exOcc = refOcc;
-          std::swap(exOcc[2*i+1],exOcc[2*j+1]);
+          std::swap(exOcc[2*ir+1],exOcc[2*jr+1]);
           exOccs.push_back(exOcc);
         }
       }
@@ -85,11 +84,13 @@ std::vector<int> SpinAdapted::Input::hfOccGenerator_ ()
     // -o- -o-     -o- -o-
     //  a   b       a   b
     for(int i = 0; i < m_alpha; ++i) {
-      for(int j = m_alpha; j < norbs_spac; ++j) {
-        int exIrep = groupTable(m_spin_orbs_symmetry[2*i],m_spin_orbs_symmetry[2*j]);
+      int ir = reorder[i];
+      for(int j = m_alpha; j < spac_norbs; ++j) {
+        int jr = reorder[j];
+        int exIrep = groupTable(m_spin_orbs_symmetry[2*ir],m_spin_orbs_symmetry[2*jr]);
         if(groupTable(refIrep,exIrep) == irep) {
           std::vector<int> exOcc = refOcc;
-          std::swap(exOcc[2*i],exOcc[2*j]);
+          std::swap(exOcc[2*ir],exOcc[2*jr]);
           exOccs.push_back(exOcc);
         }
       }
@@ -106,9 +107,17 @@ std::vector<int> SpinAdapted::Input::hfOccGenerator_ ()
       }
       if(confE_tmp < confE) {
         confE = confE_tmp;
-        hfOcc = exOccs[i];
+        refOcc = exOccs[i];
       }
     }
+  }
+
+  // NOTE: hfOcc in original order
+  std::vector<int> hfOcc(m_norbs);
+  for(int i = 0; i < spac_norbs; ++i) {
+    int ir = m_reorder[i];
+    hfOcc[2*ir]   = refOcc[2*i];
+    hfOcc[2*ir+1] = refOcc[2*i+1];
   }
 
   return hfOcc;
