@@ -1037,7 +1037,7 @@ SpinAdapted::Input::Input(const string& config_name) {
     abort();
   }
     
-  if (sym != "c1")
+//if (sym != "c1") // must be initialized even if c1 sym.
     Symmetry::InitialiseTable(sym);
 
   if (mpigetrank() == 0) {
