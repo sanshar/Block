@@ -363,10 +363,11 @@ void calldmrg_(char* input, char* output) {
 void fullrestartGenblock() {
   SweepParams sweepParams;
   bool direction; int restartsize;
-  sweepParams.restorestate(direction, restartsize);
+//FIXME: NN wrote: please let me know if this makes some erroneous behaviors
+//sweepParams.restorestate(direction, restartsize);
   sweepParams.set_sweep_iter() = 0;
   sweepParams.current_root() = -1;
-  //direction = true;
+  direction = true;
   restartsize = 0;
 
   SweepGenblock::do_one(sweepParams, false, !direction, RESTART, restartsize, -1, -1);
