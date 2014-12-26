@@ -361,13 +361,14 @@ void calldmrg_(char* input, char* output) {
 
 
 void fullrestartGenblock() {
-  SweepParams sweepParams;
+  SweepParams sweepParams, sweepParamsTmp;
   bool direction; int restartsize;
+//Temporary fix to restore sweep direction
 //FIXME: NN wrote: please let me know if this makes some erroneous behaviors
-//sweepParams.restorestate(direction, restartsize);
+  sweepParamsTmp.restorestate(direction, restartsize);
   sweepParams.set_sweep_iter() = 0;
   sweepParams.current_root() = -1;
-  direction = true;
+//direction = true;
   restartsize = 0;
 
   SweepGenblock::do_one(sweepParams, false, !direction, RESTART, restartsize, -1, -1);
