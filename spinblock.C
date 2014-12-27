@@ -745,18 +745,19 @@ void SpinBlock::BuildSingleSlaterBlock(std::vector<int> sts) {
   int left = sites[0], right = sites[0] + sites.size(), edge = dmrginp.last_site();
   int n = 0, sp = 0;
   std::vector<bool> tmp(0);
-  IrrepSpace irrep;
+  IrrepSpace irrep(0);
 
   if (dmrginp.spinAdapted()) {
     for (int orbI = left; orbI < right; ++orbI) {
       n += dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]] + dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]+1];
       sp += dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]] - dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]+1];
 
+      // FIXME: NN wrote, follows don't work correctly for non-abelian symmetry
       if (dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]] == 1) {
-        irrep += SymmetryOfSpatialOrb(orbI);
+        irrep = IrrepSpace(Symmetry::add(irrep.getirrep(),SymmetryOfSpatialOrb(orbI).getirrep())[0]);
       }
       if (dmrginp.hf_occupancy()[dmrginp.spatial_to_spin()[orbI]+1] == 1) {
-        irrep += SymmetryOfSpatialOrb(orbI);
+        irrep = IrrepSpace(Symmetry::add(irrep.getirrep(),SymmetryOfSpatialOrb(orbI).getirrep())[0]);
       }
     }
 
