@@ -49,13 +49,15 @@ int Npdm_driver::get_mpi_max_size( int my_size )
 // Do we parallelize by broadcasting LHS or RHS operators?  This is a very simple heuristic for now.  With disk-access, it may not be so good.
 
 #ifndef SERIAL
-bool Npdm_driver::broadcast_lhs( int lhs_size, int rhs_size )
+bool Npdm_driver::broadcast_lhs(NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps )
 {
   // Note all ranks have to make the same decision!
-  bool do_lhs = true;
-  int lhs_maxsize = get_mpi_max_size( lhs_size );
-  int rhs_maxsize = get_mpi_max_size( rhs_size );
-  if (rhs_maxsize < lhs_maxsize) do_lhs = false;
+  if(rhsOps.is_local_) return false;
+  else if(lhsOps.is_local_) return true;
+  bool do_lhs = false;
+  int lhs_maxsize = get_mpi_max_size( lhsOps.size() );
+  int rhs_maxsize = get_mpi_max_size( rhsOps.size() );
+  if (rhs_maxsize > lhs_maxsize) do_lhs = true;
   return do_lhs;
 }
 #endif
@@ -150,6 +152,145 @@ void Npdm_driver::do_parallel_lhs_loop( const char inner, Npdm::Npdm_expectation
   world.barrier();
 
 }
+
+void Npdm_driver::do_parallel_intermediate_loop( const char inner, Npdm::Npdm_expectations & npdm_expectations,
+                                        NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps, bool skip )
+{
+  boost::mpi::communicator world;
+  std::map<std::vector<int>, Wavefunction> local_waves;
+  if(!(lhsOps.is_local_ && mpigetrank()>0) && !skip)
+  {
+
+    if( inner =='r')
+    {
+      std::string file;
+      std::string op_string;
+
+      npdm_expectations.get_op_string(lhsOps,dotOps,op_string);
+      file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string % ".tmp" );
+      ifstream ifs(file,std::ios::binary);
+      boost::archive::binary_iarchive load_waves(ifs);
+      load_waves >> local_waves;
+
+    }
+
+    else if ( inner =='l')
+    {
+      std::string file;
+      std::string op_string;
+      //When inner=='l', lhsOps is an operator on the right block;
+      npdm_expectations.get_op_string(lhsOps,op_string);
+
+      file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % ".tmp" );
+      ifstream ifs(file,std::ios::binary);
+      boost::archive::binary_iarchive load_waves(ifs);
+      load_waves >> local_waves;
+
+    }
+    else assert(false);
+  }
+
+
+
+  if(lhsOps.is_local_ && !rhsOps.is_local_ )
+  {
+    if(mpigetrank()==0)
+    {
+      std::vector<boost::mpi::request> reqs(world.size()-1);
+      for (int rank = 1; rank < world.size(); ++rank) 
+        reqs.at(rank-1) = world.isend(rank,0,local_waves);
+      if(!skip) do_inner_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps, local_waves); 
+      boost::mpi::wait_all( reqs.begin(), reqs.end() );
+    }
+    else
+    {
+      boost::mpi::request req;
+      req = world.irecv(0,0,local_waves);
+      req.wait();
+      if(!skip) do_inner_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps, local_waves); 
+    } 
+      
+    return;
+  }
+  else if(lhsOps.is_local_ && rhsOps.is_local_  )
+  {
+    if(mpigetrank()==0)
+    {
+      if(!skip) do_inner_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps, local_waves); 
+    }
+    return;
+  }
+  else if(!lhsOps.is_local_ && rhsOps.is_local_  )
+  {
+    //This situation will not appear.
+    //Local operators are chosen as outer operators first.
+    pout << "Error in distribution of local operators" <<endl;
+    abort();
+  }
+
+
+
+  // Parallelize by broadcasting LHS or RHS intermediates
+  NpdmSpinOps_base local_base(lhsOps);
+  std::vector< NpdmSpinOps_base > nonlocal_base( world.size() );
+  std::vector< boost::mpi::request > reqs;
+  std::vector<std::map<std::vector<int>, Wavefunction>> nonlocal_waves( world.size());
+  std::vector< int > nonlocal_size( world.size() );
+  std::vector< int > nonlocal_skip( world.size() );
+
+  Timer timer;
+  // Communicate basic op info
+  int local_skip = skip; // apparently boost::mpi::all_gather fails with bools...??
+  boost::mpi::all_gather(world, local_skip, nonlocal_skip);
+  int local_size = local_base.opReps_.size();
+  boost::mpi::all_gather(world, local_size, nonlocal_size);
+  DEBUG_COMM_TIME[mpigetrank()] += timer.elapsedwalltime();
+
+
+  // Communicate operator reps
+  for (int rank = 0; rank < world.size(); ++rank) {
+    if ( rank != mpigetrank() ) {
+      // Get unique tag for send-recv pair (asymmetric)
+      unsigned int send_tag = get_mpi_tag(mpigetrank(), rank, world.size()); assert( send_tag%100 == 0 );
+      unsigned int recv_tag = get_mpi_tag(rank, mpigetrank(), world.size()); assert( send_tag%100 == 0 );
+      if ( ! local_skip ) {
+        std::vector< boost::mpi::request > new_reqs = local_base.isend_mpi_obj(rank, send_tag+2, send_tag+50);
+        reqs.insert( reqs.end(), new_reqs.begin(), new_reqs.end() );
+
+
+        boost::mpi::request new_req = world.isend(rank,mpigetrank()+1024,local_waves);
+        reqs.push_back(new_req);
+      }
+      if ( ! nonlocal_skip.at(rank) ) {
+        std::vector< boost::mpi::request > new_reqs = nonlocal_base.at(rank).irecv_mpi_obj(rank, recv_tag+2, recv_tag+50, nonlocal_size.at(rank));
+        reqs.insert( reqs.end(), new_reqs.begin(), new_reqs.end() );
+
+        boost::mpi::request new_req = world.irecv(rank,rank+1024,nonlocal_waves.at(rank));
+        reqs.push_back(new_req);
+      }
+    }
+  }
+  
+  // Do loop over RHS with local LHS operator while waiting for all non-local to be communicated 
+  // FIXME Can we extend this idea to do batches while other batches are communicating
+
+  if ( ! local_skip ) do_inner_loop( inner, npdm_expectations, local_base, rhsOps, dotOps, local_waves); 
+
+  // Contract all nonlocal LHS ops with local RHS ops; must wait for communication to be finished first
+  Timer timer2;
+  boost::mpi::wait_all( reqs.begin(), reqs.end() );
+  DEBUG_COMM_TIME[mpigetrank()] += timer2.elapsedwalltime();
+  for (int rank = 0; rank < world.size(); ++rank) {
+    if ( rank != mpigetrank() ) {
+      if ( ! nonlocal_skip.at(rank) ) do_inner_loop( inner, npdm_expectations, nonlocal_base.at(rank), rhsOps, dotOps, nonlocal_waves.at(rank)); 
+    }
+  }
+
+  // Synchronize all MPI ranks here
+  pout.flush();
+  world.barrier();
+
+}
 #endif
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -166,9 +307,14 @@ void Npdm_driver::par_loop_over_block_operators( const char inner, Npdm::Npdm_ex
 
   // Many spatial combinations on left block
   for ( int ilhs = 0; ilhs < lhs_maxsize; ++ilhs ) {
-    // Set local operators as dummy if load-balancing isn't perfect
     bool skip_op = true;
     if ( ilhs < lhsOps.size() ) skip_op = lhsOps.set_local_ops( ilhs );
+
+    if(dmrginp.npdm_intermediate() && (npdm_order_== NPDM_NEVPT2 || npdm_order_== NPDM_THREEPDM || npdm_order_== NPDM_FOURPDM) && dmrginp.npdm_multinode())
+      do_parallel_intermediate_loop(inner, npdm_expectations, lhsOps, rhsOps, dotOps, skip_op );
+    else{
+
+    // Set local operators as dummy if load-balancing isn't perfect
 
     if ( skip_parallel( lhsOps, rhsOps, lhsrhsdot ) ) {
       if ( ! skip_op ) {
@@ -177,7 +323,8 @@ void Npdm_driver::par_loop_over_block_operators( const char inner, Npdm::Npdm_ex
     }
     else {
       // Parallelize by broadcasting LHS ops
-      do_parallel_lhs_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps, skip_op );
+        do_parallel_lhs_loop( inner, npdm_expectations, lhsOps, rhsOps, dotOps, skip_op );
+    }
     }
   }
 
@@ -192,6 +339,7 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
                                  NpdmSpinOps_base& outerOps, NpdmSpinOps& innerOps, NpdmSpinOps& dotOps ) 
 {
   // Many spatial combinations on right block
+  if(innerOps.is_local_ && mpigetrank()>0) return;
   for ( int iop = 0; iop < innerOps.size(); ++iop ) {
     bool skip = innerOps.set_local_ops( iop );
     if (skip) continue;
@@ -204,6 +352,39 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
       new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( outerOps, innerOps, dotOps );
     else if ( inner == 'l' ) {
       new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( innerOps, outerOps, dotOps );
+      //for (int i = 0; i < new_spin_orbital_elements.size(); ++i) {
+      //  pout << new_spin_orbital_elements[i].first[0] << " " << new_spin_orbital_elements[i].first[1] << " " << new_spin_orbital_elements[i].second << endl;
+      //}
+    }
+    else
+      abort();
+
+    // Store new npdm elements
+    if ( new_spin_orbital_elements.size() > 0 ) container_.store_npdm_elements( new_spin_orbital_elements );
+  }
+
+  assert( ! innerOps.ifs_.is_open() );
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm_expectations, 
+                                 NpdmSpinOps_base& outerOps, NpdmSpinOps& innerOps, NpdmSpinOps& dotOps, std::map<std::vector<int>, Wavefunction>& waves) 
+{
+  if(innerOps.is_local_ && mpigetrank()>0) return;
+  // Many spatial combinations on right block
+  for ( int iop = 0; iop < innerOps.size(); ++iop ) {
+    bool skip = innerOps.set_local_ops( iop );
+    if (skip) continue;
+
+    // Get non-spin-adapated spin-orbital 3PDM elements after building spin-adapted elements
+    std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements;
+    DEBUG_CALL_GET_EXPECT[mpigetrank()] += 1;
+    // This should always work out as calling in order (lhs,rhs,dot)
+    if ( inner == 'r' )
+      new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( inner, outerOps, innerOps, dotOps, waves );
+    else if ( inner == 'l' ) {
+      new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( inner, innerOps, outerOps, dotOps, waves );
       //for (int i = 0; i < new_spin_orbital_elements.size(); ++i) {
       //  pout << new_spin_orbital_elements[i].first[0] << " " << new_spin_orbital_elements[i].first[1] << " " << new_spin_orbital_elements[i].second << endl;
       //}
@@ -286,7 +467,7 @@ void Npdm_driver::loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Np
       // Compute all irreducible PDM elements generated by this block operator pattern at this sweep position
 #ifndef SERIAL
       bool lhs_or_rhs_dot = ( (lhsBlock->size() == 1) || (rhsBlock->size() == 1) );
-      if ( broadcast_lhs( lhsOps->size(), rhsOps->size() ) ) {
+      if ( broadcast_lhs( *lhsOps, *rhsOps ) ) {
         par_loop_over_block_operators( 'r', expectations, *lhsOps, *rhsOps, *dotOps, lhs_or_rhs_dot );
       }
       else {
@@ -310,7 +491,7 @@ void Npdm_driver::loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Np
 #ifndef SERIAL
       bool lhs_or_rhs_dot = ( (lhsBlock->size() == 1) || (rhsBlock->size() == 1) );
 //pout << "lhs_or_rhs_dot " << lhs_or_rhs_dot << endl;
-      if ( broadcast_lhs( lhsOps->size(), rhsOps->size() ) ) {
+      if ( broadcast_lhs( *lhsOps, *rhsOps ) ) {
 //pout << "broadcast lhs\n";
 //pout.flush();
       par_loop_over_block_operators( 'r', expectations, *lhsOps, *rhsOps, *dotOps, lhs_or_rhs_dot );
@@ -444,6 +625,7 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
   world.barrier();
 #endif
   }
+
   loop_over_operator_patterns( npdm_patterns, npdm_expectations, big );
 #ifndef SERIAL
   world.barrier();

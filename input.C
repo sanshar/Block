@@ -121,6 +121,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_store_nonredundant_pdm =false;
   m_pdm_unsorted = false;
   m_npdm_intermediate= true;
+  m_npdm_multinode= true;
  
   m_maxiter = 10;
   m_oneindex_screen_tol = NUMERICAL_ZERO;
@@ -790,6 +791,14 @@ SpinAdapted::Input::Input(const string& config_name) {
       else if (boost::iequals(keyword, "npdm_no_intermediate"))
       {
         m_npdm_intermediate = false;
+      }
+      else if (boost::iequals(keyword, "npdm_multinode"))
+      {
+        m_npdm_multinode = true;
+      }
+      else if (boost::iequals(keyword, "npdm_no_multinode"))
+      {
+        m_npdm_multinode = false;
       }
 
 
