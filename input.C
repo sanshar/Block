@@ -135,7 +135,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_set_Sz = false;
 
   n_twodot_noise = 0;
-  m_twodot_noise = 1.0-4;
+  m_twodot_noise = 1.0e-4;
   m_twodot_gamma = 3.0e-1;
 
   m_sweep_tol = 1.0e-5;

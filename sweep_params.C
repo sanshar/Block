@@ -33,8 +33,8 @@ SpinAdapted::SweepParams::SweepParams()
   backward_starting_size = 1;
   keep_states = 0;
   keep_qstates = 0;
-  noise = 0;
-  additional_noise = 0;
+  noise = 0.0;
+  additional_noise = 0.0;
   davidson_tol = 1.e-6;
   guesstype = BASIC;
 

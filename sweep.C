@@ -453,6 +453,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       
 #ifndef SERIAL
       mpi::communicator world;
+      mpi::broadcast(world,finalError,0);
       world.barrier();
 #endif
       sweepParams.savestate(forward, syssites.size());
