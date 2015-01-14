@@ -5,10 +5,10 @@
 
 ##BOOSTINCLUDE = /home/sandeep/Work/Programs/boost_1_54_0/
 #specify boost include file
-BOOSTINCLUDE = /home/juny/boost_1_55_0/install/include/
+BOOSTINCLUDE = /home/juny/libs/boost_1_55_0-gcc-4_8_2-install/include
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/home/juny/boost_1_55_0/install/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+BOOSTLIB = -L/home/juny/libs/boost_1_55_0-gcc-4_8_2-install/lib/ -lboost_serialization -lboost_system -lboost_filesystem
 #BOOSTLIB = -lboost_serialization -lboost_system -lboost_filesystem
 LAPACKBLAS = -lblas -llapack
 
@@ -23,17 +23,17 @@ USE_MKL = yes
 
 # use this variable to set if we will use integer size of 8 or not.
 # molpro compilation requires I8, since their integers are long
-I8_OPT = yes
+I8_OPT = no
 MOLPRO = no
 OPENMP = no
 
 # add Molcas interface to libqcdmrg.so
 # molcas compilation w/ -64 option requires I8 as well
-MOLCAS = yes
+MOLCAS = no
 
 ifeq ($(USE_MKL), yes)
 MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/
-LAPACKBLAS = -L${MKLLIB} -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+LAPACKBLAS = -L${MKLLIB} -lmkl_gf_lp64 -lmkl_sequential -lmkl_core
 MKLFLAGS = /opt/intel/composer_xe_2013_sp1.0.080/mkl/include
 MKLOPT = -D_HAS_INTEL_MKL
 else
@@ -57,7 +57,7 @@ EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
 CXX =  g++
-MPICXX = /usr/lib64/openmpi/bin/mpicxx
+MPICXX = /usr/local/openmpi/1.6.5/devtoolset21/x86_64/bin/mpicxx
 BLOCKHOME = .
 HOME = .
 NEWMATINCLUDE = $(BLOCKHOME)/newmat10/
@@ -103,12 +103,14 @@ ifeq (g++, $(CXX))
    endif
 # GNU compiler
       OPT = -DNDEBUG -O3 
+      GLIBS = -L/home/juny/libs/gcc-4.8.3-install/lib64 
+      LIBS += $(GLIBS)
 #   OPT = -g -fPIC
 endif
 
 ifeq ($(USE_MPI), yes)
      MPI_OPT = 
-     MPI_LIB = -lboost_mpi
+     MPI_LIB = -lboost_mpi -L/usr/local/openmpi/1.6.5/devtoolset21/x86_64/lib64 -lmpi -lmpi_cxx
      LIBS += $(MPI_LIB)
      CXX = $(MPICXX)
 endif
