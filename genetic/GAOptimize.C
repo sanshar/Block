@@ -6,7 +6,6 @@
 #include "Generation.h"
 #include "GAInput.h"
 #include "ReadIntegral.h"
-#include "pario.h"
 using namespace std;
 
 #include <boost/function.hpp>

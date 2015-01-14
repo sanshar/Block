@@ -28,7 +28,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "input.h"
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
-#include "pario.h"
 
 using namespace boost;
 
@@ -280,17 +279,17 @@ class PairArray {
     }
 
     Matrix& GetRepresentation() {
-      perr << "PairArray::GetRepresentation not implemented yet!";
+      cerr << "PairArray::GetRepresentation not implemented yet!";
       abort();
     }
 
     void ReadFromDumpFile(ifstream& dumpFile, int norbs) {
-      perr << "PairArray::ReadFromDumpFile not implemented yet!";
+      cerr << "PairArray::ReadFromDumpFile not implemented yet!";
       abort();
     }
     
     void DumpToFile(ofstream& dumpFile) const {
-      perr << "PairArray::DumpToFile not implemented yet!";
+      cerr << "PairArray::DumpToFile not implemented yet!";
       abort();
     }
 
@@ -358,7 +357,7 @@ class CCCCArray {
     int NOrbs() const { return dim;}
     array_2d<int>& GetMap() {  return indexMap;}
     Matrix& GetRepresentation() {
-      perr << "CCCCArray::GetRepresentation not implemented yet!" << endl;
+      cerr << "CCCCArray::GetRepresentation not implemented yet!" << endl;
       abort();
     }
 
@@ -371,12 +370,12 @@ class CCCCArray {
     
 
     void ReadFromDumpFile(ifstream& dumpFile, int norbs) {
-      perr << "CCCCArray::ReadFromDumpFile not implemented yet!";
+      cerr << "CCCCArray::ReadFromDumpFile not implemented yet!";
       abort();
     }
     
     void DumpToFile(ofstream& dumpFile) const {
-      perr << "CCCCArray::DumpToFile not implemented yet!";
+      cerr << "CCCCArray::DumpToFile not implemented yet!";
       abort();
     }
     
@@ -443,7 +442,7 @@ class CCCDArray {
     int NOrbs() const { return dim;}
     array_2d<int>& GetMap() {  return indexMap;}
     Matrix& GetRepresentation() {
-      perr << "CCCDArray::GetRepresentation not implemented yet!";
+      cerr << "CCCDArray::GetRepresentation not implemented yet!";
       abort();
     }
 
@@ -455,12 +454,12 @@ class CCCDArray {
     virtual void set(int i, int j, int k, int l, double value);
 
     void ReadFromDumpFile(ifstream& dumpFile, int norbs) {
-      perr << "CCCDArray::ReadFromDumpFile not implemented yet!";
+      cerr << "CCCDArray::ReadFromDumpFile not implemented yet!";
       abort();
     }
     
     void DumpToFile(ofstream& dumpFile) const {
-      perr << "CCCDArray::DumpToFile not implemented yet!";
+      cerr << "CCCDArray::DumpToFile not implemented yet!";
       abort();
     }
     

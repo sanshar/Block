@@ -7,6 +7,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include <IntegralMatrix.h>
+#include "pario.h"
 
 using namespace boost;
 
