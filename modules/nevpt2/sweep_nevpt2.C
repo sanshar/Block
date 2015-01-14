@@ -300,12 +300,12 @@ namespace SpinAdapted{
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ){
     
     //print information
-    pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+    pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
     pout << "\t\t\t ----------------------------" << endl;
     if (forward)
-       pout << "\t\t\t Current direction is :: Forwards " << endl;
+       p1out << "\t\t\t Current direction is :: Forwards " << endl;
     else
-       pout << "\t\t\t Current direction is :: Backwards " << endl;
+       p1out << "\t\t\t Current direction is :: Backwards " << endl;
 
     //determine the way of guessing the wavefunction
     if (dmrginp.no_transform())
@@ -321,7 +321,7 @@ namespace SpinAdapted{
       
     //block and decimate. Note: when we have reached the middle position, the 
     //density generator is called
-    pout << "\t\t\t Blocking and Decimating " << endl;
+    p1out << "\t\t\t Blocking and Decimating " << endl;
     SpinBlock newSystem;
     nevpt2::BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys, CCD, CDD, IKJL, IKJA, Info);
     
@@ -332,7 +332,7 @@ namespace SpinAdapted{
     ++sweepParams.set_block_iter();
     
     //save the block
-    pout << "\t\t\t saving state " << endl;
+    p1out << "\t\t\t saving state " << endl;
     SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root());
     sweepParams.savestate(forward, system.get_sites().size());
     
@@ -374,12 +374,12 @@ namespace SpinAdapted{
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ){
     
     //print information
-    pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+    pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
     pout << "\t\t\t ----------------------------" << endl;
     if (!forward)
-       pout << "\t\t\t Current direction is :: Forwards " << endl;
+       p1out << "\t\t\t Current direction is :: Forwards " << endl;
     else
-       pout << "\t\t\t Current direction is :: Backwards " << endl;
+       p1out << "\t\t\t Current direction is :: Backwards " << endl;
 
     //determine the way of guessing the wavefunction
     if (dmrginp.no_transform())
@@ -395,7 +395,7 @@ namespace SpinAdapted{
       
     //block and decimate. Note: when we have reached the middle position, the 
     //density generator is called
-    pout << "\t\t\t Blocking and Decimating " << endl;
+    p1out << "\t\t\t Blocking and Decimating " << endl;
     SpinBlock newSystem;
     nevpt2::BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys, CCD_, CDD_, IKJL, IKJA, Info);
     
@@ -406,7 +406,7 @@ namespace SpinAdapted{
     ++sweepParams.set_block_iter();
     
     //save the block
-    pout << "\t\t\t saving state " << endl;
+    p1out << "\t\t\t saving state " << endl;
     SpinBlock::store (!forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root());
     sweepParams.savestate(!forward, system.get_sites().size());
     

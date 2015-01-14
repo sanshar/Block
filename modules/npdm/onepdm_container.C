@@ -51,7 +51,7 @@ void Onepdm_container::save_npdms(const int& i, const int& j)
 #ifndef SERIAL
   world.barrier();
 #endif
-  pout << "1PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+  p3out << "1PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------

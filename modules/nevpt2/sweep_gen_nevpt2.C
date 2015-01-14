@@ -23,7 +23,7 @@ namespace SpinAdapted{
   if (dmrginp.outputlevel() > 0) 
   mcheck("at the start of block and decimate");
   // figure out if we are going forward or backwards
-  pout << "\t\t\t Performing Blocking"<<endl;
+  p1out << "\t\t\t Performing Blocking"<<endl;
   dmrginp.guessgenT -> start();
   bool forward = (system.get_sites() [0] == 0);
   SpinBlock systemDot;
@@ -52,8 +52,7 @@ namespace SpinAdapted{
   
 
   pout << "\t\t\t System  Block"<<newSystem;
-  if (dmrginp.outputlevel() > 0)
-    newSystem.printOperatorSummary();
+  newSystem.printOperatorSummary();
 
   std::vector<Matrix> rotateMatrix;
 
@@ -107,13 +106,12 @@ namespace SpinAdapted{
     SaveRotationMatrix (newSystem.get_sites(), rotateMatrix, istate);
   }
 
-  pout <<"\t\t\t Performing Renormalization "<<endl;
+  p1out <<"\t\t\t Performing Renormalization "<<endl;
   newSystem.transform_operators(rotateMatrix);
   if (dmrginp.outputlevel() > 0) 
     mcheck("after rotation and transformation of block");
-  pout <<newSystem<<endl;
-  if (dmrginp.outputlevel() > 0)
-    newSystem.printOperatorSummary();
+  p2out <<newSystem<<endl;
+  newSystem.printOperatorSummary();
   //mcheck("After renorm transform");
   
   //clear up memory
@@ -167,14 +165,12 @@ double nevpt2::do_one_(SweepParams &sweepParams, const bool &warmUp, const bool 
 */
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
     {
-      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+      pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
-      if (dmrginp.outputlevel() > 0) {
       if (forward)
-         pout << "\t\t\t Current direction is :: Forwards " << endl;
+         p1out << "\t\t\t Current direction is :: Forwards " << endl;
       else
-         pout << "\t\t\t Current direction is :: Backwards " << endl;
-      }
+         p1out << "\t\t\t Current direction is :: Backwards " << endl;
       //if (SHOW_MORE) pout << "system block" << endl << system << endl;
   
       if (dmrginp.no_transform())
@@ -188,7 +184,7 @@ double nevpt2::do_one_(SweepParams &sweepParams, const bool &warmUp, const bool 
       else
         sweepParams.set_guesstype() = BASIC;
       
-	pout << "\t\t\t Blocking and Decimating " << endl;
+	p1out << "\t\t\t Blocking and Decimating " << endl;
 	  
       SpinBlock newSystem;
 
@@ -206,7 +202,7 @@ double nevpt2::do_one_(SweepParams &sweepParams, const bool &warmUp, const bool 
        */
       SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root());	 	
 
-      pout << "\t\t\t saving state " << system.get_sites().size() << endl;
+      p1out << "\t\t\t saving state " << system.get_sites().size() << endl;
       ++sweepParams.set_block_iter();
       //if (sweepParams.get_onedot())
       //pout << "\t\t\tUsing one dot algorithm!!"<<endl; 

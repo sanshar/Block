@@ -104,27 +104,27 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 
   if (sweepParams.get_block_iter() == 0) {
     //this is inface a combination of  2_0_0, 1_1_0 and 0_2_0
-    pout << "compute 2_0_0"<<endl;
+    p2out << "\t\t\t compute 2_0_0"<<endl;
     compute_one_pdm_2_0_0(solution[0], solution[0], big, onepdm);
     if (dmrginp.hamiltonian() == BCS)
       compute_pair_2_0_0(solution[0], solution[0], big, pairmat);
-    pout << "compute 1_1_0"<<endl;
+    p2out << "\t\t\t compute 1_1_0"<<endl;
     compute_one_pdm_1_1_0(solution[0], solution[0], big, onepdm);
     if (dmrginp.hamiltonian() == BCS)    
       compute_pair_1_1_0(solution[0], solution[0], big, pairmat);
   }
 
-  pout << "compute 0_2_0"<<endl;
+  p2out << "\t\t\t compute 0_2_0"<<endl;
   compute_one_pdm_0_2_0(solution[0], solution[0], big, onepdm);
   if (dmrginp.hamiltonian() == BCS)  
     compute_pair_0_2_0(solution[0], solution[0], big, pairmat);  
-  pout << "compute 1_1"<<endl;
+  p2out << "\t\t\t compute 1_1"<<endl;
   compute_one_pdm_1_1(solution[0], solution[0], big, onepdm);
   if (dmrginp.hamiltonian() == BCS)  
     compute_pair_1_1(solution[0], solution[0], big, pairmat);
 
   if (sweepParams.get_block_iter()  == sweepParams.get_n_iters() - 1) {
-    pout << "compute 0_2"<<endl;
+    p2out << "\t\t\t compute 0_2"<<endl;
     compute_one_pdm_0_2(solution[0], solution[0], big, onepdm);
     if (dmrginp.hamiltonian() == BCS)    
       compute_pair_0_2(solution[0], solution[0], big, pairmat);    
@@ -184,19 +184,19 @@ double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   sweepParams.set_guesstype() = TRANSPOSE;
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
     {
-      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+      pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
       if (forward)
-	pout << "\t\t\t Current direction is :: Forwards " << endl;
+	p1out << "\t\t\t Current direction is :: Forwards " << endl;
       else
-	pout << "\t\t\t Current direction is :: Backwards " << endl;
+	p1out << "\t\t\t Current direction is :: Backwards " << endl;
 
       if (sweepParams.get_block_iter() == 0)
 	sweepParams.set_guesstype() = TRANSPOSE;
       else
 	sweepParams.set_guesstype() = TRANSFORM;
 
-      pout << "\t\t\t Blocking and Decimating " << endl;
+      p1out << "\t\t\t Blocking and Decimating " << endl;
 
       SpinBlock newSystem;
       BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys, state);
@@ -208,11 +208,11 @@ double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
       
       SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root());	 	
 
-      pout << "\t\t\t saving state " << system.get_sites().size() << endl;
+      p1out << "\t\t\t saving state " << system.get_sites().size() << endl;
       ++sweepParams.set_block_iter();
       //sweepParams.savestate(forward, system.get_sites().size());
     }
-  pout << "\t\t\t The lowest sweep energy :  ----"<<endl;
+  pout << "\t\t\t The lowest sweep energy : "<< sweepParams.get_lowest_energy()[0] << endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
 

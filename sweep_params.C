@@ -90,10 +90,8 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
   noise = dmrginp.sweep_noise_schedule()[current];
   additional_noise = this->get_additional_noise();//dmrginp.get_twodot_noise();
 
-  if (dmrginp.outputlevel() > 0) {
-   pout << "\t\t\t Sweep iteration ... " << SpinAdapted::SweepParams::sweep_iter;
-   pout<< " "  << SpinAdapted::SweepParams::keep_states << " " << SpinAdapted::SweepParams::davidson_tol << " " << SpinAdapted::SweepParams::noise << " "<< SpinAdapted::SweepParams::additional_noise <<endl; 
-  }
+   p1out << "\n\t\t\t Sweep iteration ... " << SpinAdapted::SweepParams::sweep_iter;
+   p1out<< " "  << SpinAdapted::SweepParams::keep_states << " " << SpinAdapted::SweepParams::davidson_tol << " " << SpinAdapted::SweepParams::noise << " "<< SpinAdapted::SweepParams::additional_noise <<endl; 
   else 
     pout << endl;
 
@@ -139,11 +137,9 @@ void SpinAdapted::SweepParams::set_sweep_parameters()
   }
 
   //now figure out number of iterations and starting size, during first call only
-  if (dmrginp.outputlevel() > 0) {
-    pout << "\t\t\t forward system starting size ... " << forward_starting_size << " " << n_iters << endl;
-    pout << "\t\t\t backward system starting size ... " << backward_starting_size << " " << n_iters << endl;
-    //pout << "onedot or twodot "<<dmrginp.algorithm_method()<<endl;
-  }
+  p2out << "\t\t\t forward system starting size ... " << forward_starting_size << " " << n_iters << endl;
+  p2out << "\t\t\t backward system starting size ... " << backward_starting_size << " " << n_iters << endl;
+  //pout << "onedot or twodot "<<dmrginp.algorithm_method()<<endl;
 
 }
 
@@ -163,8 +159,7 @@ void SpinAdapted::SweepParams::savestate(const bool &forward, const int &size)
   {
     char file[5000];
     sprintf (file, "%s%s%d%s", dmrginp.save_prefix().c_str(), "/statefile.", mpigetrank(), ".tmp");
-    if (dmrginp.outputlevel() > 0)
-      pout << "\t\t\t Saving state "<<file<<endl;
+    p1out << "\t\t\t Saving state "<<file<<endl;
     std::ofstream ofs(file, std::ios::binary);
     boost::archive::binary_oarchive save_wave(ofs);
     save_wave << forward << size << *this;
@@ -178,8 +173,7 @@ void SpinAdapted::SweepParams::restorestate(bool &forward, int &size)
   {
     char file[5000];
     sprintf (file, "%s%s%d%s", dmrginp.load_prefix().c_str(), "/statefile.", mpigetrank(), ".tmp");
-    if (dmrginp.outputlevel() > 0)
-      pout << "\t\t\t Loading state "<<file<<endl;
+    p1out << "\t\t\t Loading state "<<file<<endl;
     std::ifstream ifs(file, std::ios::binary);
     boost::archive::binary_iarchive load_wave(ifs);
     load_wave >> forward >> size >> *this;
@@ -196,8 +190,8 @@ void SpinAdapted::SweepParams::restorestate(bool &forward, int &size)
   }
 
 
-  pout << "\t\t\t Restarting at sweep iteration: " << sweep_iter <<endl;
-  pout << "\t\t\t Restarting at block iterations: "  << block_iter <<endl;
+  pout << "\n\t\t\t Restarting at sweep iteration: " << sweep_iter <<endl;
+  pout << "\n\t\t\t Restarting at block iterations: "  << block_iter <<endl;
 
 #ifndef SERIAL
   mpi::communicator world;

@@ -17,7 +17,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 using namespace std;
 #endif
 #include "timer.h"
-#include "pario.h"
 //#include <malloc.h>
 #include <newmat.h>
 #include <newmatap.h>
@@ -36,6 +35,7 @@ using namespace std;
 #include <assert.h>
 #include "Symmetry.h"
 #include "input.h"
+#include "pario.h"
 #include <ctime>
 #include <iostream>
 // Global variables

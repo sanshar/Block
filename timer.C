@@ -57,7 +57,7 @@ void mcheck(const char* message)
 
   long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
   double rass = rss * page_size_kb;
-  pout << "\t\t\t VM: " << vsize/(1024.0*1024.0) <<" Mb = "<< vsize/(1024.0*1024.0*1024.0) <<" Gb: rss = "<<rass/(1024.0*1024.0) <<" Gb "<<endl;
+  p3out << "\t\t\t VM: " << vsize/(1024.0*1024.0) <<" Mb = "<< vsize/(1024.0*1024.0*1024.0) <<" Gb: rss = "<<rass/(1024.0*1024.0) <<" Gb "<<endl;
    
    //#endif
 }

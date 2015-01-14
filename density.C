@@ -45,8 +45,7 @@ void DensityMatrix::makedensitymatrix(const std::vector<Wavefunction>& wave_solu
       if(allowed(lQ,lQ))
 	for(int i=0;i<(*this)(lQ,lQ).Nrows();++i)
 	  norm += (*this)(lQ,lQ)(i+1,i+1);
-    if (dmrginp.outputlevel() > 0) 
-      pout << "\t\t\t norm before modification " << norm << endl;
+    p2out << "\t\t\t norm before modification " << norm << endl;
     
     
     int nroots = wave_solutions.size();
@@ -65,8 +64,7 @@ void DensityMatrix::makedensitymatrix(const std::vector<Wavefunction>& wave_solu
       if(this->allowed(lQ,lQ))
 	for(int i=0;i<(*this)(lQ,lQ).Nrows();++i)
 	  norm += (*this)(lQ,lQ)(i+1,i+1);
-    if (dmrginp.outputlevel() > 0) 
-      pout << "\t\t\t norm after modification " << norm << endl;
+    p2out << "\t\t\t norm after modification " << norm << endl;
     
   }
 
@@ -93,16 +91,14 @@ void DensityMatrix::makedensitymatrix(const Wavefunction& wave_solution, SpinBlo
 
 void DensityMatrix::add_twodot_noise(const SpinBlock &big, const double noise)
 {
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t adding noise " << noise << endl;
+  p1out << "\t\t\t adding noise " << noise << endl;
   double norm = 0.0;
   for(int lQ=0;lQ<this->nrows();++lQ)
     for(int rQ=0;rQ<this->ncols();++rQ)
       if(this->allowed(lQ,rQ))
         for(int i=0;i<(*this)(lQ,rQ).Nrows();++i)
           norm += (*this)(lQ,rQ)(i+1,i+1);
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t norm before modification " << norm << endl;
+  p2out << "\t\t\t norm before modification " << norm << endl;
 
   Wavefunction noiseMatrix;
   double reweight = 0.;
@@ -164,8 +160,7 @@ void DensityMatrix::add_twodot_noise(const SpinBlock &big, const double noise)
       if(this->allowed(lQ,rQ))
         for(int i=0;i<(*this)(lQ,rQ).Nrows();++i)
           norm += (*this)(lQ,rQ)(i+1,i+1);
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t norm after modification " << norm << endl;
+  p2out << "\t\t\t norm after modification " << norm << endl;
 
 }
 
@@ -338,8 +333,7 @@ void DensityMatrix::add_onedot_noise(const Wavefunction& wave_solution, SpinBloc
 {
 
   SpinBlock* leftBlock = big.get_leftBlock();
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t Modifying density matrix " << endl;
+  p1out << "\t\t\t Modifying density matrix " << endl;
   //int maxt = 1;
   vector<DensityMatrix> dmnoise(MAX_THRD, DensityMatrix(big.get_leftBlock()->get_stateInfo()));
   for(int j=0;j<MAX_THRD;++j)
@@ -401,8 +395,7 @@ void DensityMatrix::add_onedot_noise(const Wavefunction& wave_solution, SpinBloc
       if(this->allowed(lQ,lQ))
         for(int i=0;i<(*this)(lQ,lQ).Nrows();++i)
           norm += (*this)(lQ,lQ)(i+1,i+1);
-    if (dmrginp.outputlevel() > 0) 
-      pout << "\t\t\t norm after modification " << norm << endl;
+    p2out << "\t\t\t norm after modification " << norm << endl;
 }
 
 // accumulates into dm
@@ -410,8 +403,7 @@ void DensityMatrix::add_onedot_noise_forCompression(const Wavefunction& wave_sol
 {
 
   SpinBlock* leftBlock = big.get_leftBlock();
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t Modifying density matrix " << endl;
+  p1out << "\t\t\t Modifying density matrix " << endl;
   //int maxt = 1;
   vector<DensityMatrix> dmnoise(MAX_THRD, DensityMatrix(big.get_leftBlock()->get_braStateInfo()));
   for(int j=0;j<MAX_THRD;++j)

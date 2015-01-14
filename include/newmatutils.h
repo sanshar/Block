@@ -12,7 +12,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <newmat.h>
 #include <fstream>
 #include <cstdio>
-#include "pario.h"
 
 using namespace std;
 

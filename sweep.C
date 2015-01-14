@@ -149,11 +149,10 @@ void SpinAdapted::Sweep::makeSystemEnvironmentBigBlocks(SpinBlock& system, SpinB
 
 void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys)
 {
-  if (dmrginp.outputlevel() > 0) {
+  if (dmrginp.outputlevel() > 0)
     mcheck("at the start of block and decimate");
-    pout << "\t\t\t dot with system "<<dot_with_sys<<endl;
-  }
-  pout <<endl<< "\t\t\t Performing Blocking"<<endl;
+  p2out << "\t\t\t dot with system "<<dot_with_sys<<endl;
+  p1out <<endl<< "\t\t\t Performing Blocking"<<endl;
   // figure out if we are going forward or backwards
   dmrginp.guessgenT -> start();
 
@@ -190,16 +189,14 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 
   if (dmrginp.outputlevel() > 0)
     mcheck(""); 
-  if (dmrginp.outputlevel() == 0) {
-    if (!dot_with_sys && sweepParams.get_onedot()) {
-      pout << "\t\t\t System  Block"<<system;    
-    }
-    else {
-      pout << "\t\t\t System  Block"<<newSystem;
-    }
-    pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
-    pout << "\t\t\t Solving wavefunction "<<endl;
+  if (!dot_with_sys && sweepParams.get_onedot()) {
+    pout << "\t\t\t System  Block"<<system;    
   }
+  else {
+    pout << "\t\t\t System  Block"<<newSystem;
+  }
+  pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
+  p1out << "\t\t\t Solving wavefunction "<<endl;
 
   std::vector<Wavefunction> lowerStates;
 
@@ -244,8 +241,8 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   environment.clear();
   newEnvironment.clear();
 
-  pout <<"\t\t\t Performing Renormalization "<<endl;
-  pout << "\t\t\t Total discarded weight "<<sweepParams.get_lowest_error()<<endl<<endl;
+  p1out <<"\t\t\t Performing Renormalization "<<endl;
+  pout << "\n\t\t\t Total discarded weight "<<sweepParams.get_lowest_error()<<endl<<endl;
 
   dmrginp.multiplierT -> stop();
   dmrginp.operrotT -> start();
@@ -298,18 +295,16 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
   if (dmrginp.outputlevel() > 0)
     mcheck("after rotation and transformation of block");
 
-  if (dmrginp.outputlevel() > 0){
-    pout << (*dmrginp.guessgenT)<<" "<<*(dmrginp.multiplierT)<<" "<<*(dmrginp.operrotT)<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
-    pout << *dmrginp.makeopsT<<" makeops "<<endl;
-    pout << *dmrginp.datatransfer<<" datatransfer "<<endl;
-    pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
-    pout << *dmrginp.oneelecT<<" "<<*dmrginp.twoelecT<<" "<<*dmrginp.hmultiply<<" "<<*dmrginp.couplingcoeff<<" hmult"<<endl;
-    pout << *dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<" build block"<<endl;
-    pout << *dmrginp.blockintegrals<<"  "<<*dmrginp.blocksites<<"  "<<*dmrginp.statetensorproduct<<"  "<<*dmrginp.statecollectquanta<<"  "<<*dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<"  "<<*dmrginp.builditeratorsT<<" build sum block"<<endl;
-    pout << *dmrginp.dscreen<<"  "<<*dmrginp.ddscreen<<"  "<<*dmrginp.cdscreen<<"  screen time"<<endl;
-    pout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
-    //pout << *dmrginp.addnoise<<" "<<*dmrginp.s0time<<" "<<*dmrginp.s1time<<" "<<*dmrginp.s2time<<endl;
-  }
+  p2out << (*dmrginp.guessgenT)<<" "<<*(dmrginp.multiplierT)<<" "<<*(dmrginp.operrotT)<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+  p2out << *dmrginp.makeopsT<<" makeops "<<endl;
+  p2out << *dmrginp.datatransfer<<" datatransfer "<<endl;
+  p2out <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
+  p2out << *dmrginp.oneelecT<<" "<<*dmrginp.twoelecT<<" "<<*dmrginp.hmultiply<<" "<<*dmrginp.couplingcoeff<<" hmult"<<endl;
+  p2out << *dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<" build block"<<endl;
+  p2out << *dmrginp.blockintegrals<<"  "<<*dmrginp.blocksites<<"  "<<*dmrginp.statetensorproduct<<"  "<<*dmrginp.statecollectquanta<<"  "<<*dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<"  "<<*dmrginp.builditeratorsT<<" build sum block"<<endl;
+  p2out << *dmrginp.dscreen<<"  "<<*dmrginp.ddscreen<<"  "<<*dmrginp.cdscreen<<"  screen time"<<endl;
+  p2out << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
+  //p3out << *dmrginp.addnoise<<" "<<*dmrginp.s0time<<" "<<*dmrginp.s1time<<" "<<*dmrginp.s2time<<endl;
 
 }
 
@@ -344,8 +339,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     sweepParams.set_block_iter() = 0;
 
  
-  if (dmrginp.outputlevel() > 0)
-    pout << "\t\t\t Starting block is :: " << endl << system << endl;
+  p2out << "\t\t\t Starting block is :: " << endl << system << endl;
 
   SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root()); // if restart, just restoring an existing block --
   sweepParams.savestate(forward, system.get_sites().size());
@@ -366,15 +360,13 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) // get_n_iters() returns the number of blocking iterations needed in one sweep
     {
-      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+      pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ============================" << endl;
-      if (dmrginp.outputlevel() > 0) {
-	    if (forward) {
-	      pout << "\t\t\t Current direction is :: Forwards " << endl;
-       }
-	    else {
-	      pout << "\t\t\t Current direction is :: Backwards " << endl;
-       }
+      if (forward) {
+       p1out << "\t\t\t Current direction is :: Forwards " << endl;
+      }
+      else {
+       p1out << "\t\t\t Current direction is :: Backwards " << endl;
       }
 
       if (dmrginp.no_transform() || (sweepParams.get_sweep_iter()-sweepParams.get_restart_iter() == 0 && sweepParams.get_block_iter() == 0))
@@ -389,8 +381,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
         sweepParams.set_guesstype() = BASIC;
 
       
-      if (dmrginp.outputlevel() > 0)
-         pout << "\t\t\t Blocking and Decimating " << endl;
+      p1out << "\t\t\t Blocking and Decimating " << endl;
 	  
       SpinBlock newSystem; // new system after blocking and decimating
 
@@ -420,10 +411,8 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 	    " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j] <<endl;              
 #else 
 	  //We might want to relax the output restrictions here, so it prints out with outputlevel=0
-	  if (dmrginp.outputlevel() < 0) {
-	    pout << "\t\t\t Total block energy for State [ " << istate << 
+          p1out << "\t\t\t Total block energy for State [ " << istate << 
 	      " ] with " << sweepParams.get_keep_states()<<" States :: " << fixed << setprecision(10) << sweepParams.get_lowest_energy()[j] <<endl;              
-	  }
 #endif
 	}
 	
@@ -434,10 +423,8 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
       }
       
       system = newSystem;
-      if (dmrginp.outputlevel() > 0){
-	    pout << system<<endl;
-	    //system.printOperatorSummary();
-      }
+      p2out << system<<endl;
+      //system.printOperatorSummary();
       
       //system size is going to be less than environment size
       if (forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)
@@ -447,8 +434,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 
       SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root());	 	
       syssites = system.get_sites();
-      if (dmrginp.outputlevel() > 0)
-	pout << "\t\t\t saving state " << syssites.size() << endl;
+      p1out << "\t\t\t Saving state " << syssites.size() << endl;
       ++sweepParams.set_block_iter();
       
 #ifndef SERIAL
@@ -463,11 +449,11 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 
   for(int j=0;j<nroots;++j) {
     int istate = dmrginp.setStateSpecific() ? sweepParams.current_root() : j;
-    pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << istate 
+    pout << "\n\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << istate 
 	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j] << endl;
   }
 
-  pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
+  pout << "\n\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
   sweepParams.set_largest_dw() = finalError;
 
   for(int j=0;j<nroots;++j){
@@ -593,11 +579,11 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
     int totalstatesbyquanta = min(static_cast<int>(inorderwts.size()), keptstates + keptqstates) - totalstatesbydm;
     if (totalstatesbyquanta < 0) totalstatesbyquanta = 0;
     
-    pout << "\t\t\t total states using dm and quanta " << totalstatesbydm << " " << totalstatesbyquanta << endl;
+    p2out << "\t\t\t total states using dm and quanta " << totalstatesbydm << " " << totalstatesbyquanta << endl;
     
     
     double error = assign_matrix_by_dm(rotateMatrix, energies, transformmatrix, inorderwts, wtsbyquanta, totalstatesbydm, totalstatesbyquanta, newSystem.size(), 2*totalstatesbydm);
-    pout << "\t\t\t Total discarded weight "<<error<<endl;
+    pout << "\n\t\t\t Total discarded weight "<<error<<endl;
   }
 
 #ifndef SERIAL
@@ -615,16 +601,16 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   
 
 
-  pout << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
-  pout << dmrginp.makeopsT<<" makeops "<<endl;
-  pout << dmrginp.datatransfer<<" datatransfer "<<endl;
-  //pout << dmrginp.justmultiply<<" just multiply "<<endl;
-  //pout << dmrginp.otherrotation<<" "<<dmrginp.spinrotation<<" "<<dmrginp.operrotT<<" rotations time "<<endl; 
-  pout <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
-  pout << dmrginp.oneelecT<<" "<<dmrginp.twoelecT<<" "<<dmrginp.hmultiply<<" "<<dmrginp.couplingcoeff<<" hmult"<<endl;
-  pout << dmrginp.buildsumblock<<" "<<dmrginp.buildblockops<<" build block"<<endl;
-  pout << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
-  pout << dmrginp.addnoise<<" "<<dmrginp.s0time<<" "<<dmrginp.s1time<<" "<<dmrginp.s2time<<endl;
+  p3out << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+  p2out << dmrginp.makeopsT<<" makeops "<<endl;
+  p2out << dmrginp.datatransfer<<" datatransfer "<<endl;
+  //p2out << dmrginp.justmultiply<<" just multiply "<<endl;
+  //p3out << dmrginp.otherrotation<<" "<<dmrginp.spinrotation<<" "<<dmrginp.operrotT<<" rotations time "<<endl; 
+  p2out <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
+  p2out << dmrginp.oneelecT<<" "<<dmrginp.twoelecT<<" "<<dmrginp.hmultiply<<" "<<dmrginp.couplingcoeff<<" hmult"<<endl;
+  p2out << dmrginp.buildsumblock<<" "<<dmrginp.buildblockops<<" build block"<<endl;
+  p2out << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
+  p3out << dmrginp.addnoise<<" "<<dmrginp.s0time<<" "<<dmrginp.s1time<<" "<<dmrginp.s2time<<endl;
   
 
   //mcheck("After renorm transform");

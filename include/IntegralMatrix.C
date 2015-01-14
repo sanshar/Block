@@ -7,6 +7,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include <IntegralMatrix.h>
+#include "pario.h"
 
 using namespace boost;
 
@@ -425,7 +426,7 @@ void SpinAdapted::PartialTwoElectronArray::Save(std::string prefix, int index) {
   char file [5000];
   sprintf (file, "%s%s%d%s%d%d%s%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", index, ".", mpigetrank(), ".tmp");
   if(mpigetrank() == 0) {
-    pout << "\t\t\t Saving Integral file "<<file <<endl;
+    p1out << "\t\t\t Saving Integral file "<<file <<endl;
     std::ofstream ofs(file, std::ios::binary);
     boost::archive::binary_oarchive save_integral(ofs);
     save_integral << *this ;

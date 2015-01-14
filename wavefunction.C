@@ -207,8 +207,7 @@ void SpinAdapted::Wavefunction::SaveWavefunctionInfo (const StateInfo &waveInfo,
   char file [5000];
   int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
   sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/wave-", first, "-", last, ".", mpigetrank(), ".", wave_num, ".tmp");
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t Saving Wavefunction " << file << endl;
+  p1out << "\t\t\t Saving Wavefunction " << file << endl;
   if (mpigetrank() == 0)
     {
       std::ofstream ofs(file, std::ios::binary);
@@ -228,8 +227,7 @@ void SpinAdapted::Wavefunction::LoadWavefunctionInfo (StateInfo &waveInfo, const
   char file [5000];
   int first = min(sites[0], *sites.rbegin()), last = max(sites[0], *sites.rbegin());
   sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.load_prefix().c_str(), "/wave-", first, "-", last, ".", mpigetrank(), ".", wave_num, ".tmp");
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t Loading Wavefunction " << file << endl;
+  p1out << "\t\t\t Loading Wavefunction " << file << endl;
   waveInfo.Allocate ();
   if (mpigetrank() == 0)
     {

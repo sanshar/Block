@@ -24,7 +24,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/mpi/timer.hpp>
 #endif
-#include "pario.h"
 
 using namespace std;
 namespace SpinAdapted{
@@ -54,8 +53,8 @@ class cumulTimer
       if (localStart < 0 || localStart > t->elapsed() +1 ) 
 	{
 	  
-	  pout << "local stop called without starting first"<<endl;
-	  pout << localStart<<"  "<<t->elapsed();
+	  cout << "local stop called without starting first"<<endl;
+	  cout << localStart<<"  "<<t->elapsed();
 	  throw 20;
 	  assert(1==2);
 	  abort();
@@ -66,8 +65,8 @@ class cumulTimer
       if (localStart < 0 || localStart > clock() +1 ) 
 	{
 	  
-	  pout << "local stop called without starting first"<<endl;
-	  pout << localStart<<"  "<<clock();
+	  cout << "local stop called without starting first"<<endl;
+	  cout << localStart<<"  "<<clock();
 	  throw 20;
 	  assert(1==2);
 	  abort();

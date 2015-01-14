@@ -68,18 +68,18 @@ void SpinAdapted::Sweep::CanonicalizeWavefunction(SweepParams &sweepParams, cons
   
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) {
       
-    pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+    pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
     pout << "\t\t\t ----------------------------" << endl;
     
     if (forward) {
       new_site++;
       wave_site = new_site+1;
-      pout << "\t\t\t Current direction is :: Forwards " << endl;
+      p1out << "\t\t\t Current direction is :: Forwards " << endl;
     }
     else {
       new_site--;
       wave_site = new_site-1;
-      pout << "\t\t\t Current direction is :: Backwards " << endl;
+      p1out << "\t\t\t Current direction is :: Backwards " << endl;
     }
     std::vector<int> complementarySites, spindotsites(1, new_site), oldsites = sites, oldcomplement;
 
@@ -223,8 +223,7 @@ void Sweep::InitializeOverlapSpinBlocks(SweepParams &sweepParams, const bool &fo
   sweepParams.set_block_iter() = 0;
 
  
-  if (dmrginp.outputlevel() > 0)
-    pout << "\t\t\t Starting block is :: " << endl << system << endl;
+  p2out << "\t\t\t Starting block is :: " << endl << system << endl;
 
   SpinBlock::store (forward, system.get_sites(), system, stateA, stateB); // if restart, just restoring an existing block --
   sweepParams.savestate(forward, system.get_sites().size());
@@ -238,10 +237,8 @@ void Sweep::InitializeOverlapSpinBlocks(SweepParams &sweepParams, const bool &fo
     {
       pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
-      if (dmrginp.outputlevel() > 0) {
-	if (forward)  pout << "\t\t\t Current direction is :: Forwards " << endl;
-	else  pout << "\t\t\t Current direction is :: Backwards " << endl;
-      }
+      if (forward)  p1out << "\t\t\t Current direction is :: Forwards " << endl;
+      else  p1out << "\t\t\t Current direction is :: Backwards " << endl;
 
       SpinBlock systemDot, environmentDot;
       int systemDotStart, systemDotEnd;
@@ -270,9 +267,7 @@ void Sweep::InitializeOverlapSpinBlocks(SweepParams &sweepParams, const bool &fo
 
       
       system = newSystem;
-      if (dmrginp.outputlevel() > 0){
-	    pout << system<<endl;
-      }
+      p2out << system<<endl;
       
       SpinBlock::store (forward, system.get_sites(), system, stateA, stateB);	 	
       ++sweepParams.set_block_iter();

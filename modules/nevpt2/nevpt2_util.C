@@ -2136,7 +2136,7 @@ void CheckSize(ThreeIndOpArray &CCD){
 
       char file [5000];
       sprintf (file, "%s%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/",name, sites [0], "-", *sites.rbegin (), ".", mpi_rank(),".state",state, ".tmp");
-      pout << "\t\t\t Saving Rotation Matrix :: " << file << endl;
+      p1out << "\t\t\t Saving Rotation Matrix :: " << file << endl;
       std::ofstream ofs(file, std::ios::binary);
       boost::archive::binary_oarchive save_mat(ofs);
       save_mat << m1;
@@ -2153,7 +2153,7 @@ void NEVPT2LoadRotationMatrix (const std::vector<int>& sites, std::vector<Matrix
     char file [5000];
     //sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.load_prefix().c_str(), "/Rotation-", sites [0], "-", *sites.rbegin (), ".", mpigetrank(), ".tmp");
     sprintf (file, "%s%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/",name, sites [0], "-", *sites.rbegin (), ".", mpi_rank(),".state",state, ".tmp");
-    pout << "\t\t\t Loading Rotation Matrix :: " << file << endl;
+    p1out << "\t\t\t Loading Rotation Matrix :: " << file << endl;
     std::ifstream ifs(file, std::ios::binary);
     boost::archive::binary_iarchive load_mat(ifs);
     load_mat >> m1;

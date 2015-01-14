@@ -58,7 +58,7 @@ void CheckFileExistence(string filename, string filetype)
 void CheckFileInexistence(string filename, string filetype){
    boost::filesystem::path p(filename);
    if (boost::filesystem::exists(p)) {
-      pout << filetype<<" "<<filename<<" is present."<<endl;
+      p2out << filetype<<" "<<filename<<" is present."<<endl;
       if (filetype=="genetic algorithm reorder")
          pout << "You already ran the genetic algorithm reordering and the ordering is present in the location above." << endl;
       abort();
@@ -73,15 +73,12 @@ void ReadInput(char* conf)
   mpi::communicator world;
   int rank = world.rank();
   int size = world.size();
-  if (dmrginp.outputlevel() > 0) 
-    pout << " communication topology " << endl;
+  p3out << " communication topology " << endl;
   vector<int> sendlist;
 
-  if (dmrginp.outputlevel() > 0) {
-    for (int i = 0; i < sendlist.size(); ++i)
-      pout << "processor " << rank << " to " << sendlist[i] << endl;
-      pout << "\t\t\t proc " << rank << " of " << size << endl;
-  }
+  for (int i = 0; i < sendlist.size(); ++i)
+    p3out << "processor " << rank << " to " << sendlist[i] << endl;
+    p3out << "\t\t\t proc " << rank << " of " << size << endl;
 #endif
   globaltimer.start();
   int randomseed = 243;

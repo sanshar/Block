@@ -36,9 +36,9 @@ void SpinBlock::printOperatorSummary()
     for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core())
-         pout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";
+         p2out << "\t\t\t " << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";
       else
-         pout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
+         p2out << "\t\t\t " << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
       
       vector<int> numops(world.size(), 0);
       for (int proc = 0; proc <world.size(); proc++) {
@@ -46,17 +46,17 @@ void SpinBlock::printOperatorSummary()
             receiveobject(numops[proc],proc);
          else 
             numops[proc] = it->second->get_size();
-         pout <<numops[proc]<<"  ";
+         p2out << "\t\t\t " << numops[proc]<<"  ";
       }
-      pout << endl;
+      p2out << endl;
       /*
       if(it->second->is_core()) { 
         for (int i = 0; i < it->second->size(); ++i) {
            std::vector<boost::shared_ptr<SparseMatrix> > global_element = it->second->get_global_element(i);
-           pout << "Element " << i  << " has " << global_element.size() << " operators" << endl;
+           p2out << "\t\t\t Element " << i  << " has " << global_element.size() << " operators" << endl;
            for (int j = 0; j < global_element.size(); ++j) {
-             pout << "Operator " << j << endl; 
-             pout << *(global_element[j]) << endl;
+             p2out << "\t\t\t Operator " << j << endl; 
+             p2out << "\t\t\t " << *(global_element[j]) << endl;
            }
         }
       }
@@ -67,10 +67,10 @@ void SpinBlock::printOperatorSummary()
   for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
   {
     if(it->second->is_core()) 
-      pout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
+      p2out << "\t\t\t " << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";      
     else
-      pout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
-    pout << endl;
+      p2out << "\t\t\t " << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
+    p2out << endl;
   }
 #endif
   
@@ -80,13 +80,13 @@ ostream& operator<< (ostream& os, const SpinBlock& b)
   os << "\t\t\t Sites ::  ";
   for (int i = 0; i < b.sites.size(); ++i) { os << b.sites[i] << " "; } 
   
-  if (dmrginp.outputlevel() > 0) {
+  if (dmrginp.outputlevel() > 1) {
     os << endl;
     os << b.braStateInfo;
     os << b.ketStateInfo;
   }
   else {
-    os <<"    # states: "<<b.braStateInfo.totalStates<<endl;
+    os <<"    # states: "<<b.braStateInfo.totalStates;
     os <<"    # states: "<<b.ketStateInfo.totalStates<<endl;
   }
   return os;
@@ -323,8 +323,7 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
 {
 
   name = get_name();
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t Building Sum Block " << name << endl;
+  p1out << "\t\t\t Building Sum Block " << name << endl;
   leftBlock = &lBlock;
   rightBlock = &rBlock;
 
@@ -361,11 +360,9 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
   copy (rBlock.sites.begin(), rBlock.sites.end (), back_inserter (sites));
   sort(sites.begin(), sites.end());
   complementary_sites = make_complement(sites);
-  if (dmrginp.outputlevel() > 0) {
-    pout << "\t\t\t ";
-    for (int i = 0; i < sites.size(); ++i) pout << sites[i] << " ";
-    pout << endl;
-  }
+  p2out << "\t\t\t ";
+  for (int i = 0; i < sites.size(); ++i) p2out << sites[i] << " ";
+  p2out << endl;
   dmrginp.blocksites -> stop();
 
   dmrginp.statetensorproduct -> start();
@@ -711,8 +708,7 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   twoInt = boost::shared_ptr<TwoElectronArray>( &v_2[integralIndex], boostutils::null_deleter());
   build_iterators();
 
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t time in slater distribution " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
+  p3out << "\t\t\t time in slater distribution " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
 
   std::vector< std::vector<Csf> > ladders; ladders.resize(dets.size());
   for (int i=0; i< dets.size(); i++)
@@ -720,8 +716,7 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
 
 
   build_operators(dets, ladders);
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t time in slater operator build " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
+  p3out << "\t\t\t time in slater operator build " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
 
 
 }

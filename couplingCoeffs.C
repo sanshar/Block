@@ -31,8 +31,7 @@ void ninejCoeffs::init(int maxj_)
 
 void ninejCoeffs::buildArray()
 {
-  if (dmrginp.outputlevel() > 0) 
-    pout << "Building Array with maxj: "<<maxj<<endl;
+  p2out << "Building Array with maxj: "<<maxj<<endl;
   coeffs.resize(10);
   initarray(0, 0, 0, 0);
   initarray(1, 1, 1, 0);

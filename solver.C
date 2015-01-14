@@ -28,19 +28,16 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
   bool useprecond = true;
 
   e.ReSize(big.get_stateInfo().totalStates); e= 0;
-  if (dmrginp.outputlevel() > 0)
-    pout << "\t\t\t Building Diagonal Hamiltonian " << endl;
+  p1out << "\t\t\t Building Diagonal Hamiltonian " << endl;
 
 
   big.diagonalH(e);
-  if (dmrginp.outputlevel() > 0)
-    pout << "\t\t\t Done building diagonal hamiltonian "<<endl;
+  p1out << "\t\t\t Done building diagonal hamiltonian "<<endl;
   FORTINT m, n=1, nsize=e.Storage();
-  pout << "\t\t\t Number of elements in wavefunction :: " << e.Ncols() << endl;
+  p2out << "\t\t\t Number of elements in wavefunction :: " << e.Ncols() << endl;
   if (mpigetrank()==0) {
     m = idamax_(nsize,e.Store(), n); 
-    if (dmrginp.outputlevel() > 0)
-      pout << "highest diagonal value "<<m<<" "<<e(m)<<endl;
+    p3out << "\t\t\t highest diagonal value "<<m<<" "<<e(m)<<endl;
   }
   else 
     e.ReSize(0);

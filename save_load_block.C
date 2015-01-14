@@ -30,8 +30,7 @@ std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBloc
   else
     file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% sites[0] % "-" % sites[sites.size()-1] % "." % left % "." % right % "." %b.integralIndex % "." % mpigetrank() % ".tmp" );
   
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t Restoring block file :: " << file << endl;
+  p1out << "\t\t\t Restoring block file :: " << file << endl;
 
   std::ifstream ifs(file.c_str(), std::ios::binary);
 
@@ -74,8 +73,7 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b, int
       file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% (sites[0]/2) % "-" % (sites[sites.size()-1]/2) % "." % left % "." % right % "." %b.integralIndex % "." % mpigetrank() % ".tmp" );
   }
   
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t Saving block file :: " << file << endl;
+  p1out << "\t\t\t Saving block file :: " << file << endl;
   
   
   std::ofstream ofs(file.c_str(), std::ios::binary);
@@ -90,7 +88,7 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b, int
 
   b.Save (ofs);
   ofs.close();
-  //pout << "\t\t\t block save disk time " << disktimer.elapsedwalltime() << " " << disktimer.elapsedcputime() << endl;
+  //p1out << "\t\t\t block save disk time " << disktimer.elapsedwalltime() << " " << disktimer.elapsedcputime() << endl;
 }
 
 void SpinBlock::Save (std::ofstream &ofs)
@@ -281,11 +279,9 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
     assert (ketStateInfo.quanta [i] == oldStateInfo.quanta [newQuantaMap [i]]);
   }
 
-  if (dmrginp.outputlevel() > 0) {
-    pout << "\t\t\t total elapsed time " << globaltimer.totalwalltime() << " " << globaltimer.totalcputime() << " ... " 
-	 << globaltimer.elapsedwalltime() << " " << globaltimer.elapsedcputime() << endl;
-    pout << "\t\t\t Transforming to new basis " << endl;
-  }
+  p3out << "\t\t\t total elapsed time " << globaltimer.totalwalltime() << " " << globaltimer.totalcputime() << " ... " 
+       << globaltimer.elapsedwalltime() << " " << globaltimer.elapsedcputime() << endl;
+  p1out << "\t\t\t Transforming to new basis " << endl;
   Timer transformtimer;
 
   renormalise_transform( rotateMatrix, &this->braStateInfo );
@@ -295,8 +291,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
       ops[it->first]->set_core(true);
 
   this->direct = false;
-  if (dmrginp.outputlevel() > 0)
-    pout << "\t\t\t transform time " << transformtimer.elapsedwalltime() << " " << transformtimer.elapsedcputime() << endl;
+  p3out << "\t\t\t transform time " << transformtimer.elapsedwalltime() << " " << transformtimer.elapsedcputime() << endl;
 
   if (leftBlock)
     leftBlock->clear();
@@ -326,12 +321,9 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   *ketStateInfo.previousStateInfo = oldketStateInfo;
 
 
-
-  if (dmrginp.outputlevel() > 0) {
-    pout << "\t\t\t total elapsed time " << globaltimer.totalwalltime() << " " << globaltimer.totalcputime() << " ... " 
-	 << globaltimer.elapsedwalltime() << " " << globaltimer.elapsedcputime() << endl;
-    pout << "\t\t\t Transforming to new basis " << endl;
-  }
+  p3out << "\t\t\t total elapsed time " << globaltimer.totalwalltime() << " " << globaltimer.totalcputime() << " ... " 
+       << globaltimer.elapsedwalltime() << " " << globaltimer.elapsedcputime() << endl;
+  p1out << "\t\t\t Transforming to new basis " << endl;
   Timer transformtimer;
 
   renormalise_transform( leftrotateMatrix, &this->braStateInfo, rightrotateMatrix, &this->ketStateInfo );
@@ -341,8 +333,7 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
       ops[it->first]->set_core(true);
 
   this->direct = false;
-  if (dmrginp.outputlevel() > 0)
-    pout << "\t\t\t transform time " << transformtimer.elapsedwalltime() << " " << transformtimer.elapsedcputime() << endl;
+  p3out << "\t\t\t transform time " << transformtimer.elapsedwalltime() << " " << transformtimer.elapsedcputime() << endl;
 
   if (leftBlock && clearLeftBlock)
     leftBlock->clear();

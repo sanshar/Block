@@ -522,8 +522,7 @@ void LoadQSTensor(const int& site, QSTensor& m, int state) {
     InitBlocks::InitStartingBlock(system, forward, leftState, rightState, forward_starting_size, backward_starting_size, restartSize, restart, warmUp, 0); 
     SpinQuantum hq(0, SpinSpace(0), IrrepSpace(0));
 
-    if (dmrginp.outputlevel() > 0)
-      pout << system<<endl;
+    p2out << system<<endl;
     system.transform_operators(const_cast<std::vector<Matrix>&>(statea.getSiteTensors(0)), 
 			       const_cast<std::vector<Matrix>&>(stateb.getSiteTensors(0)), false, false );
 
