@@ -33,21 +33,21 @@ void compute_onepdm(std::vector<Wavefunction>& wavefunctions, const SpinBlock& s
 	Wavefunction &wavefunction1 = wavefunctions[i];
 	Wavefunction &wavefunction2 = wavefunctions[j];
 
-	pout <<"Performing sweep calculation: 1PDM "<<endl;
+	pout <<"\t\t\t Performing sweep calculation: 1PDM "<<endl;
 
 	//if (big.get_leftBlock()->size() == 2) {
-	pout << "compute 2_0 "<<mpigetrank()<<endl;
+	p2out << "\t\t\t compute 2_0 "<<mpigetrank()<<endl;
 	compute_one_pdm_2_0_0(wavefunction1, wavefunction2, big, onepdm);
 	compute_one_pdm_0_2_0(wavefunction1, wavefunction2, big, onepdm);
 	compute_one_pdm_1_1_0(wavefunction1, wavefunction2, big, onepdm);
 	//}
 	
 	//if (big.get_rightBlock()->size() == 1) {
-	pout << "compute 0_2 "<<mpigetrank()<<endl;
+	p2out << "\t\t\t compute 0_2 "<<mpigetrank()<<endl;
 	compute_one_pdm_0_2(wavefunction1, wavefunction2, big, onepdm);
 	//}
 	
-	pout << "compute 1_1 "<<mpigetrank()<<endl;
+	p2out << "\t\t\t compute 1_1 "<<mpigetrank()<<endl;
 	compute_one_pdm_1_1(wavefunction1, wavefunction2, big, onepdm);
 	accumulate_onepdm(onepdm);
 	save_onepdm_binary(onepdm, i, j);

@@ -437,8 +437,7 @@ void SpinAdapted::StateInfo::restore(bool forward, const vector<int>& sites, Sta
   else
     file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % first % "-" % last % "." % left % "." % mpigetrank() % ".tmp" );
 
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t Loading state file :: " << file << endl;
+  p1out << "\t\t\t Loading state file :: " << file << endl;
 
   std::ifstream ifs(file.c_str(), std::ios::binary);
   boost::archive::binary_iarchive load_state(ifs);
@@ -467,8 +466,7 @@ void SpinAdapted::StateInfo::store(bool forward, const vector<int>& sites, State
       file = str(boost::format("%s%s%d%s%d%s%d%s%d%s") % dmrginp.load_prefix() % "/StateInfo-backward-" % (first/2) % "-" % (last/2) % "." % left % "." % mpigetrank() % ".tmp" );
   }
   
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t Saving state file :: " << file << endl;
+  p1out << "\t\t\t Saving state file :: " << file << endl;
 
   std::ofstream ofs(file.c_str(), std::ios::binary);
   boost::archive::binary_oarchive save_state(ofs);

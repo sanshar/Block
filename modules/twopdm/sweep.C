@@ -200,12 +200,12 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); )
     {
-      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+      pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
       if (forward)
-	pout << "\t\t\t Current direction is :: Forwards " << endl;
+	p1out << "\t\t\t Current direction is :: Forwards " << endl;
       else
-	pout << "\t\t\t Current direction is :: Backwards " << endl;
+	p1out << "\t\t\t Current direction is :: Backwards " << endl;
 
       //if (SHOW_MORE) pout << "system block" << endl << system << endl;
   
@@ -220,7 +220,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
       else
         sweepParams.set_guesstype() = BASIC;
       
-      pout << "\t\t\t Blocking and Decimating " << endl;
+      p1out << "\t\t\t Blocking and Decimating " << endl;
 	  
       SpinBlock newSystem;
 
@@ -240,7 +240,7 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
       
       SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root());	 	
 
-      pout << "\t\t\t saving state " << system.get_sites().size() << endl;
+      p1out << "\t\t\t saving state " << system.get_sites().size() << endl;
       ++sweepParams.set_block_iter();
       //sweepParams.savestate(forward, system.get_sites().size());
     }

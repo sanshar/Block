@@ -76,7 +76,7 @@ void Threepdm_container::save_npdms(const int& i, const int& j)
 #ifndef SERIAL
   world.barrier();
 #endif
-  pout << "3PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+  p3out << "3PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 
 }
 
@@ -286,18 +286,18 @@ void Threepdm_container::save_spatial_npdm_binary(const int &i, const int &j)
       //However, when they are different, it is a little faster. Maybe compiler can do some optimizations. 
       Sortpdm::externalsort<Sortpdm::index_element>(tmpfile,sortedfile,(long)pow(dmrginp.last_site(),6));
       world.barrier();
-      pout << "3PDM parallel external sort time " << timer1.elapsedwalltime() << " " << timer1.elapsedcputime() << endl;
+      p3out << "3PDM parallel external sort time " << timer1.elapsedwalltime() << " " << timer1.elapsedcputime() << endl;
       Timer timer;
       Sortpdm::mergefile(sortedfile);
       world.barrier();
       if(mpigetrank()==0) boost::filesystem::rename(sortedfile,finalfile);
       boost::filesystem::remove(tmpfile);
-      pout << "3PDM merge sorted file time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+      p3out << "3PDM merge sorted file time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 #else
       Timer timer2;
       Sortpdm::externalsort<Sortpdm::index_element>(file,finalfile,(long)pow(dmrginp.last_site(),6));
       boost::filesystem::remove(file);
-      pout << "3PDM external sort time " << timer2.elapsedwalltime() << " " << timer2.elapsedcputime() << endl;
+      p3out << "3PDM external sort time " << timer2.elapsedwalltime() << " " << timer2.elapsedcputime() << endl;
 #endif
     }
   }

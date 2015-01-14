@@ -62,7 +62,7 @@ void SpinAdapted::Linear::olsenPrecondition(Wavefunction& op, Wavefunction& C0, 
 void SpinAdapted::Linear::Lanczos(vector<Wavefunction>& b, DiagonalMatrix& e, double normtol, Davidson_functor& h_multiply, int nroots)
 {
   int iter = 0;
-  pout.precision(12);
+  p3out.precision(12);
 
 
   if(mpigetrank() == 0) {
@@ -92,7 +92,7 @@ void SpinAdapted::Linear::Lanczos(vector<Wavefunction>& b, DiagonalMatrix& e, do
   bool notconverged = true;
   while (notconverged && iter < dmrginp.max_lanczos_dimension()) {
     r.Clear();
-    pout << "\t\t\t Lanczos Iteration :: "<<iter<<endl;
+    p3out << "\t\t\t Lanczos Iteration :: "<<iter<<endl;
     iter ++;
 
 #ifndef SERIAL
@@ -133,7 +133,7 @@ void SpinAdapted::Linear::Lanczos(vector<Wavefunction>& b, DiagonalMatrix& e, do
         if (iter > 1)
           notconverged = false;
         for (int i = 1; i <= min(iter-1, nroots); ++i) {
-          pout << "\t\t\t " << i << " ::  " << diagonal_temporary[i-1] <<"  "<<pow(offdiagonal[iter-1]*alpha(iter,i),2)<<endl;
+          p3out << "\t\t\t " << i << " ::  " << diagonal_temporary[i-1] <<"  "<<pow(offdiagonal[iter-1]*alpha(iter,i),2)<<endl;
           if (pow(offdiagonal[iter-1]*alpha(iter,i),2) >= normtol) {
             notconverged = true;
             break;
@@ -142,12 +142,12 @@ void SpinAdapted::Linear::Lanczos(vector<Wavefunction>& b, DiagonalMatrix& e, do
 
       }
       if (iter == dmrginp.max_lanczos_dimension()) {
-        pout << "Reached the maximum number of allowed iterations!!"<<endl;
+        p3out << "Reached the maximum number of allowed iterations!!"<<endl;
         exit(0);
       }
 
 
-      //pout << offdiagonal[iter-1]<<"  "<<iter<<endl;                                                                                                                       
+      //p3out << offdiagonal[iter-1]<<"  "<<iter<<endl;                                                                                                                       
       if(!notconverged) {
 	for (int i=0; i<nroots; i++)
 	  e(i+1) = diagonal_temporary[i];
@@ -179,7 +179,7 @@ void SpinAdapted::Linear::Lanczos(vector<Wavefunction>& b, DiagonalMatrix& e, do
 void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix& h_diag, double normtol, const bool &warmUp, Davidson_functor& h_multiply, bool& useprecond, int currentRoot, std::vector<Wavefunction> &lowerStates)
 {
 
-  pout.precision (12);
+  p3out.precision (12);
 #ifndef SERIAL
   mpi::communicator world;
 #endif
@@ -214,8 +214,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
   int maxiter = h_diag.Ncols() - lowerStates.size();
   while(true)
     {
-      if (dmrginp.outputlevel() > 0)
-	pout << "\t\t\t Davidson Iteration :: " << iter << endl;
+      p3out << "\t\t\t Davidson Iteration :: " << iter << endl;
 
     ++iter;
     dmrginp.hmultiply -> start();
@@ -253,8 +252,8 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 
       h_multiply(*bptr, *sigmaptr);
       //if (mpigetrank() == 0) {
-      //  pout << *bptr << endl;
-      //  pout << *sigmaptr << endl;
+      //  p3out << *bptr << endl;
+      //  p3out << *sigmaptr << endl;
       //}
 	}
     dmrginp.hmultiply -> stop();
@@ -273,10 +272,8 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	Matrix alpha;
 	diagonalise(subspace_h, subspace_eigenvalues, alpha);
 	
-	if (dmrginp.outputlevel() > 0) {
-	  for (int i = 1; i <= subspace_eigenvalues.Ncols (); ++i)
-	    pout << "\t\t\t " << i << " ::  " << subspace_eigenvalues(i,i) << endl;
-	}	
+	for (int i = 1; i <= subspace_eigenvalues.Ncols (); ++i)
+	  p3out << "\t\t\t " << i << " ::  " << subspace_eigenvalues(i,i) << endl;
 	
 	//now calculate the ritz vectors which are approximate eigenvectors
 	vector<Wavefunction> btmp = b;
@@ -304,8 +301,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
           double rnorm = DotProduct(r,r);
           if (rnorm > normtol) {
             converged_roots = i;
-	    if (dmrginp.outputlevel() > 0)
-	      pout << "\t\t\t going back to converged root "<<i<<"  "<<rnorm<<" > "<<normtol<<endl;
+	    p3out << "\t\t\t going back to converged root "<<i<<"  "<<rnorm<<" > "<<normtol<<endl;
             continue;
           }
         }
@@ -335,12 +331,10 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	olsenPrecondition(r, b[converged_roots], subspace_eigenvalues(converged_roots+1), h_diag, levelshift);
 
 
-      if (dmrginp.outputlevel() > 0)
-	pout << "\t \t \t residual :: " << rnorm << endl;
+      p3out << "\t \t \t residual :: " << rnorm << endl;
       if (rnorm < normtol)
 	{
-	  if (dmrginp.outputlevel() > 0)
-	    pout << "\t\t\t Converged root " << converged_roots << endl;
+	  p3out << "\t\t\t Converged root " << converged_roots << endl;
 
 	  ++converged_roots;
 	  if (converged_roots == nroots)
@@ -357,8 +351,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	{
 	  if(b.size() >= dmrginp.deflation_max_size())
 	    {
-	      if (dmrginp.outputlevel() > 0)
-		pout << "\t\t\t Deflating block Davidson...\n";
+	      p3out << "\t\t\t Deflating block Davidson...\n";
 	      b.resize(dmrginp.deflation_min_size());
 	      sigma.resize(dmrginp.deflation_min_size());
 	    }
@@ -397,7 +390,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 double SpinAdapted::Linear::ConjugateGradient(Wavefunction& xi, double normtol, Davidson_functor& h_multiply, std::vector<Wavefunction>& lowerStates)
 {
   setbuf(stdout, NULL);
-  pout.precision (12);
+  p3out.precision (12);
   int iter = 0, maxIter = 100;
   double levelshift = 0.0, overlap2 = 0.0, oldError=0.0, functional=0.0, Error=0.0;
 

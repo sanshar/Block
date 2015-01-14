@@ -57,8 +57,7 @@ void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const SpinB
   StateInfo oldStateInfo;
   Wavefunction oldWave;
 
-  if (dmrginp.outputlevel() != 0) 
-    pout << "\t\t\t Transposing previous wavefunction" << endl;
+  p2out << "\t\t\t Transposing previous wavefunction" << endl;
   if(!onedot)
   {
     oldWave.LoadWavefunctionInfo (oldStateInfo, big.get_rightBlock()->get_sites(), state);
@@ -257,8 +256,7 @@ void GuessWave::onedot_threeindex_to_twoindex_wavefunction(const StateInfo& twos
 
 void GuessWave::basic_guess_wavefunction(DiagonalMatrix& e, Wavefunction& trial, const StateInfo *stateinfo, const int state)
 {
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t No trial vector" << endl;
+  p2out << "\t\t\t No trial vector" << endl;
   multimap<double, int> e_sort;
   for (int i = 0; i < e.Nrows (); ++i) {
     e_sort.insert (pair<double, int> (e (i+1), i+1));
@@ -310,8 +308,7 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
     }
 
     norm = DotProduct(solution, solution);
-    if (dmrginp.outputlevel() > 0) 
-      pout << "\t\t\t Norm of wavefunction :: "<<norm<<endl;
+    p2out << "\t\t\t Norm of wavefunction :: "<<norm<<endl;
     
   }
   /*
@@ -367,8 +364,7 @@ void GuessWave::guess_wavefunctions(Wavefunction& solution, DiagonalMatrix& e, c
 
     Normalise(solution);
     norm = DotProduct(solution, solution);
-    if (dmrginp.outputlevel() > 0) 
-      pout << "\t\t\t Norm of wavefunction :: "<<norm<<endl;
+    p2out << "\t\t\t Norm of wavefunction :: "<<norm<<endl;
     
   }
   /*
@@ -489,8 +485,7 @@ void GuessWave::onedot_twoindex_to_threeindex_shufflesysdot(const StateInfo& sta
 
 void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const StateInfo& stateInfo, const std::vector<int> &leftsites, const std::vector<int> &rightsites, const int state, const bool &onedot, const bool& transpose_guess_wave)
 {
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t Transforming previous wavefunction " << endl;
+  p2out << "\t\t\t Transforming previous wavefunction " << endl;
   
   ObjectMatrix3D< vector<Matrix> > oldTrialWavefunction;
   ObjectMatrix3D< vector<Matrix> > newTrialWavefunction;
@@ -525,8 +520,7 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const State
 
 void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state, const bool &onedot, const bool& transpose_guess_wave)
 {
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t Transforming previous wavefunction " << endl;
+  p2out << "\t\t\t Transforming previous wavefunction " << endl;
   
   ObjectMatrix3D< vector<Matrix> > oldTrialWavefunction;
   ObjectMatrix3D< vector<Matrix> > newTrialWavefunction;
@@ -639,8 +633,7 @@ it's not necessary to take the pseudo inverse of right rotation matrix.
 
 void GuessWave::transform_previous_twodot_to_onedot_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state)
 {
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t Transforming previous wavefunction " << endl;
+  p2out << "\t\t\t Transforming previous wavefunction " << endl;
   
   ObjectMatrix3D< vector<Matrix> > oldTrialWavefunction;
   ObjectMatrix3D< vector<Matrix> > newTrialWavefunction;
@@ -702,8 +695,7 @@ void GuessWave::transform_previous_twodot_to_onedot_wavefunction(Wavefunction& t
 void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const SpinBlock &big, const int state, const bool &onedot, const bool& transpose_guess_wave,bool ket)
 // ket determines use braSateinfo or ketStateinfo to guess_wavefunctions.
 {
-  if (dmrginp.outputlevel() > 0) 
-    pout << "\t\t\t Transforming previous wavefunction " << endl;
+  p2out << "\t\t\t Transforming previous wavefunction " << endl;
   
   ObjectMatrix3D< vector<Matrix> > oldTrialWavefunction;
   ObjectMatrix3D< vector<Matrix> > newTrialWavefunction;

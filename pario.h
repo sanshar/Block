@@ -14,23 +14,17 @@ using namespace std;
 using namespace SpinAdapted;
 
 
-#define pout if (mpigetrank() == 0 && dmrginp.outputlevel() == 0) bout
-#define perr if (mpigetrank() == 0 && dmrginp.outputlevel() == 0) berr
+#define pout if (mpigetrank() == 0 && dmrginp.outputlevel() >= 0) bout
+#define perr if (mpigetrank() == 0 && dmrginp.outputlevel() >= 0) berr
 
-#define p1out if (mpigetrank() == 0 && dmrginp.outputlevel() == 1) bout
-#define p1err if (mpigetrank() == 0 && dmrginp.outputlevel() == 1) berr
+#define p1out if (mpigetrank() == 0 && dmrginp.outputlevel() >= 1) bout
+#define p1err if (mpigetrank() == 0 && dmrginp.outputlevel() >= 1) berr
 
-#define p2out if (mpigetrank() == 0 && dmrginp.outputlevel() == 2) bout
-#define p2err if (mpigetrank() == 0 && dmrginp.outputlevel() == 2) berr
+#define p2out if (mpigetrank() == 0 && dmrginp.outputlevel() >= 2) bout
+#define p2err if (mpigetrank() == 0 && dmrginp.outputlevel() >= 2) berr
 
-#define p3out if (mpigetrank() == 0 && dmrginp.outputlevel() == 3) bout
-#define p3err if (mpigetrank() == 0 && dmrginp.outputlevel() == 3) berr
-
-#define p4out if (mpigetrank() == 0 && dmrginp.outputlevel() == 4) bout
-#define p4err if (mpigetrank() == 0 && dmrginp.outputlevel() == 4) berr
-
-#define p5out if (mpigetrank() == 0 && dmrginp.outputlevel() == 5) bout
-#define p5err if (mpigetrank() == 0 && dmrginp.outputlevel() == 5) berr
+#define p3out if (mpigetrank() == 0 && dmrginp.outputlevel() >= 3) bout
+#define p3err if (mpigetrank() == 0 && dmrginp.outputlevel() >= 3) berr
 
 extern ostream &bout, &berr;
 

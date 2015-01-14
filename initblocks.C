@@ -76,10 +76,8 @@ void SpinAdapted::InitBlocks::InitNewSystemBlock(SpinBlock &system, SpinBlock &s
   newSystem.setstoragetype(storage);
   newSystem.BuildSumBlock (constraint, system, systemDot);
 
-  if (dmrginp.outputlevel() > 0) {
-    pout << "\t\t\t NewSystem block " << endl << newSystem << endl;
-    newSystem.printOperatorSummary();
-  }
+  p2out << "\t\t\t NewSystem block " << endl << newSystem << endl;
+  newSystem.printOperatorSummary();
 }
 
 void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, SpinBlock& environmentDot, SpinBlock &newEnvironment, 
@@ -194,10 +192,8 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
           newEnvironment.default_op_components(direct, environmentCore, environmentActive, haveNormops, haveCompops, leftState == rightState);
           newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
           newEnvironment.BuildSumBlock(constraint, environmentCore, environmentActive);
-          if (dmrginp.outputlevel() > 0) {
-	    pout << "\t\t\t NewEnvironment block " << endl << newEnvironment << endl;
-	    newEnvironment.printOperatorSummary();
-          }
+	  p2out << "\t\t\t NewEnvironment block " << endl << newEnvironment << endl;
+	  newEnvironment.printOperatorSummary();
         }
       } else { // no core
         if ((!dot_with_sys && onedot) || !onedot) {
@@ -242,19 +238,17 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
         }
       }
 
-      if (dmrginp.outputlevel() > 0) pout << "\t\t\t Quantum numbers and states used for warm up :: " << endl << "\t\t\t ";
+      p2out << "\t\t\t Quantum numbers and states used for warm up :: " << endl << "\t\t\t ";
       quantumNumbers.clear(); quantumNumbers.reserve(distribution.size());
       distribution.clear();distribution.reserve(quantumNumbers.size());
       std::map<SpinQuantum, int>::iterator qit = quantaDist.begin();
 
       for (; qit != quantaDist.end(); qit++) {
 	    quantumNumbers.push_back( qit->first); distribution.push_back(qit->second); 
-	    if (dmrginp.outputlevel() > 0) {
-	      pout << quantumNumbers.back() << " = " << distribution.back() << ", ";
-	      if (! (quantumNumbers.size() - 6) % 6) pout << endl << "\t\t\t ";
-	    }
+	    p2out << quantumNumbers.back() << " = " << distribution.back() << ", ";
+	    if (! (quantumNumbers.size() - 6) % 6) p2out << endl << "\t\t\t ";
       }
-      pout << endl;
+      p2out << endl;
 
       if(dot_with_sys && onedot) {
 	newEnvironment.set_integralIndex() = integralIndex;
@@ -265,7 +259,7 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
       }
     }
   } else {
-    if (dmrginp.outputlevel() > 0) pout << "\t\t\t Restoring block of size " << environmentSites.size () << " from previous iteration" << endl;
+    p2out << "\t\t\t Restoring block of size " << environmentSites.size () << " from previous iteration" << endl;
     
     if(dot_with_sys && onedot) {
       newEnvironment.set_integralIndex() = integralIndex;
@@ -287,14 +281,12 @@ void SpinAdapted::InitBlocks::InitNewEnvironmentBlock(SpinBlock &environment, Sp
     newEnvironment.default_op_components(direct, environment, environmentDot, haveNormops, haveCompops, leftState==rightState);
     newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
     newEnvironment.BuildSumBlock (constraint, environment, environmentDot);
-    if (dmrginp.outputlevel() > 0) {
-	  pout << "\t\t\t Environment block " << endl << environment << endl;
-	  environment.printOperatorSummary();
-	  pout << "\t\t\t NewEnvironment block " << endl << newEnvironment << endl;
-	  newEnvironment.printOperatorSummary();
-    }
-  } else if (dmrginp.outputlevel() > 0) {
-    pout << "\t\t\t Environment block " << endl << newEnvironment << endl;
+    p2out << "\t\t\t Environment block " << endl << environment << endl;
+    environment.printOperatorSummary();
+    p2out << "\t\t\t NewEnvironment block " << endl << newEnvironment << endl;
+    newEnvironment.printOperatorSummary();
+  } else {
+    p2out << "\t\t\t Environment block " << endl << newEnvironment << endl;
     newEnvironment.printOperatorSummary();
   }
 }
@@ -333,8 +325,7 @@ void SpinAdapted::InitBlocks::InitNewOverlapEnvironmentBlock(SpinBlock &environm
   for (int i = 0; i < abs(environmentEnd - environmentStart) + 1; ++i) *(environmentSites.begin () + i) = min(environmentStart,environmentEnd) + i;
 
 
-  if (dmrginp.outputlevel() > 0)
-    pout << "\t\t\t Restoring block of size " << environmentSites.size () << " from previous iteration" << endl;
+  p2out << "\t\t\t Restoring block of size " << environmentSites.size () << " from previous iteration" << endl;
 
   if(dot_with_sys && onedot) {
     newEnvironment.set_integralIndex() = integralIndex;
@@ -356,15 +347,13 @@ void SpinAdapted::InitBlocks::InitNewOverlapEnvironmentBlock(SpinBlock &environm
     newEnvironment.setstoragetype(DISTRIBUTED_STORAGE);
       
     newEnvironment.BuildSumBlock (constraint, environment, environmentDot);
-    if (dmrginp.outputlevel() > 0) {
-      pout << "\t\t\t Environment block " << endl << environment << endl;
-      environment.printOperatorSummary();
-      pout << "\t\t\t NewEnvironment block " << endl << newEnvironment << endl;
-      newEnvironment.printOperatorSummary();
-    }
+    p2out << "\t\t\t Environment block " << endl << environment << endl;
+    environment.printOperatorSummary();
+    p2out << "\t\t\t NewEnvironment block " << endl << newEnvironment << endl;
+    newEnvironment.printOperatorSummary();
   }
-  else  if (dmrginp.outputlevel() > 0) {
-    pout << "\t\t\t Environment block " << endl << newEnvironment << endl;
+  else {
+    p2out << "\t\t\t Environment block " << endl << newEnvironment << endl;
     newEnvironment.printOperatorSummary();
   }
 

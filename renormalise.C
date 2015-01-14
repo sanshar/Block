@@ -152,8 +152,7 @@ double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatri
   int totalstatesbyquanta = min(static_cast<int>(inorderwts.size()), keptstates + keptqstates) - totalstatesbydm;
   if (totalstatesbyquanta < 0) totalstatesbyquanta = 0;
   
-  if (dmrginp.outputlevel() > 0)
-    pout << "\t\t\t total states using dm and quanta " << totalstatesbydm << " " << totalstatesbyquanta << endl;
+  p3out << "\t\t\t total states using dm and quanta " << totalstatesbydm << " " << totalstatesbyquanta << endl;
   
   return assign_matrix_by_dm(rotateMatrix, eigenMatrix, transformmatrix, inorderwts, wtsbyquanta, totalstatesbydm, 
 			     totalstatesbyquanta, 0, 0);

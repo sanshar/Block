@@ -650,7 +650,7 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
     reduce(world, DEBUG_COMM_TIME[mpigetrank()], std::plus<double>(), 0);
   }
 #endif
-  pout << "NPDM compute elements time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+  p3out << "NPDM compute elements time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
   pout << "===========================================================================================\n";
   
 }

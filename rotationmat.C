@@ -31,8 +31,7 @@ void SpinAdapted::SaveRotationMatrix (const std::vector<int>& sites, const std::
 	sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", first, "-", last, ".", mpigetrank(),".state_average.tmp");
       else
 	sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", first, "-", last, ".", mpigetrank(),".state",state, ".tmp");
-      if (dmrginp.outputlevel() > 0) 
-	pout << "\t\t\t Saving Rotation Matrix :: " << file << endl;
+      p1out << "\t\t\t Saving Rotation Matrix :: " << file << endl;
       std::ofstream ofs(file, std::ios::binary);
       boost::archive::binary_oarchive save_mat(ofs);
       save_mat << m1;
@@ -52,8 +51,7 @@ void SpinAdapted::LoadRotationMatrix (const std::vector<int>& sites, std::vector
       sprintf (file, "%s%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", first, "-", last, ".", mpigetrank(),".state_average.tmp");
     else
       sprintf (file, "%s%s%d%s%d%s%d%s%d%s", dmrginp.save_prefix().c_str(), "/Rotation-", first, "-", last, ".", mpigetrank(),".state",state, ".tmp");
-    if (dmrginp.outputlevel() > 0) 
-      pout << "\t\t\t Loading Rotation Matrix :: " << file << endl;
+    p1out << "\t\t\t Loading Rotation Matrix :: " << file << endl;
     std::ifstream ifs(file, std::ios::binary);
     boost::archive::binary_iarchive load_mat(ifs);
     load_mat >> m1;
@@ -154,8 +152,7 @@ double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::
 
   
 
-  if (dmrginp.outputlevel() > 0)
-    pout << " \t\t\t assigning a total of " << min_states << " states using the dm alone " << endl;
+  p2out << " \t\t\t assigning a total of " << min_states << " states using the dm alone " << endl;
   double totalnorm = 0.;
   rotatematrix.resize(eigenmatrix.size());
 
@@ -182,8 +179,7 @@ double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::
       }
     }
 
-  if (dmrginp.outputlevel() > 0)
-    pout << " \t\t\t assigning a total of " << totalstatesbyquanta << " states using quanta selection " << " for a norm of " << totalnorm << endl;
+  p2out << " \t\t\t assigning a total of " << totalstatesbyquanta << " states using quanta selection " << " for a norm of " << totalnorm << endl;
 
   int assignedbyq = 0;
   
@@ -195,8 +191,7 @@ double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::
       totalstatesleft += wtsbyquanta[i].size();
     }
 
-  if (dmrginp.outputlevel() > 0)
-    pout << " \t\t\t a total of " << totalstatesleft << " to be assigned " << endl;
+  p2out << " \t\t\t a total of " << totalstatesleft << " to be assigned " << endl;
   
   // now sort quanta in order of importance
   vector<double> totalquantaweights(nquanta);
@@ -253,8 +248,7 @@ double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::
   for(int i=0;i<eigenmatrix.size();++i)
     for(int j=0;j<eigenmatrix[i].Nrows();++j)
       norm += eigenmatrix[i].element(j, j);
-  if (dmrginp.outputlevel() > 0)
-    pout << " \t\t\t total norm: " << norm <<"  norm after truncation: "<<totalnorm<< endl;
+  p2out << " \t\t\t total norm: " << norm <<"  norm after truncation: "<<totalnorm<< endl;
 
   return norm-totalnorm;
 

@@ -195,7 +195,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   }
 
   //newSystem.transform_operators(rotateMatrix,rotateMatrixB);
-  pout << "NPDM block and decimate and compute elements " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+  p3out << "NPDM block and decimate and compute elements " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 
 }
 
@@ -239,10 +239,10 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) {
     Timer timer;
 
-    pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+    pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
     pout << "\t\t\t ----------------------------" << endl;
-    if (forward) pout << "\t\t\t Current direction is :: Forwards " << endl;
-    else pout << "\t\t\t Current direction is :: Backwards " << endl;
+    if (forward) p1out << "\t\t\t Current direction is :: Forwards " << endl;
+    else p1out << "\t\t\t Current direction is :: Backwards " << endl;
 
     //if (SHOW_MORE) pout << "system block" << endl << system << endl;
 
@@ -258,7 +258,7 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
       sweepParams.set_guesstype() = BASIC;
     
     //pout << "guess wave funtion type: " << sweepParams.get_guesstype()<<endl;
-    pout << "\t\t\t Blocking and Decimating " << endl;
+    p1out << "\t\t\t Blocking and Decimating " << endl;
  
     SpinBlock newSystem;
 
@@ -282,11 +282,11 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
     else
       SpinBlock::store (forward, system.get_sites(), system, sweepParams.current_root(), sweepParams.current_root() );
 
-    pout << "\t\t\t saving state " << system.get_sites().size() << endl;
+    p1out << "\t\t\t saving state " << system.get_sites().size() << endl;
     ++sweepParams.set_block_iter();
     //sweepParams.savestate(forward, system.get_sites().size());
 
-    pout << "NPDM do one site time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+    p3out << "NPDM do one site time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
   }
 
   //for(int j=0;j<nroots;++j)
@@ -393,14 +393,14 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
         dmrginp.set_fullrestart() = true;
         sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
         SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, stateB); //this will generate the cd operators                               
-        pout << "NPDM SweepGenblock time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+        p3out << "\t\t\t NPDM SweepGenblock time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
         dmrginp.set_fullrestart() = false;
 
-          sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-          Timer timerX;
-          npdm_driver->clear();
-          npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,stateB);
-          pout << "NPDM sweep time " << timerX.elapsedwalltime() << " " << timerX.elapsedcputime() << endl;
+        sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+        Timer timerX;
+        npdm_driver->clear();
+        npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,stateB);
+        p3out << "\t\t\t NPDM sweep time " << timerX.elapsedwalltime() << " " << timerX.elapsedcputime() << endl;
        }
        }
     }
@@ -410,7 +410,7 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
     dmrginp.set_fullrestart() = true;
     sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
     SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
-    pout << "NPDM SweepGenblock time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+    p3out << "\t\t\t NPDM SweepGenblock time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
     dmrginp.set_fullrestart() = false;
 
     
@@ -424,7 +424,7 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
           Timer timerX;
           npdm_driver->clear();
           npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,stateB);
-          pout << "NPDM sweep time " << timerX.elapsedwalltime() << " " << timerX.elapsedcputime() << endl;
+          p3out << "\t\t\t NPDM sweep time " << timerX.elapsedwalltime() << " " << timerX.elapsedcputime() << endl;
           }
       }
 
@@ -436,7 +436,7 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
           Timer timerX;
           npdm_driver->clear();
           npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,state);
-          pout << "NPDM sweep time " << timerX.elapsedwalltime() << " " << timerX.elapsedcputime() << endl;
+          p3out << "\t\t\t NPDM sweep time " << timerX.elapsedwalltime() << " " << timerX.elapsedcputime() << endl;
         } 
         else{
           if (npdm_order == NPDM_ONEPDM) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);     
@@ -478,13 +478,13 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
         sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
         SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, stateB); //this will generate the cd operators
         dmrginp.set_fullrestart() = false;
-        pout << "NPDM SweepGenblock time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+        p3out << "\t\t\t NPDM SweepGenblock time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
   
         Timer timerX;
         npdm_driver->clear();
         sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
         npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,stateB);
-        pout << "NPDM sweep time " << timerX.elapsedwalltime() << " " << timerX.elapsedcputime() << endl;
+        p3out << "\t\t\t NPDM sweep time " << timerX.elapsedwalltime() << " " << timerX.elapsedcputime() << endl;
       }
     }
   }

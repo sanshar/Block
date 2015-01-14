@@ -457,21 +457,19 @@ void restart(double sweep_tol, bool reset_iter)
     }
     sweepParams.current_root() = currentRoot;
 
-    if (dmrginp.outputlevel() > 0)
-      if (sweepParams.current_root() <0) {
-	pout << "This is most likely not a restart calculation and should be done without the restart command!!"<<endl;
-	pout << "Aborting!!"<<endl;
-	exit(0);
-      }
-      pout << "RESTARTING STATE SPECIFIC CALCULATION OF STATE "<<sweepParams.current_root()<<" AT SWEEP ITERATION  "<<sweepParams.get_sweep_iter()<<endl;
+    if (sweepParams.current_root() <0) {
+      p1out << "This is most likely not a restart calculation and should be done without the restart command!!"<<endl;
+      p1out << "Aborting!!"<<endl;
+      exit(0);
+    }
+    pout << "RESTARTING STATE SPECIFIC CALCULATION OF STATE "<<sweepParams.current_root()<<" AT SWEEP ITERATION  "<<sweepParams.get_sweep_iter()<<endl;
 
     //this is so that the iteration is not one ahead after generate block for restart
     --sweepParams.set_sweep_iter(); sweepParams.savestate(direction, restartsize);
     for (int i=sweepParams.current_root(); i<nroots; i++) {
       sweepParams.current_root() = i;
 
-      if (dmrginp.outputlevel() > 0)
-	pout << "RUNNING GENERATE BLOCKS FOR STATE "<<i<<endl;
+      p1out << "RUNNING GENERATE BLOCKS FOR STATE "<<i<<endl;
 
       if (mpigetrank()==0) {
 	Sweep::InitializeStateInfo(sweepParams, direction, i);
@@ -488,19 +486,16 @@ void restart(double sweep_tol, bool reset_iter)
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, i, i);
       
       
-      if (dmrginp.outputlevel() > 0)
-	pout << "STATE SPECIFIC CALCULATION FOR STATE: "<<i<<endl;
+      p1out << "STATE SPECIFIC CALCULATION FOR STATE: "<<i<<endl;
       dmrg_stateSpecific(sweep_tol, i);
-      if (dmrginp.outputlevel() > 0)
-	pout << "STATE SPECIFIC CALCULATION FOR STATE: "<<i<<" FINSIHED"<<endl;
+      p1out << "STATE SPECIFIC CALCULATION FOR STATE: "<<i<<" FINSIHED"<<endl;
 
       sweepParams.set_sweep_iter() = 0;
       sweepParams.set_restart_iter() = 0;
       sweepParams.savestate(!direction, restartsize);
     }
 
-    if (dmrginp.outputlevel() > 0)
-      pout << "ALL STATE SPECIFIC CALCUALTIONS FINISHED"<<endl;
+    p1out << "ALL STATE SPECIFIC CALCUALTIONS FINISHED"<<endl;
   }
 
 
@@ -542,8 +537,7 @@ void dmrg(double sweep_tol)
 	break;
       last_be = Sweep::do_one(sweepParams, false, false, false, 0);
       direction = true;
-      if (dmrginp.outputlevel() > 0) 
-	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      p1out << "\t\t\t Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
@@ -558,8 +552,7 @@ void dmrg(double sweep_tol)
       new_states=sweepParams.get_keep_states();
       
       
-      if (dmrginp.outputlevel() > 0)
-	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      p1out << "\t\t\t Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       if (domoreIter == 2) {
 	dodiis = true;
 	break;
@@ -577,15 +570,13 @@ void dmrg(double sweep_tol)
     //sweepParams.set_restart_iter() = 0;
 
     algorithmTypes atype;
-    if (dmrginp.outputlevel() > 0)
-      pout << "STARTING STATE SPECIFIC CALCULATION "<<endl;
+    p1out << "STARTING STATE SPECIFIC CALCULATION "<<endl;
     for (int i=0; i<nroots; i++) {
       atype = dmrginp.algorithm_method();
       dmrginp.set_algorithm_method() = ONEDOT;
       sweepParams.current_root() = i;
 
-      if (dmrginp.outputlevel() > 0)
-	pout << "RUNNING GENERATE BLOCKS FOR STATE "<<i<<endl;
+      p1out << "RUNNING GENERATE BLOCKS FOR STATE "<<i<<endl;
 
       if (mpigetrank()==0) {
 	Sweep::InitializeStateInfo(sweepParams, direction, i);
@@ -605,8 +596,7 @@ void dmrg(double sweep_tol)
       }
       dmrginp.set_algorithm_method() = atype;
 
-      if (dmrginp.outputlevel() > 0)
-	pout << "RUNNING GENERATE BLOCKS FOR STATE "<<i<<endl;
+      p1out << "RUNNING GENERATE BLOCKS FOR STATE "<<i<<endl;
 
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, i, i);
       sweepParams.set_sweep_iter() = 0;
@@ -614,15 +604,12 @@ void dmrg(double sweep_tol)
       sweepParams.savestate(!direction, restartsize);
 
       
-      if (dmrginp.outputlevel() > 0)
-	pout << "STATE SPECIFIC CALCULATION FOR STATE: "<<i<<endl;
+      p1out << "STATE SPECIFIC CALCULATION FOR STATE: "<<i<<endl;
       dmrg_stateSpecific(sweep_tol, i);
-      if (dmrginp.outputlevel() > 0)
-	pout << "STATE SPECIFIC CALCULATION FOR STATE: "<<i<<" FINSIHED"<<endl;
+      p1out << "STATE SPECIFIC CALCULATION FOR STATE: "<<i<<" FINSIHED"<<endl;
     }
 
-    if (dmrginp.outputlevel() > 0)
-      pout << "ALL STATE SPECIFIC CALCUALTIONS FINISHED"<<endl;
+    p1out << "ALL STATE SPECIFIC CALCUALTIONS FINISHED"<<endl;
   }
 }
 
@@ -657,8 +644,7 @@ void responseSweep(double sweep_tol, int targetState, vector<int>& projectors, v
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
       last_be = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates);
-      if (dmrginp.outputlevel() > 0) 
-	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      p1out << "\t\t\t Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
@@ -667,8 +653,7 @@ void responseSweep(double sweep_tol, int targetState, vector<int>& projectors, v
       last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates);
 
       
-      if (dmrginp.outputlevel() > 0)
-	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      p1out << "\t\t\t Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       
     }
   
@@ -700,8 +685,7 @@ void restartResponseSweep(double sweep_tol, int targetState, int correctionVecto
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
       last_be = SweepResponse::do_one(sweepParams, warmUp, !direction, restart, restartSize, targetState, correctionVector, baseState);
-      if (dmrginp.outputlevel() > 0) 
-	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      p1out << "\t\t\t Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
@@ -710,8 +694,7 @@ void restartResponseSweep(double sweep_tol, int targetState, int correctionVecto
       last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, correctionVector, baseState);
 
       
-      if (dmrginp.outputlevel() > 0)
-	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      p1out << "\t\t\t Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       
     }
   
@@ -741,8 +724,7 @@ void compress(double sweep_tol, int targetState, int baseState)
 	break;
       last_be = SweepCompress::do_one(sweepParams, false, false, false, 0, targetState, baseState);
       direction = true;
-      if (dmrginp.outputlevel() > 0) 
-	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      p1out << "\t\t\t Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
@@ -751,8 +733,7 @@ void compress(double sweep_tol, int targetState, int baseState)
       direction = false;
       
       
-      if (dmrginp.outputlevel() > 0)
-	pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      p1out << "\t\t\t Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       
     }
 
@@ -803,8 +784,7 @@ void dmrg_stateSpecific(double sweep_tol, int targetState)
 	break;
 
       last_be = Sweep::do_one(sweepParams, false, !direction, false, 0);
-      if (dmrginp.outputlevel() > 0) 
-         pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      p1out << "\t\t\t Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
 
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
@@ -815,8 +795,7 @@ void dmrg_stateSpecific(double sweep_tol, int targetState)
       new_states=sweepParams.get_keep_states();
 
 
-      if (dmrginp.outputlevel() > 0)
-         pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+      p1out << "\t\t\t Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
 
     }
   pout << "Converged Energy  " << sweepParams.get_lowest_energy()[0]<< std::endl;
