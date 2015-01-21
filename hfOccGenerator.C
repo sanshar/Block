@@ -18,6 +18,7 @@ std::vector<int> SpinAdapted::Input::hfOccGenerator_ ()
   typedef std::multimap<double,int>::iterator mapIter;
 
   int irep = m_total_symmetry_number.getirrep();
+  if (NonabelianSym) irep = 0; //with nonabelian symmetry this code will only work with Ag symmetry
   int spac_norbs = m_norbs/2;
 
   // Sorting orbitals by 1-el. Hamiltonian, i.e. h(i, i)
