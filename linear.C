@@ -416,6 +416,26 @@ double SpinAdapted::Linear::ConjugateGradient(Wavefunction& xi, double normtol, 
   ri=xi; ri.Clear();
   h_multiply(xi, ri);  
 
+  //Check if we should even perform CG or just exit with a zero vector.
+  bool doCG = true;
+  if (mpigetrank() == 0) {
+    Wavefunction ricopy = ri; ricopy.Clear(); ricopy.Randomise();
+    if (abs(DotProduct(ricopy, targetState)) < NUMERICAL_ZERO) {
+      pout << "The problem is ill posed or the initial guess is very bad "<<DotProduct(ricopy, targetState)<<endl;
+      doCG = false;
+    }
+  }
+#ifndef SERIAL
+    mpi::broadcast(world, doCG, 0);
+#endif
+  if (!doCG) {
+    xi.Clear();
+    int success = 0;
+
+    functional = 0.0;
+    return functional;
+  }
+
   if (mpigetrank() == 0) {
     ScaleAdd(-1.0, targetState, ri);
     Scale(-1.0, ri);

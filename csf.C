@@ -13,6 +13,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "couplingCoeffs.h"
 #include "boost/shared_ptr.hpp"
 #include "tensor_operator.h"
+#include "sweep_params.h"
 
 SpinAdapted::Csf::Csf( const map<Slater, double>& p_dets, const int p_n, const SpinSpace p_S, const int p_Sz, const IrrepVector p_irrep) : det_rep(p_dets), n(p_n), S(p_S), Sz(p_Sz), irrep(p_irrep)
 {
@@ -337,7 +338,30 @@ std::vector<SpinAdapted::Csf > SpinAdapted::CSFUTIL::spinfockstrings(const std::
     Slater s1(occ_rep1, 1), s2(occ_rep2, 1); map<Slater, double > m1, m2;
     m1[s1]= 1.0; m2[s2] = 1.0;
 
-    if(dmrginp.hamiltonian() == HEISENBERG) {
+    if (find(dmrginp.get_openorbs().begin(), dmrginp.get_openorbs().end(), I) != dmrginp.get_openorbs().end() ) {
+      thisSiteCsf.push_back( Csf(m1, 0, SpinSpace(0), 0, IrrepVector(0,0))); //0,0,0
+      ladderentry.push_back(Csf(m1, 0, SpinSpace(0), 0, IrrepVector(0,0))); singleSiteLadder.push_back(ladderentry);
+      numcsfs.push_back(thisSiteCsf.size());
+
+      for (int i=0; i<thisSiteCsf.size(); i++)
+	singleSiteCsf.push_back( thisSiteCsf[i]);
+      continue;
+    }
+    else if (find(dmrginp.get_closedorbs().begin(), dmrginp.get_closedorbs().end(), I) != dmrginp.get_closedorbs().end()) {
+      std::vector<bool> occ_rep(Slater().size(),0);
+      occ_rep[dmrginp.spatial_to_spin()[I]+2*irrepsize-2] = 1;
+      occ_rep[dmrginp.spatial_to_spin()[I]+2*irrepsize-1] = 1;
+      Slater s(occ_rep, 1); map<Slater, double > m;
+      m[s]= 1.0;
+      thisSiteCsf.push_back( Csf(m, 2, SpinSpace(0), 0, IrrepVector(0,0))); //2,0,0
+      ladderentry.push_back(Csf(m, 2, SpinSpace(0), 0, IrrepVector(0,0))); singleSiteLadder.push_back(ladderentry);
+      numcsfs.push_back(thisSiteCsf.size());
+
+      for (int i=0; i<thisSiteCsf.size(); i++)
+	singleSiteCsf.push_back( thisSiteCsf[i]);
+      continue;
+    }
+    else if(dmrginp.hamiltonian() == HEISENBERG) {
       thisSiteCsf.push_back( Csf(m2, 1, SpinSpace(1), 1, IrrepVector(Irrep.getirrep(), irrepsize-1))); //1,1,L    
       for (int i=tensorops[0].Szops.size(); i> 0; i--)
 	ladderentry.push_back(applyTensorOp(tensorops[0], i-1));
@@ -562,7 +586,7 @@ std::vector< SpinAdapted::Csf > SpinAdapted::Csf::distribute (const int n, const
   int numberOfGuesses = dmrginp.guess_permutations();
   bool doAgain = true;
   int numtries = 0;
-  while(doAgain && numtries <5000)
+  while(doAgain && numtries <500)
   {
     while (next_permutation (abSeed.begin (), abSeed.end ()) && numberOfGuesses--) 
       abList.push_back (abSeed);

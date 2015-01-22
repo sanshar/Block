@@ -434,6 +434,10 @@ void DensityMatrix::add_onedot_noise_forCompression(const Wavefunction& wave_sol
     onedot_noise.set_opType(DES);
     for_all_multithread(leftBlock->get_op_array(DES), onedot_noise);
   }
+  if (leftBlock->has(OVERLAP)) {
+    onedot_noise.set_opType(OVERLAP);
+    for_all_multithread(leftBlock->get_op_array(OVERLAP), onedot_noise);
+  }
   
   if (dmrginp.hamiltonian() != HUBBARD) {
     

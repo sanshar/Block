@@ -207,14 +207,14 @@ void SpinBlock::BuildTensorProductBlock(std::vector<int>& new_sites)
   //temporarily disable screening for single site blocks
   double twoindex_ScreenTol = dmrginp.twoindex_screen_tol();
   double oneindex_ScreenTol = dmrginp.oneindex_screen_tol();
-  if (new_sites.size() == 1 && dmrginp.calc_type() != RESPONSE && dmrginp.calc_type() != COMPRESS) {
+  if (new_sites.size() == 1 ){
     dmrginp.twoindex_screen_tol() = 0.0;
     dmrginp.oneindex_screen_tol() = 0.0;
   }
 
   build_iterators();
 
-  if (new_sites.size() == 1 && dmrginp.calc_type() != RESPONSE && dmrginp.calc_type() != COMPRESS) {
+  if (new_sites.size() == 1 ) {
     dmrginp.twoindex_screen_tol() = twoindex_ScreenTol;
     dmrginp.oneindex_screen_tol() = oneindex_ScreenTol;
   }
@@ -489,11 +489,11 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
 #endif
 
   dmrginp.s1time -> start();
-  v_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
+  v_add =  leftBlock->get_op_array(CRE_CRE_DESCOMP).is_local() && rightBlock->get_op_array(CRE).is_local() ? v_array : v_distributed;
   Functor f = boost::bind(&opxop::cxcddcomp, leftBlock, _1, this, boost::ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
   for_all_multithread(rightBlock->get_op_array(CRE), f);
 
-  v_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() ? v_array : v_distributed;
+  v_add =  rightBlock->get_op_array(CRE_CRE_DESCOMP).is_local() && leftBlock->get_op_array(CRE).is_local() ? v_array : v_distributed;
   f = boost::bind(&opxop::cxcddcomp, rightBlock, _1, this, boost::ref(c), v_add, dmrginp.effective_molecule_quantum() ); 
   for_all_multithread(leftBlock->get_op_array(CRE), f);  
 

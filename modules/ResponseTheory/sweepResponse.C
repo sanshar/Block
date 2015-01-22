@@ -104,6 +104,8 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
   }
 
   //<target|O|firstOrderState>
+  DensityMatrix branoiseMatrix(newSystem.get_braStateInfo());
+  branoiseMatrix.allocate(newSystem.get_braStateInfo());
   
   for (int l=0; l<baseStates.size(); l++)
   {  
@@ -127,6 +129,11 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
     Wavefunction iwave;
     GuessWave::guess_wavefunctions(iwave, e, perturbationBig, guesstype, 
 				   sweepParams.get_onedot(), firstOrderState, dot_with_sys, 0.0);
+
+    if (sweepParams.get_noise() > NUMERICAL_ZERO && l == 0) { //only add noise using one basestate
+      int sweepiter = sweepParams.get_sweep_iter();
+      branoiseMatrix.add_onedot_noise_forCompression(iwave, perturbationBig, 1.0/DotProduct(iwave, iwave));
+    }
 
 #ifndef SERIAL
     mpi::communicator world;
@@ -200,7 +207,7 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
 
 
   dmrginp.setOutputlevel() = originalOutputlevel;
-
+  DensityMatrix bratracedMatrix;
   newSystem.RenormaliseFrom (sweepParams.set_lowest_energy(), sweepParams.set_lowest_energy_spins(),
 			     sweepParams.set_lowest_error(), rotatematrix, 
 			     sweepParams.get_keep_states(), sweepParams.get_keep_qstates(), 
@@ -208,7 +215,7 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
 			     0.0, 0.0, //noise 
 			     sweepParams.get_onedot(), system, systemDot, environment, 
 			     dot_with_sys, useSlater, sweepParams.get_sweep_iter(), targetState, 
-			     lowerStates);
+			     lowerStates, &bratracedMatrix);
 
 
 
@@ -220,18 +227,20 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
   p1out <<"\t\t\t Performing Renormalization "<<endl;
 
   rotatematrix.resize(0);
+
+  ScaleAdd(sweepParams.get_noise()*(max(1.e-5, trace(branoiseMatrix))), branoiseMatrix, bratracedMatrix);
+  if (!mpigetrank())
+    sweepParams.set_lowest_error() = makeRotateMatrix(bratracedMatrix, rotatematrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
+
+  p2out << "discarded weight "<<sweepParams.set_lowest_error()<<endl;
+
   Wavefunction targetWave; StateInfo braStateInfo;
   targetWave.LoadWavefunctionInfo (braStateInfo, newSystem.get_sites(), targetState);
 #ifndef SERIAL
   mpi::communicator world;
+  broadcast(world, rotatematrix, 0);
   broadcast(world, targetWave, 0);
 #endif
-  DensityMatrix bratracedMatrix(newSystem.get_braStateInfo());
-  bratracedMatrix.allocate(newSystem.get_braStateInfo());
-
-  operatorfunctions::MultiplyProduct (targetWave, Transpose(const_cast<Wavefunction&> (targetWave)), bratracedMatrix, 1.0);
-
-
 
   //<target|O|firstOrderState>
   dmrginp.setOutputlevel() = -1; 
@@ -270,43 +279,28 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
     else
       perturbationnewbig = perturbationBig;
 
-    Wavefunction iwave;
-    GuessWave::guess_wavefunctions(iwave, e, perturbationnewbig, guesstype, 
-				   sweepParams.get_onedot(), firstOrderState, true, 0.0);
-    
-#ifndef SERIAL
-    mpi::communicator world;
-    broadcast(world, iwave, 0);
-#endif
-    dmrginp.setOutputlevel() = 10;
-    pout << "noise "<<sweepParams.get_noise()<<endl;
-    if (sweepParams.get_noise() > NUMERICAL_ZERO && l == 0) { //only add noise using one basestate
-      int sweepiter = sweepParams.get_sweep_iter();
-      pout << "adding noise  "<<trace(bratracedMatrix)<<"  "<<sweepiter<<"  "<<dmrginp.weights(sweepiter)[0]<<endl;
-      bratracedMatrix.add_onedot_noise_forCompression(iwave, perturbationnewbig, sweepParams.get_noise()*max(1e-5,trace(bratracedMatrix)));
-      pout << "after noise  "<<trace(bratracedMatrix)<<endl;
-    }
-
-    if (l == 0) {//make rotation matrices just once
-      dmrginp.setOutputlevel() = -1;
-      double braerror = makeRotateMatrix(bratracedMatrix, rotatematrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
-    }
-
     std::vector<Matrix> ketrotatematrix;
-    DensityMatrix tracedMatrix;
-    tracedMatrix.allocate(perturbationnewbig.get_leftBlock()->get_ketStateInfo());
-    operatorfunctions::MultiplyProduct(iwave, Transpose(const_cast<Wavefunction&> (iwave)), tracedMatrix, 1.0);
-    int largeNumber = 1000000;
-    if (!mpigetrank())
-      double error = makeRotateMatrix(tracedMatrix, ketrotatematrix, largeNumber, sweepParams.get_keep_qstates());
-    
+    if (mpigetrank() == 0) {
+      Wavefunction iwave;
+      GuessWave::guess_wavefunctions(iwave, e, perturbationnewbig, guesstype, 
+				     sweepParams.get_onedot(), firstOrderState, true, 0.0);
+      
+      DensityMatrix tracedMatrix;
+      tracedMatrix.allocate(perturbationnewbig.get_leftBlock()->get_ketStateInfo());
+      operatorfunctions::MultiplyProduct(iwave, Transpose(const_cast<Wavefunction&> (iwave)), tracedMatrix, 1.0);
+      int largeNumber = 1000000;
+      if (!mpigetrank())
+	double error = makeRotateMatrix(tracedMatrix, ketrotatematrix, largeNumber, sweepParams.get_keep_qstates());
+
+      iwave.SaveWavefunctionInfo (perturbationnewbig.get_ketStateInfo(), perturbationnewbig.get_leftBlock()->get_sites(), firstOrderState);
+      SaveRotationMatrix (perturbationnewsystem.get_sites(), ketrotatematrix, firstOrderState);
+      
+    }
+
 #ifndef SERIAL
     broadcast(world, ketrotatematrix, 0);
 #endif
-    
-    iwave.SaveWavefunctionInfo (perturbationnewbig.get_ketStateInfo(), perturbationnewbig.get_leftBlock()->get_sites(), firstOrderState);
-    SaveRotationMatrix (perturbationnewsystem.get_sites(), ketrotatematrix, firstOrderState);
-    
+        
     perturbationnewsystem.transform_operators(rotatematrix, ketrotatematrix);
 
     SpinBlock::store(forward, perturbationnewsystem.get_sites(), perturbationnewsystem, targetState, firstOrderState);
@@ -351,29 +345,28 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
     else
       perturbationnewbig = perturbationBig;
 
-    Wavefunction iwave;
-    GuessWave::guess_wavefunctions(iwave, e, perturbationnewbig, guesstype, 
-				   sweepParams.get_onedot(), projectors[l], true, 0.0);
-    
-#ifndef SERIAL
-    mpi::communicator world;
-    broadcast(world, iwave, 0);
-#endif
-    dmrginp.setOutputlevel() = 10;
     std::vector<Matrix> ketrotatematrix;
-    DensityMatrix tracedMatrix;
-    tracedMatrix.allocate(perturbationnewbig.get_leftBlock()->get_ketStateInfo());
-    operatorfunctions::MultiplyProduct(iwave, Transpose(const_cast<Wavefunction&> (iwave)), tracedMatrix, 1.0);
-    int largeNumber = 1000000;
-    if (!mpigetrank())
-      double error = makeRotateMatrix(tracedMatrix, ketrotatematrix, largeNumber, sweepParams.get_keep_qstates());
-    
+    if (mpigetrank() == 0) {
+      Wavefunction iwave;
+      GuessWave::guess_wavefunctions(iwave, e, perturbationnewbig, guesstype, 
+				     sweepParams.get_onedot(), projectors[l], true, 0.0);
+      
+      dmrginp.setOutputlevel() = 10;
+      DensityMatrix tracedMatrix;
+      tracedMatrix.allocate(perturbationnewbig.get_leftBlock()->get_ketStateInfo());
+      operatorfunctions::MultiplyProduct(iwave, Transpose(const_cast<Wavefunction&> (iwave)), tracedMatrix, 1.0);
+      int largeNumber = 1000000;
+      if (!mpigetrank())
+	double error = makeRotateMatrix(tracedMatrix, ketrotatematrix, largeNumber, sweepParams.get_keep_qstates());
+
+      iwave.SaveWavefunctionInfo (perturbationnewbig.get_ketStateInfo(), perturbationnewbig.get_leftBlock()->get_sites(), projectors[l]);
+      SaveRotationMatrix (perturbationnewsystem.get_sites(), ketrotatematrix, projectors[l]);
+    }
+
 #ifndef SERIAL
     broadcast(world, ketrotatematrix, 0);
 #endif
     
-    iwave.SaveWavefunctionInfo (perturbationnewbig.get_ketStateInfo(), perturbationnewbig.get_leftBlock()->get_sites(), projectors[l]);
-    SaveRotationMatrix (perturbationnewsystem.get_sites(), ketrotatematrix, projectors[l]);
     
     perturbationnewsystem.transform_operators(rotatematrix, ketrotatematrix);
 
@@ -408,6 +401,7 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
   p2out << *dmrginp.blockintegrals<<"  "<<*dmrginp.blocksites<<"  "<<*dmrginp.statetensorproduct<<"  "<<*dmrginp.statecollectquanta<<"  "<<*dmrginp.buildsumblock<<" "<<*dmrginp.buildblockops<<" build sum block"<<endl;
   p2out << "addnoise  S_0_opxop  S_1_opxop   S_2_opxop"<<endl;
   p3out << *dmrginp.addnoise<<" "<<*dmrginp.s0time<<" "<<*dmrginp.s1time<<" "<<*dmrginp.s2time<<endl;
+  
 
 }
 
@@ -415,7 +409,7 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
 
 double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, 
 					    const bool &restart, const int &restartSize, int targetState, 
-					    vector<int>& projectors, vector<int>& baseStates)
+					  vector<int>& projectors, vector<int>& baseStates, int correctionVector)
 {
   SpinBlock system;
   int activeSpaceIntegral = 0;
@@ -478,9 +472,9 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
 
   if (restart)
   {
-    if (sweepParams.get_onedot() && forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)
+    if (forward && system.get_complementary_sites()[0] >= dmrginp.last_site()/2)
       dot_with_sys = false;
-    if (sweepParams.get_onedot() && !forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
+    if (!forward && system.get_sites()[0]-1 < dmrginp.last_site()/2)
       dot_with_sys = false;
   }
 
@@ -510,7 +504,7 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
 
       //Need to substitute by:
       if (warmUp ) {
-	int correctionVector = 1;
+	//int correctionVector = 1;
 	StartUp(sweepParams, system, newSystem, dot_with_sys, 
 		targetState, correctionVector, projectors, baseStates);
       }

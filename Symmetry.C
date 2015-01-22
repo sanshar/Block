@@ -353,8 +353,6 @@ string Symmetry::stringOfIrrep(int irrep)
     lz *= irrep<0 ? -1 : 1; 
     output+= boost::lexical_cast<string>(lz);
     output+=goru;
-    if (irrep <2) output+= '+';
-    else if (irrep >=2 && irrep <4 ) output+= '-';
     symbol = output;
   }
   else 
