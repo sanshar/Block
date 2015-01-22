@@ -12,7 +12,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 //#define DEBUG_NEVPT2NPDM
 
 #include "npdm_driver.h"
-#include "nevpt2_A16_container.h"
+#include "nevpt2_container.h"
 
 namespace SpinAdapted{
 namespace Npdm{
@@ -38,7 +38,7 @@ class Nevpt2_npdm_driver : public Npdm_driver_base {
     Fourpdm_driver fourpdm_driver;
 #else
     // Build A-matrices on the fly
-    Nevpt2_A16_matrix nevpt2_A16_matrix;
+    Nevpt2_container nevpt2_container;
     Npdm_driver onepdm_driver;
     Npdm_driver twopdm_driver;
     Npdm_driver threepdm_driver;

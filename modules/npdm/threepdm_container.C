@@ -432,11 +432,17 @@ void Threepdm_container::update_full_spatial_array( std::vector< std::pair< std:
       int m = (it->first)[4];
       int n = (it->first)[5];
 
-      if ( i%2 != n%2 ) continue;
-      if ( j%2 != m%2 ) continue;
-      if ( k%2 != l%2 ) continue;
+//      if ( i%2 != n%2 ) continue;
+//      if ( j%2 != m%2 ) continue;
+//      if ( k%2 != l%2 ) continue;
 
-      spatial_threepdm( ro.at(i/2), ro.at(j/2), ro.at(k/2), ro.at(l/2), ro.at(m/2), ro.at(n/2) ) += it->second;
+//      spatial_threepdm( ro.at(i/2), ro.at(j/2), ro.at(k/2), ro.at(l/2), ro.at(m/2), ro.at(n/2) ) += it->second;
+    if ( abs(spatial_threepdm(ro.at(i), ro.at(j), ro.at(k), ro.at(l), ro.at(m), ro.at(n))) != 0.0 ) {
+      cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<endl;
+      cout << "earlier value: " << spatial_threepdm(ro.at(i), ro.at(j), ro.at(k), ro.at(l), ro.at(m), ro.at(n)) << endl << "new value:     " <<it->second<<endl;
+      abort();
+    }
+      spatial_threepdm( ro.at(i), ro.at(j), ro.at(k), ro.at(l), ro.at(m), ro.at(n) ) = it->second;
     }
   }
 }
@@ -451,7 +457,7 @@ long Threepdm_container::oneindex_spin(const std::vector<int> & orbital_element_
   assert( orbital_element_index.size() == 6);
   long linearindex=0;
   for(int i=0; i< 6; i++)
-    linearindex+=(ro.at(orbital_element_index[i]/2))*elements_stride_[i];
+    linearindex+=(ro.at(orbital_element_index[i]))*elements_stride_[i];
   return linearindex;
 }
 
@@ -467,16 +473,8 @@ void Threepdm_container::dump_to_disk(std::vector< std::pair< std::vector<int>, 
 
     // Store significant elements only
     if ( abs(it->second) > NUMERICAL_ZERO ) {
-      if ( it->first[0]%2 != it->first[5]%2 ) continue;
-      if ( it->first[1]%2 != it->first[4]%2 ) continue;
-      if ( it->first[2]%2 != it->first[3]%2 ) continue;
       long linearindex = oneindex_spin(it->first);
-      std::map < long, double>::iterator findit= index_and_elements.find(linearindex);
-      if(findit == index_and_elements.end()){
-        index_and_elements.insert(std::pair<long,double>(linearindex,it->second));
-      }
-      else
-        findit->second += it->second;
+      index_and_elements.insert(std::pair<long,double>(linearindex,it->second));
     }
   }
   if(index_and_elements.size()==0) return;
@@ -546,23 +544,28 @@ void Threepdm_container::dump_to_disk(std::vector< std::pair< std::vector<int>, 
 
 void Threepdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
-  assert( new_spin_orbital_elements.size() == 20 );
   Threepdm_permutations perm;
-  std::vector< std::pair< std::vector<int>, double > > spin_batch;
-  // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
-  perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
+  if(dmrginp.spinAdapted())
+  {
 
-  if ( dmrginp.store_spinpdm() ) update_full_spin_array( spin_batch );
-  //TODO, it is feasible to dump only nonredundant elements.
-  //It will make the reading of data more complicate. 
-  if(dmrginp.spatpdm_disk_dump() ){
-    if(dmrginp.store_nonredundant_pdm()) 
-      dump_to_disk(nonredundant_elements);
-    else
-      dump_to_disk(spin_batch);
+    std::vector< std::pair< std::vector<int>, double > > spatial_batch;
+    perm.get_spatial_batch(new_spin_orbital_elements,spatial_batch);
+    if(dmrginp.spatpdm_disk_dump() ){
+      dump_to_disk(spatial_batch);
+    }
+    else update_full_spatial_array(spatial_batch);
+    if( dmrginp.store_spinpdm())
+    {
+      std::vector< std::pair< std::vector<int>, double > > spin_batch;
+      perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
+      update_full_spin_array( spin_batch );
+    }
   }
-  else update_full_spatial_array( spin_batch );
-  if ( ! dmrginp.store_nonredundant_pdm() || dmrginp.spatpdm_disk_dump() ) nonredundant_elements.clear();
+  else{
+    std::vector< std::pair< std::vector<int>, double > > spin_batch;
+    perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
+    update_full_spin_array( spin_batch );
+  }
 }
 
 //===========================================================================================================================================================
