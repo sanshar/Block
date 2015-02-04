@@ -13,8 +13,9 @@ namespace SpinAdapted{
 namespace Npdm{
 
 // DEBUG only
-std::vector<double> DEBUG_COMM_TIME(1000);
-std::vector<int> DEBUG_CALL_GET_EXPECT(1000);
+double DEBUG_COMM_TIME;
+int DEBUG_CALL_GET_EXPECT;
+double DEBUG_STORE_ELE_TIME;
 
 // Forward declaration
 boost::shared_ptr<NpdmSpinOps> select_op_wrapper( SpinBlock * spinBlock,const std::vector<Npdm::CD> & cd_type );
@@ -114,7 +115,6 @@ void Npdm_driver::do_parallel_lhs_loop( const char inner, Npdm::Npdm_expectation
   boost::mpi::all_gather(world, local_skip, nonlocal_skip);
   int local_size = local_base.opReps_.size();
   boost::mpi::all_gather(world, local_size, nonlocal_size);
-  DEBUG_COMM_TIME[mpigetrank()] += timer.elapsedwalltime();
 
   // Communicate operator reps
   for (int rank = 0; rank < world.size(); ++rank) {
@@ -132,6 +132,7 @@ void Npdm_driver::do_parallel_lhs_loop( const char inner, Npdm::Npdm_expectation
       }
     }
   }
+  DEBUG_COMM_TIME+= timer.elapsedwalltime();
   
   // Do loop over RHS with local LHS operator while waiting for all non-local to be communicated 
   // FIXME Can we extend this idea to do batches while other batches are communicating
@@ -140,7 +141,7 @@ void Npdm_driver::do_parallel_lhs_loop( const char inner, Npdm::Npdm_expectation
   // Contract all nonlocal LHS ops with local RHS ops; must wait for communication to be finished first
   Timer timer2;
   boost::mpi::wait_all( reqs.begin(), reqs.end() );
-  DEBUG_COMM_TIME[mpigetrank()] += timer2.elapsedwalltime();
+  DEBUG_COMM_TIME += timer2.elapsedwalltime();
   for (int rank = 0; rank < world.size(); ++rank) {
     if ( rank != mpigetrank() ) {
       if ( ! nonlocal_skip.at(rank) ) do_inner_loop( inner, npdm_expectations, nonlocal_base.at(rank), rhsOps, dotOps ); 
@@ -244,7 +245,6 @@ void Npdm_driver::do_parallel_intermediate_loop( const char inner, Npdm::Npdm_ex
   boost::mpi::all_gather(world, local_skip, nonlocal_skip);
   int local_size = local_base.opReps_.size();
   boost::mpi::all_gather(world, local_size, nonlocal_size);
-  DEBUG_COMM_TIME[mpigetrank()] += timer.elapsedwalltime();
 
 
   // Communicate operator reps
@@ -270,6 +270,7 @@ void Npdm_driver::do_parallel_intermediate_loop( const char inner, Npdm::Npdm_ex
       }
     }
   }
+  DEBUG_COMM_TIME += timer.elapsedwalltime();
   
   // Do loop over RHS with local LHS operator while waiting for all non-local to be communicated 
   // FIXME Can we extend this idea to do batches while other batches are communicating
@@ -279,7 +280,7 @@ void Npdm_driver::do_parallel_intermediate_loop( const char inner, Npdm::Npdm_ex
   // Contract all nonlocal LHS ops with local RHS ops; must wait for communication to be finished first
   Timer timer2;
   boost::mpi::wait_all( reqs.begin(), reqs.end() );
-  DEBUG_COMM_TIME[mpigetrank()] += timer2.elapsedwalltime();
+  DEBUG_COMM_TIME += timer2.elapsedwalltime();
   for (int rank = 0; rank < world.size(); ++rank) {
     if ( rank != mpigetrank() ) {
       if ( ! nonlocal_skip.at(rank) ) do_inner_loop( inner, npdm_expectations, nonlocal_base.at(rank), rhsOps, dotOps, nonlocal_waves.at(rank)); 
@@ -346,7 +347,7 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
 
     // Get non-spin-adapated spin-orbital 3PDM elements after building spin-adapted elements
     std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements;
-    DEBUG_CALL_GET_EXPECT[mpigetrank()] += 1;
+    DEBUG_CALL_GET_EXPECT += 1;
     // This should always work out as calling in order (lhs,rhs,dot)
     if ( inner == 'r' )
       new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( outerOps, innerOps, dotOps );
@@ -359,8 +360,10 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
     else
       abort();
 
+    Timer timer;
     // Store new npdm elements
     if ( new_spin_orbital_elements.size() > 0 ) container_.store_npdm_elements( new_spin_orbital_elements );
+    DEBUG_STORE_ELE_TIME += timer.elapsedwalltime();
   }
 
   assert( ! innerOps.ifs_.is_open() );
@@ -379,7 +382,7 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
 
     // Get non-spin-adapated spin-orbital 3PDM elements after building spin-adapted elements
     std::vector< std::pair< std::vector<int>, double > > new_spin_orbital_elements;
-    DEBUG_CALL_GET_EXPECT[mpigetrank()] += 1;
+    DEBUG_CALL_GET_EXPECT += 1;
     // This should always work out as calling in order (lhs,rhs,dot)
     if ( inner == 'r' )
       new_spin_orbital_elements = npdm_expectations.get_nonspin_adapted_expectations( inner, outerOps, innerOps, dotOps, waves );
@@ -392,8 +395,10 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
     else
       abort();
 
+    Timer timer;
     // Store new npdm elements
     if ( new_spin_orbital_elements.size() > 0 ) container_.store_npdm_elements( new_spin_orbital_elements );
+    DEBUG_STORE_ELE_TIME += timer.elapsedwalltime();
   }
 
   assert( ! innerOps.ifs_.is_open() );
@@ -432,7 +437,7 @@ void Npdm_driver::loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Np
   int count = 0;
   for (auto pattern = patterns.ldr_cd_begin(); pattern != patterns.ldr_cd_end(); ++pattern) {
     count++;
-    DEBUG_CALL_GET_EXPECT[mpigetrank()] = 0;
+    DEBUG_CALL_GET_EXPECT= 0;
 
 #ifndef SERIAL
     // MPI threads must be synchronised here so they all work on same operator pattern simultaneously
@@ -599,8 +604,9 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
   pout.flush();
   world.barrier();
 #endif
-  DEBUG_COMM_TIME[mpigetrank()] = 0;
-  DEBUG_CALL_GET_EXPECT[mpigetrank()] = 0;
+  DEBUG_COMM_TIME = 0;
+  DEBUG_STORE_ELE_TIME = 0;
+  DEBUG_CALL_GET_EXPECT = 0;
   Timer timer;
   pout << "===========================================================================================\n";
   pout << "Current NPDM sweep position = "<< sweepPos+1 << " of " << endPos+1 << "\n";
@@ -637,17 +643,24 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
 #ifndef SERIAL
   if (mpigetrank() == 0) {
     int sum;
-    reduce(world, DEBUG_CALL_GET_EXPECT[mpigetrank()], sum, std::plus<int>(), 0);
-    pout << "NPDM calls to expectation engine " << sum << endl;
+    reduce(world, DEBUG_CALL_GET_EXPECT, sum, std::plus<int>(), 0);
+    p3out << "NPDM calls to expectation engine " << sum << endl;
   } else {
-    reduce(world, DEBUG_CALL_GET_EXPECT[mpigetrank()], std::plus<int>(), 0);
+    reduce(world, DEBUG_CALL_GET_EXPECT, std::plus<int>(), 0);
   }
   if (mpigetrank() == 0) {
     double sum;
-    reduce(world, DEBUG_COMM_TIME[mpigetrank()], sum, std::plus<double>(), 0);
-    pout << "NPDM mpi communications time " << sum << endl;
+    reduce(world, DEBUG_COMM_TIME, sum, std::plus<double>(), 0);
+    p3out << "NPDM mpi communications time " << sum << endl;
   } else {
-    reduce(world, DEBUG_COMM_TIME[mpigetrank()], std::plus<double>(), 0);
+    reduce(world, DEBUG_COMM_TIME, std::plus<double>(), 0);
+  }
+  if (mpigetrank() == 0) {
+    double sum;
+    reduce(world, DEBUG_STORE_ELE_TIME, sum, std::plus<double>(), 0);
+    p3out << "NPDM store elements time " << sum << endl;
+  } else {
+    reduce(world, DEBUG_STORE_ELE_TIME, std::plus<double>(), 0);
   }
 #endif
   p3out << "NPDM compute elements time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;

@@ -117,7 +117,7 @@ python ../test_fourpdm.py spatial_fourpdm.0.0.txt spat_fourpdm.0.0.txt 1e-7
 echo "testing A16_matrix..."
 rm -f partial*bin A16_matrix*txt
 $MPICOMMAND ../../block.spin_adapted dmrgA16.conf >dmrg.out
-python ../test_threepdm.py A16_matrix.0.0.txt A16_matrix.0.0.ref 1e-7
+python ../test_threepdm.py A16_matrix.0.0.txt A16_matrix.0.0.ref 1e-5
 cd ../
 
 echo "testing 1pdm and 2pdm in non-spinAdapted calcultions"

@@ -7,7 +7,6 @@ Sandeep Sharma and Garnet K.-L. Chan
 */
 
 #include "nevpt2_npdm_driver.h"
-#include "nevpt2_npdm_matrices.h"
 
 namespace SpinAdapted{
 namespace Npdm{
@@ -23,11 +22,11 @@ Nevpt2_npdm_driver::Nevpt2_npdm_driver( int sites ) :
   fourpdm_driver( Fourpdm_driver(sites) )
 #else
   // Build A-matrices on the fly
-  nevpt2_A16_matrix( Nevpt2_A16_matrix( sites ) ), 
-  onepdm_driver( Npdm_driver(NPDM_ONEPDM, nevpt2_A16_matrix ) ),
-  twopdm_driver( Npdm_driver(NPDM_TWOPDM, nevpt2_A16_matrix ) ),
-  threepdm_driver( Npdm_driver(NPDM_THREEPDM, nevpt2_A16_matrix ) ),
-  fourpdm_driver( Npdm_driver(NPDM_FOURPDM, nevpt2_A16_matrix ) )
+  nevpt2_container( Nevpt2_container( sites ) ), 
+  onepdm_driver( Npdm_driver(NPDM_ONEPDM, nevpt2_container ) ),
+  twopdm_driver( Npdm_driver(NPDM_TWOPDM, nevpt2_container ) ),
+  threepdm_driver( Npdm_driver(NPDM_THREEPDM, nevpt2_container ) ),
+  fourpdm_driver( Npdm_driver(NPDM_FOURPDM, nevpt2_container ) )
 #endif
 { }
 
@@ -44,7 +43,7 @@ void Nevpt2_npdm_driver::save_data( const int i, const int j )
   compute_matrices(i,j);
 #else
   // Build A-matrices on the fly
-  nevpt2_A16_matrix.save_npdms(i,j);
+  nevpt2_container.save_npdms(i,j);
 #endif
 }
 
@@ -57,7 +56,7 @@ void Nevpt2_npdm_driver::clear()
     threepdm_driver.clear();
     fourpdm_driver.clear();
 #ifndef DEBUG_NEVPT2NPDM
-    nevpt2_A16_matrix.clear();
+    nevpt2_container.clear();
 #endif
 }
 
@@ -108,13 +107,6 @@ void Nevpt2_npdm_driver::compute_matrices( const int i, const int j )
   boost::archive::binary_iarchive load4(ifs4);
   load4 >> fourpdm;
   ifs4.close();
-
-  // Compute and store NEVPT2 matrices
-  Nevpt2_npdm nevpt2;
-  array_8d<double> eeee_matrix = nevpt2.compute_EEEE_matrix( onepdm, twopdm, threepdm, fourpdm );
-  array_6d<double> eee_matrix = nevpt2.compute_EEE_matrix( onepdm, twopdm, threepdm );
-  nevpt2.compute_A16_matrix( eeee_matrix );
-  nevpt2.compute_A22_matrix( eee_matrix, eeee_matrix );
 
 }
 

@@ -34,6 +34,9 @@ class Onepdm_container : public Npdm_container {
     array_2d<double> onepdm;
     array_2d<double> spatial_onepdm;
 
+    bool store_full_spin_array_ = true;
+    bool store_nonredundant_spin_elements_ = false;
+
     void save_npdm_text(const int &i, const int &j);
     void save_npdm_binary(const int &i, const int &j);
     void save_spatial_npdm_text(const int &i, const int &j);
