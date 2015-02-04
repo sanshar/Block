@@ -375,9 +375,14 @@ int Symmetry::negativeof(int irrep)
 {
   if (sym == "trans") {
     std::vector<int> lirrep = decompress(irrep);
-    for (int i=0; i<lirrep.size(); i++) 
-      lirrep[i] = (NPROP[i] - lirrep[i])%NPROP[i];
-    
+    for (int i=0; i<lirrep.size(); i++) {
+      lirrep[i] = lirrep[i] == 0 ? lirrep[i] : (NPROP[i] - lirrep[i]);//%NPROP[i];
+      if(lirrep[i] >= NPROP[i] || lirrep[i] < 0) {
+	pout << "cannot find the negative of "<<i<<" component of lirrep "<<lirrep[i]<<endl;
+	pout << "it is not in the first bruillion zone"<<endl;
+	exit(0);
+      }
+    }
     int outirrep = compress(lirrep);
     return outirrep;
   }

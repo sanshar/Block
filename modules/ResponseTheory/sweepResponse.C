@@ -130,7 +130,8 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
     GuessWave::guess_wavefunctions(iwave, e, perturbationBig, guesstype, 
 				   sweepParams.get_onedot(), firstOrderState, dot_with_sys, 0.0);
 
-    if (sweepParams.get_noise() > NUMERICAL_ZERO && l == 0) { //only add noise using one basestate
+    //dont add noise in the onedot algorithm
+    if (!sweepParams.get_onedot() && sweepParams.get_noise() > NUMERICAL_ZERO && l == 0) { //only add noise using one basestate
       int sweepiter = sweepParams.get_sweep_iter();
       branoiseMatrix.add_onedot_noise_forCompression(iwave, perturbationBig, 1.0/DotProduct(iwave, iwave));
     }
@@ -869,7 +870,6 @@ void SpinAdapted::SweepResponse::WavefunctionCanonicalize (SweepParams &sweepPar
   SaveRotationMatrix (newSystem.get_sites(), rotatematrix, targetState);
   
   newSystem.transform_operators(rotatematrix);
-  SpinBlock::store(forward, newSystem.get_sites(), newSystem, targetState, targetState);
   
   
   dmrginp.setOutputlevel() = originalOutputlevel;
@@ -1003,6 +1003,8 @@ void SpinAdapted::SweepResponse::WavefunctionCanonicalize (SweepParams &sweepPar
 
   dmrginp.setOutputlevel() = originalOutputlevel;
   
+  pout << newSystem<<endl;
+  SpinBlock::store(forward, newSystem.get_sites(), newSystem, targetState, targetState);
   
   if (dmrginp.outputlevel() > 0)
     mcheck("after rotation and transformation of block");

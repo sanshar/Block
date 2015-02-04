@@ -103,6 +103,7 @@ class MPS{
   const Wavefunction& getw() const {return w;}
   void normalize() {int success; w.Normalise(&success);}
   double get_coefficient(const vector<bool>& occ_strings);
+  void writeToDiskForDMRG(int state, bool writeStateAverage=false);
 };
 
 
@@ -113,7 +114,7 @@ class MPS{
  double calculateOverlap (const MPS& a, const MPS& b);
 
  //calculate hamiltonian matrix between a and b <Mpsa|H|Mpsb>
- void calcHamiltonianAndOverlap(const MPS& statea, const MPS& stateb, double& h, double& o) ;
+ void calcHamiltonianAndOverlap(const MPS& statea, const MPS& stateb, double& h, double& o, bool sameStates=false) ;
 
 }
 

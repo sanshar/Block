@@ -98,7 +98,7 @@ using namespace SpinAdapted;
 
 int calldmrg(char* input, char* output)
 {
-  //sleep(15);
+  //sleep(10);
   streambuf *backup;
   backup = cout.rdbuf();
   ofstream file;
@@ -181,6 +181,8 @@ int calldmrg(char* input, char* output)
 
 
     sweepParams.restorestate(direction, restartsize);
+    algorithmTypes atype = dmrginp.algorithm_method();
+    dmrginp.set_algorithm_method() = ONEDOT;
     if (mpigetrank()==0 && !RESTART && !FULLRESTART) {
       for (int l=0; l<dmrginp.projectorStates().size(); l++) {
 	Sweep::InitializeStateInfo(sweepParams, direction, dmrginp.projectorStates()[l]);
@@ -197,6 +199,7 @@ int calldmrg(char* input, char* output)
 	Sweep::CanonicalizeWavefunction(sweepParams, direction, dmrginp.baseStates()[l]);
       }
     }
+    dmrginp.set_algorithm_method() = atype;
 
     
     pout << "DONE COMPRESSING THE CORRECTION VECTOR"<<endl;
@@ -645,7 +648,7 @@ void responseSweep(double sweep_tol, int targetState, vector<int>& projectors, v
     sweepParams.restorestate(direction, restartSize);
     last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates);
   }
-  else
+  else 
     last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates);
 
   dmrginp.set_algorithm_method() = atype;
@@ -654,18 +657,16 @@ void responseSweep(double sweep_tol, int targetState, vector<int>& projectors, v
   warmUp = false;
   while ( true)
     {
-      direction = false;
       old_fe = last_fe;
       old_be = last_be;
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
-      last_be = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates);
+      last_be = SweepResponse::do_one(sweepParams, warmUp, !direction, restart, restartSize, targetState, projectors, baseStates);
       p1out << "\t\t\t Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
       
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
 	break;
       
-      direction = true;
       last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates);
 
       

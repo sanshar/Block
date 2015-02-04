@@ -274,7 +274,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
 	
 	for (int i = 1; i <= subspace_eigenvalues.Ncols (); ++i)
 	  p3out << "\t\t\t " << i << " ::  " << subspace_eigenvalues(i,i) << endl;
-	
+
 	//now calculate the ritz vectors which are approximate eigenvectors
 	vector<Wavefunction> btmp = b;
 	vector<Wavefunction> sigmatmp = sigma;
@@ -384,7 +384,7 @@ void SpinAdapted::Linear::block_davidson(vector<Wavefunction>& b, DiagonalMatrix
     }
 }
 
-//solves the equation (H-E)^T(H-E)|psi_1> = -(H-E)^TQV|\Psi_0>  where lowerState[0] contains |\Psi_0> to enforce orthogonality (Q), and lowerState[1] contains V|\Psi_0> so we can calculate its projection in the krylov space 
+//solves the equation (H-E)^T(H-E)|psi_1> = -(H-E)^TQV|\Psi_0>  where lowerState[1] contains |\Psi_0> to enforce orthogonality (Q), and lowerState[0] contains V|\Psi_0> so we can calculate its projection in the krylov space 
 //the algorithm is taken from wikipedia page
 //the algorithm is taken from wikipedia page
 double SpinAdapted::Linear::ConjugateGradient(Wavefunction& xi, double normtol, Davidson_functor& h_multiply, std::vector<Wavefunction>& lowerStates)
@@ -420,7 +420,17 @@ double SpinAdapted::Linear::ConjugateGradient(Wavefunction& xi, double normtol, 
   bool doCG = true;
   if (mpigetrank() == 0) {
     Wavefunction ricopy = ri; ricopy.Clear(); ricopy.Randomise();
-    if (abs(DotProduct(ricopy, targetState)) < NUMERICAL_ZERO) {
+    Wavefunction ricopy2 = ricopy;
+
+    for (int i=1; i<lowerStates.size(); i++) {
+      overlap2 = pow(DotProduct(lowerStates[i], lowerStates[i]), 0.5);
+      if (fabs(overlap2) > NUMERICAL_ZERO) { 
+	ScaleAdd(-DotProduct(ricopy, lowerStates[i])/overlap2, 
+		 lowerStates[i], ricopy2);
+      }
+    }
+
+    if (abs(DotProduct(ricopy2, targetState)) < NUMERICAL_ZERO) {
       pout << "The problem is ill posed or the initial guess is very bad "<<DotProduct(ricopy, targetState)<<endl;
       doCG = false;
     }
@@ -453,6 +463,23 @@ double SpinAdapted::Linear::ConjugateGradient(Wavefunction& xi, double normtol, 
     oldError = DotProduct(ri, ri);
     printf("\t\t\t %15s  %15s  %15s\n", "iter", "Functional", "Error");
   }
+
+#ifndef SERIAL
+    mpi::broadcast(world, Error, 0);
+    mpi::broadcast(world, oldError, 0);
+    mpi::broadcast(world, functional, 0);
+#endif
+
+    if (oldError < normtol) {
+      if (mpigetrank() == 0) {
+	functional = -DotProduct(xi, ri) - DotProduct(xi, targetState);
+	printf("\t\t\t %15i  %15.8e  %15.8e\n", 0, functional, oldError);
+      }
+#ifndef SERIAL
+    mpi::broadcast(world, functional, 0);
+#endif
+      return functional;
+    }
 
   while(true) {
 #ifndef SERIAL

@@ -34,30 +34,40 @@ void initializeGlobalMPS(int mpsindex) {
   SpinAdapted::globalMPS = MPS(mpsindex);
 }
 
-void readMPSFromDiskAndInitializeStaticVariables() {
-  if(!dmrginp.spinAdapted())
-    MPS::sweepIters = dmrginp.last_site()/2-2;
-  else
-    MPS::sweepIters = dmrginp.last_site()-2;
-  MPS::spinAdapted = false;
-  for (int i=0; i<MPS::sweepIters+2; i++) {
-    if (i==0 && dmrginp.spinAdapted() && dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0 ) {
-      SpinBlock s(i, i, 0, false);
-      SpinQuantum sq = dmrginp.molecule_quantum();
-      sq = SpinQuantum(sq.get_s().getirrep(), sq.get_s(), IrrepSpace(0));
-      int qs = 1, ns = 1;
-      StateInfo addstate(ns, &sq, &qs); 
-      SpinBlock dummyblock(addstate, 0);
-      SpinBlock newstartingBlock;
-      newstartingBlock.set_integralIndex() = 0;
-      newstartingBlock.default_op_components(false, s, dummyblock, true, true, false);
-      newstartingBlock.setstoragetype(LOCAL_STORAGE);
-      newstartingBlock.BuildSumBlock(NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, s, dummyblock);
-      MPS::siteBlocks.push_back(newstartingBlock); //alway make transpose operators as well
-    }
+void readMPSFromDiskAndInitializeStaticVariables(bool initializeDotBlocks) {
+  if (mpigetrank() == 0) {
+    if(!dmrginp.spinAdapted())
+      MPS::sweepIters = dmrginp.last_site()/2-2;
     else
-      MPS::siteBlocks.push_back(SpinBlock(i, i, 0, false)); //alway make transpose operators as well
+      MPS::sweepIters = dmrginp.last_site()-2;
+    MPS::spinAdapted = false;
+    if (initializeDotBlocks) {
+      for (int i=0; i<MPS::sweepIters+2; i++) {
+	if (i==0 && dmrginp.spinAdapted() && dmrginp.add_noninteracting_orbs() && dmrginp.molecule_quantum().get_s().getirrep() != 0 ) {
+	  SpinBlock s(i, i, 0, false);
+	  SpinQuantum sq = dmrginp.molecule_quantum();
+	  sq = SpinQuantum(sq.get_s().getirrep(), sq.get_s(), IrrepSpace(0));
+	  int qs = 1, ns = 1;
+	  StateInfo addstate(ns, &sq, &qs); 
+	  SpinBlock dummyblock(addstate, 0);
+	  SpinBlock newstartingBlock;
+	  newstartingBlock.set_integralIndex() = 0;
+	  newstartingBlock.default_op_components(false, s, dummyblock, true, true, false);
+	  newstartingBlock.setstoragetype(LOCAL_STORAGE);
+	  newstartingBlock.BuildSumBlock(NO_PARTICLE_SPIN_NUMBER_CONSTRAINT, s, dummyblock);
+	  MPS::siteBlocks.push_back(newstartingBlock); //alway make transpose operators as well
+	}
+	else
+	  MPS::siteBlocks.push_back(SpinBlock(i, i, 0, false)); //alway make transpose operators as well
+      }
+    }
   }
+#ifndef SERIAL
+  boost::mpi::communicator world;
+  boost::mpi::broadcast(world, MPS::sweepIters, 0);
+  boost::mpi::broadcast(world, MPS::spinAdapted, 0);
+#endif
+
 }
 
 void writeFullMPS()
@@ -121,7 +131,7 @@ void test()
   pout.precision(12);
   MPS statea(0);
   double o, h;
-  calcHamiltonianAndOverlap(statea, statea, h, o);
+  calcHamiltonianAndOverlap(statea, statea, h, o, true);
 
   if (mpigetrank() == 0)
     printf("<0|0> = %18.10f   <0|H|0> = %18.10f\n", o, h);
