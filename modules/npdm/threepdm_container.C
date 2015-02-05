@@ -437,11 +437,6 @@ void Threepdm_container::update_full_spatial_array( std::vector< std::pair< std:
 //      if ( k%2 != l%2 ) continue;
 
 //      spatial_threepdm( ro.at(i/2), ro.at(j/2), ro.at(k/2), ro.at(l/2), ro.at(m/2), ro.at(n/2) ) += it->second;
-    if ( abs(spatial_threepdm(ro.at(i), ro.at(j), ro.at(k), ro.at(l), ro.at(m), ro.at(n))) != 0.0 ) {
-      cout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<endl;
-      cout << "earlier value: " << spatial_threepdm(ro.at(i), ro.at(j), ro.at(k), ro.at(l), ro.at(m), ro.at(n)) << endl << "new value:     " <<it->second<<endl;
-      abort();
-    }
       spatial_threepdm( ro.at(i), ro.at(j), ro.at(k), ro.at(l), ro.at(m), ro.at(n) ) = it->second;
     }
   }

@@ -36,9 +36,13 @@ void SpinBlock::printOperatorSummary()
     for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core())
+      {
          p2out << "\t\t\t " << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";
+      }
       else
+      {
          p2out << "\t\t\t " << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
+      }
       
       vector<int> numops(world.size(), 0);
       for (int proc = 0; proc <world.size(); proc++) {

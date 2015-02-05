@@ -265,6 +265,9 @@ double DotProduct_spincorrection(const Wavefunction& w1, const Wavefunction& w2,
 
 double Npdm_expectations::build_nonspin_adapted_singlet_expectations( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps)
 {
+#ifndef SERIAL
+  boost::mpi::communicator world;
+#endif
 
   // IMPORTANT: generate spin-components in the same order as RHS of linear equation solver in npdm_set_up_linear_equations routine
   // i.e. in accordance with the operator string build_pattern
@@ -274,14 +277,14 @@ double Npdm_expectations::build_nonspin_adapted_singlet_expectations( NpdmSpinOp
     std::map<std::vector<int>, Wavefunction> rightwaves;
     std::string op_string;
     get_op_string(lhsOps,dotOps,op_string);
-    std::string file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string % ".tmp" );
+    std::string file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string %"_p" %mpigetrank() %  ".tmp" );
     ifstream ifs1(file,std::ios::binary);
     boost::archive::binary_iarchive load_waves(ifs1);
     load_waves >> leftwaves;
     ifs1.close();
 
     get_op_string(rhsOps,op_string);
-    file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % ".tmp" );
+    file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % ".tmp" );
     ifstream ifs2(file,std::ios::binary);
     boost::archive::binary_iarchive load_waves2(ifs2);
     load_waves2 >> rightwaves;
@@ -308,6 +311,9 @@ double Npdm_expectations::build_nonspin_adapted_singlet_expectations( NpdmSpinOp
 
 double Npdm_expectations::build_nonspin_adapted_singlet_expectations( const char inner, NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps, std::map<std::vector<int>, Wavefunction>& outwaves)
 {
+#ifndef SERIAL
+  boost::mpi::communicator world;
+#endif
 
   // IMPORTANT: generate spin-components in the same order as RHS of linear equation solver in npdm_set_up_linear_equations routine
   // i.e. in accordance with the operator string build_pattern
@@ -319,12 +325,12 @@ double Npdm_expectations::build_nonspin_adapted_singlet_expectations( const char
     if(inner == 'l')
     {
       get_op_string(lhsOps,dotOps,op_string);
-      file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string % ".tmp" );
+      file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string %"_p" %mpigetrank() %  ".tmp" );
     }
     else
     {
       get_op_string(rhsOps,op_string);
-      file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % ".tmp" );
+      file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % ".tmp" );
     }
     ifstream ifs1(file,std::ios::binary);
     boost::archive::binary_iarchive load_waves(ifs1);
@@ -352,6 +358,9 @@ double Npdm_expectations::build_nonspin_adapted_singlet_expectations( const char
 
 void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps)
 {
+#ifndef SERIAL
+  boost::mpi::communicator world;
+#endif
   expectations_.clear();
 
   // IMPORTANT: generate spin-components in the same order as RHS of linear equation solver in npdm_set_up_linear_equations routine
@@ -365,7 +374,7 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_bas
   {
     std::string op_string;
     get_op_string(lhsOps,dotOps,op_string);
-    std::string file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string % ".tmp" );
+    std::string file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string % "_p" %mpigetrank()%".tmp" );
     ifstream ifs1(file,std::ios::binary);
 
     boost::archive::binary_iarchive load_waves(ifs1);
@@ -373,7 +382,7 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_bas
     ifs1.close();
 
     get_op_string(rhsOps,op_string);
-    file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % ".tmp" );
+    file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string% "_p" %mpigetrank() % ".tmp" );
     ifstream ifs2(file,std::ios::binary);
     boost::archive::binary_iarchive load_waves2(ifs2);
     load_waves2 >> rightwaves;
@@ -425,6 +434,9 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_bas
 
 void Npdm_expectations::build_spin_adapted_singlet_expectations( const char inner, NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps, std::map<std::vector<int>, Wavefunction>& outwaves)
 {
+#ifndef SERIAL
+  boost::mpi::communicator world;
+#endif
   expectations_.clear();
 
   // IMPORTANT: generate spin-components in the same order as RHS of linear equation solver in npdm_set_up_linear_equations routine
@@ -441,12 +453,12 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( const char inne
     if(inner == 'l')
     {
     get_op_string(lhsOps,dotOps,op_string);
-    file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string % ".tmp" );
+    file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string% "_p" %mpigetrank() % ".tmp" );
     }
     else
     {
     get_op_string(rhsOps,op_string);
-    file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % ".tmp" );
+    file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % "_p" %mpigetrank()% ".tmp" );
     }
     ifstream ifs1(file,std::ios::binary);
     boost::archive::binary_iarchive load_waves(ifs1);
@@ -703,6 +715,9 @@ Npdm_expectations::get_nonspin_adapted_expectations(const char inner, NpdmSpinOp
 
 void Npdm_expectations::store( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dotOps )
 {
+#ifndef SERIAL
+  boost::mpi::communicator world;
+#endif
   std::map<std::vector<int>, Wavefunction> waves_;
 
   SparseMatrix* null = 0; 
@@ -753,7 +768,7 @@ void Npdm_expectations::store( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dot
   std::string file;
   std::string op_string;
   get_op_string(lhsOps,dotOps,op_string);
-  file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string % ".tmp" );
+  file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string % "_p" % mpigetrank()% ".tmp" );
   ofstream ofs(file,std::ios::binary);
   boost::archive::binary_oarchive save_waves(ofs);
   save_waves << waves_;
@@ -764,6 +779,9 @@ void Npdm_expectations::store( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dot
 
 void Npdm_expectations::store( NpdmSpinOps_base & rhsOps )
 {
+#ifndef SERIAL
+  boost::mpi::communicator world;
+#endif
   std::map<std::vector<int>, Wavefunction> waves_;
 
   SparseMatrix* null = 0; 
@@ -793,7 +811,7 @@ void Npdm_expectations::store( NpdmSpinOps_base & rhsOps )
   std::string file;
   std::string op_string;
   get_op_string(rhsOps,op_string);
-  file = str(boost::format("%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % ".tmp" );
+  file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % "_p" %mpigetrank()%".tmp" );
   ofstream ofs(file,std::ios::binary);
   boost::archive::binary_oarchive save_waves(ofs);
   save_waves << waves_;

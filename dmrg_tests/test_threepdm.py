@@ -38,12 +38,10 @@ def run(file1, file2, tol):
             for n in xrange(0,sz):
               res = (mat1[i,j,k,l,m,n] - mat2[i,j,k,l,m,n]) * (mat1[i,j,k,l,m,n] - mat2[i,j,k,l,m,n])
               val = val + sqrt(res)
-#              if (abs(mat1[i,j,k,l,m,n]) > float(tol)):
-              if (abs(res) > float(tol)):
-                print i,j,k,l,m,n, "\t\t", mat1[i,j,k,l,m,n], "\t\t", mat2[i,j,k,l,m,n]
 
-  print "Sum of residuals = ", val
-  if (abs(val) > float(tol)):
+  dev = val/sz**6
+  print "mean deviation",dev
+  if (dev > float(tol)):
     print "FAILED ...."
   else:
     print "PASSED ...."
