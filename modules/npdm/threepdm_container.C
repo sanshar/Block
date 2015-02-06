@@ -402,11 +402,6 @@ void Threepdm_container::update_full_spin_array( std::vector< std::pair< std::ve
     //}
 
     // Test for duplicates
-    if ( abs(threepdm(i,j,k,l,m,n)) != 0.0 ) {
-      pout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<endl;
-      pout << "earlier value: " << threepdm(i,j,k,l,m,n) << endl << "new value:     " <<val<<endl;
-      abort();
-    }
     threepdm(i,j,k,l,m,n) = val;
   }
 

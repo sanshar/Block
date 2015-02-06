@@ -407,12 +407,6 @@ void Fourpdm_container::update_full_spin_array( std::vector< std::pair< std::vec
     //      << "\t\t" << val << endl;
     //}
 
-    // Test for duplicates
-    if ( abs(fourpdm(i,j,k,l,m,n,p,q)) != 0.0 ) {
-      pout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<" "<<p<<" "<<q<<endl;
-      pout << "earlier value: " << fourpdm(i,j,k,l,m,n,p,q) << endl << "new value:     " <<val<<endl;
-      abort();
-    }
     fourpdm(i,j,k,l,m,n,p,q) = val;
   }
 

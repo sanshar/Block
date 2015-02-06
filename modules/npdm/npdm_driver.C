@@ -84,9 +84,7 @@ bool Npdm_driver::skip_parallel( NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, boo
   // Assumes 1-index ops are duplicated on all mpi ranks //FIXME check this?
   // (There might be some overlap in these criteria)
   bool skip = ( world.size() == 1               ||
-                lhsOps.is_local_                ||
-                rhsOps.is_local_                ||
-                lhsrhsdot );
+                lhsOps.is_local_  );
   return skip;
 }
 #endif
