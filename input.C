@@ -613,6 +613,8 @@ SpinAdapted::Input::Input(const string& config_name) {
 	m_calc_type = RESTART_THREEPDM;
       else if (boost::iequals(keyword,  "restart_fourpdm") || boost::iequals(keyword,  "restart_fourrdm") )
 	m_calc_type = RESTART_FOURPDM;
+      else if (boost::iequals(keyword,  "restart_nevpt2_npdm") )
+	m_calc_type = RESTART_NEVPT2PDM;
       else if (boost::iequals(keyword,  "transition_onepdm") || boost::iequals(keyword,  "transition_onerdm") || boost::iequals(keyword,  "tran_onepdm"))
 	m_calc_type = TRANSITION_ONEPDM;
       else if (boost::iequals(keyword,  "transition_twopdm") || boost::iequals(keyword,  "transition_twordm") || boost::iequals(keyword,  "tran_twopdm"))
