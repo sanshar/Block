@@ -165,6 +165,7 @@ void SweepTwopdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 
 double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state)
 {
+  Timer sweeptimer;
   int integralIndex = 0;
   if (dmrginp.hamiltonian() == BCS) {
     pout << "Two PDM with BCS calculations is not implemented" << endl;
@@ -252,7 +253,6 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
   pout << "\t\t\t ============================================================================ " << endl;
 
-
   int i = state, j = state;
   //for (int j=0; j<=i; j++) {
   load_twopdm_binary(twopdm, i, j); 
@@ -265,6 +265,10 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
   // update the static number of iterations
 
   ++sweepParams.set_sweep_iter();
+
+  pout << "\t\t\t Elapsed Sweep CPU  Time (seconds): " << setprecision(3) << sweeptimer.elapsedcputime() << endl;
+  pout << "\t\t\t Elapsed Sweep Wall Time (seconds): " << setprecision(3) << sweeptimer.elapsedwalltime() << endl;
+
 
   return finalEnergy[0];
 }
