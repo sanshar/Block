@@ -43,7 +43,7 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
     e.ReSize(0);
 
 
-  bool haveEnoughStates = (e.Ncols()<= nroots) ? false : true;
+  bool haveEnoughStates = (e.Ncols()< nroots) ? false : true;
 #ifndef SERIAL
   mpi::communicator world;
   broadcast(world, haveEnoughStates, 0);

@@ -181,7 +181,7 @@ int calldmrg(char* input, char* output)
 
 
     sweepParams.restorestate(direction, restartsize);
-    if (mpigetrank()==0) {
+    if (mpigetrank()==0 && !RESTART && !FULLRESTART) {
       for (int l=0; l<dmrginp.projectorStates().size(); l++) {
 	Sweep::InitializeStateInfo(sweepParams, direction, dmrginp.projectorStates()[l]);
 	Sweep::InitializeStateInfo(sweepParams, !direction, dmrginp.projectorStates()[l]);
@@ -323,6 +323,9 @@ int calldmrg(char* input, char* output)
     break;
   case (RESTART_FOURPDM):
     Npdm::npdm(NPDM_FOURPDM,true);
+    break;
+  case (RESTART_NEVPT2PDM):
+    Npdm::npdm(NPDM_NEVPT2,true);
     break;
   case (TRANSITION_ONEPDM):
     Npdm::npdm(NPDM_ONEPDM,false,true);
@@ -633,8 +636,24 @@ void responseSweep(double sweep_tol, int targetState, vector<int>& projectors, v
   dmrginp.set_algorithm_method() = ONEDOT;
 
   //the baseState is the initial guess for the targetState
-  last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates);
+  if (FULLRESTART) {
+    sweepParams.restorestate(direction, restartSize);
+    direction = !direction;
+    last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates, targetState);
+  }
+  else if (RESTART) {
+    dmrginp.set_algorithm_method() = atype;
+    warmUp = false;
+    restart = true;
+    sweepParams.restorestate(direction, restartSize);
+    last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates);
+  }
+  else
+    last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates);
+
   dmrginp.set_algorithm_method() = atype;
+  restart = false;
+  restartSize = 0;
   warmUp = false;
   while ( true)
     {

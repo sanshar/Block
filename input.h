@@ -35,7 +35,7 @@ enum solveTypes {LANCZOS, DAVIDSON, CONJUGATE_GRADIENT};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
 enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPDM,
-               RESTART_ONEPDM, RESTART_THREEPDM, RESTART_FOURPDM, TINYCALC, FCI,
+               RESTART_ONEPDM, RESTART_THREEPDM, RESTART_FOURPDM, RESTART_NEVPT2PDM, TINYCALC, FCI,
                EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN, COMPRESS, RESPONSE,
                TRANSITION_ONEPDM, TRANSITION_TWOPDM, RESTART_T_ONEPDM, RESTART_T_TWOPDM,
                NEVPT2,RESTART_NEVPT2};
@@ -55,6 +55,7 @@ class Input {
   int m_Sz;
   bool m_spinAdapted;
   bool m_Bogoliubov;
+  bool m_permSymm;
 
   IrrepSpace m_total_symmetry_number;
   IrrepSpace m_bra_symmetry_number;// This is used when bra and ket have different spatial symmetry irrep;
@@ -67,6 +68,8 @@ class Input {
   //average to statespecific 
   int m_occupied_orbitals;
 
+  vector<int> m_openorbs;
+  vector<int> m_closedorbs;
   vector<int> m_baseState;
   vector<int> m_projectorState;
   int m_targetState;
@@ -182,13 +185,13 @@ class Input {
     ar & m_spin_vector & m_spin_orbs_symmetry & m_guess_permutations & m_nroots & m_weights & m_hf_occ_user & m_hf_occupancy;
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule & m_reorder;
     ar & m_molecule_quantum & m_total_symmetry_number & m_total_spin & m_orbenergies & m_add_noninteracting_orbs;
-    ar & m_bra_symmetry_number;
+    ar & m_bra_symmetry_number & m_permSymm & m_openorbs & m_closedorbs;
     ar & m_save_prefix & m_load_prefix & m_direct & m_max_lanczos_dimension;
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat ;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform ;
     ar & m_do_pdm & m_do_npdm_ops & m_do_npdm_in_core & m_new_npdm_code & m_occupied_orbitals;
-    ar &  m_store_spinpdm &m_spatpdm_disk_dump & m_pdm_unsorted & m_npdm_intermediate& m_npdm_multinode;
+    ar &  m_store_spinpdm &m_spatpdm_disk_dump & m_pdm_unsorted & m_npdm_intermediate & m_npdm_multinode;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_oneindex_screen_tol & m_twoindex_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type & m_warmup;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
@@ -308,6 +311,8 @@ class Input {
   boost::shared_ptr<cumulTimer> s1time; 
   boost::shared_ptr<cumulTimer> s2time; 
 
+  std::vector<int>& get_openorbs() { return m_openorbs;}
+  std::vector<int>& get_closedorbs() { return m_closedorbs;}
   const std::vector<int>& baseStates() const {return m_baseState;}
   const int& targetState() const {return m_targetState;}
   const std::vector<int>& projectorStates() const {return m_projectorState;}
@@ -316,6 +321,7 @@ class Input {
   int& targetState() {return m_targetState;}
   std::vector<int>& projectorStates() {return m_projectorState;}
 
+  void reorderOpenAndClosed();
   const int& num_occupied_orbitals() const {return m_occupied_orbitals;}
   const bool& doimplicitTranspose() const {return m_implicitTranspose;}
   bool& setimplicitTranspose() {return m_implicitTranspose;}

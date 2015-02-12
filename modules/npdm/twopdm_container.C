@@ -18,9 +18,6 @@ namespace Npdm{
 
 Twopdm_container::Twopdm_container( int sites )
 {
-  store_nonredundant_spin_elements_ = true;
-  store_full_spin_array_ = true;
-  store_full_spatial_array_ = true;
 
   if ( store_full_spin_array_ ) {
     if(dmrginp.spinAdapted())
@@ -186,11 +183,6 @@ void Twopdm_container::accumulate_spatial_npdm()
             for(int n=0;n<spatial_twopdm.dim4();++n)
               if ( abs(tmp_recv(k,l,m,n)) > NUMERICAL_ZERO) {
                 // Test for duplicates
-                if ( abs(spatial_twopdm(k,l,m,n)) > NUMERICAL_ZERO ){
-
-                abort();
-                pout << "duplicates"<<endl;
-                }
                 spatial_twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
               }
 	 }
@@ -223,11 +215,6 @@ void Twopdm_container::update_full_spin_array( std::vector< std::pair< std::vect
     //pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
 
     // Test for duplicates
-    if ( abs(twopdm(i, j, k, l)) != 0.0 ) {
-      pout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<endl;
-      pout << "earlier value: "<<twopdm(i,j,k,l)<<endl<< "new value:     "<<val<<endl;
-      abort();
-    }
     twopdm(i,j,k,l) = val;
   }
 
@@ -270,10 +257,7 @@ void Twopdm_container::update_full_spatial_array( std::vector< std::pair< std::v
       int k = (it->first)[2];
       int l = (it->first)[3];
 
-      if ( i%2 != l%2 ) continue;
-      if ( j%2 != k%2 ) continue;
-
-      spatial_twopdm( ro.at(i/2), ro.at(j/2), ro.at(k/2), ro.at(l/2) ) += factor * (it->second);
+      spatial_twopdm( ro.at(i), ro.at(j), ro.at(k), ro.at(l) ) += factor * (it->second);
     }
   }
 }
@@ -282,17 +266,25 @@ void Twopdm_container::update_full_spatial_array( std::vector< std::pair< std::v
 
 void Twopdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
-  if(dmrginp.spinAdapted()) assert( new_spin_orbital_elements.size() == 6 );
-  else assert(new_spin_orbital_elements.size() == 1);
   Twopdm_permutations perm;
-  std::vector< std::pair< std::vector<int>, double > > spin_batch;
-  // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
-  perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
+  if(dmrginp.spinAdapted())
+  {
+    std::vector< std::pair< std::vector<int>, double > > spatial_batch;
+    perm.get_spatial_batch(new_spin_orbital_elements,spatial_batch);
+    update_full_spatial_array(spatial_batch);
+    if( store_full_spin_array_)
+    {
+      std::vector< std::pair< std::vector<int>, double > > spin_batch;
+      perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
+      update_full_spin_array( spin_batch );
+    }
+  }
+  else{
+    std::vector< std::pair< std::vector<int>, double > > spin_batch;
+    perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
+    update_full_spin_array( spin_batch );
+  }
 
-  //FIXME add options to dump to disk if memory becomes bottleneck
-  if ( ! store_nonredundant_spin_elements_ ) nonredundant_elements.clear();
-  if ( store_full_spin_array_ || !dmrginp.spinAdapted()) update_full_spin_array( spin_batch );
-  if ( store_full_spatial_array_ && dmrginp.spinAdapted()) update_full_spatial_array( spin_batch );
 }
 
 //===========================================================================================================================================================

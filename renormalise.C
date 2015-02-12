@@ -43,7 +43,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
 				const double additional_noise, const bool &onedot, SpinBlock& System,
 				SpinBlock& sysDot, SpinBlock& environment, const bool& dot_with_sys,
 				const bool& warmUp, int sweepiter, int currentRoot, 
-				std::vector<Wavefunction>& lowerStates)
+				std::vector<Wavefunction>& lowerStates, DensityMatrix* ReducedDM)
 {
   int nroots = dmrginp.nroots(sweepiter);
   vector<Wavefunction> wave_solutions(nroots);
@@ -102,6 +102,10 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
     twodotnoise = additional_noise;
   
   tracedMatrix.makedensitymatrix(wave_solutions, newbig, dmrginp.weights(sweepiter), noise, twodotnoise, normalnoise);
+  //this will return the RDM back. It is required when we are doing LCC using DMRG. The H0 has almost all the operatorsand is needed to add an effective noise.
+  if (ReducedDM != 0)
+    *ReducedDM = tracedMatrix;
+
   dmrginp.addnoise -> stop();
   if (dmrginp.outputlevel() > 0)
     mcheck("after density matrix before rotation matrix");
@@ -128,7 +132,7 @@ void SpinBlock::RenormaliseFrom(vector<double> &energies, vector<double> &spins,
     mcheck("after noise and calculation of density matrix");
 }
 
-double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates)
+  double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatrix, const int& keptstates, const int& keptqstates, vector<DiagonalMatrix> *eigs)
 {
   // find and sort weight info
   DensityMatrix transformmatrix = tracedMatrix;
@@ -139,6 +143,9 @@ double makeRotateMatrix(DensityMatrix& tracedMatrix, vector<Matrix>& rotateMatri
     svd_densitymat(tracedMatrix, transformmatrix, eigenMatrix);
   else
     diagonalise_dm(tracedMatrix, transformmatrix, eigenMatrix);
+
+  if (eigs != 0)
+    *eigs = eigenMatrix;
 
   vector<pair<int, int> > inorderwts;
   vector<vector<int> > wtsbyquanta;

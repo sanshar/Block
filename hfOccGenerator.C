@@ -18,6 +18,7 @@ std::vector<int> SpinAdapted::Input::hfOccGenerator_ ()
   typedef std::multimap<double,int>::iterator mapIter;
 
   int irep = m_total_symmetry_number.getirrep();
+  if (NonabelianSym) irep = 0; //with nonabelian symmetry this code will only work with Ag symmetry
   int spac_norbs = m_norbs/2;
 
   // Sorting orbitals by 1-el. Hamiltonian, i.e. h(i, i)
@@ -40,10 +41,10 @@ std::vector<int> SpinAdapted::Input::hfOccGenerator_ ()
   for(int i = 0; i < m_alpha; ++i) {
     int ir = reorder[i];
     refOcc[2*ir] = 1;
-    refIrep = groupTable(refIrep, m_spin_orbs_symmetry[2*ir]);
+    refIrep = Symmetry::add(refIrep, m_spin_orbs_symmetry[2*ir])[0];
     if(i < m_beta) {
       refOcc[2*ir+1] = 1;
-      refIrep = groupTable(refIrep, m_spin_orbs_symmetry[2*ir+1]);
+      refIrep = Symmetry::add(refIrep, m_spin_orbs_symmetry[2*ir+1])[0];
     }
   }
 
@@ -64,8 +65,8 @@ std::vector<int> SpinAdapted::Input::hfOccGenerator_ ()
       int ir = reorder[i];
       for(int j = m_beta; j < m_alpha; ++j) {
         int jr = reorder[j];
-        int exIrep = groupTable(m_spin_orbs_symmetry[2*ir+1],m_spin_orbs_symmetry[2*jr+1]);
-        if(groupTable(refIrep,exIrep) == irep) {
+        int exIrep = Symmetry::add(m_spin_orbs_symmetry[2*ir+1],m_spin_orbs_symmetry[2*jr+1])[0];
+        if(Symmetry::add(refIrep,exIrep)[0] == irep) {
           std::vector<int> exOcc = refOcc;
           std::swap(exOcc[2*ir+1],exOcc[2*jr+1]);
           exOccs.push_back(exOcc);
@@ -87,8 +88,8 @@ std::vector<int> SpinAdapted::Input::hfOccGenerator_ ()
       int ir = reorder[i];
       for(int j = m_alpha; j < spac_norbs; ++j) {
         int jr = reorder[j];
-        int exIrep = groupTable(m_spin_orbs_symmetry[2*ir],m_spin_orbs_symmetry[2*jr]);
-        if(groupTable(refIrep,exIrep) == irep) {
+        int exIrep = Symmetry::add(m_spin_orbs_symmetry[2*ir],m_spin_orbs_symmetry[2*jr])[0];
+        if(Symmetry::add(refIrep,exIrep)[0] == irep) {
           std::vector<int> exOcc = refOcc;
           std::swap(exOcc[2*ir],exOcc[2*jr]);
           exOccs.push_back(exOcc);

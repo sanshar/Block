@@ -19,6 +19,7 @@ namespace Npdm{
 
 Onepdm_container::Onepdm_container( int sites )
 {
+
   if(dmrginp.spinAdapted()){
     onepdm.resize(2*sites,2*sites);
     spatial_onepdm.resize(sites,sites);
@@ -198,11 +199,6 @@ void Onepdm_container::update_full_spin_array( std::vector< std::pair< std::vect
 //    pout << "so-onepdm val: i,j = " << i << "," << j << "\t\t" << val << endl;
 
     // Test for duplicates
-    if ( onepdm( i, j ) != 0.0 ) {
-      pout << "WARNING: Already calculated "<<i<<" "<<j<<endl;
-      pout << "earlier value: "<<onepdm(i,j)<<endl<< "new value:     "<<val<<endl;
-      abort();
-    }
     if ( abs(val) > NUMERICAL_ZERO ) onepdm(i,j) = val;
   }
 
@@ -224,8 +220,7 @@ void Onepdm_container::update_full_spatial_array( std::vector< std::pair< std::v
       // Spin indices
       int i = (it->first)[0];
       int j = (it->first)[1];
-      if ( i%2 != j%2 ) continue;
-      spatial_onepdm( ro.at(i/2), ro.at(j/2) ) += it->second;
+      spatial_onepdm( ro.at(i), ro.at(j) ) += it->second;
     }
   }
 }
@@ -261,17 +256,24 @@ void Onepdm_container::update_full_spatial_array( std::vector< std::pair< std::v
 
 void Onepdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
 {
-  if(dmrginp.spinAdapted()) assert( new_spin_orbital_elements.size() == 2 );
-  else assert( new_spin_orbital_elements.size()==1);
   Onepdm_permutations perm;
-  std::vector< std::pair< std::vector<int>, double > > spin_batch;
-  // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
-  perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
-
-  //if ( store_full_spin_array_ || !dmrginp.spinAdapted() ) update_full_spin_array( spin_batch );
-  update_full_spin_array( spin_batch );
   if(dmrginp.spinAdapted())
-    update_full_spatial_array( spin_batch );
+  {
+    std::vector< std::pair< std::vector<int>, double > > spatial_batch;
+    perm.get_spatial_batch(new_spin_orbital_elements,spatial_batch);
+    update_full_spatial_array(spatial_batch);
+    if( store_full_spin_array_)
+    {
+      std::vector< std::pair< std::vector<int>, double > > spin_batch;
+      perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
+      update_full_spin_array( spin_batch );
+    }
+  }
+  else{
+    std::vector< std::pair< std::vector<int>, double > > spin_batch;
+    perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
+    update_full_spin_array( spin_batch );
+  }
 }
 
 //===========================================================================================================================================================

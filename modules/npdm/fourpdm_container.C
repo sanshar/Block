@@ -407,12 +407,6 @@ void Fourpdm_container::update_full_spin_array( std::vector< std::pair< std::vec
     //      << "\t\t" << val << endl;
     //}
 
-    // Test for duplicates
-    if ( abs(fourpdm(i,j,k,l,m,n,p,q)) != 0.0 ) {
-      pout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<" "<<p<<" "<<q<<endl;
-      pout << "earlier value: " << fourpdm(i,j,k,l,m,n,p,q) << endl << "new value:     " <<val<<endl;
-      abort();
-    }
     fourpdm(i,j,k,l,m,n,p,q) = val;
   }
 
@@ -441,12 +435,13 @@ void Fourpdm_container::update_full_spatial_array( std::vector< std::pair< std::
       int p = (it->first)[6];
       int q = (it->first)[7];
   
-      if ( i%2 != q%2 ) continue;
-      if ( j%2 != p%2 ) continue;
-      if ( k%2 != n%2 ) continue;
-      if ( l%2 != m%2 ) continue;
-
-      spatial_fourpdm( ro.at(i/2), ro.at(j/2), ro.at(k/2), ro.at(l/2), ro.at(m/2), ro.at(n/2), ro.at(p/2), ro.at(q/2) ) += it->second;
+//      if ( i%2 != q%2 ) continue;
+//      if ( j%2 != p%2 ) continue;
+//      if ( k%2 != n%2 ) continue;
+//      if ( l%2 != m%2 ) continue;
+//
+//      spatial_fourpdm( ro.at(i/2), ro.at(j/2), ro.at(k/2), ro.at(l/2), ro.at(m/2), ro.at(n/2), ro.at(p/2), ro.at(q/2) ) += it->second;
+      spatial_fourpdm( ro.at(i), ro.at(j), ro.at(k), ro.at(l), ro.at(m), ro.at(n), ro.at(p), ro.at(q) ) = it->second;
     }
   }
 }
@@ -588,19 +583,24 @@ void Fourpdm_container::store_npdm_elements( const std::vector< std::pair< std::
 {
   assert( new_spin_orbital_elements.size() == 70 );
   Fourpdm_permutations perm;
-  std::vector< std::pair< std::vector<int>, double > > spin_batch;
+  //std::vector< std::pair< std::vector<int>, double > > spin_batch;
+  std::vector< std::pair< std::vector<int>, double > > spatial_batch;
   // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
-  perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
+  //perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
+  perm.get_spatial_batch(new_spin_orbital_elements,spatial_batch);
 
-  if ( dmrginp.store_spinpdm() ) update_full_spin_array( spin_batch );
-  if ( !dmrginp.spatpdm_disk_dump() ) update_full_spatial_array( spin_batch );
-  else{
-    if(dmrginp.store_nonredundant_pdm()) 
-      dump_to_disk(nonredundant_elements);
-    else
-      dump_to_disk(spin_batch);
+  //if ( dmrginp.store_spinpdm() ) update_full_spin_array( spin_batch );
+//  if ( !dmrginp.spatpdm_disk_dump() ) update_full_spatial_array( spin_batch );
+//  else{
+//    if(dmrginp.store_nonredundant_pdm()) 
+//      dump_to_disk(nonredundant_elements);
+//    else
+  if(dmrginp.spatpdm_disk_dump() ){
+      //dump_to_disk(spin_batch);
+      dump_to_disk(spatial_batch);
   }
-  if ( ! dmrginp.store_nonredundant_pdm() || dmrginp.spatpdm_disk_dump() ) nonredundant_elements.clear();
+  else update_full_spatial_array(spatial_batch);
+  //if ( ! dmrginp.store_nonredundant_pdm() || dmrginp.spatpdm_disk_dump() ) nonredundant_elements.clear();
 }
 
 //===========================================================================================================================================================

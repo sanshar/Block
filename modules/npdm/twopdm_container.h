@@ -27,7 +27,7 @@ class Twopdm_container : public Npdm_container {
     void store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements );
     void clear() { twopdm.Clear(); spatial_twopdm.Clear(); nonredundant_elements.clear(); }
 
-    array_4d<double>& get_spatial_twopdm() { assert(store_full_spatial_array_); return spatial_twopdm; }
+    array_4d<double>& get_spatial_twopdm() {  return spatial_twopdm; }
 
   private:
     // Vector to store nonredundant spin-orbital elements only
@@ -36,9 +36,9 @@ class Twopdm_container : public Npdm_container {
     array_4d<double> twopdm;
     array_4d<double> spatial_twopdm;
 
-    bool store_full_spin_array_;
-    bool store_full_spatial_array_;
-    bool store_nonredundant_spin_elements_;
+    bool store_full_spin_array_ = true;
+    bool store_full_spatial_array_ = true;
+    bool store_nonredundant_spin_elements_ = false;
 
     void save_npdm_text(const int &i, const int &j);
     void save_npdm_binary(const int &i, const int &j);

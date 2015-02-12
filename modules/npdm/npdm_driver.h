@@ -57,7 +57,7 @@ class Npdm_driver {
                                NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, NpdmSpinOps & dotOps, bool skip );
 
     int get_mpi_max_size( int my_size );
-    bool broadcast_lhs(NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps);
+    bool broadcast_lhs( int lhs_size, int rhs_size );
     bool skip_this_mpi_rank( NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps );
     bool skip_parallel( NpdmSpinOps & lhsOps, NpdmSpinOps & rhsOps, bool lhsrhsdot );
     bool screen(const std::vector<CD> &lhs_cd_type,const std::vector<CD> &dot_cd_type);
