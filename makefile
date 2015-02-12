@@ -18,7 +18,7 @@ ifeq ($(USE_BOOST56), yes)
 endif
 
 #use these variable to set if we will use mpi or not 
-USE_MPI = yes
+USE_MPI = no
 USE_MKL = yes
 
 # use this variable to set if we will use integer size of 8 or not.
@@ -26,6 +26,8 @@ USE_MKL = yes
 I8_OPT = no
 MOLPRO = no
 OPENMP = no
+
+DOPROF = yes
 
 # add Molcas interface to libqcdmrg.so
 # molcas compilation w/ -64 option requires I8 as well
@@ -106,6 +108,10 @@ ifeq (g++, $(CXX))
       GLIBS = -L/home/juny/libs/gcc-4.8.3-install/lib64 
       LIBS += $(GLIBS)
 #   OPT = -g -fPIC
+endif
+
+ifeq ($(DOPROF),yes)
+     OPT += -pg
 endif
 
 ifeq ($(USE_MPI), yes)
