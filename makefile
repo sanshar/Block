@@ -27,6 +27,8 @@ I8_OPT = no
 MOLPRO = no
 OPENMP = no
 
+DOPROF = no
+
 # add Molcas interface to libqcdmrg.so
 # molcas compilation w/ -64 option requires I8 as well
 MOLCAS = no
@@ -102,10 +104,12 @@ ifeq (g++, $(CXX))
       OPENMP_FLAGS= -fopenmp -D_OPENMP 
    endif
 # GNU compiler
-      OPT = -DNDEBUG -O3 
-      GLIBS = -L/home/juny/libs/gcc-4.8.3-install/lib64 
-      LIBS += $(GLIBS)
+      OPT = -DNDEBUG -O3
 #   OPT = -g -fPIC
+endif
+
+ifeq ($(DOPROF),yes)
+     OPT += -pg
 endif
 
 ifeq ($(USE_MPI), yes)

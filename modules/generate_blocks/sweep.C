@@ -86,7 +86,7 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
   newSystem.printOperatorSummary();
   //mcheck("After renorm transform");
 
-  p3out << *dmrginp.guessgenT<<" "<<*dmrginp.multiplierT<<" "<<*dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+  p2out << *dmrginp.guessgenT<<" "<<*dmrginp.multiplierT<<" "<<*dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
   p2out << *dmrginp.makeopsT<<"  "<<*dmrginp.initnewsystem<<"  "<<*dmrginp.sysdotmake<<"  "<<*dmrginp.buildcsfops<<" makeops "<<endl;
   p2out << *dmrginp.datatransfer<<" datatransfer "<<endl;
   p2out <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
@@ -100,6 +100,7 @@ void SweepGenblock::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& syste
 
 double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int stateA, int stateB)
 {
+  Timer sweeptimer;
   int integralIndex = 0;
 
   SpinBlock system;
@@ -181,12 +182,16 @@ double SweepGenblock::do_one(SweepParams &sweepParams, const bool &warmUp, const
 
   ++sweepParams.set_sweep_iter();
 
+  pout << "\t\t\t Elapsed Sweep CPU  Time (seconds): " << setprecision(3) << sweeptimer.elapsedcputime() << endl;
+  pout << "\t\t\t Elapsed Sweep Wall Time (seconds): " << setprecision(3) << sweeptimer.elapsedwalltime() << endl;
+
   return finalEnergy[0];
 }
 
 
 void SweepGenblock::do_one(SweepParams &sweepParams, const bool &forward, int stateA, int stateB)
 {
+  Timer sweeptimer;
   int integralIndex = 0;
   SpinBlock system;
 
@@ -246,6 +251,9 @@ void SweepGenblock::do_one(SweepParams &sweepParams, const bool &forward, int st
   // update the static number of iterations
 
   ++sweepParams.set_sweep_iter();
+
+  pout << "\t\t\t Elapsed Sweep CPU  Time (seconds): " << setprecision(3) << sweeptimer.elapsedcputime() << endl;
+  pout << "\t\t\t Elapsed Sweep Wall Time (seconds): " << setprecision(3) << sweeptimer.elapsedwalltime() << endl;
 
 }
 

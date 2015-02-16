@@ -11,8 +11,7 @@ find . -name "twopdm.*" |xargs rm >/dev/null 2>&1
 find . -name "Restart*" |xargs rm >/dev/null 2>&1
 find . -name "onepdm_fromtpdm" |xargs rm >/dev/null 2>&1
 find . -name "pairmat.*" |xargs rm >/dev/null 2>&1
-find . -name "dmrg.out" |xargs rm >/dev/null 2>&1
-find . -name "dmrg_onepdm.out" |xargs rm >/dev/null 2>&1
+find . -name "dmrg*.out" |xargs rm >/dev/null 2>&1
 find . -name "RI*tmp" |xargs rm >/dev/null 2>&1
 find . -name "*_*_p*.tmp" |xargs rm >/dev/null 2>&1
 find . -name "*.bin" |xargs rm >/dev/null 2>&1
@@ -22,6 +21,7 @@ find . -name "twopdm.*" |xargs rm >/dev/null 2>&1
 find . -name "threepdm.*" |xargs rm >/dev/null 2>&1
 find . -name "fourpdm.*" |xargs rm >/dev/null 2>&1
 find . -name "A16_matrix.*txt" |xargs rm >/dev/null 2>&1
+find . -name "A22_matrix.*txt" |xargs rm >/dev/null 2>&1
 rm npdm_h2o_small/*.tmp
 rm h2o_nevpt2/*.tmp0
 rm mpspt2/response.out >/dev/null 2>&1
