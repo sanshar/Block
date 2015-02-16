@@ -1,4 +1,4 @@
-<img src="https://github.com/sanshar/Block/tree/master/README_Examples/block_logo.jpg" width="60px" height="60px" />
+<img src="https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/block_logo.jpg" width="60px" height="60px" />
 
 `BLOCK` implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry.
 
@@ -69,7 +69,7 @@ Typical Calculations
 In the following the DMRG calculation for **C<sub>2</sub> molecule** is used to demonstrate various computational features as of the current 1.0.0 release.
 Integrals and orbitals must be supplied externally in Molpro's ```FCIDUMP``` format, as ```BLOCK``` does not generate its own integrals.
 
-The associated integral files for C<sub>2</sub> can be found here: [FCIDUMP](https://github.com/sanshar/Block/tree/master/README_Examples/FCIDUMP) 
+The associated integral files for C<sub>2</sub> can be found here: [FCIDUMP](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/FCIDUMP) 
 for its D<sub>2h</sub> point-group symmetry.
 
 ### 1. Molecular symmetry
@@ -303,7 +303,7 @@ Example 5: 2-particle density matrix for the ground state.
         twopdm
 
 The 2-particle density matrix is stored in the file of 
-[spatial\_twopdm.0.0.txt](https://github.com/sanshar/Block/tree/master/README_Examples/5/spatial_twopdm.0.0.txt).
+[spatial\_twopdm.0.0.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/5/spatial_twopdm.0.0.txt).
 
 Example 6: state-averaged 2-particle density matrix for two roots.
 
@@ -324,8 +324,8 @@ Example 6: state-averaged 2-particle density matrix for two roots.
         twopdm
 
 The 2-particle density matrices for both state 1 and state 2 are stored 
-in the files of [spatial\_twopdm.0.0.txt](https://github.com/sanshar/Block/tree/master/README_Examples/6/spatial_twopdm.0.0.txt), 
-and [spatial\_twopdm.1.1.txt](https://github.com/sanshar/Block/tree/master/README_Examples/6/spatial_twopdm.1.1.txt), respectively.
+in the files of [spatial\_twopdm.0.0.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/6/spatial_twopdm.0.0.txt), 
+and [spatial\_twopdm.1.1.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/6/spatial_twopdm.1.1.txt), respectively.
 
 ### 6. 1- and 2-particle transition reduced density matrix
 
@@ -356,7 +356,7 @@ Example 7: state-averaged 2-particle transition density matrix between two A<sub
         tran_twopdm
 
 The state-average 2-particle transition density matrix is stored in the file of
-[spatial\_twopdm.1.0.txt](https://github.com/sanshar/Block/tree/master/README_Examples/7/spatial_twopdm.1.0.txt).
+[spatial\_twopdm.1.0.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/7/spatial_twopdm.1.0.txt).
         
 Example 8: state-specific 2-particle transition density matrix between two _refined_ A<sub>g</sub> states.
 
@@ -379,7 +379,7 @@ Example 8: state-specific 2-particle transition density matrix between two _refi
         tran_twopdm
         
 The state-specific 2-particle transition density matrix is stored in the file of 
-[spatial\_twopdm.1.0.txt](https://github.com/sanshar/Block/tree/master/README_Examples/8/spatial_twopdm.1.0.txt).
+[spatial\_twopdm.1.0.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/8/spatial_twopdm.1.0.txt).
 
 ### 7. Restart DMRG energy calculation
 
@@ -432,7 +432,7 @@ Example 10: restart DMRG 2-particle density matrix calculation.
         restart_twopdm
 
 The 2-particle density matrix is stored in the file of 
-[spatial\_twopdm.0.0.txt](https://github.com/sanshar/Block/tree/master/README_Examples)/10/spatial_twopdm.0.0.txt).
+[spatial\_twopdm.0.0.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/10/spatial_twopdm.0.0.txt).
 
 ### 9. Restart DMRG transition reduced density matrix calculation<a name="restart_tran"></a>
 
@@ -457,7 +457,7 @@ Example 11: state-averaged 2-particle transition density matrix between bra and 
         restart_tran_twopdm
 
 The 2-particle transition density matrix is stored in the file of 
-[spatial\_twopdm.1.0.txt](https://github.com/sanshar/Block/tree/master/README_Examples/11/spatial_twopdm.1.0.txt).
+[spatial\_twopdm.1.0.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/11/spatial_twopdm.1.0.txt).
 
 When bra and ket states belong to different irreps, the restart calculation takes a few steps in which the corresponding state-specific calculations are needed.
 
@@ -528,7 +528,7 @@ in different scratch directories of ```scratch_bra``` and ```scratch_ket```, ena
         restart_tran_twopdm
 
 The 2-particle transition density matrix is stored in the file of 
-[spatial\_twopdm.1.0.txt](https://github.com/sanshar/Block/tree/master/README_Examples/12/spatial_twopdm.1.0.txt).
+[spatial\_twopdm.1.0.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/12/spatial_twopdm.1.0.txt).
 
 ### 10. Customize sweep schedule
 
@@ -726,7 +726,7 @@ When the calculation is done, extract the sweep energies from ```output.dat```,
 
 Energy extrapolation:
 
-   <img src="https://github.com/sanshar/Block/tree/master/README_Examples/c2_energy.png" width="500" />
+   <img src="https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/c2_energy.png" width="500" />
 
 Starting from _M_=500, use the largest discarded weights and associated sweep energies
 in the last sweep iteration of each _M_ to make linear regression (see the figure above).
