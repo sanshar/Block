@@ -1,0 +1,299 @@
+Runing with 6 processors
+Block  Copyright (C) 2012  Garnet K.-L. Chan
+This program comes with ABSOLUTELY NO WARRANTY; for details see license file.
+This is free software, and you are welcome to redistribute it
+under certain conditions; see license file for details.
+Reading input file
+m_hf_occ_user integral
+Fiedler-vector orbital ordering: 26 18 13 5 22 25 9 12 20 23 7 10 21 24 1 8 11 14 6 16 2 17 4 19 3 15 
+
+open orbs   :
+closed orbs :
+Initial HF occupancy guess: 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 0 0 0 0 1 1 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+Checking input for errors
+Sweep at which the switch from twodot to onedot will happen -> 12
+Summary of input
+----------------
+Total number of orbitals                           :   26
+Symmetry of the targeted wavefunctions             :   8:0:1
+Number of wavefunctions targeted                   :   1
+Symmetry of the molecule                           :   d2h
+Irreducible representations of the orbitals        :   Au  B1u  B1g  Ag  B2g  B3g  B3u  B2u  B2g  B3g  B3u  B2u  B2g  B3g  Ag  B3u  B2u  B1u  Ag  B1u  Ag  B1u  Ag  B1u  Ag  B1u  
+
+Schedule
+--------
+Iter       : # States              Davidson_tol          Random_noise        
+0          : 250                   1.000000e-05          1.000000e-04        
+8          : 500                   1.000000e-05          1.000000e-04        
+10         : 500                   1.000000e-06          0.000000e+00        
+Switching from twodot to onedot algorithm          :   12
+Maximum sweep iterations                           :   30
+
+
+			 Restarting at sweep iteration: 20
+
+			 Restarting at block iterations: 0
+
+			 Starting renormalisation sweep in backwards direction
+			 ============================================================================ 
+
+			 Block Iteration :: 0
+			 ----------------------------
+			 System  Block			 Sites ::  24 25     # states: 10    # states: 10
+
+			 Block Iteration :: 1
+			 ----------------------------
+			 System  Block			 Sites ::  23 24 25     # states: 35    # states: 35
+
+			 Block Iteration :: 2
+			 ----------------------------
+			 System  Block			 Sites ::  22 23 24 25     # states: 126    # states: 126
+
+			 Block Iteration :: 3
+			 ----------------------------
+			 System  Block			 Sites ::  21 22 23 24 25     # states: 383    # states: 383
+
+			 Block Iteration :: 4
+			 ----------------------------
+			 System  Block			 Sites ::  20 21 22 23 24 25     # states: 792    # states: 792
+
+			 Block Iteration :: 5
+			 ----------------------------
+			 System  Block			 Sites ::  19 20 21 22 23 24 25     # states: 1410    # states: 1410
+
+			 Block Iteration :: 6
+			 ----------------------------
+			 System  Block			 Sites ::  18 19 20 21 22 23 24 25     # states: 1748    # states: 1748
+
+			 Block Iteration :: 7
+			 ----------------------------
+			 System  Block			 Sites ::  17 18 19 20 21 22 23 24 25     # states: 1822    # states: 1822
+
+			 Block Iteration :: 8
+			 ----------------------------
+			 System  Block			 Sites ::  16 17 18 19 20 21 22 23 24 25     # states: 1771    # states: 1771
+
+			 Block Iteration :: 9
+			 ----------------------------
+			 System  Block			 Sites ::  15 16 17 18 19 20 21 22 23 24 25     # states: 1804    # states: 1804
+
+			 Block Iteration :: 10
+			 ----------------------------
+			 System  Block			 Sites ::  14 15 16 17 18 19 20 21 22 23 24 25     # states: 1785    # states: 1785
+
+			 Block Iteration :: 11
+			 ----------------------------
+			 System  Block			 Sites ::  13 14 15 16 17 18 19 20 21 22 23 24 25     # states: 1671    # states: 1671
+
+			 Block Iteration :: 12
+			 ----------------------------
+			 System  Block			 Sites ::  12 13 14 15 16 17 18 19 20 21 22 23 24 25     # states: 1664    # states: 1664
+
+			 Block Iteration :: 13
+			 ----------------------------
+			 System  Block			 Sites ::  11 12 13 14 15 16 17 18 19 20 21 22 23 24 25     # states: 1664    # states: 1664
+
+			 Block Iteration :: 14
+			 ----------------------------
+			 System  Block			 Sites ::  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25     # states: 1627    # states: 1627
+
+			 Block Iteration :: 15
+			 ----------------------------
+			 System  Block			 Sites ::  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25     # states: 1615    # states: 1615
+
+			 Block Iteration :: 16
+			 ----------------------------
+			 System  Block			 Sites ::  8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25     # states: 1633    # states: 1633
+
+			 Block Iteration :: 17
+			 ----------------------------
+			 System  Block			 Sites ::  7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25     # states: 1662    # states: 1662
+
+			 Block Iteration :: 18
+			 ----------------------------
+			 System  Block			 Sites ::  6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25     # states: 1436    # states: 1436
+
+			 Block Iteration :: 19
+			 ----------------------------
+			 System  Block			 Sites ::  5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25     # states: 917    # states: 917
+
+			 Block Iteration :: 20
+			 ----------------------------
+			 System  Block			 Sites ::  4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25     # states: 548    # states: 548
+
+			 Block Iteration :: 21
+			 ----------------------------
+			 System  Block			 Sites ::  3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25     # states: 145    # states: 145
+
+			 Block Iteration :: 22
+			 ----------------------------
+			 System  Block			 Sites ::  2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25     # states: 84    # states: 84
+
+			 Block Iteration :: 23
+			 ----------------------------
+			 System  Block			 Sites ::  1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25     # states: 25    # states: 25
+			 Finished Generate-Blocks Sweep. 
+			 ============================================================================ 
+			 Elapsed Sweep CPU  Time (seconds): 2.911e+01
+			 Elasped Sweep Wall Time (seconds): 3.059e+01
+
+			 Starting renormalisation sweep in forwards direction
+			 ============================================================================ 
+			 Starting block is :: 
+			 Sites ::  0     # states: 3    # states: 3
+
+
+			 Block Iteration :: 0
+			 ----------------------------
+			 Performing sweep calculation: 2PDM 
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1     # states: 10    # states: 10
+
+
+			 Block Iteration :: 1
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2     # states: 29    # states: 29
+
+
+			 Block Iteration :: 2
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3     # states: 50    # states: 50
+
+
+			 Block Iteration :: 3
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4     # states: 167    # states: 167
+
+
+			 Block Iteration :: 4
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5     # states: 276    # states: 276
+
+
+			 Block Iteration :: 5
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6     # states: 430    # states: 430
+
+
+			 Block Iteration :: 6
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7     # states: 500    # states: 500
+
+
+			 Block Iteration :: 7
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8     # states: 500    # states: 500
+
+
+			 Block Iteration :: 8
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9     # states: 500    # states: 500
+
+
+			 Block Iteration :: 9
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10     # states: 500    # states: 500
+
+
+			 Block Iteration :: 10
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10 11     # states: 500    # states: 500
+
+
+			 Block Iteration :: 11
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10 11 12     # states: 500    # states: 500
+
+
+			 Block Iteration :: 12
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10 11 12 13     # states: 500    # states: 500
+
+
+			 Block Iteration :: 13
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14     # states: 500    # states: 500
+
+
+			 Block Iteration :: 14
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15     # states: 500    # states: 500
+
+
+			 Block Iteration :: 15
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16     # states: 484    # states: 484
+
+
+			 Block Iteration :: 16
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17     # states: 498    # states: 498
+
+
+			 Block Iteration :: 17
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18     # states: 488    # states: 488
+
+
+			 Block Iteration :: 18
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19     # states: 398    # states: 398
+
+
+			 Block Iteration :: 19
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20     # states: 220    # states: 220
+
+
+			 Block Iteration :: 20
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21     # states: 106    # states: 106
+
+
+			 Block Iteration :: 21
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22     # states: 35    # states: 35
+
+
+			 Block Iteration :: 22
+			 ----------------------------
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23     # states: 10    # states: 10
+
+
+			 Block Iteration :: 23
+			 ----------------------------
+			 Performing sweep calculation 
+			 Total block energy for State [ 0 ] with 500 :: -7.572834699664e+01
+			 Sites ::  0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24     # states: 3    # states: 3
+
+			 Finished Sweep with 500 states and sweep energy for State [ 0 ] with Spin [ 0 ] :: -7.572834699664e+01
+			 Largest Error for Sweep with 500 states is 0.000000000000e+00
+			 ============================================================================ 
+			 Elasped Sweep CPU  Time (seconds): 6.688e+02
+			 Elapsed Sweep Wall Time (seconds): 6.811e+02
+
+
+			 BLOCK CPU  Time (seconds): 6.979e+02
+			 BLOCK Wall Time (seconds): 7.117e+02

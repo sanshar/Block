@@ -310,6 +310,7 @@ void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& 
 
 double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize)
 {
+  Timer sweeptimer;
   int integralIndex = 0; //By default we assume that we only have one set of integrals and its index is 0
   SpinBlock system;
   const int nroots = dmrginp.nroots(sweepParams.get_sweep_iter());
@@ -408,7 +409,7 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 	  
 #ifndef MOLPRO
 	  pout << "\t\t\t Total block energy for State [ " << istate << 
-	    " ] with " << sweepParams.get_keep_states()<<" States :: " << sweepParams.get_lowest_energy()[j] <<endl;              
+	    " ] with " << sweepParams.get_keep_states()<<" States :: " << setw(20) << setprecision(10) << fixed << sweepParams.get_lowest_energy()[j] <<endl;              
 #else 
 	  //We might want to relax the output restrictions here, so it prints out with outputlevel=0
           p1out << "\t\t\t Total block energy for State [ " << istate << 
@@ -458,23 +459,23 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
 
   for(int j=0;j<nroots;++j){
     int istate = dmrginp.setStateSpecific() ? sweepParams.current_root() : j;
-    if (mpigetrank() == 0) {
 #ifndef MOLPRO
-//    printf("\t\t\t M = %6i  state = %4i  Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), istate, finalError, finalEnergy[j]+dmrginp.get_coreenergy());
-      pout << "\t\t\t M = " << setw(6) << sweepParams.get_keep_states()
-           << "  state = " << setw(4) << istate
-           << "  Largest Discarded Weight = " << setw(8) << setprecision(3) << scientific << finalError
-           << "  Sweep Energy = " << setw(20) << setprecision(10) << fixed << finalEnergy[j]
-           << " " << endl;
+//  printf("\t\t\t M = %6i  state = %4i  Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), istate, finalError, finalEnergy[j]+dmrginp.get_coreenergy());
+    pout << "\t\t\t M = " << setw(6) << sweepParams.get_keep_states()
+         << "  state = " << setw(4) << istate
+         << "  Largest Discarded Weight = " << setw(8) << setprecision(3) << scientific << finalError
+         << "  Sweep Energy = " << setw(20) << setprecision(10) << fixed << finalEnergy[j]
+         << " " << endl;
 #else 
-      //printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
-      pout << "\t\t\t M = " <<  setw(6) << sweepParams.get_keep_states() ; 
-      pout << "\t Largest Discarded Weight = " << scientific << setprecision(3) << finalError ;
-      pout << "\t Sweep Energy = " << fixed << setprecision(10) << finalEnergy[j] << endl;
+    //printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
+    pout << "\t\t\t M = " <<  setw(6) << sweepParams.get_keep_states() ; 
+    pout << "\t Largest Discarded Weight = " << scientific << setprecision(3) << finalError ;
+    pout << "\t Sweep Energy = " << fixed << setprecision(10) << finalEnergy[j] << endl;
 #endif
-    }
   }
   pout << "\t\t\t ============================================================================ " << endl;
+  pout << "\t\t\t Elapsed Sweep CPU  Time (seconds): " << fixed << setprecision(3) << sweeptimer.elapsedcputime() << endl;
+  pout << "\t\t\t Elapsed Sweep Wall Time (seconds): " << fixed << setprecision(3) << sweeptimer.elapsedwalltime()<< endl;
 
   // update the static number of iterations
 
@@ -601,7 +602,7 @@ void SpinAdapted::Sweep::Startup (SweepParams &sweepParams, SpinBlock& system, S
   
 
 
-  p3out << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+  p2out << dmrginp.guessgenT<<" "<<dmrginp.multiplierT<<" "<<dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
   p2out << dmrginp.makeopsT<<" makeops "<<endl;
   p2out << dmrginp.datatransfer<<" datatransfer "<<endl;
   //p2out << dmrginp.justmultiply<<" just multiply "<<endl;

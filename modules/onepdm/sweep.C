@@ -148,6 +148,7 @@ void SweepOnepdm::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system,
 
 double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, int state)
 {
+  Timer sweeptimer;
   int integralIndex = 0;
   SpinBlock system;
   const int nroots = dmrginp.nroots();
@@ -229,6 +230,10 @@ double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
     // only <D{ia}D{jb}> is in the matrix
     save_pairmat_text(pairmat , state, state);
   }
+
+  pout << "\t\t\t Elapsed Sweep CPU  Time (seconds): " << setprecision(3) << sweeptimer.elapsedcputime() << endl;
+  pout << "\t\t\t Elapsed Sweep Wall Time (seconds): " << setprecision(3) << sweeptimer.elapsedwalltime() << endl;
+
   return sweepParams.get_lowest_energy()[0];
 }
 }
