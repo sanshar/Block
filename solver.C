@@ -94,6 +94,9 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
     else if (dmrginp.solve_method() == CONJUGATE_GRADIENT) {
       solution.resize(1);
 
+      //SS PLEASE REMOVE THIS
+      //lowerStates.resize(2);
+
       multiply_h davidson_f(big, onedot);
 
       if (mpigetrank()!=0) 
@@ -105,8 +108,7 @@ void SpinAdapted::Solver::solve_wavefunction(vector<Wavefunction>& solution, vec
       if (guesswavetype == BASIC)
 	solution[0].Clear();
 
-
-      double functional = Linear::ConjugateGradient(solution[0], tol, davidson_f, lowerStates);
+      double functional = Linear::MinResMethod(solution[0], tol, davidson_f, lowerStates);
       if (mpigetrank() == 0)
 	e(1) = functional;
 

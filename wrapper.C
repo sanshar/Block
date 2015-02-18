@@ -1,8 +1,3 @@
-#ifndef SERIAL
-#include <boost/mpi/environment.hpp>
-#include <boost/mpi/communicator.hpp>
-#include <boost/mpi.hpp>
-#endif
 #include "global.h"
 #include "fciqmchelper.h"
 #include "input.h"
@@ -10,6 +5,11 @@
 #include "wrapper.h"
 #include "rotationmat.h"
 #include <sstream>
+#ifndef SERIAL
+#include <boost/mpi/environment.hpp>
+#include <boost/mpi/communicator.hpp>
+#include <boost/mpi.hpp>
+#endif
 
 
 void ReadInput(char* conf);
@@ -129,37 +129,57 @@ void test()
 {
   setbuf(stdout, NULL);
   pout.precision(12);
-  MPS statea(0);
-  double o, h;
-  calcHamiltonianAndOverlap(statea, statea, h, o, true);
+  int msgsize=1000;
+  char msgctr[msgsize];
 
-  if (mpigetrank() == 0)
-    printf("<0|0> = %18.10f   <0|H|0> = %18.10f\n", o, h);
-  double e0 = h;
-
-  for (int i=1; i<60; i++) {
-    MPS statec(i);
-    double h1,o1;
-    calcHamiltonianAndOverlap(statea, statec, h, o);
-    calcHamiltonianAndOverlap(statec, statec, h1, o1);
-    if (mpigetrank() == 0)
-      printf("<0|%i> = %18.10e   <0|H|%i> = %18.10e  <%i|%i> = %18.10e  <%i|H|%i> = %18.10e  perturb=%18.10e\n", i, o, i, h, i, i, o1, i, i, h1, h1-e0*o1);
+  int nstates;
+  if (mpigetrank() == 0) {
+    ifstream file("states");
+    file.getline(msgctr, msgsize);
+    string s( msgctr);
+    vector<string> tok;
+    boost::split(tok, s, is_any_of(", \t"), token_compress_on);
+    nstates = atoi(tok[0].c_str());
+    file.close();
   }
-  /*
-  MPS statec(2);
-  calcHamiltonianAndOverlap(statea, statec, h, o);
-  if (mpigetrank() == 0)
-    printf("<0|1> = %18.10f   <0|H|1> = %18.10f\n", o, h);
+#ifndef SERIAL
+  boost::mpi::communicator world;
+  boost::mpi::broadcast(world, nstates, 0);
+#endif
+
+  std::vector< std::vector<double> > ham(nstates, std::vector<double>(nstates, 0.0));
+  std::vector< std::vector<double> > Overlap(nstates, std::vector<double>(nstates, 0.0));
 
 
-  //MPS stateb(1);
-  //calcHamiltonianAndOverlap(stateb, stateb, h, o);
-  //pout << o<<"  "<<h<<endl;
+  for (int i=0; i<nstates; i++) {
+    if(mpigetrank() == 0)
+      printf("starting row : %i\n", i);
+    for (int j=0; j<i+1; j++) {
+      MPS statea(i);
+      MPS stateb(j);
+      double h,o;
+      calcHamiltonianAndOverlap(statea, stateb, h, o);
+      ham[i][j] = h; ham[j][i] = h;
+      Overlap[i][j] = o; Overlap[j][i] = o;
+    }
+  }
 
-  calcHamiltonianAndOverlap(statec, statec, h, o);
-  if (mpigetrank() == 0)
-    printf("<1|1> = %18.10f   <1|H|1> = %18.10f\n", o, h);
-  */
+  if(mpigetrank() == 0) {
+    printf("printing hamiltonian\n");
+    for (int i=0; i<nstates; i++) {
+      for (int j=0; j<nstates; j++) 
+	printf("%18.9e ", ham[i][j]);
+      printf("\n");
+    }
+    
+    printf("\n");
+    printf("printing overlap\n");
+    for (int i=0; i<nstates; i++) {
+      for (int j=0; j<nstates; j++) 
+	printf("%18.9e ", Overlap[i][j]);
+      printf("\n");
+    }
+  }
 }
 
 void evaluateOverlapAndHamiltonian(unsigned long *occ, int length, double* o, double* h) {

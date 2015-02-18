@@ -294,6 +294,9 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
 	double error = makeRotateMatrix(tracedMatrix, ketrotatematrix, largeNumber, sweepParams.get_keep_qstates());
 
       iwave.SaveWavefunctionInfo (perturbationnewbig.get_ketStateInfo(), perturbationnewbig.get_leftBlock()->get_sites(), firstOrderState);
+
+      if ( l == 0)
+	SaveRotationMatrix (perturbationnewsystem.get_sites(), ketrotatematrix);
       SaveRotationMatrix (perturbationnewsystem.get_sites(), ketrotatematrix, firstOrderState);
       
     }
@@ -505,7 +508,9 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
 
       //Need to substitute by:
       if (warmUp ) {
-	//int correctionVector = 1;
+	int correctionVector = dmrginp.guessState();
+	p2out << "USING state "<<correctionVector<<" as initial guess"<<endl;
+
 	StartUp(sweepParams, system, newSystem, dot_with_sys, 
 		targetState, correctionVector, projectors, baseStates);
       }

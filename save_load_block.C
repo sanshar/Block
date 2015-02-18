@@ -47,8 +47,7 @@ std::string SpinBlock::restore (bool forward, const vector<int>& sites, SpinBloc
   mpi::broadcast(world, b.braStateInfo, 0);
   mpi::broadcast(world, b.ketStateInfo, 0);
 #endif
-  
-  
+
   b.Load (ifs);
   ifs.close();
 
@@ -87,7 +86,7 @@ void SpinBlock::store (bool forward, const vector<int>& sites, SpinBlock& b, int
   }
 
   b.Save (ofs);
-  ofs.close();
+  ofs.close(); 
   //p1out << "\t\t\t block save disk time " << disktimer.elapsedwalltime() << " " << disktimer.elapsedcputime() << endl;
 }
 

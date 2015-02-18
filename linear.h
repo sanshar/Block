@@ -28,6 +28,7 @@ namespace Linear
   void block_davidson(vector<Wavefunction>& b, DiagonalMatrix& e, double normtol, const bool &warmUp, Davidson_functor& h_mult, bool& useprecond, int currentRoot, vector<Wavefunction>& lowerStates);
   void Lanczos(vector<Wavefunction>& b, DiagonalMatrix& e, double normtol, Davidson_functor& h_multiply, int nroots);
   double ConjugateGradient(Wavefunction& xi, double normtol, Davidson_functor& h_multiply, std::vector<Wavefunction> &lowerStates);
+  double MinResMethod(Wavefunction& xi, double normtol, Davidson_functor& h_multiply, std::vector<Wavefunction> &lowerStates);
 };
 }
 #endif

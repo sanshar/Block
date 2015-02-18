@@ -112,6 +112,7 @@ int calldmrg(char* input, char* output)
 #ifdef _OPENMP
   omp_set_num_threads(MAX_THRD);
 #endif
+  pout.precision (12);
 
    //Initializing timer calls
   dmrginp.initCumulTimer();
@@ -132,7 +133,7 @@ int calldmrg(char* input, char* output)
   switch(dmrginp.calc_type()) {
 
   case (COMPRESS):
-
+  {
     bool direction; int restartsize;
     //sweepParams.restorestate(direction, restartsize);
     //sweepParams.set_sweep_iter() = 0;
@@ -172,8 +173,9 @@ int calldmrg(char* input, char* output)
     compress(sweep_tol, targetState, baseState);
 
     break;
+  }
   case (RESPONSE):
-
+  {
     //compressing the V|\Psi_0>, here \Psi_0 is the basestate and 
     //its product with V will have a larger bond dimension and is being compressed
     //it is called the target state
@@ -208,7 +210,9 @@ int calldmrg(char* input, char* output)
     responseSweep(sweep_tol, dmrginp.targetState(), dmrginp.projectorStates(), dmrginp.baseStates());
 
     break;
+  }
   case (CALCOVERLAP):
+  {
     pout.precision(12);
     if (mpigetrank() == 0) {
       for (int istate = 0; istate<dmrginp.nroots(); istate++) {
@@ -230,8 +234,9 @@ int calldmrg(char* input, char* output)
       //Sweep::calculateAllOverlap(O);
     }
     break;
-
+  }
   case (CALCHAMILTONIAN):
+  {
     pout.precision(12);
 
     for (int istate = 0; istate<dmrginp.nroots(); istate++) {
@@ -252,8 +257,9 @@ int calldmrg(char* input, char* output)
     pout << "overlap "<<endl<<O<<endl;
     pout << "hamiltonian "<<endl<<H<<endl;
     break;
-
+  }
   case (DMRG):
+  {
     if (RESTART && !FULLRESTART)
       restart(sweep_tol, reset_iter);
     else if (FULLRESTART) {
@@ -276,7 +282,7 @@ int calldmrg(char* input, char* output)
       dmrg(sweep_tol);
     }
     break;
-
+  }
   case (FCI):
     Sweep::fullci(sweep_tol);
     break;
@@ -640,6 +646,12 @@ void responseSweep(double sweep_tol, int targetState, vector<int>& projectors, v
     sweepParams.restorestate(direction, restartSize);
     direction = !direction;
     last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates, targetState);
+    bool tempdirection;
+    sweepParams.restorestate(tempdirection, restartSize);
+    sweepParams.calc_niter();
+    sweepParams.set_sweep_iter() = 0;
+    sweepParams.set_restart_iter() = 0;
+    sweepParams.savestate(tempdirection, restartSize);
   }
   else if (RESTART) {
     dmrginp.set_algorithm_method() = atype;

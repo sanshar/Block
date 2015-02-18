@@ -539,3 +539,149 @@ double SpinAdapted::Linear::ConjugateGradient(Wavefunction& xi, double normtol, 
     }
   }
 }
+
+
+void makeOrthogonalToLowerStates(Wavefunction& targetState, std::vector<Wavefunction>& lowerStates) {
+  for (int i=1; i<lowerStates.size(); i++) {
+    double overlap2 = pow(DotProduct(lowerStates[i], lowerStates[i]), 0.5);
+    if (fabs(overlap2) > NUMERICAL_ZERO) { 
+      ScaleAdd(-DotProduct(targetState, lowerStates[i])/overlap2, 
+	       lowerStates[i], targetState);
+    }
+  }
+}
+
+double SpinAdapted::Linear::MinResMethod(Wavefunction& xi, double normtol, Davidson_functor& h_multiply, std::vector<Wavefunction>& lowerStates)
+{
+  setbuf(stdout, NULL);
+  p3out.precision (12);
+  int iter = 0, maxIter = 100;
+  double levelshift = 0.0, overlap2 = 0.0, oldError=0.0, functional=0.0, Error=0.0;
+
+  Wavefunction& targetState = lowerStates[0];
+  if (mpigetrank() == 0) {
+    makeOrthogonalToLowerStates(targetState, lowerStates);
+    makeOrthogonalToLowerStates(xi, lowerStates);
+  }
+
+#ifndef SERIAL
+    mpi::communicator world;
+    mpi::broadcast(world, xi, 0);
+#endif
+
+    Wavefunction pi, ri; 
+    ri=xi; ri.Clear();
+    h_multiply(xi, ri);  
+
+  //Check if we should even perform CG or just exit with a zero vector.
+  bool doCG = true;
+  if (mpigetrank() == 0) {
+    Wavefunction ricopy = ri; ricopy.Clear(); ricopy.Randomise();
+    Wavefunction ricopy2 = ricopy;
+
+    makeOrthogonalToLowerStates(ricopy2, lowerStates);
+
+    if (abs(DotProduct(ricopy2, targetState)) < NUMERICAL_ZERO) {
+      pout << "The problem is ill posed or the initial guess is very bad "<<DotProduct(ricopy, targetState)<<endl;
+      doCG = false;
+    }
+  }
+#ifndef SERIAL
+    mpi::broadcast(world, doCG, 0);
+#endif
+  if (!doCG) {
+    xi.Clear();
+    int success = 0;
+
+    functional = 0.0;
+    return functional;
+  }
+
+  if (mpigetrank() == 0) {
+    ScaleAdd(-1.0, targetState, ri);
+    Scale(-1.0, ri);
+    
+    makeOrthogonalToLowerStates(ri, lowerStates);
+    
+    pi = ri;
+
+    oldError = DotProduct(ri, ri);
+    printf("\t\t\t %15s  %15s  %15s\n", "iter", "Functional", "Error");
+  }
+
+#ifndef SERIAL
+  mpi::broadcast(world, oldError, 0);
+#endif
+  
+  if (oldError < normtol) {
+    if (mpigetrank() == 0) {
+      functional = -DotProduct(xi, ri) - DotProduct(xi, targetState);
+      printf("\t\t\t %15i  %15.8e  %15.8e\n", 0, functional, oldError);
+    }
+#ifndef SERIAL
+    mpi::broadcast(world, functional, 0);
+#endif
+    return functional;
+  }
+
+#ifndef SERIAL
+    mpi::broadcast(world, ri, 0);
+#endif
+  
+  double betaNumerator = 0, betaDenominator = 0;
+  Wavefunction Hr = ri; Hr.Clear();
+  h_multiply(ri, Hr);
+  betaDenominator = DotProduct(ri, Hr);
+
+  Wavefunction Hp = Hr;
+
+  if (mpigetrank() == 0) {
+    makeOrthogonalToLowerStates(Hp, lowerStates);
+    makeOrthogonalToLowerStates(Hr, lowerStates);
+  }
+
+  while(true) {
+
+    if (mpigetrank() == 0) {
+      double alpha = DotProduct(ri, Hr)/DotProduct(Hp, Hp);
+      
+      ScaleAdd(alpha, pi, xi);
+      ScaleAdd(-alpha, Hp, ri);
+      
+      Error = DotProduct(ri, ri);
+
+      functional = -DotProduct(xi, targetState);
+      printf("\t\t\t %15i  %15.8e  %15.8e \n", iter, functional, Error);
+    }
+
+#ifndef SERIAL
+    mpi::broadcast(world, Error, 0);
+    mpi::broadcast(world, functional, 0);
+    mpi::broadcast(world, ri, 0);
+#endif
+
+    if (Error < normtol || iter >maxIter) {
+      return functional;
+    }
+    else {      
+      Hr.Clear();
+      h_multiply(ri, Hr);
+      if (mpigetrank() == 0) {
+	makeOrthogonalToLowerStates(Hr, lowerStates);
+
+	betaNumerator = DotProduct(ri, Hr);
+	double beta = betaNumerator/betaDenominator;
+	betaDenominator = betaNumerator;
+
+	ScaleAdd(1./beta, ri, pi);
+	Scale(beta, pi);
+
+	ScaleAdd(1./beta, Hr, Hp);
+	Scale(beta, Hp);
+	
+      }
+      iter ++;
+    }
+  }
+}
+

@@ -73,6 +73,7 @@ class Input {
   vector<int> m_baseState;
   vector<int> m_projectorState;
   int m_targetState;
+  int m_guessState;
 
   std::vector<int> m_hf_occupancy;
   std::string m_hf_occ_user;
@@ -196,7 +197,7 @@ class Input {
     ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type & m_warmup;
     ar & m_do_diis & m_diis_error & m_start_diis_iter & m_diis_keep_states & m_diis_error_tol & m_num_spatial_orbs;
     ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_backward & m_schedule_type_default &m_integral_disk_storage_thresh;
-    ar & n_twodot_noise & m_twodot_noise & m_twodot_gamma;
+    ar & n_twodot_noise & m_twodot_noise & m_twodot_gamma & m_guessState;
     ar & m_calc_ri_4pdm & m_store_ripdm_readable & m_nevpt2 & m_conventional_nevpt2 & m_kept_nevpt2_states & NevPrint;
   }
 
@@ -315,6 +316,7 @@ class Input {
   std::vector<int>& get_closedorbs() { return m_closedorbs;}
   const std::vector<int>& baseStates() const {return m_baseState;}
   const int& targetState() const {return m_targetState;}
+  const int& guessState() const {return m_guessState;}
   const std::vector<int>& projectorStates() const {return m_projectorState;}
 
   std::vector<int>& baseStates() {return m_baseState;}

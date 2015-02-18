@@ -24,6 +24,7 @@ Sandeep Sharma, Roberto Olivares-Amaya and Garnet K.-L. Chan
 #ifndef SERIAL
 #include <boost/mpi.hpp>
 #endif
+#include <boost/filesystem.hpp>
 #include "fiedler.h"
 #include "pario.h"
 
@@ -80,6 +81,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_baseState.resize(1,0);
   m_projectorState.resize(0);
   m_targetState = -1;
+  m_guessState = 1;
   m_permSymm = true;
 
   m_openorbs.resize(0);
@@ -669,7 +671,8 @@ SpinAdapted::Input::Input(const string& config_name) {
 	if(usedkey[PREFIX] == 0) 
 	  usedkey_error(keyword, msg);
 	usedkey[PREFIX] = 0;
-	m_load_prefix = tok[1];
+	m_load_prefix = tok[1] ;
+	pout << m_load_prefix << endl;
 	m_save_prefix = m_load_prefix;
       }
 
@@ -869,6 +872,16 @@ SpinAdapted::Input::Input(const string& config_name) {
 	  abort();
 	}
         m_targetState = atoi(tok[1].c_str());
+      }
+      else if(boost::iequals(keyword,  "GuessState") )
+      {
+	if (tok.size() !=  2) {
+	  pout << "keyword "<<keyword<<" should be followed by a single number and then an endline"<<endl;
+	  pout << "error found in the following line "<<endl;
+	  pout << msg<<endl;
+	  abort();
+	}
+        m_guessState = atoi(tok[1].c_str());
       }
       else if(boost::iequals(keyword,  "BaseStates") )
       {
@@ -1086,7 +1099,16 @@ SpinAdapted::Input::Input(const string& config_name) {
   mpi::broadcast(world, sym, 0);
   mpi::broadcast(world, m_Bogoliubov, 0);
   mpi::broadcast(world, orbitalfile, 0);
+  mpi::broadcast(world, m_load_prefix, 0);
+  mpi::broadcast(world, m_save_prefix, 0);
 #endif
+
+  //make the scratch files
+  m_load_prefix = str(boost::format("%s%s%d%s") %m_load_prefix % "/node" % mpigetrank() % "/");
+  m_save_prefix = m_load_prefix;
+  boost::filesystem::path p(m_load_prefix);
+  bool success = boost::filesystem::create_directory(p);
+
   v_2.resize(m_num_Integrals, TwoElectronArray(TwoElectronArray::restrictedNonPermSymm));
   v_1.resize(m_num_Integrals);
   coreEnergy.resize(m_num_Integrals);
@@ -1257,7 +1279,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
   //do the reordering only if it is not a restart calculation
   //if it is then just read the reorder.dat from the scratch space
   if (integralIndex == 0) {
-    if(get_restart() || get_fullrestart()) {
+    if(get_restart() || get_fullrestart() || !(m_calc_type == DMRG || m_calc_type == FCI || m_calc_type == TINYCALC)) {
       if (mpigetrank() == 0) {
 	ReorderFileInput.open(ReorderFileName);
 	boost::filesystem::path ReorderFilePath(ReorderFileName);
