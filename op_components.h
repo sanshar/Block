@@ -183,6 +183,8 @@ class Op_component_base
   virtual bool has_local_index(int i, int j=-1, int k=-1, int l=-1) const = 0;
   virtual boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1, int l=-1) = 0;
   virtual const boost::shared_ptr<SparseMatrix> get_op_rep(const std::vector<SpinQuantum>& s, int i=-1, int j=-1, int k=-1, int l=-1) const = 0;
+  virtual boost::shared_ptr<SparseMatrix> get_op_rep(const std::map< std::string, std::vector<SpinQuantum> >& s, int i=-1, int j=-1, int k=-1, int l=-1) = 0;
+  virtual const boost::shared_ptr<SparseMatrix> get_op_rep(const std::map< std::string, std::vector<SpinQuantum> >& s, int i=-1, int j=-1, int k=-1, int l=-1) const = 0;
   virtual std::string get_op_string() const = 0;
   virtual std::string get_filename() const = 0;
   virtual ~Op_component_base() {}  
@@ -352,6 +354,31 @@ template <class Op> class Op_component : public Op_component_base
     const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k,l);
     for (int p=0; p<vec.size(); p++)
       if (s == vec[p]->get_deltaQuantum())
+	    return m_op(i,j,k,l)[p];
+    return boost::shared_ptr<Op>(o);
+  }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  boost::shared_ptr<SparseMatrix> get_op_rep(const std::map< std::string, std::vector<SpinQuantum> >& s, int i=-1, int j=-1, int k=-1, int l=-1)
+  {
+    Op* o = 0;
+    std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k,l);
+    for (int p=0; p<vec.size(); p++) {
+      if (s == vec[p]->get_quantum_ladder())
+	    return m_op(i,j,k,l)[p];
+    }
+    return boost::shared_ptr<Op>(o);
+  }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  const boost::shared_ptr<SparseMatrix> get_op_rep(const std::map< std::string, std::vector<SpinQuantum> >& s, int i=-1, int j=-1, int k=-1, int l=-1) const
+  {
+    Op* o = 0;
+    const std::vector<boost::shared_ptr<Op> >& vec = m_op(i,j,k,l);
+    for (int p=0; p<vec.size(); p++)
+      if (s == vec[p]->get_quantum_ladder())
 	    return m_op(i,j,k,l)[p];
     return boost::shared_ptr<Op>(o);
   }

@@ -396,7 +396,9 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
         Timer timer;
         dmrginp.set_fullrestart() = true;
         sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+				dmrginp.npdm_generate() = true;
         SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, stateB); //this will generate the cd operators                               
+				dmrginp.npdm_generate() = false;
         p3out << "\t\t\t NPDM SweepGenblock time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
         dmrginp.set_fullrestart() = false;
 
@@ -414,6 +416,7 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
     dmrginp.set_fullrestart() = true;
     sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
     SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
+		dmrginp.npdm_generate() = false;
     p3out << "\t\t\t NPDM SweepGenblock time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
     dmrginp.set_fullrestart() = false;
 
@@ -480,7 +483,9 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
         // Prepare NPDM operators
         Timer timer;
         sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+				dmrginp.npdm_generate() = true;
         SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, stateB); //this will generate the cd operators
+				dmrginp.npdm_generate() = false;
         dmrginp.set_fullrestart() = false;
         p3out << "\t\t\t NPDM SweepGenblock time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
   
@@ -505,7 +510,9 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
         Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
       }
       // Prepare NPDM operators
+			dmrginp.npdm_generate() = true;
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
+			dmrginp.npdm_generate() = false;
       dmrginp.set_fullrestart() = false;
       // Do NPDM sweep
       npdm_driver->clear();
