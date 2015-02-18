@@ -324,38 +324,15 @@ void SpinBlock::default_op_components(bool complementary_, bool implicitTranspos
   ops[CRE_DESCOMP] = make_new_op(CRE_DESCOMP, true);
   ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
 
-	if (this->size()>1 && dmrginp.npdm_generate() == true)
-	{
-		//Now it is generating environment block for the npdm sweep.
-		//On environment block, the number of indices of operators are less than 
-		//the order of pdm.
+	if ( dmrginp.new_npdm_code() ) {
     ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
     ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
     if ( (dmrginp.calc_type() == THREEPDM) ||
          (dmrginp.calc_type() == FOURPDM)  ||
          (dmrginp.calc_type() == RESTART_THREEPDM)  ||
          (dmrginp.calc_type() == RESTART_FOURPDM)  ||
-         (dmrginp.calc_type() == NEVPT2PDM) ) {
-      ops[DES_CRE] = make_new_op(DES_CRE, true);
-      if ( (dmrginp.calc_type() == FOURPDM)   ||
-           (dmrginp.calc_type() == RESTART_FOURPDM)  ||
-           (dmrginp.calc_type() == NEVPT2PDM) ) {
-        ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
-        ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
-        ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, true);
-        ops[DES_DES_DES] = make_new_op(DES_DES_DES, true);
-      }
-    }
-
-	}
-	else if ( dmrginp.new_npdm_code() ) {
-    ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
-    ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
-    if ( (dmrginp.calc_type() == THREEPDM) ||
-         (dmrginp.calc_type() == FOURPDM)  ||
-         (dmrginp.calc_type() == RESTART_THREEPDM)  ||
-         (dmrginp.calc_type() == RESTART_FOURPDM)  ||
-         (dmrginp.calc_type() == NEVPT2PDM) ) {
+         (dmrginp.calc_type() == NEVPT2PDM) ||
+         (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
       ops[DES_CRE] = make_new_op(DES_CRE, true);
       ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
       ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
@@ -363,7 +340,8 @@ void SpinBlock::default_op_components(bool complementary_, bool implicitTranspos
       ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
       if ( (dmrginp.calc_type() == FOURPDM)   ||
            (dmrginp.calc_type() == RESTART_FOURPDM)  ||
-           (dmrginp.calc_type() == NEVPT2PDM) ) {
+           (dmrginp.calc_type() == NEVPT2PDM) ||
+           (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
         ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
         ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
         ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, true);
@@ -447,38 +425,15 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     }
 
 
-	if (this->size()>1 && dmrginp.npdm_generate() == true)
-	{
-		//Now it is generating environment block for the npdm sweep.
-		//On environment block, the number of indices of operators are less than 
-		//the order of pdm.
+	if ( dmrginp.new_npdm_code() ) {
     ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
     ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
     if ( (dmrginp.calc_type() == THREEPDM) ||
          (dmrginp.calc_type() == FOURPDM)  ||
          (dmrginp.calc_type() == RESTART_THREEPDM)  ||
          (dmrginp.calc_type() == RESTART_FOURPDM)  ||
-         (dmrginp.calc_type() == NEVPT2PDM) ) {
-      ops[DES_CRE] = make_new_op(DES_CRE, true);
-      if ( (dmrginp.calc_type() == FOURPDM)   ||
-           (dmrginp.calc_type() == RESTART_FOURPDM)  ||
-           (dmrginp.calc_type() == NEVPT2PDM) ) {
-        ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
-        ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
-        ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, true);
-        ops[DES_DES_DES] = make_new_op(DES_DES_DES, true);
-      }
-    }
-
-	}
-	else if ( dmrginp.new_npdm_code() ) {
-    ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
-    ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
-    if ( (dmrginp.calc_type() == THREEPDM) ||
-         (dmrginp.calc_type() == FOURPDM)  ||
-         (dmrginp.calc_type() == RESTART_THREEPDM)  ||
-         (dmrginp.calc_type() == RESTART_FOURPDM)  ||
-         (dmrginp.calc_type() == NEVPT2PDM) ) {
+         (dmrginp.calc_type() == NEVPT2PDM) ||
+         (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
       ops[DES_CRE] = make_new_op(DES_CRE, true);
       ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
       ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
@@ -486,7 +441,8 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
       ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
       if ( (dmrginp.calc_type() == FOURPDM)   ||
            (dmrginp.calc_type() == RESTART_FOURPDM)  ||
-           (dmrginp.calc_type() == NEVPT2PDM) ) {
+           (dmrginp.calc_type() == NEVPT2PDM) ||
+           (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
         ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
         ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
         ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, true);
@@ -545,38 +501,47 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
       }
     }
 
-	if (this->size()>1 && dmrginp.npdm_generate() == true)
-	{
-		//Now it is generating environment block for the npdm sweep.
-		//On environment block, the number of indices of operators are less than 
-		//the order of pdm.
-    ops[RI_3INDEX] = make_new_op(RI_3INDEX, false);
-    ops[RI_4INDEX] = make_new_op(RI_4INDEX, false);
-    if ( (dmrginp.calc_type() == THREEPDM) ||
-         (dmrginp.calc_type() == FOURPDM)  ||
-         (dmrginp.calc_type() == RESTART_THREEPDM)  ||
-         (dmrginp.calc_type() == RESTART_FOURPDM)  ||
-         (dmrginp.calc_type() == NEVPT2PDM) ) {
-      ops[DES_CRE] = make_new_op(DES_CRE, false);
-      if ( (dmrginp.calc_type() == FOURPDM)   ||
-           (dmrginp.calc_type() == RESTART_FOURPDM)  ||
-           (dmrginp.calc_type() == NEVPT2PDM) ) {
-        ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, false);
-        ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
-        ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, false);
-        ops[DES_DES_DES] = make_new_op(DES_DES_DES, false);
-      }
-    }
-
-	}
-	else  if ( dmrginp.new_npdm_code() ) {
+	if ( dmrginp.new_npdm_code() ) {
+	  if (dmrginp.npdm_generate() == true)
+	  {
+	  	//Now it is generating environment block for the npdm sweep.
+	  	//On environment block, the number of indices of operators are less than 
+	  	//the order of pdm.
       ops[RI_3INDEX] = make_new_op(RI_3INDEX, false);
       ops[RI_4INDEX] = make_new_op(RI_4INDEX, false);
       if ( (dmrginp.calc_type() == THREEPDM) ||
            (dmrginp.calc_type() == FOURPDM)  ||
            (dmrginp.calc_type() == RESTART_THREEPDM)  ||
            (dmrginp.calc_type() == RESTART_FOURPDM)  ||
-           (dmrginp.calc_type() == NEVPT2PDM) ) {
+           (dmrginp.calc_type() == NEVPT2PDM) ||
+           (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
+        ops[DES_CRE] = make_new_op(DES_CRE, false);
+        if ( (dmrginp.calc_type() == FOURPDM)   ||
+             (dmrginp.calc_type() == RESTART_FOURPDM)  ||
+             (dmrginp.calc_type() == NEVPT2PDM) ||
+             (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
+          ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, false);
+          ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);
+          ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
+          ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, false);
+          ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, false);
+          ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
+          ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, false);
+          ops[DES_DES_DES] = make_new_op(DES_DES_DES, false);
+        }
+      }
+
+	  }
+	  else
+    {
+      ops[RI_3INDEX] = make_new_op(RI_3INDEX, false);
+      ops[RI_4INDEX] = make_new_op(RI_4INDEX, false);
+      if ( (dmrginp.calc_type() == THREEPDM) ||
+           (dmrginp.calc_type() == FOURPDM)  ||
+           (dmrginp.calc_type() == RESTART_THREEPDM)  ||
+           (dmrginp.calc_type() == RESTART_FOURPDM)  ||
+           (dmrginp.calc_type() == NEVPT2PDM) ||
+           (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
         ops[DES_CRE] = make_new_op(DES_CRE, false);
         ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, false);
         ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);
@@ -584,7 +549,8 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
         ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, false);
         if ( (dmrginp.calc_type() == FOURPDM)   ||
              (dmrginp.calc_type() == RESTART_FOURPDM)  ||
-             (dmrginp.calc_type() == NEVPT2PDM) ) {
+             (dmrginp.calc_type() == NEVPT2PDM) ||
+             (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
           ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, false);
           ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
           ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, false);
@@ -600,6 +566,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
         }
       }
     }
+  }
 
     if (haveNormops)
       this->loopblock = true;

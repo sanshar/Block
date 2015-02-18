@@ -324,6 +324,9 @@ int calldmrg(char* input, char* output)
   case (RESTART_FOURPDM):
     Npdm::npdm(NPDM_FOURPDM,true);
     break;
+  case (RESTART_NEVPT2PDM):
+    Npdm::npdm(NPDM_NEVPT2,true);
+    break;
   case (TRANSITION_ONEPDM):
     Npdm::npdm(NPDM_ONEPDM,false,true);
     if (dmrginp.hamiltonian() == BCS) {

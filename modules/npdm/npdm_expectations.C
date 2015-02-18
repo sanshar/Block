@@ -432,6 +432,41 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_bas
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps, std::map<std::vector<int>, Wavefunction>& leftwaves, std::map<std::vector<int>, Wavefunction>& rightwaves)
+{
+#ifndef SERIAL
+  boost::mpi::communicator world;
+#endif
+  expectations_.clear();
+
+  // IMPORTANT: generate spin-components in the same order as RHS of linear equation solver in npdm_set_up_linear_equations routine
+  // i.e. in accordance with the operator string build_pattern
+  int hilhs = lhsOps.opReps_.size();
+  int hirhs = rhsOps.opReps_.size();
+  int hidot = dotOps.opReps_.size();
+  for (int irhs = 0; irhs < std::max(1,hirhs); ++irhs) {
+    for (int idot = 0; idot < std::max(1,hidot); ++idot) {
+      for (int ilhs = 0; ilhs < std::max(1,hilhs); ++ilhs) {
+        // Screen operator combinations that do not combine to give a singlet
+        bool singlet = test_for_singlet( ilhs, idot, irhs, lhsOps, rhsOps, dotOps );
+        // Contract operators to produce spin-adapted expectation value
+        if ( singlet ) 
+        {
+            std::vector<int> spin;
+            spin.push_back(ilhs);
+            spin.push_back(idot);
+            spin.push_back((-(rhsOps.opReps_.at(irhs)->get_deltaQuantum(0).get_s())).getirrep());
+            Wavefunction& lw= leftwaves.at(spin);
+            Wavefunction& rw= rightwaves.at(std::vector<int>(1,irhs));
+            expectations_.push_back(DotProduct_spincorrection(lw,rw,big_));
+        }
+      }
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 void Npdm_expectations::build_spin_adapted_singlet_expectations( const char inner, NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps, std::map<std::vector<int>, Wavefunction>& outwaves)
 {
 #ifndef SERIAL
@@ -447,6 +482,7 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( const char inne
   std::map<std::vector<int>, Wavefunction> innerwaves;
   if(dmrginp.npdm_intermediate() && (npdm_order_== NPDM_NEVPT2 || npdm_order_== NPDM_THREEPDM || npdm_order_== NPDM_FOURPDM))
   {
+		Timer timer;
 
     std::string op_string;
     std::string file;
@@ -464,6 +500,7 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( const char inne
     boost::archive::binary_iarchive load_waves(ifs1);
     load_waves >> innerwaves;
     ifs1.close();
+		diskread_time += timer.elapsedwalltime();
 
   }
   for (int irhs = 0; irhs < std::max(1,hirhs); ++irhs) {
@@ -713,6 +750,61 @@ Npdm_expectations::get_nonspin_adapted_expectations(const char inner, NpdmSpinOp
   return new_pdm_elements;
 }
 
+std::vector< std::pair< std::vector<int>, double > > 
+Npdm_expectations::get_nonspin_adapted_expectations(NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps, std::map<std::vector<int>, Wavefunction>& leftwaves, std::map<std::vector<int>, Wavefunction>& rightwaves )
+{
+  // Initialize dimension of spin-adapted to non-spin-adapted transformation
+  int dim = 0;
+  assert(dmrginp.spinAdapted());
+  if(dmrginp.spinAdapted()){
+  if ( npdm_order_ == NPDM_ONEPDM ) dim = 2;
+  else if ( npdm_order_ == NPDM_TWOPDM ) dim = 6;
+  else if ( npdm_order_ == NPDM_THREEPDM ) dim = 20;
+  else if ( npdm_order_ == NPDM_FOURPDM ) dim = 70;
+  else abort();
+  }
+  std::vector< std::pair< std::vector<int>, double > > new_pdm_elements;
+
+  // Get operator build string. e.g. (C2C4)(D5D6)
+  std::string op_string;
+  std::vector<int> indices;
+  get_full_op_string( lhsOps, rhsOps, dotOps, op_string, indices );
+
+  // Screen away unwanted strings (e.g. those that produce duplicate NPDM elements)
+  //for( int i=0;i<indices.size();i++)
+  //  pout << indices[i]<<',';
+  //pout <<endl;
+  if ( screen_op_string_for_duplicates( op_string, indices ) ) return new_pdm_elements;
+
+  // Contract spin-adapted spatial operators and build singlet expectation values
+  build_spin_adapted_singlet_expectations(lhsOps, rhsOps, dotOps, leftwaves, rightwaves);
+
+  // Now transform to non-spin-adapted spin-orbital representation
+  // b holds the spin-adapted expectation values (we only care about the singlets)
+  // Note the spin-order of elements in b follows a convention
+  ColumnVector x(dim), b(dim);
+  // x holds the non-spin-adapted expectation values
+  x=0.0;
+
+  // Transformation matrix
+  Matrix A(dim,dim);
+  // Vector of spin-orbital indices ordered according to A
+  std::vector< std::vector<int> > so_indices(dim);
+
+  // Parse operator string and set up linear equations
+  spin_adaptation_.npdm_set_up_linear_equations(dim, op_string, indices, expectations_, A, b, so_indices );
+
+  // Solve A.x = b to get non-spin-adapted expectations in x
+  xsolve_AxeqB(A, b, x);
+
+  // Package transformed elements into container and return
+  for (int i=0; i < so_indices.size(); ++i) {
+    new_pdm_elements.push_back( std::make_pair(so_indices[i], x(i+1)) );
+  } 
+
+  return new_pdm_elements;
+}
+
 void Npdm_expectations::store( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dotOps )
 {
 #ifndef SERIAL
@@ -818,6 +910,38 @@ void Npdm_expectations::store( NpdmSpinOps_base & rhsOps )
   ofs.close();
   intermediate_filenames.push_back(file);
 
+}
+
+void Npdm_expectations::restore( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dotOps, std::map<std::vector<int>, Wavefunction>& halfwaves)
+{
+#ifndef SERIAL
+  boost::mpi::communicator world;
+#endif
+
+  std::string file;
+  std::string op_string;
+  get_op_string(lhsOps,dotOps,op_string);
+  file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string% "_p" %mpigetrank() % ".tmp" );
+  ifstream ifs1(file,std::ios::binary);
+  boost::archive::binary_iarchive load_waves(ifs1);
+  load_waves >> halfwaves;
+  ifs1.close();
+}
+
+void Npdm_expectations::restore( NpdmSpinOps_base & rhsOps, std::map<std::vector<int>, Wavefunction>& halfwaves)
+{
+#ifndef SERIAL
+  boost::mpi::communicator world;
+#endif
+
+  std::string file;
+  std::string op_string;
+  get_op_string(rhsOps,op_string);
+  file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % "_p" %mpigetrank()% ".tmp" );
+  ifstream ifs1(file,std::ios::binary);
+  boost::archive::binary_iarchive load_waves(ifs1);
+  load_waves >> halfwaves;
+  ifs1.close();
 }
 
 void Npdm_expectations::get_op_string( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dotOps, 
