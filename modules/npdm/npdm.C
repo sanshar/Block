@@ -414,6 +414,7 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
     else if( !dmrginp.setStateSpecific()){
     Timer timer;
     dmrginp.set_fullrestart() = true;
+		dmrginp.npdm_generate() = true;
     sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
     SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
 		dmrginp.npdm_generate() = false;
