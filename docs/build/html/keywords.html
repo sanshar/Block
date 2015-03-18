@@ -1,0 +1,207 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Keywords &mdash; BLOCK 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BLOCK 1.0.0 documentation" href="index.html" />
+    <link rel="prev" title="Typical Calculations" href="examples.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="examples.html" title="Typical Calculations"
+             accesskey="P">previous</a></li>
+        <li class="nav-item nav-item-0"><a href="index.html">BLOCK 1.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Keywords</a><ul>
+<li><a class="reference internal" href="#hamiltonian-types">Hamiltonian Types</a></li>
+<li><a class="reference internal" href="#algorithm-types">Algorithm Types</a></li>
+<li><a class="reference internal" href="#warm-up-types">Warm-up Types</a></li>
+<li><a class="reference internal" href="#solver-types">Solver Types</a></li>
+<li><a class="reference internal" href="#orbital-reorder-types">Orbital Reorder Types</a></li>
+<li><a class="reference internal" href="#calculation-types">Calculation Types</a></li>
+<li><a class="reference internal" href="#expert-keywords">Expert Keywords</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="examples.html"
+                        title="previous chapter">Typical Calculations</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/keywords.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="keywords">
+<h1>Keywords<a class="headerlink" href="#keywords" title="Permalink to this headline">¶</a></h1>
+<p>The keyword input syntax is simple:</p>
+<div class="highlight-python"><div class="highlight"><pre>keyword value
+</pre></div>
+</div>
+<p>The default keywords and values are <strong>bolded</strong>.</p>
+<div class="section" id="hamiltonian-types">
+<h2>Hamiltonian Types<a class="headerlink" href="#hamiltonian-types" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>heisenberg</li>
+<li>hubbard</li>
+<li><strong>quantum_chemistry</strong></li>
+</ul>
+</div>
+<div class="section" id="algorithm-types">
+<h2>Algorithm Types<a class="headerlink" href="#algorithm-types" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>onedot</li>
+<li>twodot</li>
+<li><strong>twodot_to_onedot</strong></li>
+</ul>
+</div>
+<div class="section" id="warm-up-types">
+<h2>Warm-up Types<a class="headerlink" href="#warm-up-types" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>warmup <strong>local_0site</strong> <cite>|| local_2site || local_3site || local_4site || wilson</cite></li>
+</ul>
+</div>
+<div class="section" id="solver-types">
+<h2>Solver Types<a class="headerlink" href="#solver-types" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><strong>davidson</strong></li>
+<li>lanczos</li>
+</ul>
+</div>
+<div class="section" id="orbital-reorder-types">
+<h2>Orbital Reorder Types<a class="headerlink" href="#orbital-reorder-types" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><strong>fiedler</strong></li>
+<li>gaopt <cite>default</cite></li>
+<li>reorder  <cite>reorder file</cite></li>
+<li>noreorder</li>
+</ul>
+</div>
+<div class="section" id="calculation-types">
+<h2>Calculation Types<a class="headerlink" href="#calculation-types" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>backward</li>
+<li>calchamiltonian</li>
+<li>calcoverlap</li>
+<li><strong>dmrg</strong></li>
+<li>fci</li>
+<li>fourpdm</li>
+<li>fullrestart</li>
+<li>nevpt2_npdm</li>
+<li>onepdm</li>
+<li>restart_fourpdm</li>
+<li>restart_nevpt2_npdm</li>
+<li>restart_onepdm</li>
+<li>restart_threepdm</li>
+<li>restart_tran_onepdm</li>
+<li>restart_tran_twopdm</li>
+<li>restart_twopdm</li>
+<li>threepdm</li>
+<li>transition_onepdm</li>
+<li>transition_twopdm</li>
+<li>twopdm</li>
+</ul>
+</div>
+<div class="section" id="expert-keywords">
+<h2>Expert Keywords<a class="headerlink" href="#expert-keywords" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>hf_occ <cite>integral || orbital || manual</cite></li>
+<li>irrep <cite>isym</cite></li>
+<li>lastM <strong>500</strong> <cite>||  lastM</cite></li>
+<li>maxiter <strong>10</strong> <cite>|| max sweep iterations</cite></li>
+<li>maxM <cite>maxM</cite></li>
+<li>nelec <cite>nelec</cite></li>
+<li>new_npdm_code</li>
+<li>nonspinadapted</li>
+<li>nroots <strong>1</strong> <cite>|| nroots</cite></li>
+<li>occ nocc</li>
+<li>orbitals <cite>orbital file</cite></li>
+<li>outputlevel <strong>0</strong> <cite>|| 1 || 2 || 3</cite></li>
+<li>pdm_unsorted</li>
+<li><strong>schedule default</strong></li>
+<li>schedule <cite>sweep_iteration M davidson_tolerance noise</cite> end</li>
+<li>scratch <strong>current directory of input file</strong> <cite>|| scratch directory</cite></li>
+<li>screen_tol <strong>0.0</strong> <cite>|| ScreenTol</cite></li>
+<li>spin <cite>2S</cite></li>
+<li>startM <strong>250</strong> <cite>|| startM</cite></li>
+<li>statespecific</li>
+<li>sweep_tol <strong>1.0e-5</strong> <cite>|| SweepTol</cite></li>
+<li>sym <cite>point group</cite></li>
+<li>weights <strong>1.0</strong> <cite>||</cite> <cite>W</cite><sub>1</sub>, <cite>W</cite><sub>2</sub>, ..., <cite>W</cite><sub>nroots</sub></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="examples.html" title="Typical Calculations"
+             >previous</a></li>
+        <li class="nav-item nav-item-0"><a href="index.html">BLOCK 1.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Garnet Kin-Lic Chan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>
