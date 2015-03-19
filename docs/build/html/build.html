@@ -1,0 +1,170 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>BLOCK Installation &mdash; BLOCK 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BLOCK 1.0.0 documentation" href="index.html" />
+    <link rel="next" title="Typical Calculations" href="examples.html" />
+    <link rel="prev" title="Overview" href="overview.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="examples.html" title="Typical Calculations"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="overview.html" title="Overview"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BLOCK 1.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#"><cite>BLOCK</cite> Installation</a><ul>
+<li><a class="reference internal" href="#compile">Compile</a></li>
+<li><a class="reference internal" href="#how-to-run-block">How to run <cite>BLOCK</cite></a></li>
+<li><a class="reference internal" href="#testjobs">Testjobs</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="overview.html"
+                        title="previous chapter">Overview</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="examples.html"
+                        title="next chapter">Typical Calculations</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/build.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="block-installation">
+<h1><cite>BLOCK</cite> Installation<a class="headerlink" href="#block-installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="compile">
+<h2>Compile<a class="headerlink" href="#compile" title="Permalink to this headline">¶</a></h2>
+<p><cite>BLOCK</cite> requires BLAS, LAPACK and BOOST.
+MPI library is needed for distributed-memory parallel compilation.
+<cite>BLOCK</cite> is compiled using the makefile supplied in the distribution.
+The following customizations need to be made to the makefile placed in the main directory <code class="docutils literal"><span class="pre">./Block</span></code>.</p>
+<dl class="docutils">
+<dt>Choose compilers by specifying</dt>
+<dd><code class="docutils literal"><span class="pre">CXX</span> <span class="pre">=</span> <span class="pre">g++</span></code></dd>
+<dt>For MPI-based parallel execution on distributed-memory machines,</dt>
+<dd><p class="first"><code class="docutils literal"><span class="pre">USE_MPI</span> <span class="pre">=</span> <span class="pre">yes</span></code></p>
+<p class="last"><code class="docutils literal"><span class="pre">MPICXX</span> <span class="pre">=</span> <span class="pre">mpicxx</span></code></p>
+</dd>
+</dl>
+<p>MPI library must be compiled using the same compiler as for compiling <cite>BLOCK</cite>.
+Intel compiler such as <code class="docutils literal"><span class="pre">icpc</span></code> is also supported with approriate compiling flags chosen automatically.</p>
+<p>To enable MKL library,</p>
+<blockquote>
+<div><code class="docutils literal"><span class="pre">USE_MKL</span> <span class="pre">=</span> <span class="pre">yes</span></code></div></blockquote>
+<p>And supply MKL and BOOST libraries by giving the locations,</p>
+<blockquote>
+<div><p><code class="docutils literal"><span class="pre">MKLLIB</span> <span class="pre">=</span> <span class="pre">/opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/</span></code></p>
+<p><code class="docutils literal"><span class="pre">MKLFLAGS</span> <span class="pre">=</span> <span class="pre">/opt/intel/composer_xe_2013_sp1.0.080/mkl/include</span></code></p>
+<p><code class="docutils literal"><span class="pre">BOOSTLIB</span> <span class="pre">=</span> <span class="pre">/lib64/boost_1_55_0/lib/</span></code></p>
+<p><code class="docutils literal"><span class="pre">BOOSTINCLUDE</span> <span class="pre">=</span> <span class="pre">/lib64/boost_1_55_0/include/</span></code></p>
+</div></blockquote>
+<p>When the makefile is configured, run in the directory <code class="docutils literal"><span class="pre">./Block</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ make
+</pre></div>
+</div>
+<p>The successful compilation generates the executable <code class="docutils literal"><span class="pre">block.spin_adapted</span></code>, static and shared DMRG libraries <code class="docutils literal"><span class="pre">libqcdmrg.a</span></code> and <code class="docutils literal"><span class="pre">libqcdmrg.so</span></code>.</p>
+</div>
+<div class="section" id="how-to-run-block">
+<h2>How to run <cite>BLOCK</cite><a class="headerlink" href="#how-to-run-block" title="Permalink to this headline">¶</a></h2>
+<p>The standalone serial code can be executed running:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ block.spin_adapted input.dat &gt; output.dat
+</pre></div>
+</div>
+<p><code class="docutils literal"><span class="pre">input.dat</span></code> is the input file and the output of the program is piped into the output file <code class="docutils literal"><span class="pre">output.dat</span></code>.</p>
+<p>The MPI parallel mode can be called running:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ mpirun -np 4 block.spin_adapted input.dat &gt; output.dat
+</pre></div>
+</div>
+</div>
+<div class="section" id="testjobs">
+<h2>Testjobs<a class="headerlink" href="#testjobs" title="Permalink to this headline">¶</a></h2>
+<p><cite>BLOCK</cite> can be tested by executing the script in the directory <code class="docutils literal"><span class="pre">./Block/dmrg_tests</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cd dmrg_tests
+$ ./runtest
+</pre></div>
+</div>
+<p>The tests require Python to be installed on the system.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="examples.html" title="Typical Calculations"
+             >next</a></li>
+        <li class="right" >
+          <a href="overview.html" title="Overview"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BLOCK 1.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Garnet Kin-Lic Chan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

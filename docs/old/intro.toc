@@ -1,0 +1,50 @@
+\tocdepth@munge 
+\contentsline {section}{\numberline {}Contents}{i}{section*.1}
+\tocdepth@restore 
+\contentsline {section}{\numberline {I}Capabilities}{2}{section*.2}
+\contentsline {section}{\numberline {II}Installation}{2}{section*.3}
+\contentsline {subsection}{\numberline {A}MOLPRO}{2}{section*.4}
+\contentsline {subsection}{\numberline {B}ORCA}{3}{section*.5}
+\contentsline {subsection}{\numberline {C}Q-Chem}{3}{section*.6}
+\contentsline {subsection}{\numberline {D}Standalone}{3}{section*.7}
+\contentsline {subsubsection}{\numberline {1}makefile}{3}{section*.8}
+\contentsline {section}{\numberline {III}Running and testing the code}{4}{section*.9}
+\contentsline {section}{\numberline {IV}BLOCK input and calculations}{4}{section*.10}
+\contentsline {subsection}{\numberline {A}Molpro, ORCA and Q-Chem interfaces}{4}{section*.11}
+\contentsline {subsection}{\numberline {B}Standalone}{4}{section*.12}
+\contentsline {subsubsection}{\numberline {1}Generating the orbitals and integrals using Molpro}{5}{section*.13}
+\contentsline {subsection}{\numberline {C}\texttt {BLOCK} input file}{5}{section*.14}
+\contentsline {subsubsection}{\numberline {1}Orbital file}{6}{section*.15}
+\contentsline {subsubsection}{\numberline {2}Reordering orbitals}{6}{section*.16}
+\contentsline {subsubsection}{\numberline {3}Wavefunction specification}{6}{section*.17}
+\contentsline {subsubsection}{\numberline {4}Schedule}{6}{section*.18}
+\contentsline {subsubsection}{\numberline {5}MaxM}{6}{section*.19}
+\contentsline {subsubsection}{\numberline {6}Scratch directory}{7}{section*.20}
+\contentsline {subsubsection}{\numberline {7}Troubleshooting}{7}{section*.21}
+\contentsline {section}{\numberline {V}Appendix:Introduction to DMRG concepts}{8}{section*.22}
+\contentsline {subsection}{\numberline {A}The DMRG wavefunction}{8}{section*.23}
+\contentsline {subsection}{\numberline {B}Sweeps and Operators}{9}{section*.24}
+\contentsline {subsection}{\numberline {C}Quantum numbers and symmetries}{9}{section*.25}
+\contentsline {subsection}{\numberline {D}Truncation error and extrapolation}{10}{section*.26}
+\contentsline {subsection}{\numberline {E}Orbital choice}{10}{section*.27}
+\contentsline {section}{\numberline {VI}Appendix: Technical issues}{11}{section*.28}
+\contentsline {subsection}{\numberline {A}Licence and how to cite}{11}{section*.29}
+\contentsline {subsection}{\numberline {B}Calling \texttt {BLOCK} as an external subroutine}{11}{section*.30}
+\contentsline {subsection}{\numberline {C}Input and calculation details}{11}{section*.31}
+\contentsline {subsubsection}{\numberline {1}State-averaged calculations}{12}{section*.32}
+\contentsline {subsubsection}{\numberline {2}State-specific calculations}{12}{section*.33}
+\contentsline {subsubsection}{\numberline {3}Particle density matrices (pdm)}{12}{section*.34}
+\contentsline {subsubsection}{\numberline {4}Restarting a calculation}{13}{section*.35}
+\contentsline {subsubsection}{\numberline {5}Schedule details}{13}{section*.36}
+\contentsline {subsubsection}{\numberline {6}Orbital ordering}{14}{section*.37}
+\contentsline {subsubsection}{\numberline {7}Monitoring and convergence of the DMRG calculation}{14}{section*.38}
+\contentsline {subsubsection}{\numberline {8}Warm-up Scheme for Large Systems}{16}{section*.39}
+\contentsline {subsubsection}{\numberline {9}Creating FCIDUMP files}{16}{section*.40}
+\contentsline {subsection}{\numberline {D}Computational considerations}{17}{section*.41}
+\contentsline {subsection}{\numberline {E}Other examples}{17}{section*.42}
+\contentsline {subsubsection}{\numberline {1}Cr$_2$}{18}{section*.43}
+\contentsline {subsubsection}{\numberline {2}$\pi $-active space of porphine}{19}{section*.44}
+\contentsline {subsection}{\numberline {F}Appendix: Molpro input files}{19}{section*.45}
+\contentsline {subsubsection}{\numberline {1}Benzene molecule}{19}{section*.46}
+\contentsline {subsubsection}{\numberline {2}Chromium dimer}{21}{section*.47}
+\contentsline {subsubsection}{\numberline {3}Porphine, $C_1$ symmetry, fully-localized orbitals}{22}{section*.48}

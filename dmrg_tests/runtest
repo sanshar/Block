@@ -158,23 +158,6 @@ python ../test_onepdm.py spatial_onepdm.1.1.txt spat_onepdm.1.1.txt 1e-7
 python ../test_transitiononepdm.py spatial_onepdm.1.0.txt spat_onepdm.1.0.txt 1e-7
 cd ../
 
-echo "testing transition 1pdm for bcs hamiltonian"
-cd bcs_transitionpdm/M300
-$MPICOMMAND ../../../block.spin_adapted dmrg.conf > dmrg.out
-python move.py
-cd ../M400
-$MPICOMMAND ../../../block.spin_adapted dmrg.conf > dmrg.out
-python move.py
-cd ..
-$MPICOMMAND ../../block.spin_adapted dmrg.conf > dmrg.out
-python ../test_onepdm.py onepdm.0.0.txt M300/onepdm.0.0.txt 1e-7
-python ../test_onepdm.py onepdm.1.1.txt M400/onepdm.0.0.txt 1e-7
-python ../test_onepdm.py spatial_pairmat.0.0.txt M300/spatial_pairmat.0.0.txt 1e-7
-python ../test_onepdm.py spatial_pairmat.1.1.txt M400/spatial_pairmat.0.0.txt 1e-7
-python ../test_onepdm.py onepdm.1.0.txt ref_onepdm.1.0.txt 1e-7
-python ../test_onepdm.py spatial_pairmat.1.0.txt spat_pairmat.1.0.txt 1e-7
-cd ../
-
 echo "testing NEVPT2 calculations"
 cd h2o_nevpt2/
 $MPICOMMAND ../../block.spin_adapted dmrg.conf >dmrg.out
