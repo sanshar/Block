@@ -668,8 +668,8 @@ Energy extrapolation:
 
 .. figure:: images/c2_energy.png
    :align: left
-   :width: 600px
-   :height: 600px
+   :scale: 50%
 
-   Starting from *M=500*, use the largest discarded weights and associated sweep energies in the last sweep iteration of each *M* to make linear regression (see the figure above). 
-   The extrapolated DMRG sweep energy is -75.728557 a.u.
+   Starting from *M=500*, use the largest discarded weights and associated sweep energies in the last sweep iteration of each *M* to make linear regression (see the figure above). The extrapolated DMRG sweep energy is -75.728557 a.u.
+
+

@@ -9,6 +9,7 @@ Welcome to BLOCK's documentation!
    :align: left
    :width: 100px
    :height: 100px
+
 `BLOCK` implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry.
 The DMRG is a variational wavefunction method. Compared to other quantum chemical methods,
 it executionciently describes strong, multi-reference correlation in a large number of active orbitals (occupancies far from 0 or 2). 
