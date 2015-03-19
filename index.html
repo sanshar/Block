@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to BLOCK’s documentation! &mdash; BLOCK 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BLOCK 1.0.0 documentation" href="#" />
+    <link rel="next" title="Overview" href="overview.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="overview.html" title="Overview"
+             accesskey="N">next</a></li>
+        <li class="nav-item nav-item-0"><a href="#">BLOCK 1.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to BLOCK&#8217;s documentation!</a><ul>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="overview.html"
+                        title="next chapter">Overview</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-block-s-documentation">
+<h1>Welcome to BLOCK&#8217;s documentation!<a class="headerlink" href="#welcome-to-block-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="figure align-left">
+<a class="reference internal image-reference" href="_images/block_logo.jpg"><img alt="_images/block_logo.jpg" src="_images/block_logo.jpg" style="width: 100px; height: 100px;" /></a>
+</div>
+<p><cite>BLOCK</cite> implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry.
+The DMRG is a variational wavefunction method. Compared to other quantum chemical methods,
+it executionciently describes strong, multi-reference correlation in a large number of active orbitals (occupancies far from 0 or 2).
+The method is also provably optimal for correlation with a one-dimensional topology, that is,
+where orbitals are arranged with a chain- or ring-like connectivity.
+However, with the possible exception of small molecules, for correlation that is dynamic in character,
+the DMRG may be less computationally efficient than other methods
+such as coupled cluster theory or multireference con guration interaction.
+We recommend the use of the DMRG in problems requiring active spaces too large for
+standard complete active space (CAS) techniques. Thus, if you are interested in:</p>
+<ul class="simple">
+<li>a CAS-like treatment of low-lying eigenstates in problems with 16-40 active orbitals,</li>
+<li>or, one-dimensional orbital topologies with up to 100 active orbitals,</li>
+<li>and, standard chemical accuracy (1 kcal/mol in energy dirences),</li>
+</ul>
+<p>then the DMRG may be the right method for you.</p>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#calling-block-as-an-external-function">Calling <cite>Block</cite> as an external function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#license-and-how-to-cite">License and how to cite</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="build.html"><cite>BLOCK</cite> Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="build.html#compile">Compile</a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html#how-to-run-block">How to run <cite>BLOCK</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html#testjobs">Testjobs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Typical Calculations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#molecular-symmetry">Molecular symmetry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#state-wavefunction">State wavefunction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#state-averaged-calculation">State-averaged calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#state-specific-calculation">State-specific calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#n-particle-reduced-density-matrix"><em>n</em>-particle reduced density matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#and-2-particle-transition-reduced-density-matrix">1- and 2-particle transition reduced density matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#restart-dmrg-energy-calculation">Restart DMRG energy calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#restart-dmrg-n-particle-reduced-density-matrix-calculation">Restart DMRG <em>n</em>-particle reduced density matrix calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#restart-dmrg-transition-reduced-density-matrix-calculation">Restart DMRG transition reduced density matrix calculation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#customize-sweep-schedule">Customize sweep schedule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#sweep-energy-extrapolation">Sweep energy extrapolation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="keywords.html">Keywords</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="keywords.html#hamiltonian-types">Hamiltonian Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="keywords.html#algorithm-types">Algorithm Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="keywords.html#warm-up-types">Warm-up Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="keywords.html#solver-types">Solver Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="keywords.html#orbital-reorder-types">Orbital Reorder Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="keywords.html#calculation-types">Calculation Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="keywords.html#expert-keywords">Expert Keywords</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="overview.html" title="Overview"
+             >next</a></li>
+        <li class="nav-item nav-item-0"><a href="#">BLOCK 1.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Garnet Kin-Lic Chan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>
