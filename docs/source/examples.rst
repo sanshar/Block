@@ -222,8 +222,8 @@ Extract energies running::
 The DMRG reduced density matrix up to the 4-particle type for a particular state can be obtained 
 by employing the keywords ``onepdm``, ``twopdm``, ``threepdm`` and ``fourpdm``.
 Currently only "onedot" algorithm is implemented for this type of calculation.
-Density matrices of the *n*-th state are calculated and stored in a text file named *spatial\_onepdm.n.n.txt*, *spatial\_twopdm.n.n.txt*, 
-*spatial\_threepdm.n.n.txt* and *spatial\_fourpdm.n.n.txt*, respectively, starting with `n=0`.
+Density matrices of the *n*-th state are calculated and stored in a text file named *spatial_onepdm.n.n.txt*, *spatial_twopdm.n.n.txt*, 
+*spatial_threepdm.n.n.txt* and *spatial_fourpdm.n.n.txt*, respectively, starting with `n=0`.
 
 Example 5: 2-particle density matrix for the ground state::
 
@@ -241,7 +241,7 @@ Example 5: 2-particle density matrix for the ground state::
 
         twopdm
 
-The 2-particle density matrix is stored in the file of `spatial\_twopdm.0.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/5/spatial_twopdm.0.0.txt>`_.
+The 2-particle density matrix is stored in the file of `spatial_twopdm.0.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/5/spatial_twopdm.0.0.txt>`__.
 
 Example 6: state-averaged 2-particle density matrix for two roots::
 
@@ -262,15 +262,15 @@ Example 6: state-averaged 2-particle density matrix for two roots::
         twopdm
 
 The 2-particle density matrices for both state 1 and state 2 are stored in the files of 
-`spatial\_twopdm.0.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/6/spatial_twopdm.0.0.txt>`_, 
-and `spatial\_twopdm.1.1.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/6/spatial_twopdm.1.1.txt>`_, respectively.
+`spatial_twopdm.0.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/6/spatial_twopdm.0.0.txt>`__, 
+and `spatial_twopdm.1.1.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/6/spatial_twopdm.1.1.txt>`__, respectively.
 
 1- and 2-particle transition reduced density matrix
 ===================================================
 
 1-particle and 2-particle transition density matrices can be calculated using the keyword ``tran_onepdm`` and ``tran_twopdm``.
-Transition density matrices between the *m*-th and *n*-th states are calculated and stored in a text file named *spatial\_onepdm.m.n.txt* 
-and *spatial\_twopdm.m.n.txt*, respectively, starting with `m=1` and `n=0`.
+Transition density matrices between the *m*-th and *n*-th states are calculated and stored in a text file named *spatial_onepdm.m.n.txt* 
+and *spatial_twopdm.m.n.txt*, respectively, starting with `m=1` and `n=0`.
 
 The transition density matrices between states with different symmetry irreducible presentations are also available.
 However, this type of calculation requires multiple steps and the manipulation of scratch files 
@@ -295,7 +295,7 @@ Example 7: state-averaged 2-particle transition density matrix between two A\ :s
         tran_twopdm
 
 The state-average 2-particle transition density matrix is stored in the file of
-`spatial\_twopdm.1.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/7/spatial_twopdm.1.0.txt>`_.
+`spatial_twopdm.1.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/7/spatial_twopdm.1.0.txt>`__.
         
 Example 8: state-specific 2-particle transition density matrix between two refined A\ :sub:`g` states::
 
@@ -318,7 +318,7 @@ Example 8: state-specific 2-particle transition density matrix between two refin
         tran_twopdm
         
 The state-specific 2-particle transition density matrix is stored in the file of 
-`spatial\_twopdm.1.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/8/spatial_twopdm.1.0.txt>`_.
+`spatial_twopdm.1.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/8/spatial_twopdm.1.0.txt>`__.
 
 Restart DMRG energy calculation
 ===============================
@@ -373,7 +373,7 @@ Example 10: restart DMRG 2-particle density matrix calculation::
         restart_twopdm
 
 The 2-particle density matrix is stored in the file of 
-`spatial\_twopdm.0.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/10/spatial_twopdm.0.0.txt>`_.
+`spatial_twopdm.0.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/10/spatial_twopdm.0.0.txt>`__.
 
 .. _transition_dm:
 
@@ -401,7 +401,7 @@ Example 11: state-averaged 2-particle transition density matrix between bra and 
         restart_tran_twopdm
 
 The 2-particle transition density matrix is stored in the file of 
-`spatial\_twopdm.1.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/11/spatial_twopdm.1.0.txt>`_.
+`spatial_twopdm.1.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/11/spatial_twopdm.1.0.txt>`__.
 
 When bra and ket states belong to different irreps, the restart calculation takes a few steps in which the corresponding state-specific calculations are needed.
 
@@ -466,7 +466,7 @@ In ``./scratch_bra``, rename the resulting "statefile", "wave", "Rotation" scrat
         restart_tran_twopdm
 
 The 2-particle transition density matrix is stored in the file of 
-`spatial\_twopdm.1.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/12/spatial_twopdm.1.0.txt>`_.
+`spatial_twopdm.1.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/12/spatial_twopdm.1.0.txt>`__.
 
 Customize sweep schedule
 ========================
@@ -569,7 +569,7 @@ from a twodot to a onedot algorithm.
 ``sweep_tol`` gives the final tolerance on the DMRG energy,
 and is analogous to an energy convergence threshold in other quantum chemistry methods.
 
-In Example 13 between ``schedule`` and ``end`` each line has four values corresponding to *sweep\_iteration*,  *M*, *Davidson_tolerance* and *Noise*, respectively.
+In Example 13 between ``schedule`` and ``end`` each line has four values corresponding to *sweep_iteration*,  *M*, *Davidson_tolerance* and *Noise*, respectively.
 *sweep_iteration* is the sweep iteration in which the number of renormalized states *M*,
 the tolerance of Davidson algorithm and the perturbative noise should take effect. 
 
