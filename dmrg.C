@@ -73,7 +73,7 @@ void license() {
 
 
 namespace SpinAdapted{
-  Timer globaltimer;
+  Timer globaltimer(false);
   bool DEBUGWAIT = false;
   bool DEBUG_MEMORY = false;
   bool restartwarm = false;
