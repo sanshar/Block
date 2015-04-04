@@ -205,6 +205,8 @@ class SpinBlock
   void clear();
   void sendcompOps(Op_component_base& opcomp, int I, int J, int optype, int compsite);
   void recvcompOps(Op_component_base& opcomp, int I, int J, int optype);
+  void sendOneindexOps(Op_component_base& opcomp, int I, int optype, int otherproc);
+  void recvOneindexOps(Op_component_base& opcomp, int I, int optype);
 
   void RenormaliseFrom (std::vector<double> &energies, std::vector<double> &spins, double &error, std::vector<Matrix>& rotateMatrix,
                         const int keptstates, const int keptqstates, const double tol, SpinBlock& big,

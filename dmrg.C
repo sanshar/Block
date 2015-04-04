@@ -78,6 +78,7 @@ namespace SpinAdapted{
   bool DEBUG_MEMORY = false;
   bool restartwarm = false;
   double NUMERICAL_ZERO = 1e-15;
+  double BWPTenergy = 0.0;
   std::vector<OneElectronArray> v_1;
   std::vector<TwoElectronArray> v_2;
   std::vector<double> coreEnergy;
@@ -98,7 +99,7 @@ using namespace SpinAdapted;
 
 int calldmrg(char* input, char* output)
 {
-  //sleep(10);
+  //sleep(15);
   streambuf *backup;
   backup = cout.rdbuf();
   ofstream file;
@@ -171,6 +172,43 @@ int calldmrg(char* input, char* output)
 
 
     compress(sweep_tol, targetState, baseState);
+
+    break;
+  }
+  case (RESPONSEBW):
+  {
+    //compressing the V|\Psi_0>, here \Psi_0 is the basestate and 
+    //its product with V will have a larger bond dimension and is being compressed
+    //it is called the target state
+    dmrginp.setimplicitTranspose() = false;
+
+
+    sweepParams.restorestate(direction, restartsize);
+    algorithmTypes atype = dmrginp.algorithm_method();
+    dmrginp.set_algorithm_method() = ONEDOT;
+    if (mpigetrank()==0 && !RESTART && !FULLRESTART) {
+      for (int l=0; l<dmrginp.projectorStates().size(); l++) {
+	Sweep::InitializeStateInfo(sweepParams, direction, dmrginp.projectorStates()[l]);
+	Sweep::InitializeStateInfo(sweepParams, !direction, dmrginp.projectorStates()[l]);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, dmrginp.projectorStates()[l]);
+	Sweep::CanonicalizeWavefunction(sweepParams, !direction, dmrginp.projectorStates()[l]);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, dmrginp.projectorStates()[l]);
+      }
+      for (int l=0; l<dmrginp.baseStates().size(); l++) {
+	Sweep::InitializeStateInfo(sweepParams, direction, dmrginp.baseStates()[l]);
+	Sweep::InitializeStateInfo(sweepParams, !direction, dmrginp.baseStates()[l]);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, dmrginp.baseStates()[l]);
+	Sweep::CanonicalizeWavefunction(sweepParams, !direction, dmrginp.baseStates()[l]);
+	Sweep::CanonicalizeWavefunction(sweepParams, direction, dmrginp.baseStates()[l]);
+      }
+    }
+    dmrginp.set_algorithm_method() = atype;
+
+    
+    pout << "DONE COMPRESSING THE CORRECTION VECTOR"<<endl;
+    pout << "NOW WE WILL OPTIMIZE THE RESPONSE WAVEFUNCTION"<<endl;
+    //finally now calculate the response state
+    responseSweep(sweep_tol, dmrginp.targetState(), dmrginp.projectorStates(), dmrginp.baseStates());
 
     break;
   }
@@ -624,8 +662,8 @@ void dmrg(double sweep_tol)
 
 void responseSweep(double sweep_tol, int targetState, vector<int>& projectors, vector<int>& baseStates)
 {
-  double last_fe = 10.e6;
-  double last_be = 10.e6;
+  double last_fe = 1.e6;
+  double last_be = 1.e6;
   double old_fe = 0.;
   double old_be = 0.;
   SweepParams sweepParams;
@@ -645,7 +683,8 @@ void responseSweep(double sweep_tol, int targetState, vector<int>& projectors, v
   if (FULLRESTART) {
     sweepParams.restorestate(direction, restartSize);
     direction = !direction;
-    last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates, targetState);
+    dmrginp.setGuessState() = targetState;
+    last_fe = SweepResponse::do_one(sweepParams, warmUp, direction, restart, restartSize, targetState, projectors, baseStates);
     bool tempdirection;
     sweepParams.restorestate(tempdirection, restartSize);
     sweepParams.calc_niter();

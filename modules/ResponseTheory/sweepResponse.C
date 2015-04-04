@@ -107,6 +107,8 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
   DensityMatrix branoiseMatrix(newSystem.get_braStateInfo());
   branoiseMatrix.allocate(newSystem.get_braStateInfo());
   
+  if (dmrginp.outputlevel() > 0)
+    mcheck("before making correction vector");
   for (int l=0; l<baseStates.size(); l++)
   {  
     //now one needs to make |phi_0> = O|psi_0> so that the |phi_0> has the same dimensions as our target state
@@ -197,7 +199,14 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
 
     lowerStates[l+1] = temp;
     int success = 0;
-    lowerStates[l+1].Normalise(&success);
+    if (mpigetrank() == 0) {
+      for (int istate=1; istate<l+1; istate++)  {
+	double overlap = pow(DotProduct(lowerStates[istate], lowerStates[istate]), 0.5);
+	ScaleAdd(-DotProduct(lowerStates[istate], lowerStates[l+1])/overlap, lowerStates[istate], lowerStates[l+1]);
+      }
+    
+      lowerStates[l+1].Normalise(&success);
+    }
     if (mpigetrank() != 0) {
       lowerStates[l+1].CleanUp();
     }
@@ -207,6 +216,8 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
   }
 
 
+  if (dmrginp.outputlevel() > 0)
+    mcheck("Before renormalization");
   dmrginp.setOutputlevel() = originalOutputlevel;
   DensityMatrix bratracedMatrix;
   newSystem.RenormaliseFrom (sweepParams.set_lowest_energy(), sweepParams.set_lowest_energy_spins(),
@@ -229,6 +240,8 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
 
   rotatematrix.resize(0);
 
+  if (dmrginp.outputlevel() > 0)
+    mcheck("Before adding noise");
   ScaleAdd(sweepParams.get_noise()*(max(1.e-5, trace(branoiseMatrix))), branoiseMatrix, bratracedMatrix);
   if (!mpigetrank())
     sweepParams.set_lowest_error() = makeRotateMatrix(bratracedMatrix, rotatematrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
@@ -372,6 +385,8 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
 #endif
     
     
+    if (dmrginp.outputlevel() > 0)
+      mcheck("transform operators");
     perturbationnewsystem.transform_operators(rotatematrix, ketrotatematrix);
 
     SpinBlock::store(forward, perturbationnewsystem.get_sites(), perturbationnewsystem, targetState, projectors[l]);
@@ -420,7 +435,7 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
   std::vector<int> perturbationIntegral(dmrginp.getNumIntegrals()-1,0);
   for (int i=0; i<perturbationIntegral.size(); i++)
     perturbationIntegral[i] = i+1;
-  std::vector<double> finalEnergy(1,1.0e100);
+  std::vector<double> finalEnergy(1,0.0e100);
   double finalError = 0.;
 
   if (restart) {
@@ -515,8 +530,21 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
 		targetState, correctionVector, projectors, baseStates);
       }
       else {
+	double cE = 0.0;
+	if (dmrginp.calc_type() == RESPONSEBW) {
+	  //When doing BW perturbation theory in the denominator we have (H0 - E) and not (H0-E0)
+	  cE = coreEnergy[system.get_integralIndex()];
+	  double e2 = BWPTenergy;
+	  coreEnergy[system.get_integralIndex()] = cE - e2;
+	  p2out << "\t\t\t BW perturbation theory  "<<cE<<"  "<<e2<<endl; 
+	}
+
 	BlockAndDecimate(sweepParams, system, newSystem, warmUp, 
 			 dot_with_sys, targetState, projectors, baseStates);
+
+	if (dmrginp.calc_type() == RESPONSEBW) 
+	  coreEnergy[system.get_integralIndex()] = cE ;
+
       }
       
       //Need to substitute by?
@@ -526,6 +554,7 @@ double SpinAdapted::SweepResponse::do_one(SweepParams &sweepParams, const bool &
 	//this criteria should work for state average or state specific because the lowest sweep energy is always the lowest of the average
 	finalError = max(sweepParams.get_lowest_error(),finalError);
 	finalEnergy[0] = min(sweepParams.get_lowest_energy()[0], finalEnergy[0]);
+	BWPTenergy = finalEnergy[0];
 	pout << "final energy "<<finalEnergy[0]<<"  "<<sweepParams.get_lowest_energy()[0]<<endl;
       }
       

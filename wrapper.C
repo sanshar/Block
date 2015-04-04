@@ -125,7 +125,7 @@ void writeFullMPS()
 
 }
 
-void test()
+void test(char* infile)
 {
   setbuf(stdout, NULL);
   pout.precision(12);
@@ -133,19 +133,26 @@ void test()
   char msgctr[msgsize];
 
   int nstates;
+  std::vector<int> states;
   if (mpigetrank() == 0) {
-    ifstream file("states");
-    file.getline(msgctr, msgsize);
-    string s( msgctr);
-    vector<string> tok;
-    boost::split(tok, s, is_any_of(", \t"), token_compress_on);
-    nstates = atoi(tok[0].c_str());
+    ifstream file(infile);
+    int stateindex ;
+    while(file >> stateindex) {
+      states.push_back(stateindex);
+      if (mpigetrank() == 0)
+	printf("reading state %i\n", stateindex);
+    }
     file.close();
   }
 #ifndef SERIAL
   boost::mpi::communicator world;
-  boost::mpi::broadcast(world, nstates, 0);
+  boost::mpi::broadcast(world, states, 0);
 #endif
+  nstates = states.size();
+
+  std::vector<MPS> mpsstates;
+  for (int i=0; i<states.size(); i++)
+    mpsstates.push_back(MPS(states[i]));
 
   std::vector< std::vector<double> > ham(nstates, std::vector<double>(nstates, 0.0));
   std::vector< std::vector<double> > Overlap(nstates, std::vector<double>(nstates, 0.0));
@@ -154,16 +161,16 @@ void test()
   for (int i=0; i<nstates; i++) {
     if(mpigetrank() == 0)
       printf("starting row : %i\n", i);
-    for (int j=0; j<i+1; j++) {
-      MPS statea(i);
-      MPS stateb(j);
+    for (int j=0; j<1; j++) {
       double h,o;
-      calcHamiltonianAndOverlap(statea, stateb, h, o);
+      calcHamiltonianAndOverlap(mpsstates[i], mpsstates[j], h, o);
       ham[i][j] = h; ham[j][i] = h;
       Overlap[i][j] = o; Overlap[j][i] = o;
+      if (mpigetrank() == 0) 
+	printf("%i %i  %18.9e  %18.9e\n", i, j, h, o); 
     }
   }
-
+  
   if(mpigetrank() == 0) {
     printf("printing hamiltonian\n");
     for (int i=0; i<nstates; i++) {
@@ -171,7 +178,17 @@ void test()
 	printf("%18.9e ", ham[i][j]);
       printf("\n");
     }
-    
+
+    /*
+    printf("\n");
+    printf("printing hamiltonian\n");
+    for (int i=0; i<nstates; i++) {
+      for (int j=0; j<nstates; j++) 
+	printf("%18.9e ", ham[i][j]/sqrt(Overlap[i][i]*Overlap[j][j]));
+      printf("\n");
+    }
+    */
+
     printf("\n");
     printf("printing overlap\n");
     for (int i=0; i<nstates; i++) {

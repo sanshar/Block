@@ -36,7 +36,7 @@ enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
 enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPDM,
                RESTART_ONEPDM, RESTART_THREEPDM, RESTART_FOURPDM, TINYCALC, FCI,
-               EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN, COMPRESS, RESPONSE,
+               EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN, COMPRESS, RESPONSE, RESPONSEBW,
                TRANSITION_ONEPDM, TRANSITION_TWOPDM, RESTART_T_ONEPDM, RESTART_T_TWOPDM,
                NEVPT2,RESTART_NEVPT2};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
@@ -55,7 +55,7 @@ class Input {
   int m_Sz;
   bool m_spinAdapted;
   bool m_Bogoliubov;
-  bool m_permSymm;
+  int m_permSymm;
 
   IrrepSpace m_total_symmetry_number;
   IrrepSpace m_bra_symmetry_number;// This is used when bra and ket have different spatial symmetry irrep;
@@ -317,6 +317,7 @@ class Input {
   const std::vector<int>& baseStates() const {return m_baseState;}
   const int& targetState() const {return m_targetState;}
   const int& guessState() const {return m_guessState;}
+  int& setGuessState()  {return m_guessState;}
   const std::vector<int>& projectorStates() const {return m_projectorState;}
 
   std::vector<int>& baseStates() {return m_baseState;}
@@ -470,7 +471,7 @@ class Input {
   bool &do_npdm_ops() {return m_do_npdm_ops;}
   const bool &do_npdm_in_core() const {return m_do_npdm_in_core;}
   bool &do_npdm_in_core() {return m_do_npdm_in_core;}
-  const bool new_npdm_code() const{
+  bool new_npdm_code() const{
     if( m_do_pdm) return m_new_npdm_code;
     else return false;
   }

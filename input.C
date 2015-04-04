@@ -82,7 +82,7 @@ void SpinAdapted::Input::initialize_defaults()
   m_projectorState.resize(0);
   m_targetState = -1;
   m_guessState = 1;
-  m_permSymm = true;
+  m_permSymm = 2;
 
   m_openorbs.resize(0);
   m_closedorbs.resize(0);
@@ -231,7 +231,9 @@ SpinAdapted::Input::Input(const string& config_name) {
 	  orbitalfile[l] = tok[l+1];
       }
       else if (boost::iequals(keyword, "nopermsymm"))
-        m_permSymm = false;
+        m_permSymm = 1;
+      else if (boost::iequals(keyword, "nohermitiansymm"))
+        m_permSymm = 0;
       else if (boost::iequals(keyword, "maxM")) {
 	if(usedkey[MAXM] == 0) 
 	  usedkey_error(keyword, msg);
@@ -570,6 +572,17 @@ SpinAdapted::Input::Input(const string& config_name) {
 	  abort();
 	}
 	m_calc_type = RESPONSE;
+	m_solve_type = CONJUGATE_GRADIENT;
+	if(m_targetState == -1)
+	  m_targetState = 2;
+	
+      }
+      else if (boost::iequals(keyword,  "responsebw")) {
+	if (tok.size() != 1) {
+	  pout << "The keyword response should not be followed by anything!"<<endl;
+	  abort();
+	}
+	m_calc_type = RESPONSEBW;
 	m_solve_type = CONJUGATE_GRADIENT;
 	if(m_targetState == -1)
 	  m_targetState = 2;
@@ -1112,7 +1125,7 @@ SpinAdapted::Input::Input(const string& config_name) {
   v_2.resize(m_num_Integrals, TwoElectronArray(TwoElectronArray::restrictedNonPermSymm));
   v_1.resize(m_num_Integrals);
   coreEnergy.resize(m_num_Integrals);
-  if ( (m_calc_type==RESPONSE) && m_num_Integrals != m_baseState.size() + 1) {
+  if ( (m_calc_type==RESPONSE || m_calc_type==RESPONSEBW) && m_num_Integrals != m_baseState.size() + 1) {
     pout << "number of integrals should be 1 more than the number of base states"<<endl;
     pout << "about to exit"<<endl;
     abort();
@@ -1135,7 +1148,7 @@ SpinAdapted::Input::Input(const string& config_name) {
   for (int integral=0; integral < m_num_Integrals; integral++) {
     v_1[integral].rhf=true;
     v_2[integral].rhf=true;
-    if (sym != "lzsym" && sym != "dinfh_abelian" && !NonabelianSym && m_permSymm) {
+    if (sym != "lzsym" && sym != "dinfh_abelian" && !NonabelianSym && m_permSymm == 2) {
       v_2[integral].permSymm = true;
     }
     else
@@ -1202,6 +1215,7 @@ SpinAdapted::Input::Input(const string& config_name) {
   mpi::broadcast(world, NPROP, 0);
   mpi::broadcast(world, PROPBITLEN, 0);
 #endif
+
 }
 
 void SpinAdapted::Input::readreorderfile(ifstream& dumpFile, std::vector<int>& oldtonew) {
@@ -1279,7 +1293,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
   //do the reordering only if it is not a restart calculation
   //if it is then just read the reorder.dat from the scratch space
   if (integralIndex == 0) {
-    if(get_restart() || get_fullrestart() || !(m_calc_type == DMRG || m_calc_type == FCI || m_calc_type == TINYCALC)) {
+    if(get_restart() || get_fullrestart() || m_calc_type == COMPRESS || m_calc_type == RESPONSE || m_calc_type == RESPONSEBW) {
       if (mpigetrank() == 0) {
 	ReorderFileInput.open(ReorderFileName);
 	boost::filesystem::path ReorderFilePath(ReorderFileName);
@@ -2022,7 +2036,7 @@ void SpinAdapted::Input::performSanityTest()
   else
     Symmetry::irrepAllowed(m_total_symmetry_number.getirrep());
 
-  if (m_calc_type == RESPONSE && m_occupied_orbitals == -1) {
+  if ((m_calc_type == RESPONSE  || m_calc_type == RESPONSEBW )&& m_occupied_orbitals == -1) {
     pout << "For response type of calculation, number of occupied orbitals must be specified"<<endl;
     abort();
   }
