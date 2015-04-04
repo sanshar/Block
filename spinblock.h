@@ -181,6 +181,16 @@ class SpinBlock
     Op_component_base& opbase = *ops.find(optypes)->second;
     return opbase.get_op_rep(s, i, j, k, l)->getworkingrepresentation(this);
   }
+  boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const std::map< std::string, std::vector<SpinQuantum> >& s, int i=-1, int j=-1, int k=-1, int l= -1) {
+    assert(has(optypes));
+    Op_component_base& opbase = *ops.find(optypes)->second;
+    return opbase.get_op_rep(s, i, j, k, l)->getworkingrepresentation(this);
+  }
+  const boost::shared_ptr<SparseMatrix> get_op_rep(const opTypes &optypes, const std::map< std::string, std::vector<SpinQuantum> >& s, int i=-1, int j=-1, int k=-1, int l= -1) const {
+    assert(has(optypes));
+    Op_component_base& opbase = *ops.find(optypes)->second;
+    return opbase.get_op_rep(s, i, j, k, l)->getworkingrepresentation(this);
+  }
 
   void operator= (const SpinBlock& b);
   void build_iterators();

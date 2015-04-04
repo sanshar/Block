@@ -407,12 +407,6 @@ void Fourpdm_container::update_full_spin_array( std::vector< std::pair< std::vec
     //      << "\t\t" << val << endl;
     //}
 
-    // Test for duplicates
-    if ( abs(fourpdm(i,j,k,l,m,n,p,q)) != 0.0 ) {
-      pout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<" "<<p<<" "<<q<<endl;
-      pout << "earlier value: " << fourpdm(i,j,k,l,m,n,p,q) << endl << "new value:     " <<val<<endl;
-      abort();
-    }
     fourpdm(i,j,k,l,m,n,p,q) = val;
   }
 
@@ -447,11 +441,6 @@ void Fourpdm_container::update_full_spatial_array( std::vector< std::pair< std::
 //      if ( l%2 != m%2 ) continue;
 //
 //      spatial_fourpdm( ro.at(i/2), ro.at(j/2), ro.at(k/2), ro.at(l/2), ro.at(m/2), ro.at(n/2), ro.at(p/2), ro.at(q/2) ) += it->second;
-    if ( abs(spatial_fourpdm(ro.at(i), ro.at(j), ro.at(k), ro.at(l), ro.at(m), ro.at(n), ro.at(p), ro.at(q))) != 0.0 ) {
-      pout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<" "<<m<<" "<<n<<" "<<p<<" "<<q<<endl;
-      pout << "earlier value: " << spatial_fourpdm(ro.at(i), ro.at(j), ro.at(k), ro.at(l), ro.at(m), ro.at(n), ro.at(p), ro.at(q)) << endl << "new value:     " <<it->second<<endl;
-      abort();
-    }
       spatial_fourpdm( ro.at(i), ro.at(j), ro.at(k), ro.at(l), ro.at(m), ro.at(n), ro.at(p), ro.at(q) ) = it->second;
     }
   }

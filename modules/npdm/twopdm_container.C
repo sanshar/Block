@@ -183,11 +183,6 @@ void Twopdm_container::accumulate_spatial_npdm()
             for(int n=0;n<spatial_twopdm.dim4();++n)
               if ( abs(tmp_recv(k,l,m,n)) > NUMERICAL_ZERO) {
                 // Test for duplicates
-                if ( abs(spatial_twopdm(k,l,m,n)) > NUMERICAL_ZERO ){
-
-                abort();
-                pout << "duplicates"<<endl;
-                }
                 spatial_twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
               }
 	 }
@@ -220,11 +215,6 @@ void Twopdm_container::update_full_spin_array( std::vector< std::pair< std::vect
     //pout << "so-twopdm val: i,j,k,l = " << i << "," << j << "," << k << "," << l << "\t\t" << val << endl;
 
     // Test for duplicates
-    if ( abs(twopdm(i, j, k, l)) != 0.0 ) {
-      pout << "WARNING: Already calculated "<<i<<" "<<j<<" "<<k<<" "<<l<<endl;
-      pout << "earlier value: "<<twopdm(i,j,k,l)<<endl<< "new value:     "<<val<<endl;
-      abort();
-    }
     twopdm(i,j,k,l) = val;
   }
 
@@ -267,11 +257,6 @@ void Twopdm_container::update_full_spatial_array( std::vector< std::pair< std::v
       int k = (it->first)[2];
       int l = (it->first)[3];
 
-      if(abs(spatial_twopdm( ro.at(i), ro.at(j), ro.at(k), ro.at(l) ) )>NUMERICAL_ZERO)
-      {
-        cout <<"calculate again"<<endl;
-        abort();
-      }
       spatial_twopdm( ro.at(i), ro.at(j), ro.at(k), ro.at(l) ) += factor * (it->second);
     }
   }

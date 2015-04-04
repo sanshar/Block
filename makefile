@@ -5,10 +5,10 @@
 
 ##BOOSTINCLUDE = /home/sandeep/Work/Programs/boost_1_54_0/
 #specify boost include file
-BOOSTINCLUDE = /home/shengg/opt/boost/include/
+BOOSTINCLUDE = /home/juny/MyLibs/boost_1_55_0_install/include
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/home/shengg/opt/boost/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+BOOSTLIB = -L/home/juny/MyLibs/boost_1_55_0_install/lib/ -lboost_serialization -lboost_system -lboost_filesystem
 #BOOSTLIB = -lboost_serialization -lboost_system -lboost_filesystem
 LAPACKBLAS = -lblas -llapack
 
@@ -27,9 +27,11 @@ I8_OPT = no
 MOLPRO = no
 OPENMP = no
 
+DOPROF = no
+
 # add Molcas interface to libqcdmrg.so
 # molcas compilation w/ -64 option requires I8 as well
-MOLCAS = yes
+MOLCAS = no
 
 ifeq ($(USE_MKL), yes)
 MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/
@@ -57,7 +59,7 @@ EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
 CXX =  g++
-MPICXX = mpicxx
+MPICXX = /usr/lib64/openmpi/bin/mpicxx
 BLOCKHOME = .
 HOME = .
 NEWMATINCLUDE = $(BLOCKHOME)/newmat10/
@@ -102,8 +104,12 @@ ifeq (g++, $(CXX))
       OPENMP_FLAGS= -fopenmp -D_OPENMP 
    endif
 # GNU compiler
-      OPT = -DNDEBUG -O3 
+      OPT = -DNDEBUG -O3
 #   OPT = -g -fPIC
+endif
+
+ifeq ($(DOPROF),yes)
+     OPT += -pg
 endif
 
 ifeq ($(USE_MPI), yes)

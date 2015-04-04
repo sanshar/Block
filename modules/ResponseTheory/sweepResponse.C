@@ -411,7 +411,7 @@ void SpinAdapted::SweepResponse::BlockAndDecimate (SweepParams &sweepParams, Spi
   if (dmrginp.outputlevel() > 0)
     mcheck("after rotation and transformation of block");
 
-  p3out << *dmrginp.guessgenT<<" "<<*dmrginp.multiplierT<<" "<<*dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+  p2out << *dmrginp.guessgenT<<" "<<*dmrginp.multiplierT<<" "<<*dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
   p2out << *dmrginp.makeopsT<<" makeops "<<endl;
   p2out << *dmrginp.datatransfer<<" datatransfer "<<endl;
   p2out <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
@@ -775,7 +775,7 @@ void SpinAdapted::SweepResponse::StartUp (SweepParams &sweepParams, SpinBlock& s
   if (dmrginp.outputlevel() > 0)
     mcheck("after rotation and transformation of block");
 
-  p3out << *dmrginp.guessgenT<<" "<<*dmrginp.multiplierT<<" "<<*dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+  p2out << *dmrginp.guessgenT<<" "<<*dmrginp.multiplierT<<" "<<*dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
   p2out << *dmrginp.makeopsT<<" makeops "<<endl;
   p2out << *dmrginp.datatransfer<<" datatransfer "<<endl;
   p2out <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  
@@ -1043,7 +1043,7 @@ void SpinAdapted::SweepResponse::WavefunctionCanonicalize (SweepParams &sweepPar
   if (dmrginp.outputlevel() > 0)
     mcheck("after rotation and transformation of block");
   
-  p3out << *dmrginp.guessgenT<<" "<<*dmrginp.multiplierT<<" "<<*dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
+  p2out << *dmrginp.guessgenT<<" "<<*dmrginp.multiplierT<<" "<<*dmrginp.operrotT<< "  "<<globaltimer.totalwalltime()<<" timer "<<endl;
   p2out << *dmrginp.makeopsT<<" makeops "<<endl;
   p2out << *dmrginp.datatransfer<<" datatransfer "<<endl;
   p2out <<"oneindexopmult   twoindexopmult   Hc  couplingcoeff"<<endl;  

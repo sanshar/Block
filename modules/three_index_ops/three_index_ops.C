@@ -35,11 +35,10 @@ void SpinAdapted::DesDesDes::build(const SpinBlock& b) {
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
 
-  if (leftBlock->get_op_array(DES_DES_DES).has(i,j,k))
+  if (leftBlock->get_op_array(DES_DES_DES).has(i,j,k) && rightBlock->get_sites().size() == 0)
   {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(DES_DES_DES, deltaQuantum, i,j,k);
-    if (rightBlock->get_sites().size() == 0) 
-      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(DES_DES_DES, quantum_ladder, i,j,k);
+    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }
@@ -128,11 +127,10 @@ void SpinAdapted::CreCreDes::build(const SpinBlock& b) {
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
 
-  if (leftBlock->get_op_array(CRE_CRE_DES).has(i,j,k))
+  if (leftBlock->get_op_array(CRE_CRE_DES).has(i,j,k) && rightBlock->get_sites().size() == 0)
   {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DES, deltaQuantum, i,j,k);
-    if (rightBlock->get_sites().size() == 0) 
-      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_DES, quantum_ladder, i,j,k);
+    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }
@@ -222,11 +220,10 @@ void SpinAdapted::CreDesDes::build(const SpinBlock& b) {
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
 
-  if (leftBlock->get_op_array(CRE_DES_DES).has(i,j,k))
+  if (leftBlock->get_op_array(CRE_DES_DES).has(i,j,k) && rightBlock->get_sites().size() == 0)
   {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES_DES, deltaQuantum, i,j,k);
-    if (rightBlock->get_sites().size() == 0) 
-      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES_DES, quantum_ladder, i,j,k);
+    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }
@@ -317,11 +314,10 @@ void SpinAdapted::CreDesCre::build(const SpinBlock& b) {
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
 
-  if (leftBlock->get_op_array(CRE_DES_CRE).has(i,j,k))
+  if (leftBlock->get_op_array(CRE_DES_CRE).has(i,j,k) && rightBlock->get_sites().size() == 0)
   {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES_CRE, deltaQuantum, i,j,k);
-    if (rightBlock->get_sites().size() == 0) 
-      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_DES_CRE, quantum_ladder, i,j,k);
+    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }
@@ -410,11 +406,10 @@ void SpinAdapted::CreCreCre::build(const SpinBlock& b) {
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
 
-  if (leftBlock->get_op_array(CRE_CRE_CRE).has(i,j,k))
+  if (leftBlock->get_op_array(CRE_CRE_CRE).has(i,j,k) && rightBlock->get_sites().size() == 0)
   {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_CRE, deltaQuantum, i,j,k);
-    if (rightBlock->get_sites().size() == 0) 
-      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(CRE_CRE_CRE, quantum_ladder, i,j,k);
+    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }
@@ -513,11 +508,10 @@ void SpinAdapted::DesCreDes::build(const SpinBlock& b) {
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
 
-  if (leftBlock->get_op_array(DES_CRE_DES).has(i,j,k))
+  if (leftBlock->get_op_array(DES_CRE_DES).has(i,j,k) && rightBlock->get_sites().size() == 0)
   {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(DES_CRE_DES, deltaQuantum, i,j,k);
-    if (rightBlock->get_sites().size() == 0) 
-      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(DES_CRE_DES, quantum_ladder, i,j,k);
+    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }
@@ -602,11 +596,10 @@ void SpinAdapted::DesDesCre::build(const SpinBlock& b) {
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
 
-  if (leftBlock->get_op_array(DES_DES_CRE).has(i,j,k))
+  if (leftBlock->get_op_array(DES_DES_CRE).has(i,j,k) && rightBlock->get_sites().size() == 0)
   {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(DES_DES_CRE, deltaQuantum, i,j,k);
-    if (rightBlock->get_sites().size() == 0) 
-      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(DES_DES_CRE, quantum_ladder, i,j,k);
+    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }
@@ -692,11 +685,10 @@ void SpinAdapted::DesCreCre::build(const SpinBlock& b) {
   SpinBlock* leftBlock = b.get_leftBlock();
   SpinBlock* rightBlock = b.get_rightBlock();
 
-  if (leftBlock->get_op_array(DES_CRE_CRE).has(i,j,k))
+  if (leftBlock->get_op_array(DES_CRE_CRE).has(i,j,k) && rightBlock->get_sites().size() == 0)
   {      
-    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(DES_CRE_CRE, deltaQuantum, i,j,k);
-    if (rightBlock->get_sites().size() == 0) 
-      SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
+    const boost::shared_ptr<SparseMatrix>& op = leftBlock->get_op_rep(DES_CRE_CRE, quantum_ladder, i,j,k);
+    SpinAdapted::operatorfunctions::TensorTrace(leftBlock, *op, &b, &(b.get_stateInfo()), *this);
     dmrginp.makeopsT -> stop();
     return;
   }

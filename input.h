@@ -35,7 +35,7 @@ enum solveTypes {LANCZOS, DAVIDSON, CONJUGATE_GRADIENT};
 enum algorithmTypes {ONEDOT, TWODOT, TWODOT_TO_ONEDOT};
 enum noiseTypes {RANDOM, EXCITEDSTATE};
 enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPDM,
-               RESTART_ONEPDM, RESTART_THREEPDM, RESTART_FOURPDM, TINYCALC, FCI,
+               RESTART_ONEPDM, RESTART_THREEPDM, RESTART_FOURPDM, RESTART_NEVPT2PDM, TINYCALC, FCI,
                EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN, COMPRESS, RESPONSE, RESPONSEBW,
                TRANSITION_ONEPDM, TRANSITION_TWOPDM, RESTART_T_ONEPDM, RESTART_T_TWOPDM,
                NEVPT2,RESTART_NEVPT2};
@@ -110,6 +110,7 @@ class Input {
   bool m_do_pdm;
   bool m_do_npdm_ops;
   bool m_do_npdm_in_core;
+	bool m_npdm_generate = false;
   bool m_new_npdm_code;
   bool m_store_spinpdm;
   bool m_spatpdm_disk_dump;
@@ -191,7 +192,7 @@ class Input {
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat ;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform ;
-    ar & m_do_pdm & m_do_npdm_ops & m_do_npdm_in_core & m_new_npdm_code & m_occupied_orbitals;
+    ar & m_do_pdm & m_do_npdm_ops & m_do_npdm_in_core & m_npdm_generate & m_new_npdm_code  & m_transition_diff_spatial_irrep & m_occupied_orbitals;
     ar &  m_store_spinpdm &m_spatpdm_disk_dump & m_pdm_unsorted & m_npdm_intermediate & m_npdm_multinode;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_oneindex_screen_tol & m_twoindex_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type & m_warmup;
@@ -476,6 +477,8 @@ class Input {
     else return false;
   }
   void set_new_npdm_code(){ m_new_npdm_code= true;}
+	const bool &npdm_generate() const { return m_npdm_generate;}
+	bool &npdm_generate() { return m_npdm_generate;}
   const bool &store_spinpdm() const {return m_store_spinpdm;}
   bool &store_spinpdm() {return m_store_spinpdm;}
   const bool &spatpdm_disk_dump() const {return m_spatpdm_disk_dump;}

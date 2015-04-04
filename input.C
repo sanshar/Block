@@ -628,6 +628,8 @@ SpinAdapted::Input::Input(const string& config_name) {
 	m_calc_type = RESTART_THREEPDM;
       else if (boost::iequals(keyword,  "restart_fourpdm") || boost::iequals(keyword,  "restart_fourrdm") )
 	m_calc_type = RESTART_FOURPDM;
+      else if (boost::iequals(keyword,  "restart_nevpt2_npdm") )
+	m_calc_type = RESTART_NEVPT2PDM;
       else if (boost::iequals(keyword,  "transition_onepdm") || boost::iequals(keyword,  "transition_onerdm") || boost::iequals(keyword,  "tran_onepdm"))
 	m_calc_type = TRANSITION_ONEPDM;
       else if (boost::iequals(keyword,  "transition_twopdm") || boost::iequals(keyword,  "transition_twordm") || boost::iequals(keyword,  "tran_twopdm"))
@@ -1491,7 +1493,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     i = atoi(tok[1].c_str())-offset;j = atoi(tok[2].c_str())-offset;k = atoi(tok[3].c_str())-offset;l = atoi(tok[4].c_str())-offset;
 
     if (i==-1 && j==-1 && k==-1 && l==-1) {
-      coreEnergy += value;
+      coreEnergy = value;
       if (AOrbOffset == 0 && BOrbOffset == 0) //AA
 	{AOrbOffset = 1; BOrbOffset = 1;} //got to BB}
       else if (AOrbOffset == 1 && BOrbOffset == 1) //BB
@@ -1744,7 +1746,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
     value = atof(tok[0].c_str());
     i = atoi(tok[1].c_str())-offset;j = atoi(tok[2].c_str())-offset;k = atoi(tok[3].c_str())-offset;l = atoi(tok[4].c_str())-offset;
     if (i==-1 && j==-1 && k==-1 && l==-1) {
-      coreEnergy += value;
+      coreEnergy = value;
       section += 1;
     } else if (RHF) {
       if (section == 0) { // ccdd

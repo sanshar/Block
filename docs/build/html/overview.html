@@ -1,0 +1,165 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Overview &mdash; BLOCK 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BLOCK 1.0.0 documentation" href="index.html" />
+    <link rel="next" title="BLOCK Installation" href="build.html" />
+    <link rel="prev" title="Welcome to BLOCK’s documentation!" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="build.html" title="BLOCK Installation"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to BLOCK’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BLOCK 1.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Overview</a><ul>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#calling-block-as-an-external-function">Calling <cite>Block</cite> as an external function</a></li>
+<li><a class="reference internal" href="#license-and-how-to-cite">License and how to cite</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to BLOCK&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="build.html"
+                        title="next chapter"><cite>BLOCK</cite> Installation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="sources/overview.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="overview">
+<h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>DMRG sweep algorithm for quantum chemistry, Hubbard and Heisenberg hamiltonians,</li>
+<li>Full spin-adaptation (SU(2) symmetry) and Abelian point-group symmetries,</li>
+<li>State-averaged and state-specific excited states,</li>
+<li>one-, two-, three- and four-particle density matrices,</li>
+<li>one- and two-particle transition density matrices between two states,</li>
+<li>perturbation methods including NEVPT2 and MPSPT,</li>
+<li>interfaces to the Molpro, ORCA, Q-Chem and Molcas program packages.</li>
+</ul>
+</div>
+<div class="section" id="calling-block-as-an-external-function">
+<h2>Calling <cite>Block</cite> as an external function<a class="headerlink" href="#calling-block-as-an-external-function" title="Permalink to this headline">¶</a></h2>
+<p>The makefile distributed with <cite>Block</cite> code can be used to generate a library file called
+libqcdmrg.a.
+To call <cite>Block</cite> as a subroutine from a C++ program, the library file has to be
+linked to the program.
+A DMRG calculation can be performed using the function call <code class="docutils literal"><span class="pre">calldmrg(inputf,</span> <span class="pre">outputf)</span></code>,
+where <code class="docutils literal"><span class="pre">inputf</span></code> and <code class="docutils literal"><span class="pre">outputf</span></code> are C-style character arrays specifying the <cite>Block</cite> input and output fies respectively.</p>
+</div>
+<div class="section" id="license-and-how-to-cite">
+<h2>License and how to cite<a class="headerlink" href="#license-and-how-to-cite" title="Permalink to this headline">¶</a></h2>
+<p><cite>Block</cite> is distributed under the GNU GPL license which is reproduced in the file LICENSE.
+In addition, <cite>Block</cite> contains a full copy of the Newmat C++ matrix library by Robert Davies.</p>
+<p>We would appreciate if you cite the following papers in publications resulting from the
+use of <cite>Block</cite>:</p>
+<ul class="simple">
+<li><ol class="first upperalpha" start="7">
+<li>K.-L. Chan and M. Head-Gordon, J. Chem. Phys. 116, 4462 (2002),</li>
+</ol>
+</li>
+<li><ol class="first upperalpha" start="7">
+<li>K.-L. Chan, J. Chem. Phys. 120, 3172 (2004),</li>
+</ol>
+</li>
+<li><ol class="first upperalpha" start="4">
+<li>Ghosh, J. Hachmann, T. Yanai, and G. K.-L. Chan, J. Chem. Phys., 128, 144117 (2008),</li>
+</ol>
+</li>
+<li><ol class="first upperalpha" start="19">
+<li>Sharma and G. K-.L. Chan, J. Chem. Phys. 136, 124121 (2012).</li>
+</ol>
+</li>
+</ul>
+<p>In addition, a useful list of DMRG references relevant to quantum chemistry can be found
+in the article above by Sharma and Chan.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="build.html" title="BLOCK Installation"
+             >next</a></li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to BLOCK’s documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">BLOCK 1.0.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2015, Garnet Kin-Lic Chan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

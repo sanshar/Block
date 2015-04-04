@@ -34,12 +34,12 @@ void Nevpt2_container::save_npdms(const int& i, const int& j)
 //  if ( dmrginp.spatpdm_disk_dump() ){
   char file[5000];
   accumulate_full_array(a16_matrix_ );
-  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/A16_matrix.", 0, 0,".txt");
+  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/A16_matrix.", i, j,".txt");
   save_full_array_text( a16_matrix_ ,file);
 
 //
   accumulate_full_array(a22_matrix_ );
-  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/A22_matrix.", 0, 0,".txt");
+  sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/A22_matrix.", i, j,".txt");
   save_full_array_text( a22_matrix_ ,file);
 
 

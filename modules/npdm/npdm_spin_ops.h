@@ -32,7 +32,7 @@ class NpdmSpinOps_base {
 
   public:
 //FIXME
-    NpdmSpinOps_base() {}
+    NpdmSpinOps_base() = default;
 // FIXME Shallow copy constructor
     NpdmSpinOps_base( const NpdmSpinOps_base & obj ) {
 //      opReps_.clear();
@@ -125,6 +125,30 @@ class NpdmSpinOps : public NpdmSpinOps_base {
     std::string ifile_;
     // Number of spatial orbital combinations
     int size_;
+
+    NpdmSpinOps() = default;
+    NpdmSpinOps( const NpdmSpinOps & obj ) {
+//      opReps_.clear();
+//      for (int i=0; i < obj.opReps_.size(); ++i) {
+//        boost::shared_ptr<SparseMatrix> op (new Cre);
+//        opReps_.push_back(op);
+//      }
+//      for (int i=0; i < obj.opReps_.size(); ++i) {
+//        opReps_.at(i) = obj.opReps_.at(i);
+//      }
+      opReps_ = obj.opReps_;
+      build_pattern_ = obj.build_pattern_;
+      transpose_ = obj.transpose_;
+      factor_ = obj.factor_;
+      indices_ = obj.indices_;
+      is_local_ = obj.is_local_;
+      //FIXME
+      //ifstream is not copyable.
+      //Now, we do not copy it. 
+     // ifs_ = obj.ifs_;
+      ifile_ = obj.ifile_;
+      size_ = obj.size_;
+    }
 
     virtual std::vector< std::vector<int> > get_indices() { abort(); }
 //    virtual const std::vector< int >& get_1d_indices() { abort(); }
