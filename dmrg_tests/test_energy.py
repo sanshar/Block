@@ -8,7 +8,7 @@ import struct
 def run(args):
 
   #int1
-  file1 = open("dmrg.e","rb")
+  file1 = open("node0/dmrg.e","rb")
   
   tol = float(args[2])
 

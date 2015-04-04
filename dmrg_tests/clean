@@ -22,7 +22,8 @@ find . -name "twopdm.*" |xargs rm >/dev/null 2>&1
 find . -name "threepdm.*" |xargs rm >/dev/null 2>&1
 find . -name "fourpdm.*" |xargs rm >/dev/null 2>&1
 find . -name "A16_matrix.*txt" |xargs rm >/dev/null 2>&1
-rm npdm_h2o_small/*.tmp
-rm h2o_nevpt2/*.tmp0
+find . -name "node*" |xargs rm >/dev/null 2>&1
+rm npdm_h2o_small/*.tmp >/dev/null 2>&1
+rm h2o_nevpt2/*.tmp0 >/dev/null 2>&1
 rm mpspt2/response.out >/dev/null 2>&1
 rm mpspt2/compress.out >/dev/null 2>&1

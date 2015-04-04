@@ -12,7 +12,7 @@ def run():
   norb = int(fileint1.readline().split()[0])
   
   for state in range(2):
-    file1 = open("spatial_twopdm.%i.%i.txt"%(state,state),"r")
+    file1 = open("node0/spatial_twopdm.%i.%i.txt"%(state,state),"r")
     rdm2 = N.zeros((norb,norb,norb,norb))
 
     file1.readline()
@@ -23,7 +23,7 @@ def run():
     rdm1 = N.zeros((norb, norb)) 
 
     rdm1r = N.zeros((norb, norb)) 
-    file2 = open("spatial_onepdm.%i.%i.txt"%(state,state),"r")
+    file2 = open("node0/spatial_onepdm.%i.%i.txt"%(state,state),"r")
     file2.readline()
     for line in file2.readlines():
       linesp = line.split()
