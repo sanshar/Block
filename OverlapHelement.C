@@ -24,7 +24,9 @@ int main(int argc, char* argv []) {
   readMPSFromDiskAndInitializeStaticVariables();
   initializeGlobalMPS(mpsstate);
 
-  test();
+  if (rank =0) 
+    printf("Reading file %s\n", argv[2]);
+  test(argv[2]);
   //exit(0);
   //
   //

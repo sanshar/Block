@@ -47,7 +47,7 @@ bool screen_d_interaction(int index, const vector<int, std::allocator<int> >& in
 	for (int k = i; k < interactingix.size(); ++k)
 	  {
 	    int kxx = dmrginp.spatial_to_spin(interactingix[k]); 
-	    if (fabs(twoe(lxx,ixx,jxx,kxx)) >= thresh)
+	    if (fabs(twoe(lxx,ixx,jxx,kxx)) >= thresh || fabs(twoe(lxx,kxx,jxx,ixx)) >= thresh )
 	      return true;
 	  }
       }
@@ -139,7 +139,7 @@ bool screen_cddcomp_interaction(int otherindex, const vector<int, std::allocator
 	for (int k = i; k < selfindices.size(); ++k)
 	  {
 	    int kxx = dmrginp.spatial_to_spin(selfindices[k]);
-	    if (fabs(twoe(lxx,ixx,jxx,kxx)) >= thresh)
+	    if (fabs(twoe(lxx,ixx,jxx,kxx)) >= thresh || fabs(twoe(jxx,ixx,lxx,kxx)) >= thresh)
 	      return true;
 	  }
       }

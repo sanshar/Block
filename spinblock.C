@@ -50,7 +50,7 @@ void SpinBlock::printOperatorSummary()
             receiveobject(numops[proc],proc);
          else 
             numops[proc] = it->second->get_size();
-         p2out << "\t\t\t " << numops[proc]<<"  ";
+         p2out << " " << numops[proc]<<"  ";
       }
       p2out << endl;
       /*

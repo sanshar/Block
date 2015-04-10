@@ -5,8 +5,7 @@ Copyright (c) 2012, Garnet K.-L. Chan
 This program is integrated in Molpro with the permission of 
 Sandeep Sharma and Garnet K.-L. Chan
 */
-
-
+#include <unistd.h>
 #include "global.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +23,15 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "pario.h"
 
 namespace SpinAdapted{
+
+void __GetMachineName(char* machineName)
+{
+  char Name[150];
+  int i=0;
+  
+  gethostname(Name, 150);
+  strncpy(machineName,Name, 150);
+}
 
 void mcheck(const char* message)
 {
