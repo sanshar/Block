@@ -54,6 +54,7 @@ extern Timer globaltimer;
 extern std::vector<OneElectronArray> v_1;
 extern std::vector<TwoElectronArray> v_2;
 extern std::vector<double> coreEnergy;
+extern double BWPTenergy;
 extern PairArray v_cc;
 extern CCCCArray v_cccc;
 extern CCCDArray v_cccd;

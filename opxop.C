@@ -137,7 +137,6 @@ void SpinAdapted::opxop::cxcddcomp(const SpinBlock* otherblock, std::vector<boos
       Transposeview top2 = Transposeview(op2); // CDD_i
       if (otherblock == b->get_leftBlock()) parity = getCommuteParity(-op2->get_deltaQuantum(0), op1->get_deltaQuantum(0), o->get_deltaQuantum(0));
       else parity = 1.0;
-      
       SpinAdapted::operatorfunctions::TensorProduct(otherblock, top2, *op1, b, &(b->get_stateInfo()), o[ilock], scale*parity, numthrds);	    
     }
   }
@@ -244,22 +243,27 @@ void SpinAdapted::opxop::cxcddcomp(const SpinBlock* otherblock, std::vector<boos
       return;
 
     //If we have all the operators we dont have to take transposes, useful for <bra|H|ket> evaluation
-    if (loopblock->has(DES)) {
-      boost::shared_ptr<SparseMatrix> op2 = otherblock->get_op_array(CRE_DES_DESCOMP).get_element(i).at(opind)->getworkingrepresentation(otherblock);
-      
+    if (loopblock->has(DES) ) {
       double scale = 1.0;
       double parity = 1.0;
-      if (otherblock == b->get_leftBlock())
-	parity = getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), hq);
+      {
+	boost::shared_ptr<SparseMatrix> op2 = otherblock->get_op_array(CRE_DES_DESCOMP).get_element(i).at(opind)->getworkingrepresentation(otherblock);
+	boost::shared_ptr<SparseMatrix> op1rep = op1->getworkingrepresentation(loopblock);
+	
+	if (otherblock == b->get_leftBlock())
+	  parity = getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), hq);
+	
+	SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, *op1rep, b, c, v[ilock], hq, scale*parity);	    
+      }
+      {
+	boost::shared_ptr<SparseMatrix> op1 = loopblock->get_op_array(DES).get_element(i).at(opind)->getworkingrepresentation(loopblock);
+	boost::shared_ptr<SparseMatrix> op2 = otherblock->get_op_array(CRE_CRE_DESCOMP).get_element(i).at(opind)->getworkingrepresentation(otherblock);
 
-      SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, *op1->getworkingrepresentation(loopblock), b, c, v[ilock], hq, scale*parity);	    
-
-      if (otherblock == b->get_rightBlock()) parity = getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), hq);
-      else parity = 1.0;
-      
-      op1 = loopblock->get_op_array(DES).get_element(i).at(opind)->getworkingrepresentation(loopblock);
-      op2 = otherblock->get_op_array(CRE_CRE_DESCOMP).get_element(i).at(opind)->getworkingrepresentation(otherblock);
-      SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, *op1, b, c, v[ilock], hq, scale*parity);
+	if (otherblock == b->get_rightBlock()) parity = getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), hq);
+	else parity = 1.0;
+	
+	SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, *op1, b, c, v[ilock], hq, scale*parity);
+      }
     } else {
       boost::shared_ptr<SparseMatrix> op1rep = op1->getworkingrepresentation(loopblock);
       Transposeview top1 = Transposeview(*op1rep);
@@ -268,11 +272,11 @@ void SpinAdapted::opxop::cxcddcomp(const SpinBlock* otherblock, std::vector<boos
       double scale = 1.0;
       double parity = 1.0;
       if (otherblock == b->get_rightBlock())
-	parity = getCommuteParity(op1rep->get_deltaQuantum(0), op2->get_deltaQuantum(0), hq);
+	parity = getCommuteParity(-op1rep->get_deltaQuantum(0), op2->get_deltaQuantum(0), hq);
       
       SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, top1, b, c, v[ilock], hq, scale*parity);
       Transposeview top2 = Transposeview(*op2);    
-      if (otherblock == b->get_leftBlock()) parity = getCommuteParity(op1rep->get_deltaQuantum(0), op2->get_deltaQuantum(0), hq);
+      if (otherblock == b->get_leftBlock()) parity = getCommuteParity(op1rep->get_deltaQuantum(0), -op2->get_deltaQuantum(0), hq);
       else parity = 1.0;
       
       SpinAdapted::operatorfunctions::TensorMultiply(otherblock, top2, *op1rep, b, c, v[ilock], hq, scale*parity);	    
@@ -389,6 +393,7 @@ void SpinAdapted::opxop::cxcdcomp(const SpinBlock* otherBlock, std::vector<boost
 	    int j2 = op2q[0].get_s().getirrep(), j1 = op1q[0].get_s().getirrep(), j21 = oq[0].get_s().getirrep();
 	    int l2 = op2q[0].get_symm().getirrep(), l1 = op1q[0].get_symm().getirrep(), l21 = oq[0].get_symm().getirrep(), l3 = (-SymmetryOfOrb(I)).getirrep();
 	    double factor = dmrginp.spinAdapted() ? pow(-1.0, static_cast<int>((2+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1)) : 1.0;
+      if (NonabelianSym)
 	    factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
 
 	    double parity = 1.0;
@@ -409,25 +414,28 @@ void SpinAdapted::opxop::cxcdcomp(const SpinBlock* otherBlock, std::vector<boost
           otherBlock->get_op_array(CRE_DESCOMP).get_element(I, op1->get_orbs(0));
 
       for (int opind2 = 0; opind2<opvec2.size(); opind2++) {
-	    boost::shared_ptr<SparseMatrix> op2 = opvec2.at(opind2)->getworkingrepresentation(otherBlock);
-	    vector<SpinQuantum> op2q = op2->get_deltaQuantum(), op1q = op1->get_deltaQuantum(), oq = o->get_deltaQuantum();
-	    int j2 = op2q[0].get_s().getirrep(), j1 = op1q[0].get_s().getirrep(), j21 = oq[0].get_s().getirrep();
-	    int l2 = (-op2q[0].get_symm()).getirrep(), l1 = op1q[0].get_symm().getirrep(), l21 = oq[0].get_symm().getirrep(), l3 = (-SymmetryOfOrb(I)).getirrep();
-	    double factor = dmrginp.spinAdapted() ? pow(-1.0, static_cast<int>((1+1+0+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1)) : 1.0;
-	    factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
-
-	    double parity = 1.0;
-	    if (otherBlock == b->get_rightBlock())
-	      parity *= getCommuteParity(op1->get_deltaQuantum(0), -op2->get_deltaQuantum(0), o->get_deltaQuantum(0));
-
-	    parity *= TensorOp::getTransposeFactorCD(I, op1->get_orbs(0), j2, l2);
-
-	    //If we have all the operators we dont have to take transposes, useful for <bra|H|ket> evaluation
-	    if (!otherBlock->has(DES_CRECOMP)) {
-	      SpinAdapted::operatorfunctions::TensorProduct(otherBlock, Transposeview(*op2), *op1, b, &(b->get_stateInfo()), o[ilock], factor*scale*parity, numthrds);	
+	boost::shared_ptr<SparseMatrix> op2 = opvec2.at(opind2)->getworkingrepresentation(otherBlock);
+	vector<SpinQuantum> op2q = op2->get_deltaQuantum(), op1q = op1->get_deltaQuantum(), oq = o->get_deltaQuantum();
+	int j2 = op2q[0].get_s().getirrep(), j1 = op1q[0].get_s().getirrep(), j21 = oq[0].get_s().getirrep();
+	int l2 = (-op2q[0].get_symm()).getirrep(), l1 = op1q[0].get_symm().getirrep(), l21 = oq[0].get_symm().getirrep(), l3 = (-SymmetryOfOrb(I)).getirrep();
+	double factor = dmrginp.spinAdapted() ? pow(-1.0, static_cast<int>((1+1+0+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1)) : 1.0;
+      if (NonabelianSym)
+	factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
+	
+	double parity = 1.0;
+	if (otherBlock == b->get_rightBlock() && !otherBlock->has(DES_CRECOMP))
+	  parity *= getCommuteParity(op1->get_deltaQuantum(0), -op2->get_deltaQuantum(0), o->get_deltaQuantum(0));
+	else if (otherBlock == b->get_rightBlock())
+	  parity *= getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), o->get_deltaQuantum(0));
+	
+	parity *= TensorOp::getTransposeFactorCD(I, op1->get_orbs(0), j2, l2);
+	
+	//If we have all the operators we dont have to take transposes, useful for <bra|H|ket> evaluation
+	if (!otherBlock->has(DES_CRECOMP)) {
+	  SpinAdapted::operatorfunctions::TensorProduct(otherBlock, Transposeview(*op2), *op1, b, &(b->get_stateInfo()), o[ilock], factor*scale*parity, numthrds);	
         } else {
-	      double parity = 1.0;
-	      if (otherBlock == b->get_rightBlock())
+	  double parity = 1.0;
+	  if (otherBlock == b->get_rightBlock())
 	        parity *= getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), o->get_deltaQuantum(0)); // doesn't depend on nelec
 	      SpinAdapted::operatorfunctions::TensorProduct(otherBlock, *op2, *op1, b, &(b->get_stateInfo()), o[ilock], factor*scale*parity, numthrds);
 	    }
@@ -446,7 +454,7 @@ void SpinAdapted::opxop::dxcccomp(const SpinBlock* otherBlock, std::vector<boost
   for (int opind=0; opind<opvec1.size(); opind++) {
 
     //If we have all the operators we dont have to take transposes, useful for <bra|H|ket> evaluation
-    if (loopblock->has(DES)) {
+    if (loopblock->has(DES) ) {
       boost::shared_ptr<SparseMatrix> op1 = loopblock->get_op_array(DES).get_element(opvec1.at(opind)->get_orbs(0)).at(opind)->getworkingrepresentation(loopblock); // DES_j
       
       bool transpose = false;
@@ -467,6 +475,7 @@ void SpinAdapted::opxop::dxcccomp(const SpinBlock* otherBlock, std::vector<boost
 	    int j2 = op2q.get_s().getirrep(), j1 = op1q.get_s().getirrep(), j21 = oq.get_s().getirrep();
 	    int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = (-SymmetryOfOrb(K)).getirrep();
 	    double factor = dmrginp.spinAdapted() ? pow(-1.0, static_cast<int>((2+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1)) : 1.0;
+	    if (NonabelianSym)
 	    factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
 	    
 	    double parity = 1.0;
@@ -499,6 +508,7 @@ void SpinAdapted::opxop::dxcccomp(const SpinBlock* otherBlock, std::vector<boost
 	    int j2 = op2q.get_s().getirrep(), j1 = op1q.get_s().getirrep(), j21 = oq.get_s().getirrep();
 	    int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = (-SymmetryOfOrb(K)).getirrep();
 	    double factor = dmrginp.spinAdapted() ? pow(-1.0, static_cast<int>((2+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1)) : 1.0;
+	    if (NonabelianSym)
 	    factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
 	    
 	    double parity = 1.0;
@@ -544,6 +554,7 @@ void SpinAdapted::opxop::dxcdcomp(const SpinBlock* otherBlock, std::vector<boost
       int j2 = op2q[0].get_s().getirrep(), j1 = op1q[0].get_s().getirrep(), j21 = oq[0].get_s().getirrep();
       int l2 = op2q[0].get_symm().getirrep(), l1 = op1q[0].get_symm().getirrep(), l21 = oq[0].get_symm().getirrep(), l3 = (-SymmetryOfOrb(I)).getirrep();
       double factor = dmrginp.spinAdapted() ? pow(-1.0, static_cast<int>((2+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1)) : 1.0;
+      if (NonabelianSym)
       factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
       
       double parity = 1.0;
@@ -582,18 +593,20 @@ void SpinAdapted::opxop::cxddcomp(const SpinBlock* otherBlock, std::vector<boost
       
       SpinQuantum op2q = op2->get_deltaQuantum(0), op1q = op1->get_deltaQuantum(0), oq = o->get_deltaQuantum(0);
       int j2 = op2q.get_s().getirrep(), j1 = op1q.get_s().getirrep(), j21 = oq.get_s().getirrep();
-      int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = (-SymmetryOfOrb(K)).getirrep();
+      int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = (-oq.get_symm()).getirrep(), l3 = (-SymmetryOfOrb(K)).getirrep();
       double factor = dmrginp.spinAdapted() ? pow(-1.0, static_cast<int>((2+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1)) : 1.0;
-      factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
+      if (NonabelianSym)
+	factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
       
       double parity = 1.0;
       
       if (transpose)  //this is because when you go from CC_{ij} to CC_{ji} there is a phase factor
-	parity *= getCommuteParity(iq, kq, op2->get_deltaQuantum(0)); 
+	parity *= getCommuteParity(iq, kq, -op2->get_deltaQuantum(0)); 
       if (loopblock == b->get_rightBlock()) //this is because you have CC_{ij} d_j 
-	parity*= getCommuteParity(iq, op2->get_deltaQuantum(0), kq); 
-      
+	parity*= getCommuteParity(iq, op2->get_deltaQuantum(0), -kq); 
+
       SpinAdapted::operatorfunctions::TensorProduct(otherBlock, *op2, *op1, b, &(b->get_stateInfo()), o[ilock], parity*factor*scale, numthrds);
+
     }
   }
 }

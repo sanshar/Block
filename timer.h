@@ -131,6 +131,8 @@ private:
   clock_t lastcputime;
   clock_t cpustarttime;
 };
+
+void __GetMachineName(char* machineName);
 void mcheck(const char* message);
 void mdebugcheck(const char* message);
 }

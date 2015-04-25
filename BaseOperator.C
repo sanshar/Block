@@ -62,6 +62,7 @@ double Transposeview::get_scaling(SpinQuantum leftq, SpinQuantum rightq) const
   int rspin = rightq.get_s().getirrep(), rirrep = rightq.get_symm().getirrep();
   int cspin = opdata->get_deltaQuantum(0).get_s().getirrep(), cirrep = opdata->get_deltaQuantum(0).get_symm().getirrep();
 
+  int cirrepTranspose = (-opdata->get_deltaQuantum(0)).get_symm().getirrep();
   for (int lsz = -lspin; lsz<lspin+1; lsz+=2)
   for (int rsz = -rspin; rsz<rspin+1; rsz+=2)
   for (int ll = 0; ll<Symmetry::sizeofIrrep(lirrep); ll++)
@@ -74,7 +75,7 @@ double Transposeview::get_scaling(SpinQuantum leftq, SpinQuantum rightq) const
     else {
       ///CHANGE THE SPATIAL_CG cirrep,1 to cirrep,0 depending on how the transpose works out!!!
       double spinscale = pow(-1.0,cspin) * cleb/clebsch(rspin, rsz, cspin, cspin, lspin, lsz);
-      double spatscale =  clebspatial/Symmetry::spatial_cg(rirrep, cirrep, lirrep, rl, Symmetry::sizeofIrrep(cirrep)-1, ll);  
+      double spatscale =  clebspatial/Symmetry::spatial_cg(rirrep, cirrepTranspose, lirrep, rl, Symmetry::sizeofIrrep(cirrep)-1, ll);  
 
       return spinscale*spatscale;
     }
@@ -160,7 +161,7 @@ ostream& operator<< (ostream& os, const SparseMatrix& a)
 {
   if (!a.initialised){
     os <<" not initialised"<<endl;
-    return os;
+    //return os;
   };
   os<<"indices : ";
   for(int i=0; i<a.orbs.size(); i++)

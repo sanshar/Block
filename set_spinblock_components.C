@@ -503,7 +503,7 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
     //we need CCDcomp to be on core, the rest of them can be generated very quickly
     //and dont really required incore storage
     ops[CRE] = make_new_op(CRE, false); 
-    ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, true);
+    ops[CRE_CRE_DESCOMP] = make_new_op(CRE_CRE_DESCOMP, false);
     ops[HAM] = make_new_op(HAM, false);
     ops[OVERLAP] = make_new_op(OVERLAP, false);
 

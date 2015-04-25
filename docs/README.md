@@ -1,16 +1,80 @@
+<img src="https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/block_logo.jpg" width="60px" height="60px" />
+
+`BLOCK` implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry.
+
+Build Block
+-----------
+
+### 1. Complile ```BLOCK```
+
+```BLOCK``` requires BLAS, LAPACK and BOOST.
+MPI library is needed for distributed-memory parallel compilation.
+```BLOCK``` is compiled using the makefile supplied in the distribution. 
+The following customizations need to be made to the makefile placed in the main directory ```./Block```. 
+
+Choose compilers by specifying,
+
+	CXX = g++  
+
+For MPI-based parallel execution on distributed-memory machines,
+  
+        USE_MPI = yes
+        MPICXX = mpicxx  
+
+MPI library must be compiled using the same compiler as for compiling ```BLOCK```. 
+Intel compiler such as ```icpc``` is also supported with approriate compiling flags chosen automatically.
+
+To enable MKL library,
+
+        USE_MKL = yes
+
+And supply MKL and BOOST libraries by giving the locations,
+    
+	MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/ 
+	MKLFLAGS = /opt/intel/composer_xe_2013_sp1.0.080/mkl/include
+
+	BOOSTLIB = /lib64/boost_1_55_0/lib/
+	BOOSTINCLUDE = /lib64/boost_1_55_0/include/
+
+When the makefile is configured, run in the directory ```./Block```
+
+        $./make
+
+The successful compilation generates the executable ```block.spin_adapted```, static and shared DMRG libraries ```libqcdmrg.a``` and ```libqcdmrg.so```.
+
+### 2. Test ```BLOCK```
+
+```BLOCK``` can be tested by executing the script in the directory ```./Block/dmrg_tests```,
+
+        $cd dmrg_tests
+        $./runtest
+
+The tests require Python to be installed on the system.
+
+### 3. Run ```BLOCK```
+
+The standalone serial code can be executed running
+
+        $block.spin_adapted input.dat > output.dat
+
+```input.dat``` is the input file and the output of the program is piped into the output file ```output.dat```.
+
+The MPI parallel mode can be called running
+
+        $mpirun -np 4 block.spin_adapted input.dat > output.dat
+
 Typical Calculations
-********************
+--------------------
 
-In the following the DMRG calculation for C\ :sub:`2` molecule is used to demonstrate various computational features as of the current 1.0.0 release.
-Integrals and orbitals must be supplied externally in Molpro's ``FCIDUMP`` format, as ``BLOCK`` does not generate its own integrals.
+In the following the DMRG calculation for **C<sub>2</sub> molecule** is used to demonstrate various computational features as of the current 1.0.0 release.
+Integrals and orbitals must be supplied externally in Molpro's ```FCIDUMP``` format, as ```BLOCK``` does not generate its own integrals.
 
-The associated integral files for C\ :sub:`2` can be found here: `FCIDUMP <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/FCIDUMP>`_ 
-for its D\ :sub:`2h` point-group symmetry.
+The associated integral files for C<sub>2</sub> can be found here: [FCIDUMP](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/FCIDUMP) 
+for its D<sub>2h</sub> point-group symmetry.
 
-Molecular symmetry
-==================
+### 1. Molecular symmetry
 
-Example 1: ``BLOCK`` input with the default settings for the ground state energy::
+Example 1: ```BLOCK``` input with the default settings for the ground state energy:
 
         sym d2h
         orbitals FCIDUMP
@@ -24,13 +88,13 @@ Example 1: ``BLOCK`` input with the default settings for the ground state energy
         maxM 500
         maxiter 30
 
-D\ :sub:`2h` symmetry is enabled by ``sym d2h``.
-The simplest option is to take ``schedule default`` and the maximum number of renormalized states, ``maxM``.
-``BLOCK`` will then automatically choose a sweep schedule as well as set defaults for various tolerances.
+D<sub>2h</sub> symmetry is enabled by ```sym d2h```.
+The simplest option is to take ```schedule default``` and the maximum number of renormalized states, ```maxM```.
+```BLOCK``` will then automatically choose a sweep schedule as well as set defaults for various tolerances.
 
-The discarded weights and associated sweep energies can be extracted by grepping ``output.dat``, for instance::
+The discarded weights and associated sweep energies can be extracted by grepping ```output.dat```, for instance,
 
-        $ grep "Sweep Energy" output.dat
+        $grep "Sweep Energy" output.dat
         M = 250     state = 0     Largest Discarded Weight = 2.601e-05  Sweep Energy = -75.7044175965
         M = 250     state = 0     Largest Discarded Weight = 4.145e-05  Sweep Energy = -75.7253836704
         M = 250     state = 0     Largest Discarded Weight = 5.085e-05  Sweep Energy = -75.7268081556
@@ -47,12 +111,11 @@ The discarded weights and associated sweep energies can be extracted by grepping
         M = 500     state = 0     Largest Discarded Weight = 8.882e-16  Sweep Energy = -75.7283455434
         M = 500     state = 0     Largest Discarded Weight = 3.689e-13  Sweep Energy = -75.7283467279
 
-State wavefunction
-==================
+### 2. State wavefunction
 
-``BLOCK`` can target the states distinguished by the number of electrons ``nelec``, the total spin ``spin`` and the point-group symmetry of the state ``irrep``.
+```BLOCK``` can target the states distinguished by the number of electrons ```nelec```, the total spin ```spin``` and the point-group symmetry of the state ```irrep```.
 
-Example 2: a single B\ :sub:`1g` state in D\ :sub:`2h`::
+Example 2: a single B<sub>1g</sub> state in D<sub>2h</sub>.
 
         sym d2h 
         orbitals FCIDUMP
@@ -66,9 +129,9 @@ Example 2: a single B\ :sub:`1g` state in D\ :sub:`2h`::
         maxM 500
         maxiter 30
 
-Extract energies running::
+Extract energies running,
 
-        $ grep "Sweep Energy" output.dat
+        $grep "Sweep Energy" output.dat
         M = 250     state = 0     Largest Discarded Weight = 2.074e-05  Sweep Energy = -75.5487622154       
         M = 250     state = 0     Largest Discarded Weight = 2.572e-05  Sweep Energy = -75.6216559252       
         M = 250     state = 0     Largest Discarded Weight = 3.001e-05  Sweep Energy = -75.6377863834       
@@ -88,14 +151,13 @@ Extract energies running::
         M = 500     state = 0     Largest Discarded Weight = 8.882e-16  Sweep Energy = -75.6389659838
 
 
-State-averaged calculation
-==========================
+### 3. State-averaged calculation
 
-A state-averaged DMRG is available in ``BLOCK`` for which more than a single state can be targeted in the same calculation.
+A state-averaged DMRG is available in ```BLOCK``` for which more than a single state can be targeted in the same calculation.
 Currently the states being calculated must be of the same irrep. 
-The number of roots and the weight of each state can be specified by ``nroots`` and ``weights``, respectively.
+The number of roots and the weight of each state can be specified by ```nroots``` and ```weights```, respectively.
 
-Example 3: a state-averaged DMRG of two A\ :sub:`g` states in D\ :sub:`2h`::
+Example 3: a state-averaged DMRG of two A<sub>g</sub> states in D<sub>2h</sub>.
 
         sym d2h 
         orbitals FCIDUMP
@@ -111,9 +173,9 @@ Example 3: a state-averaged DMRG of two A\ :sub:`g` states in D\ :sub:`2h`::
         maxM 500
         maxiter 30
 
-Extract energies running::
+Extract energies running,
 
-        $ grep "Sweep Energy" output.dat
+        $grep "Sweep Energy" output.dat
         M = 250     state = 0     Largest Discarded Weight = 3.301e-05  Sweep Energy = -75.6977658954       
         M = 250     state = 1     Largest Discarded Weight = 3.301e-05  Sweep Energy = -75.6097171207       
         M = 250     state = 0     Largest Discarded Weight = 1.210e-04  Sweep Energy = -75.7242895778       
@@ -149,18 +211,18 @@ Extract energies running::
         M = 500     state = 0     Largest Discarded Weight = 8.724e-06  Sweep Energy = -75.7279265042       
         M = 500     state = 1     Largest Discarded Weight = 8.724e-06  Sweep Energy = -75.6386566145
 
-State-specific calculation
-==========================
+### 4. State-specific calculation
 
 The state-specific calculation is implemented as a restart calculation which assumes
 that a previous DMRG (e.g., state-average) calculation has been converged.
-The state-specific DMRG calculation of ``BLOCK`` then takes these wave functions and refines them for each root separately.
+The state-specific DMRG calculation of ```BLOCK``` then takes these wave functions and refines them for each root separately.
 Currently only "onedot" algorithm is implemented for a state-specific DMRG calculation.
 
-Example 4: a state-specific DMRG of two A\ :sub:`g` states consists of two steps.
+Example 4: a state-specific DMRG of two A<sub>g</sub> states consists of two steps.
 
 * First, obtain state-averaged wavefunctions as carried out in Example 3.
-* Second, perform the state-specific DMRG calculation by specifying ``statespecific`` along with algorithm, reading the previous DMRG wavefunction::
+
+* Second, perform the state-specific DMRG calculation by specifying ```statespecific``` along with algorithm, reading the previous DMRG wavefunction.
 
         sym d2h
         orbitals FCIDUMP
@@ -178,9 +240,9 @@ Example 4: a state-specific DMRG of two A\ :sub:`g` states consists of two steps
         maxM 500
         maxiter 30
 
-Extract energies running::
+    Extract energies running,
 
-        $ grep "Sweep Energy" output.dat
+        $grep "Sweep Energy" output.dat
         M = 250     state = 0     Largest Discarded Weight = 1.074e-04  Sweep Energy = -75.7278258618       
         M = 250     state = 0     Largest Discarded Weight = 6.265e-05  Sweep Energy = -75.7271218843       
         M = 250     state = 0     Largest Discarded Weight = 7.364e-05  Sweep Energy = -75.7269947744       
@@ -216,16 +278,15 @@ Extract energies running::
         M = 500     state = 1     Largest Discarded Weight = 2.220e-16  Sweep Energy = -75.6388750897       
         M = 500     state = 1     Largest Discarded Weight = 6.661e-16  Sweep Energy = -75.6388767670
 
-*n*-particle reduced density matrix
-===================================
+### 5. _n_-particle reduced density matrix
 
 The DMRG reduced density matrix up to the 4-particle type for a particular state can be obtained 
-by employing the keywords ``onepdm``, ``twopdm``, ``threepdm`` and ``fourpdm``.
+by employing the keywords ```onepdm```, ```twopdm```, ```threepdm``` and ```fourpdm```.
 Currently only "onedot" algorithm is implemented for this type of calculation.
-Density matrices of the *n*-th state are calculated and stored in a text file named *spatial\_onepdm.n.n.txt*, *spatial\_twopdm.n.n.txt*, 
-*spatial\_threepdm.n.n.txt* and *spatial\_fourpdm.n.n.txt*, respectively, starting with `n=0`.
+Density matrices of the _n_th state are calculated and stored in a text file named "spatial\_onepdm._n_._n_.txt", "spatial\_twopdm._n_._n_.txt", 
+"spatial\_threepdm._n_._n_.txt" and "spatial\_fourpdm._n_._n_.txt", respectively, starting with _n_=0.
 
-Example 5: 2-particle density matrix for the ground state::
+Example 5: 2-particle density matrix for the ground state.   
 
         sym d2h
         orbitals FCIDUMP
@@ -241,9 +302,10 @@ Example 5: 2-particle density matrix for the ground state::
 
         twopdm
 
-The 2-particle density matrix is stored in the file of `spatial\_twopdm.0.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/5/spatial_twopdm.0.0.txt>`_.
+The 2-particle density matrix is stored in the file of 
+[spatial\_twopdm.0.0.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/5/spatial_twopdm.0.0.txt).
 
-Example 6: state-averaged 2-particle density matrix for two roots::
+Example 6: state-averaged 2-particle density matrix for two roots.
 
         sym d2h
         orbitals FCIDUMP
@@ -261,22 +323,21 @@ Example 6: state-averaged 2-particle density matrix for two roots::
 
         twopdm
 
-The 2-particle density matrices for both state 1 and state 2 are stored in the files of 
-`spatial\_twopdm.0.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/6/spatial_twopdm.0.0.txt>`_, 
-and `spatial\_twopdm.1.1.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/6/spatial_twopdm.1.1.txt>`_, respectively.
+The 2-particle density matrices for both state 1 and state 2 are stored 
+in the files of [spatial\_twopdm.0.0.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/6/spatial_twopdm.0.0.txt), 
+and [spatial\_twopdm.1.1.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/6/spatial_twopdm.1.1.txt), respectively.
 
-1- and 2-particle transition reduced density matrix
-===================================================
+### 6. 1- and 2-particle transition reduced density matrix
 
-1-particle and 2-particle transition density matrices can be calculated using the keyword ``tran_onepdm`` and ``tran_twopdm``.
-Transition density matrices between the *m*-th and *n*-th states are calculated and stored in a text file named *spatial\_onepdm.m.n.txt* 
-and *spatial\_twopdm.m.n.txt*, respectively, starting with `m=1` and `n=0`.
+1-particle and 2-particle transition density matrices can be calculated using the keyword ```tran_onepdm``` and ```tran_twopdm```.
+Transition density matrices between the _m_th and _n_th states are calculated and stored in a text file named "spatial\_onepdm._m_._n_.txt" 
+and "spatial\_twopdm._m_._n_.txt", respectively, starting with _m_=1 and _n_=0.
 
 The transition density matrices between states with different symmetry irreducible presentations are also available.
 However, this type of calculation requires multiple steps and the manipulation of scratch files 
-and will be discussed in :ref:`transition_dm`.
+and will be discussed in [**restart DMRG _n_-particle densitry matrix calculation**](#restart_tran).
 
-Example 7: state-averaged 2-particle transition density matrix between two A\ :sub:`g` states::
+Example 7: state-averaged 2-particle transition density matrix between two A<sub>g</sub> states.
 
         sym d2h
         orbitals FCIDUMP
@@ -295,9 +356,9 @@ Example 7: state-averaged 2-particle transition density matrix between two A\ :s
         tran_twopdm
 
 The state-average 2-particle transition density matrix is stored in the file of
-`spatial\_twopdm.1.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/7/spatial_twopdm.1.0.txt>`_.
+[spatial\_twopdm.1.0.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/7/spatial_twopdm.1.0.txt).
         
-Example 8: state-specific 2-particle transition density matrix between two refined A\ :sub:`g` states::
+Example 8: state-specific 2-particle transition density matrix between two _refined_ A<sub>g</sub> states.
 
         sym d2h
         orbitals FCIDUMP
@@ -318,14 +379,13 @@ Example 8: state-specific 2-particle transition density matrix between two refin
         tran_twopdm
         
 The state-specific 2-particle transition density matrix is stored in the file of 
-`spatial\_twopdm.1.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/8/spatial_twopdm.1.0.txt>`_.
+[spatial\_twopdm.1.0.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/8/spatial_twopdm.1.0.txt).
 
-Restart DMRG energy calculation
-===============================
+### 7. Restart DMRG energy calculation
 
-DMRG energy calculations can be restarted, using the ``.tmp`` scratch files generated in the previous calculation, by specifying the keyword ``restart``.
+DMRG energy calculations can be restarted, using the ```.tmp``` scratch files generated in the previous calculation, by specifying the keyword ```restart```.
 
-Example 9: restart DMRG enegy calculation::
+Example 9: restart DMRG enegy calculation.
 
         sym d2h
         orbitals FCIDUMP
@@ -341,22 +401,21 @@ Example 9: restart DMRG enegy calculation::
          
         restart
 
-Extract energies running::
+    Extract energies running,
 
-        $ grep "Sweep Energy" output.dat
+        $grep "Sweep Energy" output.dat
         M = 500     state = 0     Largest Discarded Weight = 9.792e-14  Sweep Energy = -75.7283469966       
         M = 500     state = 0     Largest Discarded Weight = 1.221e-15  Sweep Energy = -75.7283469966       
         M = 500     state = 0     Largest Discarded Weight = 4.441e-16  Sweep Energy = -75.7283469966       
         M = 500     state = 0     Largest Discarded Weight = 1.332e-15  Sweep Energy = -75.7283469966       
         M = 500     state = 0     Largest Discarded Weight = 4.441e-16  Sweep Energy = -75.7283469966
 
-Restart DMRG *n*-particle reduced density matrix calculation
-============================================================
+### 8. Restart DMRG _n_-particle reduced density matrix calculation
 
 Up to 4-particle reduced density matrices can be calculated separately, by restarting from an existing DMRG wave function.
-This requires the presence of the following scratch files with ``.tmp`` extension: "statefile", "StateInfo", "wave" and "Rotation".
+This requires the presence of the following scratch files with ```.tmp``` extension: "statefile", "StateInfo", "wave" and "Rotation".
 
-Example 10: restart DMRG 2-particle density matrix calculation::
+Example 10: restart DMRG 2-particle density matrix calculation.
 
         sym d2h
         orbitals FCIDUMP
@@ -373,16 +432,13 @@ Example 10: restart DMRG 2-particle density matrix calculation::
         restart_twopdm
 
 The 2-particle density matrix is stored in the file of 
-`spatial\_twopdm.0.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/10/spatial_twopdm.0.0.txt>`_.
+[spatial\_twopdm.0.0.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/10/spatial_twopdm.0.0.txt).
 
-.. _transition_dm:
-
-Restart DMRG transition reduced density matrix calculation
-=====================================================================================
+### 9. Restart DMRG transition reduced density matrix calculation<a name="restart_tran"></a>
 
 A transition density matrix calculation can be carried out separately, by restarting from existing DMRG wave functions of bra and ket states.
 
-Example 11: state-averaged 2-particle transition density matrix between bra and ket states belonging to the same irrep::
+Example 11: state-averaged 2-particle transition density matrix between bra and ket states belonging to the same irrep.
 
         sym d2h
         orbitals FCIDUMP
@@ -401,15 +457,17 @@ Example 11: state-averaged 2-particle transition density matrix between bra and 
         restart_tran_twopdm
 
 The 2-particle transition density matrix is stored in the file of 
-`spatial\_twopdm.1.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/11/spatial_twopdm.1.0.txt>`_.
+[spatial\_twopdm.1.0.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/11/spatial_twopdm.1.0.txt).
 
 When bra and ket states belong to different irreps, the restart calculation takes a few steps in which the corresponding state-specific calculations are needed.
 
-Example 12: 2-particle transition density matrix between A\ :sub:`g` (bra) and B\ :sub:`3u` (ket) states.
+Example 12: 2-particle transition density matrix between A<sub>g</sub> (bra) and B<sub>3u</sub> (ket) states.
 
-* Carry out state-specific calculations for bra and ket states separately, in different scratch directories of ``scratch_bra`` and ``scratch_ket``, enabled by the keyword ``scratch``. ``BLOCK`` labels bra and ket states as "state 1" and "state 0", respectively.
+* Carry out state-specific calculations for bra and ket states separately,
+in different scratch directories of ```scratch_bra``` and ```scratch_ket```, enabled by the keyword ```scratch```.
+```BLOCK``` labels bra and ket states as "state 1" and "state 0", respectively.
 
-First, creat the scratch directory by ``mkdir ./scratch_bra`` and calculate bra state as "state 1" belonging to ``irrep 2`` of D\ :sub:`2h`::
+    First, creat the scratch directory by ```mkdir ./scratch_bra``` and calculate bra state as "state 1" belonging to ```irrep 2``` of D<sub>2h</sub>:
 
         sym d2h
         orbitals FCIDUMP
@@ -425,7 +483,7 @@ First, creat the scratch directory by ``mkdir ./scratch_bra`` and calculate bra 
 
         scratch scratch_bra
 
-Second, creat the scratch directory by ``mkdir ./scratch_ket`` and calculate ket state as "state 0" belonging to ``irrep 1`` of D\ :sub:`2h`::
+    Second, creat the scratch directory by ```mkdir ./scratch_ket``` and calculate ket state as "state 0" belonging to ```irrep 1``` of D<sub>2h</sub>:
 
         sym d2h
         orbitals FCIDUMP
@@ -441,13 +499,17 @@ Second, creat the scratch directory by ``mkdir ./scratch_ket`` and calculate ket
 
         scratch scratch_ket
 
-In ``./scratch_bra``, rename the resulting "statefile", "wave", "Rotation" scratch files by changing the numbers before the ``.tmp`` extension from "0" to "1"::
+    In ```./scratch_bra```, rename the resulting "statefile", "wave", "Rotation" scratch files by changing the numbers 
+    before the ```.tmp``` extension from "0" to "1".
 
-        $ rename .0.tmp .1.tmp *.tmp
-        $ rename .state0.tmp .state1.tmp Rotation*.tmp
+        $rename .0.tmp .1.tmp *.tmp
+        $rename .state0.tmp .state1.tmp Rotation*.tmp
 
-* Copy all "statefile", "wave", "Rotation" ``.tmp`` files from ``scratch_bra`` and ``scratch_ket`` directories to a separate directory ``scratch_tran`` for restarting calculation.
-* Restart a 2-particle transition density matrix calculation by adding the keyword ``restart_tran_twopdm``. In addition ``irrep 2 1`` represents A\ :sub:`g` and B\ :sub:`3u` states for bra and ket, respectively:: 
+* Copy all "statefile", "wave", "Rotation" ```.tmp``` files from ```scratch_bra``` and ```scratch_ket``` directories 
+  to a separate directory ```scratch_tran``` for restarting calculation.
+
+* Restart a 2-particle transition density matrix calculation by adding the keyword ```restart_tran_twopdm```.
+  In addition ```irrep 2 1``` represents A<sub>g</sub> and B<sub>3u</sub> states for bra and ket, respectively. 
 
         sym d2h
         orbitals FCIDUMP
@@ -466,15 +528,14 @@ In ``./scratch_bra``, rename the resulting "statefile", "wave", "Rotation" scrat
         restart_tran_twopdm
 
 The 2-particle transition density matrix is stored in the file of 
-`spatial\_twopdm.1.0.txt <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/12/spatial_twopdm.1.0.txt>`_.
+[spatial\_twopdm.1.0.txt](https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/12/spatial_twopdm.1.0.txt).
 
-Customize sweep schedule
-========================
+### 10. Customize sweep schedule
 
-The sweep schedule defines the renormalised states *M* used in successive DMRG sweeps.
+The sweep schedule defines the renormalised states _M_ used in successive DMRG sweeps.
 For finer control over the sweeps, we recommend using a more advanced input.
 
-Example 13: customized sweep schedule for the ground state of C\ :sub:`2` molecule::
+Example 13: customized sweep schedule for the ground state of C<sub>2</sub> molecule.
 
         sym d2h
         orbitals FCIDUMP
@@ -496,9 +557,9 @@ Example 13: customized sweep schedule for the ground state of C\ :sub:`2` molecu
         maxiter 100
         sweep_tol 1e-9
 
-Extract energies running::
+    Extract energies running,
 
-        $ grep "Sweep Energy" output.dat
+        $grep "Sweep Energy" output.dat
         M = 100     state = 0     Largest Discarded Weight = 3.960e-05  Sweep Energy = -75.6814569486       
         M = 100     state = 0     Largest Discarded Weight = 8.248e-05  Sweep Energy = -75.7162162063       
         M = 100     state = 0     Largest Discarded Weight = 1.299e-04  Sweep Energy = -75.7197142506       
@@ -563,18 +624,17 @@ Extract energies running::
         M = 800     state = 0     Largest Discarded Weight = 6.661e-16  Sweep Energy = -75.7284968234       
         M = 800     state = 0     Largest Discarded Weight = 1.887e-15  Sweep Energy = -75.7284968238
 
-``twodot_to_onedot`` specifies the sweep at which the switch is made 
+```twodot_to_onedot``` specifies the sweep at which the switch is made 
 from a twodot to a onedot algorithm. 
-``maxiter`` gives the maximum number of sweep iterations to be performed.
-``sweep_tol`` gives the final tolerance on the DMRG energy,
+```maxiter``` gives the maximum number of sweep iterations to be performed.
+```sweep_tol``` gives the final tolerance on the DMRG energy,
 and is analogous to an energy convergence threshold in other quantum chemistry methods.
 
-In Example 13 between ``schedule`` and ``end`` each line has four values corresponding to *sweep\_iteration*,  *M*, *Davidson_tolerance* and *Noise*, respectively.
+In Example 13 between ```schedule``` and ```end``` each line has four values corresponding to *sweep\_iteration*,  *M*, *Davidson_tolerance* and *Noise*, respectively.
 *sweep_iteration* is the sweep iteration in which the number of renormalized states *M*,
 the tolerance of Davidson algorithm and the perturbative noise should take effect. 
 
-Sweep energy extrapolation
-==========================
+### 11. Sweep energy extrapolation
 
 In practice the sweep energy converges almost linearly as a function of the "discarded weight".
 Therefore it is convenient to use the "discarded weight" quantity as an estimate of the error of the DMRG calculation.
@@ -583,9 +643,9 @@ since the "twodot" DMRG wavefunction provides additional variational freedom ove
 A strong deviation from a linear function (e.g. a plateau behaviour followed by a sudden drop of the
 energy as a function of discarded weight) indicates that the DMRG was stuck in a local minimum.
 
-Example 14: the ground state of C\ :sub:`2`, cc-pVDZ basis and customized sweep schedule. 
+Example 14: the ground state of C<sub>2</sub>, cc-pVDZ basis and customized sweep schedule. 
 
-Prepare ``input.dat``::
+Prepare ```input.dat```,
 
         sym d2h 
         orbitals FCIDUMP
@@ -611,13 +671,13 @@ Prepare ``input.dat``::
         maxiter 100
         sweep_tol 1e-7
 
-Then run ``BLOCK``::
+Then run ```BLOCK```,
 
-        $ block.spin_adapted input.dat > output.dat
+        $block.spin_adapted input.dat > output.dat
 
-When the calculation is done, extract the sweep energies from ``output.dat``::
+When the calculation is done, extract the sweep energies from ```output.dat```,
 
-        $ grep "Sweep Energy" output.dat
+        $grep "Sweep Energy" output.dat
         M = 250     state = 0     Largest Discarded Weight = 2.601e-05  Sweep Energy = -75.7044175965       
         M = 250     state = 0     Largest Discarded Weight = 4.145e-05  Sweep Energy = -75.7253836704       
         M = 250     state = 0     Largest Discarded Weight = 5.085e-05  Sweep Energy = -75.7268081556       
@@ -666,10 +726,96 @@ When the calculation is done, extract the sweep energies from ``output.dat``::
 
 Energy extrapolation:
 
-.. figure:: images/c2_energy.png
-   :align: left
-   :width: 600px
-   :height: 600px
+   <img src="https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/c2_energy.png" width="500" />
 
-   Starting from *M=500*, use the largest discarded weights and associated sweep energies in the last sweep iteration of each *M* to make linear regression (see the figure above). 
-   The extrapolated DMRG sweep energy is -75.728557 a.u.
+Starting from _M_=500, use the largest discarded weights and associated sweep energies
+in the last sweep iteration of each _M_ to make linear regression (see the figure above).
+The extrapolated DMRG sweep energy is -75.728557 a.u.
+
+
+Keywords List
+-------------
+
+The keyword input syntax is simple:
+
+> keyword *value*
+
+The default keywords and values are **bolded**.
+
+### Hamiltonian Types
+
+* heisenberg
+* hubbard
+* **quantum\_chemistry**
+
+### Algorithm Types
+
+* onedot
+* twodot
+* **twodot\_to\_onedot**
+
+### Warm-up Types
+
+* warmup _**local\_0site** || local\_2site || local\_3site || local\_4site || wilson_
+
+### Solver Types
+
+* **davidson**
+* lanczos 
+
+### Orbital Reorder Types
+
+* **fiedler**
+* gaopt default
+* reorder  _reorder file_
+* noreorder
+
+### Calculation Types
+
+* backward
+* calchamiltonian
+* calcoverlap
+* **dmrg**
+* fci
+* fourpdm
+* fullrestart 
+* nevpt2\_npdm
+* onepdm
+* restart\_fourpdm
+* restart\_nevpt2\_npdm
+* restart\_onepdm
+* restart\_threepdm
+* restart\_tran\_onepdm
+* restart\_tran\_twopdm
+* restart\_twopdm
+* threepdm
+* transition\_onepdm
+* transition\_twopdm
+* twopdm
+
+
+### Expert Keywords
+
+* hf\_occ _integral || orbital || manual_
+* irrep _isym_
+* lastM _**500** ||  lastM_
+* maxiter _**10** || max sweep iterations_
+* maxM _maxM_
+* nelec _nelec_
+* new\_npdm\_code
+* nonspinadapted 
+* nroots _**1** || nroots_
+* occ _nocc_
+* orbitals _orbital file_
+* outputlevel _**0** || 1 || 2 || 3_ 
+* pdm\_unsorted
+* **schedule default**
+* schedule _`sweep_iteration M davidson_tolerance noise`_ end
+* scratch _**current directory of input file** || scratch directory_
+* screen\_tol _**0.0** || ScreenTol_
+* spin _2S_
+* startM _**250** || startM_
+* statespecific 
+* sweep\_tol _**1.0e-5** || **loose** || SweepTol_
+* sym _point group_
+* weights _**1.0** || W<sub>1</sub>, W<sub>2</sub>, ..., W<sub>nroots</sub>_

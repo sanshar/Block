@@ -501,11 +501,66 @@ void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, con
   const char leftConj = (conjC == 'n') ? a.conjugacy() : b.conjugacy();
   const char rightConj = (conjC == 'n') ? b.conjugacy() : a.conjugacy();
 
+
+  int totalmem =0;
+
+  for (int lQrQPrime = 0; lQrQPrime<leftBraOpSz*rightKetOpSz; ++lQrQPrime)
+  {
+    int rQPrime = lQrQPrime%rightKetOpSz, lQ = lQrQPrime/rightKetOpSz;
+    for (int lQPrime = 0; lQPrime < leftKetOpSz; lQPrime++)
+      if (leftOp.allowed(lQ, lQPrime) && c.allowed(lQPrime, rQPrime))
+      {	    
+	Matrix m; m.ReSize(lbraS->getquantastates(lQ), rketS->getquantastates(rQPrime));
+        
+	double factor = leftOp.get_scaling(lbraS->quanta[lQ], lketS->quanta[lQPrime]);
+	MatrixMultiply (leftOp.operator_element(lQ, lQPrime), leftConj, c.operator_element(lQPrime, rQPrime), 'n',
+			m, factor, 0.);	      
+	
+	for (int rQ = 0; rQ<rightBraOpSz; rQ++) {
+	  if (v.allowed(lQ, rQ) && rightOp.allowed(rQ, rQPrime)) {
+	    double factor = scale;
+	    
+	    factor *= dmrginp.get_ninej()(lketS->quanta[lQPrime].get_s().getirrep(), rketS->quanta[rQPrime].get_s().getirrep() , c.get_deltaQuantum(0).get_s().getirrep(), 
+					  leftOp.get_spin().getirrep(), rightOp.get_spin().getirrep(), opQ.get_s().getirrep(),
+					  lbraS->quanta[lQ].get_s().getirrep(), rbraS->quanta[rQ].get_s().getirrep() , v.get_deltaQuantum(0).get_s().getirrep());
+	    factor *= Symmetry::spatial_ninej(lketS->quanta[lQPrime].get_symm().getirrep() , rketS->quanta[rQPrime].get_symm().getirrep(), c.get_symm().getirrep(), 
+					      leftOp.get_symm().getirrep(), rightOp.get_symm().getirrep(), opQ.get_symm().getirrep(),
+					      lbraS->quanta[lQ].get_symm().getirrep() , rbraS->quanta[rQ].get_symm().getirrep(), v.get_symm().getirrep());
+	    int parity = rightOp.get_fermion() && IsFermion(lketS->quanta[lQPrime]) ? -1 : 1;
+	    factor *=  rightOp.get_scaling(rbraS->quanta[rQ], rketS->quanta[rQPrime]);
+	    MatrixMultiply (m, 'n', rightOp(rQ, rQPrime), TransposeOf(rightOp.conjugacy()), v.operator_element(lQ, rQ), factor*parity);
+	  }
+	}
+	
+      }
+  }
+
+}
+
+/*
+void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, const Baseoperator<Matrix>& a, const Baseoperator<Matrix>& b, const SpinBlock *cblock, Wavefunction& c, Wavefunction& v, const SpinQuantum opQ, double scale)
+{
+  // can be used for situation with different bra and ket
+  const int leftBraOpSz = cblock->get_leftBlock()->get_braStateInfo().quanta.size ();
+  const int leftKetOpSz = cblock->get_leftBlock()->get_ketStateInfo().quanta.size ();
+  const int rightBraOpSz = cblock->get_rightBlock()->get_braStateInfo().quanta.size ();
+  const int rightKetOpSz = cblock->get_rightBlock()->get_ketStateInfo().quanta.size ();
+
+  const StateInfo* lbraS = cblock->get_braStateInfo().leftStateInfo, *rbraS = cblock->get_braStateInfo().rightStateInfo;
+  const StateInfo* lketS = cblock->get_ketStateInfo().leftStateInfo, *rketS = cblock->get_ketStateInfo().rightStateInfo;
+
+  const char conjC = (cblock->get_leftBlock() == ablock) ? 'n' : 't';
+
+  const Baseoperator<Matrix>& leftOp = (conjC == 'n') ? a : b; // an ugly hack to support the release memory optimisation
+  const Baseoperator<Matrix>& rightOp = (conjC == 'n') ? b : a;
+  const char leftConj = (conjC == 'n') ? a.conjugacy() : b.conjugacy();
+  const char rightConj = (conjC == 'n') ? b.conjugacy() : a.conjugacy();
+
   Wavefunction u;
   u.resize(leftBraOpSz*leftKetOpSz, rightKetOpSz);
 
   int totalmem =0;
-  
+
   {
     for (int lQrQPrime = 0; lQrQPrime<leftBraOpSz*rightKetOpSz; ++lQrQPrime)
     {
@@ -524,6 +579,9 @@ void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, con
 	  }
     }
   }
+
+  pout << "after first step in tensormultiply"<<endl;
+      mcheck("before davidson but after all blocks are built");
 
   {
     for (int lQrQ = 0; lQrQ<leftBraOpSz*rightBraOpSz; ++lQrQ)
@@ -553,7 +611,7 @@ void SpinAdapted::operatorfunctions::TensorMultiply(const SpinBlock *ablock, con
   }
 	      
 }
-
+*/
 void SpinAdapted::operatorfunctions::OperatorScaleAdd(double scaleV, const SpinBlock& b, const Baseoperator<Matrix>& op1, Baseoperator<Matrix>& op2)
 {
   const StateInfo& s = b.get_stateInfo();

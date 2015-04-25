@@ -13,7 +13,7 @@ Features
 * interfaces to the Molpro, ORCA, Q-Chem and Molcas program packages. 
 
 Calling `Block` as an external function
-=====================================
+=======================================
 
 The makefile distributed with `Block` code can be used to generate a library file called
 libqcdmrg.a. 
