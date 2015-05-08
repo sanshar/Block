@@ -43,7 +43,7 @@ enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
 	      MAXJ, PREFIX, NROOTS, DOCD, DEFLATION_MAX_SIZE, MAXITER, BASENERGY,
-	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, BOGOLIUBOV, TWODOT_NOISE, WARMUP, NPDM_INTERMEDIATE, NPDM_NO_INTERMEDIATE, NPDM_MULTINODE, NPDM_NO_MULTINODE, NUMKEYWORDS};
+	      SCREEN_TOL, ODOT, SWEEP_TOL, OUTPUTLEVEL, NONSPINADAPTED, BOGOLIUBOV, TWODOT_NOISE, WARMUP, NPDM_INTERMEDIATE, NPDM_NO_INTERMEDIATE, NPDM_MULTINODE, NPDM_NO_MULTINODE, SPECIFICPDM, NUMKEYWORDS};
 
 class Input {
 
@@ -117,6 +117,7 @@ class Input {
   bool m_pdm_unsorted;
   bool m_store_nonredundant_pdm;
   bool m_npdm_intermediate;
+  std::vector<int> m_specificpdm;
   bool m_npdm_multinode;
   bool m_set_Sz;
   int m_maxiter;
@@ -192,7 +193,8 @@ class Input {
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat ;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform ;
-    ar & m_do_pdm & m_do_npdm_ops & m_do_npdm_in_core & m_npdm_generate & m_new_npdm_code  & m_transition_diff_spatial_irrep & m_occupied_orbitals;
+    ar & m_do_pdm & m_do_npdm_ops & m_do_npdm_in_core & m_npdm_generate & m_new_npdm_code  & m_specificpdm;
+    ar & m_transition_diff_spatial_irrep & m_occupied_orbitals;
     ar &  m_store_spinpdm &m_spatpdm_disk_dump & m_pdm_unsorted & m_npdm_intermediate & m_npdm_multinode;
     ar & m_maxj & m_ninej & m_maxiter & m_do_deriv & m_oneindex_screen_tol & m_twoindex_screen_tol & m_quantaToKeep & m_noise_type;
     ar & m_sweep_tol & m_restart & m_backward & m_fullrestart & m_restart_warm & m_reset_iterations & m_calc_type & m_ham_type & m_warmup;
@@ -485,6 +487,8 @@ class Input {
   bool &spatpdm_disk_dump() {return m_spatpdm_disk_dump;}
   const bool &pdm_unsorted() const {return m_pdm_unsorted;}
   bool &pdm_unsorted(){return m_pdm_unsorted;}
+  const std::vector<int> &specificpdm() const {return m_specificpdm;}
+  std::vector<int> &specificpdm() {return m_specificpdm;}
   const bool &store_nonredundant_pdm() const { return m_store_nonredundant_pdm;}
   bool &store_nonredundant_pdm() { return m_store_nonredundant_pdm;}
   int slater_size() const {return m_norbs;}

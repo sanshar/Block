@@ -853,6 +853,21 @@ SpinAdapted::Input::Input(const string& config_name) {
       {
         m_npdm_multinode = false;
       }
+      else if (boost::iequals(keyword, "specificpdm"))
+      {
+        if(tok.size() ==2)
+          m_specificpdm.push_back(atoi(tok[1].c_str()));
+        else if(tok.size() ==3) 
+        {
+          m_specificpdm.push_back(atoi(tok[1].c_str()));
+          m_specificpdm.push_back(atoi(tok[2].c_str()));
+        }
+        else {
+          pout << "keyword "<<keyword<<" should be followed by one or two numbers and then an endline";
+          abort();
+        }
+      }
+
 
 
 
