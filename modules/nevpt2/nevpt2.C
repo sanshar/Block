@@ -2869,10 +2869,12 @@ namespace SpinAdapted{
     //-----------------------------------------------------
     //construct or read the effective one-electron matrices
     //-----------------------------------------------------
-    GenerateHeff(OrbWin,h,h_eff,h_eff_,IJKL,IKJL,IJAB,IAJB,IJKA,IKJA);
+    //GenerateHeff(OrbWin,h,h_eff,h_eff_,IJKL,IKJL,IJAB,IAJB,IJKA,IKJA);
     //ReadHeff(OrbWin,h_eff,h_eff_,BaseName,ReOrder);
-    Info.AddH(h);Info.AddH(h_eff);Info.AddH(h_eff_);
-    
+    //Info.AddH(h);Info.AddH(h_eff);Info.AddH(h_eff_);
+    Info.GetH(1,h_eff);
+    Info.GetH(2,h_eff_);
+
     //-------------------------
     //Read the orbital energies
     //-------------------------
