@@ -621,23 +621,44 @@ SpinAdapted::Input::Input(const string& config_name) {
       else if (boost::iequals(keyword,  "nevpt2_npdm"))
 	m_calc_type = NEVPT2PDM;
       else if (boost::iequals(keyword,  "restart_onepdm") || boost::iequals(keyword,  "restart_onerdm") || boost::iequals(keyword,  "restart_ordm"))
+      {
 	m_calc_type = RESTART_ONEPDM;
+  m_restart = true;
+      }
       else if (boost::iequals(keyword,  "restart_twopdm") || boost::iequals(keyword,  "restart_twordm") || boost::iequals(keyword,  "restart_trdm"))
+      {
 	m_calc_type = RESTART_TWOPDM;
+  m_restart = true;
+      }
       else if (boost::iequals(keyword,  "restart_threepdm") || boost::iequals(keyword,  "restart_threerdm") )
+      {
 	m_calc_type = RESTART_THREEPDM;
+  m_restart = true;
+      }
       else if (boost::iequals(keyword,  "restart_fourpdm") || boost::iequals(keyword,  "restart_fourrdm") )
+      {
 	m_calc_type = RESTART_FOURPDM;
+  m_restart = true;
+      }
       else if (boost::iequals(keyword,  "restart_nevpt2_npdm") )
+      {
 	m_calc_type = RESTART_NEVPT2PDM;
+  m_restart = true;
+      }
       else if (boost::iequals(keyword,  "transition_onepdm") || boost::iequals(keyword,  "transition_onerdm") || boost::iequals(keyword,  "tran_onepdm"))
 	m_calc_type = TRANSITION_ONEPDM;
       else if (boost::iequals(keyword,  "transition_twopdm") || boost::iequals(keyword,  "transition_twordm") || boost::iequals(keyword,  "tran_twopdm"))
 	m_calc_type = TRANSITION_TWOPDM;
       else if (boost::iequals(keyword,  "restart_tran_onepdm") || boost::iequals(keyword,  "restart_tran_onerdm") || boost::iequals(keyword,  "restart_tran_ordm"))
+      {
 	m_calc_type = RESTART_T_ONEPDM;
+  m_restart = true;
+      }
       else if (boost::iequals(keyword,  "restart_tran_twopdm") || boost::iequals(keyword,  "restart_tran_twordm") || boost::iequals(keyword,  "restart_tran_trdm"))
+      {
 	m_calc_type = RESTART_T_TWOPDM;
+  m_restart = true;
+      }
       else if (boost::iequals(keyword,  "nevpt2") || boost::iequals(keyword,  "pt2")){
 	m_calc_type = NEVPT2;
         m_nevpt2 = true;
@@ -652,11 +673,13 @@ SpinAdapted::Input::Input(const string& config_name) {
         m_calc_type = RESTART_NEVPT2;
         m_nevpt2 = true;
         m_transition_diff_spatial_irrep=false;
+        m_restart = true;
       }
       else if (boost::iequals(keyword,  "restart_ripdm")){
         m_calc_type = RESTART_NEVPT2;
         m_nevpt2 = false;
         m_transition_diff_spatial_irrep=false;
+        m_restart = true;
       }
       else if (boost::iequals(keyword,  "calc_ri4pdm") || boost::iequals(keyword,  "ri4pdm"))
       {
@@ -1132,12 +1155,6 @@ SpinAdapted::Input::Input(const string& config_name) {
   mpi::broadcast(world, m_load_prefix, 0);
   mpi::broadcast(world, m_save_prefix, 0);
 #endif
-
-  //make the scratch files
-  m_load_prefix = str(boost::format("%s%s%d%s") %m_load_prefix % "/node" % mpigetrank() % "/");
-  m_save_prefix = m_load_prefix;
-  boost::filesystem::path p(m_load_prefix);
-  bool success = boost::filesystem::create_directory(p);
 
   v_2.resize(m_num_Integrals, TwoElectronArray(TwoElectronArray::restrictedNonPermSymm));
   v_1.resize(m_num_Integrals);
