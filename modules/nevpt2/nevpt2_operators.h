@@ -141,7 +141,7 @@ namespace SpinAdapted {
         ofstream ofs;                                   //the output file stream
         ifstream ifs;                                   //the input file stream
         std::vector<BufferElement<T> > Buffer;          //InCore buffer for operators read from disk
-        int BufferSize;                                 //number of element in Buffer
+        long BufferSize;                                //number of element in Buffer
         int CurrentElement;                             //the current element read from the buffer
         long BufferPosition;                            //the position of the buffer in the file
         bool HaveStateInfo;                             //do we have a StateInfo file?

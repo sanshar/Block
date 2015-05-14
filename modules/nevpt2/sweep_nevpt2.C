@@ -31,7 +31,8 @@ namespace SpinAdapted{
   void nevpt2::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem,
                                  const bool &useSlater, const bool& dot_with_sys,
                                  ThreeIndOpArray &CCD, ThreeIndOpArray &CDD, IntegralContainer &IKJL,
-                                 IntegralContainer &IKJA, NEVPT2Info &Info)
+                                 IntegralContainer &IKJA, IntegralContainer &IAJB, 
+                                 IntegralContainer &IJKA, NEVPT2Info &Info)
 {
   //mcheck("at the start of block and decimate");
   // figure out if we are going forward or backwards
@@ -91,22 +92,7 @@ namespace SpinAdapted{
   mpi::broadcast(world, solutions, 0);
 #endif
 
-  std::vector<Matrix> rotateMatrix;
-  DensityMatrix tracedMatrix;
-  tracedMatrix.allocate(newSystem.get_stateInfo());
-  tracedMatrix.makedensitymatrix(solutions, big, dmrginp.weights(sweepParams.get_sweep_iter()), 0.0, 0.0, false);
-  AddFOISDensity(big,tracedMatrix,solutions,Info,sweepParams.get_sweep_iter(),sweepParams.get_block_iter());
-  rotateMatrix.clear();
-  if (!mpigetrank()){
-    double error = makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
-  }
-  NEVPT2_AddToRotationMat(big,rotateMatrix,newSystem,solutions,sweepParams.get_block_iter());
   
-
-#ifndef SERIAL
-  mpi::broadcast(world,rotateMatrix,0);
-#endif
-
 
 #ifdef SERIAL
   const int numprocs = 1;
@@ -149,7 +135,22 @@ namespace SpinAdapted{
     };
   }//nevpt2?
 
+  std::vector<Matrix> rotateMatrix;
+  DensityMatrix tracedMatrix;
+  tracedMatrix.allocate(newSystem.get_stateInfo());
+  tracedMatrix.makedensitymatrix(solutions, big, dmrginp.weights(sweepParams.get_sweep_iter()), 0.0, 0.0, false);
+  //AddFOISDensity(big,tracedMatrix,solutions,Info,sweepParams.get_sweep_iter(),sweepParams.get_block_iter());
+  AddFOISDensity(big,tracedMatrix,solutions,CCD,CDD,IKJL,IKJA,IAJB,IJKA,Info,sweepParams.get_sweep_iter(),sweepParams.get_block_iter());
+  rotateMatrix.clear();
+  if (!mpigetrank()){
+    double error = makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
+  }
+  NEVPT2_AddToRotationMat(big,rotateMatrix,newSystem,solutions,sweepParams.get_block_iter());
 
+
+#ifndef SERIAL
+  mpi::broadcast(world,rotateMatrix,0);
+#endif
   //----------------------------------------------------------------------------
   //Save rotation matrices and transform operators
   //----------------------------------------------------------------------------
@@ -238,6 +239,7 @@ namespace SpinAdapted{
   int NActive  =OrbWin[3]-OrbWin[2]+1;
   int NExternal=OrbWin[5]-OrbWin[4]+1;
   int NOcc = NInternal + NActive;
+  int OrbDim = NInternal+NActive+NExternal;
   int n;//the number of possible spin couplings for V(i) and V(a) with |psi>
   int MaxCore = Info.GetMaxCore();
   //--------------------------------
@@ -264,14 +266,36 @@ namespace SpinAdapted{
   //----------------------
   //the integral container
   //----------------------
+  Matrix h,h_eff,h_eff_;
+  h.ReSize(OrbDim,OrbDim);
+  h_eff.ReSize(OrbDim,OrbDim);
+  h_eff_.ReSize(OrbDim,OrbDim);
   vector<int> ReOrder;
   Info.GetOrbOrder(ReOrder);
+  IntegralContainer IJKL(NOcc,NOcc,NOcc,NOcc,_COULOMB_);
   IntegralContainer IKJL(NOcc,NOcc,NOcc,NOcc,_EXCHANGE_);
+  IntegralContainer IAJB(NOcc,NOcc,NExternal,NExternal,_EXCHANGE_);
+  IntegralContainer IJAB(NOcc,NOcc,NExternal,NExternal,_COULOMB_);
+  IntegralContainer IJKA(NOcc,NOcc,NOcc,NExternal,_NO_SYMM_);
   IntegralContainer IKJA(NOcc,NOcc,NOcc,NExternal,_NO_SYMM_);
+  sprintf(msg,"%s.block.ijkl.tmp",BaseName);IJKL.SetFileName(msg);
   sprintf(msg,"%s.block.ikjl.tmp",BaseName);IKJL.SetFileName(msg);
+  sprintf(msg,"%s.block.iajb.tmp",BaseName);IAJB.SetFileName(msg);
+  sprintf(msg,"%s.block.ijab.tmp",BaseName);IJAB.SetFileName(msg);
+  sprintf(msg,"%s.block.ijka.tmp",BaseName);IJKA.SetFileName(msg);
   sprintf(msg,"%s.block.ikja.tmp",BaseName);IKJA.SetFileName(msg);
-  //read in some integrals
-  if (dmrginp.nevpt2()) ReadK(IKJL,IKJA,OrbWin,BaseName,ReOrder);
+  if (dmrginp.nevpt2()) ReadIntegrals(IJKL,IKJL,IAJB,IJAB,IJKA,IKJA,h,OrbWin,BaseName,ReOrder);
+    
+  //-----------------------------------------------------
+  //construct or read the effective one-electron matrices
+  //-----------------------------------------------------
+  GenerateHeff(OrbWin,h,h_eff,h_eff_,IJKL,IKJL,IJAB,IAJB,IJKA,IKJA);
+  //ReadHeff(OrbWin,h_eff,h_eff_,BaseName,ReOrder);
+  Info.AddH(h);Info.AddH(h_eff);Info.AddH(h_eff_);
+  
+  //release some memory
+  IJKL.Clear();
+  IJAB.Clear();
   
   //----------------------
   // start the first sweep
@@ -323,7 +347,7 @@ namespace SpinAdapted{
     //density generator is called
     p1out << "\t\t\t Blocking and Decimating " << endl;
     SpinBlock newSystem;
-    nevpt2::BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys, CCD, CDD, IKJL, IKJA, Info);
+    nevpt2::BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys, CCD, CDD, IKJL, IKJA, IAJB, IJKA, Info);
     
     //update the system block
     system = newSystem;
@@ -354,6 +378,7 @@ namespace SpinAdapted{
   //-----------------------
   // start the second sweep
   //-----------------------
+  sweepParams.set_sweep_iter()++;
   sweepParams.set_sweep_parameters();
   // a new renormalisation sweep routine
   pout << ((!forward) ? "\t\t\t Starting renormalisation sweep in forwards direction" : "\t\t\t Starting renormalisation sweep in backwards direction") << endl;
@@ -397,7 +422,7 @@ namespace SpinAdapted{
     //density generator is called
     p1out << "\t\t\t Blocking and Decimating " << endl;
     SpinBlock newSystem;
-    nevpt2::BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys, CCD_, CDD_, IKJL, IKJA, Info);
+    nevpt2::BlockAndDecimate (sweepParams, system, newSystem, warmUp, dot_with_sys, CCD_, CDD_, IKJL, IKJA, IAJB, IJKA, Info);
     
     //update the system block
     system = newSystem;
@@ -431,6 +456,8 @@ namespace SpinAdapted{
   CDD_.Clear();
   IKJL.Clear();
   IKJA.Clear();
+  IAJB.Clear();
+  IJKA.Clear();
   
   return sweepParams.get_lowest_energy()[0];
 

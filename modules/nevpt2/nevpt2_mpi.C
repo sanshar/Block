@@ -90,23 +90,23 @@ void PALDivideLoop(int &start_loc, int &stop_loc, int start_global, int stop_glo
     stop_loc   = stop_global;
   }
   else{
-    int loopsize = stop_global - start_global + 1;
+    int loopsize = stop_global - start_global;
     int numproc = world.size();
     int quot = loopsize / numproc;
     int iproc = world.rank();
-    start_loc = iproc * quot;
-    stop_loc = (iproc+1) * quot;
+    start_loc = iproc * quot + start_global;
+    stop_loc = (iproc+1) * quot + start_global;
     if (numproc>=loopsize){
       if (iproc>=loopsize){
         start_loc = -1;
         stop_loc = -1;
       }
       else{
-        start_loc = iproc;
-        stop_loc = iproc + 1;
+        start_loc = iproc + start_global;
+        stop_loc = iproc + 1 + start_global;
       }
     }
-    if (world.rank()==numproc-1){
+    else if (world.rank()==numproc-1){
       stop_loc = stop_global;
     }
       

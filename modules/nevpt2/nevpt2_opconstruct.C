@@ -996,11 +996,10 @@ namespace SpinAdapted{
     int NActive = big.get_sites().size();
     int NExternal = a1-a0+1;
     int OrbDim = NInternal+NActive+NExternal;
-    int t,u,v,i,a,tu;
+    int t=1,u=-1,v=-1,i,a,tu;
     int t_,u_,v_;
     int dummy;
     SpinQuantum WFQ = WF.get_deltaQuantum(0);
-    boost::shared_ptr<Matrix> Kut;
     SpinBlock *leftBlock  = big.get_leftBlock();
     SpinBlock *rightBlock = big.get_rightBlock();
     double twoS = (double) WFQ.get_s().getirrep();
@@ -1014,6 +1013,7 @@ namespace SpinAdapted{
     //---------------------------------------------------
     //open the integral file
     IKJL.OpenFileRead();
+    boost::shared_ptr<Matrix> Kut = IKJL.GetMatrix(0,0);
     //Open the operator arrays and prepare the buffer
     CCD.OpenFileRead();
     CCD.ResetBuffer();
@@ -1075,7 +1075,7 @@ namespace SpinAdapted{
       }
 
       //if necessary, get the integral matrix
-      if ((t!=t_)||(u!=u_)){
+      if ((t!=t_)||(u!=u_)&&!DummyIter){
          Kut = IKJL.GetMatrix(u+NInternal,t+NInternal);
       }
       //the possible quanta
@@ -1158,7 +1158,7 @@ namespace SpinAdapted{
       }
 
       //if necessary, get the integral matrix
-      if ((t!=t_)||(u!=u_)){
+      if ((t!=t_)||(u!=u_)&&!DummyIter){
          Kut = IKJL.GetMatrix(u+NInternal,t+NInternal);
       }
       //the possible quanta
@@ -3367,11 +3367,10 @@ namespace SpinAdapted{
     int NExternal = a1-a0+1;
     int NOcc = NInternal + NActive;
     int OrbDim = NInternal+NActive+NExternal;
-    int t,u,v,i,a,tu;
+    int t=-1,u=-1,v=-1,i,a,tu;
     int t_,u_,v_;
     int dummy;
     SpinQuantum WFQ = WF.get_deltaQuantum(0);
-    boost::shared_ptr<Matrix> Ktv;
     SpinBlock *leftBlock  = big.get_leftBlock();
     SpinBlock *rightBlock = big.get_rightBlock();
     double twoS = (double) WFQ.get_s().getirrep();
@@ -3387,6 +3386,7 @@ namespace SpinAdapted{
     //---------------------------------------------------
     //open the integral file
     IKJA.OpenFileRead();
+    boost::shared_ptr<Matrix> Ktv = IKJA.GetMatrix(0,0);
     //Open the operator arrays and prepare the buffer
     CDD.OpenFileRead();
     CDD.ResetBuffer();
@@ -3447,7 +3447,7 @@ namespace SpinAdapted{
       }
 
       //if necessary, get the integral matrix
-      if ((t!=t_)||(v!=v_)){
+      if ((t!=t_)||(v!=v_)&&!DummyIter){
          Ktv = IKJA.GetMatrix(t+NInternal,v+NInternal);
       }
       //the possible quanta
@@ -3526,7 +3526,7 @@ namespace SpinAdapted{
         DummyIter = true;
       }
       //if necessary, get the integral matrix
-      if ((t!=t_)||(v!=v_)){
+      if ((t!=t_)||(v!=v_)&&!DummyIter){
          Ktv = IKJA.GetMatrix(t+NInternal,v+NInternal);
       }
       //the possible quanta

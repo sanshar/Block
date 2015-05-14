@@ -2112,10 +2112,16 @@ void CheckSize(ThreeIndOpArray &CCD){
   //============================================================================
   void EstablishBatching(vector<pair<int,int> > &batches, int MaxCore, int M, int start,
                      int end, int NOperators){
-    int ElementSize = M * M * 8;
+        double ElementSize_ = (double) M * M * sizeof(double);
     //determine how many sets of N operators can be stored without exceeding MaxCore
-    int BatchSize = MaxCore*1000000/(ElementSize*NOperators);
-    if (BatchSize==0) BatchSize = 1;
+    double tmp = (double) MaxCore;
+    tmp *= 1024.0 * 1024.0;
+    tmp /= (ElementSize_ * (double) NOperators);
+    int BatchSize = (int) tmp;
+    if (BatchSize<=0) BatchSize = 1;
+    //DEBUG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    BatchSize = 1;
+    //DEBUG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     //Evaluate the start and stop indices for each batch
     int NIters = end-start;
     int NBatches = NIters / BatchSize + 1;
