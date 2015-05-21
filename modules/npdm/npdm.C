@@ -392,7 +392,9 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
     dmrginp.set_fullrestart() = true;
     sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
 	  dmrginp.npdm_generate() = true;
-    if (dmrginp.specificpdm().size()==1)
+    if ( !dmrginp.setStateSpecific())
+      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
+    else if (dmrginp.specificpdm().size()==1)
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, dmrginp.specificpdm()[0], dmrginp.specificpdm()[0]); //this will generate the cd operators                               
     else if (dmrginp.specificpdm().size()==2)
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, dmrginp.specificpdm()[0], dmrginp.specificpdm()[1]); //this will generate the cd operators                               
