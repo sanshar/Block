@@ -1156,6 +1156,12 @@ SpinAdapted::Input::Input(const string& config_name) {
   mpi::broadcast(world, m_save_prefix, 0);
 #endif
 
+  //make the scratch files   
+  m_load_prefix = str(boost::format("%s%s%d%s") %m_load_prefix % "/node" % mpigetrank() % "/");    
+  m_save_prefix = m_load_prefix;   
+  boost::filesystem::path p(m_load_prefix);    
+  bool success = boost::filesystem::create_directory(p);   
+
   v_2.resize(m_num_Integrals, TwoElectronArray(TwoElectronArray::restrictedNonPermSymm));
   v_1.resize(m_num_Integrals);
   coreEnergy.resize(m_num_Integrals);
