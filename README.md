@@ -14,7 +14,7 @@ The following customizations need to be made to the makefile placed in the main 
 
 Choose compilers by specifying,
 
-	CXX = g++  
+        CXX = g++  
 
 For MPI-based parallel execution on distributed-memory machines,
   
