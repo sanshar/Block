@@ -20,6 +20,13 @@ For MPI-based parallel execution on distributed-memory machines,
 MPI library must be compiled using the same compiler as for compiling `BLOCK`. 
 Intel compiler such as ``icpc`` is also supported with approriate compiling flags chosen automatically.
 
+Please note that when choosing your compiler, either GNU or Intel, C++0x/C++11 standards must be appropriately supported,
+as `BLOCK` requires new features for some of the modules (eg, `npdm`, `nevpt2`, etc).
+Here are our suggested _minimum_ GNU/Intel compiler versions in order for the compiling process to be successful: 
+
+* GNU ``g++``: 4.8 or newer,
+* or Intel ``icpc``: at least 14.0.1 (2013 SP1 Update 1) or newer.
+
 To enable MKL library,
 
         ``USE_MKL = yes``
