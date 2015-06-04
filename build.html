@@ -105,6 +105,13 @@ The following customizations need to be made to the makefile placed in the main 
 </dl>
 <p>MPI library must be compiled using the same compiler as for compiling <cite>BLOCK</cite>.
 Intel compiler such as <code class="docutils literal"><span class="pre">icpc</span></code> is also supported with approriate compiling flags chosen automatically.</p>
+<p>Please note that when choosing your compiler, either GNU or Intel, C++0x/C++11 standards must be appropriately supported,
+as <cite>BLOCK</cite> requires new features for some of the modules (eg, <cite>npdm</cite>, <cite>nevpt2</cite>, etc).
+Here are our suggested _minimum_ GNU/Intel compiler versions in order for the compiling process to be successful:</p>
+<ul class="simple">
+<li>GNU <code class="docutils literal"><span class="pre">g++</span></code>: 4.8 or newer,</li>
+<li>or Intel <code class="docutils literal"><span class="pre">icpc</span></code>: at least 14.0.1 (2013 SP1 Update 1) or newer.</li>
+</ul>
 <p>To enable MKL library,</p>
 <blockquote>
 <div><code class="docutils literal"><span class="pre">USE_MKL</span> <span class="pre">=</span> <span class="pre">yes</span></code></div></blockquote>
