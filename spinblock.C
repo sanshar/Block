@@ -712,7 +712,8 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
   twoInt = boost::shared_ptr<TwoElectronArray>( &v_2[integralIndex], boostutils::null_deleter());
   build_iterators();
 
-  p3out << "\t\t\t time in slater distribution " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
+  tcpu = slatertimer.elapsedcputime(); twall= slatertimer.elapsedwalltime();
+  p3out << "\t\t\t time in slater distribution " << twall << " " << tcpu << endl;
 
   std::vector< std::vector<Csf> > ladders; ladders.resize(dets.size());
   for (int i=0; i< dets.size(); i++)
@@ -720,7 +721,8 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
 
 
   build_operators(dets, ladders);
-  p3out << "\t\t\t time in slater operator build " << slatertimer.elapsedwalltime() << " " << slatertimer.elapsedcputime() << endl;
+  tcpu = slatertimer.elapsedcputime();twall= slatertimer.elapsedwalltime();
+  p3out << "\t\t\t time in slater operator build " <<  twall << " " << tcpu << endl;
 
 
 }

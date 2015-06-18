@@ -11,7 +11,7 @@ Welcome to BLOCK's documentation!
 
 `BLOCK` implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry.
 The DMRG is a variational wavefunction method. Compared to other quantum chemical methods,
-it executionciently describes strong, multi-reference correlation in a large number of active orbitals (occupancies far from 0 or 2).
+it efficiently describes strong, multi-reference correlation in a large number of active orbitals (occupancies far from 0 or 2).
 The method is also provably optimal for correlation with a one-dimensional topology, that is,
 where orbitals are arranged with a chain- or ring-like connectivity. 
 However, with the possible exception of small molecules, for correlation that is dynamic in character, 
@@ -20,7 +20,7 @@ such as coupled cluster theory or multireference configuration interaction.
 We recommend the use of the DMRG in problems requiring active spaces too large for
 standard complete active space (CAS) techniques. Thus, if you are interested in:
 
-* a CAS-like treatment of low-lying eigenstates in problems with 16-40 active orbitals,
+* a CAS-like treatment of low-lying eigenstates in real problems with more than 50 active orbitals,
 * or, one-dimensional orbital topologies with up to 100 active orbitals,
 * and, standard chemical accuracy (1 kcal/mol in energy differences),
 

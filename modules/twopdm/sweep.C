@@ -266,8 +266,9 @@ double SweepTwopdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
 
   ++sweepParams.set_sweep_iter();
 
-  pout << "\t\t\t Elapsed Sweep CPU  Time (seconds): " << setprecision(3) << sweeptimer.elapsedcputime() << endl;
-  pout << "\t\t\t Elapsed Sweep Wall Time (seconds): " << setprecision(3) << sweeptimer.elapsedwalltime() << endl;
+  ecpu = sweeptimer.elapsedcputime(); ewall = sweeptimer.elapsedwalltime();
+  pout << "\t\t\t Elapsed Sweep CPU  Time (seconds): " << setprecision(3) << ecpu << endl;
+  pout << "\t\t\t Elapsed Sweep Wall Time (seconds): " << setprecision(3) << ewall << endl;
 
 
   return finalEnergy[0];

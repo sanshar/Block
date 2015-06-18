@@ -61,7 +61,8 @@ void Twopdm_container::save_npdms(const int& i, const int& j)
 #ifndef SERIAL
   world.barrier();
 #endif
-  p3out << "2PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+  ecpu = timer.elapsedcputime();ewall=timer.elapsedwalltime();
+  p3out << "2PDM save full array time " << ewall << " " << ecpu << endl;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
