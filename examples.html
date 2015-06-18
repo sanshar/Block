@@ -57,6 +57,7 @@
 <li><a class="reference internal" href="#restart-dmrg-transition-reduced-density-matrix-calculation">Restart DMRG transition reduced density matrix calculation</a></li>
 <li><a class="reference internal" href="#customize-sweep-schedule">Customize sweep schedule</a></li>
 <li><a class="reference internal" href="#sweep-energy-extrapolation">Sweep energy extrapolation</a></li>
+<li><a class="reference internal" href="#further-reading">Further Reading</a></li>
 </ul>
 </li>
 </ul>
@@ -743,6 +744,27 @@ M = 4500    state = 0     Largest Discarded Weight = 7.772e-16  Sweep Energy = -
 <a class="reference internal image-reference" href="images/c2_energy.png"><img alt="images/c2_energy.png" src="images/c2_energy.png" style="width: 640.0px; height: 512.0px;" /></a>
 <p class="caption"><span class="caption-text">Starting from <em>M=500</em>, use the largest discarded weights and associated sweep energies in the last sweep iteration of each <em>M</em> to make linear regression (see the figure above). The extrapolated DMRG sweep energy is -75.728557 a.u.</span></p>
 </div>
+</div>
+<div class="section" id="further-reading">
+<h2>Further Reading<a class="headerlink" href="#further-reading" title="Permalink to this headline">¶</a></h2>
+<p>Some practical questions are often asked such as,</p>
+<ul class="simple">
+<li>what sort of molecules can the DMRG be practically applied to?</li>
+<li>what sort of accuracies can be obtained and at what cost? What are the typical sizes of systems (e.g. number
+of active orbitals) that can be treated with practical computational resources?</li>
+<li>how do we reason about the accuracy of DMRG calculations for dirent molecules?</li>
+<li>how is a DMRG calculation best specified (e.g. in terms of starting orbitals and their order)?</li>
+</ul>
+<p>We provide answers in the following paper from both theoretical reasonsing and numerical results by applying the method
+to a representative set of molecules.
+We demonstrated that the calculations we describe therein are all run in a completely black-box fashion
+using the default settings of our <code class="docutils literal"><span class="pre">Block</span></code> code.</p>
+<ul class="simple">
+<li><ol class="first upperalpha" start="18">
+<li>Olivares-Amaya, W.F. Hu, N. Nakatani, S. Sharma, J. Yang and G. K.-L. Chan, J. Chem. Phys. 142, 034102 (2015),</li>
+</ol>
+</li>
+</ul>
 </div>
 </div>
 
