@@ -73,6 +73,7 @@ extern bool NonabelianSym;
 extern std::vector<int> NPROP;
 extern int PROPBITLEN;
 extern double NUMERICAL_ZERO;
+extern double tcpu,twall,ecpu,ewall;
 //extern ifstream* coutbuf;
 }
 #endif

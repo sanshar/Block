@@ -672,4 +672,20 @@ Energy extrapolation:
 
    Starting from *M=500*, use the largest discarded weights and associated sweep energies in the last sweep iteration of each *M* to make linear regression (see the figure above). The extrapolated DMRG sweep energy is -75.728557 a.u.
 
+Further Reading
+===============
+
+Some practical questions are often asked such as,
+
+* what sort of molecules can the DMRG be practically applied to?
+* what sort of accuracies can be obtained and at what cost? What are the typical sizes of systems (e.g. number
+  of active orbitals) that can be treated with practical computational resources?
+* how do we reason about the accuracy of DMRG calculations for dirent molecules?
+* how is a DMRG calculation best specified (e.g. in terms of starting orbitals and their order)?
+
+We provide answers in the following paper from both theoretical reasoning and numerical calculation by applying the DMRG 
+to a representative set of molecules. 
+The calculations we describe therein are all run in a completely black-box fashion using the default settings of our ``Block`` code.
+
+* R. Olivares-Amaya, W. Hu, N. Nakatani, S. Sharma, J. Yang and G. K.-L. Chan, J. Chem. Phys. 142, 034102 (2015).
 

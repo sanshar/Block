@@ -473,9 +473,10 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
     pout << "\t Sweep Energy = " << fixed << setprecision(10) << finalEnergy[j] << endl;
 #endif
   }
+  tcpu  = sweeptimer.elapsedcputime(); twall = sweeptimer.elapsedwalltime();
   pout << "\t\t\t ============================================================================ " << endl;
-  pout << "\t\t\t Elapsed Sweep CPU  Time (seconds): " << fixed << setprecision(3) << sweeptimer.elapsedcputime() << endl;
-  pout << "\t\t\t Elapsed Sweep Wall Time (seconds): " << fixed << setprecision(3) << sweeptimer.elapsedwalltime()<< endl;
+  pout << "\t\t\t Elapsed Sweep CPU  Time (seconds): " << fixed << setprecision(3) << tcpu  << endl;
+  pout << "\t\t\t Elapsed Sweep Wall Time (seconds): " << fixed << setprecision(3) << twall << endl;
 
   // update the static number of iterations
 

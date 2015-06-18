@@ -45,7 +45,8 @@ void Pairpdm_container::save_npdms(const int& i, const int& j)
 #ifndef SERIAL
   world.barrier();
 #endif
-  p3out << "Pair PDM save full array time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+  ecpu = timer.elapsedcputime();ewall=timer.elapsedwalltime();
+  p3out << "Pair PDM save full array time " << ewall << " " << ecpu << endl;
 }
 
 void Pairpdm_container::save_npdm_text(const int &i, const int &j)
