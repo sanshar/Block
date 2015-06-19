@@ -20,7 +20,7 @@ such as coupled cluster theory or multireference configuration interaction.
 We recommend the use of the DMRG in problems requiring active spaces too large for
 standard complete active space (CAS) techniques. Thus, if you are interested in:
 
-* a CAS-like treatment of low-lying eigenstates in problems of more than 50 active orbitals with today's computer power,
+* a CAS-like treatment of low-lying eigenstates in real problems with more than 50 active orbitals,
 * or, one-dimensional orbital topologies with up to 100 active orbitals,
 * and, standard chemical accuracy (1 kcal/mol in energy differences),
 
