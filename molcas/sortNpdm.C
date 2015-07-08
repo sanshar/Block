@@ -12,7 +12,7 @@ void sort1pdm (FORTINT N_act, FORTINT iRoot, FORTINT jRoot)
   if(mpigetrank() == 0) {
 
     std::ostringstream ifname;
-    ifname << "./spatial_binary_onepdm." << iRoot << "." << jRoot << ".bin";
+    ifname << "./node0/spatial_binary_onepdm." << iRoot << "." << jRoot << ".bin";
 
     std::ostringstream ofname;
     ofname << "./SORTED1PDM." << iRoot << "." << jRoot << ".0";
@@ -62,7 +62,7 @@ void sort2pdm (FORTINT N_act, FORTINT iRoot, FORTINT jRoot)
   if(mpigetrank() == 0) {
 
     std::ostringstream ifname;
-    ifname << "./spatial_binary_twopdm." << iRoot << "." << jRoot << ".bin";
+    ifname << "./node0/spatial_binary_twopdm." << iRoot << "." << jRoot << ".bin";
 
     std::ostringstream ofname;
     ofname << "./SORTED2PDM." << iRoot << "." << jRoot << ".0";
@@ -123,7 +123,7 @@ void sort3pdm (FORTINT N_act, FORTINT iRoot, FORTINT jRoot)
   if(mpigetrank() == 0) {
 
     std::ostringstream ifname;
-    ifname << "./spatial_threepdm." << iRoot << "." << jRoot << ".bin";
+    ifname << "./node0/spatial_threepdm." << iRoot << "." << jRoot << ".bin";
 
     std::ostringstream ofname;
     ofname << "./SORTED3PDM." << iRoot << "." << jRoot << ".0";

@@ -115,11 +115,13 @@ void SpinAdapted::Input::initialize_defaults()
   m_deflation_min_size = 2;
   m_deflation_max_size = 20;
 
+  m_transition_diff_spatial_irrep = false;
   m_add_noninteracting_orbs = true;
   m_no_transform = false;
   m_do_fci = false;
   m_do_npdm_ops = false;
   m_do_npdm_in_core = false;
+  m_npdm_generate = false;
   m_new_npdm_code = false;
   m_do_pdm = false;
   m_store_spinpdm = false;
@@ -197,13 +199,12 @@ SpinAdapted::Input::Input(const string& config_name) {
   NonabelianSym = false;
   std::vector<string> orbitalfile;
 
+  initialize_defaults();
 
   if(mpigetrank() == 0)
   {
     pout << "Reading input file"<<endl;
     bool PROVIDED_WEIGHTS = false;
-
-    initialize_defaults();
 
     ifstream input(config_name.c_str());
 
@@ -1154,6 +1155,7 @@ SpinAdapted::Input::Input(const string& config_name) {
   mpi::broadcast(world, orbitalfile, 0);
   mpi::broadcast(world, m_load_prefix, 0);
   mpi::broadcast(world, m_save_prefix, 0);
+  mpi::broadcast(world, m_calc_type, 0);
 #endif
 
   //make the scratch files   

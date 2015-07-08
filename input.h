@@ -60,7 +60,7 @@ class Input {
   IrrepSpace m_total_symmetry_number;
   IrrepSpace m_bra_symmetry_number;// This is used when bra and ket have different spatial symmetry irrep;
                                 // It is only used for transition density matrix calculations.
-  bool m_transition_diff_spatial_irrep=false;
+  bool m_transition_diff_spatial_irrep;
   SpinQuantum m_molecule_quantum;
   int m_total_spin;
   int m_guess_permutations;
@@ -110,7 +110,7 @@ class Input {
   bool m_do_pdm;
   bool m_do_npdm_ops;
   bool m_do_npdm_in_core;
-	bool m_npdm_generate = false;
+	bool m_npdm_generate;
   bool m_new_npdm_code;
   bool m_store_spinpdm;
   bool m_spatpdm_disk_dump;
@@ -189,7 +189,8 @@ class Input {
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule & m_reorder;
     ar & m_molecule_quantum & m_total_symmetry_number & m_total_spin & m_orbenergies & m_add_noninteracting_orbs;
     ar & m_bra_symmetry_number & m_permSymm & m_openorbs & m_closedorbs;
-    ar & m_save_prefix & m_load_prefix & m_direct & m_max_lanczos_dimension;
+//  ar & m_save_prefix & m_load_prefix & m_direct & m_max_lanczos_dimension;
+    ar & m_direct & m_max_lanczos_dimension;
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
     ar & m_algorithm_type & m_twodot_to_onedot_iter & m_orbformat ;
     ar & m_nquanta & m_sys_add & m_env_add & m_do_fci & m_no_transform ;
