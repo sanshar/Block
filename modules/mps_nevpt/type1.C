@@ -14,7 +14,7 @@
 #include "davidson.h"
 #include "sweep.h"
 //#include "mps_mpi.h"
-#include "Va.h"
+#include "type1.h"
 #include "operatorfunctions.h"
 #include "StateInfo.h"
 
@@ -22,7 +22,7 @@ using namespace boost;
 using namespace std;
 
 
-double SpinAdapted::mps_nevpt::Va::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, perturber& pb, int baseState)
+double SpinAdapted::mps_nevpt::type1::do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, perturber& pb, int baseState)
 {
   int integralIndex = 0;
   SpinBlock system;
@@ -166,7 +166,7 @@ double SpinAdapted::mps_nevpt::Va::do_one(SweepParams &sweepParams, const bool &
   return finalError;
 }
 
-void SpinAdapted::mps_nevpt::Va::BlockDecimateAndCompress (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys, perturber& pb, int baseState)
+void SpinAdapted::mps_nevpt::type1::BlockDecimateAndCompress (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys, perturber& pb, int baseState)
 {
   int sweepiter = sweepParams.get_sweep_iter();
   if (dmrginp.outputlevel() > 0) {
@@ -238,7 +238,10 @@ void SpinAdapted::mps_nevpt::Va::BlockDecimateAndCompress (SweepParams &sweepPar
   outputState[0].AllowQuantaFor(big.get_leftBlock()->get_braStateInfo(), big.get_rightBlock()->get_braStateInfo(),pb.braquanta);
   outputState[0].set_onedot(sweepParams.get_onedot());
   outputState[0].Clear();
-  big.multiplyCDD_sum(solution[0],&(outputState[0]),MAX_THRD);
+  if (pb.type() == TwoPerturbType::Va)
+    big.multiplyCDD_sum(solution[0],&(outputState[0]),MAX_THRD);
+  if (pb.type() == TwoPerturbType::Vi)
+    big.multiplyCCD_sum(solution[0],&(outputState[0]),MAX_THRD);
 
   //davidson_f(solution[0], outputState[0]);
   SpinBlock newbig;
@@ -328,18 +331,94 @@ void SpinAdapted::mps_nevpt::Va::BlockDecimateAndCompress (SweepParams &sweepPar
 
 }
 
-void SpinAdapted::mps_nevpt::Va::run(int baseState)
+void SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
 {
   
   double energy=0;
-  VaPerturber pb;
-  MPS::sweepIters = dmrginp.last_site()-2;
+  double overlap=0;
+  ViPerturber pb;
   MPS basemps(baseState);
   MPS::siteBlocks.clear();
-  for(int i=0; i< dmrginp.virt_size(); i++){
+  int coresize = dmrginp.spinAdapted()? dmrginp.core_size():dmrginp.core_size()*2;
+  int coreshift = dmrginp.spinAdapted()? dmrginp.act_size(): dmrginp.act_size()*2;
+  //int virtsize = dmrginp.virt_size();
+  //int virtshift = dmrginp.core_size()+dmrginp.act_size();
+  for(int i=0; i< coresize; i++){
     double perturberEnergy=0;
     dmrginp.calc_type() = MPS_NEVPT;
-    pb.init(i+dmrginp.core_size()+dmrginp.act_size());
+    pb.init(i+coreshift);
+    pout << "Begin Vi subspace with i = " << pb.orb(0)<<endl;
+    SweepParams sweepParams;
+    sweepParams.set_sweep_parameters();
+    //sweepParams.current_root() = -1;
+    //double last_fe = Startup(sweepParams, true, true, false, 0, pb, baseState);
+    Startup(sweepParams, true, basemps, pb, baseState);
+    //sweepParams.current_root() = baseState;
+    while(true)
+    {
+      do_one(sweepParams, false, false, false, 0, pb, baseState);
+      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+	      break;
+      do_one(sweepParams, false, true, false, 0, pb, baseState);
+      if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+	      break;
+    }
+    MPS pbmps(pb.wavenumber());
+    double o, h;
+    dmrginp.calc_type() = DMRG;
+    calcHamiltonianAndOverlap(pbmps, h, o,pb);
+    if(!dmrginp.spinAdapted())
+    {
+      //In nonspinAdapted, alpha and beta have the results. Only one is neccessary. 
+      o*=2;
+      h*=2;
+      i++;
+    }
+    if(o> NUMERICAL_ZERO){
+      double fock =dmrginp.spinAdapted()? v_1[0](2*(i+coreshift),2*(i+coreshift)): v_1[0](i+coreshift,i+coreshift);
+      //perturberEnergy = h/o+fock+perturber::CoreEnergy[0];
+      perturberEnergy = h/o - fock;
+      energy += o/(perturber::ZeroEnergy[0]- perturberEnergy) ;
+      p3out <<"zero energy" <<perturber::ZeroEnergy[0]<<endl;
+      p3out <<"core energy" <<perturber::CoreEnergy[0]<<endl;
+      overlap +=o;
+      if (mpigetrank() == 0)
+      {
+        p3out << "Overlap : " << o <<endl;
+        p3out << "Ener(only CAS part) : " << h/o<<endl;
+        p3out << "Energy : " << perturberEnergy<<endl;
+        p3out << "Correction Energy: "<< o/(perturber::ZeroEnergy[0]- perturberEnergy)<<endl; 
+      }
+    }
+    else{
+      p3out << "Overlap : " << 0.0 <<endl;
+      p3out << "Energy : " << 0.0<<endl;
+    }
+
+
+
+  }
+  pout << "Nevpt2 correction to the energy for state 0 in subspace Vi is " << energy<<endl;;
+  pout << "Nevpt2 Vi subspace perturber overlap : " << overlap<<endl;;
+  pout << "Core Energy of nevpt2 " <<perturber::CoreEnergy[0]<<endl;
+}
+
+void SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
+{
+  
+  double energy=0;
+  double overlap=0;
+  VaPerturber pb;
+  MPS basemps(baseState);
+  MPS::siteBlocks.clear();
+  int virtsize = dmrginp.spinAdapted()? dmrginp.virt_size():dmrginp.virt_size()*2;
+  int virtshift = dmrginp.spinAdapted()? dmrginp.core_size()+dmrginp.act_size(): (dmrginp.core_size()+dmrginp.act_size())*2;
+  //int virtsize = dmrginp.virt_size();
+  //int virtshift = dmrginp.core_size()+dmrginp.act_size();
+  for(int i=0; i< virtsize; i++){
+    double perturberEnergy=0;
+    dmrginp.calc_type() = MPS_NEVPT;
+    pb.init(i+virtshift);
     pout << "Begin Va subspace with a = " << pb.orb(0)<<endl;
     SweepParams sweepParams;
     sweepParams.set_sweep_parameters();
@@ -351,37 +430,56 @@ void SpinAdapted::mps_nevpt::Va::run(int baseState)
     {
       do_one(sweepParams, false, false, false, 0, pb, baseState);
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
-	break;
+	      break;
       do_one(sweepParams, false, true, false, 0, pb, baseState);
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
-	break;
+	      break;
     }
     MPS pbmps(pb.wavenumber());
     double o, h;
     dmrginp.calc_type() = DMRG;
     calcHamiltonianAndOverlap(pbmps, h, o,pb);
+    if(!dmrginp.spinAdapted())
+    {
+      //In nonspinAdapted, alpha and beta have the results. Only one is neccessary. 
+      o*=2;
+      h*=2;
+      i++;
+    }
     if(o> NUMERICAL_ZERO){
-      perturberEnergy = h/o+v_1[0](2*(i+dmrginp.act_size()+dmrginp.core_size()),2*(i+dmrginp.act_size()+dmrginp.core_size()))+perturber::CoreEnergy[0];
+      double fock =dmrginp.spinAdapted()? v_1[0](2*(i+virtshift),2*(i+virtshift)): v_1[0](i+virtshift,i+virtshift);
+      //perturberEnergy = h/o+fock+perturber::CoreEnergy[0];
+      perturberEnergy = h/o+fock;
       energy += o/(perturber::ZeroEnergy[0]- perturberEnergy) ;
+      p3out <<"zero energy" <<perturber::ZeroEnergy[0]<<endl;
+      p3out <<"core energy" <<perturber::CoreEnergy[0]<<endl;
+      overlap +=o;
       if (mpigetrank() == 0)
       {
-        cout << "Overlap : " << o <<endl;
-        cout << "Energy : " << perturberEnergy<<endl;
+        p3out << "Overlap : " << o <<endl;
+        p3out << "Ener(only CAS part) : " << h/o<<endl;
+        p3out << "Energy : " << perturberEnergy<<endl;
+        p3out << "Correction Energy: "<< o/(perturber::ZeroEnergy[0]- perturberEnergy)<<endl; 
       }
     }
     else{
-      cout << "Overlap : " << 0.0 <<endl;
-      cout << "Energy : " << 0.0<<endl;
+      p3out << "Overlap : " << 0.0 <<endl;
+      p3out << "Energy : " << 0.0<<endl;
     }
 
 
 
   }
   pout << "Nevpt2 correction to the energy for state 0 in subspace Va is " << energy<<endl;;
+  pout << "Nevpt2 Va subspace perturber overlap : " << overlap<<endl;;
   pout << "Core Energy of nevpt2 " <<perturber::CoreEnergy[0]<<endl;
 }
 
-void SpinAdapted::mps_nevpt::Va::calcHamiltonianAndOverlap(const MPS& statea, double& h, double& o, perturber& pb) {
+void SpinAdapted::mps_nevpt::type1::calcHamiltonianAndOverlap(const MPS& statea, double& h, double& o, perturber& pb) {
+
+#ifndef SERIAL
+  mpi::communicator world;
+#endif
 
   SpinBlock system, siteblock;
   bool forward = true, restart=false, warmUp = false;
@@ -409,21 +507,27 @@ void SpinAdapted::mps_nevpt::Va::calcHamiltonianAndOverlap(const MPS& statea, do
 
   SpinBlock newSystem, big;
   system.addAdditionalCompOps();
+  system.printOperatorSummary();
   //To set implicit_transpose to true.
   //The last site spinblock should have implicit_transpose true.
   InitBlocks::InitNewSystemBlock(system, MPS::siteBlocks_noDES[MPS::sweepIters], newSystem,  leftState, rightState, sys_add, direct, 0, DISTRIBUTED_STORAGE, false, true,NO_PARTICLE_SPIN_NUMBER_CONSTRAINT,statea.getw().get_deltaQuantum(),statea.getw().get_deltaQuantum());
   
   newSystem.set_loopblock(false); system.set_loopblock(false);
+  newSystem.addAdditionalCompOps();
+  //MPS::siteBlocks_noDES[MPS::sweepIters+1].set_loopblock(false);
   InitBlocks::InitBigBlock(newSystem, MPS::siteBlocks_noDES[MPS::sweepIters+1], big,statea.getw().get_deltaQuantum(),statea.getw().get_deltaQuantum()); 
   
+
   //FIXME
   //Assume statea.getw() has only one deltaquantum.
   //Spin Embeding for zero order wavefunction is needed.
 
   Wavefunction temp = statea.getw();
   temp.Clear();
+  world.barrier();
   big.multiplyH(const_cast<Wavefunction&>(statea.getw()), &temp, 1);
 
+  world.barrier();
   if (mpigetrank() == 0)
     h = DotProduct(statea.getw(), temp);
 
@@ -431,21 +535,29 @@ void SpinAdapted::mps_nevpt::Va::calcHamiltonianAndOverlap(const MPS& statea, do
   big.multiplyOverlap(const_cast<Wavefunction&>(statea.getw()), &temp, 1);
   if (mpigetrank() == 0)
     o = DotProduct(statea.getw(), temp);
-  double cg= 1.0;
-  SpinQuantum wQ= statea.getw().get_deltaQuantum(0);
-  cg*= dmrginp.get_ninej()(wQ.get_s().getirrep(), 1, dmrginp.effective_molecule_quantum().get_s().getirrep(), 
-						   pb.delta.get_s().getirrep(), pb.delta.get_s().getirrep(), 0,
-                            dmrginp.effective_molecule_quantum().get_s().getirrep(), 0, dmrginp.effective_molecule_quantum().get_s().getirrep());
-  cg*= Symmetry::spatial_ninej(wQ.get_symm().getirrep(), -pb.delta.get_symm().getirrep(), dmrginp.effective_molecule_quantum().get_symm().getirrep(), 
-						   pb.delta.get_symm().getirrep(), -pb.delta.get_symm().getirrep(), 0,
-                            dmrginp.effective_molecule_quantum().get_symm().getirrep(), 0, dmrginp.effective_molecule_quantum().get_symm().getirrep());
-  cout << "cg coefficient: " <<cg<<endl;
-  h*= cg*cg;
-  o*= cg*cg;
+  if(dmrginp.spinAdapted())
+  {
+
+    double cg= 0.0;
+    //TODO
+    //Assume the zero order wavefunction has a spin zero. 
+    //Spin Embeding must be used.
+    SpinQuantum wQ= statea.getw().get_deltaQuantum(0);
+    //cg*= dmrginp.get_ninej()(wQ.get_s().getirrep(), 1, dmrginp.effective_molecule_quantum().get_s().getirrep(), 
+    //      					   pb.delta.get_s().getirrep(), pb.delta.get_s().getirrep(), 0,
+    //                          dmrginp.effective_molecule_quantum().get_s().getirrep(), 0, dmrginp.effective_molecule_quantum().get_s().getirrep());
+    //cg*= Symmetry::spatial_ninej(wQ.get_symm().getirrep(), -pb.delta.get_symm().getirrep(), dmrginp.effective_molecule_quantum().get_symm().getirrep(), 
+    //      					   pb.delta.get_symm().getirrep(), -pb.delta.get_symm().getirrep(), 0,
+    //                          dmrginp.effective_molecule_quantum().get_symm().getirrep(), 0, dmrginp.effective_molecule_quantum().get_symm().getirrep());
+    cg += pow(clebsch(wQ.get_s().getirrep(),-1,1,1,0,0),2);
+    cg += pow(clebsch(wQ.get_s().getirrep(),1,1,-1,0,0),2);
+    //cout << "cg coefficient: " <<cg<<endl;
+    h*= cg*cg;
+    o*= cg*cg;
+  }
 
 
 #ifndef SERIAL
-  mpi::communicator world;
   mpi::broadcast(world, h, 0);
   mpi::broadcast(world, o, 0);
 #endif
@@ -453,8 +565,11 @@ void SpinAdapted::mps_nevpt::Va::calcHamiltonianAndOverlap(const MPS& statea, do
   return;
 }
 
-void SpinAdapted::mps_nevpt::Va::Startup(const SweepParams &sweepParams, const bool &forward, const MPS& statea, perturber& pb, int baseState) {
+void SpinAdapted::mps_nevpt::type1::Startup(const SweepParams &sweepParams, const bool &forward, const MPS& statea, perturber& pb, int baseState) {
 
+#ifndef SERIAL
+  mpi::communicator world;
+#endif
   assert(forward);
   SpinBlock system;
   system.nonactive_orb() =pb.orb();
@@ -468,6 +583,7 @@ void SpinAdapted::mps_nevpt::Va::Startup(const SweepParams &sweepParams, const b
     SpinBlock newSystem;
     SpinBlock dotSystem(i+1,i+1,pb.orb(),false);
 
+    system.addAdditionalCompOps();
     newSystem.default_op_components(true, system, dotSystem, true, true, false);
     newSystem.setstoragetype(DISTRIBUTED_STORAGE);
     newSystem.BuildSumBlock(LessThanQ, system, dotSystem, pb.braquanta, pb.ketquanta);
@@ -488,6 +604,10 @@ void SpinAdapted::mps_nevpt::Va::Startup(const SweepParams &sweepParams, const b
     std::vector<Wavefunction> outputState; outputState.resize(1);
     std::vector<Wavefunction> solutionprojector; solutionprojector.resize(1);
     solution[0].LoadWavefunctionInfo(ketStateInfo, newSystem.get_sites(), baseState);
+    #ifndef SERIAL
+      broadcast(world, ketStateInfo, 0);
+      broadcast(world, solution, 0);
+    #endif
     outputState[0].AllowQuantaFor(newSystem.get_braStateInfo(), *(ketStateInfo.rightStateInfo), pb.braquanta);
     outputState[0].set_onedot(solution[0].get_onedot());
     outputState[0].Clear();
@@ -512,9 +632,14 @@ void SpinAdapted::mps_nevpt::Va::Startup(const SweepParams &sweepParams, const b
     //SpinAdapted::operatorfunctions::Product(&newSystem, ccd, solution[0], &ketStateInfo, stateb.getw(), temp, SpinQuantum(0, SpinSpace(0), IrrepSpace(0)), true, 1.0);
 
     
-    boost::shared_ptr<SparseMatrix> cdd = newSystem.get_op_array(CDD_SUM).get_local_element(0)[0]->getworkingrepresentation(&newSystem);
+
+    boost::shared_ptr<SparseMatrix> O;
+    if (pb.type() == TwoPerturbType::Va)
+      O = newSystem.get_op_array(CDD_SUM).get_local_element(0)[0]->getworkingrepresentation(&newSystem);
+    if (pb.type() == TwoPerturbType::Vi)
+      O = newSystem.get_op_array(CCD_SUM).get_local_element(0)[0]->getworkingrepresentation(&newSystem);
     boost::shared_ptr<SparseMatrix> overlap = newSystem.get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(&newSystem);
-    SpinAdapted::operatorfunctions::TensorMultiply(*cdd, &braStateInfo, &ketStateInfo , solution[0], outputState[0], pb.delta, true, 1.0);
+    SpinAdapted::operatorfunctions::TensorMultiply(*O, &braStateInfo, &ketStateInfo , solution[0], outputState[0], pb.delta, true, 1.0);
     SpinAdapted::operatorfunctions::TensorMultiply(*overlap, &halfbraStateInfo, &ketStateInfo , solution[0], solutionprojector[0], overlap->get_deltaQuantum(0), true, 1.0);
     DensityMatrix bratracedMatrix(newSystem.get_braStateInfo());
     bratracedMatrix.allocate(newSystem.get_braStateInfo());
@@ -527,11 +652,11 @@ void SpinAdapted::mps_nevpt::Va::Startup(const SweepParams &sweepParams, const b
     double error;
     if (!mpigetrank())
       error = makeRotateMatrix(bratracedMatrix, brarotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
+    #ifndef SERIAL
+      broadcast(world, ketrotateMatrix, 0);
+      broadcast(world, brarotateMatrix, 0);
+    #endif
 
-    cout <<"solution"<<endl<< solution[0]<<endl;
-    cout <<"solutionprojector"<<endl<< solutionprojector[0]<<endl;
-    cout << "outputwave"<<endl<< outputState[0];
-    cout << "density"<<endl<< bratracedMatrix;
     SaveRotationMatrix (newSystem.get_sites(), brarotateMatrix, pb.wavenumber());
     newSystem.transform_operators(brarotateMatrix,ketrotateMatrix);
     SpinBlock::store (forward, newSystem.get_sites(), newSystem, pb.wavenumber(), baseState); // if restart, just restoring an existing block --

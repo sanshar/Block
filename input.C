@@ -594,6 +594,7 @@ SpinAdapted::Input::Input(const string& config_name) {
         for(int i= 0; i< TwoPertEnd; i++){
           //vpt_2[static_cast<TwoPerturbType>(i)]= TwoElectronArray(TwoElectronArray::restrictedNonPermSymm);
           vpt_2[static_cast<TwoPerturbType>(i)]= PerturbTwoElectronArray();
+         // vpt_2[i].rhf = true;
         }
       }
       else if (boost::iequals(keyword,  "restart_mps_nevpt")) {
@@ -1076,6 +1077,7 @@ SpinAdapted::Input::Input(const string& config_name) {
   }
 
   //read the orbitals
+  vpt_1.rhf=true;
   for (int integral=0; integral < m_num_Integrals; integral++) {
     v_1[integral].rhf=true;
     v_2[integral].rhf=true;
@@ -1465,7 +1467,6 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
 
 void SpinAdapted::Input::readorbitalsfile(string& orbitalfile,OneElectronArray& v1, TwoElectronArray& v2, OneElectronArray& vpt1, std::map<TwoPerturbType,PerturbTwoElectronArray>& vpt2, double& coreEnergy)
 {
-  cout << " begain read orbitals " <<endl;
   //TODO
   //Reorder is not supported.
   ifstream dumpFile; 
@@ -1673,8 +1674,10 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile,OneElectronArray& 
   vpt1.ReSize(m_total_orbs*2);
   //for(auto i: vpt1)
   //  i.second.ReSize(m_total_orbs*2);  
-  for(auto& i: vpt2)
-    i.second.ReSize(m_total_orbs*2,m_total_orbs*2,m_total_orbs*2,m_total_orbs*2);  
+  vpt2[Va].ReSize(m_total_orbs*2,m_act_size*2,m_act_size*2,m_act_size*2);
+  vpt2[Vi].ReSize(m_act_size*2,m_act_size*2,m_total_orbs*2,m_act_size*2);
+//  for(auto& i: vpt2)
+//    i.second.ReSize(m_total_orbs*2,m_total_orbs*2,m_total_orbs*2,m_total_orbs*2);  
   //fock.ReSize(m_total_orbs*2);
 
 
@@ -1746,7 +1749,8 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile,OneElectronArray& 
 //
 
   //Read perturbation two electron integral in different spaces;
-  for(int type=0; type< vpt2.size(); type++){
+  for(int type=0; type< 2 ; type++){
+  //for(int type=0; type< vpt2.size(); type++){
     msg.resize(0);
     ReadMeaningfulLine(dumpFile, msg, msgsize); //this if the first line with integrals
   while(msg.size() != 0) {
@@ -1776,6 +1780,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile,OneElectronArray& 
   }
   }
 
+  for(int type=0; type< 3 ; type++){
   msg.resize(0);
   ReadMeaningfulLine(dumpFile, msg, msgsize); //this if the first line with integrals
   while(msg.size() != 0) {
@@ -1801,6 +1806,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile,OneElectronArray& 
     }
     msg.resize(0);
     ReadMeaningfulLine(dumpFile, msg, msgsize); //this if the first line with integrals
+  }
   }
 
 //

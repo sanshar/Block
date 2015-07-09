@@ -516,7 +516,9 @@ void LoadQSTensor(const int& site, QSTensor& m, int state) {
     system.addAdditionalCompOps();
     InitBlocks::InitNewSystemBlock(system, MPS::siteBlocks[MPS::sweepIters], newSystem, 0, 1, sys_add, direct, 0, DISTRIBUTED_STORAGE, false, true);
     
-    newSystem.set_loopblock(false); system.set_loopblock(false);
+    newSystem.set_loopblock(false);
+    newSystem.addAdditionalCompOps();
+    //newSystem.set_loopblock(false); system.set_loopblock(false);
     InitBlocks::InitBigBlock(newSystem, MPS::siteBlocks[MPS::sweepIters+1], big); 
     
     Wavefunction temp = statea.getw();

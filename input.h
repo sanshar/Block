@@ -32,7 +32,7 @@ class PerturbTwoElectronArray;
 class PairArray;
 class CCCCArray;
 class CCCDArray;
-enum OnePerturbType{ Vi_1=0, Va_1, Vai_1, OnePertEnd};
+enum OnePerturbType{ Va_1=0, Vi_1, Vai_1, OnePertEnd};
 enum TwoPerturbType{Va=0,Vi,Vab,Vij,Vai,Vabi,Vaij,Vabij,TwoPertEnd};
 //enum OnePerturbType : int;
 //enum TwoPerturbType : int;

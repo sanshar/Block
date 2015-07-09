@@ -63,10 +63,11 @@ namespace SpinAdapted{
     
     class perturber
     {
-      private: 
-        TwoPerturbType type_;
       public:
-        const TwoPerturbType type() const { return type_;}
+        TwoPerturbType type_;
+        bool initialized_ = false;
+        const bool initialized() const {return initialized_; }
+        const TwoPerturbType type() const { return type_; }
         vector<int> orbs;
         perturber(){;}
         static vector<double> ZeroEnergy;
@@ -109,9 +110,11 @@ namespace SpinAdapted{
 
     class VaPerturber : public perturber
     {
-      private:
-        TwoPerturbType type_= Va;
       public: 
+        VaPerturber(){
+        type_= TwoPerturbType::Va;
+        initialized_ = true;
+        }
         //void init( const Wavefunction& w_, const vector<int>& orbs_)
         void init( int w_, const vector<int>& orbs_)
         {
@@ -129,13 +132,55 @@ namespace SpinAdapted{
           orbs= orbs_;
           assert(orbs.size()==1);
           //delta = vector<SpinQuantum>(1,-SpinQuantum(1,1,SymmetryOfSpatialOrb(orbs[0])));
-          delta = -getSpinQuantum(orbs[0]);
+          delta = -getSpinQuantum( orbs[0] );
+          //delta = -getSpinQuantum( orbs[0]);
           ketquanta = dmrginp.effective_molecule_quantum_vec();
           braquanta = delta+ketquanta;
         }
         
         void init(int orb)
         {
+          //init(std::vector<int>(1,dmrginp.spinAdapted()? orb: 2*orb));
+          init(std::vector<int>(1,orb));
+        }
+
+        const int wavenumber() const { return static_cast<int>(type_)*10000+orbs[0]+100000;}
+        
+    };
+
+    class ViPerturber : public perturber
+    {
+      public: 
+        ViPerturber(){
+        type_= TwoPerturbType::Vi;
+        initialized_ = true;
+        }
+        //void init( const Wavefunction& w_, const vector<int>& orbs_)
+        void init( int w_, const vector<int>& orbs_)
+        {
+          w0=w_;
+          orbs= orbs_;
+          assert(orbs.size()==1);
+          //delta = vector<SpinQuantum>(1,SpinQuantum(-1,1,SymmetryOfSpatialOrb(orbs[0])));
+          delta = getSpinQuantum(orbs[0]);
+          ketquanta = dmrginp.effective_molecule_quantum_vec();
+          braquanta = delta+ketquanta;
+        }
+        
+        void init( const vector<int>& orbs_)
+        {
+          orbs= orbs_;
+          assert(orbs.size()==1);
+          //delta = vector<SpinQuantum>(1,-SpinQuantum(1,1,SymmetryOfSpatialOrb(orbs[0])));
+          delta = getSpinQuantum( orbs[0] );
+          //delta = -getSpinQuantum( orbs[0]);
+          ketquanta = dmrginp.effective_molecule_quantum_vec();
+          braquanta = delta+ketquanta;
+        }
+        
+        void init(int orb)
+        {
+          //init(std::vector<int>(1,dmrginp.spinAdapted()? orb: 2*orb));
           init(std::vector<int>(1,orb));
         }
 

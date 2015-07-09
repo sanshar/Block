@@ -1,4 +1,4 @@
-#include "Va.h"
+#include "type1.h"
 #include "mps_nevpt.h"
 #include "sweep.h"
 #include "npdm.h"
@@ -21,7 +21,7 @@ double readZeroEnergy(){
 
   for(int i=0; i< dmrginp.core_size(); i++)
     perturber::CoreEnergy[0] += 2*v_1[0](2*(i+dmrginp.act_size()),2*(i+dmrginp.act_size()));
-  perturber::ZeroEnergy[0] +=perturber::CoreEnergy[0];
+  //perturber::ZeroEnergy[0] +=perturber::CoreEnergy[0];
   pout << "Zero order energy for state 0 is " << perturber::ZeroEnergy[0]<<endl;;
 }
 
@@ -47,17 +47,26 @@ void SpinAdapted::mps_nevpt::mps_nevpt(int baseState)
   //  double sweep_tol = 1e-7;
     dmrginp.calc_type() = DMRG;
     Npdm::npdm(NPDM_ONEPDM);
+    dmrginp.do_pdm() = false;
   //  dmrg(sweep_tol);
     dmrginp.calc_type() = MPS_NEVPT;
   }
-  if(!dmrginp.spinAdapted())
-    MPS::sweepIters = dmrginp.last_site()/2-2;
-  else
-    MPS::sweepIters = dmrginp.last_site()-2;
   dmrginp.calc_type() = DMRG;
-  for (int j=0; j<dmrginp.last_site(); j++){
-    MPS::siteBlocks_noDES.push_back(SpinBlock(j, j, 0, true)); 
+  if(!dmrginp.spinAdapted())
+  {
+    MPS::sweepIters = dmrginp.last_site()/2-2;
+    for (int j=0; j<dmrginp.last_site(); j+=2){
+      MPS::siteBlocks_noDES.push_back(SpinBlock(j/2, j/2, 0, true)); 
 //    MPS::siteBlocks.push_back(SpinBlock(j, j, 0, false)); 
+    }
+  }
+  else
+  {
+    MPS::sweepIters = dmrginp.last_site()-2;
+    for (int j=0; j<dmrginp.last_site(); j++){
+      MPS::siteBlocks_noDES.push_back(SpinBlock(j, j, 0, true)); 
+//      MPS::siteBlocks.push_back(SpinBlock(j, j, 0, false)); 
+    }
   }
   dmrginp.calc_type() = MPS_NEVPT;
   SweepParams sweepParams;
@@ -74,5 +83,6 @@ void SpinAdapted::mps_nevpt::mps_nevpt(int baseState)
   }
   dmrginp.set_algorithm_method() = atype;
   readZeroEnergy();
-  SpinAdapted::mps_nevpt::Va::run(baseState);
+  SpinAdapted::mps_nevpt::type1::subspace_Vi(baseState);
+  SpinAdapted::mps_nevpt::type1::subspace_Va(baseState);
 }

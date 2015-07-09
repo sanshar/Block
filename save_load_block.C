@@ -165,10 +165,26 @@ void SpinBlock::addAdditionalCompOps()
         if (processorindex(sites[i]) != mpigetrank()) ops[DES]->add_local_indices(sites[i]);
         ops[DES]->set_local() = true;
         mpi::broadcast(world, *(ops[DES]->get_element(sites[i])[0]), processorindex(sites[i]));
-	}
+	      }
       }
     }
   }
+  if(dmrginp.calc_type() == MPS_NEVPT)
+  {
+  //  if ( has(CDD_CRE_DESCOMP))
+  //    if (!ops[CDD_CRE_DESCOMP]->is_local) {
+  //      for(int i=0; i<get_sites().size(); i++) {
+  //        if (ops[CDD_CRE_DESCOMP]->has(sites[i])) {
+  //        if (processorindex(sites[i]) != mpigetrank()) ops[CDD_CRE_DESCOMP]->add_local_indices(sites[i]);
+  //          ops[CDD_CRE_DESCOMP]->set_local() = true;
+  //          mpi::broadcast(world, *(ops[CDD_CRE_DESCOMP]->get_element(sites[i])[0]), processorindex(sites[i]));
+  //        }
+  //      }
+  //    }
+    return ;
+  }
+
+
 
   vector<int> dotindice;
   dotindice.push_back((sites[0] == 0) ? complementary_sites[0] : complementary_sites[complementary_sites.size()-1]);

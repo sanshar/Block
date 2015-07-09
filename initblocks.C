@@ -612,6 +612,7 @@ void SpinAdapted::InitBlocks::InitBigBlock(SpinBlock &leftBlock, SpinBlock &righ
 {
   //set big block components
   big.set_integralIndex() = leftBlock.get_integralIndex();
+  big.nonactive_orb() = leftBlock.nonactive_orb();
   
   big.set_big_components(); 
   // build the big block

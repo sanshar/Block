@@ -36,9 +36,13 @@ void SpinBlock::printOperatorSummary()
     for (std::map<opTypes, boost::shared_ptr< Op_component_base> >::const_iterator it = ops.begin(); it != ops.end(); ++it)
     {
       if(it->second->is_core())
-         pout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";
+      {
+         pout << "\t\t\t " << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Core Operators  ";
+      }
       else
-         pout << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
+      {
+         pout << "\t\t\t " << it->second->size()<<" :  "<<it->second->get_op_string()<<"  Virtual Operators  ";      
+      }
       
       vector<int> numops(world.size(), 0);
       for (int proc = 0; proc <world.size(); proc++) {
@@ -46,7 +50,7 @@ void SpinBlock::printOperatorSummary()
             receiveobject(numops[proc],proc);
          else 
             numops[proc] = it->second->get_size();
-         pout <<numops[proc]<<"  ";
+         pout << " " << numops[proc]<<"  ";
       }
       pout << endl;
       /*
@@ -641,8 +645,7 @@ void SpinBlock::multiplyCDD_sum(Wavefunction& c, Wavefunction* v, int num_thread
   int size = world.size();
 #endif
 
-  SpinQuantum q= -SpinQuantum(1,SpinSpace(1),SymmetryOfSpatialOrb(nonactive_orb(0)));
-  dmrginp.s1time -> start();
+  SpinQuantum q= -getSpinQuantum( nonactive_orb(0));  dmrginp.s1time -> start();
   v_add =  leftBlock->get_op_array(CDD_CRE_DESCOMP).is_local() ? v_array : v_distributed;
   Functor f = boost::bind(&opxop::cdd_dxcdcomp, leftBlock, _1, this, boost::ref(c), v_add,q); 
   for_all_multithread(rightBlock->get_op_array(DES), f);
@@ -664,6 +667,57 @@ void SpinBlock::multiplyCDD_sum(Wavefunction& c, Wavefunction* v, int num_thread
 
 }
 
+void SpinBlock::multiplyCCD_sum(Wavefunction& c, Wavefunction* v, int num_threads) const
+{
+
+  SpinBlock* loopBlock=(leftBlock->is_loopblock()) ? leftBlock : rightBlock;
+  SpinBlock* otherBlock = loopBlock == leftBlock ? rightBlock : leftBlock;
+
+  Wavefunction *v_array=0, *v_distributed=0, *v_add=0;
+
+  int maxt = 1;
+  initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
+  dmrginp.oneelecT -> start();
+  dmrginp.s0time -> start();
+
+  //if (mpigetrank() == 0) {
+    boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(CCD_SUM).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
+    boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+    TensorMultiply(leftBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0) ,1.0);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
+    
+    overlap = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
+    op = rightBlock->get_op_array(CCD_SUM).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+    TensorMultiply(rightBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0), 1.0);  
+    //}
+
+  dmrginp.s0time -> stop();
+#ifndef SERIAL
+  boost::mpi::communicator world;
+  int size = world.size();
+#endif
+
+  SpinQuantum q= getSpinQuantum( nonactive_orb(0));  dmrginp.s1time -> start();
+  v_add =  leftBlock->get_op_array(CCD_CRE_DESCOMP).is_local() ? v_array : v_distributed;
+  Functor f = boost::bind(&opxop::ccd_cxcdcomp, leftBlock, _1, this, boost::ref(c), v_add,q); 
+  for_all_multithread(rightBlock->get_op_array(CRE), f);
+
+  v_add =  rightBlock->get_op_array(CCD_CRE_DESCOMP).is_local() ? v_array : v_distributed;
+  f = boost::bind(&opxop::ccd_cxcdcomp, rightBlock, _1, this, boost::ref(c), v_add, q ); 
+  for_all_multithread(leftBlock->get_op_array(CRE), f);  
+    
+  v_add =  leftBlock->get_op_array(CCD_CRE_CRECOMP).is_local() ? v_array : v_distributed;
+  f = boost::bind(&opxop::ccd_dxcccomp, leftBlock, _1, this, boost::ref(c), v_add, q);
+  for_all_multithread(rightBlock->get_op_array(DES), f);
+  
+  v_add =  rightBlock->get_op_array(CCD_CRE_CRECOMP).is_local() ? v_array : v_distributed;
+  f = boost::bind(&opxop::ccd_dxcccomp, rightBlock, _1, this, boost::ref(c), v_add, q);
+  for_all_multithread(leftBlock->get_op_array(DES), f);
+  
+
+  accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
+
+}
+
 
 void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) const
 {
@@ -677,7 +731,6 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
   dmrginp.oneelecT -> start();
   dmrginp.s0time -> start();
-
   //coreEnergy
   if (fabs(coreEnergy[integralIndex]) > TINY && mpigetrank() == 0) {
     Wavefunction vtemp = *v;
@@ -685,16 +738,14 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
     multiplyOverlap(c, &vtemp, num_threads);
     ScaleAdd(coreEnergy[integralIndex], vtemp, *v);
   }
-
   //if (mpigetrank() == 0) {
     boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
     boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
     TensorMultiply(leftBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0) ,1.0);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
-    
     overlap = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
     op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
     TensorMultiply(rightBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0), 1.0);  
-    //}
+   // }
 
   dmrginp.s0time -> stop();
 #ifndef SERIAL
@@ -731,6 +782,7 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   }
   
   dmrginp.twoelecT -> stop();
+
 
   accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
 

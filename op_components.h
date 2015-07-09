@@ -147,6 +147,15 @@ template <> struct ChooseArray<CDD_CreDesComp> {
 template <> struct ChooseArray<CDD_DesDesComp> {
   typedef para_array_1d<std::vector<boost::shared_ptr<CDD_DesDesComp> > > ArrayType;
 };
+template <> struct ChooseArray<CCD_sum> {
+  typedef para_array_0d<std::vector<boost::shared_ptr<CCD_sum> > > ArrayType;
+};
+template <> struct ChooseArray<CCD_CreDesComp> {
+  typedef para_array_1d<std::vector<boost::shared_ptr<CCD_CreDesComp> > > ArrayType;
+};
+template <> struct ChooseArray<CCD_CreCreComp> {
+  typedef para_array_1d<std::vector<boost::shared_ptr<CCD_CreCreComp> > > ArrayType;
+};
 //===========================================================================================================================================================
 
 class Op_component_base

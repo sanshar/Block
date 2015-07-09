@@ -41,9 +41,9 @@ enum opTypes{ HAM, CRE, CRE_CRE, DES_DESCOMP, CRE_DES, CRE_DESCOMP, CRE_CRE_DESC
               // Extra 4PDM operators
               DES_CRE_DES, DES_DES_CRE, DES_CRE_CRE, DES_DES_DES,
               CRE_CRE_DES_DES, CRE_DES_CRE_DES, CRE_DES_DES_CRE, CRE_DES_DES_DES,
-              CRE_CRE_CRE_DES, CRE_CRE_DES_CRE, CRE_DES_CRE_CRE, CRE_CRE_CRE_CRE ,CDD_SUM, CDD_CRE_DESCOMP, CDD_DES_DESCOMP};
+              CRE_CRE_CRE_DES, CRE_CRE_DES_CRE, CRE_DES_CRE_CRE, CRE_CRE_CRE_CRE ,CDD_SUM, CDD_CRE_DESCOMP, CDD_DES_DESCOMP, CCD_SUM, CCD_CRE_DESCOMP, CCD_CRE_CRECOMP};
 
-enum CompType{CD, DD, CCD, C, CDD, CDD_DD};
+enum CompType{CD, DD, CCD, C, CDD, CDD_CD, CCD_CD};
 
 template<class T> class Baseoperator  // The abstract class of an operator
 {
@@ -168,6 +168,7 @@ class SparseMatrix : public Baseoperator<Matrix>  // the sparse matrix represent
   virtual double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b=0)=0;
   double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, const TwoElectronArray& v_2, int integralIndex);
   double calcCompfactor(TensorOp& op1, TensorOp& op2, CompType comp, const PerturbTwoElectronArray& v_2, int integralIndex);
+  double calcCompfactor(TensorOp& op1, TensorOp& op2, CompType comp, const OneElectronArray& v_1, int integralIndex);
   double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, const CCCCArray& vcccc);
   double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, const CCCDArray& vcccd);  
   double calcCompfactor(TensorOp& Top1, TensorOp& op2, CompType comp, int op2index, const TwoElectronArray& v_2, int integralIndex);

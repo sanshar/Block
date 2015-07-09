@@ -1,5 +1,5 @@
-#ifndef VA_SUBSPACE_HEADER
-#define VA_SUBSPACE_HEADER
+#ifndef TYPE1_SUBSPACE_HEADER
+#define TYPE1_SUBSPACE_HEADER
 #include "wavefunction.h"
 #include "sweep_params.h"
 #include "perturb.h"
@@ -7,7 +7,7 @@
 
 namespace SpinAdapted{
   namespace mps_nevpt{
-    namespace Va{
+    namespace type1{
 
       double do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward, const bool &restart, const int &restartSize, perturber& pb, int baseState);
       
@@ -17,7 +17,9 @@ namespace SpinAdapted{
 
       void Startup(const SweepParams& sweepParams, const bool &forward, const MPS& statea, perturber& pb, int baseState);
       
-      void run(int baseState);
+      void subspace_Va(int baseState);
+
+      void subspace_Vi(int baseState);
 
       void calcHamiltonianAndOverlap(const MPS& statea, double& h, double& o, perturber& pb);
     }

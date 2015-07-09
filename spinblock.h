@@ -39,6 +39,7 @@ class SpinBlock
       ar & complementary_sites ;
       ar & integralIndex;
       ar & nonactive_orbs;
+      //ar & nevpt_perturbation;
       //FIX ME!! remove register_type stuff and add BOOST_CLASS_EXPORT to op_components.h (will take longer to compile)                     
       ar.register_type(static_cast<Op_component<Cre> *>(NULL));
       ar.register_type(static_cast<Op_component<Des> *>(NULL));
@@ -82,6 +83,9 @@ class SpinBlock
       ar.register_type(static_cast<Op_component<CDD_sum> *>(NULL));
       ar.register_type(static_cast<Op_component<CDD_CreDesComp> *>(NULL));
       ar.register_type(static_cast<Op_component<CDD_DesDesComp> *>(NULL));
+      ar.register_type(static_cast<Op_component<CCD_sum> *>(NULL));
+      ar.register_type(static_cast<Op_component<CCD_CreDesComp> *>(NULL));
+      ar.register_type(static_cast<Op_component<CCD_CreCreComp> *>(NULL));
 
       ar & ops;
     }
@@ -108,6 +112,7 @@ class SpinBlock
   // In nevpt2, the integral between nonactive space and active space should be considered. 
   // nonactive_orbs is the vector of orbitals that electrons are excited to or from. 
   std::vector<int> nonactive_orbs;
+  //perturber nevpt_perturbation;
  public: 
   SpinBlock();
   SpinBlock (const StateInfo& s, int integralIndex);
@@ -144,6 +149,8 @@ class SpinBlock
   vector<int>& nonactive_orb() { return nonactive_orbs;}
   const int& nonactive_orb(int i) const { return nonactive_orbs[i];}
   int& nonactive_orb(int i) { return nonactive_orbs[i];}
+  //const perturber nevpt_pb() const { return nevpt_perturbation;}
+  //perturber& nevpt_pb() { return nevpt_perturbation;}
   //void build_comp_remove_normal_ops();
   void remove_normal_ops();
   int get_name() const {return name;}
@@ -219,6 +226,7 @@ class SpinBlock
   void multiplyH_Q(Wavefunction& c, Wavefunction* v, int num_threads, SpinQuantum &Q) const;
   void multiplyOverlap(Wavefunction& c, Wavefunction* v, int num_threads) const;
   void multiplyCDD_sum(Wavefunction& c, Wavefunction* v, int num_threads) const;
+  void multiplyCCD_sum(Wavefunction& c, Wavefunction* v, int num_threads) const;
   void diagonalH(DiagonalMatrix& e) const;
   void clear();
   void sendcompOps(Op_component_base& opcomp, int I, int J, int optype, int compsite);

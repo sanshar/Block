@@ -608,23 +608,30 @@ void SpinAdapted::opxop::cdd_cxddcomp(const SpinBlock* otherblock, std::vector<b
   int numthrds = 1;//MAX_THRD;
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
 
-  for (int opind=0; opind<opvec1.size(); opind++) {
-    boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind)->getworkingrepresentation(loopblock); // CRE_i
+  for (int opind1=0; opind1<opvec1.size(); opind1++) {
+    boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind1)->getworkingrepresentation(loopblock); // CRE_i
     int i = op1->get_orbs(0);
     if (!otherblock->get_op_array(CDD_DES_DESCOMP).has_local_index(i))
       return;
 
-    boost::shared_ptr<SparseMatrix> op2 = otherblock->get_op_array(CDD_DES_DESCOMP).get_element(i).at(opind)->getworkingrepresentation(otherblock);
-    double scale = 1.0;
-    double parity = 1.0;
-    if (otherblock == b->get_leftBlock()) parity = getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), o->get_deltaQuantum(0));
-    else parity = 1.0;
-    
-    SpinAdapted::operatorfunctions::TensorProduct(otherblock, *op2, *op1, b, &(b->get_stateInfo()), o[ilock], scale*parity, numthrds);	    
+    const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherblock->get_op_array(CDD_DES_DESCOMP).get_element(i); // P_{ki}
+    for (int opind2=0; opind2<opvec2.size(); opind2++) {
+      boost::shared_ptr<SparseMatrix> op2 = opvec2.at(opind2)->getworkingrepresentation(otherblock);
+      
+	    SpinQuantum op1q = op1->get_deltaQuantum()[0], op2q = op2->get_deltaQuantum()[0], oq = -getSpinQuantum(b->nonactive_orb(0)); // o is the resulted CDD
+	    int j2 = op2q.get_s().getirrep(), j1 = op1q.get_s().getirrep(), j21 = oq.get_s().getirrep();
+	    int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = oq.get_symm().getirrep();
+	    double factor = dmrginp.spinAdapted() ? pow(-1.0, static_cast<int>((2+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1)) : 1.0;
+	    factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
+
+      double parity = 1.0;
+      if (otherblock == b->get_leftBlock()) parity *= getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), o->get_deltaQuantum(0));
+      
+      SpinAdapted::operatorfunctions::TensorProduct(otherblock, *op2, *op1, b, &(b->get_stateInfo()), o[ilock], factor*parity, numthrds);	    
+    }
 
   }
 }
-
 
 void SpinAdapted::opxop::cdd_dxcdcomp(const SpinBlock* otherblock, std::vector<boost::shared_ptr<SparseMatrix> >& opvec1, const SpinBlock* b, SparseMatrix* o)
 {
@@ -632,20 +639,28 @@ void SpinAdapted::opxop::cdd_dxcdcomp(const SpinBlock* otherblock, std::vector<b
   int numthrds = 1;//MAX_THRD;
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
 
-  for (int opind=0; opind<opvec1.size(); opind++) {
-    boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind)->getworkingrepresentation(loopblock); // CRE_i
+  for (int opind1=0; opind1<opvec1.size(); opind1++) {
+    boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind1)->getworkingrepresentation(loopblock); // CRE_i
     int i = op1->get_orbs(0);
     if (!otherblock->get_op_array(CDD_CRE_DESCOMP).has_local_index(i))
       return;
 
-    boost::shared_ptr<SparseMatrix> op2 = otherblock->get_op_array(CDD_CRE_DESCOMP).get_element(i).at(opind)->getworkingrepresentation(otherblock);
-    double scale = 1.0;
-    double parity = 1.0;
-    if (otherblock == b->get_leftBlock()) parity = getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), o->get_deltaQuantum(0));
-    else parity = 1.0;
-    
-    SpinAdapted::operatorfunctions::TensorProduct(otherblock, *op2, *op1, b, &(b->get_stateInfo()), o[ilock], scale*parity, numthrds);	    
+    const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherblock->get_op_array(CDD_CRE_DESCOMP).get_element(i); // P_{ki}
+    for (int opind2=0; opind2<opvec2.size(); opind2++) {
+      boost::shared_ptr<SparseMatrix> op2 = opvec2.at(opind2)->getworkingrepresentation(otherblock);
 
+	    SpinQuantum op1q = op1->get_deltaQuantum()[0], op2q = op2->get_deltaQuantum()[0], oq = -getSpinQuantum(b->nonactive_orb(0)); // o is the resulted CDD
+	    int j2 = op2q.get_s().getirrep(), j1 = op1q.get_s().getirrep(), j21 = oq.get_s().getirrep();
+	    int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = oq.get_symm().getirrep();
+	    double factor = dmrginp.spinAdapted() ? pow(-1.0, static_cast<int>((2+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1)) : 1.0;
+	    factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
+
+    
+      double parity = 1.0;
+      if (otherblock == b->get_leftBlock()) parity *= getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), o->get_deltaQuantum(0));
+      
+      SpinAdapted::operatorfunctions::TensorProduct(otherblock, *op2, *op1, b, &(b->get_stateInfo()), o[ilock], factor*parity, numthrds);	    
+    }
   }
 }
 
@@ -655,17 +670,26 @@ void SpinAdapted::opxop::cdd_cxddcomp(const SpinBlock* otherblock, std::vector<b
   int numthrds = 1;//MAX_THRD;
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
     
-  for (int opind=0; opind<opvec1.size(); opind++) {
-    boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind)->getworkingrepresentation(loopblock);
+  for (int opind1=0; opind1<opvec1.size(); opind1++) {
+    boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind1)->getworkingrepresentation(loopblock);
     int i = op1->get_orbs(0);
     if (!otherblock->get_op_array(CDD_DES_DESCOMP).has_local_index(i))
       return;
-    boost::shared_ptr<SparseMatrix> op2 = otherblock->get_op_array(CDD_DES_DESCOMP).get_element(i).at(opind)->getworkingrepresentation(otherblock);
-    double factor = 1.0;
-    double parity = 1.0;
-    if (otherblock == b->get_leftBlock()) parity = getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), q);
-    else parity = 1.0;
-    SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, *op1, b, c, v[ilock], q, factor*parity);
+    const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherblock->get_op_array(CDD_DES_DESCOMP).get_element(i); // P_{ki}
+    for (int opind2=0; opind2<opvec2.size(); opind2++) {
+      boost::shared_ptr<SparseMatrix> op2 = opvec2.at(opind2)->getworkingrepresentation(otherblock);
+
+	    SpinQuantum op1q = op1->get_deltaQuantum()[0], op2q = op2->get_deltaQuantum()[0], oq = -getSpinQuantum(b->nonactive_orb(0)); // o is the resulted CDD
+	    int j2 = op2q.get_s().getirrep(), j1 = op1q.get_s().getirrep(), j21 = oq.get_s().getirrep();
+	    int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = oq.get_symm().getirrep();
+	    double factor = dmrginp.spinAdapted() ? pow(-1.0, static_cast<int>((2+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1)) : 1.0;
+	    factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
+
+      double parity = 1.0;
+      if (otherblock == b->get_leftBlock()) parity *= getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), q);
+
+      SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, *op1, b, c, v[ilock], q, factor*parity);
+    }
   }
 }
 
@@ -675,17 +699,143 @@ void SpinAdapted::opxop::cdd_dxcdcomp(const SpinBlock* otherblock, std::vector<b
   int numthrds = 1;//MAX_THRD;
   const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
     
-  for (int opind=0; opind<opvec1.size(); opind++) {
-    boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind)->getworkingrepresentation(loopblock);
+  for (int opind1=0; opind1<opvec1.size(); opind1++) {
+    boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind1)->getworkingrepresentation(loopblock);
     int i = op1->get_orbs(0);
     if (!otherblock->get_op_array(CDD_CRE_DESCOMP).has_local_index(i))
       return;
-    boost::shared_ptr<SparseMatrix> op2 = otherblock->get_op_array(CDD_CRE_DESCOMP).get_element(i).at(opind)->getworkingrepresentation(otherblock);
-    double factor = 1.0;
-    double parity = 1.0;
-    if (otherblock == b->get_leftBlock()) parity = getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), q);
-    else parity = 1.0;
-    SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, *op1, b, c, v[ilock], q, factor*parity);
+    const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherblock->get_op_array(CDD_CRE_DESCOMP).get_element(i); // P_{ki}
+    for (int opind2=0; opind2<opvec2.size(); opind2++) {
+      boost::shared_ptr<SparseMatrix> op2 = opvec2.at(opind2)->getworkingrepresentation(otherblock);
+
+	    SpinQuantum op1q = op1->get_deltaQuantum()[0], op2q = op2->get_deltaQuantum()[0], oq = -getSpinQuantum(b->nonactive_orb(0)); // o is the resulted CDD
+	    int j2 = op2q.get_s().getirrep(), j1 = op1q.get_s().getirrep(), j21 = oq.get_s().getirrep();
+	    int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = oq.get_symm().getirrep();
+	    double factor = dmrginp.spinAdapted() ? pow(-1.0, static_cast<int>((2+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1)) : 1.0;
+	    factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
+
+
+      double parity = 1.0;
+      if (otherblock == b->get_leftBlock()) parity *= getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), q);
+      //if (loopblock == b->get_leftBlock()) parity *= getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), q);
+
+      SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, *op1, b, c, v[ilock], q, factor*parity);
+
+    }
+  }
+}
+
+//**********************************************************************************************************
+
+void SpinAdapted::opxop::ccd_dxcccomp(const SpinBlock* otherblock, std::vector<boost::shared_ptr<SparseMatrix> >& opvec1, const SpinBlock* b, SparseMatrix* o)
+{
+  int ilock = omp_get_thread_num();
+  int numthrds = 1;//MAX_THRD;
+  const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
+
+  for (int opind1=0; opind1<opvec1.size(); opind1++) {
+    boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind1)->getworkingrepresentation(loopblock); // DES_i
+    int i = op1->get_orbs(0);
+    if (!otherblock->get_op_array(CCD_CRE_CRECOMP).has_local_index(i))
+      return;
+
+    const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherblock->get_op_array(CCD_CRE_CRECOMP).get_element(i); // P_{ki}
+    for (int opind2=0; opind2<opvec2.size(); opind2++) {
+      boost::shared_ptr<SparseMatrix> op2 = opvec2.at(opind2)->getworkingrepresentation(otherblock);
+      
+      double scale = 1.0;
+      double parity = 1.0;
+      if (otherblock == b->get_rightBlock()) parity *= getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), o->get_deltaQuantum(0));
+      
+      SpinAdapted::operatorfunctions::TensorProduct(otherblock, *op2, *op1, b, &(b->get_stateInfo()), o[ilock], scale*parity, numthrds);	    
+    }
+
+  }
+}
+
+void SpinAdapted::opxop::ccd_cxcdcomp(const SpinBlock* otherblock, std::vector<boost::shared_ptr<SparseMatrix> >& opvec1, const SpinBlock* b, SparseMatrix* o)
+{
+  int ilock = omp_get_thread_num();
+  int numthrds = 1;//MAX_THRD;
+  const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
+
+  for (int opind1=0; opind1<opvec1.size(); opind1++) {
+    boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind1)->getworkingrepresentation(loopblock); // CRE_i
+    int i = op1->get_orbs(0);
+    if (!otherblock->get_op_array(CCD_CRE_DESCOMP).has_local_index(i))
+      return;
+
+    const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherblock->get_op_array(CCD_CRE_DESCOMP).get_element(i); // P_{ki}
+    for (int opind2=0; opind2<opvec2.size(); opind2++) {
+      boost::shared_ptr<SparseMatrix> op2 = opvec2.at(opind2)->getworkingrepresentation(otherblock);
+    
+      double scale = 1.0;
+      double parity = 1.0;
+      if (otherblock == b->get_rightBlock()) parity *= getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), o->get_deltaQuantum(0));
+      
+      SpinAdapted::operatorfunctions::TensorProduct(otherblock, *op2, *op1, b, &(b->get_stateInfo()), o[ilock], scale*parity, numthrds);	    
+    }
+  }
+}
+
+void SpinAdapted::opxop::ccd_dxcccomp(const SpinBlock* otherblock, std::vector<boost::shared_ptr<SparseMatrix> >& opvec1, const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q)
+{
+  int ilock = omp_get_thread_num();
+  int numthrds = 1;//MAX_THRD;
+  const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
+    
+  for (int opind1=0; opind1<opvec1.size(); opind1++) {
+    boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind1)->getworkingrepresentation(loopblock);
+    int i = op1->get_orbs(0);
+    if (!otherblock->get_op_array(CCD_CRE_CRECOMP).has_local_index(i))
+      return;
+    const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherblock->get_op_array(CCD_CRE_CRECOMP).get_element(i); // P_{ki}
+    for (int opind2=0; opind2<opvec2.size(); opind2++) {
+      boost::shared_ptr<SparseMatrix> op2 = opvec2.at(opind2)->getworkingrepresentation(otherblock);
+
+	    SpinQuantum op1q = op1->get_deltaQuantum()[0], op2q = op2->get_deltaQuantum()[0], oq = getSpinQuantum(b->nonactive_orb(0)); // o is the resulted CCD
+	    int j2 = op2q.get_s().getirrep(), j1 = op1q.get_s().getirrep(), j21 = oq.get_s().getirrep();
+	    int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = oq.get_symm().getirrep();
+	    double factor = dmrginp.spinAdapted() ? pow(-1.0, static_cast<int>((2+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1)) : 1.0;
+	    factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
+
+      double parity = 1.0;
+      if (otherblock == b->get_rightBlock()) parity *= getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), q);
+
+      SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, *op1, b, c, v[ilock], q, factor*parity);
+    }
+  }
+}
+
+void SpinAdapted::opxop::ccd_cxcdcomp(const SpinBlock* otherblock, std::vector<boost::shared_ptr<SparseMatrix> >& opvec1, const SpinBlock* b, Wavefunction& c, Wavefunction* v, const SpinQuantum& q)
+{
+  int ilock = omp_get_thread_num();
+  int numthrds = 1;//MAX_THRD;
+  const SpinBlock* loopblock = (otherblock==b->get_leftBlock()) ? b->get_rightBlock() : b->get_leftBlock();
+    
+  for (int opind1=0; opind1<opvec1.size(); opind1++) {
+    boost::shared_ptr<SparseMatrix> op1 = opvec1.at(opind1)->getworkingrepresentation(loopblock);
+    int i = op1->get_orbs(0);
+    if (!otherblock->get_op_array(CCD_CRE_DESCOMP).has_local_index(i))
+      return;
+    const std::vector<boost::shared_ptr<SparseMatrix> >& opvec2 = otherblock->get_op_array(CCD_CRE_DESCOMP).get_element(i); // P_{ki}
+    for (int opind2=0; opind2<opvec2.size(); opind2++) {
+      boost::shared_ptr<SparseMatrix> op2 = opvec2.at(opind2)->getworkingrepresentation(otherblock);
+
+	    SpinQuantum op1q = op1->get_deltaQuantum()[0], op2q = op2->get_deltaQuantum()[0], oq = -getSpinQuantum(b->nonactive_orb(0)); // o is the resulted CDD
+	    int j2 = op2q.get_s().getirrep(), j1 = op1q.get_s().getirrep(), j21 = oq.get_s().getirrep();
+	    int l2 = op2q.get_symm().getirrep(), l1 = op1q.get_symm().getirrep(), l21 = oq.get_symm().getirrep(), l3 = oq.get_symm().getirrep();
+	    double factor = dmrginp.spinAdapted() ? pow(-1.0, static_cast<int>((2+j2)/2)) * sixj(j2, j1, j21, 1, 0, j2) * sqrt((j21+1)*(j2+1)) : 1.0;
+	    factor *= Symmetry::spatial_sixj(l2, l1, l21, l3, 0, (-IrrepSpace(l2)).getirrep());
+
+
+      double parity = 1.0;
+      if (otherblock == b->get_rightBlock()) parity *= getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), q);
+      //if (loopblock == b->get_leftBlock()) parity *= getCommuteParity(op1->get_deltaQuantum(0), op2->get_deltaQuantum(0), q);
+
+      SpinAdapted::operatorfunctions::TensorMultiply(otherblock, *op2, *op1, b, c, v[ilock], q, factor*parity);
+
+    }
   }
 }
 
