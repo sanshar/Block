@@ -35,12 +35,15 @@ double SpinAdapted::mps_nevpt::type1::do_one(SweepParams &sweepParams, const boo
 
   sweepParams.set_sweep_parameters();
   // a new renormalisation sweep routine
-  pout << endl;
   if (forward)
-    pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in forwards direction"<<endl;
+    if (dmrginp.outputlevel() > 0)
+      pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in forwards direction"<<endl;
   else
-    pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
-  pout << "\t\t\t ============================================================================ " << endl;
+    if (dmrginp.outputlevel() > 0)
+    {
+      pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
+      pout << "\t\t\t ============================================================================ " << endl;
+    }
 
   InitBlocks::InitStartingBlock (system,forward, baseState, pb.wavenumber(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex, pb.braquanta, pb.ketquanta);
   if(!restart)
@@ -67,13 +70,20 @@ double SpinAdapted::mps_nevpt::type1::do_one(SweepParams &sweepParams, const boo
 
   for (; sweepParams.get_block_iter() < sweepParams.get_n_iters(); ) // get_n_iters() returns the number of blocking iterations needed in one sweep
     {
-      pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
-      pout << "\t\t\t ----------------------------" << endl;
+      if (dmrginp.outputlevel() > 0)
+      {
+        pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
+        pout << "\t\t\t ----------------------------" << endl;
+      }
       if (dmrginp.outputlevel() > 0) {
 	    if (forward)
+      {
 	      pout << "\t\t\t Current direction is :: Forwards " << endl;
+      }
 	    else
+      {
 	      pout << "\t\t\t Current direction is :: Backwards " << endl;
+      }
       }
 
       if (sweepParams.get_block_iter() != 0) 
@@ -116,7 +126,7 @@ double SpinAdapted::mps_nevpt::type1::do_one(SweepParams &sweepParams, const boo
       SpinBlock::store (forward, system.get_sites(), system, pb.wavenumber(), baseState);	 	
       syssites = system.get_sites();
       if (dmrginp.outputlevel() > 0)
-	pout << "\t\t\t saving state " << syssites.size() << endl;
+	      pout << "\t\t\t saving state " << syssites.size() << endl;
       ++sweepParams.set_block_iter();
       
 #ifndef SERIAL
@@ -172,8 +182,8 @@ void SpinAdapted::mps_nevpt::type1::BlockDecimateAndCompress (SweepParams &sweep
   if (dmrginp.outputlevel() > 0) {
     mcheck("at the start of block and decimate");
     pout << "\t\t\t dot with system "<<dot_with_sys<<endl;
+    pout <<endl<< "\t\t\t Performing Blocking"<<endl;
   }
-  pout <<endl<< "\t\t\t Performing Blocking"<<endl;
   // figure out if we are going forward or backwards
   dmrginp.guessgenT -> start();
   bool forward = (system.get_sites() [0] == 0);
@@ -213,8 +223,8 @@ void SpinAdapted::mps_nevpt::type1::BlockDecimateAndCompress (SweepParams &sweep
 
   if (dmrginp.outputlevel() > 0)
     mcheck(""); 
-  if (dmrginp.outputlevel() == 0) {
-    if (!dot_with_sys && sweepParams.get_onedot()) pout << "\t\t\t System  Block"<<system;    
+  if (dmrginp.outputlevel() > 0) {
+    if (!dot_with_sys && sweepParams.get_onedot())  { pout << "\t\t\t System  Block"<<system;    }
     else pout << "\t\t\t System  Block"<<newSystem;
     pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
     pout << "\t\t\t Solving wavefunction "<<endl;
@@ -296,7 +306,8 @@ void SpinAdapted::mps_nevpt::type1::BlockDecimateAndCompress (SweepParams &sweep
   broadcast(world, brarotateMatrix, 0);
 #endif
 
-  pout << "\t\t\t Total bra discarded weight "<<braerror<<endl<<endl;
+  if (dmrginp.outputlevel() > 0)
+    pout << "\t\t\t Total bra discarded weight "<<braerror<<endl<<endl;
 
   sweepParams.set_lowest_error() = braerror;
 
@@ -312,7 +323,8 @@ void SpinAdapted::mps_nevpt::type1::BlockDecimateAndCompress (SweepParams &sweep
 //  solution[0].SaveWavefunctionInfo (newbig.get_ketStateInfo(), newbig.get_leftBlock()->get_sites(), baseState);
 //  SaveRotationMatrix (newbig.get_leftBlock()->get_sites(), ketrotateMatrix, baseState);
 
-  pout <<"\t\t\t Performing Renormalization "<<endl;
+  if (dmrginp.outputlevel() > 0)
+    pout <<"\t\t\t Performing Renormalization "<<endl;
   newSystem.transform_operators(brarotateMatrix, ketrotateMatrix);
 
   if (dmrginp.outputlevel() > 0)
@@ -379,20 +391,25 @@ void SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
       //perturberEnergy = h/o+fock+perturber::CoreEnergy[0];
       perturberEnergy = h/o - fock;
       energy += o/(perturber::ZeroEnergy[0]- perturberEnergy) ;
-      p3out <<"zero energy" <<perturber::ZeroEnergy[0]<<endl;
-      p3out <<"core energy" <<perturber::CoreEnergy[0]<<endl;
-      overlap +=o;
-      if (mpigetrank() == 0)
+      if (dmrginp.outputlevel() > 2)
       {
-        p3out << "Overlap : " << o <<endl;
-        p3out << "Ener(only CAS part) : " << h/o<<endl;
-        p3out << "Energy : " << perturberEnergy<<endl;
-        p3out << "Correction Energy: "<< o/(perturber::ZeroEnergy[0]- perturberEnergy)<<endl; 
+        pout <<"zero energy" <<perturber::ZeroEnergy[0]<<endl;
+        pout <<"core energy" <<perturber::CoreEnergy[0]<<endl;
+      }
+      overlap +=o;
+      if (dmrginp.outputlevel() > 2)
+      {
+        pout << "Overlap : " << o <<endl;
+        pout << "Ener(only CAS part) : " << h/o<<endl;
+        pout << "Energy : " << perturberEnergy<<endl;
+        pout << "Correction Energy: "<< o/(perturber::ZeroEnergy[0]- perturberEnergy)<<endl; 
       }
     }
     else{
-      p3out << "Overlap : " << 0.0 <<endl;
-      p3out << "Energy : " << 0.0<<endl;
+      if (dmrginp.outputlevel() > 2){
+        pout << "Overlap : " << 0.0 <<endl;
+        pout << "Energy : " << 0.0<<endl;
+      }
     }
 
 
@@ -451,20 +468,23 @@ void SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
       //perturberEnergy = h/o+fock+perturber::CoreEnergy[0];
       perturberEnergy = h/o+fock;
       energy += o/(perturber::ZeroEnergy[0]- perturberEnergy) ;
-      p3out <<"zero energy" <<perturber::ZeroEnergy[0]<<endl;
-      p3out <<"core energy" <<perturber::CoreEnergy[0]<<endl;
+      if (dmrginp.outputlevel() > 2){
+        pout <<"zero energy" <<perturber::ZeroEnergy[0]<<endl;
+        pout <<"core energy" <<perturber::CoreEnergy[0]<<endl;
+      }
       overlap +=o;
-      if (mpigetrank() == 0)
-      {
-        p3out << "Overlap : " << o <<endl;
-        p3out << "Ener(only CAS part) : " << h/o<<endl;
-        p3out << "Energy : " << perturberEnergy<<endl;
-        p3out << "Correction Energy: "<< o/(perturber::ZeroEnergy[0]- perturberEnergy)<<endl; 
+      if (dmrginp.outputlevel() > 2){
+        pout << "Overlap : " << o <<endl;
+        pout << "Ener(only CAS part) : " << h/o<<endl;
+        pout << "Energy : " << perturberEnergy<<endl;
+        pout << "Correction Energy: "<< o/(perturber::ZeroEnergy[0]- perturberEnergy)<<endl; 
       }
     }
     else{
-      p3out << "Overlap : " << 0.0 <<endl;
-      p3out << "Energy : " << 0.0<<endl;
+      if (dmrginp.outputlevel() > 2){
+        pout << "Overlap : " << 0.0 <<endl;
+        pout << "Energy : " << 0.0<<endl;
+      }
     }
 
 
