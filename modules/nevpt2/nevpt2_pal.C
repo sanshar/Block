@@ -4,6 +4,7 @@
 #include <boost/serialization/serialization.hpp>
 #include "nevpt2_operators.h"
 #include "distribute.h"
+#include "density.h"
 
 #ifndef SERIAL
 #include <boost/mpi/environment.hpp>
@@ -18,9 +19,6 @@ namespace SpinAdapted{
   //============================================================================
   void AddPalWavefunction(Wavefunction &WF){
 #ifndef SERIAL
-    //copy the original wavefunction to the receive buffer
-    boost::shared_ptr<Wavefunction> tmp_recv = boost::make_shared<Wavefunction>(WF);
-    boost::shared_ptr<Wavefunction> tmp_send;
     
     //the communicator
     mpi::communicator world;
@@ -34,10 +32,11 @@ namespace SpinAdapted{
 
     //receive and accumulate the data
     for (int isender=0;isender<sendlist.size();isender++){
+      boost::shared_ptr<Wavefunction> tmp_recv (new Wavefunction());
       //receive
-      world.recv(sendlist[isender],0,tmp_recv);
+      world.recv(sendlist[isender],0,*tmp_recv);
       //accumulate
-      ScaleAdd(1.0,*(tmp_recv),WF);
+      ScaleAdd(1.0,*tmp_recv,WF);
     }//isender
       
     //send the data
@@ -48,6 +47,43 @@ namespace SpinAdapted{
 #endif
   }
 
+  //============================================================================
+  // Add all contributions from different processes to a wavefunction
+  //============================================================================
+  void AddPalDensity(DensityMatrix &D){
+#ifndef SERIAL
+    
+    //the communicator
+    mpi::communicator world;
+    int WorldSize=world.size();
+    if (WorldSize==1) return;
+    int rank = world.rank();
+    
+    //determine the send-recv structure
+    std::vector<int> sendlist;
+    makesendlist(sendlist);
+
+    //receive and accumulate the data
+    for (int isender=0;isender<sendlist.size();isender++){
+      boost::shared_ptr<DensityMatrix> tmp_recv (new DensityMatrix());
+      //DensityMatrix part;
+      //receive
+      world.recv(sendlist[isender],0,*tmp_recv);
+      //accumulate
+      ScaleAdd(1.0,*tmp_recv,D);
+      //clear memory
+      //part.Clear();
+    }//isender
+
+    //send the data
+    if (rank!=0) world.send(receivefrom(),0,D);
+
+    //broadcast the accumulated result
+    boost::mpi::broadcast(world,D,0);
+#endif
+  }
+
+  
   //============================================================================
   // Add all contributions from different processes to a set of wavefunctions
   //============================================================================

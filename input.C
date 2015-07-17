@@ -115,11 +115,13 @@ void SpinAdapted::Input::initialize_defaults()
   m_deflation_min_size = 2;
   m_deflation_max_size = 20;
 
+  m_transition_diff_spatial_irrep = false;
   m_add_noninteracting_orbs = true;
   m_no_transform = false;
   m_do_fci = false;
   m_do_npdm_ops = false;
   m_do_npdm_in_core = false;
+  m_npdm_generate = false;
   m_new_npdm_code = false;
   m_do_pdm = false;
   m_store_spinpdm = false;
@@ -197,13 +199,12 @@ SpinAdapted::Input::Input(const string& config_name) {
   NonabelianSym = false;
   std::vector<string> orbitalfile;
 
+  initialize_defaults();
 
   if(mpigetrank() == 0)
   {
     pout << "Reading input file"<<endl;
     bool PROVIDED_WEIGHTS = false;
-
-    initialize_defaults();
 
     ifstream input(config_name.c_str());
 
@@ -876,6 +877,21 @@ SpinAdapted::Input::Input(const string& config_name) {
       {
         m_npdm_multinode = false;
       }
+      else if (boost::iequals(keyword, "specificpdm"))
+      {
+        if(tok.size() ==2)
+          m_specificpdm.push_back(atoi(tok[1].c_str()));
+        else if(tok.size() ==3) 
+        {
+          m_specificpdm.push_back(atoi(tok[1].c_str()));
+          m_specificpdm.push_back(atoi(tok[2].c_str()));
+        }
+        else {
+          pout << "keyword "<<keyword<<" should be followed by one or two numbers and then an endline";
+          abort();
+        }
+      }
+
 
 
 
@@ -1139,13 +1155,14 @@ SpinAdapted::Input::Input(const string& config_name) {
   mpi::broadcast(world, orbitalfile, 0);
   mpi::broadcast(world, m_load_prefix, 0);
   mpi::broadcast(world, m_save_prefix, 0);
+  mpi::broadcast(world, m_calc_type, 0);
 #endif
 
-  //make the scratch files
-  m_load_prefix = str(boost::format("%s%s%d%s") %m_load_prefix % "/node" % mpigetrank() % "/");
-  m_save_prefix = m_load_prefix;
-  boost::filesystem::path p(m_load_prefix);
-  bool success = boost::filesystem::create_directory(p);
+  //make the scratch files   
+  m_load_prefix = str(boost::format("%s%s%d%s") %m_load_prefix % "/node" % mpigetrank() % "/");    
+  m_save_prefix = m_load_prefix;   
+  boost::filesystem::path p(m_load_prefix);    
+  bool success = boost::filesystem::create_directory(p);   
 
   v_2.resize(m_num_Integrals, TwoElectronArray(TwoElectronArray::restrictedNonPermSymm));
   v_1.resize(m_num_Integrals);

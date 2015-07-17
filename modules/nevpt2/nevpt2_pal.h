@@ -14,9 +14,10 @@
 
 namespace SpinAdapted{
   //============================================================================
-  // Add all contributions from different processes to a wavefunction
+  // Add all contributions from different processes to a wavefunction/density
   //============================================================================
   void AddPalWavefunction(Wavefunction &WF);
+  void AddPalDensity(DensityMatrix &D);
 
   //============================================================================
   // Add all contributions from different processes to a set of wavefunctions

@@ -7,6 +7,7 @@
 #include "nevpt2_mpi.h"
 #include "nevpt2_util.h"
 #include "nevpt2_info.h"
+#include "nevpt2_operators.h"
 
 #ifndef SERIAL
 #include <boost/mpi/environment.hpp>
@@ -18,7 +19,10 @@
 
 namespace SpinAdapted{
   
-  void nevpt2::BlockAndDecimate_(SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys,NEVPT2Info &Info)
+  void nevpt2::BlockAndDecimate_(SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
+                                 const bool &useSlater, const bool& dot_with_sys,IntegralContainer &IKJL, 
+                                 IntegralContainer &IKJA, IntegralContainer &IAJB, IntegralContainer &IJKA,
+                                 NEVPT2Info &Info)
 {
   if (dmrginp.outputlevel() > 0) 
   mcheck("at the start of block and decimate");
@@ -48,7 +52,7 @@ namespace SpinAdapted{
 
   system.addAdditionalCompOps();
   InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(), 
-                                 sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), DISTRIBUTED_STORAGE, true, true);
+                                 sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), DISTRIBUTED_STORAGE_FOR_ONEPDM, true, true);
   
 
   pout << "\t\t\t System  Block"<<newSystem;
@@ -91,7 +95,11 @@ namespace SpinAdapted{
   DensityMatrix tracedMatrix;
   tracedMatrix.allocate(newSystem.get_stateInfo());
   tracedMatrix.makedensitymatrix(solutions, big, dmrginp.weights(SweepIter), 0.0, 0.0, false);
-  AddFOISDensity(big,tracedMatrix,solutions,Info,SweepIter,BlockIter);
+  ThreeIndOpArray Dummy,Dummy_;
+  //AddFOISDensity(big,tracedMatrix,solutions,Info,sweepParams.get_sweep_iter(),sweepParams.get_block_iter());
+  AddFOISDensity(big,tracedMatrix,solutions,Dummy,Dummy_,IKJL,IKJA,IAJB,IJKA,Info,SweepIter,BlockIter);
+  Dummy.Clear();
+  Dummy_.Clear();
   rotateMatrix.clear();
   if (!mpigetrank()){
     double error = makeRotateMatrix(tracedMatrix, rotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());    
@@ -127,11 +135,61 @@ double nevpt2::do_one_(SweepParams &sweepParams, const bool &warmUp, const bool 
 
   int IntegralIndex =0;
   
+  //---------------
   //the NEVPT2 Info
+  //---------------
+  int OrbWin[6];
+  char BaseName[512];
+  char msg[512];
   NEVPT2Info Info;
   Info.ReadData();
   Info.ReadOrbOrder();
   Info.ReadOrbEnergies();
+  Info.GetOrbWin(OrbWin);
+  Info.getBaseName(BaseName);
+  Info.CalcMaxBlockIter(sweepParams.get_n_iters());
+  Info.ResetNevSweep();
+  int NInternal=OrbWin[1]-OrbWin[0]+1;  
+  int NActive  =OrbWin[3]-OrbWin[2]+1;
+  int NExternal=OrbWin[5]-OrbWin[4]+1;
+  int NOcc = NInternal + NActive;
+  int OrbDim = NInternal+NActive+NExternal;
+  int n;//the number of possible spin couplings for V(i) and V(a) with |psi>
+  int MaxCore = Info.GetMaxCore();
+  
+  //----------------------
+  //the integral container
+  //----------------------
+  Matrix h,h_eff,h_eff_;
+  h.ReSize(OrbDim,OrbDim);
+  h_eff.ReSize(OrbDim,OrbDim);
+  h_eff_.ReSize(OrbDim,OrbDim);
+  vector<int> ReOrder;
+  Info.GetOrbOrder(ReOrder);
+  IntegralContainer IJKL(NOcc,NOcc,NOcc,NOcc,_COULOMB_);
+  IntegralContainer IKJL(NOcc,NOcc,NOcc,NOcc,_EXCHANGE_);
+  IntegralContainer IAJB(NOcc,NOcc,NExternal,NExternal,_EXCHANGE_);
+  IntegralContainer IJAB(NOcc,NOcc,NExternal,NExternal,_COULOMB_);
+  IntegralContainer IJKA(NOcc,NOcc,NOcc,NExternal,_NO_SYMM_);
+  IntegralContainer IKJA(NOcc,NOcc,NOcc,NExternal,_NO_SYMM_);
+  sprintf(msg,"%s.block.ijkl.tmp",BaseName);IJKL.SetFileName(msg);
+  sprintf(msg,"%s.block.ikjl.tmp",BaseName);IKJL.SetFileName(msg);
+  sprintf(msg,"%s.block.iajb.tmp",BaseName);IAJB.SetFileName(msg);
+  sprintf(msg,"%s.block.ijab.tmp",BaseName);IJAB.SetFileName(msg);
+  sprintf(msg,"%s.block.ijka.tmp",BaseName);IJKA.SetFileName(msg);
+  sprintf(msg,"%s.block.ikja.tmp",BaseName);IKJA.SetFileName(msg);
+  if (dmrginp.nevpt2()) ReadIntegrals(IJKL,IKJL,IAJB,IJAB,IJKA,IKJA,h,OrbWin,BaseName,ReOrder);
+    
+  //-----------------------------------------------------
+  //construct or read the effective one-electron matrices
+  //-----------------------------------------------------
+  GenerateHeff(OrbWin,h,h_eff,h_eff_,IJKL,IKJL,IJAB,IAJB,IJKA,IKJA);
+  //ReadHeff(OrbWin,h_eff,h_eff_,BaseName,ReOrder);
+  Info.AddH(h);Info.AddH(h_eff);Info.AddH(h_eff_);
+  
+  //release some memory
+  IJKL.Clear();
+  IJAB.Clear();
   
   SpinBlock system;
   const int nroots = dmrginp.nroots();
@@ -188,7 +246,7 @@ double nevpt2::do_one_(SweepParams &sweepParams, const bool &warmUp, const bool 
 	  
       SpinBlock newSystem;
 
-      nevpt2::BlockAndDecimate_(sweepParams, system, newSystem, warmUp, dot_with_sys,Info);
+      nevpt2::BlockAndDecimate_(sweepParams, system, newSystem, warmUp, dot_with_sys,IKJL,IKJA,IAJB,IJKA,Info);
 
       
       system = newSystem;
@@ -210,6 +268,12 @@ double nevpt2::do_one_(SweepParams &sweepParams, const bool &warmUp, const bool 
     }
   pout << "\t\t\t Finished Generate-Blocks Sweep. " << endl;
   pout << "\t\t\t ============================================================================ " << endl;
+
+  //clear disk and memory
+  IKJL.Clear();
+  IKJA.Clear();
+  IAJB.Clear();
+  IJKA.Clear();
 
   // update the static number of iterations
 

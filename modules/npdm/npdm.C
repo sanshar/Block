@@ -386,6 +386,34 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
   }
 
 
+  if (dmrginp.specificpdm().size()!=0)
+  {
+    Timer timer;
+    dmrginp.set_fullrestart() = true;
+    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+	  dmrginp.npdm_generate() = true;
+    if ( !dmrginp.setStateSpecific())
+      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
+    else if (dmrginp.specificpdm().size()==1)
+      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, dmrginp.specificpdm()[0], dmrginp.specificpdm()[0]); //this will generate the cd operators                               
+    else if (dmrginp.specificpdm().size()==2)
+      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, dmrginp.specificpdm()[0], dmrginp.specificpdm()[1]); //this will generate the cd operators                               
+    else abort();
+		dmrginp.npdm_generate() = false;
+    p3out << "\t\t\t NPDM SweepGenblock time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+    dmrginp.set_fullrestart() = false;
+
+    sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+    Timer timerX;
+    npdm_driver->clear();
+    if (dmrginp.specificpdm().size()==1)
+      npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0,dmrginp.specificpdm()[0],dmrginp.specificpdm()[0]);
+    else if (dmrginp.specificpdm().size()==2)
+      npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0,dmrginp.specificpdm()[0],dmrginp.specificpdm()[1]);
+    else abort();
+    p3out << "\t\t\t NPDM sweep time " << timerX.elapsedwalltime() << " " << timerX.elapsedcputime() << endl;
+    return;
+  }
 
   if(dmrginp.transition_diff_irrep()){
     // It is used when bra and ket has different spatial irrep

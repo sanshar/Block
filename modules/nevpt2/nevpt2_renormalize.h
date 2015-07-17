@@ -36,10 +36,15 @@ namespace SpinAdapted{
   // Add the first order interacting space density to the density of the ground 
   // state (with a weight of 10%)
   //============================================================================
+  //void AddFOISDensity(SpinBlock &big, DensityMatrix &D, vector<Wavefunction> &WF,
+  //                    NEVPT2Info &Info, int SweepIter, int BlockIter);
+  
   void AddFOISDensity(SpinBlock &big, DensityMatrix &D, vector<Wavefunction> &WF,
-                      NEVPT2Info &Info, int SweepIter, int BlockIter);
-  
-  
+                      ThreeIndOpArray &CCD, ThreeIndOpArray &CDD, 
+                      IntegralContainer &IKJL, IntegralContainer &IKJA, IntegralContainer &IAJB,
+                      IntegralContainer &IJKA, NEVPT2Info &Info, int SweepIter, 
+                      int BlockIter, bool WarmUp=false);
+
   
 }
 

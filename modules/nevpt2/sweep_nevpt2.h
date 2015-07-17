@@ -32,8 +32,9 @@ namespace SpinAdapted{
     //void BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys);
     void BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem,
                            const bool &useSlater, const bool& dot_with_sys,
-                           ThreeIndOpArray &Ti, ThreeIndOpArray &Ta, IntegralContainer &IKJL,
-                           IntegralContainer &IKJA, NEVPT2Info &Info);
+                           ThreeIndOpArray &CCD, ThreeIndOpArray &CDD, IntegralContainer &IKJL,
+                           IntegralContainer &IKJA, IntegralContainer &IAJB, IntegralContainer &IJKA,
+                           NEVPT2Info &Info);
     void nevpt2();
     void nevpt2_restart();
   };

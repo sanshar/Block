@@ -759,8 +759,12 @@ namespace SpinAdapted {
   //============================================================================
   template <class T>
   void OperatorArray<T>::CalcBufferSize(int MaxMemSize, int M){
-    int ElementSize = M * M * 8;
-    BufferSize = MaxMemSize*1000000/ElementSize;
+    long ElementSize = M * M * sizeof(double);
+    double ElementSize_ = (double) M * M * sizeof(double);
+    double tmp = (double) MaxMemSize;
+    tmp *= 1024.0 * 1024.0;
+    tmp /= ElementSize_;
+    BufferSize = (long) tmp;
     if (BufferSize==0) BufferSize = 1;
   } 
   
@@ -1405,7 +1409,7 @@ namespace SpinAdapted {
 
       case _COULOMB_:
         //resize the vector that holds the integral matrices
-        N = (dim1+1)*(dim1/2);
+        N = (dim1+1)*(dim1)/2;
         rep.resize(N);
         //resize and fill the IndexMap
         IndexMap.ReSize(dim1,dim2);
@@ -1428,7 +1432,7 @@ namespace SpinAdapted {
 
       case _EXCHANGE_:
         //resize the vector that holds the integral matrices
-        N = (dim1+1)*(dim1/2);
+        N = (dim1+1)*(dim1)/2;
         rep.resize(N);
         //resize and fill the IndexMap
         IndexMap.ReSize(dim1,dim2);
