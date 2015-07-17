@@ -25,7 +25,7 @@ USE_MKL = yes
 # molpro compilation requires I8, since their integers are long
 I8_OPT = no
 MOLPRO = no
-OPENMP = no
+OPENMP = yes
 
 DOPROF = no
 
@@ -35,7 +35,11 @@ MOLCAS = no
 
 ifeq ($(USE_MKL), yes)
 MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/
+ifeq ($(OPENMP), yes)
+LAPACKBLAS = -L${MKLLIB} -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core
+else
 LAPACKBLAS = -L${MKLLIB} -lmkl_gf_lp64 -lmkl_sequential -lmkl_core
+endif
 MKLFLAGS = /opt/intel/composer_xe_2013_sp1.0.080/mkl/include
 MKLOPT = -D_HAS_INTEL_MKL
 else
@@ -101,7 +105,7 @@ endif
 
 ifeq (g++, $(CXX))
    ifeq ($(OPENMP), yes)
-      OPENMP_FLAGS= -fopenmp -D_OPENMP 
+      OPENMP_FLAGS= -fopenmp #-D_OPENMP 
    endif
 # GNU compiler
       OPT = -DNDEBUG -O3
