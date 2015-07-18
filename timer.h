@@ -23,6 +23,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #ifndef SERIAL
 #include <boost/serialization/shared_ptr.hpp>
 #include <boost/mpi/timer.hpp>
+#include <include/communicate.h>
 #endif
 
 using namespace std;
@@ -106,9 +107,9 @@ public:
 #ifndef SERIAL
   void start() { t = boost::shared_ptr<boost::mpi::timer>(new boost::mpi::timer()); walltime = t->elapsed(); lastwalltime = walltime; wallstarttime = walltime; cputime = clock(); lastcputime = cputime; cpustarttime = cputime; }  
   double elapsedwalltime() { walltime = t->elapsed(); double elapsed = walltime - lastwalltime; lastwalltime = walltime; return elapsed; }
-  double elapsedcputime() { cputime = clock(); double elapsed = double(cputime - lastcputime) / double(CLOCKS_PER_SEC); lastcputime = cputime; return elapsed; }
+  double elapsedcputime() { cputime = clock(); double elapsed = double(cputime - lastcputime) / double(CLOCKS_PER_SEC); elapsed=accumclock(elapsed);lastcputime = cputime; return elapsed; }
   double totalwalltime() { return t->elapsed() - wallstarttime; }
-  double totalcputime() { return (double)(clock() - cpustarttime) / double(CLOCKS_PER_SEC); }
+  double totalcputime() { double total=double(clock() - cpustarttime) / double(CLOCKS_PER_SEC);total=accumclock(total);return total; }
 #else
   void start() { walltime = time(NULL); lastwalltime = walltime; wallstarttime = walltime; cputime = clock(); lastcputime = cputime; cpustarttime = cputime; }  
   long elapsedwalltime() { walltime = time(NULL); time_t elapsed = walltime - lastwalltime; lastwalltime = walltime; return elapsed; }
@@ -122,6 +123,13 @@ private:
   double  walltime;
   double lastwalltime;
   double wallstarttime;
+  double accumclock(double tcpu) 
+  {
+   boost::mpi::communicator world;
+   double sum;
+   all_reduce(world, tcpu, sum, std::plus<double>());
+   return sum;
+  }
 #else
   time_t walltime;
   time_t lastwalltime;

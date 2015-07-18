@@ -278,8 +278,9 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
     assert (ketStateInfo.quanta [i] == oldStateInfo.quanta [newQuantaMap [i]]);
   }
 
-  p3out << "\t\t\t total elapsed time " << globaltimer.totalwalltime() << " " << globaltimer.totalcputime() << " ... " 
-       << globaltimer.elapsedwalltime() << " " << globaltimer.elapsedcputime() << endl;
+  tcpu = globaltimer.totalcputime(); twall= globaltimer.totalwalltime();
+  ecpu = globaltimer.elapsedcputime(); ewall= globaltimer.elapsedwalltime();
+  p3out << "\t\t\t total elapsed time " <<  twall << " " << tcpu << " ... " << ewall << " " << ecpu << endl;
   p1out << "\t\t\t Transforming to new basis " << endl;
   Timer transformtimer;
 
@@ -290,7 +291,8 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
       ops[it->first]->set_core(true);
 
   this->direct = false;
-  p3out << "\t\t\t transform time " << transformtimer.elapsedwalltime() << " " << transformtimer.elapsedcputime() << endl;
+  ecpu = transformtimer.elapsedcputime();ewall= transformtimer.elapsedwalltime();
+  p3out << "\t\t\t transform time " << ewall << " " << ecpu << endl;
 
   if (leftBlock)
     leftBlock->clear();
@@ -320,9 +322,11 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
   *ketStateInfo.previousStateInfo = oldketStateInfo;
 
 
-  p3out << "\t\t\t total elapsed time " << globaltimer.totalwalltime() << " " << globaltimer.totalcputime() << " ... " 
-       << globaltimer.elapsedwalltime() << " " << globaltimer.elapsedcputime() << endl;
+  tcpu = globaltimer.totalcputime(); twall= globaltimer.totalwalltime();
+  ecpu = globaltimer.elapsedcputime(); ewall= globaltimer.elapsedwalltime();
+  p3out << "\t\t\t total elapsed time " << twall << " " << tcpu << " ... " << ewall << " " << ecpu << endl;
   p1out << "\t\t\t Transforming to new basis " << endl;
+
   Timer transformtimer;
 
   renormalise_transform( leftrotateMatrix, &this->braStateInfo, rightrotateMatrix, &this->ketStateInfo );
@@ -332,7 +336,8 @@ void SpinBlock::transform_operators(std::vector<Matrix>& rotateMatrix)
       ops[it->first]->set_core(true);
 
   this->direct = false;
-  p3out << "\t\t\t transform time " << transformtimer.elapsedwalltime() << " " << transformtimer.elapsedcputime() << endl;
+  ecpu = transformtimer.elapsedcputime(); ewall= transformtimer.elapsedwalltime();
+  p3out << "\t\t\t transform time " << ewall << " " << ecpu << endl;
 
   if (leftBlock && clearLeftBlock)
     leftBlock->clear();

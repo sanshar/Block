@@ -719,7 +719,8 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
     loop_over_operator_patterns_store( npdm_patterns, npdm_expectations, big );
 #ifndef SERIAL
   world.barrier();
-  p3out << " prepare intermediate time"<< timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
+  ecpu = timer.elapsedcputime();ewall=timer.elapsedwalltime();
+  p3out << " prepare intermediate time"<< ewall << " " << ecpu << endl;
 #endif
   }
 
@@ -772,15 +773,9 @@ void Npdm_driver::compute_npdm_elements(std::vector<Wavefunction> & wavefunction
   } else {
     reduce(world, write_intermediate_time, std::plus<double>(), 0);
   }
-  if (mpigetrank() == 0) {
-    double sum, sum2;
-    reduce(world, timer.elapsedwalltime(), sum2, std::plus<double>(), 0);
-    reduce(world, timer.elapsedcputime(), sum, std::plus<double>(), 0);
-    p3out << "NPDM compute elements time " << sum << " "<< sum2 << endl;
-  } else {
-    reduce(world, timer.elapsedwalltime(), std::plus<double>(), 0);
-    reduce(world, timer.elapsedcputime(), std::plus<double>(), 0);
-  }
+
+  ecpu = timer.elapsedcputime();ewall=timer.elapsedwalltime();
+  p3out << "NPDM compute elements time " << ewall << " "<< ecpu << endl;
 #else
   p3out << "NPDM compute elements time " << timer.elapsedwalltime() << " " << timer.elapsedcputime() << endl;
 #endif

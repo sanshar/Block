@@ -10,7 +10,7 @@ Features
 * one-, two-, three- and four-particle density matrices,
 * one- and two-particle transition density matrices between two states,
 * perturbation methods including NEVPT2 and MPSPT,
-* interfaces to the Molpro, ORCA, Q-Chem and Molcas program packages. 
+* DMRG-SCF and/or DMRG-NEVPT2 interfaces to the Molpro, ORCA, Q-Chem and Molcas program packages. 
 
 Calling `Block` as an external function
 =======================================
@@ -34,8 +34,9 @@ use of `Block`:
 * G. K.-L. Chan and M. Head-Gordon, J. Chem. Phys. 116, 4462 (2002),
 * G. K.-L. Chan, J. Chem. Phys. 120, 3172 (2004),
 * D. Ghosh, J. Hachmann, T. Yanai, and G. K.-L. Chan, J. Chem. Phys., 128, 144117 (2008),
-* S. Sharma and G. K-.L. Chan, J. Chem. Phys. 136, 124121 (2012).
+* S. Sharma and G. K-.L. Chan, J. Chem. Phys. 136, 124121 (2012),
+* R. Olivares-Amaya, W. Hu, N. Nakatani, S. Sharma, J. Yang and G. K.-L. Chan, J. Chem. Phys. 142, 034102 (2015).
 
 In addition, a useful list of DMRG references relevant to quantum chemistry can be found
-in the article above by Sharma and Chan.
+in the article above by Sharma and Chan. 
 
