@@ -171,7 +171,6 @@ class Input {
   std::vector<int> m_total_spin_orbs_symmetry;
   std::vector<int> m_total_spatial_to_spin;
   std::vector<int> m_total_spin_to_spatial;
-  std::vector<int> m_total_reorder;
 
   int m_outputlevel;
   orbitalFormat m_orbformat;
@@ -210,7 +209,7 @@ class Input {
     ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_backward & m_schedule_type_default &m_integral_disk_storage_thresh;
     ar & n_twodot_noise & m_twodot_noise & m_twodot_gamma;
     ar & m_calc_ri_4pdm & m_store_ripdm_readable & m_nevpt2 & m_conventional_nevpt2 & m_kept_nevpt2_states & NevPrint;
-    ar & m_act_size & m_core_size & m_virt_size & m_total_orbs & m_total_spin_orbs_symmetry & m_total_spatial_to_spin & m_total_spin_to_spatial & m_total_reorder;
+    ar & m_act_size & m_core_size & m_virt_size & m_total_orbs & m_total_spin_orbs_symmetry & m_total_spatial_to_spin & m_total_spin_to_spatial;
   }
 
 
@@ -276,6 +275,7 @@ class Input {
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
   std::vector<int> getgaorder(ifstream& gaconfFile, string& orbitalfile, std::vector<int>& fiedlerorder);
   std::vector<int> get_fiedler(string& dumpname);
+  std::vector<int> get_fiedler_nevpt(string& dumpname, int nact);
   std::vector<int> get_fiedler_bcs(string& dumpname);  
   void usedkey_error(string& key, string& line);
   void makeInitialHFGuess();

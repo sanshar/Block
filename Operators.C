@@ -2955,7 +2955,6 @@ void SpinAdapted::CDD_DesDesComp::build(const SpinBlock& b)
   }  
   // explicitly build DD_comp
 
-  if (leftBlock->get_op_array(CDD_DES_DESCOMP).has(i) && rightBlock->get_op_array(CDD_DES_DESCOMP).has(i))
   for (int kx = 0; kx < leftBlock->get_sites().size(); ++kx)
     for (int lx = 0; lx < rightBlock->get_sites().size(); ++lx)
     {
@@ -3098,7 +3097,6 @@ void SpinAdapted::CDD_CreDesComp::build(const SpinBlock& b)
     SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *Overlap, *op, &b, &(b.get_stateInfo()), *this, 1.0);
   }  
   // build CDcomp explicitely
-  if (leftBlock->get_op_array(CDD_CRE_DESCOMP).has(i) && rightBlock->get_op_array(CDD_CRE_DESCOMP).has(i))
   for (int kx = 0; kx < leftBlock->get_sites().size(); ++kx)
     for (int lx = 0; lx < rightBlock->get_sites().size(); ++lx) {
       int k = leftBlock->get_sites()[kx];
@@ -3413,7 +3411,6 @@ void SpinAdapted::CCD_CreCreComp::build(const SpinBlock& b)
   }  
   // explicitly build DD_comp
 
-  if (leftBlock->get_op_array(CCD_CRE_CRECOMP).has(i) && rightBlock->get_op_array(CCD_CRE_CRECOMP).has(i))
   for (int kx = 0; kx < leftBlock->get_sites().size(); ++kx)
     for (int lx = 0; lx < rightBlock->get_sites().size(); ++lx)
     {
@@ -3551,7 +3548,6 @@ void SpinAdapted::CCD_CreDesComp::build(const SpinBlock& b)
     SpinAdapted::operatorfunctions::TensorProduct(leftBlock, *Overlap, *op, &b, &(b.get_stateInfo()), *this, 1.0);
   }  
   // build CDcomp explicitely
-  if (leftBlock->get_op_array(CCD_CRE_DESCOMP).has(i) && rightBlock->get_op_array(CCD_CRE_DESCOMP).has(i))
   for (int kx = 0; kx < leftBlock->get_sites().size(); ++kx)
     for (int lx = 0; lx < rightBlock->get_sites().size(); ++lx) {
       int k = leftBlock->get_sites()[kx];

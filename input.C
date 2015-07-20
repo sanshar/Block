@@ -1520,9 +1520,9 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile,OneElectronArray& 
       pout << "The Fiedler routine for finding the orbital ordering has already been run." << endl;
       pout << "Using the reorder file " << ReorderFileName << endl;
       pout << "================"<<endl;
-      m_total_reorder.resize(m_total_orbs);
+      m_reorder.resize(m_total_orbs);
       for (int i=0; i<m_total_orbs; i++)
-	ReorderFileInput >> m_total_reorder[i];
+	      ReorderFileInput >> m_reorder[i];
       ReorderFileInput.close();
     }
     }
@@ -1535,32 +1535,38 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile,OneElectronArray& 
 
     // read the reorder file or calculate the reordering using one of the many options  
 
-    if (m_reorderType == MANUAL) {
+    if (m_reorderType == FIEDLER) {
+      
+      if (mpigetrank() == 0){
+        m_reorder=get_fiedler_nevpt(orbitalfile, m_act_size);
+      pout << "Fiedler-vector orbital ordering: ";     
+      }
+    }
+    else if (m_reorderType == MANUAL) {
       if (mpigetrank() == 0) {
       ifstream reorderFile(m_reorderfile.c_str());
       CheckFileExistence(m_reorderfile, "Reorder file ");
-      readreorderfile(reorderFile, m_total_reorder);
+      readreorderfile(reorderFile, m_reorder);
       pout << "Manually provided orbital ordering: ";
       }
     }
     else { //this is the no-reorder case 
       if (mpigetrank() == 0) {
-      m_total_reorder.resize(m_total_orbs);
-      for (int i=0; i<m_total_reorder.size(); i++)
-	m_total_reorder.at(i) = i;
+      m_reorder.resize(m_act_size);
+      for (int i=0; i<m_reorder.size(); i++)
+	      m_reorder.at(i) = i;
       pout << "No orbital reorder: ";
       }
     }
 
     if (mpigetrank() == 0) {
-    for (int i=0; i<m_total_reorder.size(); i++){
-      ReorderFileOutput << m_total_reorder[i]<<"  ";
+    for (int i=0; i<m_reorder.size(); i++){
+      ReorderFileOutput << m_reorder[i]<<"  ";
     }
     ReorderFileOutput.close();    
     }
   }
 
-  m_reorder = std::vector<int>(m_total_reorder.begin(),m_total_reorder.begin()+m_act_size);
 
   //the name reorder is confusing because it clases the with the m_reorder member of the input class and these two are inverse of each other.
   //the reorder here helps one to go from the unreordered matrices to the reordered matrices
@@ -1570,11 +1576,14 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile,OneElectronArray& 
   // but for this m_reorder the reorder vector below would be 3 1 2 4 and O_unreordered(1,2) -> O_reorder(3, 1)
   if (mpigetrank() == 0) {
   reorder.resize(m_total_orbs);
-  for (int i=0; i<m_total_orbs; i++) {
-    reorder.at(m_total_reorder[i]) = i;
-    pout << m_total_reorder[i]+1 << " ";
+  for (int i=0; i<m_act_size; i++)
+  {
+    reorder.at(m_reorder[i]) = i;
+    pout << m_reorder[i]+1 << " ";
   }
-  pout << endl;
+  for (int i=m_act_size; i<m_total_orbs; i++) {
+    reorder.at(i) = i;
+  }
   pout << endl;
 
 
@@ -2144,6 +2153,18 @@ std::vector<int> SpinAdapted::Input::get_fiedler(string& dumpname){
      ifstream dumpFile;
      dumpFile.open(dumpname.c_str(), ios::in);
      genetic::ReadIntegral(dumpFile, fiedler);
+     dumpFile.close();
+     SymmetricMatrix fiedler_sym;
+     fiedler_sym << fiedler;
+     std::vector<int> findices = fiedler_reorder(fiedler_sym);
+     return findices;
+}
+
+std::vector<int> SpinAdapted::Input::get_fiedler_nevpt(string& dumpname, int nact){
+     Matrix fiedler; 
+     ifstream dumpFile;
+     dumpFile.open(dumpname.c_str(), ios::in);
+     genetic::ReadIntegral_nevpt(dumpFile, fiedler, nact);
      dumpFile.close();
      SymmetricMatrix fiedler_sym;
      fiedler_sym << fiedler;

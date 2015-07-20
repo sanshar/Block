@@ -25,8 +25,9 @@ double readZeroEnergy(){
   pout << "Zero order energy for state 0 is " << perturber::ZeroEnergy[0]<<endl;;
 }
 
-void SpinAdapted::mps_nevpt::mps_nevpt(int baseState)
+void SpinAdapted::mps_nevpt::mps_nevpt(double sweep_tol)
 {
+  int baseState = 0;
   //if(!restartpdm){
   //  if (RESTART && !FULLRESTART)
   //    restart(sweep_tol, reset_iter);
@@ -46,9 +47,9 @@ void SpinAdapted::mps_nevpt::mps_nevpt(int baseState)
   if(dmrginp.calc_type() == MPS_NEVPT){
   //  double sweep_tol = 1e-7;
     dmrginp.calc_type() = DMRG;
-    Npdm::npdm(NPDM_ONEPDM);
-    dmrginp.do_pdm() = false;
-  //  dmrg(sweep_tol);
+//    Npdm::npdm(NPDM_ONEPDM);
+//    dmrginp.do_pdm() = false;
+    dmrg(sweep_tol);
     dmrginp.calc_type() = MPS_NEVPT;
   }
   dmrginp.calc_type() = DMRG;
@@ -83,6 +84,22 @@ void SpinAdapted::mps_nevpt::mps_nevpt(int baseState)
   }
   dmrginp.set_algorithm_method() = atype;
   readZeroEnergy();
-  SpinAdapted::mps_nevpt::type1::subspace_Vi(baseState);
-  SpinAdapted::mps_nevpt::type1::subspace_Va(baseState);
+  double energy = 0.0; 
+  if (dmrginp.core_size()>0)
+  {
+    energy = SpinAdapted::mps_nevpt::type1::subspace_Vi(baseState);
+  }
+  std::string file = str(boost::format("%s%s%d") % dmrginp.load_prefix() % "/Vi_" % baseState);
+  std::fstream f(file,std::fstream::out);
+  f << energy;
+  f.close();
+  energy = 0.0; 
+  if (dmrginp.virt_size()>0)
+  {
+    energy = SpinAdapted::mps_nevpt::type1::subspace_Va(baseState);
+  }
+  std::string file2 = str(boost::format("%s%s%d") % dmrginp.load_prefix() % "/Va_" % baseState);
+  std::fstream f2(file2,std::fstream::out);
+  f2 << energy;
+  f2.close();
 }

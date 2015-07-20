@@ -17,7 +17,7 @@ ifeq ($(USE_BOOST56), yes)
 endif
 
 #use these variable to set if we will use mpi or not 
-USE_MPI = yes
+USE_MPI = no
 USE_MKL = yes
 
 #add Molcas interface to libqcdmrg.so

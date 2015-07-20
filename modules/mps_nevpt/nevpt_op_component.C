@@ -37,11 +37,18 @@ namespace SpinAdapted {
   template<> void Op_component<CDD_CreDesComp>::build_iterators(SpinBlock& b)
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
-      const double screen_tol = dmrginp.oneindex_screen_tol();
-      int integralIndex = b.get_integralIndex();
-      //TODO, there is no screen here.
-      vector< int > screened_cdd_ix = b.get_complementary_sites();
-      m_op.set_indices(screened_cdd_ix, dmrginp.last_site());      
+      double screen_tol = dmrginp.oneindex_screen_tol();
+    //screen_tol = 0.0;
+      std::vector<int> screened_d_ix = screened_cdd_d_indices(b.get_complementary_sites(), b.get_sites(), b.nonactive_orb()[0], vpt_1, vpt_2[Va], screen_tol);
+    if (screened_d_ix.size()!=b.get_complementary_sites().size())
+        cout <<"Screened CDD_CREDES" <<endl;
+    for(int i =0; i<b.get_complementary_sites().size();i++)
+      cout << b.get_complementary_sites()[i]<<" ";
+    cout <<endl;
+    for(int i =0; i<screened_d_ix.size();i++)
+      cout << screened_d_ix[i]<<" ";
+    cout <<endl;
+      m_op.set_indices(screened_d_ix, dmrginp.last_site());      
       std::vector<int> orbs(1);
       for (int i = 0; i < m_op.local_nnz(); ++i)
 	    {
@@ -70,11 +77,18 @@ namespace SpinAdapted {
   template<> void Op_component<CDD_DesDesComp>::build_iterators(SpinBlock& b)
   {
     if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
-    const double screen_tol = dmrginp.oneindex_screen_tol();
-    int integralIndex = b.get_integralIndex();
-    //TODO, there is no screen here.
-    vector< int > screened_cdd_ix = b.get_complementary_sites();
-    m_op.set_indices(screened_cdd_ix, dmrginp.last_site());      
+    double screen_tol = dmrginp.oneindex_screen_tol();
+    //screen_tol = 0.0;
+    std::vector<int> screened_c_ix = screened_cdd_c_indices(b.get_complementary_sites(), b.get_sites(), b.nonactive_orb()[0], vpt_1, vpt_2[Va], screen_tol);
+    if (screened_c_ix.size()!=b.get_complementary_sites().size())
+        cout <<"Screened CDD_DESDES" <<endl;
+    for(int i =0; i<b.get_complementary_sites().size();i++)
+      cout << b.get_complementary_sites()[i]<<" ";
+    cout <<endl;
+    for(int i =0; i<screened_c_ix.size();i++)
+      cout << screened_c_ix[i]<<" ";
+    cout <<endl;
+    m_op.set_indices(screened_c_ix, dmrginp.last_site());      
     std::vector<int> orbs(1);
     for (int i = 0; i < m_op.local_nnz(); ++i)
   	{
@@ -121,10 +135,16 @@ namespace SpinAdapted {
     {
       if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
       const double screen_tol = dmrginp.oneindex_screen_tol();
-      int integralIndex = b.get_integralIndex();
-      //TODO, there is no screen here.
-      vector< int > screened_cdd_ix = b.get_complementary_sites();
-      m_op.set_indices(screened_cdd_ix, dmrginp.last_site());      
+      std::vector<int> screened_c_ix = screened_ccd_c_indices(b.get_complementary_sites(), b.get_sites(), b.nonactive_orb()[0], vpt_1, vpt_2[Vi], screen_tol);
+    if (screened_c_ix.size()!=b.get_complementary_sites().size())
+        cout <<"Screened CCD_CREDES" <<endl;
+    for(int i =0; i<b.get_complementary_sites().size();i++)
+      cout << b.get_complementary_sites()[i]<<" ";
+    cout <<endl;
+    for(int i =0; i<screened_c_ix.size();i++)
+      cout << screened_c_ix[i]<<" ";
+    cout <<endl;
+      m_op.set_indices(screened_c_ix, dmrginp.last_site());      
       std::vector<int> orbs(1);
       for (int i = 0; i < m_op.local_nnz(); ++i)
 	    {
@@ -154,10 +174,16 @@ namespace SpinAdapted {
   {
     if (b.get_sites().size () == 0) return; // blank construction (used in unset_initialised() Block copy construction, for use with STL)
     const double screen_tol = dmrginp.oneindex_screen_tol();
-    int integralIndex = b.get_integralIndex();
-    //TODO, there is no screen here.
-    vector< int > screened_cdd_ix = b.get_complementary_sites();
-    m_op.set_indices(screened_cdd_ix, dmrginp.last_site());      
+    std::vector<int> screened_d_ix = screened_ccd_d_indices(b.get_complementary_sites(), b.get_sites(), b.nonactive_orb()[0], vpt_1, vpt_2[Vi], screen_tol);
+    if (screened_d_ix.size()!=b.get_complementary_sites().size())
+        cout <<"Screened CCD_CRECRE" <<endl;
+    for(int i =0; i<b.get_complementary_sites().size();i++)
+      cout << b.get_complementary_sites()[i]<<" ";
+    cout <<endl;
+    for(int i =0; i<screened_d_ix.size();i++)
+      cout << screened_d_ix[i]<<" ";
+    cout <<endl;
+    m_op.set_indices(screened_d_ix, dmrginp.last_site());      
     std::vector<int> orbs(1);
     for (int i = 0; i < m_op.local_nnz(); ++i)
   	{

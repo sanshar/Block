@@ -315,11 +315,11 @@ int calldmrg(char* input, char* output)
     break;
 
   case(MPS_NEVPT):
-    mps_nevpt::mps_nevpt(0);
+    mps_nevpt::mps_nevpt(sweep_tol);
     break;
     
   case(RESTART_MPS_NEVPT):
-    mps_nevpt::mps_nevpt(0);
+    mps_nevpt::mps_nevpt(sweep_tol);
     break;
     
   case (RESTART_ONEPDM):
@@ -356,14 +356,18 @@ int calldmrg(char* input, char* output)
   case (RESTART_T_TWOPDM):
     Npdm::npdm(NPDM_TWOPDM,true,true);
     break;
-   case(RESTART_NEVPT2):
+  case(RESTART_NEVPT2):
     nevpt2::nevpt2_restart();
     break;
+  default:
+    pout << "Invalid calculation types" << endl; abort();
+  }
     
   cout.rdbuf(backup);
+  pout << setprecision(3) <<"\n\n\t\t\t BLOCK CPU  Time (seconds): " << globaltimer.totalcputime() << endl;
+  pout << setprecision(3) <<"\t\t\t BLOCK Wall Time (seconds): " << globaltimer.totalwalltime() << endl;
 
   return 0;
-  }
 }
 
 

@@ -17,6 +17,7 @@
 #include "type1.h"
 #include "operatorfunctions.h"
 #include "StateInfo.h"
+#include <stdio.h>
 
 using namespace boost;
 using namespace std;
@@ -343,7 +344,24 @@ void SpinAdapted::mps_nevpt::type1::BlockDecimateAndCompress (SweepParams &sweep
 
 }
 
-void SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
+void SpinAdapted::mps_nevpt::type1::cleanup(int baseState, const perturber& pb, int cleanlevel)
+{
+  for (int site=0; site < dmrginp.last_site(); site++)
+  {
+    std::string file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% 0 % "-" % site % "." %pb.wavenumber() % "." % baseState % "." %0 % "." % mpigetrank() % ".tmp" );
+    if (boost::filesystem::exists(file)) remove(file.c_str());
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% 0 % "-" % site % "." % pb.wavenumber() % "." % baseState % "." %0 % "." % mpigetrank() % ".tmp" );
+    if (boost::filesystem::exists(file)) remove(file.c_str());
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-forward-"% (site+1) % "-" % (dmrginp.last_site()-1) % "." % pb.wavenumber() % "." % baseState % "." %0 % "." % mpigetrank() % ".tmp" );
+    if (boost::filesystem::exists(file)) remove(file.c_str());
+    file = str(boost::format("%s%s%d%s%d%s%d%s%d%s%d%s%d%s") % dmrginp.save_prefix() % "/SpinBlock-backward-"% (site+1) % "-" % (dmrginp.last_site()-1) % "." % pb.wavenumber() % "." % baseState % "." %0 % "." % mpigetrank() % ".tmp" );
+    if (boost::filesystem::exists(file)) remove(file.c_str());
+
+  }
+}
+
+
+double SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
 {
   
   double energy=0;
@@ -373,12 +391,34 @@ void SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
 	      break;
       do_one(sweepParams, false, true, false, 0, pb, baseState);
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+      {
+        cleanup(baseState, pb);
 	      break;
+      }
     }
+//
+//    if (mpigetrank()==0) {
+//      bool direction = true;
+//      Sweep::InitializeStateInfo(sweepParams, !direction, pb.wavenumber(),pb.braquanta );
+//      Sweep::InitializeStateInfo(sweepParams, direction, pb.wavenumber(),pb.braquanta );
+//      Sweep::CanonicalizeWavefunction(sweepParams, !direction, pb.wavenumber(),pb.braquanta );
+//      Sweep::CanonicalizeWavefunction(sweepParams, direction, pb.wavenumber(),pb.braquanta );
+//      Sweep::CanonicalizeWavefunction(sweepParams, !direction, pb.wavenumber(),pb.braquanta );
+//      Sweep::InitializeStateInfo(sweepParams, !direction, pb.wavenumber(),pb.braquanta );
+//      Sweep::InitializeStateInfo(sweepParams, direction, pb.wavenumber(),pb.braquanta );
+//      
+//    }
+//
+
     MPS pbmps(pb.wavenumber());
     double o, h;
     dmrginp.calc_type() = DMRG;
+
     calcHamiltonianAndOverlap(pbmps, h, o,pb);
+
+
+
+
     if(!dmrginp.spinAdapted())
     {
       //In nonspinAdapted, alpha and beta have the results. Only one is neccessary. 
@@ -391,23 +431,19 @@ void SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
       //perturberEnergy = h/o+fock+perturber::CoreEnergy[0];
       perturberEnergy = h/o - fock;
       energy += o/(perturber::ZeroEnergy[0]- perturberEnergy) ;
-      if (dmrginp.outputlevel() > 2)
+      //overlap +=o;
+      overlap += sqrt(o)/(perturber::ZeroEnergy[0]- perturberEnergy);
+      if (dmrginp.outputlevel() > 0)
       {
-        pout <<"zero energy" <<perturber::ZeroEnergy[0]<<endl;
-        pout <<"core energy" <<perturber::CoreEnergy[0]<<endl;
-      }
-      overlap +=o;
-      if (dmrginp.outputlevel() > 2)
-      {
-        pout << "Overlap : " << o <<endl;
+        pout << "Amplitude : " << sqrt(o)/(perturber::ZeroEnergy[0]- perturberEnergy) <<endl;
         pout << "Ener(only CAS part) : " << h/o<<endl;
         pout << "Energy : " << perturberEnergy<<endl;
         pout << "Correction Energy: "<< o/(perturber::ZeroEnergy[0]- perturberEnergy)<<endl; 
       }
     }
     else{
-      if (dmrginp.outputlevel() > 2){
-        pout << "Overlap : " << 0.0 <<endl;
+      if (dmrginp.outputlevel() > 0){
+        pout << "Amplitude : " << 0.0 <<endl;
         pout << "Energy : " << 0.0<<endl;
       }
     }
@@ -416,11 +452,12 @@ void SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
 
   }
   pout << "Nevpt2 correction to the energy for state 0 in subspace Vi is " << energy<<endl;;
-  pout << "Nevpt2 Vi subspace perturber overlap : " << overlap<<endl;;
-  pout << "Core Energy of nevpt2 " <<perturber::CoreEnergy[0]<<endl;
+  pout << "Nevpt2 Vi subspace perturber Amplitude : " << overlap<<endl;;
+  //pout << "Core Energy of nevpt2 " <<perturber::CoreEnergy[0]<<endl;
+  return energy;
 }
 
-void SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
+double SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
 {
   
   double energy=0;
@@ -450,12 +487,52 @@ void SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
 	      break;
       do_one(sweepParams, false, true, false, 0, pb, baseState);
       if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+      {
+        cleanup(baseState, pb);
 	      break;
+      }
     }
+//    while ( true)
+//      {
+//        old_fe = last_fe;
+//        old_be = last_be;
+//        if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+//	        break;
+//        last_be = do_one(sweepParams, false, false, false, 0, pb, baseState);
+//        if (dmrginp.outputlevel() > 0) 
+//	        pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+//        
+//        if(dmrginp.max_iter() <= sweepParams.get_sweep_iter())
+//	        break;
+//        
+//        last_fe = do_one(sweepParams, false, true, false, 0, pb, baseState);
+//        
+//        if (dmrginp.outputlevel() > 0)
+//	        pout << "Finished Sweep Iteration "<<sweepParams.get_sweep_iter()<<endl;
+//        
+//      }
+//
+
+ //   if (mpigetrank()==0) {
+ //     bool direction = true;
+ //     Sweep::InitializeStateInfo(sweepParams, !direction, pb.wavenumber(),pb.braquanta );
+ //     Sweep::InitializeStateInfo(sweepParams, direction, pb.wavenumber(),pb.braquanta );
+ //     Sweep::CanonicalizeWavefunction(sweepParams, !direction, pb.wavenumber(),pb.braquanta );
+ //     Sweep::CanonicalizeWavefunction(sweepParams, direction, pb.wavenumber(),pb.braquanta );
+ //     Sweep::CanonicalizeWavefunction(sweepParams, !direction, pb.wavenumber(),pb.braquanta );
+ //     Sweep::InitializeStateInfo(sweepParams, !direction, pb.wavenumber(),pb.braquanta );
+ //     Sweep::InitializeStateInfo(sweepParams, direction, pb.wavenumber(),pb.braquanta );
+ //     
+ //   }
+   
     MPS pbmps(pb.wavenumber());
     double o, h;
     dmrginp.calc_type() = DMRG;
+
+
     calcHamiltonianAndOverlap(pbmps, h, o,pb);
+
+
     if(!dmrginp.spinAdapted())
     {
       //In nonspinAdapted, alpha and beta have the results. Only one is neccessary. 
@@ -468,21 +545,18 @@ void SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
       //perturberEnergy = h/o+fock+perturber::CoreEnergy[0];
       perturberEnergy = h/o+fock;
       energy += o/(perturber::ZeroEnergy[0]- perturberEnergy) ;
-      if (dmrginp.outputlevel() > 2){
-        pout <<"zero energy" <<perturber::ZeroEnergy[0]<<endl;
-        pout <<"core energy" <<perturber::CoreEnergy[0]<<endl;
-      }
-      overlap +=o;
-      if (dmrginp.outputlevel() > 2){
-        pout << "Overlap : " << o <<endl;
+      //overlap +=o;
+      overlap += sqrt(o)/(perturber::ZeroEnergy[0]- perturberEnergy);
+      if (dmrginp.outputlevel() > 0){
+        pout << "Amplitude : " << sqrt(o)/(perturber::ZeroEnergy[0]- perturberEnergy) <<endl;
         pout << "Ener(only CAS part) : " << h/o<<endl;
         pout << "Energy : " << perturberEnergy<<endl;
         pout << "Correction Energy: "<< o/(perturber::ZeroEnergy[0]- perturberEnergy)<<endl; 
       }
     }
     else{
-      if (dmrginp.outputlevel() > 2){
-        pout << "Overlap : " << 0.0 <<endl;
+      if (dmrginp.outputlevel() > 0){
+        pout << "Amplitude : " << 0.0 <<endl;
         pout << "Energy : " << 0.0<<endl;
       }
     }
@@ -491,8 +565,9 @@ void SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
 
   }
   pout << "Nevpt2 correction to the energy for state 0 in subspace Va is " << energy<<endl;;
-  pout << "Nevpt2 Va subspace perturber overlap : " << overlap<<endl;;
-  pout << "Core Energy of nevpt2 " <<perturber::CoreEnergy[0]<<endl;
+  pout << "Nevpt2 Va subspace perturber Amplitude : " << overlap<<endl;;
+  //pout << "Core Energy of nevpt2 " <<perturber::CoreEnergy[0]<<endl;
+  return energy;
 }
 
 void SpinAdapted::mps_nevpt::type1::calcHamiltonianAndOverlap(const MPS& statea, double& h, double& o, perturber& pb) {
@@ -500,6 +575,7 @@ void SpinAdapted::mps_nevpt::type1::calcHamiltonianAndOverlap(const MPS& statea,
 #ifndef SERIAL
   mpi::communicator world;
 #endif
+
 
   SpinBlock system, siteblock;
   bool forward = true, restart=false, warmUp = false;
@@ -544,10 +620,8 @@ void SpinAdapted::mps_nevpt::type1::calcHamiltonianAndOverlap(const MPS& statea,
 
   Wavefunction temp = statea.getw();
   temp.Clear();
-  world.barrier();
   big.multiplyH(const_cast<Wavefunction&>(statea.getw()), &temp, 1);
 
-  world.barrier();
   if (mpigetrank() == 0)
     h = DotProduct(statea.getw(), temp);
 

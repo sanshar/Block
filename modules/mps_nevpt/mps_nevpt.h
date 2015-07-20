@@ -3,7 +3,7 @@
 
 namespace SpinAdapted{
   namespace mps_nevpt{
-    void mps_nevpt(int baseState);
+    void mps_nevpt(double sweep_tol);
 
   }
 }
