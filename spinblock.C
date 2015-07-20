@@ -720,8 +720,8 @@ void SpinBlock::BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum>
     ladders[i] = dets[i].spinLadder(min(2, dets[i].S.getirrep()));
 
 
-  tcpu = slatertimer.elapsedcputime();twall= slatertimer.elapsedwalltime();
   build_operators(dets, ladders);
+  tcpu = slatertimer.elapsedcputime();twall= slatertimer.elapsedwalltime();
   p3out << "\t\t\t time in slater operator build " <<  twall << " " << tcpu << endl;
 
 
