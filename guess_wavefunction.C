@@ -111,7 +111,7 @@ void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const SpinB
       onedot_transpose_wavefunction(oldStateInfo, big.get_braStateInfo(), oldWave, trial);
 
   }
-
+  oldStateInfo.Free ();
 }
 
 void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const StateInfo& stateInfo, const std::vector<int>& rightsites, const std::vector<int> &dotsites, const int state, const bool &onedot, const bool& transpose_guess_wave)
@@ -129,6 +129,7 @@ void GuessWave::transpose_previous_wavefunction(Wavefunction& trial, const State
   sort(wfsites.begin(), wfsites.end());
   oldWave.LoadWavefunctionInfo(oldStateInfo, wfsites, state);
   onedot_transpose_wavefunction(oldStateInfo, stateInfo, oldWave, trial);
+  oldStateInfo.Free ();
 }
 
 
@@ -513,6 +514,8 @@ void GuessWave::transform_previous_wavefunction(Wavefunction& trial, const State
     
   onedot_transform_wavefunction(oldStateInfo, stateInfo, oldWave, leftRotationMatrix, rightRotationMatrix, trial, transpose_guess_wave);
 
+  oldStateInfo.Free ();
+
   double norm = DotProduct(trial, trial);
 }
 
@@ -627,6 +630,7 @@ it's not necessary to take the pseudo inverse of right rotation matrix.
     onedot_transform_wavefunction(oldStateInfo, big.get_stateInfo(), oldWave, leftRotationMatrix, rightRotationMatrix, trial, transpose_guess_wave);
   }
 
+  oldStateInfo.Free ();
 
   double norm = DotProduct(trial, trial);
 }
@@ -687,6 +691,8 @@ void GuessWave::transform_previous_twodot_to_onedot_wavefunction(Wavefunction& t
 
   TensorProduct( *big.get_stateInfo().leftStateInfo->leftStateInfo, *oldStateInfo.rightStateInfo,  tempoldStateInfo, PARTICLE_SPIN_NUMBER_CONSTRAINT);
   onedot_shufflesysdot(  tempoldStateInfo, big.get_stateInfo(), tmpwavefunction, trial);
+
+  oldStateInfo.Free ();
 
   double norm = DotProduct(trial, trial);
 }
@@ -806,6 +812,7 @@ it's not necessary to take the pseudo inverse of right rotation matrix.
   }
 
 
+  oldStateInfo.Free ();
 
   double norm = DotProduct(trial, trial);
 }
