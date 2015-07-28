@@ -12,6 +12,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "screen.h"
 
 namespace SpinAdapted {
+ 
   // -------------------- C_S1 ---------------------------  
   template<> string Op_component<Cre>::get_op_string() const {
     return "CRE";
@@ -58,8 +59,7 @@ namespace SpinAdapted {
       return ret_val;
     }
   
-
-  template<> void Op_component<Cre>::add_local_indices(int i, int j , int k)
+  template<> void Op_component<Cre>::add_local_indices(int i, int j , int k) 
     {
       m_op.add_local_index(i);
       
@@ -67,7 +67,6 @@ namespace SpinAdapted {
       vec.resize(1);
       vec[0]=boost::shared_ptr<Cre>(new Cre);
     }
-
 
   //usually not needed, because it can be calculated as a transpose of C, but
   //when the bra and ket state in the block are different than transpose cannot be used
@@ -117,7 +116,7 @@ namespace SpinAdapted {
     }
   
 
-  template<> void Op_component<Des>::add_local_indices(int i, int j , int k)
+  template<> void Op_component<Des>::add_local_indices(int i, int j , int k) 
     {
       m_op.add_local_index(i);
       
@@ -162,6 +161,7 @@ namespace SpinAdapted {
 	}
     }
   
+  template<> void Op_component<CreDes>::add_local_indices(int i, int j , int k) {};
 
   // -------------------- dC_ ---------------------------  
   template<> string Op_component<DesCre>::get_op_string() const {
@@ -197,6 +197,7 @@ namespace SpinAdapted {
 	}
     }
   
+  template<> void Op_component<DesCre>::add_local_indices(int i, int j , int k) {};
   
   
   // -------------------- Cc_ ---------------------------  
@@ -233,6 +234,7 @@ namespace SpinAdapted {
 	}
     }
   
+  template<> void Op_component<CreCre>::add_local_indices(int i, int j , int k) {};
   
   // -------------------- Dd_ ---------------------------  
   template<> string Op_component<DesDes>::get_op_string() const {
@@ -268,6 +270,7 @@ namespace SpinAdapted {
 	}
     }
   
+  template<> void Op_component<DesDes>::add_local_indices(int i, int j , int k) {};
   
   // -------------------- Cdcomp_ ---------------------------  
   template<> string Op_component<CreDesComp>::get_op_string() const {
@@ -308,7 +311,7 @@ namespace SpinAdapted {
       }
 	}
   }
-  
+
   template<> void Op_component<CreDesComp>::add_local_indices(int i, int j , int k)
     {
       m_op.add_local_indices(i,j);
@@ -363,7 +366,7 @@ namespace SpinAdapted {
   }
   
   
-  template<> void Op_component<DesCreComp>::add_local_indices(int i, int j , int k)
+  template<> void Op_component<DesCreComp>::add_local_indices(int i, int j , int k) 
     {
       m_op.add_local_indices(i,j);
       
@@ -418,7 +421,7 @@ namespace SpinAdapted {
       
     }
   
-  template<> void Op_component<DesDesComp>::add_local_indices(int i, int j , int k)
+  template<> void Op_component<DesDesComp>::add_local_indices(int i, int j , int k) 
     {
       m_op.add_local_indices(i,j);
       
@@ -473,7 +476,7 @@ namespace SpinAdapted {
       
     }
   
-  template<> void Op_component<CreCreComp>::add_local_indices(int i, int j , int k)
+  template<> void Op_component<CreCreComp>::add_local_indices(int i, int j , int k) 
     {
       m_op.add_local_indices(i,j);
       
@@ -536,6 +539,8 @@ namespace SpinAdapted {
       return ret_val;
     }
 
+  template<> void Op_component<CreCreDesComp>::add_local_indices(int i, int j , int k) {};
+
   //usually not needed, because it can be calculated as a transpose of CCDcomp, but
   //when the bra and ket state in the block are different than transpose cannot be used
   // -------------------- Cddcomp_ ---------------------------  
@@ -586,6 +591,8 @@ namespace SpinAdapted {
 	}
       return ret_val;
     }
+
+  template<> void Op_component<CreDesDesComp>::add_local_indices(int i, int j , int k) {};
   
   // -------------------- HAM ---------------------------  
   template<> string Op_component<Ham>::get_op_string() const {
@@ -614,6 +621,8 @@ namespace SpinAdapted {
       std::vector< std::vector<int> > ret_val(m_op.local_nnz());
       return ret_val;
     }
+
+  template<> void Op_component<Ham>::add_local_indices(int i, int j , int k) {};
   
   // -------------------- Overlap ---------------------------  
   template<> string Op_component<Overlap>::get_op_string() const {
@@ -638,6 +647,31 @@ namespace SpinAdapted {
       return ret_val;
     }
   
+  template<> void Op_component<Overlap>::add_local_indices(int i, int j , int k) {};
+
+// three-index opertors
+  template<> void Op_component<CreCreDes>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<CreDesDes>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<CreDesCre>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<CreCreCre>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<DesCreDes>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<DesDesCre>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<DesCreCre>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<DesDesDes>::add_local_indices(int i, int j , int k) {};
+
+// four-index opertors
+  template<> void Op_component<CreCreDesDes>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<CreDesCreDes>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<CreDesDesCre>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<CreDesDesDes>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<CreCreCreDes>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<CreCreDesCre>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<CreDesCreCre>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<CreCreCreCre>::add_local_indices(int i, int j , int k) {};
+
+// NPDM
+  template<> void Op_component<RI3index>::add_local_indices(int i, int j , int k) {};
+  template<> void Op_component<RI4index>::add_local_indices(int i, int j , int k) {};
 
 
 }
