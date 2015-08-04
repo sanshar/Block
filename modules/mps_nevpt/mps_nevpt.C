@@ -85,21 +85,6 @@ void SpinAdapted::mps_nevpt::mps_nevpt(double sweep_tol)
   dmrginp.set_algorithm_method() = atype;
   readZeroEnergy();
   double energy = 0.0; 
-  if (dmrginp.core_size()>0)
-  {
-    energy = SpinAdapted::mps_nevpt::type1::subspace_Vi(baseState);
-  }
-  std::string file = str(boost::format("%s%s%d") % dmrginp.load_prefix() % "/Vi_" % baseState);
-  std::fstream f(file,std::fstream::out);
-  f << energy;
-  f.close();
-  energy = 0.0; 
-  if (dmrginp.virt_size()>0)
-  {
-    energy = SpinAdapted::mps_nevpt::type1::subspace_Va(baseState);
-  }
-  std::string file2 = str(boost::format("%s%s%d") % dmrginp.load_prefix() % "/Va_" % baseState);
-  std::fstream f2(file2,std::fstream::out);
-  f2 << energy;
-  f2.close();
+  SpinAdapted::mps_nevpt::type1::subspace_Vi(baseState);
+  SpinAdapted::mps_nevpt::type1::subspace_Va(baseState);
 }

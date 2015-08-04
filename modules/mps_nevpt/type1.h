@@ -19,9 +19,9 @@ namespace SpinAdapted{
 
       void cleanup(int baseState, const perturber& pb, int cleanleve=0);
       
-      double subspace_Va(int baseState);
+      void subspace_Va(int baseState);
 
-      double subspace_Vi(int baseState);
+      void subspace_Vi(int baseState);
 
       void calcHamiltonianAndOverlap(const MPS& statea, double& h, double& o, perturber& pb);
     }

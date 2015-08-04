@@ -361,7 +361,7 @@ void SpinAdapted::mps_nevpt::type1::cleanup(int baseState, const perturber& pb, 
 }
 
 
-double SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
+void SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
 {
   
   double energy=0;
@@ -454,10 +454,14 @@ double SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
   pout << "Nevpt2 correction to the energy for state 0 in subspace Vi is " << energy<<endl;;
   pout << "Nevpt2 Vi subspace perturber Amplitude : " << overlap<<endl;;
   //pout << "Core Energy of nevpt2 " <<perturber::CoreEnergy[0]<<endl;
-  return energy;
+  std::string file = str(boost::format("%s%s%d") % dmrginp.load_prefix() % "/Vi_" % baseState);
+  std::fstream f(file,std::fstream::out);
+  f << energy <<endl;
+  f << overlap <<endl;
+  f.close();
 }
 
-double SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
+void SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
 {
   
   double energy=0;
@@ -567,7 +571,11 @@ double SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
   pout << "Nevpt2 correction to the energy for state 0 in subspace Va is " << energy<<endl;;
   pout << "Nevpt2 Va subspace perturber Amplitude : " << overlap<<endl;;
   //pout << "Core Energy of nevpt2 " <<perturber::CoreEnergy[0]<<endl;
-  return energy;
+  std::string file = str(boost::format("%s%s%d") % dmrginp.load_prefix() % "/Va_" % baseState);
+  std::fstream f(file,std::fstream::out);
+  f << energy <<endl;
+  f << overlap <<endl;
+  f.close();
 }
 
 void SpinAdapted::mps_nevpt::type1::calcHamiltonianAndOverlap(const MPS& statea, double& h, double& o, perturber& pb) {
