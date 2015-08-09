@@ -46,11 +46,8 @@ class Npdm_driver {
 		std::vector<boost::shared_ptr<std::map<std::vector<int>, Wavefunction> > > inner_intermediate;
 
     void loop_over_operator_patterns( Npdm_patterns& patterns, Npdm_expectations& expectations, const SpinBlock& big );
-    void loop_over_operator_patterns_store( Npdm::Npdm_patterns& patterns, Npdm::Npdm_expectations& expectations, const SpinBlock& big );
     void do_inner_loop( const char inner, Npdm_expectations & npdm_expectations, 
                         NpdmSpinOps_base & outerOps, NpdmSpinOps & innerOps, NpdmSpinOps & dotOps );
-    void do_inner_loop( const char inner, Npdm_expectations & npdm_expectations, 
-                        NpdmSpinOps_base & outerOps, NpdmSpinOps & innerOps, NpdmSpinOps & dotOps, std::map<std::vector<int>, Wavefunction>& waves );
     void do_inner_loop( const char inner, Npdm_expectations & npdm_expectations, 
                         NpdmSpinOps_base & outerOps, NpdmSpinOps & dotOps, std::map<std::vector<int>, Wavefunction>& waves );
     void loop_over_block_operators( Npdm_expectations& npdm_expectations, NpdmSpinOps& outerOps, NpdmSpinOps& innerOps, NpdmSpinOps& dotOps );
@@ -63,7 +60,6 @@ class Npdm_driver {
     void do_parallel_intermediate_loop( const char inner, Npdm_expectations & npdm_expectations,
                                NpdmSpinOps & outerOps, NpdmSpinOps & innerOps, NpdmSpinOps & dotOps, bool skip );
     void get_inner_Operators( const char inner, Npdm_expectations & npdm_expectations, boost::shared_ptr<NpdmSpinOps> lhsOps, boost::shared_ptr<NpdmSpinOps> dotOps, boost::shared_ptr<NpdmSpinOps> rhsOps) ;
-
     int get_mpi_max_size( int my_size );
     bool broadcast_lhs( int lhs_size, int rhs_size );
     bool skip_this_mpi_rank( NpdmSpinOps & outerOps, NpdmSpinOps & innerOps );

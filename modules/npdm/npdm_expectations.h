@@ -28,16 +28,12 @@ class Npdm_expectations {
     std::vector< std::pair< std::vector<int>, double > > 
       get_nonspin_adapted_expectations(NpdmSpinOps_base& lhsOps, NpdmSpinOps_base& rhsOps, NpdmSpinOps_base& dotOps);
     std::vector< std::pair< std::vector<int>, double > > 
-      get_nonspin_adapted_expectations(const char inner, NpdmSpinOps_base& lhsOps, NpdmSpinOps_base& rhsOps, NpdmSpinOps_base& dotOps, std::map<std::vector<int>, Wavefunction>& waves);
-    std::vector< std::pair< std::vector<int>, double > > 
       get_nonspin_adapted_expectations(NpdmSpinOps_base& lhsOps, NpdmSpinOps_base& rhsOps, NpdmSpinOps_base& dotOps,std::map<std::vector<int>, Wavefunction>& leftwaves, std::map<std::vector<int>, Wavefunction>& rightwaves);
-    void store( NpdmSpinOps_base & rhsOps );
-    void store( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dotOps );
-    void restore( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dotOps, std::map<std::vector<int>, Wavefunction>& halfwaves);
-    void restore( NpdmSpinOps_base & rhsOps, std::map<std::vector<int>, Wavefunction>& halfwaves);
     void get_op_string( NpdmSpinOps_base & rhsOps, std::string& op_string);
     void get_op_string( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dotOps, std::string& op_string );
-		double diskread_time = 0;
+    void compute_intermediate( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dotOps, std::map<std::vector<int>, Wavefunction> & waves);
+
+    void compute_intermediate( NpdmSpinOps_base & rhsOps, std::map<std::vector<int>, Wavefunction> &  waves);
     std::vector<std::string> intermediate_filenames;
 
   private:
@@ -52,10 +48,8 @@ class Npdm_expectations {
     bool screen_op_string_for_duplicates( const std::string& op, const std::vector<int>& indices );
     double contract_spin_adapted_operators( int ilhs, int idot, int irhs, NpdmSpinOps_base& lhsOps, NpdmSpinOps_base& rhsOps, NpdmSpinOps_base& dotOps );
     void build_spin_adapted_singlet_expectations( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps);
-    void build_spin_adapted_singlet_expectations( const char inner, NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps, std::map<std::vector<int>, Wavefunction>& waves );
     void build_spin_adapted_singlet_expectations( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps, std::map<std::vector<int>, Wavefunction>& leftwaves , std::map<std::vector<int>, Wavefunction>& rightwaves);
     double build_nonspin_adapted_singlet_expectations( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps);
-    double build_nonspin_adapted_singlet_expectations( const char inner, NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps, std::map<std::vector<int>, Wavefunction>& waves );
     double build_nonspin_adapted_singlet_expectations( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & rhsOps, NpdmSpinOps_base & dotOps, std::map<std::vector<int>, Wavefunction>& leftwaves , std::map<std::vector<int>, Wavefunction>& rightwaves);
     bool test_for_singlet( int ilhs, int idot, int irhs, NpdmSpinOps_base& lhsOps, NpdmSpinOps_base& rhsOps, NpdmSpinOps_base& dotOps );
 
