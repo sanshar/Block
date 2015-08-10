@@ -120,6 +120,9 @@ void SpinAdapted::Input::initialize_defaults()
   m_spatpdm_disk_dump = false;
   m_store_nonredundant_pdm =false;
   m_pdm_unsorted = false;
+
+
+  m_nevpt_state_num = 0;
  
   m_maxiter = 10;
   m_oneindex_screen_tol = NUMERICAL_ZERO;
@@ -616,6 +619,15 @@ SpinAdapted::Input::Input(const string& config_name) {
           //vpt_2[static_cast<TwoPerturbType>(i)]= TwoElectronArray(TwoElectronArray::restrictedNonPermSymm);
           vpt_2[static_cast<TwoPerturbType>(i)]= PerturbTwoElectronArray();
         }
+      }
+      else if (boost::iequals(keyword,  "nevpt_state_num" ))
+      {
+	      if (tok.size() !=  2) {
+          pout << "keyword nevpt_state_num should be followed by a single integer than then an end line."<<endl;
+          abort();
+        }
+        m_nevpt_state_num = atoi(tok[1].c_str());
+
       }
       else if (boost::iequals(keyword,  "maxj")) {
 	if (tok.size() !=  2) {

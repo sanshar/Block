@@ -168,6 +168,7 @@ class Input {
   int m_core_size;
   int m_virt_size;
   int m_total_orbs;
+  int m_nevpt_state_num;
   std::vector<int> m_total_spin_orbs_symmetry;
   std::vector<int> m_total_spatial_to_spin;
   std::vector<int> m_total_spin_to_spatial;
@@ -502,14 +503,11 @@ class Input {
   int slater_size() const {return m_norbs;}
   const std::vector<int> &reorder_vector() {return m_reorder;}
   const int &act_size() const { return m_act_size;}
-  int &act_size(){ return m_act_size;}
   const int &core_size() const { return m_core_size;}
-  int &core_size(){ return m_core_size;}
   const int &virt_size() const { return m_virt_size;}
-  int &virt_size(){ return m_virt_size;}
   const int &total_size() const { return m_total_orbs;}
-  int &total_size(){ return m_total_orbs;}
   bool spinAdapted() {return m_spinAdapted;}
+  const int &nevpt_state_num() const {return m_nevpt_state_num;}
 };
 }
 #endif

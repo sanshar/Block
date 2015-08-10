@@ -239,7 +239,8 @@ void SpinAdapted::mps_nevpt::type1::BlockDecimateAndCompress (SweepParams &sweep
 
   //read the 0th wavefunction which we keep on the ket side because by default the ket stateinfo is used to initialize wavefunction
   //also when you use spinblock operators to multiply a state, it does so from the ket side i.e.  H|ket>
-  GuessWave::guess_wavefunctions(solution, e, big, sweepParams.set_guesstype(), sweepParams.get_onedot(), dot_with_sys, 0.0, baseState); 
+  //GuessWave::guess_wavefunctions(solution, e, big, sweepParams.set_guesstype(), sweepParams.get_onedot(), dot_with_sys, 0.0, baseState); 
+  GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.set_guesstype(), sweepParams.get_onedot(), baseState, dot_with_sys, 0.0); 
 
 #ifndef SERIAL
   mpi::communicator world;
@@ -279,7 +280,8 @@ void SpinAdapted::mps_nevpt::type1::BlockDecimateAndCompress (SweepParams &sweep
   DensityMatrix bratracedMatrix(newSystem.get_braStateInfo());
   bratracedMatrix.allocate(newSystem.get_braStateInfo());
 
-  bratracedMatrix.makedensitymatrix(outputState, newbig, dmrginp.weights(sweepiter), 0.0, 0.0, true);
+  //bratracedMatrix.makedensitymatrix(outputState, newbig, dmrginp.weights(sweepiter), 0.0, 0.0, true);
+  bratracedMatrix.makedensitymatrix(outputState, newbig, std::vector<double>(1,1.0), 0.0, 0.0, true);
   /*
   if (sweepParams.get_noise() > NUMERICAL_ZERO) {
     pout << "adding noise  "<<trace(bratracedMatrix)<<"  "<<sweepiter<<"  "<<dmrginp.weights(sweepiter)[0]<<endl;
@@ -367,7 +369,6 @@ void SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
   double energy=0;
   double overlap=0;
   ViPerturber pb;
-  MPS basemps(baseState);
   MPS::siteBlocks.clear();
   int coresize = dmrginp.spinAdapted()? dmrginp.core_size():dmrginp.core_size()*2;
   int coreshift = dmrginp.spinAdapted()? dmrginp.act_size(): dmrginp.act_size()*2;
@@ -380,9 +381,10 @@ void SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
     pout << "Begin Vi subspace with i = " << pb.orb(0)<<endl;
     SweepParams sweepParams;
     sweepParams.set_sweep_parameters();
+    sweepParams.current_root() = baseState;
     //sweepParams.current_root() = -1;
     //double last_fe = Startup(sweepParams, true, true, false, 0, pb, baseState);
-    Startup(sweepParams, true, basemps, pb, baseState);
+    Startup(sweepParams, true, pb, baseState);
     //sweepParams.current_root() = baseState;
     while(true)
     {
@@ -430,15 +432,16 @@ void SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
       double fock =dmrginp.spinAdapted()? v_1[0](2*(i+coreshift),2*(i+coreshift)): v_1[0](i+coreshift,i+coreshift);
       //perturberEnergy = h/o+fock+perturber::CoreEnergy[0];
       perturberEnergy = h/o - fock;
-      energy += o/(perturber::ZeroEnergy[0]- perturberEnergy) ;
+      energy += o/(perturber::ZeroEnergy[baseState]- perturberEnergy) ;
       //overlap +=o;
-      overlap += sqrt(o)/(perturber::ZeroEnergy[0]- perturberEnergy);
+      overlap += sqrt(o)/(perturber::ZeroEnergy[baseState]- perturberEnergy);
       if (dmrginp.outputlevel() > 0)
       {
-        pout << "Amplitude : " << sqrt(o)/(perturber::ZeroEnergy[0]- perturberEnergy) <<endl;
+        pout << "Zero Energy: " << perturber::ZeroEnergy[baseState]<<endl;
+        pout << "Amplitude : " << sqrt(o)/(perturber::ZeroEnergy[baseState]- perturberEnergy) <<endl;
         pout << "Ener(only CAS part) : " << h/o<<endl;
         pout << "Energy : " << perturberEnergy<<endl;
-        pout << "Correction Energy: "<< o/(perturber::ZeroEnergy[0]- perturberEnergy)<<endl; 
+        pout << "Correction Energy: "<< o/(perturber::ZeroEnergy[baseState]- perturberEnergy)<<endl; 
       }
     }
     else{
@@ -467,7 +470,6 @@ void SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
   double energy=0;
   double overlap=0;
   VaPerturber pb;
-  MPS basemps(baseState);
   MPS::siteBlocks.clear();
   int virtsize = dmrginp.spinAdapted()? dmrginp.virt_size():dmrginp.virt_size()*2;
   int virtshift = dmrginp.spinAdapted()? dmrginp.core_size()+dmrginp.act_size(): (dmrginp.core_size()+dmrginp.act_size())*2;
@@ -480,9 +482,10 @@ void SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
     pout << "Begin Va subspace with a = " << pb.orb(0)<<endl;
     SweepParams sweepParams;
     sweepParams.set_sweep_parameters();
+    sweepParams.current_root() = baseState;
     //sweepParams.current_root() = -1;
     //double last_fe = Startup(sweepParams, true, true, false, 0, pb, baseState);
-    Startup(sweepParams, true, basemps, pb, baseState);
+    Startup(sweepParams, true, pb, baseState);
     //sweepParams.current_root() = baseState;
     while(true)
     {
@@ -548,14 +551,14 @@ void SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
       double fock =dmrginp.spinAdapted()? v_1[0](2*(i+virtshift),2*(i+virtshift)): v_1[0](i+virtshift,i+virtshift);
       //perturberEnergy = h/o+fock+perturber::CoreEnergy[0];
       perturberEnergy = h/o+fock;
-      energy += o/(perturber::ZeroEnergy[0]- perturberEnergy) ;
+      energy += o/(perturber::ZeroEnergy[baseState]- perturberEnergy) ;
       //overlap +=o;
-      overlap += sqrt(o)/(perturber::ZeroEnergy[0]- perturberEnergy);
+      overlap += sqrt(o)/(perturber::ZeroEnergy[baseState]- perturberEnergy);
       if (dmrginp.outputlevel() > 0){
-        pout << "Amplitude : " << sqrt(o)/(perturber::ZeroEnergy[0]- perturberEnergy) <<endl;
+        pout << "Amplitude : " << sqrt(o)/(perturber::ZeroEnergy[baseState]- perturberEnergy) <<endl;
         pout << "Ener(only CAS part) : " << h/o<<endl;
         pout << "Energy : " << perturberEnergy<<endl;
-        pout << "Correction Energy: "<< o/(perturber::ZeroEnergy[0]- perturberEnergy)<<endl; 
+        pout << "Correction Energy: "<< o/(perturber::ZeroEnergy[baseState]- perturberEnergy)<<endl; 
       }
     }
     else{
@@ -611,7 +614,7 @@ void SpinAdapted::mps_nevpt::type1::calcHamiltonianAndOverlap(const MPS& statea,
 
   SpinBlock newSystem, big;
   system.addAdditionalCompOps();
-  system.printOperatorSummary();
+  //system.printOperatorSummary();
   //To set implicit_transpose to true.
   //The last site spinblock should have implicit_transpose true.
   InitBlocks::InitNewSystemBlock(system, MPS::siteBlocks_noDES[MPS::sweepIters], newSystem,  leftState, rightState, sys_add, direct, 0, DISTRIBUTED_STORAGE, false, true,NO_PARTICLE_SPIN_NUMBER_CONSTRAINT,statea.getw().get_deltaQuantum(),statea.getw().get_deltaQuantum());
@@ -667,7 +670,7 @@ void SpinAdapted::mps_nevpt::type1::calcHamiltonianAndOverlap(const MPS& statea,
   return;
 }
 
-void SpinAdapted::mps_nevpt::type1::Startup(const SweepParams &sweepParams, const bool &forward, const MPS& statea, perturber& pb, int baseState) {
+void SpinAdapted::mps_nevpt::type1::Startup(const SweepParams &sweepParams, const bool &forward, perturber& pb, int baseState) {
 
 #ifndef SERIAL
   mpi::communicator world;

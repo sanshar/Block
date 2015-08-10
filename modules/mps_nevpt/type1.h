@@ -15,7 +15,7 @@ namespace SpinAdapted{
       
 //      void Startup (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool& dot_with_sys, perturber& pb, int baseState);
 
-      void Startup(const SweepParams& sweepParams, const bool &forward, const MPS& statea, perturber& pb, int baseState);
+      void Startup(const SweepParams& sweepParams, const bool &forward, perturber& pb, int baseState);
 
       void cleanup(int baseState, const perturber& pb, int cleanleve=0);
       

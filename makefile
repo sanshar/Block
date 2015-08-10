@@ -24,9 +24,9 @@ USE_MKL = yes
 MOLCAS_INTERFACE = yes
 
 ifeq ($(USE_MKL), yes)
-MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/
+MKLLIB = /opt/intel/composer_xe2013.3.163/mkl/lib/intel64/
 LAPACKBLAS = -L${MKLLIB} -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
-MKLFLAGS = /opt/intel/composer_xe_2013_sp1.0.080/mkl/include
+MKLFLAGS = /opt/intel/composer_xe_2013.3.163/mkl/include
 MKLOPT = -D_HAS_INTEL_MKL
 else
 MKLFLAGS = .

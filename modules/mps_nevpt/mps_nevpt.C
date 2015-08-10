@@ -5,11 +5,11 @@
 
 void dmrg(double sweep_tol);
 vector<double> perturber::ZeroEnergy;
-vector<double> perturber::CoreEnergy;
+//vector<double> perturber::CoreEnergy;
 
 double readZeroEnergy(){
   perturber::ZeroEnergy.resize(dmrginp.nroots());
-  perturber::CoreEnergy.resize(dmrginp.nroots(),0.0);
+//  perturber::CoreEnergy.resize(dmrginp.nroots(),0.0);
 
   std::string efile;
   efile = str(boost::format("%s%s") % dmrginp.load_prefix() % "/dmrg.e" );
@@ -19,15 +19,14 @@ double readZeroEnergy(){
   }
   fclose(f);
 
-  for(int i=0; i< dmrginp.core_size(); i++)
-    perturber::CoreEnergy[0] += 2*v_1[0](2*(i+dmrginp.act_size()),2*(i+dmrginp.act_size()));
-  //perturber::ZeroEnergy[0] +=perturber::CoreEnergy[0];
-  pout << "Zero order energy for state 0 is " << perturber::ZeroEnergy[0]<<endl;;
+//  for(int i=0; i< dmrginp.core_size(); i++)
+//    perturber::CoreEnergy[0] += 2*v_1[0](2*(i+dmrginp.act_size()),2*(i+dmrginp.act_size()));
+//  //perturber::ZeroEnergy[0] +=perturber::CoreEnergy[0];
+//  pout << "Zero order energy for state 0 is " << perturber::ZeroEnergy[0]<<endl;;
 }
 
 void SpinAdapted::mps_nevpt::mps_nevpt(double sweep_tol)
 {
-  int baseState = 0;
   //if(!restartpdm){
   //  if (RESTART && !FULLRESTART)
   //    restart(sweep_tol, reset_iter);
@@ -75,6 +74,7 @@ void SpinAdapted::mps_nevpt::mps_nevpt(double sweep_tol)
   algorithmTypes atype = dmrginp.algorithm_method();
   dmrginp.set_algorithm_method() = ONEDOT;
   //initialize state info and canonicalize wavefunction is always done using onedot algorithm
+  int baseState = dmrginp.nevpt_state_num();
   if (mpigetrank()==0) {
     Sweep::InitializeStateInfo(sweepParams, direction, baseState);
     Sweep::InitializeStateInfo(sweepParams, !direction, baseState);
@@ -84,7 +84,6 @@ void SpinAdapted::mps_nevpt::mps_nevpt(double sweep_tol)
   }
   dmrginp.set_algorithm_method() = atype;
   readZeroEnergy();
-  double energy = 0.0; 
   SpinAdapted::mps_nevpt::type1::subspace_Vi(baseState);
   SpinAdapted::mps_nevpt::type1::subspace_Va(baseState);
 }
