@@ -429,7 +429,7 @@ void SpinAdapted::operatorfunctions::braTensorMultiply(const SpinBlock *ablock, 
 	    if (a.allowed(lQPrime, lQ))
               {
 		const Matrix& aop = a.operator_element(lQPrime, lQ);
-		  for (int rQ = 0; rQ < rightKetOpSz; ++rQ) 
+		  for (int rQ = 0; rQ < rightBraOpSz; ++rQ) 
 		    if (c.allowed(lQPrime, rQ) && v.allowed(lQ, rQ))
 		    {
                       double fac=scale;

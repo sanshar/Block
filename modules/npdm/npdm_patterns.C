@@ -31,28 +31,19 @@ Npdm_patterns::Npdm_patterns( NpdmOrder pdm_order, int sweep_pos, int end_pos )
 
 bool Npdm_patterns::screen_2pdm_strings( const std::vector<int>& indices, const std::string& CD )
 {
-  if(dmrginp.doimplicitTranspose()){
-    if ( indices[0] == indices[1] ) {
-      std::string foo = { 'C', 'D', 'D', 'C' };
-      if ( CD == foo ) return true;
-    }
-    return false;
+  if(!dmrginp.doimplicitTranspose()) return false;
+  if ( indices[0] == indices[1] ) {
+    std::string foo = { 'C', 'D', 'D', 'C' };
+    if ( CD == foo ) return true;
   }
-  else{
-    if(indices[0] == indices[1]){
-      std::string foo= {'D','C','D','C'};
-      if( CD==foo) return true;
-      foo= {'D','C','C','D'};
-      if( CD==foo) return true;
-      }
-    return false;
-  }
+  return false;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 bool Npdm_patterns::screen_3pdm_strings( const std::vector<int>& indices, const std::string& CD )
 {
+  if(!dmrginp.doimplicitTranspose()) return false;
   if ( (indices[0] == indices[2]) && (indices[1] == indices[3]) ) {
     std::string foo = { 'C', 'C', 'D', 'D', 'D', 'C' }; if ( CD == foo ) return true;
   }
@@ -75,6 +66,7 @@ bool Npdm_patterns::screen_3pdm_strings( const std::vector<int>& indices, const 
 
 bool Npdm_patterns::screen_4pdm_strings( const std::vector<int>& indices, const std::string& CD )
 {
+  if(!dmrginp.doimplicitTranspose()) return false;
   if ( (indices[0] == indices[1]) 
     && (indices[2] == indices[4])
     && (indices[3] == indices[5]) ) {
@@ -473,7 +465,9 @@ bool Npdm_patterns::is_valid_ldr_type( std::map< char, std::vector<CD> > & cd_pa
     // if implicit Transpose is not used, lhs can be greater than rhs
     // when spin-adpated is closed, dot site has more than one orbitals. Therefore, each orbital number in opstring is different.
     // Since the first one must be creator. rhs is must large than lhs. 
+  {
     if ( not valid ) return false;
+  }
 
   return true;
 }
@@ -516,9 +510,6 @@ void Npdm_patterns::build_ldr_cd_types( int sweep_pos, int end_pos )
 
       // Only allow if it's a valid full pattern
       if ( not is_valid_ldr_type( cd_pattern ) ) continue;
-      //print_cd_string( lhs_cd );
-      //print_cd_string( dot_cd );
-      //print_cd_string( rhs_cd ); pout << "\n";
 
       ldr_cd_types_.insert( cd_pattern );
       //if ( lhs_cd.size() != 0 ) lhs_cd_types_.insert( lhs_cd );

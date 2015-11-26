@@ -689,7 +689,7 @@ void Npdm_expectations::compute_intermediate( NpdmSpinOps_base & lhsOps, NpdmSpi
 #endif
 
   SparseMatrix* null = 0; 
-  vector<SpinQuantum> dQ = wavefunction_1.get_deltaQuantum();
+  vector<SpinQuantum> dQ = wavefunction_0.get_deltaQuantum();
   assert(dQ.size()==1 );
   assert(dQ[0].totalSpin.getirrep()== 0);
   int lindices= &lhsOps ? lhsOps.indices_.size(): 0;
@@ -724,7 +724,7 @@ void Npdm_expectations::compute_intermediate( NpdmSpinOps_base & lhsOps, NpdmSpi
           Wavefunction opw2;
           opw2.AllowQuantaFor(big_.get_leftBlock()->get_ketStateInfo(),big_.get_rightBlock()->get_braStateInfo(),dQ[0]-AOp.get_deltaQuantum(0));
           //Left part of intermediate wavefuntion should multiply transpose of left ops.
-          operatorfunctions::braTensorMultiply(big_.get_leftBlock(), AOp, &big_, wavefunction_1, opw2, lhsOps.factor_*dotOps.factor_);
+          operatorfunctions::braTensorMultiply(big_.get_leftBlock(), AOp, &big_, wavefunction_0, opw2, lhsOps.factor_*dotOps.factor_);
           std::vector<int> spin;
           //spin.push_back(lhsOp->get_deltaQuantum(0).get_s().getirrep()); spin.push_back(dotOp->get_deltaQuantum(0).get_s().getirrep());spin.push_back(total_spin);
           spin.push_back(ilhs); spin.push_back(idot);spin.push_back(total_spin);
@@ -743,7 +743,7 @@ void Npdm_expectations::compute_intermediate( NpdmSpinOps_base & rhsOps, std::ma
 #endif
 
   SparseMatrix* null = 0; 
-  vector<SpinQuantum> dQ = wavefunction_0.get_deltaQuantum();
+  vector<SpinQuantum> dQ = wavefunction_1.get_deltaQuantum();
   assert(dQ.size()==1 );
   assert(dQ[0].totalSpin.getirrep()== 0);
   int rindices= &rhsOps ? rhsOps.indices_.size(): 0;
@@ -759,7 +759,7 @@ void Npdm_expectations::compute_intermediate( NpdmSpinOps_base & rhsOps, std::ma
       Wavefunction opw2;
       opw2.AllowQuantaFor(big_.get_leftBlock()->get_ketStateInfo(),big_.get_rightBlock()->get_braStateInfo(),dQ[0]+rhsOp->get_deltaQuantum(0));
           //Left part of intermediate wavefuntion should multiply transpose of left ops.
-      operatorfunctions::TensorMultiply(big_.get_rightBlock(), *rhsOp, &big_, wavefunction_0, opw2, rhsOp->get_deltaQuantum(0), rhsOps.factor_);
+      operatorfunctions::TensorMultiply(big_.get_rightBlock(), *rhsOp, &big_, wavefunction_1, opw2, rhsOp->get_deltaQuantum(0), rhsOps.factor_);
       std::vector<int> spin;
       spin.push_back(irhs);
       waves.emplace(spin,opw2);

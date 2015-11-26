@@ -159,6 +159,8 @@ void SpinBlock::setstoragetype(Storagetype st)
     localstorage = false;
     if (has(CRE))
       set_op_array(CRE)->set_local() = true;
+    if (has(DES))
+      set_op_array(DES)->set_local() = true;
     if (has(CRE_DES))
       set_op_array(CRE_DES)->set_local() = false;
     if (has(CRE_CRE))
@@ -325,20 +327,57 @@ void SpinBlock::default_op_components(bool complementary_, bool implicitTranspos
   ops[DES_DESCOMP] = make_new_op(DES_DESCOMP, true);
 
 	if ( dmrginp.new_npdm_code() ) {
-    ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
-    ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
-    if ( (dmrginp.calc_type() == THREEPDM) ||
-         (dmrginp.calc_type() == FOURPDM)  ||
-         (dmrginp.calc_type() == RESTART_THREEPDM)  ||
-         (dmrginp.calc_type() == RESTART_FOURPDM)  ||
-         (dmrginp.calc_type() == NEVPT2PDM) ||
-         (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
-      ops[DES_CRE] = make_new_op(DES_CRE, true);
-      ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
-      ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
-      ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
-      ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
+	  if (dmrginp.npdm_generate() == true)
+	  {
+	  	//Now it is generating environment block for the npdm sweep.
+	  	//On environment block, the number of indices of operators are less than 
+	  	//the order of pdm.
+      ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
+      ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
+      if ( (dmrginp.calc_type() == THREEPDM) ||
+           (dmrginp.calc_type() == RESTART_THREEPDM)  ||
+           (dmrginp.calc_type() == TRANSITION_THREEPDM)  ||
+           (dmrginp.calc_type() == RESTART_T_THREEPDM)  ||
+           (dmrginp.calc_type() == FOURPDM)  ||
+           (dmrginp.calc_type() == RESTART_FOURPDM)  ||
+           (dmrginp.calc_type() == NEVPT2PDM) ||
+           (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
+        ops[DES_CRE] = make_new_op(DES_CRE, true);
+      }
       if ( (dmrginp.calc_type() == FOURPDM)   ||
+           (dmrginp.calc_type() == RESTART_FOURPDM)  ||
+           (dmrginp.calc_type() == NEVPT2PDM) ||
+           (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
+        ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
+        ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
+        ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
+        ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
+        ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
+        ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
+        ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, true);
+        ops[DES_DES_DES] = make_new_op(DES_DES_DES, true);
+      }
+    }
+    else{
+      ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
+      ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
+      if ( (dmrginp.calc_type() == THREEPDM) ||
+           (dmrginp.calc_type() == RESTART_THREEPDM)  ||
+           (dmrginp.calc_type() == TRANSITION_THREEPDM)  ||
+           (dmrginp.calc_type() == RESTART_T_THREEPDM)  ||
+           (dmrginp.calc_type() == FOURPDM)  ||
+           (dmrginp.calc_type() == RESTART_FOURPDM)  ||
+           (dmrginp.calc_type() == NEVPT2PDM) ||
+           (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
+        ops[DES_CRE] = make_new_op(DES_CRE, true);
+        ops[CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE, true);
+        ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
+        ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
+        ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
+      }
+      if ( (dmrginp.calc_type() == TRANSITION_THREEPDM)  ||
+           (dmrginp.calc_type() == RESTART_T_THREEPDM)  ||
+           (dmrginp.calc_type() == FOURPDM)   ||
            (dmrginp.calc_type() == RESTART_FOURPDM)  ||
            (dmrginp.calc_type() == NEVPT2PDM) ||
            (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
@@ -346,6 +385,11 @@ void SpinBlock::default_op_components(bool complementary_, bool implicitTranspos
         ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
         ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, true);
         ops[DES_DES_DES] = make_new_op(DES_DES_DES, true);
+      }
+      if ( (dmrginp.calc_type() == FOURPDM)   ||
+           (dmrginp.calc_type() == RESTART_FOURPDM)  ||
+           (dmrginp.calc_type() == NEVPT2PDM) ||
+           (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
         ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, true);
         ops[CRE_DES_CRE_DES] = make_new_op(CRE_DES_CRE_DES, true);
         ops[CRE_DES_DES_CRE] = make_new_op(CRE_DES_DES_CRE, true);
@@ -434,8 +478,10 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
       ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
       ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
       if ( (dmrginp.calc_type() == THREEPDM) ||
-           (dmrginp.calc_type() == FOURPDM)  ||
            (dmrginp.calc_type() == RESTART_THREEPDM)  ||
+           (dmrginp.calc_type() == TRANSITION_THREEPDM)  ||
+           (dmrginp.calc_type() == RESTART_T_THREEPDM)  ||
+           (dmrginp.calc_type() == FOURPDM)  ||
            (dmrginp.calc_type() == RESTART_FOURPDM)  ||
            (dmrginp.calc_type() == NEVPT2PDM) ||
            (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
@@ -460,8 +506,10 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
       ops[RI_3INDEX] = make_new_op(RI_3INDEX, true);
       ops[RI_4INDEX] = make_new_op(RI_4INDEX, true);
       if ( (dmrginp.calc_type() == THREEPDM) ||
-           (dmrginp.calc_type() == FOURPDM)  ||
            (dmrginp.calc_type() == RESTART_THREEPDM)  ||
+           (dmrginp.calc_type() == TRANSITION_THREEPDM)  ||
+           (dmrginp.calc_type() == RESTART_T_THREEPDM)  ||
+           (dmrginp.calc_type() == FOURPDM)  ||
            (dmrginp.calc_type() == RESTART_FOURPDM)  ||
            (dmrginp.calc_type() == NEVPT2PDM) ||
            (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
@@ -470,23 +518,31 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
         ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, true);
         ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, true);
         ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, true);
-        if ( (dmrginp.calc_type() == FOURPDM)   ||
-             (dmrginp.calc_type() == RESTART_FOURPDM)  ||
-             (dmrginp.calc_type() == NEVPT2PDM) ||
-             (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
-          ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
-          ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
-          ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, true);
-          ops[DES_DES_DES] = make_new_op(DES_DES_DES, true);
-          ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, true);
-          ops[CRE_DES_CRE_DES] = make_new_op(CRE_DES_CRE_DES, true);
-          ops[CRE_DES_DES_CRE] = make_new_op(CRE_DES_DES_CRE, true);
-          ops[CRE_DES_DES_DES] = make_new_op(CRE_DES_DES_DES, true);
-          ops[CRE_CRE_CRE_DES] = make_new_op(CRE_CRE_CRE_DES, true);
-          ops[CRE_CRE_DES_CRE] = make_new_op(CRE_CRE_DES_CRE, true);
-          ops[CRE_DES_CRE_CRE] = make_new_op(CRE_DES_CRE_CRE, true);
-          ops[CRE_CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE_CRE, true);
-        }
+      }
+      if ( 
+           (dmrginp.calc_type() == TRANSITION_THREEPDM)  ||
+           (dmrginp.calc_type() == RESTART_T_THREEPDM)  ||
+           (dmrginp.calc_type() == FOURPDM)   ||
+           (dmrginp.calc_type() == RESTART_FOURPDM)  ||
+           (dmrginp.calc_type() == NEVPT2PDM) ||
+           (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
+        ops[DES_CRE_DES] = make_new_op(DES_CRE_DES, true);
+        ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, true);
+        ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, true);
+        ops[DES_DES_DES] = make_new_op(DES_DES_DES, true);
+      }
+      if ( (dmrginp.calc_type() == FOURPDM)   ||
+           (dmrginp.calc_type() == RESTART_FOURPDM)  ||
+           (dmrginp.calc_type() == NEVPT2PDM) ||
+           (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
+        ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, true);
+        ops[CRE_DES_CRE_DES] = make_new_op(CRE_DES_CRE_DES, true);
+        ops[CRE_DES_DES_CRE] = make_new_op(CRE_DES_DES_CRE, true);
+        ops[CRE_DES_DES_DES] = make_new_op(CRE_DES_DES_DES, true);
+        ops[CRE_CRE_CRE_DES] = make_new_op(CRE_CRE_CRE_DES, true);
+        ops[CRE_CRE_DES_CRE] = make_new_op(CRE_CRE_DES_CRE, true);
+        ops[CRE_DES_CRE_CRE] = make_new_op(CRE_DES_CRE_CRE, true);
+        ops[CRE_CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE_CRE, true);
       }
     }
   }
@@ -542,8 +598,10 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
       ops[RI_3INDEX] = make_new_op(RI_3INDEX, false);
       ops[RI_4INDEX] = make_new_op(RI_4INDEX, false);
       if ( (dmrginp.calc_type() == THREEPDM) ||
-           (dmrginp.calc_type() == FOURPDM)  ||
            (dmrginp.calc_type() == RESTART_THREEPDM)  ||
+           (dmrginp.calc_type() == TRANSITION_THREEPDM)  ||
+           (dmrginp.calc_type() == RESTART_T_THREEPDM)  ||
+           (dmrginp.calc_type() == FOURPDM)  ||
            (dmrginp.calc_type() == RESTART_FOURPDM)  ||
            (dmrginp.calc_type() == NEVPT2PDM) ||
            (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
@@ -569,8 +627,10 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
       ops[RI_3INDEX] = make_new_op(RI_3INDEX, false);
       ops[RI_4INDEX] = make_new_op(RI_4INDEX, false);
       if ( (dmrginp.calc_type() == THREEPDM) ||
-           (dmrginp.calc_type() == FOURPDM)  ||
            (dmrginp.calc_type() == RESTART_THREEPDM)  ||
+           (dmrginp.calc_type() == TRANSITION_THREEPDM)  ||
+           (dmrginp.calc_type() == RESTART_T_THREEPDM)  ||
+           (dmrginp.calc_type() == FOURPDM)  ||
            (dmrginp.calc_type() == RESTART_FOURPDM)  ||
            (dmrginp.calc_type() == NEVPT2PDM) ||
            (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
@@ -579,7 +639,10 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
         ops[CRE_DES_DES] = make_new_op(CRE_DES_DES, false);
         ops[CRE_CRE_DES] = make_new_op(CRE_CRE_DES, false);
         ops[CRE_DES_CRE] = make_new_op(CRE_DES_CRE, false);
-        if ( (dmrginp.calc_type() == FOURPDM)   ||
+        }
+        if ( (dmrginp.calc_type() == TRANSITION_THREEPDM)  ||
+             (dmrginp.calc_type() == RESTART_T_THREEPDM)  ||
+             (dmrginp.calc_type() == FOURPDM)   ||
              (dmrginp.calc_type() == RESTART_FOURPDM)  ||
              (dmrginp.calc_type() == NEVPT2PDM) ||
              (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
@@ -587,6 +650,11 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
           ops[DES_DES_CRE] = make_new_op(DES_DES_CRE, false);
           ops[DES_CRE_CRE] = make_new_op(DES_CRE_CRE, false);
           ops[DES_DES_DES] = make_new_op(DES_DES_DES, false);
+        }
+        if ( (dmrginp.calc_type() == FOURPDM)   ||
+             (dmrginp.calc_type() == RESTART_FOURPDM)  ||
+             (dmrginp.calc_type() == NEVPT2PDM) ||
+             (dmrginp.calc_type() == RESTART_NEVPT2PDM) ) {
           ops[CRE_CRE_DES_DES] = make_new_op(CRE_CRE_DES_DES, false);
           ops[CRE_DES_CRE_DES] = make_new_op(CRE_DES_CRE_DES, false);
           ops[CRE_DES_DES_CRE] = make_new_op(CRE_DES_DES_CRE, false);
@@ -597,7 +665,6 @@ void SpinBlock::default_op_components(bool direct, SpinBlock& lBlock, SpinBlock&
           ops[CRE_CRE_CRE_CRE] = make_new_op(CRE_CRE_CRE_CRE, false);
         }
       }
-    }
   }
 
     if (haveNormops)
