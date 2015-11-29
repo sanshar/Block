@@ -216,12 +216,12 @@ bool Npdm_expectations::test_for_singlet( int ilhs, int idot, int irhs, NpdmSpin
 double DotProduct_spincorrection(const Wavefunction& w1, const Wavefunction& w2, const SpinBlock& big)
 {
   // After multipling ket by cd operator, it has the same basis with ket
-  int leftOpSz = big.get_leftBlock()->get_braStateInfo().quanta.size ();
-  int rightOpSz = big.get_rightBlock()->get_braStateInfo().quanta.size ();
-  const StateInfo* rS = big.get_braStateInfo().rightStateInfo, *lS = big.get_braStateInfo().leftStateInfo;
+  int leftOpSz = big.get_leftBlock()->get_ketStateInfo().quanta.size();
+  int rightOpSz = big.get_rightBlock()->get_braStateInfo().quanta.size();
+  const StateInfo* rS = big.get_braStateInfo().rightStateInfo, *lS = big.get_ketStateInfo().leftStateInfo;
 
   double output = 0.0;
-  SpinQuantum Q= w1.get_deltaQuantum(0);
+  SpinQuantum Q= w2.get_deltaQuantum(0);
   for (int lQ =0; lQ < leftOpSz; lQ++)
     for (int rQ = 0; rQ < rightOpSz; rQ++) {
       if (w1.allowed(lQ, rQ) && w2.allowed(lQ, rQ))
@@ -232,16 +232,16 @@ double DotProduct_spincorrection(const Wavefunction& w1, const Wavefunction& w2,
               {
 
 	        b1b2 *= dmrginp.get_ninej()(lS->quanta[lQ].get_s().getirrep(), (-lS->quanta[lQ].get_s()).getirrep() , 0, 
-	          				Q.get_s().getirrep(), (-Q.get_s()).getirrep(), 0,
+	          				(-Q.get_s()).getirrep(), Q.get_s().getirrep(), 0,
 	          				(-rS->quanta[rQ].get_s()).getirrep(), rS->quanta[rQ].get_s().getirrep() , 0);
 	        b1b2 *= Symmetry::spatial_ninej(lS->quanta[lQ].get_symm().getirrep(), (-lS->quanta[lQ].get_symm()).getirrep() , 0, 
-	          				Q.get_symm().getirrep(), (-Q.get_symm()).getirrep(), 0,
+	          				(-Q.get_symm()).getirrep(), Q.get_symm().getirrep(), 0,
 	          				(-rS->quanta[rQ].get_symm()).getirrep(), rS->quanta[rQ].get_symm().getirrep() , 0);
 	        b1b2 /= dmrginp.get_ninej()((-rS->quanta[rQ].get_s()).getirrep(), rS->quanta[rQ].get_s().getirrep() , 0, 
-	          				Q.get_s().getirrep(), 0, Q.get_s().getirrep(),
+	          				(-Q.get_s()).getirrep(), 0, (-Q.get_s()).getirrep(),
 	          				lS->quanta[lQ].get_s().getirrep(), rS->quanta[rQ].get_s().getirrep() , Q.get_s().getirrep());
 	        b1b2 /= Symmetry::spatial_ninej((-rS->quanta[rQ].get_symm()).getirrep(), rS->quanta[rQ].get_symm().getirrep() , 0, 
-	          				Q.get_symm().getirrep(), 0, Q.get_symm().getirrep(),
+	          				(-Q.get_symm()).getirrep(), 0, (-Q.get_symm()).getirrep(),
 	          				lS->quanta[lQ].get_symm().getirrep(), rS->quanta[rQ].get_symm().getirrep() , Q.get_symm().getirrep());
 	        b1b2 /= dmrginp.get_ninej()(lS->quanta[lQ].get_s().getirrep(), (-lS->quanta[lQ].get_s()).getirrep() , 0, 
 	          				0, Q.get_s().getirrep(), Q.get_s().getirrep(),
@@ -257,8 +257,7 @@ double DotProduct_spincorrection(const Wavefunction& w1, const Wavefunction& w2,
        
       }	
     }
-
-  return output;
+return output;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
