@@ -282,7 +282,6 @@ void SpinAdapted::mps_nevpt::type1::BlockDecimateAndCompress (SweepParams &sweep
 
   //bratracedMatrix.makedensitymatrix(outputState, newbig, dmrginp.weights(sweepiter), 0.0, 0.0, true);
   bratracedMatrix.makedensitymatrix(outputState, newbig, std::vector<double>(1,1.0), 0.0, 0.0, true);
-  /*
   if (sweepParams.get_noise() > NUMERICAL_ZERO) {
     pout << "adding noise  "<<trace(bratracedMatrix)<<"  "<<sweepiter<<"  "<<dmrginp.weights(sweepiter)[0]<<endl;
     bratracedMatrix.add_onedot_noise_forCompression(solution[0], newbig, sweepParams.get_noise()*max(1.0,trace(bratracedMatrix)));
@@ -291,7 +290,6 @@ void SpinAdapted::mps_nevpt::type1::BlockDecimateAndCompress (SweepParams &sweep
       
     pout << "after noise  "<<trace(bratracedMatrix)<<"  "<<sweepParams.get_noise()<<endl;
   }
-  */
   environment.clear();
   newEnvironment.clear();
 
@@ -384,8 +382,11 @@ void SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
     sweepParams.current_root() = baseState;
     //sweepParams.current_root() = -1;
     //double last_fe = Startup(sweepParams, true, true, false, 0, pb, baseState);
+    Timer timer;
     Startup(sweepParams, true, pb, baseState);
+    pout <<"Start up time :" << timer.elapsedwalltime();
     //sweepParams.current_root() = baseState;
+    timer.start();
     while(true)
     {
       do_one(sweepParams, false, false, false, 0, pb, baseState);
@@ -398,6 +399,7 @@ void SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
 	      break;
       }
     }
+    pout <<"Sweep time :" << timer.elapsedwalltime();
 //
 //    if (mpigetrank()==0) {
 //      bool direction = true;
@@ -416,8 +418,10 @@ void SpinAdapted::mps_nevpt::type1::subspace_Vi(int baseState)
     double o, h;
     dmrginp.calc_type() = DMRG;
 
+    timer.start();
     calcHamiltonianAndOverlap(pbmps, h, o,pb);
 
+    pout <<"Calculate Expectation time :" << timer.elapsedwalltime();
 
 
 
@@ -485,8 +489,11 @@ void SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
     sweepParams.current_root() = baseState;
     //sweepParams.current_root() = -1;
     //double last_fe = Startup(sweepParams, true, true, false, 0, pb, baseState);
+    Timer timer;
     Startup(sweepParams, true, pb, baseState);
+    pout <<"Start up time :" << timer.elapsedwalltime();
     //sweepParams.current_root() = baseState;
+    timer.start();
     while(true)
     {
       do_one(sweepParams, false, false, false, 0, pb, baseState);
@@ -499,6 +506,7 @@ void SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
 	      break;
       }
     }
+    pout <<"Sweep time :" << timer.elapsedwalltime();
 //    while ( true)
 //      {
 //        old_fe = last_fe;
@@ -536,9 +544,11 @@ void SpinAdapted::mps_nevpt::type1::subspace_Va(int baseState)
     double o, h;
     dmrginp.calc_type() = DMRG;
 
+    timer.start();
 
     calcHamiltonianAndOverlap(pbmps, h, o,pb);
 
+    pout <<"Calculate Expectation time :" << timer.elapsedwalltime();
 
     if(!dmrginp.spinAdapted())
     {
@@ -670,6 +680,80 @@ void SpinAdapted::mps_nevpt::type1::calcHamiltonianAndOverlap(const MPS& statea,
   return;
 }
 
+//
+//void SpinAdapted::mps_nevpt::type1::Startup(const SweepParams &sweepParams, const bool &forward, perturber& pb, int baseState) {
+//
+//#ifndef SERIAL
+//  mpi::communicator world;
+//#endif
+//  assert(forward);
+//  SpinBlock system;
+//  system.nonactive_orb() =pb.orb();
+//  bool restart=false, warmUp = false;
+//  int forward_starting_size=1, backward_starting_size=0, restartSize =0;
+//  InitBlocks::InitStartingBlock(system, forward, pb.wavenumber(), baseState, forward_starting_size, backward_starting_size, restartSize, restart, warmUp, 0,pb.braquanta, pb.ketquanta); 
+//
+//  SpinBlock::store (forward, system.get_sites(), system, pb.wavenumber(), baseState); // if restart, just restoring an existing block --
+//
+//  for (int i=0; i<MPS::sweepIters; i++) {
+//    SpinBlock newSystem;
+//    SpinBlock dotSystem(i+1,i+1,pb.orb(),false);
+//
+//    system.addAdditionalCompOps();
+//    //newSystem.default_op_components(true, system, dotSystem, true, true, false);
+//    newSystem.perturb_op_components(false, system, dotSystem, pb);
+//    newSystem.setstoragetype(DISTRIBUTED_STORAGE);
+//    newSystem.BuildSumBlock(LessThanQ, system, dotSystem, pb.ketquanta, pb.ketquanta);
+//    //newSystem.BuildSumBlock(LessThanQ, system, dotSystem, pb.braquanta, pb.ketquanta);
+//    newSystem.printOperatorSummary();
+//    //SpinBlock Environment, big;
+//    //SpinBlock::restore (!forward, newSystem.get_complementary_sites() , Environment, baseState, baseState);
+//    //TODO
+//    //SpinBlock::restore (!forward, newSystem.get_complementary_sites() , Environment,sweepParams.current_root(),sweepParams.current_root());
+//
+//    //big.BuildSumBlock(PARTICLE_SPIN_NUMBER_CONSTRAINT, newSystem, Environment, pb.braquanta, pb.ketquanta);
+//
+//    //StateInfo envStateInfo;
+//    StateInfo ketStateInfo;
+//    StateInfo braStateInfo;
+//    StateInfo halfbraStateInfo;// It has the same left and right StateInfo as braStateInfo. However, its total quanta is pb.ketquanta.
+//    // It is used to project solution into to braStateInfo.
+//
+//    //TensorProduct (newSystem.get_braStateInfo(), *(ketStateInfo.rightStateInfo), pb.braquanta[0], EqualQ, braStateInfo);
+//    //TODO
+//    //TensorProduct do not support const StateInfo&
+//
+//    //StateInfo::restore(forward, environmentsites, envStateInfo, baseState);
+//
+//    //DiagonalMatrix e;
+//    //if(i == 0)
+//    //  GuessWave::guess_wavefunctions(solution, e, big, TRANSPOSE, true, true, 0.0, baseState); 
+//    //else
+//    //  GuessWave::guess_wavefunctions(solution, e, big, TRANSFORM, true, true, 0.0, baseState); 
+//
+//
+//    //SpinAdapted::operatorfunctions::Product(&newSystem, ccd, solution[0], &ketStateInfo, stateb.getw(), temp, SpinQuantum(0, SpinSpace(0), IrrepSpace(0)), true, 1.0);
+//
+//    
+//
+//    boost::shared_ptr<SparseMatrix> O;
+//    if (pb.type() == TwoPerturbType::Va)
+//      O = newSystem.get_op_array(CDD_SUM).get_local_element(0)[0]->getworkingrepresentation(&newSystem);
+//    if (pb.type() == TwoPerturbType::Vi)
+//      O = newSystem.get_op_array(CCD_SUM).get_local_element(0)[0]->getworkingrepresentation(&newSystem);
+//    boost::shared_ptr<SparseMatrix> overlap = newSystem.get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(&newSystem);
+//    std::vector<Matrix> brarotateMatrix, ketrotateMatrix;
+//    LoadRotationMatrix (newSystem.get_sites(), ketrotateMatrix, baseState);
+//
+//    newSystem.transform_operators(ketrotateMatrix,ketrotateMatrix);
+//    SpinBlock::store (forward, newSystem.get_sites(), newSystem, pb.wavenumber(), baseState); // if restart, just restoring an existing block --
+//    system=newSystem;
+//  }
+//  //TODO
+//  //It seems that there is no need to do Last Step of Sweep.
+//}
+//
+
 void SpinAdapted::mps_nevpt::type1::Startup(const SweepParams &sweepParams, const bool &forward, perturber& pb, int baseState) {
 
 #ifndef SERIAL
@@ -689,9 +773,11 @@ void SpinAdapted::mps_nevpt::type1::Startup(const SweepParams &sweepParams, cons
     SpinBlock dotSystem(i+1,i+1,pb.orb(),false);
 
     system.addAdditionalCompOps();
-    newSystem.default_op_components(true, system, dotSystem, true, true, false);
+    //newSystem.default_op_components(true, system, dotSystem, true, true, false);
+    newSystem.perturb_op_components(false, system, dotSystem, pb);
     newSystem.setstoragetype(DISTRIBUTED_STORAGE);
     newSystem.BuildSumBlock(LessThanQ, system, dotSystem, pb.braquanta, pb.ketquanta);
+    newSystem.printOperatorSummary();
     //SpinBlock Environment, big;
     //SpinBlock::restore (!forward, newSystem.get_complementary_sites() , Environment, baseState, baseState);
     //TODO
@@ -771,69 +857,4 @@ void SpinAdapted::mps_nevpt::type1::Startup(const SweepParams &sweepParams, cons
   //It seems that there is no need to do Last Step of Sweep.
 }
 
-//void SpinAdapted::mps_nevpt::Va::Startup(const SweepParams &sweepParams, const bool &forward, const MPS& statea, perturber& pb, int baseState) {
-//
-//  assert(forward);
-//  SpinBlock system(0,0,pb.orb(),true);
-//  StateInfo stateA=MPS::siteBlocks[0].get_stateInfo(), stateB=MPS::siteBlocks[0].get_stateInfo();
-//  SpinBlock::store (true, system.get_sites(), system, pb.wavenumber(), baseState); // if restart, just restoring an existing block --
-//
-//  for (int i=0; i<MPS::sweepIters; i++) {
-//    SpinBlock systemdot(i+1,i+1,pb.orb(),true);
-//    SpinBlock newSystem;
-//    newSystem.default_op_components(true, system, systemdot, true, true, false);
-//    newSystem.setstoragetype(DISTRIBUTED_STORAGE);
-//    newSystem.BuildSumBlock(LessThanQ, system, systemdot,pb.braquanta,pb.ketquanta);
-//    SpinBlock Environment, big;
-//    //SpinBlock::restore (!forward, newSystem.get_complementary_sites() , Environment, baseState, baseState);
-//    //TODO
-//    SpinBlock::restore (!forward, newSystem.get_complementary_sites() , Environment,sweepParams.current_root(),sweepParams.current_root());
-//
-//    big.BuildSumBlock(PARTICLE_SPIN_NUMBER_CONSTRAINT, newSystem, Environment, pb.braquanta, pb.ketquanta);
-//
-//    //StateInfo envStateInfo;
-//    //StateInfo ketStateInfo;
-//    //StateInfo braStateInfo;
-//    //TensorProduct (newSystem.get_braStateInfo(), *(ketStateInfo.rightStateInfo), pb.braquanta[0], EqualQ, braStateInfo);
-//    //TODO
-//    //TensorProduct do not support const StateInfo&
-//    //TensorProduct (newSystem.set_braStateInfo(), *(ketStateInfo.rightStateInfo), pb.braquanta[0], EqualQ, braStateInfo);
-//
-//    //StateInfo::restore(forward, environmentsites, envStateInfo, baseState);
-//    std::vector<Wavefunction> solution; solution.resize(1);
-//    std::vector<Wavefunction> outputState; outputState.resize(1);
-//
-//    DiagonalMatrix e;
-//    if(i == 0)
-//      GuessWave::guess_wavefunctions(solution, e, big, TRANSPOSE, true, true, 0.0, baseState); 
-//    else //      GuessWave::guess_wavefunctions(solution, e, big, TRANSFORM, true, true, 0.0, baseState); 
-//
-//    //solution[0].LoadWavefunctionInfo(ketStateInfo, newSystem.get_sites(), baseState);
-//    outputState[0].AllowQuantaFor(newSystem.get_braStateInfo(), Environment.get_braStateInfo(), pb.braquanta);
-//    outputState[0].set_onedot(solution[0].get_onedot());
-//    outputState[0].Clear();
-//
-//    //SpinAdapted::operatorfunctions::Product(&newSystem, ccd, solution[0], &ketStateInfo, stateb.getw(), temp, SpinQuantum(0, SpinSpace(0), IrrepSpace(0)), true, 1.0);
-//
-//    
-//    boost::shared_ptr<SparseMatrix> cdd = newSystem.get_op_rep(CDD_SUM, pb.delta);
-//    SpinAdapted::operatorfunctions::TensorMultiply(*cdd, &big.get_braStateInfo(), &big.get_ketStateInfo() , solution[0], outputState[0], pb.delta, true, 1.0);
-//    DensityMatrix bratracedMatrix(newSystem.get_braStateInfo());
-//    bratracedMatrix.allocate(newSystem.get_braStateInfo());
-//    SpinAdapted::operatorfunctions::MultiplyProduct(outputState[0], Transpose(const_cast<Wavefunction&> (outputState[0])), bratracedMatrix, 1.0);
-//    std::vector<Matrix> brarotateMatrix, ketrotateMatrix;
-//    LoadRotationMatrix (newSystem.get_sites(), ketrotateMatrix, baseState);
-//    double error;
-//    if (!mpigetrank())
-//      error = makeRotateMatrix(bratracedMatrix, brarotateMatrix, sweepParams.get_keep_states(), sweepParams.get_keep_qstates());
-//
-//    SaveRotationMatrix (newSystem.get_sites(), brarotateMatrix, pb.wavenumber());
-//    newSystem.transform_operators(brarotateMatrix,ketrotateMatrix);
-//    SpinBlock::store (forward, newSystem.get_sites(), newSystem, pb.wavenumber(), baseState); // if restart, just restoring an existing block --
-//    system=newSystem;
-//  }
-//  //TODO
-//  //It seems that there is no need to do Last Step of Sweep.
-//}
-//
 

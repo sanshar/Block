@@ -106,8 +106,8 @@ ifeq (g++, $(filter g++, $(notdir $(firstword $(CXX))) $(MPICOMPILER)))
       OPENMP_FLAGS= -fopenmp -D_OPENMP 
    endif
 # GNU compiler
-#      OPT = -DNDEBUG -O3 -fPIC
-   OPT = -g
+    OPT = -DNDEBUG -O3 -fPIC -g
+#   OPT = -g
 endif
 
 OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(B56) $(MOLPRO_BLOCK)  -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL ${MKLOPT} ${UNITTEST}

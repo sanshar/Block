@@ -82,14 +82,10 @@ void SpinBlock::setstoragetype(Storagetype st)
     if (has(CRE_CRE_CRE_CRE))
       set_op_array(CRE_CRE_CRE_CRE)->set_local() = true;
     //mps_nevpt2
-    if (has(CDD_SUM))
-      set_op_array(CDD_SUM)->set_local() = true;
     if (has(CDD_CRE_DESCOMP))
       set_op_array(CDD_CRE_DESCOMP)->set_local() = true;
     if (has(CDD_DES_DESCOMP))
       set_op_array(CDD_DES_DESCOMP)->set_local() = true;
-    if (has(CCD_SUM))
-      set_op_array(CCD_SUM)->set_local() = true;
     if (has(CCD_CRE_DESCOMP))
       set_op_array(CCD_CRE_DESCOMP)->set_local() = true;
     if (has(CCD_CRE_CRECOMP))
@@ -162,14 +158,10 @@ void SpinBlock::setstoragetype(Storagetype st)
     if (has(CRE_CRE_CRE_CRE))
       set_op_array(CRE_CRE_CRE_CRE)->set_local() = false;
     //mps_nevpt2
-//    if (has(CDD_SUM))
-//      set_op_array(CDD_SUM)->set_local() = false;
     if (has(CDD_CRE_DESCOMP))
       set_op_array(CDD_CRE_DESCOMP)->set_local() = false;
     if (has(CDD_DES_DESCOMP))
       set_op_array(CDD_DES_DESCOMP)->set_local() = false;
-//    if (has(CCD_SUM))
-//      set_op_array(CCD_SUM)->set_local() = false;
     if (has(CCD_CRE_DESCOMP))
       set_op_array(CCD_CRE_DESCOMP)->set_local() = false;
     if (has(CCD_CRE_CRECOMP))

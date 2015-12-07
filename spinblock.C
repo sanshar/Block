@@ -664,6 +664,7 @@ void SpinBlock::multiplyCDD_sum(Wavefunction& c, Wavefunction* v, int num_thread
   
 
   accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
+  dmrginp.oneelecT -> stop();
 
 }
 
@@ -715,6 +716,8 @@ void SpinBlock::multiplyCCD_sum(Wavefunction& c, Wavefunction* v, int num_thread
   
 
   accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
+
+  dmrginp.oneelecT -> stop();
 
 }
 
