@@ -84,6 +84,25 @@ bool screen_dd_interaction(int di, int dj, const std::vector<int, std::allocator
 std::vector<int, std::allocator<int> > screened_cddcomp_indices(const std::vector<int, std::allocator<int> >& otherindices, const std::vector<int, std::allocator<int> >& selfindices, const OneElectronArray& onee, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh);
 
 bool screen_cddcomp_interaction(int otherindex, const std::vector<int, std::allocator<int> >& selfindices, const OneElectronArray& onee, const TwoElectronArray& twoe, const PairArray& vcc, const CCCCArray& vcccc, const CCCDArray& vcccd, double thresh);
+
+vector<int, std::allocator<int> > screened_cdd_c_indices(const vector<int, std::allocator<int> >& indices, const vector<int, std::allocator<int> >& interactingix, int external_orb, const OneElectronArray& onee, const PerturbTwoElectronArray& twoe, double thresh);
+                                                                                                                                                                                                                                
+vector<int, std::allocator<int> > screened_cdd_d_indices(const vector<int, std::allocator<int> >& indices, const vector<int, std::allocator<int> >& interactingix, int external_orb, const OneElectronArray& onee, const PerturbTwoElectronArray& twoe, double thresh);
+                                                                                                                                                                                                                                
+vector<int, std::allocator<int> > screened_ccd_c_indices(const vector<int, std::allocator<int> >& indices, const vector<int, std::allocator<int> >& interactingix, int external_orb, const OneElectronArray& onee, const PerturbTwoElectronArray& twoe, double thresh);
+                                                                                                                                                                                                                                
+vector<int, std::allocator<int> > screened_ccd_d_indices(const vector<int, std::allocator<int> >& indices, const vector<int, std::allocator<int> >& interactingix, int external_orb, const OneElectronArray& onee, const PerturbTwoElectronArray& twoe, double thresh);
+
+bool screen_cdd_c_interaction(int index, const vector<int, std::allocator<int> >& interactingix, int external_orb, const OneElectronArray& onee, const PerturbTwoElectronArray& twoe, double thresh);
+                                                                                                                                                      
+bool screen_cdd_d_interaction(int index, const vector<int, std::allocator<int> >& interactingix, int external_orb, const OneElectronArray& onee, const PerturbTwoElectronArray& twoe, double thresh);
+                                                                                                                                                      
+bool screen_ccd_c_interaction(int index, const vector<int, std::allocator<int> >& interactingix, int external_orb, const OneElectronArray& onee, const PerturbTwoElectronArray& twoe, double thresh);
+                                                                                                                                                      
+bool screen_ccd_d_interaction(int index, const vector<int, std::allocator<int> >& interactingix, int external_orb, const OneElectronArray& onee, const PerturbTwoElectronArray& twoe, double thresh);
+
 }
 
+
 #endif
+

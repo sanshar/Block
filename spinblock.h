@@ -11,6 +11,7 @@
 #include "sweep_params.h"
 #include "multiarray.h"
 #include "boost/variant.hpp"
+#include "perturb.h"
 
 
 namespace SpinAdapted{
@@ -37,6 +38,8 @@ class SpinBlock
       ar & sites;
       ar & complementary_sites ;
       ar & integralIndex;
+      ar & nonactive_orbs;
+      //ar & nevpt_perturbation;
       //FIX ME!! remove register_type stuff and add BOOST_CLASS_EXPORT to op_components.h (will take longer to compile)                     
       ar.register_type(static_cast<Op_component<Cre> *>(NULL));
       ar.register_type(static_cast<Op_component<Des> *>(NULL));
@@ -76,6 +79,13 @@ class SpinBlock
       ar.register_type(static_cast<Op_component<CreCreDesCre> *>(NULL));
       ar.register_type(static_cast<Op_component<CreDesCreCre> *>(NULL));
       ar.register_type(static_cast<Op_component<CreCreCreCre> *>(NULL));
+      //mps_nevpt
+      ar.register_type(static_cast<Op_component<CDD_sum> *>(NULL));
+      ar.register_type(static_cast<Op_component<CDD_CreDesComp> *>(NULL));
+      ar.register_type(static_cast<Op_component<CDD_DesDesComp> *>(NULL));
+      ar.register_type(static_cast<Op_component<CCD_sum> *>(NULL));
+      ar.register_type(static_cast<Op_component<CCD_CreDesComp> *>(NULL));
+      ar.register_type(static_cast<Op_component<CCD_CreCreComp> *>(NULL));
 
       ar & ops;
     }
@@ -99,11 +109,16 @@ class SpinBlock
   StateInfo ketStateInfo;
   std::vector<int> sites;
   std::vector<int> complementary_sites;
+  // In nevpt2, the integral between nonactive space and active space should be considered. 
+  // nonactive_orbs is the vector of orbitals that electrons are excited to or from. 
+  std::vector<int> nonactive_orbs;
+  //perturber nevpt_perturbation;
  public: 
   SpinBlock();
   SpinBlock (const StateInfo& s, int integralIndex);
   SpinBlock (const SpinBlock& b);
   SpinBlock (int start, int finish, int integralIndex, bool implicitTranspose, bool is_complement = false);
+  SpinBlock(int start, int finish, const std::vector<int>& nonactive_orbs_, bool is_complement = false);
   void BuildTensorProductBlock (std::vector<int>& new_sites);
   
   static std::string  restore (bool forward, const vector<int>& sites, SpinBlock& b, int left, int right, char* name=0);//left and right are the bra and ket states and the name is the type of the MPO (currently only H)
@@ -126,9 +141,16 @@ class SpinBlock
   void default_op_components(bool complementary_, bool implicitTranspose);
   void default_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, bool haveNormops, bool haveCompops, bool implicitTranspose);
   void set_big_components();
+  void perturb_op_components(bool direct, SpinBlock& lBlock, SpinBlock& rBlock, const perturber& pb);
   void printOperatorSummary();
 
   int size() const { return sites.size(); }
+  const vector<int>& nonactive_orb() const { return nonactive_orbs;}
+  vector<int>& nonactive_orb() { return nonactive_orbs;}
+  const int& nonactive_orb(int i) const { return nonactive_orbs[i];}
+  int& nonactive_orb(int i) { return nonactive_orbs[i];}
+  //const perturber nevpt_pb() const { return nevpt_perturbation;}
+  //perturber& nevpt_pb() { return nevpt_perturbation;}
   //void build_comp_remove_normal_ops();
   void remove_normal_ops();
   int get_name() const {return name;}
@@ -202,7 +224,9 @@ class SpinBlock
   void renormalise_transform(const std::vector<Matrix>& leftMat, const StateInfo *bra, const std::vector<Matrix>& rightMat, const StateInfo *ket);
 
   void BuildSumBlock(int condition, SpinBlock& b_1, SpinBlock& b_2, StateInfo* compState=0);
+  void BuildSumBlock(int condition, SpinBlock& b_1, SpinBlock& b_2, const std::vector<SpinQuantum>& braquantum, const std::vector<SpinQuantum>& ketquantum);
   void BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState=0);
+  void BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBlock& rBlock, const std::vector<SpinQuantum>& braquantum, const std::vector<SpinQuantum>& ketquantum);
   void BuildSlaterBlock (std::vector<int> sts, std::vector<SpinQuantum> qnumbers, std::vector<int> distribution, bool random, 
 			 const bool haveNormops);
   void BuildSingleSlaterBlock(std::vector<int> sts);
@@ -211,6 +235,8 @@ class SpinBlock
   void multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) const;
   void multiplyH_Q(Wavefunction& c, Wavefunction* v, int num_threads, SpinQuantum &Q) const;
   void multiplyOverlap(Wavefunction& c, Wavefunction* v, int num_threads) const;
+  void multiplyCDD_sum(Wavefunction& c, Wavefunction* v, int num_threads) const;
+  void multiplyCCD_sum(Wavefunction& c, Wavefunction* v, int num_threads) const;
   void diagonalH(DiagonalMatrix& e) const;
   void clear();
   void sendcompOps(Op_component_base& opcomp, int I, int J, int optype, int compsite);

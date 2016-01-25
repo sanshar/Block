@@ -28,6 +28,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "input.h"
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/vector.hpp>
+#include "pario.h"
+#include "ObjectMatrix.h"
 
 using namespace boost;
 
@@ -93,7 +95,127 @@ class OneElectronArray
     }
   };
 
+// It is an interface to unify TwoElectronArray in active space and TwoElectronArray between active space and nonactivespace in nevpt2.
+class GeneralTwoElectronArray
+{
+  public:
+    virtual double& operator()(int i, int j, int k, int l) =0;
+    virtual double operator () (int i, int j, int k, int l) const =0;
 
+};
+
+//class VaTwoElectronArray : public GeneralTwoElectronArray // 2e array, store the two electron integral in Va subspace of nevpt2.
+//{
+//  private :
+//    ObjectMatrix4D
+//
+//}
+
+class PerturbTwoElectronArray : public GeneralTwoElectronArray // 2e array, store the two electron integral in Va subspace of nevpt2.
+{
+  std::vector< std::vector< std::vector<std::vector<double> > > > rep;
+  int n0;
+  int n1;
+  int n2;
+  int n3;
+  double dummyZero; // dummy variable to hold zero for RHF integrals
+
+  friend class boost::serialization::access;
+  template<class Archive> void serialize(Archive & ar, const unsigned int version)
+  {
+    ar & rep;
+    ar & n0 & n1 & n2 & n3;
+  }
+
+public:
+  PerturbTwoElectronArray () : n0 (0), n1 (0), n2 (0), n3(0) {}
+  PerturbTwoElectronArray (int m0, int m1, int m2, int m3) : n0 (m0), n1 (m1), n2 (m2), n3 (m3) { ReSize (n0, n1, n2, n3); }
+  
+  void ReSize (int m0, int m1, int m2, int m3)
+  {
+    assert(m0%2==0);
+    assert(m1%2==0);
+    assert(m2%2==0);
+    assert(m3%2==0);
+    n0 = m0; n1 = m1; n2 = m2; n3 = m3;
+    rep.resize (n0/2);
+    for (int i = 0; i < n0/2; ++i)
+      {
+	rep[i].resize (n1/2);
+	for (int j = 0; j < n1/2; ++j)
+        {
+	  rep[i][j].resize (n2/2);
+          for( int k =0; k< n2/2; ++k)
+	    rep[i][j][k].resize (n3/2);
+        }
+      }
+  }
+  
+  virtual double& operator() (int i, int j, int k, int l)
+  {
+    assert(i >= 0 && i < n0 && j >= 0 && j < n1 && k >= 0 && k < n2 && l >= 0 && l < n3);
+    bool is_odd_i = (i & 1);
+    bool is_odd_j = (j & 1);
+    bool is_odd_k = (k & 1);
+    bool is_odd_l = (l & 1);
+
+    bool zero = !((is_odd_i == is_odd_k) && (is_odd_j == is_odd_l));
+    if (zero) {
+      dummyZero = 0.0;
+      return dummyZero;
+    }
+
+    i=i/2;
+    j=j/2;
+    k=k/2;
+    l=l/2;
+    return rep[i][j][k][l];
+  }
+
+  virtual double operator() (int i, int j, int k, int l) const
+  {
+    assert(i >= 0 && i < n0 && j >= 0 && j < n1 && k >= 0 && k < n2 && l >= 0 && l < n3);
+    bool is_odd_i = (i & 1);
+    bool is_odd_j = (j & 1);
+    bool is_odd_k = (k & 1);
+    bool is_odd_l = (l & 1);
+
+    bool zero = !((is_odd_i == is_odd_k) && (is_odd_j == is_odd_l));
+    if (zero)
+      return 0.0;
+
+    i=i/2;
+    j=j/2;
+    k=k/2;
+    l=l/2;
+    return rep[i][j][k][l];
+  }
+
+  int NDim0 () const { return n0; }
+  int NDim1 () const { return n1; }
+  int NDim2 () const { return n2; }
+  int NDim3 () const { return n3; }
+  int Nrows0 () { return n0; }
+  int Nrows1 () { return n1; }
+  int Nrows2 () { return n2; }
+  int Nrows3 () { return n3; }
+};
+
+//class PerturbTwoElectronArray : public GeneralTwoElectronArray // 2e array, store the two electron integral in Va subspace of nevpt2.
+//{
+//  private:
+//    ObjectMatrix4D<double> rep;
+//  public:
+//    void ReSize(int i, int j, int k, int l){ rep.ReSize(i/2,j/2,k/2,l/2) };
+//    T& operator() (int i, int j, int k, int l) {
+//      assert(i >= 0 && i < dim && j >= 0 && j < dim && k >= 0 && k < dim && l >= 0 && l < dim);
+//      return rep [i][j][k][l]; }
+//    const T& operator() (int i, int j, int k, int l) const { return rep [i][j][k][l]; }
+//
+//
+//    
+//}
+//
 // ***************************************************************************
 // class TwoElectronArray
 // ***************************************************************************
@@ -115,7 +237,7 @@ e.g. twoe(0, 2, 0, 2) would be a all-beta type quantity.
 by setting the rhf flag. However, to the external user the indexing still behaves
 as unrestricted. Default is false.
 */
-class TwoElectronArray // 2e integral, notation (12|12), symmetric matrix
+class TwoElectronArray : public GeneralTwoElectronArray // 2e integral, notation (12|12), symmetric matrix
   {
   private:
 
@@ -473,6 +595,9 @@ class CCCDArray {
     }
   };
 
+ 
+//  enum OnePerturbType{ Vi_1=0, Va_1, Vai_1, OnePertEnd};
+//  enum TwoPerturbType{ Vij=0, Vi, Vab, Va, Vabij, Vai, Vabi, Vaij,TwoPertEnd};
 } // namespace
 
 #endif

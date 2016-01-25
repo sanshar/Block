@@ -54,9 +54,11 @@ class SpinQuantum
   /// Adds quantum number (to self)
   /// \return Clebsch-Gordon sum of quantum numbers (if non-Abelian)
   /// or length-1 vector if Abelian.
-  vector<SpinQuantum> operator+ (const SpinQuantum q) const;
+  vector<SpinQuantum> operator+ (const SpinQuantum& q) const;
+  vector<SpinQuantum> operator+ (const vector<SpinQuantum>& q) const;
 
-  vector<SpinQuantum> operator- (const SpinQuantum q) const;
+  vector<SpinQuantum> operator- (const SpinQuantum& q) const;
+  vector<SpinQuantum> operator- (const vector<SpinQuantum>& q) const;
 
   bool operator== (const SpinQuantum q) const;
   bool operator!= (const SpinQuantum q) const;

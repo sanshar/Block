@@ -296,6 +296,24 @@ class TensorOp {
   }    
     
   friend ostream& operator<<(ostream& os, const TensorOp& op) {
+    if(!dmrginp.spinAdapted())
+    {
+      for (int ilz = 0; ilz<op.rows; ilz++){
+	//int lz = op.lz[ilz];
+	os <<"printing operator with Sz = "<<op.Spin<<" and row = "<< ilz<<" and total spin "<<op.Spin<<" and irrep "<<op.irrep<<endl;;
+	for (int i=0; i<op.Szops[0].size(); i++) {
+	  if (op.Szops[ilz][i] != 0.0) {
+	    os << op.Szops[ilz][i]<<"   ";
+	    for (int j=0; j<op.opindices[i].size(); j++)
+	      os<<op.opindices[i][j]<<" ";
+	    os<<endl;
+	  }
+	}
+	os << endl;
+      }
+      return os;
+
+    }
     if (op.Spin%2 == 0) {
       for (int ilz = 0; ilz<op.rows; ilz++){
 	//int lz = op.lz[ilz];

@@ -26,11 +26,11 @@ enum {
 };
 
 enum {
-  AnyQ,  
   LessThanQ, 
   EqualQ,
   EqualS,
   LessThanN,
+  AnyQ,  
   WITH_LIST /*< states are added together if the are allowed by the quantaList */
 };
 

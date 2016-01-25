@@ -141,6 +141,65 @@ class Overlap: public SpinAdapted::SparseMatrix
   double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
 };
 
+//CDD_sum is used in V_a subspace of nevpt2.
+//It is the sum of perturber operator on one block.
+class CDD_sum: public SpinAdapted::SparseMatrix
+{
+ public:
+  CDD_sum() { fermion = true;}
+  void build(const SpinBlock& b) ;
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+  double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+class CDD_CreDesComp: public SpinAdapted::SparseMatrix
+{
+ public:
+  CDD_CreDesComp() { fermion = false;}
+  void build(const SpinBlock& b) ;
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+  double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+class CDD_DesDesComp: public SpinAdapted::SparseMatrix
+{
+ public:
+  CDD_DesDesComp() { fermion = false;}
+  void build(const SpinBlock& b) ;
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+  double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+//CCD_sum is used in V_i subspace of nevpt2.
+//It is the sum of perturber operator on one block.
+class CCD_sum: public SpinAdapted::SparseMatrix
+{
+ public:
+  CCD_sum() { fermion = true;}
+  void build(const SpinBlock& b) ;
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+  double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+class CCD_CreDesComp: public SpinAdapted::SparseMatrix
+{
+ public:
+  CCD_CreDesComp() { fermion = false;}
+  void build(const SpinBlock& b) ;
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+  double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+class CCD_CreCreComp: public SpinAdapted::SparseMatrix
+{
+ public:
+  CCD_CreCreComp() { fermion = false;}
+  void build(const SpinBlock& b) ;
+  boost::shared_ptr<SparseMatrix> getworkingrepresentation(const SpinBlock* block);
+  double redMatrixElement(Csf c1, vector<Csf>& ladder, const SpinBlock* b);
+};
+
+
 double vcccc_4idx_asymm(int i, int j, int k, int l);
 
 }

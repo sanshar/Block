@@ -109,7 +109,8 @@ SpinBlock::SpinBlock(int start, int finish, int p_integralIndex, bool implicitTr
   name (rand()), 
   hasMemoryAllocated (false), 
   integralIndex(p_integralIndex),
-  direct(false), leftBlock(0), rightBlock(0)
+  direct(false), leftBlock(0), rightBlock(0),
+  nonactive_orbs(0)
 {
   complementary = is_complement;
   normal = !is_complement;
@@ -137,6 +138,37 @@ SpinBlock::SpinBlock(int start, int finish, int p_integralIndex, bool implicitTr
   }
   else
     twoInt = boost::shared_ptr<TwoElectronArray>( &v_2[integralIndex], boostutils::null_deleter());
+
+  int lower = min(start, finish);
+  int higher = max(start, finish);
+  sites.resize(higher - lower + 1);
+  for (int i=0; i < sites.size(); i++)
+      sites[i] = lower + i;
+
+  BuildTensorProductBlock(sites);
+
+}
+
+SpinBlock::SpinBlock(int start, int finish, const std::vector<int>& nonactive_orbs_, bool is_complement) :  
+  name (rand()), 
+  hasMemoryAllocated (false), 
+  integralIndex(0),
+  direct(false), leftBlock(0), rightBlock(0),
+  nonactive_orbs(nonactive_orbs_)
+{
+  complementary = is_complement;
+  normal = !is_complement;
+
+  //this is used to make dot block and we make the 
+  //additional operators by default because they are cheap
+  default_op_components(is_complement, false);
+
+  std::vector<int> sites; 
+  //TODO
+  //twoInt = boost::shared_ptr<TwoElectronArray>( &v_2[integralIndex], boostutils::null_deleter());
+  //TODO
+  //Set the integral connecting active space and nonactive space.
+  twoInt = boost::shared_ptr<TwoElectronArray>( &v_2[integralIndex], boostutils::null_deleter());
 
   int lower = min(start, finish);
   int higher = max(start, finish);
@@ -331,6 +363,24 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
   leftBlock = &lBlock;
   rightBlock = &rBlock;
 
+  if(lBlock.nonactive_orbs.size()!=0 && rBlock.nonactive_orbs.size()==0 )
+    nonactive_orbs= lBlock.nonactive_orbs;
+  else if(lBlock.nonactive_orbs.size()!=0 && rBlock.nonactive_orbs.size()==0 )
+    nonactive_orbs= rBlock.nonactive_orbs;
+  else if(lBlock.nonactive_orbs.size()!=0 && rBlock.nonactive_orbs.size()!=0 ){
+    if(lBlock.nonactive_orbs.size() != rBlock.nonactive_orbs.size()){
+      pout << "Nonactive_orbs in left block and right block are different.";
+      abort();
+    }
+    else{
+      nonactive_orbs= rBlock.nonactive_orbs;
+      for(int i=0; i<nonactive_orbs.size(); i++)
+        if(lBlock.nonactive_orbs[i]!= rBlock.nonactive_orbs[i]){
+          pout << "Nonactive_orbs in left block and right block are different.";
+          abort();
+        }
+    }
+  }
   sites.reserve (lBlock.sites.size () + rBlock.sites.size ());
 
   dmrginp.blockintegrals -> start();
@@ -395,6 +445,96 @@ void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBloc
 
 }
 
+//Build Sum Block with different quanta num in bra and ket.
+void SpinBlock::BuildSumBlockSkeleton(int condition, SpinBlock& lBlock, SpinBlock& rBlock, const std::vector<SpinQuantum>& braquantum, const std::vector<SpinQuantum>& ketquantum)
+{
+
+  name = get_name();
+  if (dmrginp.outputlevel() > 0) 
+    pout << "\t\t\t Building Sum Block " << name << endl;
+  leftBlock = &lBlock;
+  rightBlock = &rBlock;
+
+  if(lBlock.nonactive_orbs.size()!=0 && rBlock.nonactive_orbs.size()==0 )
+    nonactive_orbs= lBlock.nonactive_orbs;
+  else if(lBlock.nonactive_orbs.size()!=0 && rBlock.nonactive_orbs.size()==0 )
+    nonactive_orbs= rBlock.nonactive_orbs;
+  else if(lBlock.nonactive_orbs.size()!=0 && rBlock.nonactive_orbs.size()!=0 ){
+    if(lBlock.nonactive_orbs.size() != rBlock.nonactive_orbs.size()){
+      pout << "Nonactive_orbs in left block and right block are different.";
+      abort();
+    }
+    else{
+      nonactive_orbs= rBlock.nonactive_orbs;
+      for(int i=0; i<nonactive_orbs.size(); i++)
+        if(lBlock.nonactive_orbs[i]!= rBlock.nonactive_orbs[i]){
+          pout << "Nonactive_orbs in left block and right block are different.";
+          abort();
+        }
+    }
+  }
+
+
+  dmrginp.blockintegrals -> start();
+  
+  if (dmrginp.use_partial_two_integrals()) {
+    if (rBlock.sites.size() == 1) {
+      std::vector<int> o;
+      for (int i=dmrginp.spatial_to_spin().at(rBlock.sites[0]); i<dmrginp.spatial_to_spin().at(rBlock.sites[0]+1); i+=2)
+	o.push_back(i/2);
+      twoInt = boost::shared_ptr<PartialTwoElectronArray> (new PartialTwoElectronArray(o));
+      twoInt->Load(dmrginp.load_prefix(), integralIndex);
+#ifndef SERIAL
+      mpi::communicator world;
+      PartialTwoElectronArray& ar = dynamic_cast<PartialTwoElectronArray&>(*twoInt.get());
+      mpi::broadcast(world, ar, 0);
+#endif
+
+    }
+    //pout << "Cannot use partial two electron integrals, when the dot block has more than one orbital"<<endl;
+    //abort();
+
+  }
+  else 
+    twoInt = boost::shared_ptr<TwoElectronArray>( &v_2[integralIndex],  boostutils::null_deleter());
+
+  dmrginp.blockintegrals -> stop();
+
+  dmrginp.blocksites -> start();
+
+  sites.reserve (lBlock.sites.size () + rBlock.sites.size ());
+  sites = lBlock.sites;
+  copy (rBlock.sites.begin(), rBlock.sites.end (), back_inserter (sites));
+  sort(sites.begin(), sites.end());
+  complementary_sites = make_complement(sites);
+  if (dmrginp.outputlevel() > 0) {
+    pout << "\t\t\t ";
+    for (int i = 0; i < sites.size(); ++i) pout << sites[i] << " ";
+    pout << endl;
+  }
+  dmrginp.blocksites -> stop();
+
+  dmrginp.statetensorproduct -> start();
+  //TODO
+  //It is very possible that several quantum numbers for bra.
+  //For example, Perturber can have different Spatial Symmetry.
+  //TODO
+  //What does compState do? 
+  //It is not used at all in the whole block code.
+  TensorProduct (lBlock.braStateInfo, rBlock.braStateInfo, braquantum[0],condition, braStateInfo);
+  TensorProduct (lBlock.ketStateInfo, rBlock.ketStateInfo, ketquantum[0],condition, ketStateInfo);
+  dmrginp.statetensorproduct -> stop();
+
+  dmrginp.statecollectquanta -> start();
+  if (!( (dmrginp.hamiltonian() == BCS && condition == SPIN_NUMBER_CONSTRAINT)  ||
+	 (dmrginp.hamiltonian() != BCS && condition == PARTICLE_SPIN_NUMBER_CONSTRAINT))) {
+    braStateInfo.CollectQuanta();
+    ketStateInfo.CollectQuanta();
+  }
+  dmrginp.statecollectquanta -> stop();
+
+}
+
 void SpinBlock::BuildSumBlock(int condition, SpinBlock& lBlock, SpinBlock& rBlock, StateInfo* compState)
 {
   if (!(lBlock.integralIndex == rBlock.integralIndex && lBlock.integralIndex == integralIndex))  {
@@ -404,6 +544,25 @@ void SpinBlock::BuildSumBlock(int condition, SpinBlock& lBlock, SpinBlock& rBloc
   }
   dmrginp.buildsumblock -> start();
   BuildSumBlockSkeleton(condition, lBlock, rBlock, compState);
+
+  build_iterators();
+
+  dmrginp.buildblockops -> start();
+  build_operators();
+  dmrginp.buildblockops -> stop();
+  dmrginp.buildsumblock -> stop();
+}
+
+//Build Sum Block with different quanta num in bra and ket.
+void SpinBlock::BuildSumBlock(int condition, SpinBlock& lBlock, SpinBlock& rBlock, const std::vector<SpinQuantum>& braquantum, const std::vector<SpinQuantum>& ketquantum)
+{
+  if (!(lBlock.integralIndex == rBlock.integralIndex && lBlock.integralIndex == integralIndex))  {
+    pout << "The left, right and dot block should use the same integral indices"<<endl;
+    pout << "ABORTING!!"<<endl;
+    exit(0);
+  }
+  dmrginp.buildsumblock -> start();
+  BuildSumBlockSkeleton(condition, lBlock, rBlock, braquantum,ketquantum);
 
   build_iterators();
 
@@ -454,6 +613,111 @@ void SpinBlock::multiplyOverlap(Wavefunction& c, Wavefunction* v, int num_thread
 
 }
 
+void SpinBlock::multiplyCDD_sum(Wavefunction& c, Wavefunction* v, int num_threads) const
+{
+
+  SpinBlock* loopBlock=(leftBlock->is_loopblock()) ? leftBlock : rightBlock;
+  SpinBlock* otherBlock = loopBlock == leftBlock ? rightBlock : leftBlock;
+
+  Wavefunction *v_array=0, *v_distributed=0, *v_add=0;
+
+  int maxt = 1;
+  initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
+  dmrginp.oneelecT -> start();
+  dmrginp.s0time -> start();
+
+  //if (mpigetrank() == 0) {
+    boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(CDD_SUM).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
+    boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+    TensorMultiply(leftBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0) ,1.0);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
+    
+    overlap = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
+    op = rightBlock->get_op_array(CDD_SUM).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+    TensorMultiply(rightBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0), 1.0);  
+    //}
+
+  dmrginp.s0time -> stop();
+#ifndef SERIAL
+  boost::mpi::communicator world;
+  int size = world.size();
+#endif
+
+  SpinQuantum q= -getSpinQuantum( nonactive_orb(0));  dmrginp.s1time -> start();
+  v_add =  leftBlock->get_op_array(CDD_CRE_DESCOMP).is_local() ? v_array : v_distributed;
+  Functor f = boost::bind(&opxop::cdd_dxcdcomp, leftBlock, _1, this, boost::ref(c), v_add,q); 
+  for_all_multithread(rightBlock->get_op_array(DES), f);
+
+  v_add =  rightBlock->get_op_array(CDD_CRE_DESCOMP).is_local() ? v_array : v_distributed;
+  f = boost::bind(&opxop::cdd_dxcdcomp, rightBlock, _1, this, boost::ref(c), v_add, q ); 
+  for_all_multithread(leftBlock->get_op_array(DES), f);  
+    
+  v_add =  leftBlock->get_op_array(CDD_DES_DESCOMP).is_local() ? v_array : v_distributed;
+  f = boost::bind(&opxop::cdd_cxddcomp, leftBlock, _1, this, boost::ref(c), v_add, q);
+  for_all_multithread(rightBlock->get_op_array(CRE), f);
+  
+  v_add =  rightBlock->get_op_array(CDD_DES_DESCOMP).is_local() ? v_array : v_distributed;
+  f = boost::bind(&opxop::cdd_cxddcomp, rightBlock, _1, this, boost::ref(c), v_add, q);
+  for_all_multithread(leftBlock->get_op_array(CRE), f);
+  
+
+  accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
+  dmrginp.oneelecT -> stop();
+
+}
+
+void SpinBlock::multiplyCCD_sum(Wavefunction& c, Wavefunction* v, int num_threads) const
+{
+
+  SpinBlock* loopBlock=(leftBlock->is_loopblock()) ? leftBlock : rightBlock;
+  SpinBlock* otherBlock = loopBlock == leftBlock ? rightBlock : leftBlock;
+
+  Wavefunction *v_array=0, *v_distributed=0, *v_add=0;
+
+  int maxt = 1;
+  initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
+  dmrginp.oneelecT -> start();
+  dmrginp.s0time -> start();
+
+  //if (mpigetrank() == 0) {
+    boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(CCD_SUM).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
+    boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+    TensorMultiply(leftBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0) ,1.0);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
+    
+    overlap = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
+    op = rightBlock->get_op_array(CCD_SUM).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
+    TensorMultiply(rightBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0), 1.0);  
+    //}
+
+  dmrginp.s0time -> stop();
+#ifndef SERIAL
+  boost::mpi::communicator world;
+  int size = world.size();
+#endif
+
+  SpinQuantum q= getSpinQuantum( nonactive_orb(0));  dmrginp.s1time -> start();
+  v_add =  leftBlock->get_op_array(CCD_CRE_DESCOMP).is_local() ? v_array : v_distributed;
+  Functor f = boost::bind(&opxop::ccd_cxcdcomp, leftBlock, _1, this, boost::ref(c), v_add,q); 
+  for_all_multithread(rightBlock->get_op_array(CRE), f);
+
+  v_add =  rightBlock->get_op_array(CCD_CRE_DESCOMP).is_local() ? v_array : v_distributed;
+  f = boost::bind(&opxop::ccd_cxcdcomp, rightBlock, _1, this, boost::ref(c), v_add, q ); 
+  for_all_multithread(leftBlock->get_op_array(CRE), f);  
+    
+  v_add =  leftBlock->get_op_array(CCD_CRE_CRECOMP).is_local() ? v_array : v_distributed;
+  f = boost::bind(&opxop::ccd_dxcccomp, leftBlock, _1, this, boost::ref(c), v_add, q);
+  for_all_multithread(rightBlock->get_op_array(DES), f);
+  
+  v_add =  rightBlock->get_op_array(CCD_CRE_CRECOMP).is_local() ? v_array : v_distributed;
+  f = boost::bind(&opxop::ccd_dxcccomp, rightBlock, _1, this, boost::ref(c), v_add, q);
+  for_all_multithread(leftBlock->get_op_array(DES), f);
+  
+
+  accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
+
+  dmrginp.oneelecT -> stop();
+
+}
+
 
 void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) const
 {
@@ -467,7 +731,6 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   initiateMultiThread(v, v_array, v_distributed, MAX_THRD);
   dmrginp.oneelecT -> start();
   dmrginp.s0time -> start();
-
   //coreEnergy
   if (fabs(coreEnergy[integralIndex]) > TINY && mpigetrank() == 0) {
     Wavefunction vtemp = *v;
@@ -475,16 +738,14 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
     multiplyOverlap(c, &vtemp, num_threads);
     ScaleAdd(coreEnergy[integralIndex], vtemp, *v);
   }
-
   //if (mpigetrank() == 0) {
     boost::shared_ptr<SparseMatrix> op = leftBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
     boost::shared_ptr<SparseMatrix> overlap = rightBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
     TensorMultiply(leftBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0) ,1.0);  // dmrginp.effective_molecule_quantum() is never used in TensorMultiply
-    
     overlap = leftBlock->get_op_array(OVERLAP).get_local_element(0)[0]->getworkingrepresentation(leftBlock);
     op = rightBlock->get_op_array(HAM).get_local_element(0)[0]->getworkingrepresentation(rightBlock);
     TensorMultiply(rightBlock, *op, *overlap, this, c, *v, op->get_deltaQuantum(0), 1.0);  
-    //}
+   // }
 
   dmrginp.s0time -> stop();
 #ifndef SERIAL
@@ -521,6 +782,7 @@ void SpinBlock::multiplyH(Wavefunction& c, Wavefunction* v, int num_threads) con
   }
   
   dmrginp.twoelecT -> stop();
+
 
   accumulateMultiThread(v, v_array, v_distributed, MAX_THRD);
 
