@@ -419,8 +419,6 @@ int calldmrg(char* input, char* output)
   }
 
   cout.rdbuf(backup);
-  pout << setprecision(3) <<"\n\n\t\t\t BLOCK CPU  Time (seconds): " << globaltimer.totalcputime() << endl;
-  pout << setprecision(3) <<"\t\t\t BLOCK Wall Time (seconds): " << globaltimer.totalwalltime() << endl;
 
   tcpu=globaltimer.totalcputime();twall=globaltimer.totalwalltime();
   pout << setprecision(3) <<"\n\n\t\t\t BLOCK CPU  Time (seconds): " << tcpu << endl;
