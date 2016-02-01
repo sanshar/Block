@@ -425,6 +425,8 @@ void Npdm_driver::do_inner_loop( const char inner, Npdm::Npdm_expectations& npdm
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+#ifdef SERIAL
+
 void Npdm_driver::loop_over_block_operators( Npdm::Npdm_expectations& npdm_expectations, NpdmSpinOps& outerOps, NpdmSpinOps& innerOps, NpdmSpinOps& dotOps)
 {
   // Many spatial combinations on left block
@@ -433,13 +435,27 @@ void Npdm_driver::loop_over_block_operators( Npdm::Npdm_expectations& npdm_expec
     bool skip_op = true;
 			Timer timer2;
     skip_op = outerOps.set_local_ops( ilhs );
-			diskread_time += timer2.elapsedwalltime();
-    if ( ! skip_op ) do_inner_loop( 'r', npdm_expectations, outerOps, innerOps, dotOps );
+	  diskread_time += timer2.elapsedwalltime();
+    if(dmrginp.npdm_intermediate() && (npdm_order_== NPDM_NEVPT2 || npdm_order_== NPDM_THREEPDM || npdm_order_== NPDM_FOURPDM) && dmrginp.npdm_multinode())
+    {
+      if ( ! skip_op ) {
+        std::map<std::vector<int>, Wavefunction> local_waves;
+        npdm_expectations.compute_intermediate(outerOps,dotOps,local_waves);
+
+        do_inner_loop( 'r', npdm_expectations, outerOps, dotOps, local_waves); 
+      }
+    }
+    else
+    {
+      if ( ! skip_op ) do_inner_loop( 'r', npdm_expectations, outerOps, innerOps, dotOps );
+    }
   }
 
   assert( ! outerOps.ifs_.is_open() );
   assert( ! innerOps.ifs_.is_open() );
 }
+
+#endif
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -517,6 +533,9 @@ void Npdm_driver::loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Np
         par_loop_over_block_operators( 'l', expectations, *rhsOps, *lhsOps, *dotOps, lhs_or_rhs_dot );
       }
 #else
+      inner_Operators.clear();
+      inner_intermediate.clear();
+      get_inner_Operators( 'r', expectations, lhsOps, dotOps , rhsOps) ;
       loop_over_block_operators( expectations, *lhsOps, *rhsOps, *dotOps );
 #endif
     }

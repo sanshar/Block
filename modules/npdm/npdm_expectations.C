@@ -272,34 +272,7 @@ double Npdm_expectations::build_nonspin_adapted_singlet_expectations( NpdmSpinOp
   // i.e. in accordance with the operator string build_pattern
   if(dmrginp.npdm_intermediate() && (npdm_order_== NPDM_NEVPT2 || npdm_order_== NPDM_THREEPDM || npdm_order_== NPDM_FOURPDM))
   {
-    std::map<std::vector<int>, Wavefunction> leftwaves;
-    std::map<std::vector<int>, Wavefunction> rightwaves;
-    std::string op_string;
-    get_op_string(lhsOps,dotOps,op_string);
-    std::string file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string %"_p" %mpigetrank() %  ".tmp" );
-    ifstream ifs1(file,std::ios::binary);
-    boost::archive::binary_iarchive load_waves(ifs1);
-    load_waves >> leftwaves;
-    ifs1.close();
-
-    get_op_string(rhsOps,op_string);
-    file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string % ".tmp" );
-    ifstream ifs2(file,std::ios::binary);
-    boost::archive::binary_iarchive load_waves2(ifs2);
-    load_waves2 >> rightwaves;
-    ifs2.close();
-
-    std::vector<int> spin;
-    //spin.push_back(!lhsOps.transpose_? lhsOps.opReps_.at(0)->get_deltaQuantum(0).get_s().getirrep(): (-lhsOps.opReps_.at(0)->get_deltaQuantum(0).get_s()).getirrep());
-    //spin.push_back(!dotOps.transpose_? dotOps.opReps_.at(0)->get_deltaQuantum(0).get_s().getirrep(): (-dotOps.opReps_.at(0)->get_deltaQuantum(0).get_s()).getirrep());
-    //spin.push_back(!rhsOps.transpose_? (-rhsOps.opReps_.at(0)->get_deltaQuantum(0).get_s()).getirrep(): rhsOps.opReps_.at(0)->get_deltaQuantum(0).get_s().getirrep());
-    spin.push_back(0);
-    spin.push_back(0);
-    spin.push_back(!rhsOps.transpose_? (-rhsOps.opReps_.at(0)->get_deltaQuantum(0).get_s()).getirrep(): rhsOps.opReps_.at(0)->get_deltaQuantum(0).get_s().getirrep());
-    Wavefunction& lw= leftwaves.at(spin);
-    Wavefunction& rw= rightwaves.at(std::vector<int>(1,0));
-    return DotProduct_spincorrection(lw,rw,big_);
-          
+    assert(false);
   }
   else
    return contract_spin_adapted_operators( 0, 0, 0, lhsOps, rhsOps, dotOps) ; 
@@ -323,24 +296,7 @@ void Npdm_expectations::build_spin_adapted_singlet_expectations( NpdmSpinOps_bas
   std::map<std::vector<int>, Wavefunction> leftwaves;
   std::map<std::vector<int>, Wavefunction> rightwaves;
   if(dmrginp.npdm_intermediate() && (npdm_order_== NPDM_NEVPT2 || npdm_order_== NPDM_THREEPDM || npdm_order_== NPDM_FOURPDM))
-  {
-    std::string op_string;
-    get_op_string(lhsOps,dotOps,op_string);
-    std::string file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_left."% op_string % "_p" %mpigetrank()%".tmp" );
-    ifstream ifs1(file,std::ios::binary);
-
-    boost::archive::binary_iarchive load_waves(ifs1);
-    load_waves >> leftwaves;
-    ifs1.close();
-
-    get_op_string(rhsOps,op_string);
-    file = str(boost::format("%s%s%s%s%s%s") % dmrginp.save_prefix() % "/npdm_right."% op_string% "_p" %mpigetrank() % ".tmp" );
-    ifstream ifs2(file,std::ios::binary);
-    boost::archive::binary_iarchive load_waves2(ifs2);
-    load_waves2 >> rightwaves;
-    ifs2.close();
-
-  }
+    assert(false);
   for (int irhs = 0; irhs < std::max(1,hirhs); ++irhs) {
     for (int idot = 0; idot < std::max(1,hidot); ++idot) {
       for (int ilhs = 0; ilhs < std::max(1,hilhs); ++ilhs) {
