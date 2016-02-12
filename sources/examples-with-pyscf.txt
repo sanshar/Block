@@ -1,5 +1,5 @@
-BLOCK for Electronic Structure Calculations
-*******************************************
+DMRG for Electronic Structure Calculations
+******************************************
 
 Using PySCF
 ===========
@@ -27,22 +27,19 @@ Executing this script in command line::
         $ python example1.py
 
 will start BLOCK program with 4 processors, assuming that you have the
-configuration ``dmrgscf.settings.MPIPREFIX = "mpirun -n 4"``
-
-.. note:: Don't put the prefix ``mpirun -n`` in the command line to start python.
-
-The number of processors can be dynamically adjusted using ``sys.argv``
-parameter, eg::
+configuration ``dmrgscf.settings.MPIPREFIX = "mpirun -n 4"``.
+The number of parallel processors can be dynamically adjusted using
+``sys.argv``, eg::
 
         $ cat example2.py
         import sys
         from pyscf import gto, scf, dmrgscf
-        dmrgscf.dmrgci.settings.MPIPREFIX = "mpirun -n %s" % sys.argv[0]
+        dmrgscf.dmrgci.settings.MPIPREFIX = "mpirun -n %s" % sys.argv[1]
         mf = gto.M(atom="C 0 0 0; C 0 0 1", basis="ccpvdz").apply(scf.RHF).run()
         mc = dmrgscf.dmrgci.DMRGSCF(mf, 6, 6)
         mc.run()
 
-        $ python example1.py 4
+        $ python example2.py 4
 
 In the above examples, ``gto``, ``scf`` are the standard modules provided by
 PySCF package.  For the use of PySCF package, we refer the reader to the
@@ -84,17 +81,17 @@ the settings of ``dmrgsolver`` object, eg to set the sweep schedule::
         dmrgsolver.twodot_to_onedot = 38
 
 For more details of the default settings and control parameters, we refer to
-the `source code <https://github.com/sunqm/pyscf/blob/master/future/dmrgscf/dmrgci.py>`_
-and the corresponding Block code `keywords list <keywords.rst>`_.
+the `PySCF source code <https://github.com/sunqm/pyscf/blob/master/future/dmrgscf/dmrgci.py>`_
+and the corresponding Block code :ref:`keywords list <keywords_list>`_.
 
 To make the embedded DMRG solver work more efficiently in CASSCF iteration, one
 need carefully tune the DMRG runtime parameters.  It means more input arguments
 and options to be specified for ``dmrgsolver`` object.  To simplify the input,
 we provided a shortcut function ``DMRGSCF`` in the ``dmrgscf`` module, as shown
 by the first example ``example1.py``.  In the ``DMRGSCF`` function, we created
-a CASSCF object, and changed its ``fcisolver`` to ``dmrgsolver``, then hook a
-function which is used to dynamically adjust sweep scheduler to CASSCF object.
-Now, the DMRG-CASSCF method can be applied in one line of input::
+a CASSCF object, and assigned ``dmrgsolver`` to its ``fcisolver``, then hooked
+a function which is used to dynamically adjust sweep scheduler to CASSCF object.
+Now, the DMRG-CASSCF calculation can be executed in one line of input::
 
         mc = dmrgscf.dmrgci.DMRGSCF(mf, norb, nelec).run()
 
@@ -105,20 +102,20 @@ Apparently, we can modify its value to change the place to save the DMRG
 wave function.  The default directory is read from the dmrgscf configuration
 parameter ``dmrgscf.settings.BLOCKSCRATCHDIR``.
 
-.. note:: Be sure the mc.fcisolver.scratchDirectory is properly assigned.
-  Since all DMRGCI object by default uses the same BLOCKSCRATCHDIR settings,
+.. note:: Be sure the ``mc.fcisolver.scratchDirectory`` is properly assigned.
+  Since all DMRGCI object by default uses the same ``BLOCKSCRATCHDIR`` settings,
   it's easy to cause name conflicts on the scratch directory, especially when
   two DMRG-CASSCF calculations are executed on the same node.
 
 .. note:: Usually, the DMRG wave function is very large.  Be sure that the
-  disk which BLOCKSCRATCHDIR pointed to has enough space.
+  disk which ``BLOCKSCRATCHDIR`` pointed to has enough space.
 
 Due to the complexity of multi-configuration model, it's common that we need
-interrupted the CASSCF calculation and restart a new one with modified
+interrupt the CASSCF calculation and restart the calculation with modified
 parameters.  To restart the CASSCF calculation, we need the information such as
-orbital coefficients and active space CI wave function of last simulation.
-Although the orbital coefficients can be save/load through PySCF `chkfile`
-module (see `PySCF documentation <http://www.pyscf.org>`_),  the CI wave
+orbital coefficients and active space CI wave function from last simulation.
+Although the orbital coefficients can be save/load through
+`PySCF chkfile module <https://github.com/sunqm/pyscf/blob/master/mcscf/chkfile.py>`_,  the CI wave
 function are not saved by PySCF.  Unlike the regular Full CI based CASSCF
 calculation in which the Full CI wave function can be fast rebuilt by a fresh
 running, the restart feature of DMRG-CASSCF calculation relies on the wave
@@ -130,9 +127,8 @@ function indicated by the ``mc.fcisolver.scratchDirectory`` attribute and the
         mc.fcisolver.restart = True
         mc.run()
 
-.. note:: Assigne the direct Block wave function directory to
-  mc.fcisolver.scratchDirectory.  An incorrect DMRG wave function may cause
-  DMRG-CASSCF crash.
+.. note:: A mismatched DMRG wave function (from wrong
+  ``mc.fcisolver.scratchDirectory``) may cause DMRG-CASSCF crash.
 
 Other common features like state-average DMRG-CASSCF or state-specific for
 excited state can be easily called with the ``DMRGSCF`` wrapper function::
