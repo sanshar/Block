@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Typical Calculations &mdash; BLOCK 1.0.0 documentation</title>
+    <title>Typical Calculations with BLOCK &mdash; BLOCK 1.1.0 documentation</title>
     
     <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0.0',
+        VERSION:     '1.1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,29 +23,29 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="BLOCK 1.0.0 documentation" href="index.html" />
-    <link rel="next" title="Keywords" href="keywords.html" />
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BLOCK 1.1.0 documentation" href="index.html" />
+    <link rel="next" title="BLOCK for Electronic Structure Calculations" href="examples-with-pyscf.html" />
     <link rel="prev" title="BLOCK Installation" href="build.html" /> 
   </head>
-  <body role="document">
-    <div class="related" role="navigation" aria-label="related navigation">
+  <body>
+    <div class="related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="keywords.html" title="Keywords"
+          <a href="examples-with-pyscf.html" title="BLOCK for Electronic Structure Calculations"
              accesskey="N">next</a></li>
         <li class="right" >
           <a href="build.html" title="BLOCK Installation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">BLOCK 1.0.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">BLOCK 1.1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Typical Calculations</a><ul>
+<li><a class="reference internal" href="#">Typical Calculations with <cite>BLOCK</cite></a><ul>
 <li><a class="reference internal" href="#molecular-symmetry">Molecular symmetry</a></li>
 <li><a class="reference internal" href="#state-wavefunction">State wavefunction</a></li>
 <li><a class="reference internal" href="#state-averaged-calculation">State-averaged calculation</a></li>
@@ -66,16 +66,14 @@
   <p class="topless"><a href="build.html"
                         title="previous chapter"><cite>BLOCK</cite> Installation</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="keywords.html"
-                        title="next chapter">Keywords</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="sources/examples.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
+  <p class="topless"><a href="examples-with-pyscf.html"
+                        title="next chapter">BLOCK for Electronic Structure Calculations</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="sources/examples.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
@@ -94,17 +92,19 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body" role="main">
+          <div class="body">
             
-  <div class="section" id="typical-calculations">
-<h1>Typical Calculations<a class="headerlink" href="#typical-calculations" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="typical-calculations-with-block">
+<h1>Typical Calculations with <cite>BLOCK</cite><a class="headerlink" href="#typical-calculations-with-block" title="Permalink to this headline">¶</a></h1>
 <p>In the following the DMRG calculation for C<sub>2</sub> molecule is used to demonstrate various computational features as of the current 1.0.0 release.
-Integrals and orbitals must be supplied externally in Molpro&#8217;s <code class="docutils literal"><span class="pre">FCIDUMP</span></code> format, as <code class="docutils literal"><span class="pre">BLOCK</span></code> does not generate its own integrals.</p>
+Integrals and orbitals must be supplied externally in
+<a class="reference external" href="http://www.molpro.net/info/2010.1/doc/manual/node417.html">Molpro&#8217;s FCIDUMP format</a>,
+as <tt class="docutils literal"><span class="pre">BLOCK</span></tt> does not generate its own integrals.</p>
 <p>The associated integral files for C<sub>2</sub> can be found here: <a class="reference external" href="https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/FCIDUMP">FCIDUMP</a>
 for its D<sub>2h</sub> point-group symmetry.</p>
 <div class="section" id="molecular-symmetry">
 <h2>Molecular symmetry<a class="headerlink" href="#molecular-symmetry" title="Permalink to this headline">¶</a></h2>
-<p>Example 1: <code class="docutils literal"><span class="pre">BLOCK</span></code> input with the default settings for the ground state energy:</p>
+<p>Example 1: <tt class="docutils literal"><span class="pre">BLOCK</span></tt> input with the default settings for the ground state energy:</p>
 <div class="highlight-python"><div class="highlight"><pre>sym d2h
 orbitals FCIDUMP
 
@@ -118,10 +118,10 @@ maxM 500
 maxiter 30
 </pre></div>
 </div>
-<p>D<sub>2h</sub> symmetry is enabled by <code class="docutils literal"><span class="pre">sym</span> <span class="pre">d2h</span></code>.
-The simplest option is to take <code class="docutils literal"><span class="pre">schedule</span> <span class="pre">default</span></code> and the maximum number of renormalized states, <code class="docutils literal"><span class="pre">maxM</span></code>.
-<code class="docutils literal"><span class="pre">BLOCK</span></code> will then automatically choose a sweep schedule as well as set defaults for various tolerances.</p>
-<p>The discarded weights and associated sweep energies can be extracted by grepping <code class="docutils literal"><span class="pre">output.dat</span></code>, for instance:</p>
+<p>D<sub>2h</sub> symmetry is enabled by <tt class="docutils literal"><span class="pre">sym</span> <span class="pre">d2h</span></tt>.
+The simplest option is to take <tt class="docutils literal"><span class="pre">schedule</span> <span class="pre">default</span></tt> and the maximum number of renormalized states, <tt class="docutils literal"><span class="pre">maxM</span></tt>.
+<tt class="docutils literal"><span class="pre">BLOCK</span></tt> will then automatically choose a sweep schedule as well as set defaults for various tolerances.</p>
+<p>The discarded weights and associated sweep energies can be extracted by grepping <tt class="docutils literal"><span class="pre">output.dat</span></tt>, for instance:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ grep &quot;Sweep Energy&quot; output.dat
 M = 250     state = 0     Largest Discarded Weight = 2.601e-05  Sweep Energy = -75.7044175965
 M = 250     state = 0     Largest Discarded Weight = 4.145e-05  Sweep Energy = -75.7253836704
@@ -143,7 +143,7 @@ M = 500     state = 0     Largest Discarded Weight = 3.689e-13  Sweep Energy = -
 </div>
 <div class="section" id="state-wavefunction">
 <h2>State wavefunction<a class="headerlink" href="#state-wavefunction" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal"><span class="pre">BLOCK</span></code> can target the states distinguished by the number of electrons <code class="docutils literal"><span class="pre">nelec</span></code>, the total spin <code class="docutils literal"><span class="pre">spin</span></code> and the point-group symmetry of the state <code class="docutils literal"><span class="pre">irrep</span></code>.</p>
+<p><tt class="docutils literal"><span class="pre">BLOCK</span></tt> can target the states distinguished by the number of electrons <tt class="docutils literal"><span class="pre">nelec</span></tt>, the total spin <tt class="docutils literal"><span class="pre">spin</span></tt> and the point-group symmetry of the state <tt class="docutils literal"><span class="pre">irrep</span></tt>.</p>
 <p>Example 2: a single B<sub>1g</sub> state in D<sub>2h</sub>:</p>
 <div class="highlight-python"><div class="highlight"><pre>sym d2h
 orbitals FCIDUMP
@@ -182,9 +182,9 @@ M = 500     state = 0     Largest Discarded Weight = 8.882e-16  Sweep Energy = -
 </div>
 <div class="section" id="state-averaged-calculation">
 <h2>State-averaged calculation<a class="headerlink" href="#state-averaged-calculation" title="Permalink to this headline">¶</a></h2>
-<p>A state-averaged DMRG is available in <code class="docutils literal"><span class="pre">BLOCK</span></code> for which more than a single state can be targeted in the same calculation.
+<p>A state-averaged DMRG is available in <tt class="docutils literal"><span class="pre">BLOCK</span></tt> for which more than a single state can be targeted in the same calculation.
 Currently the states being calculated must be of the same irrep.
-The number of roots and the weight of each state can be specified by <code class="docutils literal"><span class="pre">nroots</span></code> and <code class="docutils literal"><span class="pre">weights</span></code>, respectively.</p>
+The number of roots and the weight of each state can be specified by <tt class="docutils literal"><span class="pre">nroots</span></tt> and <tt class="docutils literal"><span class="pre">weights</span></tt>, respectively.</p>
 <p>Example 3: a state-averaged DMRG of two A<sub>g</sub> states in D<sub>2h</sub>:</p>
 <div class="highlight-python"><div class="highlight"><pre>sym d2h
 orbitals FCIDUMP
@@ -244,13 +244,13 @@ M = 500     state = 1     Largest Discarded Weight = 8.724e-06  Sweep Energy = -
 <h2>State-specific calculation<a class="headerlink" href="#state-specific-calculation" title="Permalink to this headline">¶</a></h2>
 <p>The state-specific calculation is implemented as a restart calculation which assumes
 that a previous DMRG (e.g., state-average) calculation has been converged.
-The state-specific DMRG calculation of <code class="docutils literal"><span class="pre">BLOCK</span></code> then takes these wave functions and refines them for each root separately.
+The state-specific DMRG calculation of <tt class="docutils literal"><span class="pre">BLOCK</span></tt> then takes these wave functions and refines them for each root separately.
 Currently only &#8220;onedot&#8221; algorithm is implemented for a state-specific DMRG calculation.</p>
 <p>Example 4: a state-specific DMRG of two A<sub>g</sub> states consists of two steps.</p>
 <ul>
 <li><p class="first">First, obtain state-averaged wavefunctions as carried out in Example 3.</p>
 </li>
-<li><p class="first">Second, perform the state-specific DMRG calculation by specifying <code class="docutils literal"><span class="pre">statespecific</span></code> along with algorithm, reading the previous DMRG wavefunction:</p>
+<li><p class="first">Second, perform the state-specific DMRG calculation by specifying <tt class="docutils literal"><span class="pre">statespecific</span></tt> along with algorithm, reading the previous DMRG wavefunction:</p>
 <div class="highlight-python"><div class="highlight"><pre>sym d2h
 orbitals FCIDUMP
 
@@ -312,7 +312,7 @@ M = 500     state = 1     Largest Discarded Weight = 6.661e-16  Sweep Energy = -
 <div class="section" id="n-particle-reduced-density-matrix">
 <h2><em>n</em>-particle reduced density matrix<a class="headerlink" href="#n-particle-reduced-density-matrix" title="Permalink to this headline">¶</a></h2>
 <p>The DMRG reduced density matrix up to the 4-particle type for a particular state can be obtained
-by employing the keywords <code class="docutils literal"><span class="pre">onepdm</span></code>, <code class="docutils literal"><span class="pre">twopdm</span></code>, <code class="docutils literal"><span class="pre">threepdm</span></code> and <code class="docutils literal"><span class="pre">fourpdm</span></code>.
+by employing the keywords <tt class="docutils literal"><span class="pre">onepdm</span></tt>, <tt class="docutils literal"><span class="pre">twopdm</span></tt>, <tt class="docutils literal"><span class="pre">threepdm</span></tt> and <tt class="docutils literal"><span class="pre">fourpdm</span></tt>.
 Currently only &#8220;onedot&#8221; algorithm is implemented for this type of calculation.
 Density matrices of the <em>n</em>-th state are calculated and stored in a text file named <em>spatial_onepdm.n.n.txt</em>, <em>spatial_twopdm.n.n.txt</em>,
 <em>spatial_threepdm.n.n.txt</em> and <em>spatial_fourpdm.n.n.txt</em>, respectively, starting with <cite>n=0</cite>.</p>
@@ -357,12 +357,12 @@ and <a class="reference external" href="https://raw.githubusercontent.com/sansha
 </div>
 <div class="section" id="and-2-particle-transition-reduced-density-matrix">
 <h2>1- and 2-particle transition reduced density matrix<a class="headerlink" href="#and-2-particle-transition-reduced-density-matrix" title="Permalink to this headline">¶</a></h2>
-<p>1-particle and 2-particle transition density matrices can be calculated using the keyword <code class="docutils literal"><span class="pre">tran_onepdm</span></code> and <code class="docutils literal"><span class="pre">tran_twopdm</span></code>.
+<p>1-particle and 2-particle transition density matrices can be calculated using the keyword <tt class="docutils literal"><span class="pre">tran_onepdm</span></tt> and <tt class="docutils literal"><span class="pre">tran_twopdm</span></tt>.
 Transition density matrices between the <em>m</em>-th and <em>n</em>-th states are calculated and stored in a text file named <em>spatial_onepdm.m.n.txt</em>
 and <em>spatial_twopdm.m.n.txt</em>, respectively, starting with <cite>m=1</cite> and <cite>n=0</cite>.</p>
 <p>The transition density matrices between states with different symmetry irreducible presentations are also available.
 However, this type of calculation requires multiple steps and the manipulation of scratch files
-and will be discussed in <a class="reference internal" href="#transition-dm"><span>Restart DMRG transition reduced density matrix calculation</span></a>.</p>
+and will be discussed in <a class="reference internal" href="#transition-dm"><em>Restart DMRG transition reduced density matrix calculation</em></a>.</p>
 <p>Example 7: state-averaged 2-particle transition density matrix between two A<sub>g</sub> states:</p>
 <div class="highlight-python"><div class="highlight"><pre>sym d2h
 orbitals FCIDUMP
@@ -408,7 +408,7 @@ tran_twopdm
 </div>
 <div class="section" id="restart-dmrg-energy-calculation">
 <h2>Restart DMRG energy calculation<a class="headerlink" href="#restart-dmrg-energy-calculation" title="Permalink to this headline">¶</a></h2>
-<p>DMRG energy calculations can be restarted, using the <code class="docutils literal"><span class="pre">.tmp</span></code> scratch files generated in the previous calculation, by specifying the keyword <code class="docutils literal"><span class="pre">restart</span></code>.</p>
+<p>DMRG energy calculations can be restarted, using the <tt class="docutils literal"><span class="pre">.tmp</span></tt> scratch files generated in the previous calculation, by specifying the keyword <tt class="docutils literal"><span class="pre">restart</span></tt>.</p>
 <p>Example 9: restart DMRG enegy calculation:</p>
 <div class="highlight-python"><div class="highlight"><pre>sym d2h
 orbitals FCIDUMP
@@ -438,7 +438,7 @@ M = 500     state = 0     Largest Discarded Weight = 4.441e-16  Sweep Energy = -
 <div class="section" id="restart-dmrg-n-particle-reduced-density-matrix-calculation">
 <h2>Restart DMRG <em>n</em>-particle reduced density matrix calculation<a class="headerlink" href="#restart-dmrg-n-particle-reduced-density-matrix-calculation" title="Permalink to this headline">¶</a></h2>
 <p>Up to 4-particle reduced density matrices can be calculated separately, by restarting from an existing DMRG wave function.
-This requires the presence of the following scratch files with <code class="docutils literal"><span class="pre">.tmp</span></code> extension: &#8220;statefile&#8221;, &#8220;StateInfo&#8221;, &#8220;wave&#8221; and &#8220;Rotation&#8221;.</p>
+This requires the presence of the following scratch files with <tt class="docutils literal"><span class="pre">.tmp</span></tt> extension: &#8220;statefile&#8221;, &#8220;StateInfo&#8221;, &#8220;wave&#8221; and &#8220;Rotation&#8221;.</p>
 <p>Example 10: restart DMRG 2-particle density matrix calculation:</p>
 <div class="highlight-python"><div class="highlight"><pre>sym d2h
 orbitals FCIDUMP
@@ -484,9 +484,9 @@ restart_tran_twopdm
 <p>When bra and ket states belong to different irreps, the restart calculation takes a few steps in which the corresponding state-specific calculations are needed.</p>
 <p>Example 12: 2-particle transition density matrix between A<sub>g</sub> (bra) and B<sub>3u</sub> (ket) states.</p>
 <ul class="simple">
-<li>Carry out state-specific calculations for bra and ket states separately, in different scratch directories of <code class="docutils literal"><span class="pre">scratch_bra</span></code> and <code class="docutils literal"><span class="pre">scratch_ket</span></code>, enabled by the keyword <code class="docutils literal"><span class="pre">scratch</span></code>. <code class="docutils literal"><span class="pre">BLOCK</span></code> labels bra and ket states as &#8220;state 1&#8221; and &#8220;state 0&#8221;, respectively.</li>
+<li>Carry out state-specific calculations for bra and ket states separately, in different scratch directories of <tt class="docutils literal"><span class="pre">scratch_bra</span></tt> and <tt class="docutils literal"><span class="pre">scratch_ket</span></tt>, enabled by the keyword <tt class="docutils literal"><span class="pre">scratch</span></tt>. <tt class="docutils literal"><span class="pre">BLOCK</span></tt> labels bra and ket states as &#8220;state 1&#8221; and &#8220;state 0&#8221;, respectively.</li>
 </ul>
-<p>First, creat the scratch directory by <code class="docutils literal"><span class="pre">mkdir</span> <span class="pre">./scratch_bra</span></code> and calculate bra state as &#8220;state 1&#8221; belonging to <code class="docutils literal"><span class="pre">irrep</span> <span class="pre">2</span></code> of D<sub>2h</sub>:</p>
+<p>First, creat the scratch directory by <tt class="docutils literal"><span class="pre">mkdir</span> <span class="pre">./scratch_bra</span></tt> and calculate bra state as &#8220;state 1&#8221; belonging to <tt class="docutils literal"><span class="pre">irrep</span> <span class="pre">2</span></tt> of D<sub>2h</sub>:</p>
 <div class="highlight-python"><div class="highlight"><pre>sym d2h
 orbitals FCIDUMP
 
@@ -502,7 +502,7 @@ maxiter 30
 scratch scratch_bra
 </pre></div>
 </div>
-<p>Second, creat the scratch directory by <code class="docutils literal"><span class="pre">mkdir</span> <span class="pre">./scratch_ket</span></code> and calculate ket state as &#8220;state 0&#8221; belonging to <code class="docutils literal"><span class="pre">irrep</span> <span class="pre">1</span></code> of D<sub>2h</sub>:</p>
+<p>Second, creat the scratch directory by <tt class="docutils literal"><span class="pre">mkdir</span> <span class="pre">./scratch_ket</span></tt> and calculate ket state as &#8220;state 0&#8221; belonging to <tt class="docutils literal"><span class="pre">irrep</span> <span class="pre">1</span></tt> of D<sub>2h</sub>:</p>
 <div class="highlight-python"><div class="highlight"><pre>sym d2h
 orbitals FCIDUMP
 
@@ -518,15 +518,15 @@ maxiter 30
 scratch scratch_ket
 </pre></div>
 </div>
-<p>In <code class="docutils literal"><span class="pre">./scratch_bra</span></code>, rename the resulting &#8220;statefile&#8221;, &#8220;wave&#8221;, &#8220;Rotation&#8221; scratch files by changing the numbers before the <code class="docutils literal"><span class="pre">.tmp</span></code> extension from &#8220;0&#8221; to &#8220;1&#8221;:</p>
+<p>In <tt class="docutils literal"><span class="pre">./scratch_bra</span></tt>, rename the resulting &#8220;statefile&#8221;, &#8220;wave&#8221;, &#8220;Rotation&#8221; scratch files by changing the numbers before the <tt class="docutils literal"><span class="pre">.tmp</span></tt> extension from &#8220;0&#8221; to &#8220;1&#8221;:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ rename .0.tmp .1.tmp *.tmp
 $ rename .state0.tmp .state1.tmp Rotation*.tmp
 </pre></div>
 </div>
 <ul>
-<li><p class="first">Copy all &#8220;statefile&#8221;, &#8220;wave&#8221;, &#8220;Rotation&#8221; <code class="docutils literal"><span class="pre">.tmp</span></code> files from <code class="docutils literal"><span class="pre">scratch_bra</span></code> and <code class="docutils literal"><span class="pre">scratch_ket</span></code> directories to a separate directory <code class="docutils literal"><span class="pre">scratch_tran</span></code> for restarting calculation.</p>
+<li><p class="first">Copy all &#8220;statefile&#8221;, &#8220;wave&#8221;, &#8220;Rotation&#8221; <tt class="docutils literal"><span class="pre">.tmp</span></tt> files from <tt class="docutils literal"><span class="pre">scratch_bra</span></tt> and <tt class="docutils literal"><span class="pre">scratch_ket</span></tt> directories to a separate directory <tt class="docutils literal"><span class="pre">scratch_tran</span></tt> for restarting calculation.</p>
 </li>
-<li><p class="first">Restart a 2-particle transition density matrix calculation by adding the keyword <code class="docutils literal"><span class="pre">restart_tran_twopdm</span></code>. In addition <code class="docutils literal"><span class="pre">irrep</span> <span class="pre">2</span> <span class="pre">1</span></code> represents A<sub>g</sub> and B<sub>3u</sub> states for bra and ket, respectively:</p>
+<li><p class="first">Restart a 2-particle transition density matrix calculation by adding the keyword <tt class="docutils literal"><span class="pre">restart_tran_twopdm</span></tt>. In addition <tt class="docutils literal"><span class="pre">irrep</span> <span class="pre">2</span> <span class="pre">1</span></tt> represents A<sub>g</sub> and B<sub>3u</sub> states for bra and ket, respectively:</p>
 <div class="highlight-python"><div class="highlight"><pre>sym d2h
 orbitals FCIDUMP
 
@@ -642,12 +642,12 @@ M = 800     state = 0     Largest Discarded Weight = 6.661e-16  Sweep Energy = -
 M = 800     state = 0     Largest Discarded Weight = 1.887e-15  Sweep Energy = -75.7284968238
 </pre></div>
 </div>
-<p><code class="docutils literal"><span class="pre">twodot_to_onedot</span></code> specifies the sweep at which the switch is made
+<p><tt class="docutils literal"><span class="pre">twodot_to_onedot</span></tt> specifies the sweep at which the switch is made
 from a twodot to a onedot algorithm.
-<code class="docutils literal"><span class="pre">maxiter</span></code> gives the maximum number of sweep iterations to be performed.
-<code class="docutils literal"><span class="pre">sweep_tol</span></code> gives the final tolerance on the DMRG energy,
+<tt class="docutils literal"><span class="pre">maxiter</span></tt> gives the maximum number of sweep iterations to be performed.
+<tt class="docutils literal"><span class="pre">sweep_tol</span></tt> gives the final tolerance on the DMRG energy,
 and is analogous to an energy convergence threshold in other quantum chemistry methods.</p>
-<p>In Example 13 between <code class="docutils literal"><span class="pre">schedule</span></code> and <code class="docutils literal"><span class="pre">end</span></code> each line has four values corresponding to <em>sweep_iteration</em>,  <em>M</em>, <em>Davidson_tolerance</em> and <em>Noise</em>, respectively.
+<p>In Example 13 between <tt class="docutils literal"><span class="pre">schedule</span></tt> and <tt class="docutils literal"><span class="pre">end</span></tt> each line has four values corresponding to <em>sweep_iteration</em>,  <em>M</em>, <em>Davidson_tolerance</em> and <em>Noise</em>, respectively.
 <em>sweep_iteration</em> is the sweep iteration in which the number of renormalized states <em>M</em>,
 the tolerance of Davidson algorithm and the perturbative noise should take effect.</p>
 </div>
@@ -660,7 +660,7 @@ since the &#8220;twodot&#8221; DMRG wavefunction provides additional variational
 A strong deviation from a linear function (e.g. a plateau behaviour followed by a sudden drop of the
 energy as a function of discarded weight) indicates that the DMRG was stuck in a local minimum.</p>
 <p>Example 14: the ground state of C<sub>2</sub>, cc-pVDZ basis and customized sweep schedule.</p>
-<p>Prepare <code class="docutils literal"><span class="pre">input.dat</span></code>:</p>
+<p>Prepare <tt class="docutils literal"><span class="pre">input.dat</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre>sym d2h
 orbitals FCIDUMP
 
@@ -686,11 +686,11 @@ maxiter 100
 sweep_tol 1e-7
 </pre></div>
 </div>
-<p>Then run <code class="docutils literal"><span class="pre">BLOCK</span></code>:</p>
+<p>Then run <tt class="docutils literal"><span class="pre">BLOCK</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ block.spin_adapted input.dat &gt; output.dat
 </pre></div>
 </div>
-<p>When the calculation is done, extract the sweep energies from <code class="docutils literal"><span class="pre">output.dat</span></code>:</p>
+<p>When the calculation is done, extract the sweep energies from <tt class="docutils literal"><span class="pre">output.dat</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ grep &quot;Sweep Energy&quot; output.dat
 M = 250     state = 0     Largest Discarded Weight = 2.601e-05  Sweep Energy = -75.7044175965
 M = 250     state = 0     Largest Discarded Weight = 4.145e-05  Sweep Energy = -75.7253836704
@@ -740,9 +740,9 @@ M = 4500    state = 0     Largest Discarded Weight = 7.772e-16  Sweep Energy = -
 </pre></div>
 </div>
 <p>Energy extrapolation:</p>
-<div class="figure align-left" id="id1">
+<div class="figure align-left">
 <a class="reference internal image-reference" href="images/c2_energy.png"><img alt="images/c2_energy.png" src="images/c2_energy.png" style="width: 640.0px; height: 512.0px;" /></a>
-<p class="caption"><span class="caption-text">Starting from <em>M=500</em>, use the largest discarded weights and associated sweep energies in the last sweep iteration of each <em>M</em> to make linear regression (see the figure above). The extrapolated DMRG sweep energy is -75.728557 a.u.</span></p>
+<p class="caption">Starting from <em>M=500</em>, use the largest discarded weights and associated sweep energies in the last sweep iteration of each <em>M</em> to make linear regression (see the figure above). The extrapolated DMRG sweep energy is -75.728557 a.u.</p>
 </div>
 </div>
 <div class="section" id="further-reading">
@@ -757,7 +757,7 @@ of active orbitals) that can be treated with practical computational resources?<
 </ul>
 <p>We provide answers in the following paper from both theoretical reasoning and numerical calculation by applying the DMRG
 to a representative set of molecules.
-The calculations we describe therein are all run in a completely black-box fashion using the default settings of our <code class="docutils literal"><span class="pre">Block</span></code> code.</p>
+The calculations we describe therein are all run in a completely black-box fashion using the default settings of our <tt class="docutils literal"><span class="pre">Block</span></tt> code.</p>
 <ul class="simple">
 <li><ol class="first upperalpha" start="18">
 <li>Olivares-Amaya, W. Hu, N. Nakatani, S. Sharma, J. Yang and G. K.-L. Chan, J. Chem. Phys. 142, 034102 (2015).</li>
@@ -773,21 +773,21 @@ The calculations we describe therein are all run in a completely black-box fashi
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="keywords.html" title="Keywords"
+          <a href="examples-with-pyscf.html" title="BLOCK for Electronic Structure Calculations"
              >next</a></li>
         <li class="right" >
           <a href="build.html" title="BLOCK Installation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">BLOCK 1.0.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">BLOCK 1.1.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
-    <div class="footer" role="contentinfo">
+    <div class="footer">
         &copy; Copyright 2015, Garnet Kin-Lic Chan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

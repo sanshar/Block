@@ -1,0 +1,201 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Benchmark &mdash; BLOCK 1.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BLOCK 1.1.0 documentation" href="index.html" />
+    <link rel="next" title="Change Log" href="CHANGELOG.html" />
+    <link rel="prev" title="Keywords" href="keywords.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="CHANGELOG.html" title="Change Log"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="keywords.html" title="Keywords"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">BLOCK 1.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Benchmark</a><ul>
+<li><a class="reference internal" href="#computation-cost">Computation cost</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="keywords.html"
+                        title="previous chapter">Keywords</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="CHANGELOG.html"
+                        title="next chapter">Change Log</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="sources/benchmark.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="benchmark">
+<span id="id1"></span><h1>Benchmark<a class="headerlink" href="#benchmark" title="Permalink to this headline">¶</a></h1>
+<table border="1" class="docutils">
+<colgroup>
+<col width="23%" />
+<col width="77%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Platform</th>
+<th class="head">&nbsp;</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>CPU</td>
+<td>4 Intel E5-2670 &#64; 2.6 GB</td>
+</tr>
+<tr class="row-odd"><td>Memory</td>
+<td>128 GB DDR3</td>
+</tr>
+<tr class="row-even"><td>OS</td>
+<td>Custom Redhat 6.6</td>
+</tr>
+<tr class="row-odd"><td>BLAS</td>
+<td>MKL 11.0</td>
+</tr>
+<tr class="row-even"><td>Compiler</td>
+<td>GCC 4.8.2</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="computation-cost">
+<h2>Computation cost<a class="headerlink" href="#computation-cost" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="40%" />
+<col width="16%" />
+<col width="29%" />
+<col width="16%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Problem size</th>
+<th class="head">Program</th>
+<th class="head">CPU</th>
+<th class="head">Memory</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>439 AOs, CAS(16e,20o), M = 1000</td>
+<td>DMRG-CASCI</td>
+<td>~ 1 h (16 core)</td>
+<td>&lt; 1 GB/core</td>
+</tr>
+<tr class="row-odd"><td></td>
+<td>DMRG-CASSCF</td>
+<td>~ 1.5 h/iter (16 core)</td>
+<td>&lt; 1 GB/core</td>
+</tr>
+<tr class="row-even"><td></td>
+<td>NEVPT2</td>
+<td>48 h (8 core)</td>
+<td>~12 GB/core</td>
+</tr>
+<tr class="row-odd"><td></td>
+<td>MPS-NEVPT2</td>
+<td>5.5 h (16 core)</td>
+<td>&lt; 4 GB/core</td>
+</tr>
+<tr class="row-even"><td>439 AOs, CAS(22e,27o), M = 1000</td>
+<td>DMRG-CASCI</td>
+<td>6 h (16 core)</td>
+<td>&lt; 2 GB/core</td>
+</tr>
+<tr class="row-odd"><td></td>
+<td>DMRG-CASSCF</td>
+<td>9 h/iter (16 core)</td>
+<td>&lt; 2 GB/core</td>
+</tr>
+<tr class="row-even"><td></td>
+<td>MPS-NEVPT2</td>
+<td>29 h (16 core)</td>
+<td>~10 GB/core</td>
+</tr>
+<tr class="row-odd"><td>760 AOs, CAS(30e,36o), M = 1500</td>
+<td>DMRG-CASCI</td>
+<td>24 h (16 core)</td>
+<td>&lt; 2 GB/core</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="CHANGELOG.html" title="Change Log"
+             >next</a></li>
+        <li class="right" >
+          <a href="keywords.html" title="Keywords"
+             >previous</a> |</li>
+        <li><a href="index.html">BLOCK 1.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Garnet Kin-Lic Chan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
