@@ -47,6 +47,56 @@ When the makefile is configured, run in the directory ``./Block``::
 
 The successful compilation generates the executable ``block.spin_adapted``, static and shared DMRG libraries ``libqcdmrg.a`` and ``libqcdmrg.so``.
 
+
+.. _pyscf-itrf:
+
+Interface to PySCF package
+--------------------------
+
+The electronic structure Python module `PySCF <http://chemists.princeton.edu/chan/software/pyscf/>`_
+provided an interface to run `BLOCK` code.  If you would like to run
+DMRG-SCF, DMRG-NEVPT2 etc with PySCF package, you need create a pyscf
+config file ``/path/to/pyscf/future/dmrgscf/settings.py`` and add the
+following settings in it::
+
+        BLOCKEXE = "/path/to/Block/block.spin_adapted"
+        BLOCKSCRATCHDIR = "/path/to/scratch"
+        MPIPREFIX = "mpirun"
+
+Note the parameter ``MPIPREFIX`` should be adjusted according to your
+job scheduler, eg::
+
+        # For OpenPBS/Torque 
+        MPIPREFIX = "mpirun"
+        # For SLURM
+        MPIPREFIX = "srun"
+
+If calculation is carried out on interactive node, eg with 4 processors,
+the setting looks like::
+
+        MPIPREFIX = "mpirun -n 4"
+
+If ``BLOCK`` and ``PySCF`` are installed successfully, a simple DMRG-SCF
+calculation can be input in Python interpereter:: 
+
+        >>> from pyscf import gto, scf, dmrgscf
+        >>> mf = gto.M(atom='C 0 0 0; C 0 0 1', basis='ccpvdz').apply(scf.RHF).run()
+        >>> mc = dmrgscf.dmrgci.DMRGSCF(mf, 6, 6)
+        >>> mc.run()
+
+DMRG-NEVPT2 calculation can be applied::
+
+        >>> from pyscf import mrpt
+        >>> mrpt.nevpt2.sc_nevpt(mc)
+
+Optionally, if `MPI4Py <http://mpi4py.scipy.org>`_ was installed, the efficient
+DMRG-NEVPT2 implementation can be used, eg::
+
+        >>> from pyscf import mrpt
+        >>> dmrgscf.dmrgci.DMRG_MPS_NEVPT(mc)
+        >>> mrpt.nevpt2.sc_nevpt(mc, useMPS=True)
+
+
 How to run `BLOCK`
 ==================
 
@@ -69,4 +119,5 @@ Testjobs
         $ ./runtest
 
 The tests require Python to be installed on the system.
+
 
