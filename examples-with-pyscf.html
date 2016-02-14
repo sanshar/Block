@@ -167,7 +167,7 @@ the settings of <tt class="docutils literal"><span class="pre">dmrgsolver</span>
 </div>
 <p>For more details of the default settings and control parameters, we refer to
 the <a class="reference external" href="https://github.com/sunqm/pyscf/blob/master/future/dmrgscf/dmrgci.py">PySCF source code</a>
-and the corresponding Block code <a href="#id1"><span class="problematic" id="id2">:ref:`keywords list &lt;keywords_list&gt;`_</span></a>.</p>
+and the corresponding Block code <a class="reference internal" href="keywords.html#keywords-list"><em>Keywords</em></a> list.</p>
 <p>To make the embedded DMRG solver work more efficiently in CASSCF iteration, one
 need carefully tune the DMRG runtime parameters.  It means more input arguments
 and options to be specified for <tt class="docutils literal"><span class="pre">dmrgsolver</span></tt> object.  To simplify the input,
@@ -259,21 +259,18 @@ finished:</p>
 </div>
 <p>However, the default DMRG-NEVPT2 calculation is extremely demanding on both CPU
 and memory resources.  In Block code, there is an effective approximation
-implemented which can significantly reduce the computation cost:</p>
+implemented based on compressed MPS perturber which can significantly
+reduce the computation cost:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">dmrgscf</span><span class="p">,</span> <span class="n">mrpt</span>
 <span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&quot;C 0 0 0; C 0 0 1&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&quot;ccpvdz&quot;</span><span class="p">)</span>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-
 <span class="n">mc</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
-<span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRG_MPS_NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
-<span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">useMPS</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">dmrgscf</span><span class="o">.</span><span class="n">compress_perturb</span><span class="p">(</span><span class="n">mc</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>The efficient NEVPT2 implementation is initialized with <tt class="docutils literal"><span class="pre">DMRG_MPS_NEVPT</span></tt>
-function.  The most demanding intermediates are computed in this function and
-stored on disk.  Next we need pass <tt class="docutils literal"><span class="pre">useMPS=True</span></tt> parameter to the NEVPT2
-method to tell NEVPT2 method to read the precomputed quantities.</p>
+<p>The efficient NEVPT2 needs be initialized with <tt class="docutils literal"><span class="pre">compress_perturb</span></tt> function,
+in which the most demanding intermediates are precomputed and stored on disk.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The efficient NEVPT2 algorithm is also very demanding, especially on
@@ -286,16 +283,12 @@ available in the current Block version:</p>
 <span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGCI</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">nroots</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
-<span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRG_MPS_NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">maxM</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">mps_nevpt_e1</span> <span class="o">=</span> <span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">ci</span><span class="o">=</span><span class="n">mc</span><span class="o">.</span><span class="n">ci</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">useMPS</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
-<span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRG_MPS_NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">maxM</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">mps_nevpt_e2</span> <span class="o">=</span> <span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">ci</span><span class="o">=</span><span class="n">mc</span><span class="o">.</span><span class="n">ci</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">useMPS</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">mps_nevpt_e1</span> <span class="o">=</span> <span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">dmrgscf</span><span class="o">.</span><span class="n">compress_perturb</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">maxM</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">mps_nevpt_e2</span> <span class="o">=</span> <span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">dmrgscf</span><span class="o">.</span><span class="n">compress_perturb</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">maxM</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>In the above example, two NEVPT2 calculations are carried out separately for
-two states which are indicated by the <tt class="docutils literal"><span class="pre">mc.ci</span></tt> attributes.  Each NEVPT2
-calculation has its own initializer <tt class="docutils literal"><span class="pre">DMRG_MPS_NEVPT</span></tt> which is specified by
-the <tt class="docutils literal"><span class="pre">root</span></tt> argument.</p>
+two states which are indicated by the argument <tt class="docutils literal"><span class="pre">root=*</span></tt>.</p>
 <p>For DMRG-CASSCF and DMRG-NEVPT2 calculations, there are more examples available
 in <a class="reference external" href="https://github.com/sunqm/pyscf/tree/master/examples/dmrg">PySCF source code</a>.</p>
 </div>

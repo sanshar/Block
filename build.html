@@ -169,8 +169,7 @@ calculation can be input in Python interpereter:</p>
 <p>Optionally, if <a class="reference external" href="http://mpi4py.scipy.org">MPI4Py</a> was installed, the efficient
 DMRG-NEVPT2 implementation can be used, eg:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">mrpt</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRG_MPS_NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">useMPS</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">dmrgscf</span><span class="o">.</span><span class="n">compress_perturb</span><span class="p">(</span><span class="n">mc</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>

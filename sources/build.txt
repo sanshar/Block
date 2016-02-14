@@ -93,8 +93,7 @@ Optionally, if `MPI4Py <http://mpi4py.scipy.org>`_ was installed, the efficient
 DMRG-NEVPT2 implementation can be used, eg::
 
         >>> from pyscf import mrpt
-        >>> dmrgscf.dmrgci.DMRG_MPS_NEVPT(mc)
-        >>> mrpt.nevpt2.sc_nevpt(mc, useMPS=True)
+        >>> mrpt.nevpt2.sc_nevpt(dmrgscf.compress_perturb(mc))
 
 
 How to run `BLOCK`

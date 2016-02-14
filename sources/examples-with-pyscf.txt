@@ -82,7 +82,7 @@ the settings of ``dmrgsolver`` object, eg to set the sweep schedule::
 
 For more details of the default settings and control parameters, we refer to
 the `PySCF source code <https://github.com/sunqm/pyscf/blob/master/future/dmrgscf/dmrgci.py>`_
-and the corresponding Block code :ref:`keywords list <keywords_list>`_.
+and the corresponding Block code :ref:`keywords_list` list.
 
 To make the embedded DMRG solver work more efficiently in CASSCF iteration, one
 need carefully tune the DMRG runtime parameters.  It means more input arguments
@@ -172,21 +172,18 @@ finished::
 
 However, the default DMRG-NEVPT2 calculation is extremely demanding on both CPU
 and memory resources.  In Block code, there is an effective approximation
-implemented which can significantly reduce the computation cost::
+implemented based on compressed MPS perturber which can significantly
+reduce the computation cost::
 
         from pyscf import gto, scf, dmrgscf, mrpt
         mol = gto.M(atom="C 0 0 0; C 0 0 1", basis="ccpvdz")
         mf = scf.RHF(mol).run()
-
         mc = dmrgscf.dmrgci.DMRGSCF(mf, 6, 6).run()
 
-        dmrgscf.dmrgci.DMRG_MPS_NEVPT(mc)
-        mrpt.nevpt2.sc_nevpt(mc, useMPS=True)
+        mrpt.nevpt2.sc_nevpt(dmrgscf.compress_perturb(mc))
 
-The efficient NEVPT2 implementation is initialized with ``DMRG_MPS_NEVPT``
-function.  The most demanding intermediates are computed in this function and
-stored on disk.  Next we need pass ``useMPS=True`` parameter to the NEVPT2
-method to tell NEVPT2 method to read the precomputed quantities.
+The efficient NEVPT2 needs be initialized with ``compress_perturb`` function,
+in which the most demanding intermediates are precomputed and stored on disk.
 
 .. note:: The efficient NEVPT2 algorithm is also very demanding, especially on
   the memory usage.  Please refer to the :ref:`benchmark` for approximate cost.
@@ -199,15 +196,11 @@ available in the current Block version::
         mc.fcisolver = dmrgscf.dmrgci.DMRGCI(mol)
         mc.fcisolver.nroots = 2
         mc.kernel()
-        dmrgscf.dmrgci.DMRG_MPS_NEVPT(mc, maxM=100, root=0)
-        mps_nevpt_e1 = mrpt.nevpt2.sc_nevpt(mc, ci=mc.ci[0], useMPS=True)
-        dmrgscf.dmrgci.DMRG_MPS_NEVPT(mc, maxM=100, root=1)
-        mps_nevpt_e2 = mrpt.nevpt2.sc_nevpt(mc, ci=mc.ci[1], useMPS=True)
+        mps_nevpt_e1 = mrpt.nevpt2.sc_nevpt(dmrgscf.compress_perturb(mc, maxM=100, root=0))
+        mps_nevpt_e2 = mrpt.nevpt2.sc_nevpt(dmrgscf.compress_perturb(mc, maxM=100, root=1))
 
 In the above example, two NEVPT2 calculations are carried out separately for
-two states which are indicated by the ``mc.ci`` attributes.  Each NEVPT2
-calculation has its own initializer ``DMRG_MPS_NEVPT`` which is specified by
-the ``root`` argument.
+two states which are indicated by the argument ``root=*``.
 
 For DMRG-CASSCF and DMRG-NEVPT2 calculations, there are more examples available
 in `PySCF source code <https://github.com/sunqm/pyscf/tree/master/examples/dmrg>`_.
