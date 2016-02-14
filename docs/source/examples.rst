@@ -1,8 +1,10 @@
-Typical Calculations
-********************
+Typical Calculations with `BLOCK`
+*********************************
 
 In the following the DMRG calculation for C\ :sub:`2` molecule is used to demonstrate various computational features as of the current 1.0.0 release.
-Integrals and orbitals must be supplied externally in Molpro's ``FCIDUMP`` format, as ``BLOCK`` does not generate its own integrals.
+Integrals and orbitals must be supplied externally in
+`Molpro's FCIDUMP format <http://www.molpro.net/info/2010.1/doc/manual/node417.html>`_,
+as ``BLOCK`` does not generate its own integrals.
 
 The associated integral files for C\ :sub:`2` can be found here: `FCIDUMP <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/FCIDUMP>`_ 
 for its D\ :sub:`2h` point-group symmetry.

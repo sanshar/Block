@@ -10,9 +10,9 @@ Features
 * one-, two-, three- and four-particle density matrices,
 * one- and two-particle transition density matrices between two states,
 * perturbation methods including NEVPT2 and MPSPT,
-* DMRG-SCF and/or DMRG-NEVPT2 interfaces to the Molpro, ORCA, Q-Chem and Molcas program packages. 
+* DMRG-SCF and/or DMRG-NEVPT2 interfaces to the PySCF, Molpro, ORCA, Q-Chem and Molcas program packages. 
 
-Calling `Block` as an external function
+Calling `BLOCK` as an external function
 =======================================
 
 The makefile distributed with `Block` code can be used to generate a library file called
