@@ -1,0 +1,326 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>DMRG for Electronic Structure Calculations &mdash; BLOCK 1.1.0 documentation</title>
+    
+    <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="static/jquery.js"></script>
+    <script type="text/javascript" src="static/underscore.js"></script>
+    <script type="text/javascript" src="static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="BLOCK 1.1.0 documentation" href="index.html" />
+    <link rel="next" title="Keywords" href="keywords.html" />
+    <link rel="prev" title="Typical Calculations with BLOCK" href="examples.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="keywords.html" title="Keywords"
+             accesskey="N">next</a></li>
+        <li class="right" >
+          <a href="examples.html" title="Typical Calculations with BLOCK"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">BLOCK 1.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">DMRG for Electronic Structure Calculations</a><ul>
+<li><a class="reference internal" href="#using-pyscf">Using PySCF</a><ul>
+<li><a class="reference internal" href="#dmrg-casscf">DMRG-CASSCF</a></li>
+<li><a class="reference internal" href="#dmrg-nevpt2">DMRG-NEVPT2</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-molpro">Using Molpro</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="examples.html"
+                        title="previous chapter">Typical Calculations with <cite>BLOCK</cite></a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="keywords.html"
+                        title="next chapter">Keywords</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="sources/examples-with-pyscf.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="dmrg-for-electronic-structure-calculations">
+<h1>DMRG for Electronic Structure Calculations<a class="headerlink" href="#dmrg-for-electronic-structure-calculations" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="using-pyscf">
+<h2>Using PySCF<a class="headerlink" href="#using-pyscf" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://chemists.princeton.edu/chan/software/pyscf/">PySCF</a> package provided
+an interface to call <tt class="docutils literal"><span class="pre">BLOCK</span></tt> code for DMRG-CASSCF and DMRG-NEVPT2 calculations.
+See the <a class="reference internal" href="build.html#pyscf-itrf"><em>installation</em></a> section to setup the PySCF/BLOCK interface.
+In the section, we will demonstrate how to use <tt class="docutils literal"><span class="pre">BLOCK</span></tt> and <tt class="docutils literal"><span class="pre">PySCF</span></tt> packages
+to study static and dynamic correlations with DMRG-CASSCF/DMRG-CASCI and
+DMRG-MRPT solvers for large active space problems.</p>
+<div class="section" id="dmrg-casscf">
+<h3>DMRG-CASSCF<a class="headerlink" href="#dmrg-casscf" title="Permalink to this headline">¶</a></h3>
+<p>We start from a simple example:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cat example1.py
+from pyscf import gto, scf, dmrgscf
+mf = gto.M(atom=&quot;C 0 0 0; C 0 0 1&quot;, basis=&quot;ccpvdz&quot;).apply(scf.RHF).run()
+mc = dmrgscf.dmrgci.DMRGSCF(mf, 6, 6)
+mc.run()
+</pre></div>
+</div>
+<p>Executing this script in command line:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python example1.py
+</pre></div>
+</div>
+<p>will start BLOCK program with 4 processors, assuming that you have the
+configuration <tt class="docutils literal"><span class="pre">dmrgscf.settings.MPIPREFIX</span> <span class="pre">=</span> <span class="pre">&quot;mpirun</span> <span class="pre">-n</span> <span class="pre">4&quot;</span></tt>.
+The number of parallel processors can be dynamically adjusted using
+<tt class="docutils literal"><span class="pre">sys.argv</span></tt>, eg:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ cat example2.py
+import sys
+from pyscf import gto, scf, dmrgscf
+dmrgscf.dmrgci.settings.MPIPREFIX = &quot;mpirun -n %s&quot; % sys.argv[1]
+mf = gto.M(atom=&quot;C 0 0 0; C 0 0 1&quot;, basis=&quot;ccpvdz&quot;).apply(scf.RHF).run()
+mc = dmrgscf.dmrgci.DMRGSCF(mf, 6, 6)
+mc.run()
+
+$ python example2.py 4
+</pre></div>
+</div>
+<p>In the above examples, <tt class="docutils literal"><span class="pre">gto</span></tt>, <tt class="docutils literal"><span class="pre">scf</span></tt> are the standard modules provided by
+PySCF package.  For the use of PySCF package, we refer the reader to the
+<a class="reference external" href="http://www.pyscf.org">PySCF documentation</a>.  <tt class="docutils literal"><span class="pre">dmrgscf</span></tt> module is the code
+where we put Block interface.  It is designed to control all Block input
+parameters, access the results from Block, including but not limiting to
+regular DMRG calculation, N-particle density matrices (up to 4-PDM) and
+transition density matrices (up to 2-PDM), DMRG-NEVPT2 calculations.</p>
+<p>The standard way to start a DMRG-CASSCF calculation needs to modify the
+<tt class="docutils literal"><span class="pre">fcisolver</span></tt> attribute of CASSCF or CASCI object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span><span class="p">,</span> <span class="n">dmrgscf</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&quot;C 0 0 0; C 0 0 1&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&quot;ccpvdz&quot;</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">norb</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="n">nelec</span> <span class="o">=</span> <span class="mi">6</span>
+<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
+<span class="n">dmrgsolver</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGCI</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">dmrgsolver</span><span class="o">.</span><span class="n">maxM</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="n">dmrgsolver</span><span class="o">.</span><span class="n">maxIter</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">dmrgscfsolver</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASCI</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGCI</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">dmrgsolver</span> <span class="pre">=</span> <span class="pre">dmrgscf.dmrgci.DMRGCI(mol)</span></tt> created an object <tt class="docutils literal"><span class="pre">dmrgsolver</span></tt> to
+hold Block input parameters and runtime environments.  By default,
+<tt class="docutils literal"><span class="pre">maxM=1000</span></tt> is applied.   One can control the DMRG calculation by changing
+the settings of <tt class="docutils literal"><span class="pre">dmrgsolver</span></tt> object, eg to set the sweep schedule:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">dmrgsolver</span><span class="o">.</span><span class="n">scheduleSweeps</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">34</span><span class="p">]</span>
+<span class="n">dmrgsolver</span><span class="o">.</span><span class="n">scheduleMaxMs</span>  <span class="o">=</span> <span class="p">[</span><span class="mi">200</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">800</span><span class="p">,</span> <span class="mi">1200</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="mi">4000</span><span class="p">,</span> <span class="mi">3000</span><span class="p">,</span> <span class="mi">2000</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">500</span><span class="p">]</span>
+<span class="n">dmrgsolver</span><span class="o">.</span><span class="n">scheduleTols</span>   <span class="o">=</span> <span class="p">[</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.0001</span><span class="p">,</span> <span class="mf">1e-5</span><span class="p">,</span> <span class="mf">1e-6</span><span class="p">,</span> <span class="mf">1e-7</span><span class="p">,</span> <span class="mf">1e-7</span><span class="p">,</span> <span class="mf">1e-7</span><span class="p">,</span> <span class="mf">1e-7</span><span class="p">]</span>
+<span class="n">dmrgsolver</span><span class="o">.</span><span class="n">scheduleNoises</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+<span class="n">dmrgsolver</span><span class="o">.</span><span class="n">twodot_to_onedot</span> <span class="o">=</span> <span class="mi">38</span>
+</pre></div>
+</div>
+<p>For more details of the default settings and control parameters, we refer to
+the <a class="reference external" href="https://github.com/sunqm/pyscf/blob/master/future/dmrgscf/dmrgci.py">PySCF source code</a>
+and the corresponding Block code <a class="reference internal" href="keywords.html#keywords-list"><em>Keywords</em></a> list.</p>
+<p>To make the embedded DMRG solver work more efficiently in CASSCF iteration, one
+need carefully tune the DMRG runtime parameters.  It means more input arguments
+and options to be specified for <tt class="docutils literal"><span class="pre">dmrgsolver</span></tt> object.  To simplify the input,
+we provided a shortcut function <tt class="docutils literal"><span class="pre">DMRGSCF</span></tt> in the <tt class="docutils literal"><span class="pre">dmrgscf</span></tt> module, as shown
+by the first example <tt class="docutils literal"><span class="pre">example1.py</span></tt>.  In the <tt class="docutils literal"><span class="pre">DMRGSCF</span></tt> function, we created
+a CASSCF object, and assigned <tt class="docutils literal"><span class="pre">dmrgsolver</span></tt> to its <tt class="docutils literal"><span class="pre">fcisolver</span></tt>, then hooked
+a function which is used to dynamically adjust sweep scheduler to CASSCF object.
+Now, the DMRG-CASSCF calculation can be executed in one line of input:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mc</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="n">nelec</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The DMRG-CASSCF results such as orbital coefficients, natural occupancy etc.
+will be held in the <tt class="docutils literal"><span class="pre">mc</span></tt> object.  The DMRG wave function will be stored on
+disk, more precisely, in the directory specified by <tt class="docutils literal"><span class="pre">mc.fcisolver.scratchDirectory</span></tt>.
+Apparently, we can modify its value to change the place to save the DMRG
+wave function.  The default directory is read from the dmrgscf configuration
+parameter <tt class="docutils literal"><span class="pre">dmrgscf.settings.BLOCKSCRATCHDIR</span></tt>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Be sure the <tt class="docutils literal"><span class="pre">mc.fcisolver.scratchDirectory</span></tt> is properly assigned.
+Since all DMRGCI object by default uses the same <tt class="docutils literal"><span class="pre">BLOCKSCRATCHDIR</span></tt> settings,
+it&#8217;s easy to cause name conflicts on the scratch directory, especially when
+two DMRG-CASSCF calculations are executed on the same node.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Usually, the DMRG wave function is very large.  Be sure that the
+disk which <tt class="docutils literal"><span class="pre">BLOCKSCRATCHDIR</span></tt> pointed to has enough space.</p>
+</div>
+<p>Due to the complexity of multi-configuration model, it&#8217;s common that we need
+interrupt the CASSCF calculation and restart the calculation with modified
+parameters.  To restart the CASSCF calculation, we need the information such as
+orbital coefficients and active space CI wave function from last simulation.
+Although the orbital coefficients can be save/load through
+<a class="reference external" href="https://github.com/sunqm/pyscf/blob/master/mcscf/chkfile.py">PySCF chkfile module</a>,  the CI wave
+function are not saved by PySCF.  Unlike the regular Full CI based CASSCF
+calculation in which the Full CI wave function can be fast rebuilt by a fresh
+running, the restart feature of DMRG-CASSCF calculation relies on the wave
+function indicated by the <tt class="docutils literal"><span class="pre">mc.fcisolver.scratchDirectory</span></tt> attribute and the
+<tt class="docutils literal"><span class="pre">restart</span></tt> flag of DMRG solver:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mc</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGSCF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">scratchDirectory</span> <span class="o">=</span> <span class="s">&quot;/path/to/last/dmrg/scratch&quot;</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">restart</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A mismatched DMRG wave function (from wrong
+<tt class="docutils literal"><span class="pre">mc.fcisolver.scratchDirectory</span></tt>) may cause DMRG-CASSCF crash.</p>
+</div>
+<p>Other common features like state-average DMRG-CASSCF or state-specific for
+excited state can be easily called with the <tt class="docutils literal"><span class="pre">DMRGSCF</span></tt> wrapper function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span><span class="p">,</span> <span class="n">dmrgscf</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&quot;C 0 0 0; C 0 0 1&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&quot;ccpvdz&quot;</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">mc</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="c"># half-half average over ground state and first excited state</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">state_average_</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="c"># Optimize the first excited state</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">state_specific_</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>More information of their usage can be found in PySCF examples
+<a class="reference external" href="https://github.com/sunqm/pyscf/blob/master/examples/dmrg/10-state_average.py">10-state_average.py</a>
+and
+<a class="reference external" href="https://github.com/sunqm/pyscf/blob/master/examples/dmrg/11-excited_states.py">11-excited_states.py</a>.</p>
+</div>
+<div class="section" id="dmrg-nevpt2">
+<h3>DMRG-NEVPT2<a class="headerlink" href="#dmrg-nevpt2" title="Permalink to this headline">¶</a></h3>
+<p>DMRG-NEVPT2 calculation is straightforward if the DMRG-CASCI or DMRG-CASSCF are
+finished:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">dmrgscf</span><span class="p">,</span> <span class="n">mrpt</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&quot;C 0 0 0; C 0 0 1&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&quot;ccpvdz&quot;</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="n">mc</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
+
+<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASCI</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGCI</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>However, the default DMRG-NEVPT2 calculation is extremely demanding on both CPU
+and memory resources.  In Block code, there is an effective approximation
+implemented based on compressed MPS perturber which can significantly
+reduce the computation cost:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">dmrgscf</span><span class="p">,</span> <span class="n">mrpt</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&quot;C 0 0 0; C 0 0 1&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&quot;ccpvdz&quot;</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">mc</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">dmrgscf</span><span class="o">.</span><span class="n">compress_perturb</span><span class="p">(</span><span class="n">mc</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The efficient NEVPT2 needs be initialized with <tt class="docutils literal"><span class="pre">compress_perturb</span></tt> function,
+in which the most demanding intermediates are precomputed and stored on disk.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The efficient NEVPT2 algorithm is also very demanding, especially on
+the memory usage.  Please refer to the <a class="reference internal" href="benchmark.html#benchmark"><em>Benchmark</em></a> for approximate cost.</p>
+</div>
+<p>If the excitation energy is of interest, we can use DMRG-NEVPT2 to compute the
+energy of excited state.  Note only the state-specific NEVPT2 calculation is
+available in the current Block version:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASCI</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGCI</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">nroots</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="n">mps_nevpt_e1</span> <span class="o">=</span> <span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">dmrgscf</span><span class="o">.</span><span class="n">compress_perturb</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">maxM</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">mps_nevpt_e2</span> <span class="o">=</span> <span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">dmrgscf</span><span class="o">.</span><span class="n">compress_perturb</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">maxM</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>In the above example, two NEVPT2 calculations are carried out separately for
+two states which are indicated by the argument <tt class="docutils literal"><span class="pre">root=*</span></tt>.</p>
+<p>For DMRG-CASSCF and DMRG-NEVPT2 calculations, there are more examples available
+in <a class="reference external" href="https://github.com/sunqm/pyscf/tree/master/examples/dmrg">PySCF source code</a>.</p>
+</div>
+</div>
+<div class="section" id="using-molpro">
+<h2>Using Molpro<a class="headerlink" href="#using-molpro" title="Permalink to this headline">¶</a></h2>
+<p>The examples of Block installation and DMRG-SCF calculation can be found in
+<a class="reference external" href="https://www.molpro.net/info/2015.1/doc/manual/node385.html">Molpro online manual</a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="keywords.html" title="Keywords"
+             >next</a></li>
+        <li class="right" >
+          <a href="examples.html" title="Typical Calculations with BLOCK"
+             >previous</a> |</li>
+        <li><a href="index.html">BLOCK 1.1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Garnet Kin-Lic Chan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
