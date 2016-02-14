@@ -146,8 +146,14 @@ void Twopdm_container::save_spatial_npdm_binary(const int &i, const int &j)
 void Twopdm_container::accumulate_npdm()
 {
 #ifndef SERIAL
-  array_4d<double> tmp_recv;
   mpi::communicator world;
+#ifdef NDEBUG
+  if( mpigetrank() == 0)
+    MPI_Reduce(MPI_IN_PLACE, twopdm.data(),  twopdm.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+  else
+    MPI_Reduce(twopdm.data(), twopdm.data(),  twopdm.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+#else
+  array_4d<double> tmp_recv;
   if( mpigetrank() == 0) {
     for(int i=1;i<world.size();++i) {
       world.recv(i, i, tmp_recv);
@@ -157,7 +163,7 @@ void Twopdm_container::accumulate_npdm()
             for(int n=0;n<twopdm.dim4();++n)
               if ( abs(tmp_recv(k,l,m,n)) > NUMERICAL_ZERO) {
                 // Test for duplicates
-                if ( abs(twopdm(k,l,m,n)) > NUMERICAL_ZERO ) abort();
+                assert(abs(twopdm(k,l,m,n)) < NUMERICAL_ZERO ) ;
                 twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
               }
 	 }
@@ -166,6 +172,7 @@ void Twopdm_container::accumulate_npdm()
     world.send(0, mpigetrank(), twopdm);
   }
 #endif
+#endif
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -173,8 +180,14 @@ void Twopdm_container::accumulate_npdm()
 void Twopdm_container::accumulate_spatial_npdm()
 {
 #ifndef SERIAL
-  array_4d<double> tmp_recv;
   mpi::communicator world;
+#ifdef NDEBUG
+  if( mpigetrank() == 0)
+    MPI_Reduce(MPI_IN_PLACE, spatial_twopdm.data(),  spatial_twopdm.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+  else
+    MPI_Reduce(spatial_twopdm.data(), spatial_twopdm.data(),  spatial_twopdm.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+#else
+  array_4d<double> tmp_recv;
   if( mpigetrank() == 0) {
     for(int i=1;i<world.size();++i) {
       world.recv(i, i, tmp_recv);
@@ -184,6 +197,7 @@ void Twopdm_container::accumulate_spatial_npdm()
             for(int n=0;n<spatial_twopdm.dim4();++n)
               if ( abs(tmp_recv(k,l,m,n)) > NUMERICAL_ZERO) {
                 // Test for duplicates
+                assert(abs(spatial_twopdm(k,l,m,n)) < NUMERICAL_ZERO ) ;
                 spatial_twopdm(k,l,m,n) = tmp_recv(k,l,m,n);
               }
 	 }
@@ -191,6 +205,7 @@ void Twopdm_container::accumulate_spatial_npdm()
   else {
     world.send(0, mpigetrank(), spatial_twopdm);
   }
+#endif
 #endif
 }
 

@@ -133,9 +133,15 @@ void Nevpt2_container::save_full_array_text( std::vector<double>& matrix, char f
 void Nevpt2_container::accumulate_full_array(array_6d<double>& matrix)
 {
 #ifndef SERIAL
+  mpi::communicator world;
+#ifdef NDEBUG
+  if( mpigetrank() == 0)
+    MPI_Reduce(MPI_IN_PLACE, matrix.data(),  matrix.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+  else
+    MPI_Reduce(matrix.data(), matrix.data(),  matrix.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+#else
   int dim = matrix.dim1();
   array_6d<double> tmp_recv;
-  mpi::communicator world;
   if( mpigetrank() == 0)
   {
     for(int p=1; p<world.size(); ++p) {
@@ -156,14 +162,21 @@ void Nevpt2_container::accumulate_full_array(array_6d<double>& matrix)
     world.send(0, mpigetrank(), matrix);
   }
 #endif
+#endif
 }
 
 void Nevpt2_container::accumulate_full_array(array_4d<double>& matrix)
 {
 #ifndef SERIAL
+  mpi::communicator world;
+#ifdef NDEBUG
+  if( mpigetrank() == 0)
+    MPI_Reduce(MPI_IN_PLACE, matrix.data(),  matrix.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+  else
+    MPI_Reduce(matrix.data(), matrix.data(),  matrix.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+#else
   int dim = matrix.dim1();
   array_4d<double> tmp_recv;
-  mpi::communicator world;
   if( mpigetrank() == 0)
   {
     for(int p=1; p<world.size(); ++p) {
@@ -182,14 +195,21 @@ void Nevpt2_container::accumulate_full_array(array_4d<double>& matrix)
     world.send(0, mpigetrank(), matrix);
   }
 #endif
+#endif
 }
 
 void Nevpt2_container::accumulate_full_array(array_2d<double>& matrix)
 {
 #ifndef SERIAL
+  mpi::communicator world;
+#ifdef NDEBUG
+  if( mpigetrank() == 0)
+    MPI_Reduce(MPI_IN_PLACE, matrix.data(),  matrix.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+  else
+    MPI_Reduce(matrix.data(), matrix.data(),  matrix.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+#else
   int dim = matrix.dim1();
   array_2d<double> tmp_recv;
-  mpi::communicator world;
   if( mpigetrank() == 0)
   {
     for(int p=1; p<world.size(); ++p) {
@@ -206,14 +226,21 @@ void Nevpt2_container::accumulate_full_array(array_2d<double>& matrix)
     world.send(0, mpigetrank(), matrix);
   }
 #endif
+#endif
 }
 
 void Nevpt2_container::accumulate_full_array(std::vector<double>& matrix)
 {
 #ifndef SERIAL
+  mpi::communicator world;
+#ifdef NDEBUG
+  if( mpigetrank() == 0)
+    MPI_Reduce(MPI_IN_PLACE, matrix.data(),  matrix.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+  else
+    MPI_Reduce(matrix.data(), matrix.data(),  matrix.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+#else
   int dim = matrix.size();
   std::vector<double> tmp_recv;
-  mpi::communicator world;
   if( mpigetrank() == 0)
   {
     for(int p=1; p<world.size(); ++p) {
@@ -228,6 +255,7 @@ void Nevpt2_container::accumulate_full_array(std::vector<double>& matrix)
   {
     world.send(0, mpigetrank(), matrix);
   }
+#endif
 #endif
 }
 

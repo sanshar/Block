@@ -316,8 +316,14 @@ void Threepdm_container::load_npdm_binary(const int &i, const int &j) { abort();
 void Threepdm_container::accumulate_npdm()
 {
 #ifndef SERIAL
-  array_6d<double> tmp_recv;
   mpi::communicator world;
+#ifdef NDEBUG
+  if( mpigetrank() == 0)
+    MPI_Reduce(MPI_IN_PLACE, spatial_threepdm.data(),  spatial_threepdm.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+  else
+    MPI_Reduce(spatial_threepdm.data(), spatial_threepdm.data(),  spatial_threepdm.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+#else
+  array_6d<double> tmp_recv;
   if( mpigetrank() == 0)
   {
     for(int p=1; p<world.size(); ++p) {
@@ -330,7 +336,7 @@ void Threepdm_container::accumulate_npdm()
                 for(int n=0; n<threepdm.dim6(); ++n) {
                   if ( abs(tmp_recv(i,j,k,l,m,n)) > NUMERICAL_ZERO ) {
                     // Test if any duplicate elements built on different processors
-                    if ( abs(threepdm(i,j,k,l,m,n)) > NUMERICAL_ZERO ) abort();
+                    assert ( abs(threepdm(i,j,k,l,m,n)) < NUMERICAL_ZERO );
                     threepdm(i,j,k,l,m,n) = tmp_recv(i,j,k,l,m,n);
                   }
                 }
@@ -341,14 +347,22 @@ void Threepdm_container::accumulate_npdm()
     world.send(0, mpigetrank(), threepdm);
   }
 #endif
+#endif
 } 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void Threepdm_container::accumulate_spatial_npdm()
 {
 #ifndef SERIAL
-  array_6d<double> tmp_recv;
   mpi::communicator world;
+#ifdef NDEBUG
+  if( mpigetrank() == 0)
+    MPI_Reduce(MPI_IN_PLACE, spatial_threepdm.data(),  spatial_threepdm.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+  else
+    MPI_Reduce(spatial_threepdm.data(), spatial_threepdm.data(),  spatial_threepdm.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+#else
+  array_6d<double> tmp_recv;
+
   if( mpigetrank() == 0)
   {
     for(int p=1; p<world.size(); ++p) {
@@ -361,7 +375,7 @@ void Threepdm_container::accumulate_spatial_npdm()
                 for(int n=0; n<spatial_threepdm.dim6(); ++n) {
                   if( abs(tmp_recv(i,j,k,l,m,n)) > NUMERICAL_ZERO ) {
                     // Test if any duplicate elements built on different processors
-                    if ( abs(spatial_threepdm(i,j,k,l,m,n)) > NUMERICAL_ZERO ) abort();
+                    assert(abs(spatial_threepdm(i,j,k,l,m,n)) < NUMERICAL_ZERO );
                     spatial_threepdm(i,j,k,l,m,n) = tmp_recv(i,j,k,l,m,n);
                   }
                 }
@@ -371,6 +385,8 @@ void Threepdm_container::accumulate_spatial_npdm()
   {
     world.send(0, mpigetrank(), spatial_threepdm);
   }
+#endif
+
 #endif
 }
 
