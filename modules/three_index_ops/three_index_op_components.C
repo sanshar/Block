@@ -279,7 +279,8 @@ void Op_component<DesDesDes>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<DesDesDes>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ abort(); }
+{ Three_index_ops::build_3index_ops( DES_DES_DES, b, DES, DES_DES, DES, DES_DES, leftMat, bra, rightMat, ket);
+}
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 
@@ -377,7 +378,9 @@ void Op_component<CreCreCre>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<CreCreCre>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ abort(); }
+{
+  Three_index_ops::build_3index_ops( CRE_CRE_CRE, b, CRE, CRE_CRE, CRE, CRE_CRE, leftMat, bra, rightMat, ket);
+}
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
@@ -488,7 +491,9 @@ void Op_component<CreCreDes>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<CreCreDes>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ abort(); }
+{
+  Three_index_ops::build_3index_ops( CRE_CRE_DES, b, CRE, CRE_CRE, DES, CRE_DES, leftMat, bra, rightMat, ket);
+}
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 
@@ -587,7 +592,9 @@ void Op_component<CreDesDes>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<CreDesDes>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ abort(); }
+{
+  Three_index_ops::build_3index_ops( CRE_DES_DES, b, CRE, CRE_DES, DES, DES_DES, leftMat, bra, rightMat, ket);
+}
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 
@@ -686,7 +693,9 @@ void Op_component<CreDesCre>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<CreDesCre>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ abort(); }
+{
+  Three_index_ops::build_3index_ops( CRE_DES_CRE, b, CRE, CRE_DES, CRE, DES_CRE, leftMat, bra, rightMat, ket);
+}
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 
@@ -789,7 +798,9 @@ void Op_component<DesCreDes>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<DesCreDes>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ abort(); }
+{
+  Three_index_ops::build_3index_ops( DES_CRE_DES, b, DES, DES_CRE, DES, CRE_DES, leftMat, bra, rightMat, ket);
+}
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
@@ -886,7 +897,9 @@ void Op_component<DesDesCre>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<DesDesCre>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ abort(); }
+{
+  Three_index_ops::build_3index_ops( DES_DES_CRE, b, DES, DES_DES, CRE, DES_CRE, leftMat, bra, rightMat, ket);
+}
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 
@@ -983,7 +996,9 @@ void Op_component<DesCreCre>::build_and_renormalise_operators(SpinBlock&b, const
 template<>
 void Op_component<DesCreCre>::build_and_renormalise_operators(SpinBlock&b, const opTypes &ot, const std::vector<Matrix>& leftMat, const StateInfo *bra, 
                                                                                               const std::vector<Matrix>& rightMat, const StateInfo *ket)
-{ abort(); }
+{
+  Three_index_ops::build_3index_ops( DES_CRE_CRE, b, DES, DES_CRE, CRE, CRE_CRE, leftMat, bra, rightMat, ket);
+}
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------  
 template<> 

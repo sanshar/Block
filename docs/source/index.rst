@@ -35,7 +35,10 @@ Contents
    overview.rst
    build.rst
    examples.rst
+   examples-with-pyscf.rst
    keywords.rst
+   benchmark.rst
+   CHANGELOG.rst
 
 .. Indices and tables
 .. ==================

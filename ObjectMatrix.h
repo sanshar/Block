@@ -173,5 +173,46 @@ public:
   int Nrows1 () { return n1; }
   int Nrows2 () { return n2; }
 };
+
+template<class T> class ObjectMatrix4D
+{
+  std::vector< std::vector< std::vector<std::vector<T> > > > rep;
+  int n0;
+  int n1;
+  int n2;
+  int n3;
+
+public:
+  ObjectMatrix4D (void) : n0 (0), n1 (0), n2 (0), n3(0) {}
+  ObjectMatrix4D (int m0, int m1, int m2, int m3) : n0 (m0), n1 (m1), n2 (m2), n3 (m3) { ReSize (n0, n1, n2, n3); }
+  
+  void ReSize (int m0, int m1, int m2, int m3)
+  {
+    n0 = m0; n1 = m1; n2 = m2; n3 = m3;
+    rep.resize (n0);
+    for (int i = 0; i < n0; ++i)
+      {
+	rep [i].resize (n1);
+	for (int j = 0; j < n1; ++j)
+        {
+	  rep [i][j].resize (n2);
+          for( int k =0; k< n2; ++k)
+	    rep [i][j][k].resize (n3);
+        }
+      }
+  }
+  
+  T& operator() (int i, int j, int k, int l) { return rep [i][j][k][l]; }
+  const T& operator() (int i, int j, int k, int l) const { return rep [i][j][k][l]; }
+
+  int NDim0 () const { return n0; }
+  int NDim1 () const { return n1; }
+  int NDim2 () const { return n2; }
+  int NDim3 () const { return n3; }
+  int Nrows0 () { return n0; }
+  int Nrows1 () { return n1; }
+  int Nrows2 () { return n2; }
+  int Nrows3 () { return n3; }
+};
 }
 #endif

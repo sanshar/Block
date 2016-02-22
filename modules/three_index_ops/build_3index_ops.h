@@ -23,6 +23,12 @@ void build_3index_ops( const opTypes& optype, SpinBlock& big,
                        const opTypes& rhsType1, const opTypes& rhsType2,
                        const std::vector<Matrix>& rotateMatrix, const StateInfo *stateinfo );
 
+void build_3index_ops( const opTypes& optype, SpinBlock& big,
+                       const opTypes& lhsType1, const opTypes& lhsType2,
+                       const opTypes& rhsType1, const opTypes& rhsType2,
+                       const std::vector<Matrix>& leftMat, const StateInfo *bra, 
+                       const std::vector<Matrix>& rightMat, const StateInfo *ket);
+
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 }

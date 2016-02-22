@@ -19,15 +19,23 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "timer.h"
 #include "couplingCoeffs.h"
 #include <boost/tr1/unordered_map.hpp>
+#include "IntegralMatrix.h"
 
 
 namespace SpinAdapted{
 class SpinBlock;
 class OneElectronArray;
 class TwoElectronArray;
+//typedef OneElectronArray PerturbOneElectronArray;
+//typedef TwoElectronArray PerturbTwoElectronArray;
+class PerturbTwoElectronArray;
 class PairArray;
 class CCCCArray;
 class CCCDArray;
+enum OnePerturbType{ Va_1=0, Vi_1, Vai_1, OnePertEnd};
+enum TwoPerturbType{Va=0,Vi,Vab,Vij,Vai,Vabi,Vaij,Vabij,TwoPertEnd};
+//enum OnePerturbType : int;
+//enum TwoPerturbType : int;
 
 enum WarmUpTypes {WILSON, LOCAL0, LOCAL2, LOCAL3, LOCAL4};
 enum hamTypes {QUANTUM_CHEMISTRY, HUBBARD, BCS, HEISENBERG};
@@ -37,8 +45,8 @@ enum noiseTypes {RANDOM, EXCITEDSTATE};
 enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPDM,
                RESTART_ONEPDM, RESTART_THREEPDM, RESTART_FOURPDM, RESTART_NEVPT2PDM, TINYCALC, FCI,
                EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN, COMPRESS, RESPONSE, RESPONSEBW,
-               TRANSITION_ONEPDM, TRANSITION_TWOPDM, RESTART_T_ONEPDM, RESTART_T_TWOPDM,
-               NEVPT2,RESTART_NEVPT2};
+               TRANSITION_ONEPDM, TRANSITION_TWOPDM, TRANSITION_THREEPDM, RESTART_T_ONEPDM, RESTART_T_TWOPDM, RESTART_T_THREEPDM,
+               NEVPT2,RESTART_NEVPT2, MPS_NEVPT, RESTART_MPS_NEVPT};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
@@ -164,6 +172,15 @@ class Input {
   std::vector<int> m_spatial_to_spin;
   std::vector<int> m_spin_to_spatial;
 
+  int m_act_size;
+  int m_core_size;
+  int m_virt_size;
+  int m_total_orbs;
+  int m_nevpt_state_num;
+  std::vector<int> m_total_spin_orbs_symmetry;
+  std::vector<int> m_total_spatial_to_spin;
+  std::vector<int> m_total_spin_to_spatial;
+
   int m_outputlevel;
   orbitalFormat m_orbformat;
 
@@ -203,6 +220,7 @@ class Input {
     ar & m_spatial_to_spin & m_spin_to_spatial & m_maxM & m_schedule_type_backward & m_schedule_type_default &m_integral_disk_storage_thresh;
     ar & n_twodot_noise & m_twodot_noise & m_twodot_gamma & m_guessState;
     ar & m_calc_ri_4pdm & m_store_ripdm_readable & m_nevpt2 & m_conventional_nevpt2 & m_kept_nevpt2_states & NevPrint;
+    ar & m_act_size & m_core_size & m_virt_size & m_total_orbs & m_total_spin_orbs_symmetry & m_total_spatial_to_spin & m_total_spin_to_spatial;
   }
 
 
@@ -265,11 +283,13 @@ class Input {
   void performSanityTest();
   void generateDefaultSchedule();
   void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, double& coreEnergy, int integralIndex);
+  void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, OneElectronArray& vpt1, std::map<TwoPerturbType,PerturbTwoElectronArray>& vpt2, double& coreEnergy);
   void readorbitalsfile(string& dumpFile, OneElectronArray& v1, TwoElectronArray& v2, double& coreEnergy, PairArray& vcc, CCCCArray& vcccc, CCCDArray& vcccd);  
   int getNumIntegrals() { return m_num_Integrals;}
   void readreorderfile(ifstream& dumpFile, std::vector<int>& reorder);
   std::vector<int> getgaorder(ifstream& gaconfFile, string& orbitalfile, std::vector<int>& fiedlerorder);
   std::vector<int> get_fiedler(string& dumpname);
+  std::vector<int> get_fiedler_nevpt(string& dumpname, int nact);
   std::vector<int> get_fiedler_bcs(string& dumpname);  
   void usedkey_error(string& key, string& line);
   void makeInitialHFGuess();
@@ -366,6 +386,7 @@ class Input {
   const int &max_lanczos_dimension() const {return m_max_lanczos_dimension;}
   std::vector<int> thrds_per_node() const { return m_thrds_per_node; }
   const calcType &calc_type() const { return m_calc_type; }
+  calcType &calc_type() { return m_calc_type; }
   const solveTypes &solve_method() const { return m_solve_type; }
   const noiseTypes &noise_type() const {return m_noise_type;}
   const bool &set_Sz() const {return m_set_Sz;}
@@ -402,9 +423,19 @@ class Input {
   int last_site() const 
   { 
     if(m_spinAdapted) 
-      return m_num_spatial_orbs; 
+    {
+      if(m_calc_type == MPS_NEVPT)
+        return m_act_size;
+      else
+        return m_num_spatial_orbs; 
+    }
     else 
-      return 2*m_num_spatial_orbs; 
+    {
+      if(m_calc_type == MPS_NEVPT)
+        return 2*m_act_size;
+      else
+        return 2*m_num_spatial_orbs; 
+    }
   }
   const bool &no_transform() const { return m_no_transform; }
   const int &deflation_min_size() const { return m_deflation_min_size; }
@@ -494,7 +525,12 @@ class Input {
   bool &store_nonredundant_pdm() { return m_store_nonredundant_pdm;}
   int slater_size() const {return m_norbs;}
   const std::vector<int> &reorder_vector() {return m_reorder;}
+  const int &act_size() const { return m_act_size;}
+  const int &core_size() const { return m_core_size;}
+  const int &virt_size() const { return m_virt_size;}
+  const int &total_size() const { return m_total_orbs;}
   bool spinAdapted() {return m_spinAdapted;}
+  const int &nevpt_state_num() const {return m_nevpt_state_num;}
   bool &npdm_intermediate() { return m_npdm_intermediate; }
   const bool &npdm_intermediate() const { return m_npdm_intermediate; }
   bool &npdm_multinode() { return m_npdm_multinode; }

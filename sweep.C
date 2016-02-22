@@ -91,7 +91,7 @@ void SpinAdapted::Sweep::makeSystemEnvironmentBigOverlapBlocks(const std::vector
 void SpinAdapted::Sweep::makeSystemEnvironmentBigBlocks(SpinBlock& system, SpinBlock& systemDot, SpinBlock& newSystem, 
 							SpinBlock& environment, SpinBlock& environmentDot, SpinBlock& newEnvironment,
 							SpinBlock& big, SweepParams& sweepParams, const bool& dot_with_sys, const bool& useSlater, 
-							int integralIndex, int braState, int ketState)
+							int integralIndex, int braState, int ketState, const vector<SpinQuantum>& braquanta, const vector<SpinQuantum>& ketquanta)
 {
   bool forward = (system.get_sites() [0] == 0);
   bool haveNormOps = dot_with_sys, haveCompOps = true;
@@ -99,42 +99,62 @@ void SpinAdapted::Sweep::makeSystemEnvironmentBigBlocks(SpinBlock& system, SpinB
 
   const int nexact = forward ? sweepParams.get_forward_starting_size() : sweepParams.get_backward_starting_size();
   if (!sweepParams.get_onedot() || dot_with_sys) {
-    SpinQuantum moleculeQ = dmrginp.molecule_quantum();
-    if (dmrginp.calc_type() == RESPONSE && system.get_sites() [0] != 0 && system.get_sites()[0] > dmrginp.num_occupied_orbitals()){ //response and reverse and after active sites
-      dmrginp.set_molecule_quantum() = SpinQuantum(2, SpinSpace(0), IrrepSpace(0));
+    if(braquanta.size()!=0 && ketquanta.size()!=0)
+      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, braState, ketState, sweepParams.get_sys_add(), dmrginp.direct(), 
+				     integralIndex, DISTRIBUTED_STORAGE, haveNormOps, haveCompOps,NO_PARTICLE_SPIN_NUMBER_CONSTRAINT,braquanta,ketquanta);
+    else{
+      if (dmrginp.calc_type() == RESPONSE && system.get_sites() [0] != 0 && system.get_sites()[0] > dmrginp.num_occupied_orbitals()){ //response and reverse and after active sites
+        SpinQuantum moleculeQ = dmrginp.molecule_quantum();
+        dmrginp.set_molecule_quantum() = SpinQuantum(2, SpinSpace(0), IrrepSpace(0));
 
-      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, braState, ketState, sweepParams.get_sys_add(), dmrginp.direct(), 
-				     integralIndex, DISTRIBUTED_STORAGE, haveNormOps, haveCompOps, PARTICLE_NUMBER_CONSTRAINT);
-    }
-    else 
-      InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, braState, ketState, sweepParams.get_sys_add(), dmrginp.direct(), 
+        InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, braState, ketState, sweepParams.get_sys_add(), dmrginp.direct(), 
+          			     integralIndex, DISTRIBUTED_STORAGE, haveNormOps, haveCompOps, PARTICLE_NUMBER_CONSTRAINT);
+        dmrginp.set_molecule_quantum() = moleculeQ;
+      }
+      else
+        InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, braState, ketState, sweepParams.get_sys_add(), dmrginp.direct(), 
 				     integralIndex, DISTRIBUTED_STORAGE, haveNormOps, haveCompOps);
-    
-    dmrginp.set_molecule_quantum() = moleculeQ;
+    }
   }
 
+
   if (!dot_with_sys && sweepParams.get_onedot()) 
-    InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, braState, ketState,
+  {
+    if(braquanta.size()!=0 && ketquanta.size()!=0)
+      InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, braState, ketState,
+					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
+					sweepParams.get_onedot(), nexact, useSlater, integralIndex, 
+					!haveNormOps, haveCompOps, dot_with_sys,NO_PARTICLE_SPIN_NUMBER_CONSTRAINT,braquanta, ketquanta);
+    else
+      InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot, braState, ketState,
 					sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 					sweepParams.get_onedot(), nexact, useSlater, integralIndex, 
 					!haveNormOps, haveCompOps, dot_with_sys);
+  }
   else {
-    SpinQuantum moleculeQ = dmrginp.molecule_quantum();
-    if (dmrginp.calc_type() == RESPONSE && system.get_sites() [0] == 0 && *system.get_sites().rbegin()  >= dmrginp.num_occupied_orbitals()) {//response and forward and after active sites
-      dmrginp.set_molecule_quantum() = SpinQuantum(2, SpinSpace(0), IrrepSpace(0));
-
+    if(braquanta.size()!=0 && ketquanta.size()!=0)
       InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, braState, ketState,
 					  sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 					  sweepParams.get_onedot(), nexact, useSlater, integralIndex, 
-					  !haveNormOps, haveCompOps, dot_with_sys, PARTICLE_NUMBER_CONSTRAINT);
-    }
-    else
-      InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, braState, ketState,
+					  !haveNormOps, haveCompOps, dot_with_sys,NO_PARTICLE_SPIN_NUMBER_CONSTRAINT,braquanta,ketquanta);
+    else{
+      if (dmrginp.calc_type() == RESPONSE && system.get_sites() [0] == 0 && *system.get_sites().rbegin()  >= dmrginp.num_occupied_orbitals()) {//response and forward and after active sites
+        SpinQuantum moleculeQ = dmrginp.molecule_quantum();
+        dmrginp.set_molecule_quantum() = SpinQuantum(2, SpinSpace(0), IrrepSpace(0));
+
+        InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, braState, ketState,
+          				  sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
+          				  sweepParams.get_onedot(), nexact, useSlater, integralIndex, 
+          				  !haveNormOps, haveCompOps, dot_with_sys, PARTICLE_NUMBER_CONSTRAINT);
+        dmrginp.set_molecule_quantum() = moleculeQ;
+      }
+      else
+        InitBlocks::InitNewEnvironmentBlock(environment, environmentDot, newEnvironment, system, systemDot, braState, ketState,
 					  sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
 					  sweepParams.get_onedot(), nexact, useSlater, integralIndex, 
 					  !haveNormOps, haveCompOps, dot_with_sys);
     
-    dmrginp.set_molecule_quantum() = moleculeQ;
+    }
   }
 
 
@@ -142,9 +162,19 @@ void SpinAdapted::Sweep::makeSystemEnvironmentBigBlocks(SpinBlock& system, SpinB
   if (dot_with_sys) newSystem.set_loopblock(true);
   else newEnvironment.set_loopblock(true);
   if (!dot_with_sys && sweepParams.get_onedot())
-    InitBlocks::InitBigBlock(system, newEnvironment, big); 
+  {
+    if(braquanta.size()!=0 && ketquanta.size()!=0)
+      InitBlocks::InitBigBlock(system, newEnvironment, big,braquanta,ketquanta); 
+    else
+      InitBlocks::InitBigBlock(system, newEnvironment, big); 
+  }
   else
-    InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
+  {
+    if(braquanta.size()!=0 && ketquanta.size()!=0)
+      InitBlocks::InitBigBlock(newSystem, newEnvironment, big,braquanta,ketquanta); 
+    else
+      InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
+  }
 }
 
 void SpinAdapted::Sweep::BlockAndDecimate (SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, const bool &useSlater, const bool& dot_with_sys)

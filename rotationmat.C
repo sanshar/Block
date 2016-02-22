@@ -162,7 +162,7 @@ double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::
       int qs = inorderwts[i].second;
 
       //if(i < min_states && eigenmatrix[q].element(qs, qs) > 1.e-12)
-      if( eigenmatrix[q].element(qs, qs) > 1.e-13)
+      if( eigenmatrix[q].element(qs, qs) > 1.e-13 || dmrginp.do_pdm())
       {
         if (rotatematrix[q].Ncols() == 0)
         {
@@ -227,7 +227,7 @@ double SpinAdapted::assign_matrix_by_dm(std::vector<Matrix>& rotatematrix, std::
   {
     int q = linearwtsbyquanta[i].first;
     int qs = linearwtsbyquanta[i].second;
-    if( eigenmatrix[q].element(qs, qs) > 1.e-13)
+    if( eigenmatrix[q].element(qs, qs) > 1.e-13 || dmrginp.do_pdm())
     {
       if (rotatematrix[q].Ncols() == 0)
       {

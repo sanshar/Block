@@ -1,3 +1,5 @@
+.. _keywords_list:
+
 Keywords
 ********
 

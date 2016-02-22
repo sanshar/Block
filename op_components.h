@@ -137,7 +137,25 @@ template <> struct ChooseArray<CreDesCreCre> {
 template <> struct ChooseArray<CreCreCreCre> {
   typedef para_array_4d<std::vector<boost::shared_ptr<CreCreCreCre> > > ArrayType;
 };
-
+// mps_nevpt
+template <> struct ChooseArray<CDD_sum> {
+  typedef para_array_0d<std::vector<boost::shared_ptr<CDD_sum> > > ArrayType;
+};
+template <> struct ChooseArray<CDD_CreDesComp> {
+  typedef para_array_1d<std::vector<boost::shared_ptr<CDD_CreDesComp> > > ArrayType;
+};
+template <> struct ChooseArray<CDD_DesDesComp> {
+  typedef para_array_1d<std::vector<boost::shared_ptr<CDD_DesDesComp> > > ArrayType;
+};
+template <> struct ChooseArray<CCD_sum> {
+  typedef para_array_0d<std::vector<boost::shared_ptr<CCD_sum> > > ArrayType;
+};
+template <> struct ChooseArray<CCD_CreDesComp> {
+  typedef para_array_1d<std::vector<boost::shared_ptr<CCD_CreDesComp> > > ArrayType;
+};
+template <> struct ChooseArray<CCD_CreCreComp> {
+  typedef para_array_1d<std::vector<boost::shared_ptr<CCD_CreCreComp> > > ArrayType;
+};
 //===========================================================================================================================================================
 
 class Op_component_base
@@ -224,7 +242,7 @@ template <class Op> class Op_component : public Op_component_base
   int size() const  {return m_op.global_nnz();}
   bool has(int i, int j=-1, int k=-1, int l=-1) const {return m_op.has(i, j, k, l);}
   bool has_local_index(int i, int j=-1, int k=-1, int l=-1) const {return m_op.has_local_index(i, j, k, l);}
-  virtual void add_local_indices(int i, int j=-1, int k=-1);
+  virtual void add_local_indices(int i, int j=-1, int k=-1){};
   void clear(){m_op.clear();}
 
   void build_iterators(SpinBlock& b);

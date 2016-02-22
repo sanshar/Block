@@ -50,6 +50,7 @@ Sandeep Sharma and Garnet K.-L. Chan
 #endif
 #include "pario.h"
 #include "modules/nevpt2/sweep_nevpt2.h"
+#include "mps_nevpt.h"
 
 
 #ifdef USE_BTAS
@@ -82,6 +83,11 @@ namespace SpinAdapted{
   double BWPTenergy = 0.0;
   std::vector<OneElectronArray> v_1;
   std::vector<TwoElectronArray> v_2;
+  std::map<TwoPerturbType,PerturbTwoElectronArray> vpt_2;
+  OneElectronArray vpt_1;
+//  std::map<OnePerturbType,OnePerturbArray> vpt_1;
+//  std::map<TwoPerturbType,TwoPerturbArray> vpt_2;
+  OneElectronArray fock;
   std::vector<double> coreEnergy;
   PairArray v_cc;
   CCCCArray v_cccc;
@@ -352,6 +358,14 @@ int calldmrg(char* input, char* output)
   case(NEVPT2):
     nevpt2::nevpt2();
     break;
+
+  case(MPS_NEVPT):
+    mps_nevpt::mps_nevpt(sweep_tol);
+    break;
+    
+  case(RESTART_MPS_NEVPT):
+    mps_nevpt::mps_nevpt(sweep_tol);
+    break;
     
   case (RESTART_ONEPDM):
     Npdm::npdm(NPDM_ONEPDM,true);
@@ -381,6 +395,9 @@ int calldmrg(char* input, char* output)
   case (TRANSITION_TWOPDM):
     Npdm::npdm(NPDM_TWOPDM,false,true);
     break;
+  case (TRANSITION_THREEPDM):
+    Npdm::npdm(NPDM_THREEPDM,false,true);
+    break;
   case (RESTART_T_ONEPDM):
     Npdm::npdm(NPDM_ONEPDM,true,true);
     if (dmrginp.hamiltonian() == BCS) {
@@ -388,6 +405,9 @@ int calldmrg(char* input, char* output)
     }
     break;
   case (RESTART_T_TWOPDM):
+    Npdm::npdm(NPDM_TWOPDM,true,true);
+    break;
+  case (RESTART_T_THREEPDM):
     Npdm::npdm(NPDM_TWOPDM,true,true);
     break;
   case(RESTART_NEVPT2):
