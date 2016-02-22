@@ -514,8 +514,6 @@ void Npdm_driver::loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Np
         if(dmrginp.npdm_intermediate() && (npdm_order_== NPDM_NEVPT2 || npdm_order_== NPDM_THREEPDM || npdm_order_== NPDM_FOURPDM))
         {
 	  		  Timer timer2;
-          inner_Operators.clear();
-          inner_intermediate.clear();
           get_inner_Operators( 'r', expectations, lhsOps, dotOps , rhsOps) ;
 	  		  diskread_time += timer2.elapsedwalltime();
         }
@@ -525,18 +523,18 @@ void Npdm_driver::loop_over_operator_patterns( Npdm::Npdm_patterns& patterns, Np
         if(dmrginp.npdm_intermediate() && (npdm_order_== NPDM_NEVPT2 || npdm_order_== NPDM_THREEPDM || npdm_order_== NPDM_FOURPDM))
         {
 	  		  Timer timer2;
-          inner_Operators.clear();
-          inner_intermediate.clear();
           get_inner_Operators( 'l', expectations, lhsOps, dotOps, rhsOps ) ;
 	  		  diskread_time += timer2.elapsedwalltime();
         }
         par_loop_over_block_operators( 'l', expectations, *rhsOps, *lhsOps, *dotOps, lhs_or_rhs_dot );
       }
-#else
       inner_Operators.clear();
       inner_intermediate.clear();
+#else
       get_inner_Operators( 'r', expectations, lhsOps, dotOps , rhsOps) ;
       loop_over_block_operators( expectations, *lhsOps, *rhsOps, *dotOps );
+      inner_Operators.clear();
+      inner_intermediate.clear();
 #endif
     }
     }

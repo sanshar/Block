@@ -313,8 +313,14 @@ void Fourpdm_container::load_npdm_binary(const int &i, const int &j) { abort(); 
 void Fourpdm_container::accumulate_npdm()
 {
 #ifndef SERIAL
-  array_8d<double> tmp_recv;
   mpi::communicator world;
+#ifdef NDEBUG
+  if( mpigetrank() == 0)
+    MPI_Reduce(MPI_IN_PLACE, fourpdm.data(),  fourpdm.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+  else
+    MPI_Reduce(fourpdm.data(), fourpdm.data(),  fourpdm.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+#else
+  array_8d<double> tmp_recv;
   if( mpigetrank() == 0)
   {
     for(int u=1; u<world.size(); ++u) {
@@ -329,7 +335,7 @@ void Fourpdm_container::accumulate_npdm()
                     for(int q=0; q<fourpdm.dim8(); ++q) {
                       if ( abs(tmp_recv(i,j,k,l,m,n,p,q)) > NUMERICAL_ZERO ) {
                         // Test for duplicates
-                        if ( abs(fourpdm(i,j,k,l,m,n,p,q)) > NUMERICAL_ZERO ) abort();
+                        assert(abs(fourpdm(i,j,k,l,m,n,p,q)) < NUMERICAL_ZERO );
                         fourpdm(i,j,k,l,m,n,p,q) = tmp_recv(i,j,k,l,m,n,p,q);
                       }
                     }
@@ -340,6 +346,7 @@ void Fourpdm_container::accumulate_npdm()
     world.send(0, mpigetrank(), fourpdm);
   }
 #endif
+#endif
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -347,8 +354,14 @@ void Fourpdm_container::accumulate_npdm()
 void Fourpdm_container::accumulate_spatial_npdm()
 {
 #ifndef SERIAL
-  array_8d<double> tmp_recv;
   mpi::communicator world;
+#ifdef NDEBUG
+  if( mpigetrank() == 0)
+    MPI_Reduce(MPI_IN_PLACE, spatial_fourpdm.data(),  spatial_fourpdm.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+  else
+    MPI_Reduce(spatial_fourpdm.data(), spatial_fourpdm.data(),  spatial_fourpdm.size(), MPI_DOUBLE, MPI_SUM, 0, world);
+#else
+  array_8d<double> tmp_recv;
   if( mpigetrank() == 0)
   {
     for(int u=1; u<world.size(); ++u) {
@@ -363,7 +376,7 @@ void Fourpdm_container::accumulate_spatial_npdm()
                     for(int q=0; q<spatial_fourpdm.dim8(); ++q) {
                       if ( abs(tmp_recv(i,j,k,l,m,n,p,q)) > NUMERICAL_ZERO ) {
                         // Test for duplicates
-                        if ( abs(spatial_fourpdm(i,j,k,l,m,n,p,q)) > NUMERICAL_ZERO ) abort();
+                        assert(abs(spatial_fourpdm(i,j,k,l,m,n,p,q)) < NUMERICAL_ZERO );
                         spatial_fourpdm(i,j,k,l,m,n,p,q) = tmp_recv(i,j,k,l,m,n,p,q);
                       }
                     }
@@ -373,6 +386,7 @@ void Fourpdm_container::accumulate_spatial_npdm()
   {
     world.send(0, mpigetrank(), spatial_fourpdm);
   }
+#endif
 #endif
 }
 
