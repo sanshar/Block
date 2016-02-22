@@ -3,8 +3,8 @@
 `BLOCK` implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry.
 
 * [Project web](http://chemists.princeton.edu/chan/software/block-code-for-dmrg)
-* [Latest release 1.1 alpha](../releases/latest)
-* [Changelog](../blob/master/CHANGELOG.md)
+* [Latest release 1.1 alpha](../../releases/latest)
+* [New features](../master/CHANGELOG.md)
 * [Documentation](https://sanshar.github.io/Block)
 * [Build Block](#build-block)
 * [How to cite Block](#how-to-cite-block)
