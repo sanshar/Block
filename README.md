@@ -2,6 +2,15 @@
 
 `BLOCK` implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry.
 
+* [Project web](http://chemists.princeton.edu/chan/software/block-code-for-dmrg)
+* [Latest release 1.1 alpha](../releases/latest)
+* [Changelog](../blob/master/CHANGELOG.md)
+* [Documentation](https://sanshar.github.io/Block)
+* [Build Block](#build-block)
+* [How to cite Block](#how-to-cite-block)
+* [License GPLv3](../master/LICENSE.txt)
+
+
 Build Block
 -----------
 
@@ -70,8 +79,8 @@ The MPI parallel mode can be called running
 
         $mpirun -np 4 block.spin_adapted input.dat > output.dat
 
-How to cite `Block`
--------------------
+How to cite Block
+-----------------
 
 `Block` is distributed under the GNU GPL license which is reproduced in the file LICENSE.
 In addition, `Block` contains a full copy of the Newmat C++ matrix library by Robert Davies.
@@ -87,9 +96,4 @@ use of `Block`:
 In addition, a useful list of DMRG references relevant to quantum chemistry can be found
 in the article above by Sharma and Chan.
 
-
-Documentation
--------------
-
-The online documentation is available at [https://sanshar.github.io/Block](https://sanshar.github.io/Block).
 
