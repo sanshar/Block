@@ -5,10 +5,10 @@
 
 
 #specify boost include file
-BOOSTINCLUDE = /home/juny/libs/boost_1_55_0-gcc-4_8_2-install/include
+BOOSTINCLUDE = /home/juny/libs/boost_1_55_0-impi-5_0_3_048-install/include
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/home/juny/libs/boost_1_55_0-gcc-4_8_2-install/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+BOOSTLIB = -L/home/juny/libs/boost_1_55_0-impi-5_0_3_048-install/lib -lboost_serialization -lboost_system -lboost_filesystem
 #BOOSTLIB = -lboost_serialization -lboost_system -lboost_filesystem
 LAPACKBLAS = -lblas -llapack
 
@@ -23,9 +23,9 @@ USE_MKL = yes
 
 # use this variable to set if we will use integer size of 8 or not.
 # molpro compilation requires I8, since their integers are long
-I8_OPT = no
-MOLPRO = no
-OPENMP = yes
+I8_OPT = yes
+MOLPRO = yes
+OPENMP = no
 
 DOPROF = no
 
@@ -34,13 +34,13 @@ DOPROF = no
 MOLCAS = no
 
 ifeq ($(USE_MKL), yes)
-MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/
+MKLLIB = /opt/intel/compilers_and_libraries_2016.0.109/linux/mkl/lib/intel64
 ifeq ($(OPENMP), yes)
-LAPACKBLAS = -L${MKLLIB} -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core
+LAPACKBLAS = -L${MKLLIB} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core
 else
-LAPACKBLAS = -L${MKLLIB} -lmkl_gf_lp64 -lmkl_sequential -lmkl_core
+LAPACKBLAS = -L${MKLLIB} -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 endif
-MKLFLAGS = /opt/intel/composer_xe_2013_sp1.0.080/mkl/include
+MKLFLAGS = /opt/intel/compilers_and_libraries_2016.0.109/linux/mkl/include
 MKLOPT = -D_HAS_INTEL_MKL
 else
 MKLFLAGS = .
@@ -62,8 +62,8 @@ endif
 EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
-CXX =  g++
-MPICXX = /usr/local/openmpi/1.6.5/devtoolset21/x86_64/bin/mpicxx
+CXX =  icpc
+MPICXX = mpiicpc
 BLOCKHOME = .
 HOME = .
 NEWMATINCLUDE = $(BLOCKHOME)/newmat10/
@@ -76,7 +76,7 @@ BTAS = $(BLOCKHOME)/btas
    
 MOLPROINCLUDE=.
 ifeq ($(MOLPRO), yes)
-   MOLPROINCLUDE=$(BLOCKHOME)/../
+#   MOLPROINCLUDE=$(BLOCKHOME)/../
    MOLPRO_BLOCK= -DMOLPRO
 endif
 
@@ -119,7 +119,7 @@ endif
 
 ifeq ($(USE_MPI), yes)
      MPI_OPT = 
-     MPI_LIB = -lboost_mpi -L/usr/local/openmpi/1.6.5/devtoolset21/x86_64/lib64 -lmpi -lmpi_cxx
+     MPI_LIB = -lboost_mpi -L/opt/intel/compilers_and_libraries_2016.0.109/linux/mpi/intel64/lib -lmpi 
      LIBS += $(MPI_LIB)
      CXX = $(MPICXX)
 endif
@@ -184,7 +184,7 @@ all	: library $(EXECUTABLE) OH COEF CSFOH
 
 library : libqcdmrg.a $(NEWMATLIB)/libnewmat.a libqcdmrg.so
 
-libqcdmrg.a : $(OBJ_spin_library) $(OBJ_molcas) $(OBJ_mps_nevpt)
+libqcdmrg.a : $(OBJ_spin_library) $(OBJ_molcas) $(OBJ_mps_nevpt) $(NEWMATLIB)/libnewmat.a
 	$(AR) $(ARFLAGS) $@ $^
 	$(RANLIB) $@
 

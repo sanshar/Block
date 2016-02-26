@@ -6,13 +6,14 @@
 #include <fstream>
 #include "global.h"
 
-#ifdef MOLPRO
-#include "global/CxOutputStream.h"
-#endif
-
 using namespace std;
 using namespace SpinAdapted;
 
+
+#ifdef MOLPRO
+#define pm1out if (mpigetrank() == 0 && dmrginp.outputlevel() >= -1) bout
+#define pm1err if (mpigetrank() == 0 && dmrginp.outputlevel() >= -1) berr
+#endif
 
 #define pout if (mpigetrank() == 0 && dmrginp.outputlevel() >= 0) bout
 #define perr if (mpigetrank() == 0 && dmrginp.outputlevel() >= 0) berr
