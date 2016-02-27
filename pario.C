@@ -3,7 +3,7 @@
 #include "pario.h"
 
 #ifdef MOLPRO
-#include "global/CxOutputStream.h"
+extern std::ostream &xout,&xerr;
 blockout Bout(&xout);
 blockerr Berr(&xerr);
 #else

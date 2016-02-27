@@ -498,9 +498,9 @@ double SpinAdapted::Sweep::do_one(SweepParams &sweepParams, const bool &warmUp, 
          << " " << endl;
 #else 
     //printf("\t\t\t M = %6i   Largest Discarded Weight = %8.3e  Sweep Energy = %20.10f \n",sweepParams.get_keep_states(), finalError, finalEnergy[j]+dmrginp.get_coreenergy());
-    pout << "\t\t\t M = " <<  setw(6) << sweepParams.get_keep_states() ; 
-    pout << "\t Largest Discarded Weight = " << scientific << setprecision(3) << finalError ;
-    pout << "\t Sweep Energy = " << fixed << setprecision(10) << finalEnergy[j] << endl;
+    pm1out << "\t\t\t M = " <<  setw(6) << sweepParams.get_keep_states() ; 
+    pm1out << "\t Largest Discarded Weight = " << scientific << setprecision(3) << finalError ;
+    pm1out << "\t Sweep Energy = " << fixed << setprecision(10) << finalEnergy[j] << endl;
 #endif
   }
   tcpu  = sweeptimer.elapsedcputime(); twall = sweeptimer.elapsedwalltime();
