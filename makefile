@@ -23,8 +23,8 @@ USE_MKL = yes
 
 # use this variable to set if we will use integer size of 8 or not.
 # molpro compilation requires I8, since their integers are long
-I8_OPT = yes
-MOLPRO = yes
+I8_OPT = no
+MOLPRO = no
 OPENMP = no
 
 DOPROF = no
@@ -74,13 +74,11 @@ BTAS = $(BLOCKHOME)/btas
 .SUFFIXES: .C .cpp
 
    
-MOLPROINCLUDE=.
 ifeq ($(MOLPRO), yes)
-#   MOLPROINCLUDE=$(BLOCKHOME)/../
    MOLPRO_BLOCK= -DMOLPRO
 endif
 
-FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(MOLPROINCLUDE) \
+FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) \
          -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(HOME)/modules/twopdm/ \
          -I$(HOME)/modules/npdm -I$(HOME)/modules/two_index_ops -I$(HOME)/modules/three_index_ops -I$(HOME)/modules/four_index_ops -std=c++0x \
 	 -I$(HOME)/modules/ResponseTheory -I$(HOME)/modules/nevpt2 -I$(HOME)/molcas -I$(HOME)/modules/mps_nevpt
