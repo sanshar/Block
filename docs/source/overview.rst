@@ -4,13 +4,20 @@ Overview
 Features
 ========
 
-* DMRG sweep algorithm for quantum chemistry, Hubbard and Heisenberg hamiltonians,
-* Full spin-adaptation (SU(2) symmetry) and Abelian point-group symmetries,
-* State-averaged and state-specific excited states,
-* one-, two-, three- and four-particle density matrices,
-* one- and two-particle transition density matrices between two states,
-* perturbation methods including NEVPT2 and MPSPT,
-* DMRG-SCF and/or DMRG-NEVPT2 interfaces to the PySCF, Molpro, ORCA, Q-Chem and Molcas program packages. 
+New features in Block 1.1
+-------------------------
+
+* Perturbation methods including NEVPT2 and MPSPT
+* One-, two-, three- and four-particle density matrices
+* One- and two-particle transition density matrices between two states
+
+Features in Block 1.0
+---------------------
+
+* DMRG sweep algorithm for quantum chemistry, Hubbard and Heisenberg hamiltonians
+* Full spin-adaptation (SU(2) symmetry) and Abelian point-group symmetries
+* State-averaged and state-specific excited states
+* DMRG-SCF and/or DMRG-NEVPT2 interfaces to the PySCF, Molpro, ORCA, Q-Chem and Molcas program packages
 
 Calling `BLOCK` as an external function
 =======================================
