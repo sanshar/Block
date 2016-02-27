@@ -2,13 +2,26 @@
 
 `BLOCK` implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry.
 
-* [Project web](http://chemists.princeton.edu/chan/software/block-code-for-dmrg)
-* [Latest release 1.1](../../releases/latest)
-* [New features](../master/CHANGELOG.md)
-* [Documentation](https://sanshar.github.io/Block)
+* [New features](#new-features)
 * [Build Block](#build-block)
 * [How to cite Block](#how-to-cite-block)
+* [Project web](http://chemists.princeton.edu/chan/software/block-code-for-dmrg)
+* [Documentation](https://sanshar.github.io/Block)
 * [License GPLv3](../master/LICENSE.txt)
+
+
+New features
+------------
+
+### [Version 1.1 (alpha)](../../releases/latest)
+
+* DMRG-CASSCF: close integration with [PySCF](http://chemists.princeton.edu/chan/software/pyscf/)
+  (up to about 40 orbitals and 3000 basis functions)
+* DMRG-NEVPT2 (up to about 24 orbitals and 1200 basis functions with PySCF)
+* DMRG-NEVPT2 with compressed MPS perturber (up to about 30 orbitals and 1200
+  basis functions through PySCF)
+* 1, 2, 3, 4-particle density matrices
+* 1, 2-particle transition density matrices
 
 
 Build Block
