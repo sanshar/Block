@@ -1,4 +1,4 @@
-CXX = g++
+CXX = icpc
 CXXFLAGS = -fPIC -O2 -Wall
 
 DIFF = ./sdiff

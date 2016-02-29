@@ -180,9 +180,13 @@ endif
 
 all	: library $(EXECUTABLE) OH COEF CSFOH
 
+ifeq ($(MOLCAS), yes)
 library : libqcdmrg.a $(NEWMATLIB)/libnewmat.a libqcdmrg.so
+else                                           
+library : libqcdmrg.a $(NEWMATLIB)/libnewmat.a 
+endif
 
-libqcdmrg.a : $(OBJ_spin_library) $(OBJ_molcas) $(OBJ_mps_nevpt) $(NEWMATLIB)/libnewmat.a
+libqcdmrg.a : $(OBJ_spin_library) $(OBJ_molcas) $(OBJ_mps_nevpt) $(NEWMATLIB)/*.o
 	$(AR) $(ARFLAGS) $@ $^
 	$(RANLIB) $@
 
