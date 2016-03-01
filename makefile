@@ -3,12 +3,12 @@
 #This program is integrated in Molpro with the permission of 
 #Sandeep Sharma and Garnet K.-L. Chan
 
-##BOOSTINCLUDE = /home/sandeep/Work/Programs/boost_1_54_0/
+
 #specify boost include file
-BOOSTINCLUDE = /home/shengg/opt/boost/include/
+BOOSTINCLUDE = /home/juny/libs/boost_1_55_0-impi-5_0_3_048-install/include
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/home/shengg/opt/boost/lib/ -lboost_serialization -lboost_system -lboost_filesystem
+BOOSTLIB = -L/home/juny/libs/boost_1_55_0-impi-5_0_3_048-install/lib -lboost_serialization -lboost_system -lboost_filesystem
 #BOOSTLIB = -lboost_serialization -lboost_system -lboost_filesystem
 LAPACKBLAS = -lblas -llapack
 
@@ -34,9 +34,13 @@ DOPROF = no
 MOLCAS = no
 
 ifeq ($(USE_MKL), yes)
-MKLLIB = /opt/intel/composer_xe_2013.3.163/mkl/lib/intel64/
-LAPACKBLAS = -L${MKLLIB} -lmkl_gf_lp64 -lmkl_sequential -lmkl_core
-MKLFLAGS = /opt/intel/composer_xe_2013.3.163/mkl/include
+MKLLIB = /opt/intel/compilers_and_libraries_2016.0.109/linux/mkl/lib/intel64
+ifeq ($(OPENMP), yes)
+LAPACKBLAS = -L${MKLLIB} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core
+else
+LAPACKBLAS = -L${MKLLIB} -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+endif
+MKLFLAGS = /opt/intel/compilers_and_libraries_2016.0.109/linux/mkl/include
 MKLOPT = -D_HAS_INTEL_MKL
 else
 MKLFLAGS = .
@@ -58,8 +62,8 @@ endif
 EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
-CXX =  g++
-MPICXX = mpicxx
+CXX =  icpc
+MPICXX = mpiicpc
 BLOCKHOME = .
 HOME = .
 NEWMATINCLUDE = $(BLOCKHOME)/newmat10/
@@ -70,13 +74,11 @@ BTAS = $(BLOCKHOME)/btas
 .SUFFIXES: .C .cpp
 
    
-MOLPROINCLUDE=.
 ifeq ($(MOLPRO), yes)
-   MOLPROINCLUDE=$(BLOCKHOME)/../
    MOLPRO_BLOCK= -DMOLPRO
 endif
 
-FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) -I$(MOLPROINCLUDE) \
+FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) \
          -I$(HOME)/modules/generate_blocks/ -I$(HOME)/modules/onepdm -I$(HOME)/modules/twopdm/ \
          -I$(HOME)/modules/npdm -I$(HOME)/modules/two_index_ops -I$(HOME)/modules/three_index_ops -I$(HOME)/modules/four_index_ops -std=c++0x \
 	 -I$(HOME)/modules/ResponseTheory -I$(HOME)/modules/nevpt2 -I$(HOME)/molcas -I$(HOME)/modules/mps_nevpt
@@ -101,7 +103,7 @@ endif
 
 ifeq (g++, $(CXX))
    ifeq ($(OPENMP), yes)
-      OPENMP_FLAGS= -fopenmp -D_OPENMP 
+      OPENMP_FLAGS= -fopenmp #-D_OPENMP 
    endif
 # GNU compiler
       OPT = -DNDEBUG -O3 -g -funroll-loops
@@ -115,7 +117,7 @@ endif
 
 ifeq ($(USE_MPI), yes)
      MPI_OPT = 
-     MPI_LIB = -lboost_mpi
+     MPI_LIB = -lboost_mpi -L/opt/intel/compilers_and_libraries_2016.0.109/linux/mpi/intel64/lib -lmpi 
      LIBS += $(MPI_LIB)
      CXX = $(MPICXX)
 endif
@@ -178,9 +180,13 @@ endif
 
 all	: library $(EXECUTABLE) OH COEF CSFOH
 
+ifeq ($(MOLCAS), yes)
 library : libqcdmrg.a $(NEWMATLIB)/libnewmat.a libqcdmrg.so
+else                                           
+library : libqcdmrg.a $(NEWMATLIB)/libnewmat.a 
+endif
 
-libqcdmrg.a : $(OBJ_spin_library) $(OBJ_molcas) $(OBJ_mps_nevpt)
+libqcdmrg.a : $(OBJ_spin_library) $(OBJ_molcas) $(OBJ_mps_nevpt) $(NEWMATLIB)/*.o
 	$(AR) $(ARFLAGS) $@ $^
 	$(RANLIB) $@
 
