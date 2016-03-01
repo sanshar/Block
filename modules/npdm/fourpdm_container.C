@@ -43,9 +43,11 @@ Fourpdm_container::Fourpdm_container( int sites )
     char file[5000];
     sprintf (file, "%s%s%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",mpigetrank(),".tmp");
     //std::ofstream spatpdm_disk(file, std::ios::binary);
-    spatpdm_disk=fopen(file,"wb");
+    spatpdm_disk=fopen(file,"w");
     //32M buffer;
     setvbuf(spatpdm_disk,NULL,_IOFBF,1024*1024*32);
+    if(mpigetrank()==0)
+      fprintf(spatpdm_disk,"%d\n",sites);
     //spatpdm_disk.open(file, std::ios::binary);
     //spatpdm_disk.close();
   }
@@ -65,11 +67,15 @@ void Fourpdm_container::save_npdms(const int& i, const int& j)
     save_npdm_binary(i, j);
     save_npdm_text(i, j);
   } 
-  if ( !dmrginp.spatpdm_disk_dump() ) {
+  if ( dmrginp.spatpdm_disk_dump() ) {
+    merge_diskfile(i,j);
+  }
+  else
+  {
     accumulate_spatial_npdm();
     save_spatial_npdm_text(i, j);
-  } 
-  save_spatial_npdm_binary(i, j);
+    save_spatial_npdm_binary(i, j);
+  }
     
 #ifndef SERIAL
   world.barrier();
@@ -555,6 +561,119 @@ long Fourpdm_container::oneindex_spin(const std::vector<int> & orbital_element_i
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+void Fourpdm_container::dump_binary_to_disk(std::vector< std::pair< std::vector<int>, double > > & spin_batch)
+{
+
+  const std::vector<int>& ro = dmrginp.reorder_vector();
+  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
+    assert( (it->first).size() == 8 );
+
+    // Store significant elements only
+    if ( abs(it->second) > NUMERICAL_ZERO ) {
+      std::vector<int> sites;
+      sites.resize(8);
+      for (int i=0;i<8;i++)
+        sites[i] = ro.at((it->first)[i]);
+
+      fwrite(sites.data(),sizeof(int),8,spatpdm_disk);
+      fwrite(&(it->second),sizeof(double),1,spatpdm_disk);
+    }
+  }
+}
+
+void Fourpdm_container::dump_text_to_disk(std::vector< std::pair< std::vector<int>, double > > & spin_batch)
+{
+
+  const std::vector<int>& ro = dmrginp.reorder_vector();
+  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
+    assert( (it->first).size() == 8 );
+
+    // Store significant elements only
+    if ( abs(it->second) > NUMERICAL_ZERO ) {
+
+      int i = (it->first)[0];
+      int j = (it->first)[1];
+      int k = (it->first)[2];
+      int l = (it->first)[3];
+      int m = (it->first)[4];
+      int n = (it->first)[5];
+      int p = (it->first)[6];
+      int q = (it->first)[7];
+
+      fprintf(spatpdm_disk,"%d %d %d %d %d %d %d %d %20.14e\n", ro.at(i), ro.at(j), ro.at(k), ro.at(l), ro.at(m), ro.at(n), ro.at(p), ro.at(q) ,it->second);
+    }
+  }
+}
+
+void Fourpdm_container::merge_diskfile(const int &i, const int &j)
+{
+  fclose(spatpdm_disk);
+  if(mpigetrank()==0)
+  {
+    char oldfile[5000];
+    sprintf (oldfile, "%s%s%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",mpigetrank(),".tmp");
+    char file[5000];
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.", i, j,".txt");
+    std::rename(oldfile,file);
+  }
+
+#ifndef SERIAL
+  boost::mpi::communicator world;
+  world.barrier();
+
+  int chunksize = 100*1024*1024; // 100M buffer for reading.
+  char* buffer = new char[chunksize];
+
+  if(mpigetrank()==0)
+  {
+    char file[5000];
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.", i, j,".txt");
+    FILE* merged_file=fopen(file,"ab");
+    for (int rank = 1; rank<mpigetsize();rank++)
+    {
+      long size;
+      while(true)
+      {
+        MPI_Recv(&size, 1, MPI_LONG, rank, 0, world,  MPI_STATUS_IGNORE);
+        if(size==-1)
+          break;
+        MPI_Recv(buffer, size, MPI_CHAR, rank, 0, world,  MPI_STATUS_IGNORE);
+        fwrite(buffer,1,size,merged_file);
+      }
+
+
+    }
+    fclose(merged_file);
+
+  }
+  else
+    {
+    char file[5000];
+    sprintf (file, "%s%s%d%s", dmrginp.save_prefix().c_str(),"/spatial_fourpdm.",mpigetrank(),".tmp");
+    //std::ofstream spatpdm_disk(file, std::ios::binary);
+    FILE* local_file=fopen(file,"rb");
+    fseek(local_file,0,SEEK_END);
+    long file_size = ftell(local_file);
+    fseek(local_file,0,SEEK_SET);
+    do
+    {
+      long size=fread(buffer, 1, chunksize, local_file);
+      MPI_Send(&size, 1, MPI_LONG, 0, 0, world);
+      MPI_Send(buffer, size, MPI_CHAR, 0, 0, world);
+    }
+    while(ftell(local_file)<file_size);
+
+    long size=-1;
+
+    MPI_Send(&size, 1, MPI_LONG, 0, 0, world);
+    fclose(local_file);
+    std::remove(file);
+    }
+  delete[] buffer;
+#endif
+
+}
+/*
 void Fourpdm_container::dump_to_disk(std::vector< std::pair< std::vector<int>, double > > & spin_batch)
 {
   long spatpdm_disk_position= ftell(spatpdm_disk);
@@ -594,6 +713,7 @@ void Fourpdm_container::dump_to_disk(std::vector< std::pair< std::vector<int>, d
   nonspin_batch.push_back(onerecord);
   }
 }
+*/
 
 
 //===========================================================================================================================================================
@@ -601,24 +721,31 @@ void Fourpdm_container::store_npdm_elements( const std::vector< std::pair< std::
 {
   assert( new_spin_orbital_elements.size() == 70 );
   Fourpdm_permutations perm;
-  //std::vector< std::pair< std::vector<int>, double > > spin_batch;
-  std::vector< std::pair< std::vector<int>, double > > spatial_batch;
-  // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
-  //perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
-  perm.get_spatial_batch(new_spin_orbital_elements,spatial_batch);
+  if(dmrginp.spinAdapted())
+  {
+    //std::vector< std::pair< std::vector<int>, double > > spin_batch;
+    std::vector< std::pair< std::vector<int>, double > > spatial_batch;
+    // Work with the non-redundant elements only, and get all unique spin-permutations as a by-product
+    //perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
+    perm.get_spatial_batch(new_spin_orbital_elements,spatial_batch);
 
-  //if ( dmrginp.store_spinpdm() ) update_full_spin_array( spin_batch );
-//  if ( !dmrginp.spatpdm_disk_dump() ) update_full_spatial_array( spin_batch );
-//  else{
-//    if(dmrginp.store_nonredundant_pdm()) 
-//      dump_to_disk(nonredundant_elements);
-//    else
-  if(dmrginp.spatpdm_disk_dump() ){
-      //dump_to_disk(spin_batch);
-      dump_to_disk(spatial_batch);
+    //if ( dmrginp.store_spinpdm() ) update_full_spin_array( spin_batch );
+//    if ( !dmrginp.spatpdm_disk_dump() ) update_full_spatial_array( spin_batch );
+//    else{
+//      if(dmrginp.store_nonredundant_pdm()) 
+//        dump_to_disk(nonredundant_elements);
+//      else
+    if(dmrginp.spatpdm_disk_dump() ){
+        dump_text_to_disk(spatial_batch);
+    }
+    else update_full_spatial_array(spatial_batch);
+    //if ( ! dmrginp.store_nonredundant_pdm() || dmrginp.spatpdm_disk_dump() ) nonredundant_elements.clear();
+   }
+  else{
+    std::vector< std::pair< std::vector<int>, double > > spin_batch;
+    perm.process_new_elements( new_spin_orbital_elements, nonredundant_elements, spin_batch );
+    update_full_spin_array( spin_batch );
   }
-  else update_full_spatial_array(spatial_batch);
-  //if ( ! dmrginp.store_nonredundant_pdm() || dmrginp.spatpdm_disk_dump() ) nonredundant_elements.clear();
 }
 
 //===========================================================================================================================================================

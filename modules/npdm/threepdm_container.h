@@ -57,7 +57,10 @@ class Threepdm_container : public Npdm_container {
     void update_full_spatial_array( std::vector< std::pair< std::vector<int>, double > >& spin_batch );
     long oneindex_spin(const std::vector<int> & orbital_element_index);
     void dump_to_disk(std::vector< std::pair< std::vector<int>, double > > & spin_batch);
+    void dump_text_to_disk(std::vector< std::pair< std::vector<int>, double > > & spin_batch);
+    void dump_binary_to_disk(std::vector< std::pair< std::vector<int>, double > > & spin_batch);
 
+    void merge_diskfile(const int &i, const int &j);
 
 
     template<class U> friend class Npdm::Sortpdm::cache;

@@ -43,9 +43,11 @@ Threepdm_container::Threepdm_container( int sites )
     char file[5000];
     sprintf (file, "%s%s%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.",mpigetrank(),".tmp");
     //std::ofstream spatpdm_disk(file, std::ios::binary);
-    spatpdm_disk=fopen(file,"wb");
-    //32M buffer;
+    spatpdm_disk=fopen(file,"w");
     setvbuf(spatpdm_disk,NULL,_IOFBF,1024*1024*32);
+    if(mpigetrank()==0)
+      fprintf(spatpdm_disk,"%d\n",sites);
+    //32M buffer;
     //spatpdm_disk.open(file, std::ios::binary);
     //spatpdm_disk.close();
   }
@@ -67,11 +69,15 @@ void Threepdm_container::save_npdms(const int& i, const int& j)
     save_npdm_binary(i, j);
     save_npdm_text(i, j);
   }
-  if ( !dmrginp.spatpdm_disk_dump() ) {
+  if ( dmrginp.spatpdm_disk_dump() ) {
+    merge_diskfile(i,j);
+  }
+  else
+  {
     accumulate_spatial_npdm();
     save_spatial_npdm_text(i, j);
+    save_spatial_npdm_binary(i, j);
   }
-  save_spatial_npdm_binary(i, j);
 
 #ifndef SERIAL
   world.barrier();
@@ -155,6 +161,7 @@ void Threepdm_container::save_npdm_binary(const int &i, const int &j)
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
+/*
 void Threepdm_container::external_sort_index(const int &i, const int &j)
 {
 
@@ -240,6 +247,76 @@ void Threepdm_container::external_sort_index(const int &i, const int &j)
     nonspin_batch.clear();
 #endif
 }
+*/
+
+void Threepdm_container::merge_diskfile(const int &i, const int &j)
+{
+  fclose(spatpdm_disk);
+  if(mpigetrank()==0)
+  {
+    char oldfile[5000];
+    sprintf (oldfile, "%s%s%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.",mpigetrank(),".tmp");
+    char file[5000];
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j,".txt");
+    std::rename(oldfile,file);
+  }
+
+#ifndef SERIAL
+  boost::mpi::communicator world;
+  world.barrier();
+
+  int chunksize = 100*1024*1024; // 100M buffer for reading.
+  char* buffer = new char[chunksize];
+
+  if(mpigetrank()==0)
+  {
+    char file[5000];
+    sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.", i, j,".txt");
+    FILE* merged_file=fopen(file,"ab");
+    for (int rank = 1; rank<mpigetsize();rank++)
+    {
+      long size;
+      while(true)
+      {
+        MPI_Recv(&size, 1, MPI_LONG, rank, 0, world,  MPI_STATUS_IGNORE);
+        if(size==-1)
+          break;
+        MPI_Recv(buffer, size, MPI_CHAR, rank, 0, world,  MPI_STATUS_IGNORE);
+        fwrite(buffer,1,size,merged_file);
+      }
+
+
+    }
+    fclose(merged_file);
+
+  }
+  else
+    {
+    char file[5000];
+    sprintf (file, "%s%s%d%s", dmrginp.save_prefix().c_str(),"/spatial_threepdm.",mpigetrank(),".tmp");
+    //std::ofstream spatpdm_disk(file, std::ios::binary);
+    FILE* local_file=fopen(file,"rb");
+    fseek(local_file,0,SEEK_END);
+    long file_size = ftell(local_file);
+    fseek(local_file,0,SEEK_SET);
+    do
+    {
+      long size=fread(buffer, 1, chunksize, local_file);
+      MPI_Send(&size, 1, MPI_LONG, 0, 0, world);
+      MPI_Send(buffer, size, MPI_CHAR, 0, 0, world);
+    }
+    while(ftell(local_file)<file_size);
+
+    long size=-1;
+
+    MPI_Send(&size, 1, MPI_LONG, 0, 0, world);
+    fclose(local_file);
+    std::remove(file);
+    }
+  delete[] buffer;
+#endif
+
+}
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -257,6 +334,7 @@ void Threepdm_container::save_spatial_npdm_binary(const int &i, const int &j)
       ofs.close();
     }
   }
+  /*
   else{
     fclose(spatpdm_disk);
     //When spatpdm_disk is opened, the state numbers, i and j, are not known. 
@@ -305,6 +383,7 @@ void Threepdm_container::save_spatial_npdm_binary(const int &i, const int &j)
 #endif
     }
   }
+  */
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -474,8 +553,56 @@ long Threepdm_container::oneindex_spin(const std::vector<int> & orbital_element_
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
+void Threepdm_container::dump_binary_to_disk(std::vector< std::pair< std::vector<int>, double > > & spin_batch)
+{
+
+  const std::vector<int>& ro = dmrginp.reorder_vector();
+  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
+    assert( (it->first).size() == 6 );
+
+    // Store significant elements only
+    if ( abs(it->second) > NUMERICAL_ZERO ) {
+      std::vector<int> sites;
+      sites.resize(6);
+      for (int i=0;i<6;i++)
+        sites[i] = ro.at((it->first)[i]);
+
+      fwrite(sites.data(),sizeof(int),6,spatpdm_disk);
+      fwrite(&(it->second),sizeof(double),1,spatpdm_disk);
+    }
+  }
+}
+
+void Threepdm_container::dump_text_to_disk(std::vector< std::pair< std::vector<int>, double > > & spin_batch)
+{
+
+  const std::vector<int>& ro = dmrginp.reorder_vector();
+  for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
+    assert( (it->first).size() == 6 );
+
+    // Store significant elements only
+    if ( abs(it->second) > NUMERICAL_ZERO ) {
+
+      int i = (it->first)[0];
+      int j = (it->first)[1];
+      int k = (it->first)[2];
+      int l = (it->first)[3];
+      int m = (it->first)[4];
+      int n = (it->first)[5];
+
+      fprintf(spatpdm_disk,"%d %d %d %d %d %d %20.14e\n", ro.at(i), ro.at(j), ro.at(k), ro.at(l), ro.at(m), ro.at(n) ,it->second);
+    }
+  }
+}
+
+
+  //TODO
+  //The order of rdm elements does not seem useful. 
+  //Now, we just need to dump element one by one.
+  /*
 void Threepdm_container::dump_to_disk(std::vector< std::pair< std::vector<int>, double > > & spin_batch)
 {
+
   long spatpdm_disk_position= ftell(spatpdm_disk);
   std::map < long, double>  index_and_elements;
   for (auto it = spin_batch.begin(); it != spin_batch.end(); ++it) {
@@ -550,6 +677,7 @@ void Threepdm_container::dump_to_disk(std::vector< std::pair< std::vector<int>, 
 #endif
 #endif
 }
+  */
 
 
 void Threepdm_container::store_npdm_elements( const std::vector< std::pair< std::vector<int>, double > > & new_spin_orbital_elements)
@@ -561,7 +689,7 @@ void Threepdm_container::store_npdm_elements( const std::vector< std::pair< std:
     std::vector< std::pair< std::vector<int>, double > > spatial_batch;
     perm.get_spatial_batch(new_spin_orbital_elements,spatial_batch);
     if(dmrginp.spatpdm_disk_dump() ){
-      dump_to_disk(spatial_batch);
+      dump_text_to_disk(spatial_batch);
     }
     else update_full_spatial_array(spatial_batch);
     if( dmrginp.store_spinpdm())
