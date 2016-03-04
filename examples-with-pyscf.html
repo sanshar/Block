@@ -249,12 +249,11 @@ finished:</p>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="n">mc</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-<span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
+<span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASCI</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
 <span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGCI</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-<span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
+<span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>However, the default DMRG-NEVPT2 calculation is extremely demanding on both CPU
@@ -266,25 +265,26 @@ reduce the computation cost:</p>
 <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="n">mc</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
-<span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">dmrgscf</span><span class="o">.</span><span class="n">compress_perturb</span><span class="p">(</span><span class="n">mc</span><span class="p">))</span>
+<span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span><span class="o">.</span><span class="n">compress_approx</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The efficient NEVPT2 needs be initialized with <tt class="docutils literal"><span class="pre">compress_perturb</span></tt> function,
-in which the most demanding intermediates are precomputed and stored on disk.</p>
+<p>The compressed perturber NEVPT2 method needs be initialized with
+<tt class="docutils literal"><span class="pre">compress_approx</span></tt> function, in which the most demanding intermediates
+are precomputed and stored on disk.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">The efficient NEVPT2 algorithm is also very demanding, especially on
+<p class="last">The compressed NEVPT2 algorithm is also very demanding, especially on
 the memory usage.  Please refer to the <a class="reference internal" href="benchmark.html#benchmark"><em>Benchmark</em></a> for approximate cost.</p>
 </div>
 <p>If the excitation energy is of interest, we can use DMRG-NEVPT2 to compute the
 energy of excited state.  Note only the state-specific NEVPT2 calculation is
-available in the current Block version:</p>
+available in the current Block release:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASCI</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
 <span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGCI</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
 <span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">nroots</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
-<span class="n">mps_nevpt_e1</span> <span class="o">=</span> <span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">dmrgscf</span><span class="o">.</span><span class="n">compress_perturb</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">maxM</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
-<span class="n">mps_nevpt_e2</span> <span class="o">=</span> <span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">dmrgscf</span><span class="o">.</span><span class="n">compress_perturb</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">maxM</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">compress_approx</span><span class="p">(</span><span class="n">maxM</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">compress_approx</span><span class="p">(</span><span class="n">maxM</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>In the above example, two NEVPT2 calculations are carried out separately for
