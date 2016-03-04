@@ -136,11 +136,18 @@ DMRG-SCF, DMRG-NEVPT2 etc with PySCF package, you need create a pyscf
 config file <tt class="docutils literal"><span class="pre">/path/to/pyscf/future/dmrgscf/settings.py</span></tt> and add the
 following settings in it:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">BLOCKEXE</span> <span class="o">=</span> <span class="s">&quot;/path/to/Block/block.spin_adapted&quot;</span>
+<span class="n">BLOCKEXE_COMPRESS_NEVPT</span> <span class="o">=</span> <span class="s">&quot;/path/to/serially/compiled/Block/block.spin_adapted&quot;</span>
 <span class="n">BLOCKSCRATCHDIR</span> <span class="o">=</span> <span class="s">&quot;/path/to/scratch&quot;</span>
 <span class="n">MPIPREFIX</span> <span class="o">=</span> <span class="s">&quot;mpirun&quot;</span>
 </pre></div>
 </div>
-<p>Note the parameter <tt class="docutils literal"><span class="pre">MPIPREFIX</span></tt> should be adjusted according to your
+<p><tt class="docutils literal"><span class="pre">BLOCKEXE</span></tt> is the parallel Block program. Most DMRG calculations (DMRG-CASCI,
+DMRG-CASSCF etc) will call this parallel executable through <tt class="docutils literal"><span class="pre">mpirun</span></tt>
+interface.  <tt class="docutils literal"><span class="pre">BLOCKEXE_COMPRESS_NEVPT</span></tt> points to the <strong>serially
+compiled</strong> Block executable.  It is only needed by the compressed perturber
+NEVPT2 method.  Although this Block executable is not MPI-parallelized, the
+DMRG-NEVPT2 program are efficiently parallelized in a different manner.
+Note the parameter <tt class="docutils literal"><span class="pre">MPIPREFIX</span></tt> should be adjusted according to your
 job scheduler, eg:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="c"># For OpenPBS/Torque</span>
 <span class="n">MPIPREFIX</span> <span class="o">=</span> <span class="s">&quot;mpirun&quot;</span>
@@ -163,13 +170,13 @@ calculation can be input in Python interpereter:</p>
 </div>
 <p>DMRG-NEVPT2 calculation can be applied:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">mrpt</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>Optionally, if <a class="reference external" href="http://mpi4py.scipy.org">MPI4Py</a> was installed, the efficient
 DMRG-NEVPT2 implementation can be used, eg:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">mrpt</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mrpt</span><span class="o">.</span><span class="n">nevpt2</span><span class="o">.</span><span class="n">sc_nevpt</span><span class="p">(</span><span class="n">dmrgscf</span><span class="o">.</span><span class="n">compress_perturb</span><span class="p">(</span><span class="n">mc</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span><span class="o">.</span><span class="n">compress_approx</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
