@@ -34,7 +34,7 @@ class Npdm_driver {
     double write_intermediate_time =0;
     explicit Npdm_driver(NpdmOrder order, Npdm_container& container) : npdm_order_(order), container_(container) {}
     ~Npdm_driver() {}
-   void clear() { container_.clear(); }
+   void clear() { container_.clear();}
    void save_data( const int i, const int j ) { container_.save_npdms(i,j); }
    void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos );
 
@@ -103,7 +103,7 @@ class Twopdm_driver : public Npdm_driver_base {
 class Threepdm_driver : public Npdm_driver_base {
   public:
     explicit Threepdm_driver( int sites ) : container( Threepdm_container(sites) ), driver( Npdm_driver(NPDM_THREEPDM, container) ) {}
-    void clear() { driver.clear(); }
+    void clear() { driver.clear(); container= Threepdm_container(dmrginp.last_site());/*Reinitialize container to reopen the temporary file.*/}
     void save_data( const int i, const int j ) { driver.save_data(i,j); }
     void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos ) 
       { driver.compute_npdm_elements(wavefunctions, big, sweepPos, endPos ); }
@@ -117,7 +117,7 @@ class Threepdm_driver : public Npdm_driver_base {
 class Fourpdm_driver : public Npdm_driver_base {
   public:
     explicit Fourpdm_driver( int sites ) : container( Fourpdm_container(sites) ), driver( Npdm_driver(NPDM_FOURPDM, container) ) {}
-    void clear() { driver.clear(); }
+    void clear() { driver.clear(); container= Fourpdm_container(dmrginp.last_site()); /*Reinitialize container to reopen the temporary file.*/}
     void save_data( const int i, const int j ) { driver.save_data(i,j); }
     void compute_npdm_elements( std::vector<Wavefunction> & wavefunctions, const SpinBlock & big, int sweepPos, int endPos ) 
       { driver.compute_npdm_elements(wavefunctions, big, sweepPos, endPos ); }
