@@ -148,7 +148,7 @@ void Onepdm_container::accumulate_npdm()
         for(int l=0;l<onepdm.dim2();++l)
           if( abs(tmp_recv(k,l)) > NUMERICAL_ZERO )
           {
-          assert ( abs(onepdm(i,j,k,l,m,n)) < NUMERICAL_ZERO );
+          assert ( abs(onepdm(k,l)) < NUMERICAL_ZERO );
           onepdm(k,l) = tmp_recv(k,l);
           }
     }
@@ -180,7 +180,7 @@ void Onepdm_container::accumulate_spatial_npdm()
         for(int l=0;l<spatial_onepdm.dim2();++l)
           if( abs(tmp_recv(k,l)) > NUMERICAL_ZERO )
           {
-          assert ( abs(onepdm(i,j,k,l,m,n)) < NUMERICAL_ZERO );
+          assert ( abs(onepdm(k,l)) < NUMERICAL_ZERO );
           onepdm(k,l) = tmp_recv(k,l);
           }
     }
