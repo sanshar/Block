@@ -62,7 +62,7 @@ if(${Boost_VERSION} GREATER "105599")
 endif()
 
 add_custom_target(libnewmat.a ALL
-                  COMMAND ${CMAKE_MAKE_PROGRAM}
+                  COMMAND CXX=${CMAKE_CXX_COMPILER} ${CMAKE_MAKE_PROGRAM}
                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/newmat10
                   COMMENT "Building newmat")
 #add_library(${CMAKE_CURRENT_SOURCE_DIR}/newmat10/libnewmat.a STATIC IMPORTED)
