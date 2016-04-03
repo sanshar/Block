@@ -3,7 +3,8 @@ project (Block)
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -dynamic -DBLAS -DUSELAPACK -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBLAS -DUSELAPACK -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL -fPIC")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -dynamic")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g ")
 if(DEBUG)
   message("Warning: Debug mode")
@@ -20,8 +21,9 @@ if (SERIAL)
 else (SERIAL)
   find_package(MPI REQUIRED)
   set(CMAKE_CXX_COMPILER ${MPI_CXX_COMPILER})
-  include_directories( ${MPI_CXX_INCLUDE_PATH} )
-  link_directories(${MPI_CXX_LINK_FLAGS})
+  include_directories(${MPI_CXX_INCLUDE_PATH})
+  link_directories(${MPI_CXX_LIBRARIES})
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${MPI_CXX_LINK_FLAGS}")
 endif (SERIAL)
 
 
@@ -44,7 +46,6 @@ if (BLA_VENDOR MATCHES "Intel*")
 endif()
 find_package(LAPACK REQUIRED)
 
-
 if (SERIAL)
   find_package(Boost REQUIRED COMPONENTS system filesystem serialization)
 else(SERIAL)
@@ -56,6 +57,10 @@ link_directories(${Boost_LIBRARY_DIR})
 link_libraries( ${Boost_LIBRARIES} )
 message("Boost library ${Boost_LIBRARIES}")
         
+if(${Boost_VERSION} GREATER "105599")
+  add_definitions (-DBOOST_1_56_0)
+endif()
+
 add_custom_target(libnewmat.a ALL
                   COMMAND ${CMAKE_MAKE_PROGRAM}
                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/newmat10
@@ -92,3 +97,14 @@ add_executable(block.spin_adapted main.C $<TARGET_OBJECTS:object_files>)
 add_executable(OH OverlapHelement.C $<TARGET_OBJECTS:object_files>)
 add_executable(COEF Coefficients.C $<TARGET_OBJECTS:object_files>)
 add_executable(CSFOH CSFOverlapHelement.C $<TARGET_OBJECTS:object_files>)
+
+target_link_libraries(block.spin_adapted ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+target_link_libraries(OH ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+target_link_libraries(COEF ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+target_link_libraries(CSFOH ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+
+add_dependencies(object_files libnewmat.a)
+#add_dependencies(block.spin_adapted libnewmat.a)
+#add_dependencies(OH libnewmat.a)
+#add_dependencies(COEF libnewmat.a)
+#add_dependencies(CSFOH libnewmat.a)
