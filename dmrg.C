@@ -408,7 +408,7 @@ int calldmrg(char* input, char* output)
     Npdm::npdm(NPDM_TWOPDM,true,true);
     break;
   case (RESTART_T_THREEPDM):
-    Npdm::npdm(NPDM_TWOPDM,true,true);
+    Npdm::npdm(NPDM_THREEPDM,true,true);
     break;
   case(RESTART_NEVPT2):
     nevpt2::nevpt2_restart();
