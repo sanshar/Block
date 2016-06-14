@@ -116,7 +116,7 @@ class NpdmSpinOps_base {
 class NpdmSpinOps : public NpdmSpinOps_base {
 
   public:
-    const int size() { return size_; }
+    int size() { return size_; }
     virtual bool set_local_ops( int idx ) { abort(); }
 
 //FIXME public??

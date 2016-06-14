@@ -697,5 +697,12 @@ namespace SpinAdapted {
   template<> void Op_component<RI3index>::add_local_indices(int i, int j , int k) {};
   template<> void Op_component<RI4index>::add_local_indices(int i, int j , int k) {};
 
+// Added by NN, 2016-06-14
+  template<> void Op_component<CDD_sum>::add_local_indices(int, int, int) { }
+  template<> void Op_component<CDD_CreDesComp>::add_local_indices(int, int, int) { }
+  template<> void Op_component<CDD_DesDesComp>::add_local_indices(int, int, int) { }
+  template<> void Op_component<CCD_sum>::add_local_indices(int, int, int) { }
+  template<> void Op_component<CCD_CreDesComp>::add_local_indices(int, int, int) { }
+  template<> void Op_component<CCD_CreCreComp>::add_local_indices(int, int, int) { }
 
 }

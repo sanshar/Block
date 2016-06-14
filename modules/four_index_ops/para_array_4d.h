@@ -27,7 +27,7 @@ public:
   para_array_4d() : stored_local_(false) {}
 
   // This is designed for 4-index operators
-  const int num_indices() { return 4; }
+  int num_indices() { return 4; }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 

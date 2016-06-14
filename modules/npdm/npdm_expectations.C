@@ -683,7 +683,8 @@ void Npdm_expectations::compute_intermediate( NpdmSpinOps_base & lhsOps, NpdmSpi
           std::vector<int> spin;
           //spin.push_back(lhsOp->get_deltaQuantum(0).get_s().getirrep()); spin.push_back(dotOp->get_deltaQuantum(0).get_s().getirrep());spin.push_back(total_spin);
           spin.push_back(ilhs); spin.push_back(idot);spin.push_back(total_spin);
-          waves.emplace(spin,opw2);
+//        waves.emplace(spin,opw2);
+          waves.insert(std::make_pair(spin,opw2));
         }
       }
     }
@@ -717,7 +718,8 @@ void Npdm_expectations::compute_intermediate( NpdmSpinOps_base & rhsOps, std::ma
       operatorfunctions::TensorMultiply(big_.get_rightBlock(), *rhsOp, &big_, wavefunction_1, opw2, rhsOp->get_deltaQuantum(0), rhsOps.factor_);
       std::vector<int> spin;
       spin.push_back(irhs);
-      waves.emplace(spin,opw2);
+//    waves.emplace(spin,opw2);
+      waves.insert(std::make_pair(spin,opw2));
     }
 
   }

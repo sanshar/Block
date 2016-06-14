@@ -242,7 +242,7 @@ template <class Op> class Op_component : public Op_component_base
   int size() const  {return m_op.global_nnz();}
   bool has(int i, int j=-1, int k=-1, int l=-1) const {return m_op.has(i, j, k, l);}
   bool has_local_index(int i, int j=-1, int k=-1, int l=-1) const {return m_op.has_local_index(i, j, k, l);}
-  virtual void add_local_indices(int i, int j=-1, int k=-1){};
+  virtual void add_local_indices(int i, int j=-1, int k=-1);
   void clear(){m_op.clear();}
 
   void build_iterators(SpinBlock& b);

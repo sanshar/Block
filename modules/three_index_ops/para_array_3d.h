@@ -36,7 +36,7 @@ public:
   para_array_3d() : stored_local_(false) {}
 
   // This is designed for 3-index operators
-  const int num_indices() { return 3; }
+  int num_indices() { return 3; }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 

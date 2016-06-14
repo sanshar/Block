@@ -23,7 +23,7 @@ class Npdm_patterns
     Npdm_patterns() { pdm_order_=NPDM_EMPTY; };
     Npdm_patterns( NpdmOrder pdm_order, int sweep_pos, int end_pos );
 
-    const int size() { return ldr_cd_types_.size(); };
+    int size() { return ldr_cd_types_.size(); };
     std::set< std::map< char, std::vector<CD> > >::const_iterator ldr_cd_begin() { return ldr_cd_types_.begin(); };
     std::set< std::map< char, std::vector<CD> > >::const_iterator ldr_cd_end() { return ldr_cd_types_.end(); };
 

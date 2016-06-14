@@ -413,7 +413,7 @@ void SpinAdapted::PartialTwoElectronArray::populate(TwoElectronArray& v2) {
 
 void SpinAdapted::PartialTwoElectronArray::Load(std::string prefix, int index) {
   char file [5000];
-  sprintf (file, "%s%s%d%s%d%d%s%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", index, ".", mpigetrank(), ".tmp");
+  sprintf (file, "%s%s%d%s%d%s%d%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", index, ".", mpigetrank(), ".tmp");
   if(mpigetrank() == 0) {
     pout << "\t\t\t Reading Integral file "<<file <<endl;
     std::ifstream ifs(file, std::ios::binary);
@@ -424,7 +424,7 @@ void SpinAdapted::PartialTwoElectronArray::Load(std::string prefix, int index) {
 
 void SpinAdapted::PartialTwoElectronArray::Save(std::string prefix, int index) {
   char file [5000];
-  sprintf (file, "%s%s%d%s%d%d%s%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", index, ".", mpigetrank(), ".tmp");
+  sprintf (file, "%s%s%d%s%d%s%d%s%d%s", prefix.c_str(), "/integral-", OrbIndex[0],"-",OrbIndex[OrbIndex.size()-1], ".", index, ".", mpigetrank(), ".tmp");
   if(mpigetrank() == 0) {
     p1out << "\t\t\t Saving Integral file "<<file <<endl;
     std::ofstream ofs(file, std::ios::binary);

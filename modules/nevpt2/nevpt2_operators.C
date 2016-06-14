@@ -950,13 +950,13 @@ namespace SpinAdapted {
     //Inverse the left rotation matrix
     for (int q = 0; q < leftRotMatrix.size (); ++q){
       if (leftRotMatrix [q].Nrows () > 0){
-  /****************************************************************************************************
+  *****************************************************************************************************
   FIXME:
   Left rotation matrix should be transposed rather than inverted. Fortunately, this bug doesn't affect
   to any results, since rotation matrix has singular values which are all equal to 1, meaning that
   the pseudo inverse of a rotation matrix is indeed, the transposition of it. From the same reason,
   it's not necessary to take the pseudo inverse of right rotation matrix.
-  ****************************************************************************************************
+  *****************************************************************************************************
 
   //    try
   //    {
