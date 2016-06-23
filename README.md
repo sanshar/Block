@@ -57,13 +57,21 @@ To enable MKL library,
 
         USE_MKL = yes
 
-And supply MKL and BOOST libraries by giving the locations,
+And supply MKL, BOOST, LAPACK, BLAS libraries by giving the link locations and link names
     
 	MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/ 
 	MKLFLAGS = /opt/intel/composer_xe_2013_sp1.0.080/mkl/include
 
-	BOOSTLIB = /lib64/boost_1_55_0/lib/
-	BOOSTINCLUDE = /lib64/boost_1_55_0/include/
+	BOOSTLIB = -L/opt/local/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt
+	BOOSTINCLUDE = /opt/local/include/include
+
+	LAPACKBLAS = -L/opt/local/lib -lblas -llapack
+	
+Note: BOOST libraries may have different names on different systems, e.g.
+boost_serialization vs. boost_serialization_mt. Check your BOOST installation. For BOOST
+versions > 1.56, set 
+
+        USE_BOOST56 = yes
 
 When the makefile is configured, run in the directory ```./Block```
 
