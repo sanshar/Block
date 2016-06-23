@@ -5,21 +5,21 @@
 
 
 #specify boost include file
-BOOSTINCLUDE = /home/juny/libs/boost_1_55_0-impi-5_0_3_048-install/include
+BOOSTINCLUDE = /opt/local/include/include
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/home/juny/libs/boost_1_55_0-impi-5_0_3_048-install/lib -lboost_serialization -lboost_system -lboost_filesystem
+BOOSTLIB = -L/opt/local/lib -lboost_serialization -lboost_system -lboost_filesystem
 #BOOSTLIB = -lboost_serialization -lboost_system -lboost_filesystem
 LAPACKBLAS = -lblas -llapack
 
-USE_BOOST56 = no
+USE_BOOST56 = yes
 ifeq ($(USE_BOOST56), yes)
 	B56 = -DBOOST_1_56_0
 endif
 
 #use these variable to set if we will use mpi or not 
-USE_MPI = yes
-USE_MKL = yes
+USE_MPI = no
+USE_MKL = no
 
 # use this variable to set if we will use integer size of 8 or not.
 # molpro compilation requires I8, since their integers are long
@@ -62,7 +62,7 @@ endif
 EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
-CXX =  icpc
+CXX =  g++
 MPICXX = mpiicpc
 BLOCKHOME = .
 HOME = .
@@ -186,7 +186,7 @@ else
 library : libqcdmrg.a $(NEWMATLIB)/libnewmat.a 
 endif
 
-libqcdmrg.a : $(OBJ_spin_library) $(OBJ_molcas) $(OBJ_mps_nevpt) $(NEWMATLIB)/*.o
+libqcdmrg.a : $(OBJ_spin_library) $(OBJ_molcas) $(OBJ_mps_nevpt) $(NEWMATLIB)/libnewmat.a
 	$(AR) $(ARFLAGS) $@ $^
 	$(RANLIB) $@
 
