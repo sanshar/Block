@@ -9,6 +9,8 @@
 #include "wavefunction.h"
 #include "ObjectMatrix.h"
 
+typedef unsigned long int ulong;
+
 namespace SpinAdapted{
 
 
