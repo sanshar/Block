@@ -71,8 +71,10 @@ void SpinAdapted::SweepCompress::BlockDecimateAndCompress (SweepParams &sweepPar
 
   if (dmrginp.outputlevel() > 0)
     mcheck(""); 
-  if (!dot_with_sys && sweepParams.get_onedot()) pout << "\t\t\t System  Block"<<system;    
-  else pout << "\t\t\t System  Block"<<newSystem;
+  if (!dot_with_sys && sweepParams.get_onedot())
+    { pout << "\t\t\t System  Block"<<system; }
+  else
+    { pout << "\t\t\t System  Block"<<newSystem; }
   pout << "\t\t\t Environment Block"<<newEnvironment<<endl;
   p1out << "\t\t\t Solving wavefunction "<<endl;
 
@@ -201,9 +203,9 @@ double SpinAdapted::SweepCompress::do_one(SweepParams &sweepParams, const bool &
   // a new renormalisation sweep routine
   pout << endl;
   if (forward)
-    pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in forwards direction"<<endl;
+    { pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in forwards direction"<<endl; }
   else
-    pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
+    { pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl; }
   pout << "\t\t\t ============================================================================ " << endl;
 
   InitBlocks::InitStartingBlock (system,forward, baseState, targetState, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex);
@@ -233,9 +235,9 @@ double SpinAdapted::SweepCompress::do_one(SweepParams &sweepParams, const bool &
       pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
       if (forward)
-       p1out << "\t\t\t Current direction is :: Forwards " << endl;
+	{ p1out << "\t\t\t Current direction is :: Forwards " << endl; }
       else
-       p1out << "\t\t\t Current direction is :: Backwards " << endl;
+	{ p1out << "\t\t\t Current direction is :: Backwards " << endl; }
 
       if (sweepParams.get_block_iter() != 0) 
 	sweepParams.set_guesstype() = TRANSFORM;
@@ -298,9 +300,9 @@ double SpinAdapted::SweepCompress::do_one(SweepParams &sweepParams, const bool &
       pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
       if (forward)
-       p1out << "\t\t\t Current direction is :: Forwards " << endl;
+	{ p1out << "\t\t\t Current direction is :: Forwards " << endl; }
       else
-       p1out << "\t\t\t Current direction is :: Backwards " << endl;
+	{ p1out << "\t\t\t Current direction is :: Backwards " << endl; }
     sweepParams.set_onedot() = true;
     sweepParams.set_env_add() = 0;
     bool dot_with_sys = true;
@@ -600,8 +602,10 @@ void SpinAdapted::SweepCompress::WavefunctionCanonicalize (SweepParams &sweepPar
   
   if (dmrginp.outputlevel() > 0)
     mcheck(""); 
-  if (!dot_with_sys && sweepParams.get_onedot()) pout << "\t\t\t System  Block"<<system;    
-  else pout << "\t\t\t System  Block"<<newSystem;
+  if (!dot_with_sys && sweepParams.get_onedot())
+    { pout << "\t\t\t System  Block"<<system; }
+  else
+    { pout << "\t\t\t System  Block"<<newSystem; }
   pout << "\t\t\t Environment Block"<<environmentDot<<endl;
   p1out << "\t\t\t Solving wavefunction "<<endl;
   

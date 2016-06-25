@@ -188,9 +188,9 @@ double SweepOnepdm::do_one(SweepParams &sweepParams, const bool &warmUp, const b
       pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
       if (forward)
-	p1out << "\t\t\t Current direction is :: Forwards " << endl;
+	{ p1out << "\t\t\t Current direction is :: Forwards " << endl; }
       else
-	p1out << "\t\t\t Current direction is :: Backwards " << endl;
+	{ p1out << "\t\t\t Current direction is :: Backwards " << endl; }
 
       if (sweepParams.get_block_iter() == 0)
 	sweepParams.set_guesstype() = TRANSPOSE;

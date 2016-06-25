@@ -10,7 +10,7 @@ namespace mps_nevpt{
   std::vector<SpinBlock> siteBlocks_noDES;
   vector<double> ZeroEnergy;
   int sweepIters ;
-  double readZeroEnergy(){
+  void readZeroEnergy(){
     ZeroEnergy.resize(dmrginp.nroots());
   //  CoreEnergy.resize(dmrginp.nroots(),0.0);
   

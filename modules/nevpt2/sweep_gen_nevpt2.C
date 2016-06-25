@@ -226,9 +226,9 @@ double nevpt2::do_one_(SweepParams &sweepParams, const bool &warmUp, const bool 
       pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
       if (forward)
-         p1out << "\t\t\t Current direction is :: Forwards " << endl;
+	{ p1out << "\t\t\t Current direction is :: Forwards " << endl; }
       else
-         p1out << "\t\t\t Current direction is :: Backwards " << endl;
+	{ p1out << "\t\t\t Current direction is :: Backwards " << endl; }
       //if (SHOW_MORE) pout << "system block" << endl << system << endl;
   
       if (dmrginp.no_transform())

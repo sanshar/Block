@@ -6,7 +6,7 @@ namespace SpinAdapted{
     extern std::vector<SpinBlock> siteBlocks_noDES;
     extern vector<double> ZeroEnergy;
     extern int sweepIters ;
-    double readZeroEnergy();
+    void readZeroEnergy();
     void mps_nevpt(double sweep_tol);
   }
 }

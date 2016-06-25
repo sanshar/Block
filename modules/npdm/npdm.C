@@ -243,8 +243,8 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
 
     pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
     pout << "\t\t\t ----------------------------" << endl;
-    if (forward) p1out << "\t\t\t Current direction is :: Forwards " << endl;
-    else p1out << "\t\t\t Current direction is :: Backwards " << endl;
+    if (forward) { p1out << "\t\t\t Current direction is :: Forwards " << endl; }
+    else { p1out << "\t\t\t Current direction is :: Backwards " << endl; }
 
     //if (SHOW_MORE) pout << "system block" << endl << system << endl;
 

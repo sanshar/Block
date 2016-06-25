@@ -37,13 +37,17 @@ double SpinAdapted::mps_nevpt::type1::do_one(SweepParams &sweepParams, const boo
   sweepParams.set_sweep_parameters();
   // a new renormalisation sweep routine
   if (forward)
-    if (dmrginp.outputlevel() > 0)
-      pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in forwards direction"<<endl;
-  else
-    if (dmrginp.outputlevel() > 0)
     {
-      pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
-      pout << "\t\t\t ============================================================================ " << endl;
+      if (dmrginp.outputlevel() > 0)
+	{ pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in forwards direction"<<endl; }
+    }
+  else
+    {
+      if (dmrginp.outputlevel() > 0)
+	{
+	  pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
+	  pout << "\t\t\t ============================================================================ " << endl;
+	}
     }
 
   InitBlocks::InitStartingBlock (system,forward, baseState, pb.wavenumber(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex, pb.braquanta, pb.ketquanta);

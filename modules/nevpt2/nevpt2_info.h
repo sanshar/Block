@@ -19,7 +19,7 @@ namespace SpinAdapted{
   private:
     //calculation infos
     int nroots;
-    int OrbWin[6];
+    int OrbWin[7];
     bool ConvOverlap;
     bool ConventionalNevpt2;
     char BaseName[512];

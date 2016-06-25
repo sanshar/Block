@@ -337,6 +337,9 @@ namespace SpinAdapted{
         else if (u==DotIndex) return true;
         else if (v==DotIndex) return true;
         else return false;
+    default:
+      return false;
+      
     } 
   }
   
@@ -1075,7 +1078,7 @@ namespace SpinAdapted{
       }
 
       //if necessary, get the integral matrix
-      if ((t!=t_)||(u!=u_)&&!DummyIter){
+      if (((t!=t_)||(u!=u_))  &&  !DummyIter){
          Kut = IKJL.GetMatrix(u+NInternal,t+NInternal);
       }
       //the possible quanta
@@ -1158,7 +1161,7 @@ namespace SpinAdapted{
       }
 
       //if necessary, get the integral matrix
-      if ((t!=t_)||(u!=u_)&&!DummyIter){
+      if (((t!=t_)||(u!=u_))   && !DummyIter){
          Kut = IKJL.GetMatrix(u+NInternal,t+NInternal);
       }
       //the possible quanta
@@ -3447,7 +3450,7 @@ namespace SpinAdapted{
       }
 
       //if necessary, get the integral matrix
-      if ((t!=t_)||(v!=v_)&&!DummyIter){
+      if (((t!=t_)||(v!=v_))  && !DummyIter){
          Ktv = IKJA.GetMatrix(t+NInternal,v+NInternal);
       }
       //the possible quanta
@@ -3526,7 +3529,7 @@ namespace SpinAdapted{
         DummyIter = true;
       }
       //if necessary, get the integral matrix
-      if ((t!=t_)||(v!=v_)&&!DummyIter){
+      if (((t!=t_)||(v!=v_)) && !DummyIter){
          Ktv = IKJA.GetMatrix(t+NInternal,v+NInternal);
       }
       //the possible quanta

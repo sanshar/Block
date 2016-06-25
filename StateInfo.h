@@ -67,6 +67,15 @@ enum {
 ///    This has no LR product structure. `newQuantaMap` maps indices between the
 ///    states before and after renormalization (when some states are thrown out).
 ///    Made using `transform_state`.
+
+ class StateInfo;
+ 
+  void TensorProduct (StateInfo& a, StateInfo& b, const SpinQuantum q, const int constraint, StateInfo& c, StateInfo* compState=0);
+
+  /// Interface to other TensorProduct function.
+  void TensorProduct (StateInfo& a, StateInfo& b, StateInfo& c, const int constraint, StateInfo* compState=0);
+
+ 
 class StateInfo
 {
  private:
@@ -166,10 +175,10 @@ class StateInfo
   ///        Implemented only
   ///        with `LessThanQ`, only constructs a+b if a+b+compStateQ in q. Usually 0, 
   ///        used only in warmup.
-  friend void TensorProduct (StateInfo& a, StateInfo& b, const SpinQuantum q, const int constraint, StateInfo& c, StateInfo* compState=0);
+  friend void TensorProduct (StateInfo& a, StateInfo& b, const SpinQuantum q, const int constraint, StateInfo& c, StateInfo* compState);
 
   /// Interface to other TensorProduct function.
-  friend void TensorProduct (StateInfo& a, StateInfo& b, StateInfo& c, const int constraint, StateInfo* compState=0);
+  friend void TensorProduct (StateInfo& a, StateInfo& b, StateInfo& c, const int constraint, StateInfo* compState);
 
   friend void makeStateInfo(StateInfo& s, int site);
 

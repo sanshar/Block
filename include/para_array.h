@@ -67,23 +67,23 @@ public:
   virtual bool is_local() const {return is_local();}
   virtual bool is_distributed() const {return is_distributed();}
 
-  virtual bool& set_local() {};
+  virtual bool& set_local()=0;// {};
 
   /// virtual constructor. caller is responsible for managing storage
-  virtual para_sparse_vector<T>* clone() const {}
+  virtual para_sparse_vector<T>* clone() const=0;// {}
 
   //FIX ME!!
   virtual bool has_local_index(int i, int j) const {return has_local_index(i); }
 
-  virtual bool has(int i) const {}
-  virtual bool has(int i, int j) const {}
-  virtual bool has(int i=-1, int j=-1, int k=-1, int l=-1) const {};
-  virtual bool has(const std::vector<int>& orbs) const {};
-  virtual const std::vector<T>& get_store() const {};
-  virtual const std::vector<int>& get_indices() const {};
-  virtual int trimap_2d(int i, int j) const {};
+  virtual bool has(int i) const { return false; }
+  virtual bool has(int i, int j) const { return false; }
+  virtual bool has(int i=-1, int j=-1, int k=-1, int l=-1) const { return false; };
+  virtual bool has(const std::vector<int>& orbs) const { return false; }
+  virtual const std::vector<T>& get_store() const =0;// {}
+  virtual const std::vector<int>& get_indices() const=0;// {};
+  virtual int trimap_2d(int i, int j) const { return 0; } 
   virtual T& get(const std::vector<int>& orbs)=0;
-  virtual const std::vector<int> unmap_local_index(int i) const { assert(false); };
+  virtual const std::vector<int> unmap_local_index(int i) const=0;// { assert(false); };
 
 };
 
@@ -115,11 +115,20 @@ public:
   const T& operator()(int i=-1, int j=-1, int k=-1, int l=-1) const { return store(0); }
   bool has_local_index(int i, int j=-1, int k=-1, int l=-1) const { return store.has_local_index(i); }
   const std::vector<T>& get_store() const { return store.get_store(); }
+  bool& set_local() { return store.set_local(); }
+
+  const std::vector<int> unmap_local_index(int i) const { return store.unmap_local_index(i); }
+
   void set_indices() 
   { 
     std::vector<int> i(1); i[0] = 0;
     store.set_indices(i, 1);
   }
+  const std::vector<int>& get_indices() const
+  {
+    return store.get_indices();
+  }
+
   T& get(const std::vector<int>& orbs)
   {
     return store(0);
@@ -178,6 +187,10 @@ public:
   }
   const std::vector<int>& get_local_indices() const { return local_indices; }
 
+  const std::vector<int> unmap_local_index(int i) const
+  {
+    return std::vector<int>(1, local_indices[i]);
+  }
   /// query whether elements are non-null, locally and globally
   bool has(int i, int j=-1, int k=-1, int l=-1) const
   {

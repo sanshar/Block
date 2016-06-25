@@ -173,7 +173,9 @@ public:
   para_array_3d<T>* clone() const { return new para_array_3d<T>(*this); }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
+  const std::vector<T>& get_store() const { return store_; }  /// deprecated
 
+  
   void add_local_indices(int i, int j, int k)
   {
     int index = trimap_3d(i,j,k);

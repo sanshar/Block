@@ -140,6 +140,8 @@ public:
     return store_.at(trimap_4d(i,j,k,l));
   }
 
+  const std::vector<T>& get_store() const  { return store_; }
+  
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
   /// ith element of local storage

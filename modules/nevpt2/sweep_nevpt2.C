@@ -327,9 +327,9 @@ namespace SpinAdapted{
     pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
     pout << "\t\t\t ----------------------------" << endl;
     if (forward)
-       p1out << "\t\t\t Current direction is :: Forwards " << endl;
+      { p1out << "\t\t\t Current direction is :: Forwards " << endl; }
     else
-       p1out << "\t\t\t Current direction is :: Backwards " << endl;
+      { p1out << "\t\t\t Current direction is :: Backwards " << endl; }
 
     //determine the way of guessing the wavefunction
     if (dmrginp.no_transform())
@@ -402,9 +402,9 @@ namespace SpinAdapted{
     pout << "\n\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
     pout << "\t\t\t ----------------------------" << endl;
     if (!forward)
-       p1out << "\t\t\t Current direction is :: Forwards " << endl;
+      { p1out << "\t\t\t Current direction is :: Forwards " << endl; }
     else
-       p1out << "\t\t\t Current direction is :: Backwards " << endl;
+      { p1out << "\t\t\t Current direction is :: Backwards " << endl; }
 
     //determine the way of guessing the wavefunction
     if (dmrginp.no_transform())

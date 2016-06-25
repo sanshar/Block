@@ -47,17 +47,21 @@ public:
       return os;
     }
     bool operator<(const index_element& onepiece2) const{
-      if(index < onepiece2.index) return true;
-      if(index > onepiece2.index) return false;
-      if(index == onepiece2.index){
-        pout << "there are elements with same index"<<endl;
-        if(element !=onepiece2.element) 
-        {
-          pout << " and their values are different, abort"<<endl;
-          abort();
-        }
-
-      }
+      if(index < onepiece2.index)
+	{ return true; }
+      else if(index > onepiece2.index)
+	{ return false; }
+      else // this means the indices are the same 
+	//      if(index == onepiece2.index)
+	{
+	  pout << "there are elements with same index"<<endl;
+	  if(element !=onepiece2.element) 
+	    {
+	      pout << " and their values are different, abort"<<endl;
+	      abort();
+	    }
+	  return false; 
+	}
     }
   };
 
@@ -117,7 +121,7 @@ class cache
     end_pointer     = cache0.end_pointer;
     cache_size      = cache0.cache_size;
     inputfile       = cache0.inputfile;
-
+    return *this;
   }
     
   //seek_set of file makes it possible to seperate one file into different parts.
@@ -218,6 +222,7 @@ class batch_index{
     position=x.position;
     batch_size=x.batch_size;
     mpi_number=x.mpi_number;
+    return *this;
   }
   long element_index;
   long position;

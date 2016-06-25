@@ -212,9 +212,9 @@ void Sweep::InitializeOverlapSpinBlocks(SweepParams &sweepParams, const bool &fo
 
   sweepParams.set_sweep_parameters();
   if (forward)
-    pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in forwards direction"<<endl;
+    { pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in forwards direction"<<endl; }
   else
-    pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl;
+    { pout << "\t\t\t Starting sweep "<< sweepParams.set_sweep_iter()<<" in backwards direction" << endl; }
   pout << "\t\t\t ============================================================================ " << endl;
 
   int restartSize = 0; bool restart = false, warmUp = false;
@@ -237,8 +237,8 @@ void Sweep::InitializeOverlapSpinBlocks(SweepParams &sweepParams, const bool &fo
     {
       pout << "\t\t\t Block Iteration :: " << sweepParams.get_block_iter() << endl;
       pout << "\t\t\t ----------------------------" << endl;
-      if (forward)  p1out << "\t\t\t Current direction is :: Forwards " << endl;
-      else  p1out << "\t\t\t Current direction is :: Backwards " << endl;
+      if (forward)  { p1out << "\t\t\t Current direction is :: Forwards " << endl; }
+      else  { p1out << "\t\t\t Current direction is :: Backwards " << endl; }
 
       SpinBlock systemDot, environmentDot;
       int systemDotStart, systemDotEnd;

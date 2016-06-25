@@ -273,9 +273,12 @@ double Npdm_expectations::build_nonspin_adapted_singlet_expectations( NpdmSpinOp
   if(dmrginp.npdm_intermediate() && (npdm_order_== NPDM_NEVPT2 || npdm_order_== NPDM_THREEPDM || npdm_order_== NPDM_FOURPDM))
   {
     assert(false);
+    return 0;
   }
   else
-   return contract_spin_adapted_operators( 0, 0, 0, lhsOps, rhsOps, dotOps) ; 
+    {
+      return contract_spin_adapted_operators( 0, 0, 0, lhsOps, rhsOps, dotOps) ;
+    }
 
 }
 

@@ -1,6 +1,6 @@
 #change this depending on your architechture
 #MPICOMMAND=srun
-MPICOMMAND="mpirun -np 4"
+#MPICOMMAND="mpirun -np 4"
 
 
 

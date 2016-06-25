@@ -5,14 +5,14 @@
 
 
 #specify boost include file
-BOOSTINCLUDE = /opt/local/include/include
+BOOSTINCLUDE = /opt/local/include
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/opt/local/lib -lboost_serialization -lboost_system -lboost_filesystem
+BOOSTLIB = -L/opt/local/lib  -lboost_system-mt -lboost_filesystem-mt -lboost_serialization-mt
 #BOOSTLIB = -lboost_serialization -lboost_system -lboost_filesystem
-LAPACKBLAS = -lblas -llapack
+LAPACKBLAS =    /usr/lib/liblapack.dylib /usr/lib/libblas.dylib
 
-USE_BOOST56 = yes
+USE_BOOST56 = no
 ifeq ($(USE_BOOST56), yes)
 	B56 = -DBOOST_1_56_0
 endif
@@ -62,7 +62,7 @@ endif
 EXECUTABLE = block.spin_adapted
 
 # change to icpc for Intel
-CXX =  g++
+CXX =  clang++
 MPICXX = mpiicpc
 BLOCKHOME = .
 HOME = .
@@ -73,7 +73,6 @@ NEWMATLIB = $(BLOCKHOME)/newmat10/
 BTAS = $(BLOCKHOME)/btas
 .SUFFIXES: .C .cpp
 
-   
 ifeq ($(MOLPRO), yes)
    MOLPRO_BLOCK= -DMOLPRO
 endif
@@ -83,32 +82,36 @@ FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTI
          -I$(HOME)/modules/npdm -I$(HOME)/modules/two_index_ops -I$(HOME)/modules/three_index_ops -I$(HOME)/modules/four_index_ops -std=c++0x \
 	 -I$(HOME)/modules/ResponseTheory -I$(HOME)/modules/nevpt2 -I$(HOME)/molcas -I$(HOME)/modules/mps_nevpt
 
-LIBS +=  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) -lgomp 
+LIBS +=  -L$(NEWMATLIB) -lnewmat $(BOOSTLIB) $(LAPACKBLAS) 
 MPI_OPT = -DSERIAL
-
-
-
 
 ifeq (icpc, $(CXX))
    ifeq ($(OPENMP), yes)
       OPENMP_FLAGS= -openmp -D_OPENMP 
    endif
 # Intel compiler
-   OPT = -DNDEBUG -O3 -funroll-loops  
+   OPT = -DNDEBUG -O3 -funroll-loops -Werror
 #  OPT = -g -fPIC
    ifeq ($(USE_MPI), no) 
       CXX = icc
    endif
 endif
 
+# GNU compiler
 ifeq (g++, $(CXX))
    ifeq ($(OPENMP), yes)
       OPENMP_FLAGS= -fopenmp #-D_OPENMP 
    endif
-# GNU compiler
-      OPT = -DNDEBUG -O3 -g -funroll-loops
-
+   OPT = -DNDEBUG -O3 -g -funroll-loops -Werror
 #   OPT = -g -fPIC
+endif
+
+ifeq (clang++, $(CXX))
+   ifeq ($(OPENMP), yes)
+      OPENMP_FLAGS= -fopenmp #-D_OPENMP 
+   endif
+
+   OPT = -DNDEBUG -g -Werror
 endif
 
 ifeq ($(DOPROF),yes)
@@ -207,7 +210,8 @@ COEF : $(OBJ_COEF) $(NEWMATLIB)/libnewmat.a
 	$(CXX)   $(FLAGS) $(OPT) -o  COEF $(OBJ_COEF) $(LIBS)
 
 $(NEWMATLIB)/libnewmat.a :
-	cd $(NEWMATLIB) && $(MAKE) -f makefile libnewmat.a
+	export CXX
+	cd $(NEWMATLIB) &&  $(MAKE) -f makefile libnewmat.a
 
 clean:
 	rm *.o include/*.o modules/generate_blocks/*.o modules/onepdm/*.o modules/twopdm/*.o modules/npdm/*.o $(NEWMATLIB)*.o libqcdmrg.a libqcdmrg.so $(EXECUTABLE) $(NEWMATLIB)/libnewmat.a genetic/gaopt genetic/*.o btas/lib/*.o btas/lib/libbtas.a modules/two_index_ops/*.o modules/three_index_ops/*.o modules/four_index_ops/*.o modules/ResponseTheory/*.o modules/nevpt2/*.o molcas/*.o modules/mps_nevpt/*o OH CSFOH COEF

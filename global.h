@@ -13,9 +13,8 @@ Sandeep Sharma and Garnet K.-L. Chan
 #define WANT_MATH
 #define WANT_STREAM
 // Matrix library header files
-#ifndef KCC
-using namespace std;
-#endif
+
+
 #include "timer.h"
 //#include <malloc.h>
 #include <newmat.h>
@@ -24,6 +23,7 @@ using namespace std;
 #include <IntegralMatrix.h>
 // STL headers
 #include <iostream>
+using namespace std;
 #include <map>
 #include <algorithm>
 #include <vector>

@@ -380,10 +380,10 @@ void Twopdm_permutations::get_spin_permutations( std::vector<std::pair<std::vect
   // If indices are not all unique, then all elements should be zero (and next_even_permutation fails)
   std::vector<int> v = {i,j};
   std::sort( v.begin(), v.end() );
-  if ( (v[0]==v[1]) ) return;
+  if ( v[0]==v[1] ) return;
   std::vector<int> w = {k,l};
   std::sort( w.begin(), w.end() );
-  if ( (w[0]==w[1]) ) return;
+  if ( w[0]==w[1] ) return;
   bool skip_transpose = ( v == w );
 
   // 8 permutations
