@@ -4,6 +4,7 @@
 #Sandeep Sharma and Garnet K.-L. Chan
 
 
+######### GENERAL OPTIONS FOR USER #########
 #specify boost include file
 BOOSTINCLUDE = /opt/local/include
 
@@ -12,6 +13,7 @@ BOOSTLIB = -L/opt/local/lib  -lboost_system-mt -lboost_filesystem-mt -lboost_ser
 #BOOSTLIB = -lboost_serialization -lboost_system -lboost_filesystem
 LAPACKBLAS =    /usr/lib/liblapack.dylib /usr/lib/libblas.dylib
 
+# set if using BOOST version >= 1.56.0
 USE_BOOST56 = no
 ifeq ($(USE_BOOST56), yes)
 	B56 = -DBOOST_1_56_0
@@ -21,17 +23,24 @@ endif
 USE_MPI = no
 USE_MKL = no
 
+# change to icpc for Intel
+CXX =  clang++
+MPICXX = mpiicpc
+
+######### ADVANCED OPTIONS (GENERALLY THESE DO NOT NEED TO BE SET) #########
+
 # use this variable to set if we will use integer size of 8 or not.
 # molpro compilation requires I8, since their integers are long
 I8_OPT = no
-MOLPRO = no
-OPENMP = no
 
+MOLPRO = no
 DOPROF = no
 
 # add Molcas interface to libqcdmrg.so
 # molcas compilation w/ -64 option requires I8 as well
 MOLCAS = no
+
+OPENMP = no
 
 ifeq ($(USE_MKL), yes)
 MKLLIB = /opt/intel/compilers_and_libraries_2016.0.109/linux/mkl/lib/intel64
@@ -61,9 +70,6 @@ endif
 
 EXECUTABLE = block.spin_adapted
 
-# change to icpc for Intel
-CXX =  clang++
-MPICXX = mpiicpc
 BLOCKHOME = .
 HOME = .
 NEWMATINCLUDE = $(BLOCKHOME)/newmat10/

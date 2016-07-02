@@ -1,4 +1,4 @@
-CXX = clang++
+#CXX = $(CXX)
 CXXFLAGS = -fPIC -O2 -Wall
 
 DIFF = ./sdiff

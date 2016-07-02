@@ -426,7 +426,7 @@ void partition_data(long number_of_data, char* inputfilename, char* outputfilena
   long realsize=fread(inputbuff,sizeof(T),Buff_SIZE,inputfile);
   if(realsize==0) {
     fclose(inputfile);
-    boost::mpi::request req[world.size()];
+    std::vector<boost::mpi::request> req(world.size());
     for(int i=0; i< world.size();i++)
       req[i]=world.isend(i,0,make_infopair(send_buff[i],true));
     send_end= true;

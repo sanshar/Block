@@ -244,6 +244,8 @@ public:
   void add_local_index(int i)
   {
     local_indices.push_back(i);
+    if (local_indices_map.size() <i+1)
+      local_indices_map.resize(i+1);
     local_indices_map[i] = i;
   }
 
@@ -550,6 +552,8 @@ public:
   {
     int index = trimap_2d(i, j);
     local_indices.push_back(index);
+    if (local_indices_map.size() <index+1)
+      local_indices_map.resize(index+1);
     local_indices_map[index]= index;
     // I am not updating local_index_pair because it seems to do nothing
     //local_index_pair.push_back(global_index_pair[index]);
@@ -790,6 +794,8 @@ public:
   {
     int index = squaremap(i, j);
     local_indices.push_back(index);
+    if (local_indices_map.size() <index+1)
+      local_indices_map.resize(index+1);
     local_indices_map[index]= index;
     // I am not updating local_index_pair because it seems to do nothing
     //local_index_pair.push_back(global_index_pair[index]);
