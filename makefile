@@ -26,8 +26,8 @@ USE_MKL = no
 # change to icpc for Intel
 CXX =  clang++
 MPICXX = mpiicpc
-
-######### ADVANCED OPTIONS (GENERALLY THESE DO NOT NEED TO BE SET) #########
+export CXX
+export MPICXX
 
 # use this variable to set if we will use integer size of 8 or not.
 # molpro compilation requires I8, since their integers are long
@@ -216,7 +216,6 @@ COEF : $(OBJ_COEF) $(NEWMATLIB)/libnewmat.a
 	$(CXX)   $(FLAGS) $(OPT) -o  COEF $(OBJ_COEF) $(LIBS)
 
 $(NEWMATLIB)/libnewmat.a :
-	export CXX
 	cd $(NEWMATLIB) &&  $(MAKE) -f makefile libnewmat.a
 
 clean:
