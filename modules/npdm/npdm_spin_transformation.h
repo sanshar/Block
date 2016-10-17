@@ -4,8 +4,9 @@
 #include <cmath>
 #include <limits>
 #include <iterator>
+#include <boost/version.hpp>
 #include <boost/spirit/include/qi.hpp>
-#if BOOST_VERSION >= 1056000
+#if BOOST_VERSION < 105600
 #include <boost/spirit/home/phoenix/container.hpp>
 #include <boost/spirit/home/phoenix/operator.hpp>
 #include <boost/spirit/home/phoenix/object/construct.hpp>
