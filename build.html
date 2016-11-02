@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>BLOCK Installation &mdash; BLOCK 1.1.0 documentation</title>
+    <title>BLOCK Installation &mdash; BLOCK 1.5.0 documentation</title>
     
     <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.1.0',
+        VERSION:     '1.5.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="BLOCK 1.1.0 documentation" href="index.html" />
+    <link rel="top" title="BLOCK 1.5.0 documentation" href="index.html" />
     <link rel="next" title="Typical Calculations with BLOCK" href="examples.html" />
     <link rel="prev" title="Overview" href="overview.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="overview.html" title="Overview"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">BLOCK 1.1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">BLOCK 1.5.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
@@ -123,6 +123,20 @@ Here are our suggested <cite>minimum</cite> GNU/Intel compiler versions in order
 <p><tt class="docutils literal"><span class="pre">BOOSTLIB</span> <span class="pre">=</span> <span class="pre">/lib64/boost_1_55_0/lib/</span></tt></p>
 <p><tt class="docutils literal"><span class="pre">BOOSTINCLUDE</span> <span class="pre">=</span> <span class="pre">/lib64/boost_1_55_0/include/</span></tt></p>
 </div></blockquote>
+<p>Note that Boost-MPI was used in BLock code.  It requires Boost being
+compiled with the mpi components.  See <a class="reference external" href="http://www.boost.org/doc/libs/1_60_0/doc/html/mpi/getting_started.html">boost documents</a>
+for details of the installation of Boost-MPI.</p>
+<p>For certain compilers, you may have error message:</p>
+<div class="highlight-python"><div class="highlight"><pre>error: ‘auto_ptr’ is deprecated (declared at /usr/include/c++/4.8.2/backward/auto_ptr.h:87) [-Werror=deprecated-declarations]
+</pre></div>
+</div>
+<p>It is caused by the flag <tt class="docutils literal"><span class="pre">-Werror</span></tt>.  It is safe to remove this flag
+from <tt class="docutils literal"><span class="pre">OPT</span></tt> variable.  Some compiler/linker may issue errors if
+<tt class="docutils literal"><span class="pre">OPENMP</span> <span class="pre">=</span> <span class="pre">yes</span></tt> was specified in Makefile:</p>
+<div class="highlight-python"><div class="highlight"><pre>/usr/bin/ld: dmrg.o: undefined reference to symbol &#39;shm_openn@@GLIBC_2.2.5&#39;
+</pre></div>
+</div>
+<p>Appending <tt class="docutils literal"><span class="pre">-lpthread</span> <span class="pre">-lrt</span></tt> at the end of <tt class="docutils literal"><span class="pre">LIBS</span></tt> can solve this problem.</p>
 <p>When the makefile is configured, run in the directory <tt class="docutils literal"><span class="pre">./Block</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ make
 </pre></div>
@@ -145,7 +159,7 @@ following settings in it:</p>
 DMRG-CASSCF etc) will call this parallel executable through <tt class="docutils literal"><span class="pre">mpirun</span></tt>
 interface.  <tt class="docutils literal"><span class="pre">BLOCKEXE_COMPRESS_NEVPT</span></tt> points to the <strong>serially
 compiled</strong> Block executable.  It is only needed by the compressed perturber
-NEVPT2 method.  Although this Block executable is not MPI-parallelized, the
+NEVPT2 method.  Although this Block executable file is not MPI-parallelized, the
 DMRG-NEVPT2 program are efficiently parallelized in a different manner.
 Note the parameter <tt class="docutils literal"><span class="pre">MPIPREFIX</span></tt> should be adjusted according to your
 job scheduler, eg:</p>
@@ -219,12 +233,12 @@ $ ./runtest
         <li class="right" >
           <a href="overview.html" title="Overview"
              >previous</a> |</li>
-        <li><a href="index.html">BLOCK 1.1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">BLOCK 1.5.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015, Garnet Kin-Lic Chan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

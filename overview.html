@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Overview &mdash; BLOCK 1.1.0 documentation</title>
+    <title>Overview &mdash; BLOCK 1.5.0 documentation</title>
     
     <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.1.0',
+        VERSION:     '1.5.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="BLOCK 1.1.0 documentation" href="index.html" />
+    <link rel="top" title="BLOCK 1.5.0 documentation" href="index.html" />
     <link rel="next" title="BLOCK Installation" href="build.html" />
     <link rel="prev" title="Welcome to BLOCK’s documentation!" href="index.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="index.html" title="Welcome to BLOCK’s documentation!"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">BLOCK 1.1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">BLOCK 1.5.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
@@ -47,10 +47,12 @@
   <ul>
 <li><a class="reference internal" href="#">Overview</a><ul>
 <li><a class="reference internal" href="#features">Features</a><ul>
+<li><a class="reference internal" href="#new-features-in-block-1-5-stackblock">New features in Block 1.5 (stackblock)</a></li>
 <li><a class="reference internal" href="#new-features-in-block-1-1">New features in Block 1.1</a></li>
 <li><a class="reference internal" href="#features-in-block-1-0">Features in Block 1.0</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#downloads">Downloads</a></li>
 <li><a class="reference internal" href="#calling-block-as-an-external-function">Calling <cite>BLOCK</cite> as an external function</a></li>
 <li><a class="reference internal" href="#license-and-how-to-cite">License and how to cite</a></li>
 </ul>
@@ -93,6 +95,13 @@
 <h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="new-features-in-block-1-5-stackblock">
+<h3>New features in Block 1.5 (stackblock)<a class="headerlink" href="#new-features-in-block-1-5-stackblock" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li>Optimized memory usage and efficiency</li>
+<li>Supported (OpenMP) threads and shared memory</li>
+</ul>
+</div>
 <div class="section" id="new-features-in-block-1-1">
 <h3>New features in Block 1.1<a class="headerlink" href="#new-features-in-block-1-1" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
@@ -110,6 +119,27 @@
 <li>DMRG-SCF and/or DMRG-NEVPT2 interfaces to the PySCF, Molpro, ORCA, Q-Chem and Molcas program packages</li>
 </ul>
 </div>
+</div>
+<div class="section" id="downloads">
+<h2>Downloads<a class="headerlink" href="#downloads" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Block-1.5 (stackblock)<ul>
+<li>Precompiled binary <a class="reference external" href="http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0.gz">block.spin_adapted-1.5.0.gz</a>
+(+ OpenMPI + Boost-1.55 + MKL-11) for Linux x86_64</li>
+<li>Precompiled binary <a class="reference external" href="http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0-serial.gz">block.spin_adapted-1.5.0-serial.gz</a>
+(+ Boost-1.55 + MKL-11) for Linux x86_64.  This binary is used by
+DMRG-NEVPT2 compressed perturber method.</li>
+</ul>
+</li>
+<li>Block-1.1<ul>
+<li>Precompiled binary <a class="reference external" href="http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.1.0.gz">block.spin_adapted-1.1.0.gz</a>
+(+ OpenMPI + Boost-1.55 + MKL-11) for Linux x86_64</li>
+<li>Precompiled binary <a class="reference external" href="http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.1.0-serial.gz">block.spin_adapted-1.1.0-serial.gz</a>
+(+ Boost-1.55 + MKL-11) for Linux x86_64.  This binary is used by
+DMRG-NEVPT2 compressed perturber method.</li>
+</ul>
+</li>
+</ul>
 </div>
 <div class="section" id="calling-block-as-an-external-function">
 <h2>Calling <cite>BLOCK</cite> as an external function<a class="headerlink" href="#calling-block-as-an-external-function" title="Permalink to this headline">¶</a></h2>
@@ -168,12 +198,12 @@ in the article above by Sharma and Chan.</p>
         <li class="right" >
           <a href="index.html" title="Welcome to BLOCK’s documentation!"
              >previous</a> |</li>
-        <li><a href="index.html">BLOCK 1.1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">BLOCK 1.5.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015, Garnet Kin-Lic Chan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>
