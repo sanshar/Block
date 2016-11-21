@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>BLOCK Installation &mdash; BLOCK 1.5.0 documentation</title>
+    <title>Block Installation &mdash; BLOCK 1.5.0 documentation</title>
     
     <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="static/doctools.js"></script>
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="BLOCK 1.5.0 documentation" href="index.html" />
-    <link rel="next" title="Typical Calculations with BLOCK" href="examples.html" />
+    <link rel="next" title="DMRG for electronic structure calculations" href="with-pyscf.html" />
     <link rel="prev" title="Overview" href="overview.html" /> 
   </head>
   <body>
@@ -33,7 +33,7 @@
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="examples.html" title="Typical Calculations with BLOCK"
+          <a href="with-pyscf.html" title="DMRG for electronic structure calculations"
              accesskey="N">next</a></li>
         <li class="right" >
           <a href="overview.html" title="Overview"
@@ -45,12 +45,13 @@
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#"><cite>BLOCK</cite> Installation</a><ul>
+<li><a class="reference internal" href="#">Block Installation</a><ul>
+<li><a class="reference internal" href="#precompiled-binary">Precompiled binary</a></li>
 <li><a class="reference internal" href="#compile">Compile</a><ul>
 <li><a class="reference internal" href="#interface-to-pyscf-package">Interface to PySCF package</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#how-to-run-block">How to run <cite>BLOCK</cite></a></li>
+<li><a class="reference internal" href="#run-block-in-cmdline">Run Block in cmdline</a></li>
 <li><a class="reference internal" href="#testjobs">Testjobs</a></li>
 </ul>
 </li>
@@ -60,8 +61,8 @@
   <p class="topless"><a href="overview.html"
                         title="previous chapter">Overview</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="examples.html"
-                        title="next chapter">Typical Calculations with <cite>BLOCK</cite></a></p>
+  <p class="topless"><a href="with-pyscf.html"
+                        title="next chapter">DMRG for electronic structure calculations</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="sources/build.txt"
@@ -89,43 +90,72 @@
           <div class="body">
             
   <div class="section" id="block-installation">
-<h1><cite>BLOCK</cite> Installation<a class="headerlink" href="#block-installation" title="Permalink to this headline">¶</a></h1>
+<span id="build"></span><h1>Block Installation<a class="headerlink" href="#block-installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="precompiled-binary">
+<h2>Precompiled binary<a class="headerlink" href="#precompiled-binary" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Version 1.5<ul>
+<li><a class="reference external" href="http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0.gz">block.spin_adapted-1.5.0.gz</a>,
+1.8 MB, compiled with GCC-4.8, Boost-1.55, OpenMPI-1.10.3, MKL-11</li>
+<li><a class="reference external" href="http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0-serial.gz">block.spin_adapted-1.5.0-serial.gz</a>
+1.7 MB, compiled with GCC-4.8, Boost-1.55, MKL-11</li>
+</ul>
+</li>
+<li>Version 1.1.1<ul>
+<li><a class="reference external" href="http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.1.1.gz">block.spin_adapted-1.1.1.gz</a>,
+2.4 MB, compiled with GCC-4.8, Boost-1.55, OpenMPI-1.10.3, MKL-11</li>
+<li><a class="reference external" href="http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.1.1-serial.gz">block.spin_adapted-1.1.1-serial.gz</a>
+2.2 MB, compiled with GCC-4.8, Boost-1.55, MKL-11</li>
+</ul>
+</li>
+<li>Version 1.1.0<ul>
+<li><a class="reference external" href="http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.1.0.gz">block.spin_adapted-1.1.0.gz</a>,
+4.3 MB, compiled with GCC-4.8, Boost-1.55, OpenMPI-1.6.5, MKL-11</li>
+<li><a class="reference external" href="http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.1.0-serial.gz">block.spin_adapted-1.1.0-serial.gz</a>
+2.2 MB, compiled with GCC-4.8, Boost-1.55, MKL-11</li>
+</ul>
+</li>
+</ul>
+</div>
 <div class="section" id="compile">
 <h2>Compile<a class="headerlink" href="#compile" title="Permalink to this headline">¶</a></h2>
-<p><cite>BLOCK</cite> requires BLAS, LAPACK and BOOST.
-MPI library is needed for distributed-memory parallel compilation.
-<cite>BLOCK</cite> is compiled using the makefile supplied in the distribution.
-The following customizations need to be made to the makefile placed in the main directory <tt class="docutils literal"><span class="pre">./Block</span></tt>.</p>
-<dl class="docutils">
-<dt>Choose compilers by specifying</dt>
-<dd><tt class="docutils literal"><span class="pre">CXX</span> <span class="pre">=</span> <span class="pre">g++</span></tt></dd>
-<dt>For MPI-based parallel execution on distributed-memory machines,</dt>
-<dd><p class="first"><tt class="docutils literal"><span class="pre">USE_MPI</span> <span class="pre">=</span> <span class="pre">yes</span></tt></p>
-<p class="last"><tt class="docutils literal"><span class="pre">MPICXX</span> <span class="pre">=</span> <span class="pre">mpicxx</span></tt></p>
-</dd>
-</dl>
-<p>MPI library must be compiled using the same compiler as for compiling <cite>BLOCK</cite>.
-Intel compiler such as <tt class="docutils literal"><span class="pre">icpc</span></tt> is also supported with approriate compiling flags chosen automatically.</p>
+<p>Building Block code requires C++11 compiler,  BLAS, LAPACK and Boost libraries.
+For distributed-memory parallel compilation, MPI and multi-threading
+Boost-MPI libraries are needed.  When you compile Boost-MPI, you can use
+the following flags for <tt class="docutils literal"><span class="pre">b2</span></tt> the Boost built-in compilation tool to
+generate the multi-threading <tt class="docutils literal"><span class="pre">-mt</span></tt> libraries.:</p>
+<div class="highlight-python"><div class="highlight"><pre>./b2 --layout=tagged link=static,shared threading=multi install
+</pre></div>
+</div>
+<p>Note Boost and MPI libraries must be compiled using the same compiler as for compiling Block.
+See also <a class="reference external" href="http://www.boost.org/doc/libs/1_60_0/doc/html/mpi/getting_started.html">boost documents</a>
+for details of the installation of Boost with the MPI components.</p>
+<p>To compile Block code, the following customizations need to be made to
+the makefile placed in the main directory.:</p>
+<div class="highlight-python"><div class="highlight"><pre>CXX = g++
+BOOSTINCLUDE = /lib64/boost_1_55_0/include/
+BOOSTLIB = /lib64/boost_1_55_0/lib/
+OPENMP = yes
+</pre></div>
+</div>
 <p>Please note that when choosing your compiler, either GNU or Intel, C++0x/C++11 standards must be appropriately supported,
-as <cite>BLOCK</cite> requires new features for some of the modules (eg, <cite>npdm</cite>, <cite>nevpt2</cite>, etc).
+as Block requires new features for some of the modules (eg, <tt class="xref py py-mod docutils literal"><span class="pre">npdm</span></tt>, <tt class="xref py py-mod docutils literal"><span class="pre">nevpt2</span></tt>, etc).
 Here are our suggested <cite>minimum</cite> GNU/Intel compiler versions in order for the compiling process to be successful:</p>
 <ul class="simple">
 <li>GNU <tt class="docutils literal"><span class="pre">g++</span></tt>: 4.8 or newer,</li>
 <li>or Intel <tt class="docutils literal"><span class="pre">icpc</span></tt>: at least 14.0.1 (2013 SP1 Update 1) or newer.</li>
 </ul>
-<p>To enable MKL library,</p>
-<blockquote>
-<div><tt class="docutils literal"><span class="pre">USE_MKL</span> <span class="pre">=</span> <span class="pre">yes</span></tt></div></blockquote>
-<p>And supply MKL and BOOST libraries by giving the locations,</p>
-<blockquote>
-<div><p><tt class="docutils literal"><span class="pre">MKLLIB</span> <span class="pre">=</span> <span class="pre">/opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/</span></tt></p>
-<p><tt class="docutils literal"><span class="pre">MKLFLAGS</span> <span class="pre">=</span> <span class="pre">/opt/intel/composer_xe_2013_sp1.0.080/mkl/include</span></tt></p>
-<p><tt class="docutils literal"><span class="pre">BOOSTLIB</span> <span class="pre">=</span> <span class="pre">/lib64/boost_1_55_0/lib/</span></tt></p>
-<p><tt class="docutils literal"><span class="pre">BOOSTINCLUDE</span> <span class="pre">=</span> <span class="pre">/lib64/boost_1_55_0/include/</span></tt></p>
-</div></blockquote>
-<p>Note that Boost-MPI was used in BLock code.  It requires Boost being
-compiled with the mpi components.  See <a class="reference external" href="http://www.boost.org/doc/libs/1_60_0/doc/html/mpi/getting_started.html">boost documents</a>
-for details of the installation of Boost-MPI.</p>
+<p>Turn on the MPI support for Block code:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">USE_MPI</span> <span class="o">=</span> <span class="n">yes</span>
+<span class="n">MPICXX</span> <span class="o">=</span> <span class="n">mpicxx</span>
+</pre></div>
+</div>
+<p>And supply MKL libraries:</p>
+<div class="highlight-python"><div class="highlight"><pre>USE_MKL = yes
+MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/``
+MKLFLAGS = /opt/intel/composer_xe_2013_sp1.0.080/mkl/include``
+</pre></div>
+</div>
 <p>For certain compilers, you may have error message:</p>
 <div class="highlight-python"><div class="highlight"><pre>error: ‘auto_ptr’ is deprecated (declared at /usr/include/c++/4.8.2/backward/auto_ptr.h:87) [-Werror=deprecated-declarations]
 </pre></div>
@@ -145,8 +175,7 @@ from <tt class="docutils literal"><span class="pre">OPT</span></tt> variable.  S
 <div class="section" id="interface-to-pyscf-package">
 <span id="pyscf-itrf"></span><h3>Interface to PySCF package<a class="headerlink" href="#interface-to-pyscf-package" title="Permalink to this headline">¶</a></h3>
 <p>The electronic structure Python module <a class="reference external" href="http://chemists.princeton.edu/chan/software/pyscf/">PySCF</a>
-provided an interface to run <cite>BLOCK</cite> code.  If you would like to run
-DMRG-SCF, DMRG-NEVPT2 etc with PySCF package, you need create a pyscf
+provided an interface to run Block code.  You need create a pyscf
 config file <tt class="docutils literal"><span class="pre">/path/to/pyscf/future/dmrgscf/settings.py</span></tt> and add the
 following settings in it:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">BLOCKEXE</span> <span class="o">=</span> <span class="s">&quot;/path/to/Block/block.spin_adapted&quot;</span>
@@ -174,8 +203,8 @@ the setting looks like:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">MPIPREFIX</span> <span class="o">=</span> <span class="s">&quot;mpirun -n 4&quot;</span>
 </pre></div>
 </div>
-<p>If <tt class="docutils literal"><span class="pre">BLOCK</span></tt> and <tt class="docutils literal"><span class="pre">PySCF</span></tt> are installed successfully, a simple DMRG-SCF
-calculation can be input in Python interpereter:</p>
+<p>With the Block-PySCF interface, a simple DMRG-SCF calculation can be
+input in Python interpereter:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">dmrgscf</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mf</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&#39;C 0 0 0; C 0 0 1&#39;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&#39;ccpvdz&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mc</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">dmrgci</span><span class="o">.</span><span class="n">DMRGSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
@@ -184,19 +213,13 @@ calculation can be input in Python interpereter:</p>
 </div>
 <p>DMRG-NEVPT2 calculation can be applied:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">mrpt</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>Optionally, if <a class="reference external" href="http://mpi4py.scipy.org">MPI4Py</a> was installed, the efficient
-DMRG-NEVPT2 implementation can be used, eg:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">mrpt</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span><span class="o">.</span><span class="n">compress_approx</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 </div>
-<div class="section" id="how-to-run-block">
-<h2>How to run <cite>BLOCK</cite><a class="headerlink" href="#how-to-run-block" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="run-block-in-cmdline">
+<h2>Run Block in cmdline<a class="headerlink" href="#run-block-in-cmdline" title="Permalink to this headline">¶</a></h2>
 <p>The standalone serial code can be executed running:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ block.spin_adapted input.dat &gt; output.dat
 </pre></div>
@@ -209,7 +232,7 @@ DMRG-NEVPT2 implementation can be used, eg:</p>
 </div>
 <div class="section" id="testjobs">
 <h2>Testjobs<a class="headerlink" href="#testjobs" title="Permalink to this headline">¶</a></h2>
-<p><cite>BLOCK</cite> can be tested by executing the script in the directory <tt class="docutils literal"><span class="pre">./Block/dmrg_tests</span></tt>:</p>
+<p>Tests are placed in the directory <tt class="docutils literal"><span class="pre">./Block/dmrg_tests</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ cd dmrg_tests
 $ ./runtest
 </pre></div>
@@ -228,7 +251,7 @@ $ ./runtest
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="examples.html" title="Typical Calculations with BLOCK"
+          <a href="with-pyscf.html" title="DMRG for electronic structure calculations"
              >next</a></li>
         <li class="right" >
           <a href="overview.html" title="Overview"
@@ -238,7 +261,7 @@ $ ./runtest
     </div>
     <div class="footer">
         &copy; Copyright 2015, Garnet Kin-Lic Chan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

@@ -26,7 +26,7 @@
     <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="BLOCK 1.5.0 documentation" href="index.html" />
     <link rel="next" title="Benchmark" href="benchmark.html" />
-    <link rel="prev" title="DMRG for Electronic Structure Calculations" href="examples-with-pyscf.html" /> 
+    <link rel="prev" title="Typical Calculations with BLOCK" href="examples.html" /> 
   </head>
   <body>
     <div class="related">
@@ -36,7 +36,7 @@
           <a href="benchmark.html" title="Benchmark"
              accesskey="N">next</a></li>
         <li class="right" >
-          <a href="examples-with-pyscf.html" title="DMRG for Electronic Structure Calculations"
+          <a href="examples.html" title="Typical Calculations with BLOCK"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">BLOCK 1.5.0 documentation</a> &raquo;</li> 
       </ul>
@@ -52,14 +52,15 @@
 <li><a class="reference internal" href="#solver-types">Solver Types</a></li>
 <li><a class="reference internal" href="#orbital-reorder-types">Orbital Reorder Types</a></li>
 <li><a class="reference internal" href="#calculation-types">Calculation Types</a></li>
+<li><a class="reference internal" href="#schedule">Schedule</a></li>
 <li><a class="reference internal" href="#expert-keywords">Expert Keywords</a></li>
 </ul>
 </li>
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="examples-with-pyscf.html"
-                        title="previous chapter">DMRG for Electronic Structure Calculations</a></p>
+  <p class="topless"><a href="examples.html"
+                        title="previous chapter">Typical Calculations with <cite>BLOCK</cite></a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="benchmark.html"
                         title="next chapter">Benchmark</a></p>
@@ -91,103 +92,224 @@
             
   <div class="section" id="keywords">
 <span id="keywords-list"></span><h1>Keywords<a class="headerlink" href="#keywords" title="Permalink to this headline">¶</a></h1>
-<p>The keyword input syntax is simple:</p>
-<div class="highlight-python"><div class="highlight"><pre>keyword value
+<p>Block program offers many keywords to control the calculation.  In the Block
+input file, each keyword (and its value) should take one line.  There are two
+types of format to input the keywords.  One is the key-value pattern:</p>
+<div class="highlight-python"><div class="highlight"><pre>keyword value1 value2 ...
 </pre></div>
 </div>
-<p>The default keywords and values are <strong>bolded</strong>.</p>
+<p>The other is the <cite>schedule</cite> section:</p>
+<div class="highlight-python"><div class="highlight"><pre>schedule
+0 50  1.0e-6 1e-06
+5 50  1.0e-7 0e-06
+end
+</pre></div>
+</div>
 <div class="section" id="hamiltonian-types">
 <h2>Hamiltonian Types<a class="headerlink" href="#hamiltonian-types" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li>heisenberg</li>
-<li>hubbard</li>
-<li><strong>quantum_chemistry</strong></li>
-</ul>
+<p>Default Hamiltonian type is the chemistry Hamiltonian, in which the
+2-electron interaction term is a dense matrix.  Block also supports model
+Hamiltonians:</p>
+<dl class="docutils">
+<dt>heisenberg</dt>
+<dd>No associated value.</dd>
+<dt>hubbard</dt>
+<dd>No associated value.</dd>
+</dl>
 </div>
 <div class="section" id="algorithm-types">
 <h2>Algorithm Types<a class="headerlink" href="#algorithm-types" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li>onedot</li>
-<li>twodot</li>
-<li><strong>twodot_to_onedot</strong></li>
-</ul>
+<p>If no algorithm is specified, the default is twodot_to_onedot algorithm.</p>
+<dl class="docutils">
+<dt>onedot</dt>
+<dd>No associated value.</dd>
+<dt>twodot</dt>
+<dd>No associated value.</dd>
+<dt>twodot_to_onedot</dt>
+<dd>followed by a single number to indicate the iteration when to switch from the
+two-dot to the one-dot algorithm.</dd>
+</dl>
 </div>
 <div class="section" id="warm-up-types">
 <h2>Warm-up Types<a class="headerlink" href="#warm-up-types" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li>warmup <strong>local_0site</strong> <cite>|| local_2site || local_3site || local_4site || wilson</cite></li>
-</ul>
+<p>If <tt class="docutils literal"><span class="pre">warmup</span></tt> is not specified, the default is <tt class="docutils literal"><span class="pre">local\_0site</span></tt>.</p>
+<dl class="docutils">
+<dt>warmup</dt>
+<dd><p class="first">followed by one of the following strings.</p>
+<div class="last line-block">
+<div class="line">local_0site</div>
+<div class="line">local_2site</div>
+<div class="line">local_3site</div>
+<div class="line">local_4site</div>
+<div class="line">wilson</div>
+</div>
+</dd>
+</dl>
 </div>
 <div class="section" id="solver-types">
 <h2>Solver Types<a class="headerlink" href="#solver-types" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><strong>davidson</strong></li>
-<li>lanczos</li>
-</ul>
+<p>If not specified, default is <tt class="docutils literal"><span class="pre">davidson</span></tt> solver.</p>
+<dl class="docutils">
+<dt>davidson</dt>
+<dd>No associated value</dd>
+<dt>lanczos</dt>
+<dd>No associated value</dd>
+</dl>
 </div>
 <div class="section" id="orbital-reorder-types">
 <h2>Orbital Reorder Types<a class="headerlink" href="#orbital-reorder-types" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><strong>fiedler</strong></li>
-<li>gaopt <cite>default</cite></li>
-<li>reorder  <cite>reorder file</cite></li>
-<li>noreorder</li>
-</ul>
+<p>If not specified, <tt class="docutils literal"><span class="pre">fielder</span></tt> ordering is used by default.</p>
+<dl class="docutils">
+<dt>fiedler</dt>
+<dd>No associated value</dd>
+<dt>gaopt</dt>
+<dd>followed by the filename</dd>
+<dt>reorder</dt>
+<dd>followed by the filename which saves the indices of the reordered orbitals.</dd>
+<dt>noreorder</dt>
+<dd>No associated value</dd>
+</dl>
 </div>
 <div class="section" id="calculation-types">
 <h2>Calculation Types<a class="headerlink" href="#calculation-types" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li>backward</li>
-<li>calchamiltonian</li>
-<li>calcoverlap</li>
-<li><strong>dmrg</strong></li>
-<li>fci</li>
-<li>fourpdm</li>
-<li>fullrestart</li>
-<li>nevpt2_npdm</li>
-<li>onepdm</li>
-<li>restart_fourpdm</li>
-<li>restart_nevpt2_npdm</li>
-<li>restart_onepdm</li>
-<li>restart_threepdm</li>
-<li>restart_tran_onepdm</li>
-<li>restart_tran_twopdm</li>
-<li>restart_twopdm</li>
-<li>threepdm</li>
-<li>transition_onepdm</li>
-<li>transition_twopdm</li>
-<li>twopdm</li>
-</ul>
+<dl class="docutils">
+<dt>dmrg</dt>
+<dd>No associated value.  This is the default calculation type.</dd>
+<dt>calcoverlap</dt>
+<dd>No associated value.  If set, Compute only the overlap of two DMRG wave function.</dd>
+<dt>calchamiltonian</dt>
+<dd>No associated value.</dd>
+<dt>fourpdm (Not support in Block-1.5)</dt>
+<dd>No associated value.  If set, besides the regular dmrg calculation, the
+program also compute the 4-particle density matrix.</dd>
+<dt>fullrestart</dt>
+<dd>No associated value</dd>
+<dt>nevpt2_npdm</dt>
+<dd>No associated value</dd>
+<dt>onepdm</dt>
+<dd>No associated value, If set, the program also computes and stores the
+1-particle density matrix in <tt class="file docutils literal"><span class="pre">spatial_onepdm.*.*.txt</span></tt>.</dd>
+<dt>restart_fourpdm</dt>
+<dd>No associated value</dd>
+<dt>restart_nevpt2_npdm</dt>
+<dd>No associated value</dd>
+<dt>restart_onepdm</dt>
+<dd>No associated value</dd>
+<dt>restart_threepdm</dt>
+<dd>No associated value</dd>
+<dt>restart_tran_onepdm</dt>
+<dd>No associated value</dd>
+<dt>restart_tran_twopdm</dt>
+<dd>No associated value</dd>
+<dt>restart_twopdm</dt>
+<dd>No associated value</dd>
+<dt>threepdm</dt>
+<dd>No associated value, If set, the program also computes and stores the
+3-particle density matrix in <tt class="file docutils literal"><span class="pre">spatial_threepdm.*.*.txt</span></tt>.</dd>
+<dt>transition_onepdm</dt>
+<dd>No associated value, If set, the program also computes and stores the
+transition density matrix in <tt class="file docutils literal"><span class="pre">spatial_onepdm.*.*.txt</span></tt>.</dd>
+<dt>transition_twopdm</dt>
+<dd>No associated value, If set, the program also computes and stores the
+transition 2-particle density matrix in <tt class="file docutils literal"><span class="pre">spatial_twopdm.*.*.txt</span></tt>.</dd>
+<dt>twopdm</dt>
+<dd>No associated value, If set, the program also computes and stores the
+2-particle density matrix in <tt class="file docutils literal"><span class="pre">spatial_twopdm.*.*.txt</span></tt>.</dd>
+</dl>
+</div>
+<div class="section" id="schedule">
+<h2>Schedule<a class="headerlink" href="#schedule" title="Permalink to this headline">¶</a></h2>
+<p>DMRG sweep schedule.  It supports two types of input format.  One is:</p>
+<div class="highlight-python"><div class="highlight"><pre>schedule default
+</pre></div>
+</div>
+<p>to generate the sweep schedule by Block program.  This is the default value of
+<tt class="docutils literal"><span class="pre">schedule</span></tt> keyword.  The other is to explicitly input the schedule, eg:</p>
+<div class="highlight-python"><div class="highlight"><pre>schedule
+0 50  1.0e-6 1e-06
+5 50  1.0e-7 0e-06
+end
+</pre></div>
+</div>
+<p>The first column is the sweep-iteration, the second column is the corresponding
+bond dimension, the third column is the convergence tolerance for Davidson
+diagonalization, the fourth column is the noise.</p>
 </div>
 <div class="section" id="expert-keywords">
 <h2>Expert Keywords<a class="headerlink" href="#expert-keywords" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li>hf_occ <cite>integral || orbital || manual</cite></li>
-<li>irrep <cite>isym</cite></li>
-<li>lastM <strong>500</strong> <cite>||  lastM</cite></li>
-<li>maxiter <strong>10</strong> <cite>|| max sweep iterations</cite></li>
-<li>maxM <cite>maxM</cite></li>
-<li>nelec <cite>nelec</cite></li>
-<li>new_npdm_code</li>
-<li>nonspinadapted</li>
-<li>nroots <strong>1</strong> <cite>|| nroots</cite></li>
-<li>occ nocc</li>
-<li>orbitals <cite>orbital file</cite></li>
-<li>outputlevel <strong>0</strong> <cite>|| 1 || 2 || 3</cite></li>
-<li>pdm_unsorted</li>
-<li><strong>schedule default</strong></li>
-<li>schedule <cite>sweep_iteration M davidson_tolerance noise</cite> end</li>
-<li>scratch <strong>current directory of input file</strong> <cite>|| scratch directory</cite></li>
-<li>screen_tol <strong>0.0</strong> <cite>|| ScreenTol</cite></li>
-<li>spin <cite>2S</cite></li>
-<li>startM <strong>250</strong> <cite>|| startM</cite></li>
-<li>statespecific</li>
-<li>sweep_tol <strong>1.0e-5</strong> <cite>|| SweepTol</cite></li>
-<li>sym <cite>point group</cite></li>
-<li>weights <strong>1.0</strong> <cite>||</cite> <cite>W</cite><sub>1</sub>, <cite>W</cite><sub>2</sub>, ..., <cite>W</cite><sub>nroots</sub></li>
-<li>num_thrds (new in Block-1.5)</li>
-<li>memory <strong>2 g</strong> (use <cite>g</cite>, <cite>m</cite>, <cite>k</cite> as unit.  new in Block-1.5)</li>
-</ul>
+<dl class="docutils">
+<dt>backward</dt>
+<dd>No associated value.  If set, the program starts with backward sweep.</dd>
+<dt>hf_occ</dt>
+<dd><p class="first">The initial HF wave function occupancies, in spin orbital.  It can be one of
+the following values.  The recommended one is <tt class="docutils literal"><span class="pre">integral</span></tt>.</p>
+<dl class="last docutils">
+<dt>integral</dt>
+<dd>Generate occupancy pattern based on the 1-electron integrals.</dd>
+<dt>canonical</dt>
+<dd>Based on the input orbital ordering, take the first N orbitals as occupied
+orbitals</dd>
+<dt>manual</dt>
+<dd>followed by the HF occupancy in the same line.</dd>
+</dl>
+</dd>
+<dt>irrep</dt>
+<dd>followed by one or two numbers. If one number is given, it determines the wave
+function symmetry.  If two numbers are given, it means that calculations of
+transition density matrix between wavefunctions with different irreps.  The
+irrep value follows the Molpro symmetry convention, see also
+<a class="reference external" href="https://github.com/sunqm/pyscf/blob/master/future/dmrgscf/dmrg_sym.py">https://github.com/sunqm/pyscf/blob/master/future/dmrgscf/dmrg_sym.py</a></dd>
+<dt>lastM</dt>
+<dd>followed by an integer.  Default is 500</dd>
+<dt>maxiter</dt>
+<dd>followed by an integer represents the max sweep iterations. Default is 10.</dd>
+<dt>maxM</dt>
+<dd>followed by an integer, the maximum bond dimension.</dd>
+<dt>nelec</dt>
+<dd>followed by an integer, for the total number of electrons.</dd>
+</dl>
+<dl class="docutils">
+<dt>nonspinadapted</dt>
+<dd>No associated value.</dd>
+<dt>nroots</dt>
+<dd>followed by one integer, for the number of states to solve. Default is 1.</dd>
+</dl>
+<dl class="docutils">
+<dt>orbitals</dt>
+<dd>followed by the orbital file</dd>
+<dt>outputlevel <strong>0</strong> <cite>|| 1 || 2 || 3</cite></dt>
+<dd>followed by an integer, range from 0 (less output) to 3 (very noise).  Default is 0.</dd>
+</dl>
+<dl class="docutils">
+<dt>scratch</dt>
+<dd>followed by the scratch directory to store the intermediates, the resultant
+wave function, and density matrices.</dd>
+<dt>screen_tol</dt>
+<dd>followed by a float number.  Default is 0.0</dd>
+<dt>spin <cite>2S</cite></dt>
+<dd>followed by an integer represents the difference of alpha and beta electron
+numbers.</dd>
+<dt>startM</dt>
+<dd>followed by an integer.  Default is 250.</dd>
+<dt>statespecific</dt>
+<dd>No associated value.  This option implies that a previous dmrg calculation has
+already been performed.  This calculation will take the previous wavefunctions
+and refine them.</dd>
+<dt>sweep_tol</dt>
+<dd>followed by a float number, for the convergence tolerance.</dd>
+<dt>sym</dt>
+<dd>followed by the string for the symbol of point group symmetry, can be d2h and
+its subgroup.</dd>
+<dt>weights</dt>
+<dd>followed by a list of float numbers for weight of each state.  You could chose
+to omit the keyword weights in which case the weights will be distributed
+uniformly bet ween the different roots.</dd>
+<dt>num_thrds (new in Block-1.5)</dt>
+<dd>followed by an integer for the number of OpenMP threads to use.</dd>
+<dt>memory (new in Block-1.5)</dt>
+<dd>followed by an integer and a letter as the unit (k, m, g).
+The default is <tt class="docutils literal"><span class="pre">2</span> <span class="pre">g</span></tt> (2 GB memory).</dd>
+</dl>
 </div>
 </div>
 
@@ -204,14 +326,14 @@
           <a href="benchmark.html" title="Benchmark"
              >next</a></li>
         <li class="right" >
-          <a href="examples-with-pyscf.html" title="DMRG for Electronic Structure Calculations"
+          <a href="examples.html" title="Typical Calculations with BLOCK"
              >previous</a> |</li>
         <li><a href="index.html">BLOCK 1.5.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2015, Garnet Kin-Lic Chan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>

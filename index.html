@@ -104,17 +104,28 @@ standard complete active space (CAS) techniques. Thus, if you are interested in:
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="overview.html#features">Features</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview.html#downloads">Downloads</a></li>
-<li class="toctree-l2"><a class="reference internal" href="overview.html#calling-block-as-an-external-function">Calling <cite>BLOCK</cite> as an external function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#use-block-through-pyscf-package">Use Block through PySCF package</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview.html#license-and-how-to-cite">License and how to cite</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="build.html"><cite>BLOCK</cite> Installation</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="build.html">Block Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="build.html#precompiled-binary">Precompiled binary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="build.html#compile">Compile</a></li>
-<li class="toctree-l2"><a class="reference internal" href="build.html#how-to-run-block">How to run <cite>BLOCK</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="build.html#run-block-in-cmdline">Run Block in cmdline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="build.html#testjobs">Testjobs</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="examples.html">Typical Calculations with <cite>BLOCK</cite></a><ul>
+<li class="toctree-l1"><a class="reference internal" href="with-pyscf.html">DMRG for electronic structure calculations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="with-pyscf.html#casci-casscf-in-pyscf">CASCI/CASSCF in PySCF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="with-pyscf.html#setup-block-in-pyscf-package">Setup Block in PySCF package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="with-pyscf.html#control-block-program-through-pyscf-wrapper">Control Block program through PySCF wrapper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="with-pyscf.html#state-average-and-state-specific-dmrg-casci-dmrg-casscf">State-average and state-specific DMRG-CASCI/DMRG-CASSCF</a></li>
+<li class="toctree-l2"><a class="reference internal" href="with-pyscf.html#dmrg-nevpt2">DMRG-NEVPT2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="with-pyscf.html#case-study">Case study</a></li>
+<li class="toctree-l2"><a class="reference internal" href="with-pyscf.html#run-block-standalone">Run Block standalone</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Block program as a standalone solver</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#molecular-symmetry">Molecular symmetry</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#state-wavefunction">State wavefunction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples.html#state-averaged-calculation">State-averaged calculation</a></li>
@@ -129,11 +140,6 @@ standard complete active space (CAS) techniques. Thus, if you are interested in:
 <li class="toctree-l2"><a class="reference internal" href="examples.html#further-reading">Further Reading</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="examples-with-pyscf.html">DMRG for Electronic Structure Calculations</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="examples-with-pyscf.html#using-pyscf">Using PySCF</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples-with-pyscf.html#using-molpro">Using Molpro</a></li>
-</ul>
-</li>
 <li class="toctree-l1"><a class="reference internal" href="keywords.html">Keywords</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="keywords.html#hamiltonian-types">Hamiltonian Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="keywords.html#algorithm-types">Algorithm Types</a></li>
@@ -141,6 +147,7 @@ standard complete active space (CAS) techniques. Thus, if you are interested in:
 <li class="toctree-l2"><a class="reference internal" href="keywords.html#solver-types">Solver Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="keywords.html#orbital-reorder-types">Orbital Reorder Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="keywords.html#calculation-types">Calculation Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="keywords.html#schedule">Schedule</a></li>
 <li class="toctree-l2"><a class="reference internal" href="keywords.html#expert-keywords">Expert Keywords</a></li>
 </ul>
 </li>
@@ -171,7 +178,7 @@ standard complete active space (CAS) techniques. Thus, if you are interested in:
     </div>
     <div class="footer">
         &copy; Copyright 2015, Garnet Kin-Lic Chan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
     </div>
   </body>
 </html>
