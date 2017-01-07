@@ -43,8 +43,8 @@ void compute_two_pdm_3_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 void compute_two_pdm_3_0_1(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, array_4d<double>& twopdm); // done
 void compute_two_pdm_1_3(Wavefunction& wave1, Wavefunction& wave2, const SpinBlock& big, array_4d<double>& twopdm);//0_1_3 and 1_0_3 // done
 
-void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix &leftOp, SparseMatrix& dotOp, SparseMatrix& rightOp, const SpinBlock& big, vector<double>& expectations, bool doTranspose);  // Done
-void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const SparseMatrix& dotOp, SparseMatrix& Aop, int totalspin); // Done
+void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix* leftOp_ptr, SparseMatrix* dotOp_ptr, SparseMatrix* rightOp_ptr, const SpinBlock& big, vector<double>& expectations, bool doTranspose);  // Done
+void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix* leftOp_ptr, const SparseMatrix* dotOp_ptr, SparseMatrix& Aop, int totalspin); // Done
 void spin_to_nonspin(vector<int>& indices, vector<double>& coeffs, array_4d<double>& twopdm, Oporder order, bool dotranspose);  // Done
 
 void save_twopdm_text(const array_4d<double>& twopdm, const int &i, const int &j);
