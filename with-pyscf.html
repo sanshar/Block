@@ -723,11 +723,18 @@ limits the system size to at most 26 orbitals.  Starting from Block 1.1 version,
 we implemented an effective approximation based on compressed MPS-perturber
 technique which can significantly reduce the computation cost.  The MPS-perturber
 NEVPT2 implementation requires the <a class="reference external" href="http://mpi4py.scipy.org">MPI4Py</a> library
-and the serial version of Block program.  You need set in the config file
+and the <strong>serial version</strong> of Block program.  You need set in the config file
 <tt class="file docutils literal"><span class="pre">/path/to/pyscf/future/dmrgscf/settings.py</span></tt> the variable
 <tt class="docutils literal"><span class="pre">BLOCKEXE_COMPRESS_NEVPT</span></tt>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">BLOCKEXE_COMPRESS_NEVPT</span> <span class="o">=</span> <span class="s">&quot;/path/to/serially/compiled/Block/block.spin_adapted-serial&quot;</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The wavefunction structure from different Block versions are incompatible.  If
+BLOCKEXE for zeroth order wavefunction is set to Block-1.1, BLOCKEXE_COMPRESS_NEVPT
+for PT should also be Block-1.1.  Similarly, Block-1.5 (stackblock) PT code
+only compatible with the zeroth order wavefunction of Block-1.5 (stackblock).</p>
 </div>
 <p>Now you can use <tt class="xref py py-func docutils literal"><span class="pre">compress_approx()</span></tt> function to initialize a compressed
 pertuber NEVPT2 method.  In the <tt class="xref py py-func docutils literal"><span class="pre">compress_approx()</span></tt> function, we precomputed
@@ -1294,7 +1301,6 @@ ID to the <tt class="docutils literal"><span class="pre">mc</span></tt> object b
 <span class="c"># There is also a fast DMRG-NEVPT2 implementation.  See also the example</span>
 <span class="c"># pyscf/examples/dmrg/02-dmrg_nevpt2.py</span>
 <span class="c">#</span>
-<span class="kn">from</span> <span class="nn">pyscf.dmrgscf</span> <span class="kn">import</span> <span class="n">compress_perturb</span>
 <span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span><span class="o">.</span><span class="n">compress_approx</span><span class="p">()</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 
 <span class="c">##################################################</span>
@@ -1322,7 +1328,7 @@ input config <tt class="file docutils literal"><span class="pre">dmrg.conf</span
 <div class="highlight-python"><div class="highlight"><pre>mpirun -n 2 block.spin_adapted dmrg.conf &gt; dmrg.out
 </pre></div>
 </div>
-<p>See more examples in <a class="reference internal" href="examples.html#standalone"><em>Block program as a standalone solver</em></a>.</p>
+<p>See more examples in Chapter <a class="reference internal" href="examples.html#standalone"><em>Block program as a standalone solver</em></a>.</p>
 <p class="rubric">Footnotes</p>
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -1360,7 +1366,7 @@ input config <tt class="file docutils literal"><span class="pre">dmrg.conf</span
     </div>
     <div class="footer">
         &copy; Copyright 2015, Garnet Kin-Lic Chan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

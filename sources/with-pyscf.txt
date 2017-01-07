@@ -586,11 +586,18 @@ limits the system size to at most 26 orbitals.  Starting from Block 1.1 version,
 we implemented an effective approximation based on compressed MPS-perturber
 technique which can significantly reduce the computation cost.  The MPS-perturber
 NEVPT2 implementation requires the `MPI4Py <http://mpi4py.scipy.org>`_ library
-and the serial version of Block program.  You need set in the config file
+and the **serial version** of Block program.  You need set in the config file
 :file:`/path/to/pyscf/future/dmrgscf/settings.py` the variable
 ``BLOCKEXE_COMPRESS_NEVPT``::
 
     BLOCKEXE_COMPRESS_NEVPT = "/path/to/serially/compiled/Block/block.spin_adapted-serial"
+
+.. note::
+
+  The wavefunction structure from different Block versions are incompatible.  If
+  BLOCKEXE for zeroth order wavefunction is set to Block-1.1, BLOCKEXE_COMPRESS_NEVPT
+  for PT should also be Block-1.1.  Similarly, Block-1.5 (stackblock) PT code
+  only compatible with the zeroth order wavefunction of Block-1.5 (stackblock).
 
 Now you can use :func:`compress_approx` function to initialize a compressed
 pertuber NEVPT2 method.  In the :func:`compress_approx` function, we precomputed
@@ -670,7 +677,7 @@ You can execute Block program in command line::
 
     mpirun -n 2 block.spin_adapted dmrg.conf > dmrg.out
 
-See more examples in :ref:`standalone`.
+See more examples in Chapter :ref:`standalone`.
 
 
 
