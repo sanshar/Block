@@ -38,6 +38,13 @@ int main(int argc, char* argv [])
   if (argc == 1 && mpigetrank() == 0) {
     pout << "No command line argument found, expects an input file"<<endl;
     abort();
+  } else if (strncmp(argv[1], "-v", 2) || strncmp(argv[1], "--version", 9)) {
+    pout << "Block 1.1.1"<<endl;
+    pout << "Copyright (C) 2012  Garnet K.-L. Chan"<<endl;
+    pout << "This program comes with ABSOLUTELY NO WARRANTY; for details see license file."<<endl;
+    pout << "This is free software, and you are welcome to redistribute it"<<endl;
+    pout << "under certain conditions; see license file for details."<<endl;
+    return 0;
   }
   char* output = 0;
   return calldmrg(argv[1], output);
