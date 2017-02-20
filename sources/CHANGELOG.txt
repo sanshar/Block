@@ -1,7 +1,7 @@
 Change Log
 ==========
 
-## [1.5 alpha] - 2016-11-01
+## [1.5] - 2017-02-16
 
 * Optimized memory usage and efficiency
 * Supported (OpenMP) threads and shard memory
