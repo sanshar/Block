@@ -4,8 +4,8 @@
 
 This version Block-1.1.1 is not maintained anymore.  The DMRG code has been
 rewritten for better memory and computational efficiency.  The project was moved
-to bitbucket and released as Block-1.5.  The precompiled binary of Block-1.5 can
-be [downloaded](https://sanshar.github.io/Block/build.html#precompiled-binary)
+to bitbucket and released as Block-1.5.  Source code and manual of Block-1.5 can
+be found [here](https://sanshar.github.io/Block).
 
 * [New features](#new-features)
 * [How to cite Block](#how-to-cite-block)
@@ -24,13 +24,61 @@ New features
 
 ### [Version 1.1 (alpha)](../../releases/latest)
 
-* DMRG-CASSCF: close integration with [PySCF](http://chemists.princeton.edu/chan/software/pyscf/)
-  (up to about 40 orbitals and 3000 basis functions)
+* DMRG-CASSCF: close integration with PySCF (up to about 40 orbitals and 3000
+  basis functions)
 * DMRG-NEVPT2 (up to about 24 orbitals and 1200 basis functions with PySCF)
 * DMRG-NEVPT2 with compressed MPS perturber (up to about 30 orbitals and 1200
   basis functions through PySCF)
 * 1, 2, 3, 4-particle density matrices
 * 1, 2-particle transition density matrices
+
+
+FAQ
+---
+
+### Should I update to Block-1.5 (stackblock)?
+We highly recommend you to move to Block-1.5 for many reasons:
+
+* Bugfix.  We fixed many bugs in Block-1.5.  Calculations, especially NEVPT2,
+  are more stable in Block-1.5.
+
+* Performance.  Block-1.5 can be 1.5 to 5 times faster than Block-1.1.  The speed up
+  is significant for small systems.
+
+* Maintenance.  Block-1.5 is the long-term project that we'll invest energy to
+  maintain.  We'll not spend time to fix problems that only exist in Block-1.1.
+
+### Where can I get Block-1.5?
+You can download the source code or the binary executable from online
+[manual](https://sanshar.github.io/Block/build.html).  If you are using DMRG
+for chemistry problems, we recommend to use Block-1.5 with its interface
+in [PySCF](https://github.com/sunqm/pyscf) program.  The Block programs in
+Molpro, ORCA and QChem are Block-1.1.  We are working to port Block-1.5
+program to these quantum chemistry packages.
+
+### Can I use the input of Block-1.1 in Block-1.5?
+Yes.  Input files (FCIDUMP and dmrg.conf) of Block-1.1 can be used in Block-1.5
+without any changes.  Block-1.5 provides new keywords num_thrds and memory to
+control the number of threads and the total memory to use.
+```
+num_thrds 8
+memory, 40, g
+```
+Note these keywords are not recognized in Block-1.1 and they will cause
+Block-1.1 crashing.
+
+### Is wave-function format compatible in block-1.1 and block-1.5?
+No.  Block-1.1 and Block-1.5 have different data format for wave-function.
+You're not able to use wfn files of Block-1.1 to restart calculation in
+Block-1.5 and vice versa.
+
+### Why does my Block-1.5 crash for multiple threads while it works all right with Block-1.1 and single-thread Block-1.5?
+It is mostly due to the memory size you specified in the input.  In Block-1.5,
+operators are held in memory within the limits you specified in the input (or
+2GB/proc).  The memory is shared by all threads of the process.  If you specify
+many threads (num_thrds keyword) in your calculation, you should increas
+the memory size accordingly.
+
 
 How to cite Block
 -----------------
