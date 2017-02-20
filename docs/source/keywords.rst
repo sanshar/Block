@@ -93,3 +93,5 @@ Expert Keywords
 * sweep\_tol **1.0e-5** `|| SweepTol`
 * sym `point group`
 * weights **1.0** `||` `W`\ :sub:`1`, `W`\ :sub:`2`, ..., `W`\ :sub:`nroots`
+* num_thrds (new in Block-1.5)
+* memory **2 g** (use `g`, `m`, `k` as unit.  new in Block-1.5)

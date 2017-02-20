@@ -163,12 +163,11 @@ finished::
         mf = scf.RHF(mol).run()
 
         mc = dmrgscf.dmrgci.DMRGSCF(mf, 6, 6).run()
-        mrpt.nevpt2.sc_nevpt(mc)
+        mrpt.NEVPT(mc).run()
 
         mc = mcscf.CASCI(mf, 6, 6)
         mc.fcisolver = dmrgscf.dmrgci.DMRGCI(mol)
-        mc.run()
-        mrpt.nevpt2.sc_nevpt(mc)
+        mrpt.NEVPT(mc).run()
 
 However, the default DMRG-NEVPT2 calculation is extremely demanding on both CPU
 and memory resources.  In Block code, there is an effective approximation
@@ -180,24 +179,25 @@ reduce the computation cost::
         mf = scf.RHF(mol).run()
         mc = dmrgscf.dmrgci.DMRGSCF(mf, 6, 6).run()
 
-        mrpt.nevpt2.sc_nevpt(dmrgscf.compress_perturb(mc))
+        mrpt.NEVPT(mc).compress_approx().run()
 
-The efficient NEVPT2 needs be initialized with ``compress_perturb`` function,
-in which the most demanding intermediates are precomputed and stored on disk.
+The compressed perturber NEVPT2 method needs be initialized with
+``compress_approx`` function, in which the most demanding intermediates
+are precomputed and stored on disk.
 
-.. note:: The efficient NEVPT2 algorithm is also very demanding, especially on
+.. note:: The compressed NEVPT2 algorithm is also very demanding, especially on
   the memory usage.  Please refer to the :ref:`benchmark` for approximate cost.
 
 If the excitation energy is of interest, we can use DMRG-NEVPT2 to compute the
 energy of excited state.  Note only the state-specific NEVPT2 calculation is
-available in the current Block version::
+available in the current Block release::
 
         mc = mcscf.CASCI(mf, 6, 6)
         mc.fcisolver = dmrgscf.dmrgci.DMRGCI(mol)
         mc.fcisolver.nroots = 2
         mc.kernel()
-        mps_nevpt_e1 = mrpt.nevpt2.sc_nevpt(dmrgscf.compress_perturb(mc, maxM=100, root=0))
-        mps_nevpt_e2 = mrpt.nevpt2.sc_nevpt(dmrgscf.compress_perturb(mc, maxM=100, root=1))
+        mrpt.NEVPT(mc, root=0).compress_approx(maxM=100).run()
+        mrpt.NEVPT(mc, root=1).compress_approx(maxM=100).run()
 
 In the above example, two NEVPT2 calculations are carried out separately for
 two states which are indicated by the argument ``root=*``.

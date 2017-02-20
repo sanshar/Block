@@ -4,6 +4,12 @@ Overview
 Features
 ========
 
+New features in Block 1.5 (stackblock)
+--------------------------------------
+
+* Optimized memory usage and efficiency
+* Supported (OpenMP) threads and shared memory
+
 New features in Block 1.1
 -------------------------
 
@@ -18,6 +24,28 @@ Features in Block 1.0
 * Full spin-adaptation (SU(2) symmetry) and Abelian point-group symmetries
 * State-averaged and state-specific excited states
 * DMRG-SCF and/or DMRG-NEVPT2 interfaces to the PySCF, Molpro, ORCA, Q-Chem and Molcas program packages
+
+
+Downloads
+=========
+* Block-1.5 (stackblock)
+
+  - Precompiled binary `block.spin_adapted-1.5.0.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0.gz>`_
+    (+ OpenMPI + Boost-1.55 + MKL-11) for Linux x86_64
+
+  - Precompiled binary `block.spin_adapted-1.5.0-serial.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0-serial.gz>`_
+    (+ Boost-1.55 + MKL-11) for Linux x86_64.  This binary is used by
+    DMRG-NEVPT2 compressed perturber method.
+
+* Block-1.1
+
+  - Precompiled binary `block.spin_adapted-1.1.0.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.1.0.gz>`_
+    (+ OpenMPI + Boost-1.55 + MKL-11) for Linux x86_64
+
+  - Precompiled binary `block.spin_adapted-1.1.0-serial.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.1.0-serial.gz>`_
+    (+ Boost-1.55 + MKL-11) for Linux x86_64.  This binary is used by
+    DMRG-NEVPT2 compressed perturber method.
+
 
 Calling `BLOCK` as an external function
 =======================================
