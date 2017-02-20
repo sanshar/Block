@@ -41,6 +41,22 @@ And supply MKL and BOOST libraries by giving the locations,
 
 	``BOOSTINCLUDE = /lib64/boost_1_55_0/include/``
 
+Note that Boost-MPI was used in BLock code.  It requires Boost being
+compiled with the mpi components.  See `boost documents <http://www.boost.org/doc/libs/1_60_0/doc/html/mpi/getting_started.html>`_
+for details of the installation of Boost-MPI.
+
+For certain compilers, you may have error message::
+
+        error: ‘auto_ptr’ is deprecated (declared at /usr/include/c++/4.8.2/backward/auto_ptr.h:87) [-Werror=deprecated-declarations]
+
+It is caused by the flag ``-Werror``.  It is safe to remove this flag
+from ``OPT`` variable.  Some compiler/linker may issue errors if
+``OPENMP = yes`` was specified in Makefile::
+
+        /usr/bin/ld: dmrg.o: undefined reference to symbol 'shm_openn@@GLIBC_2.2.5'
+
+Appending ``-lpthread -lrt`` at the end of ``LIBS`` can solve this problem.
+
 When the makefile is configured, run in the directory ``./Block``::
 
         $ make
@@ -60,9 +76,16 @@ config file ``/path/to/pyscf/future/dmrgscf/settings.py`` and add the
 following settings in it::
 
         BLOCKEXE = "/path/to/Block/block.spin_adapted"
+        BLOCKEXE_COMPRESS_NEVPT = "/path/to/serially/compiled/Block/block.spin_adapted"
         BLOCKSCRATCHDIR = "/path/to/scratch"
         MPIPREFIX = "mpirun"
 
+``BLOCKEXE`` is the parallel Block program. Most DMRG calculations (DMRG-CASCI,
+DMRG-CASSCF etc) will call this parallel executable through ``mpirun``
+interface.  ``BLOCKEXE_COMPRESS_NEVPT`` points to the **serially
+compiled** Block executable.  It is only needed by the compressed perturber
+NEVPT2 method.  Although this Block executable file is not MPI-parallelized, the
+DMRG-NEVPT2 program are efficiently parallelized in a different manner.
 Note the parameter ``MPIPREFIX`` should be adjusted according to your
 job scheduler, eg::
 
@@ -87,13 +110,13 @@ calculation can be input in Python interpereter::
 DMRG-NEVPT2 calculation can be applied::
 
         >>> from pyscf import mrpt
-        >>> mrpt.nevpt2.sc_nevpt(mc)
+        >>> mrpt.NEVPT(mc).run()
 
 Optionally, if `MPI4Py <http://mpi4py.scipy.org>`_ was installed, the efficient
 DMRG-NEVPT2 implementation can be used, eg::
 
         >>> from pyscf import mrpt
-        >>> mrpt.nevpt2.sc_nevpt(dmrgscf.compress_perturb(mc))
+        >>> mrpt.NEVPT(mc).compress_approx().run()
 
 
 How to run `BLOCK`
