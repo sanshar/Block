@@ -34,16 +34,9 @@ Contents
 
    overview.rst
    build.rst
+   with-pyscf.rst
    examples.rst
-   examples-with-pyscf.rst
    keywords.rst
    benchmark.rst
    CHANGELOG.rst
-
-.. Indices and tables
-.. ==================
-
-.. * :ref:`genindex`
-.. * :ref:`modindex`
-.. * :ref:`search`
 
