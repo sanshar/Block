@@ -93,6 +93,7 @@ use of `Block`:
 * G. K.-L. Chan, J. Chem. Phys. 120, 3172 (2004),
 * D. Ghosh, J. Hachmann, T. Yanai, and G. K.-L. Chan, J. Chem. Phys., 128, 144117 (2008),
 * S. Sharma and G. K-.L. Chan, J. Chem. Phys. 136, 124121 (2012).
+* S. Guo, M. A. Watson, W. Hu, Q. Sun, G. K.-L. Chan, J. Chem.  Theory Comput. 12, 1583 (2016)
 
 In addition, a useful list of DMRG references relevant to quantum chemistry can be found
 in the article above by Sharma and Chan.

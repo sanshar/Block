@@ -30,9 +30,9 @@ Downloads
 =========
 * Block-1.5 (stackblock)
 
-  - Source code `block-1.5.0.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.0.gz>`_.
+  - Source code `block-1.5.0.tar.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.0.tar.gz>`_.
 
-  - Source code `block-1.5.0-serial.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.0-serial.gz>`_.
+  - Source code `block-1.5.0-serial.tar.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.0-serial.tar.gz>`_.
     This serial version is used by DMRG-NEVPT2 compressed perturber method.
 
   - Precompiled binary `block.spin_adapted-1.5.0.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0.gz>`_
@@ -40,15 +40,6 @@ Downloads
 
   - Precompiled binary `block.spin_adapted-1.5.0-serial.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0-serial.gz>`_
     (+ Boost-1.55 + MKL-11) for Linux x86_64.  This serial version is used by
-    DMRG-NEVPT2 compressed perturber method.
-
-* Block-1.1.1
-
-  - Precompiled binary `block.spin_adapted-1.1.1.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.1.1.gz>`_
-    (+ OpenMPI + Boost-1.55 + MKL-11) for Linux x86_64
-
-  - Precompiled binary `block.spin_adapted-1.1.1-serial.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.1.1-serial.gz>`_
-    (+ Boost-1.55 + MKL-11) for Linux x86_64.  This binary is used by
     DMRG-NEVPT2 compressed perturber method.
 
 

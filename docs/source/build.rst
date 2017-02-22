@@ -8,8 +8,8 @@ Source code and binary
 
 * Version 1.5
 
-  - Source code `block-1.5.0.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.0.gz>`_,
-  - Source code `block-1.5.0-serial.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.0-serial.gz>`_,
+  - Source code `block-1.5.0.tar.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.0.tar.gz>`_,
+  - Source code `block-1.5.0-serial.tar.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.0-serial.tar.gz>`_,
   - Binary `block.spin_adapted-1.5.0.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0.gz>`_,
     1.8 MB, compiled with GCC-4.8, Boost-1.55, OpenMPI-1.10.3, MKL-11
   - Binary `block.spin_adapted-1.5.0-serial.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0-serial.gz>`_
@@ -108,7 +108,10 @@ following settings in it::
 DMRG-CASSCF etc) will call this parallel executable through ``mpirun``
 interface.  ``BLOCKEXE_COMPRESS_NEVPT`` points to the **serially
 compiled** Block executable.  It is only needed by the compressed perturber
-NEVPT2 method.  Although this Block executable file is not MPI-parallelized, the
+NEVPT2 method.  Note the serial version of Block is slightly different to the
+parallel Block with compiling flag ``USE_MPI=yes``.  Specifically, NEVPT2
+implementation in the serial code is not available in the parallelized code.
+Although this Block executable file is not MPI-parallelized, the
 DMRG-NEVPT2 program are efficiently parallelized in a different manner.
 Note the parameter ``MPIPREFIX`` should be adjusted according to your
 job scheduler, eg::
