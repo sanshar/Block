@@ -95,8 +95,8 @@
 <h2>Source code and binary<a class="headerlink" href="#source-code-and-binary" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li>Version 1.5<ul>
-<li>Source code <a class="reference external" href="http://www.sunqm.net/pyscf/files/src/block-1.5.0.gz">block-1.5.0.gz</a>,</li>
-<li>Source code <a class="reference external" href="http://www.sunqm.net/pyscf/files/src/block-1.5.0-serial.gz">block-1.5.0-serial.gz</a>,</li>
+<li>Source code <a class="reference external" href="http://www.sunqm.net/pyscf/files/src/block-1.5.0.tar.gz">block-1.5.0.tar.gz</a>,</li>
+<li>Source code <a class="reference external" href="http://www.sunqm.net/pyscf/files/src/block-1.5.0-serial.tar.gz">block-1.5.0-serial.tar.gz</a>,</li>
 <li>Binary <a class="reference external" href="http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0.gz">block.spin_adapted-1.5.0.gz</a>,
 1.8 MB, compiled with GCC-4.8, Boost-1.55, OpenMPI-1.10.3, MKL-11</li>
 <li>Binary <a class="reference external" href="http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0-serial.gz">block.spin_adapted-1.5.0-serial.gz</a>
@@ -190,7 +190,10 @@ following settings in it:</p>
 DMRG-CASSCF etc) will call this parallel executable through <tt class="docutils literal"><span class="pre">mpirun</span></tt>
 interface.  <tt class="docutils literal"><span class="pre">BLOCKEXE_COMPRESS_NEVPT</span></tt> points to the <strong>serially
 compiled</strong> Block executable.  It is only needed by the compressed perturber
-NEVPT2 method.  Although this Block executable file is not MPI-parallelized, the
+NEVPT2 method.  Note the serial version of Block is slightly different to the
+parallel Block with compiling flag <tt class="docutils literal"><span class="pre">USE_MPI=yes</span></tt>.  Specifically, NEVPT2
+implementation in the serial code is not available in the parallelized code.
+Although this Block executable file is not MPI-parallelized, the
 DMRG-NEVPT2 program are efficiently parallelized in a different manner.
 Note the parameter <tt class="docutils literal"><span class="pre">MPIPREFIX</span></tt> should be adjusted according to your
 job scheduler, eg:</p>
