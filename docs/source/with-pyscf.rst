@@ -111,13 +111,7 @@ More CASCI/CASSCF parameters are documented in http://www.pyscf.org/mcscf.html
 Setup Block in PySCF package
 ============================
 
-First you need :ref:`prepare the Block executable binary <build>`.
-You can either compile it from source code [#]_ or download the
-precompiled binary
-`block.spin_adapted-1.5.0.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0.gz>`_
-(compiled with Boost-1.55, OpenMPI-1.10.3, MKL-11) and the MPI-disabled version
-`block.spin_adapted-1.5.0-serial.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0-serial.gz>`_
-(compiled with Boost-1.55, MKL-11).
+First is to :ref:`prepare the Block executable binary <build>`.
 Next, you need setup the Block runtime environment in PySCF.  In the config file
 :file:`/path/to/pyscf/future/dmrgscf/settings.py` (see also the template
 :file:`/path/to/pyscf/future/dmrgscf/settings.py.template`), you need specify::
@@ -191,12 +185,11 @@ Control Block program through PySCF wrapper
 Parallelism
 -----------
 
-Block-1.1.1 or older version support MPI level parallelization.  The MPI
-parallelization parameters are controlled by the variable ``MPIPREFIX`` in
-:file:`pyscf/future/dmrgscf/settings.py` or the attribute :attr:`mpiprefix` of
-:class:`DMRGCI` object.  For example, if you want to run Block using 4
-processors on 2 nodes with Infiniband as the communication layer, you can
-specify in the input script::
+MPI parallelization parameters for Block are controlled by the variable
+``MPIPREFIX`` in :file:`pyscf/future/dmrgscf/settings.py` or the attribute
+:attr:`mpiprefix` of :class:`DMRGCI` object.  For example, if you want to run
+Block using 4 processors on 2 nodes with Infiniband as the communication layer,
+you can specify in the input script::
 
     mc = dmrgscf.DMRGSCF(mf, 6, 6)
     mc.fcisolver.mpiprefix = 'mpirun -np 4 -npernode --mca btl self,openib'
@@ -565,25 +558,12 @@ you can find more examples of state-average and state-specific calculations.
 DMRG-NEVPT2
 ===========
 
-For Block 1.1.1 version or older, the standard DMRG-NEVPT2 calculation can be
-carried out on top of the DMRG-CASCI or DMRG-CASSCF calculation::
-
-    from pyscf import gto, scf, dmrgscf, mrpt
-    mol = gto.M(atom="N 0 0 0; N 0 0 1", basis="ccpvdz")
-    mf = scf.RHF(mol).run()
-
-    mc = dmrgscf.DMRGSCF(mf, 6, 6).run()
-    mrpt.NEVPT(mc).run()
-
-    mc = mcscf.CASCI(mf, 6, 6)
-    mc.fcisolver = dmrgscf.DMRGCI(mol)
-    mc.run()
-    mrpt.NEVPT(mc).run()
-
-The standard DMRG-NEVPT2 method requires the 4-particle density matrix.
-Computing and storing the 4-particle density matrix is extremely demanding.  It
-limits the system size to at most 26 orbitals.  Starting from Block 1.1 version,
-we implemented an effective approximation based on compressed MPS-perturber
+DMRG-NEVPT2 [#]_ calculations are available since Block-1.1.  In Block-1.1, we
+implemented the standard DMRG-NEVPT2 method which requires the 4-particle
+density matrix.  Computing and storing the 4-particle density matrix is
+extremely demanding.  It limits the system size to at most 26 orbitals.
+To handle systems with larger active space, we implemented an effective
+approximation based on compressed MPS-perturber
 technique which can significantly reduce the computation cost.  The MPS-perturber
 NEVPT2 implementation requires the `MPI4Py <http://mpi4py.scipy.org>`_ library
 and the **serial version** of Block program.  You need set in the config file
@@ -595,9 +575,10 @@ and the **serial version** of Block program.  You need set in the config file
 .. note::
 
   The wavefunction structure from different Block versions are incompatible.  If
-  BLOCKEXE for zeroth order wavefunction is set to Block-1.1, BLOCKEXE_COMPRESS_NEVPT
-  for PT should also be Block-1.1.  Similarly, Block-1.5 (stackblock) PT code
-  only compatible with the zeroth order wavefunction of Block-1.5 (stackblock).
+  BLOCKEXE for zeroth order wavefunction is set to Block-1.1, the variable
+  BLOCKEXE_COMPRESS_NEVPT should also be Block-1.1.  Similarly, Block-1.5
+  (stackblock) PT code only compatible with the zeroth order wavefunction of
+  Block-1.5 (stackblock).
 
 Now you can use :func:`compress_approx` function to initialize a compressed
 pertuber NEVPT2 method.  In the :func:`compress_approx` function, we precomputed
@@ -658,12 +639,15 @@ ID to the ``mc`` object before passing it to :func:`mrpt.NEVPT` method.::
 Case study
 ==========
 
-.. literalinclude::  020-dmrg_casscf_nevpt2_for_FeS.py
+In this example, we computed the lowest excited states with DMRG-CASSCF and
+DMRG-NEVPT2 methods.
+
+.. literalinclude::  vocl4.py
 
 
 Run Block standalone
 ====================
-``Block`` program can be run standalone without the PySCF environments.
+``Block`` program can be run standalone without the PySCF environment.
 In PySCF-1.3,  the DMRG interface provides dry run mode to generate the Block
 input config :file:`dmrg.conf` and the integral file
 :file:`FCIDUMP`.::
@@ -683,7 +667,6 @@ See more examples in Chapter :ref:`standalone`.
 
 .. rubric:: Footnotes
 
-.. [#] cite paper.
+.. [#] E. R. Sayfutyarova, Q. Sun, G. K.-L. Chan, G. Knizia, arXiv:1701.07862 [physics.chem-ph]
 
-.. [#] Please contact "Sandeep Sharma" <sanshar@gmail.com> or "Garnet Chan"
-   <gkc1000@gmail.com> for Block source code.
+.. [#] S. Guo, M. A. Watson, W. Hu, Q. Sun, G. K.-L. Chan, J. Chem.  Theory Comput. 12, 1583 (2016)
