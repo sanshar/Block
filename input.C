@@ -117,6 +117,9 @@ void SpinAdapted::Input::initialize_defaults()
 
   m_transition_diff_spatial_irrep = false;
   m_add_noninteracting_orbs = true;
+  m_bra_alpha = 0;
+  m_bra_beta =0;
+  m_non_SE = false;
   m_no_transform = false;
   m_do_fci = false;
   m_do_npdm_ops = false;
@@ -198,6 +201,7 @@ SpinAdapted::Input::Input(const string& config_name) {
   std::vector<int> usedkey(NUMKEYWORDS, -1);
   int n_elec = -1;
   int n_spin = -1;
+  int n_bra_spin =-1; //EL
   sym = "c1";
   NonabelianSym = false;
   std::vector<string> orbitalfile;
@@ -528,14 +532,28 @@ SpinAdapted::Input::Input(const string& config_name) {
 	if(usedkey[SPIN] == 0) 
 	  usedkey_error(keyword, msg);
 	usedkey[SPIN] = 0;
-	if (tok.size() !=  2) {
-	  pout << "keyword spin should be followed by a single number and then an end line"<<endl;
+// 
+        if (tok.size() ==  2)
+        n_spin = atoi(tok[1].c_str());
+        else if (tok.size() ==  3)
+/* Elvira:  only for transition pdms <s1|T^1|s2>  and required for SOC and g-tensor calculations:
+ * preliminary calculations for the states should be performed without singlet embedding, otherwise the triplet excitation matrix elements will be equal to 0
+If 2 spins are given, the calculations of transition density matrix between wavefunctions with different spins (w/ or w/o different irreps) will be performed  */
+          {
+          n_bra_spin = atoi(tok[1].c_str());
+          n_spin = atoi(tok[2].c_str());
+          m_transition_diff_spin=true;
+          m_add_noninteracting_orbs = false;
+          m_bra_alpha = (n_elec + n_bra_spin)/2;
+          m_bra_beta = (n_elec - n_bra_spin)/2;
+     }
+	if ((tok.size() !=  2)&&((tok.size() !=  3))) {
+	  pout << "keyword spin should be followed by a single number (or two spin numbers for SOC pdms)  and then an end line"<<endl;
 	  pout << "error found in the following line "<<endl;
 	  pout << msg<<endl;
 	  abort();
 	}	
-	n_spin = atoi(tok[1].c_str());
-	if(n_spin < 0) {
+	if ((n_spin < 0)||((m_transition_diff_spin==true)&&(n_bra_spin <0))) {
 	  pout << "Spin of the wavefunction cannot be less than 0."<<endl;
 	  pout << "See the manual for further details."<<endl;
 	  abort();
@@ -560,6 +578,13 @@ SpinAdapted::Input::Input(const string& config_name) {
 	  abort();
 	}	
       }
+/* Elvira: dmrg calculations without singlet embedding (SE) are required to calculate transition pdms between states with different spins
+   otherwise the transition pdms are 0, since bra and ket spins  are equal to 0 because of singlet embedding*/
+      else if (boost::iequals(keyword, "nonSE")|| boost::iequals(keyword,  "nosingletembedding")) {
+              m_add_noninteracting_orbs = false;
+              m_non_SE = true;
+      }
+
       else if (boost::iequals(keyword,  "hubbard"))
 	m_ham_type = HUBBARD;
       else if (boost::iequals(keyword,  "heisenberg"))
@@ -715,6 +740,17 @@ SpinAdapted::Input::Input(const string& config_name) {
 	m_calc_type = RESTART_T_TWOPDM;
   m_restart = true;
       }
+//  Elvira: these are to calculate <s1|T^1|s2> pdms for SOC
+      else if (boost::iequals(keyword,  "ds1_onepdm") || boost::iequals(keyword,  "ds1_onerdm"))
+        m_calc_type = DS1_ONEPDM;
+      else if (boost::iequals(keyword,  "restart_ds1_onepdm") || boost::iequals(keyword,  "restart_ds1_onerdm"))
+        m_calc_type = RESTART_DS1_ONEPDM;
+//  Elvira: these are to calculate <s1|T^0|s2> pdms to calculate S in the code for g-tensors
+      else if (boost::iequals(keyword,  "ds0_onepdm") || boost::iequals(keyword,  "ds0_onerdm"))
+        m_calc_type = DS0_ONEPDM;
+      else if (boost::iequals(keyword,  "restart_ds0_onepdm") || boost::iequals(keyword,  "restart_ds0_onerdm"))
+        m_calc_type = RESTART_DS0_ONEPDM;
+//
       else if (boost::iequals(keyword,  "restart_tran_threepdm") || boost::iequals(keyword,  "restart_tran_threerdm") || boost::iequals(keyword,  "restart_tran_threerdm"))
       {
 	m_calc_type = RESTART_T_THREEPDM;
@@ -1288,7 +1324,12 @@ SpinAdapted::Input::Input(const string& config_name) {
   }
   
   m_molecule_quantum = SpinQuantum(m_alpha + m_beta, SpinSpace(m_alpha - m_beta), m_total_symmetry_number);
-
+//Elvira: for bra and ket states with different spins
+  if  (m_transition_diff_spin==true)
+      {
+         m_bra_molecule_quantum = SpinQuantum(m_bra_alpha + m_bra_beta, SpinSpace(m_bra_alpha - m_bra_beta), m_bra_symmetry_number);
+    }
+//
   if (mpigetrank() == 0) {
     reorderOpenAndClosed();
     makeInitialHFGuess();
@@ -1552,7 +1593,8 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
 
 
   m_spatial_to_spin.push_back(m_norbs);
-  m_spin_to_spatial.push_back(m_norbs/2);
+  m_spin_to_spatial.push_back(m_norbs);
+//  m_spin_to_spatial.push_back(m_norbs/2); //EL
 
   while (!((boost::iequals(tok[0], "&END")) || (boost::iequals(tok[0], "/")))) {
     int temp;

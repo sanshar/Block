@@ -46,7 +46,8 @@ enum calcType {DMRG, ONEPDM, TWOPDM, THREEPDM, FOURPDM, NEVPT2PDM, RESTART_TWOPD
                RESTART_ONEPDM, RESTART_THREEPDM, RESTART_FOURPDM, RESTART_NEVPT2PDM, TINYCALC, FCI,
                EXCITEDDMRG, CALCOVERLAP, CALCHAMILTONIAN, COMPRESS, RESPONSE, RESPONSEBW,
                TRANSITION_ONEPDM, TRANSITION_TWOPDM, TRANSITION_THREEPDM, RESTART_T_ONEPDM, RESTART_T_TWOPDM, RESTART_T_THREEPDM,
-               NEVPT2,RESTART_NEVPT2, MPS_NEVPT, RESTART_MPS_NEVPT};
+               NEVPT2,RESTART_NEVPT2, MPS_NEVPT, RESTART_MPS_NEVPT, 
+               DS1_ONEPDM, RESTART_DS1_ONEPDM, DS0_ONEPDM, RESTART_DS0_ONEPDM};
 enum orbitalFormat{MOLPROFORM, DMRGFORM};
 enum reorderType{FIEDLER, GAOPT, MANUAL, NOREORDER};
 enum keywords{ORBS, LASTM, STARTM, MAXM,  REORDER, HF_OCC, SCHEDULE, SYM, NELECS, SPIN, IRREP,
@@ -60,6 +61,11 @@ class Input {
   int m_norbs;
   int m_alpha;
   int m_beta;
+//
+  int m_bra_alpha; 
+  int m_bra_beta;  
+  int n_bra_spin;  
+//
   int m_Sz;
   bool m_spinAdapted;
   bool m_Bogoliubov;
@@ -69,6 +75,9 @@ class Input {
   IrrepSpace m_bra_symmetry_number;// This is used when bra and ket have different spatial symmetry irrep;
                                 // It is only used for transition density matrix calculations.
   bool m_transition_diff_spatial_irrep;
+  bool m_transition_diff_spin =false;   //Elvira: This is used when bra and ket have different spins
+  SpinQuantum m_bra_molecule_quantum;  // It is only to calculate <s1|T^1|s2> pdms for SOC 
+
   SpinQuantum m_molecule_quantum;
   int m_total_spin;
   int m_guess_permutations;
@@ -133,7 +142,7 @@ class Input {
   double m_twoindex_screen_tol;
   bool m_no_transform;
   bool m_add_noninteracting_orbs;
-
+  bool m_non_SE;
   int m_nquanta;
   int m_sys_add;
   int m_env_add;
@@ -206,6 +215,10 @@ class Input {
     ar & m_sweep_iter_schedule & m_sweep_state_schedule & m_sweep_qstate_schedule & m_sweep_tol_schedule & m_sweep_noise_schedule &m_sweep_additional_noise_schedule & m_reorder;
     ar & m_molecule_quantum & m_total_symmetry_number & m_total_spin & m_orbenergies & m_add_noninteracting_orbs;
     ar & m_bra_symmetry_number & m_permSymm & m_openorbs & m_closedorbs;
+    ar & m_bra_molecule_quantum & m_bra_symmetry_number &  m_add_noninteracting_orbs;  //diff spins case
+    ar & m_bra_alpha & m_bra_beta & n_bra_spin;  //diff spins case
+    ar & m_transition_diff_spin;
+    ar & m_non_SE;
 //  ar & m_save_prefix & m_load_prefix & m_direct & m_max_lanczos_dimension;
     ar & m_direct & m_max_lanczos_dimension;
     ar & m_deflation_min_size & m_deflation_max_size & m_outputlevel & m_reorderfile;
@@ -411,6 +424,7 @@ class Input {
   int nroots() const {return m_nroots;}
   int real_particle_number() const { return (m_alpha + m_beta);}
   int total_particle_number() const { if(!m_add_noninteracting_orbs) return (m_alpha + m_beta); else return (2*m_alpha); }
+  int bra_particle_number() const { if(!m_add_noninteracting_orbs) return (m_bra_alpha + m_bra_beta); else return (2*m_bra_alpha); } // diff spins case
   bool calc_ri_4pdm() const {return m_calc_ri_4pdm;}
   bool store_ripdm_readable() const {return m_store_ripdm_readable;}
   bool nevpt2() const {return m_nevpt2;}
@@ -420,6 +434,7 @@ class Input {
   int PrintIndex() const{return NevPrint.second;}
   void SetPrint(bool p, int i=0){NevPrint.first = p;NevPrint.second=i;}
   const SpinSpace total_spin_number() const { if (!m_add_noninteracting_orbs) return SpinSpace(m_alpha - m_beta); else return SpinSpace(0); }
+  const SpinSpace bra_spin_number() const { if (!m_add_noninteracting_orbs) return SpinSpace(m_bra_alpha - m_bra_beta); else return SpinSpace(0); } // diff spins case
   int last_site() const 
   { 
     if(m_spinAdapted) 
@@ -444,9 +459,11 @@ class Input {
   const IrrepSpace &total_symmetry_number() const { return m_total_symmetry_number; }
   const IrrepSpace &bra_symmetry_number() const { return m_bra_symmetry_number; }
   const SpinQuantum &molecule_quantum() const { return m_molecule_quantum; }
+  const SpinQuantum &bra_molecule_quantum() const { return m_bra_molecule_quantum; } // diff spins case
   const int &sys_add() const { return m_sys_add; }
   const bool &add_noninteracting_orbs() const {return m_add_noninteracting_orbs;}
   bool &add_noninteracting_orbs() {return m_add_noninteracting_orbs;}
+  const bool &non_SE() {return m_non_SE;}  //for calculations without singlet embedding
   const int &nquanta() const { return m_nquanta; }
   const int &env_add() const { return m_env_add; }
   const bool &do_fci() const { return m_do_fci; }
@@ -460,6 +477,11 @@ class Input {
   const std::string &save_prefix() const { return m_save_prefix; }
   const std::string &load_prefix() const { return m_load_prefix; }
   SpinQuantum& set_molecule_quantum() {return m_molecule_quantum;}
+
+ bool transition_diff_spin() {
+    return m_transition_diff_spin;
+   }
+
   SpinQuantum effective_molecule_quantum() {
     if (!m_add_noninteracting_orbs) 
       return m_molecule_quantum;
@@ -467,12 +489,27 @@ class Input {
       return SpinQuantum(m_molecule_quantum.particleNumber + m_molecule_quantum.totalSpin.getirrep(), SpinSpace(0), m_molecule_quantum.orbitalSymmetry);
     //return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), total_symmetry_number());
   }
+
+//
   SpinQuantum bra_quantum() {
-    if (!m_add_noninteracting_orbs) 
+   if (!m_add_noninteracting_orbs)
+   {
+    if (m_transition_diff_spin) {
+      return SpinQuantum(bra_particle_number(), SpinSpace(m_bra_alpha - m_bra_beta), bra_symmetry_number());
+      }
+    else
       return SpinQuantum(total_particle_number(), SpinSpace(m_alpha - m_beta), bra_symmetry_number());
-    else 
-      return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), bra_symmetry_number());
-  }
+   }
+   else  {
+     if (m_transition_diff_spin) {
+      return SpinQuantum(bra_particle_number()+bra_spin_number().getirrep(), SpinSpace(0), bra_symmetry_number());
+      }
+     else
+       return SpinQuantum(total_particle_number() + total_spin_number().getirrep(), SpinSpace(0), bra_symmetry_number());  }
+}
+
+
+
   vector<SpinQuantum> effective_molecule_quantum_vec() {
     vector<SpinQuantum> q;
     if (!m_Bogoliubov) q.push_back(effective_molecule_quantum());

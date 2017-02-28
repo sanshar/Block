@@ -15,6 +15,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "npdm_driver.h"
 #include "nevpt2_npdm_driver.h"
 #include "pario.h"
+#include "ds1_sweeponepdm.h"  //EL
+#include "ds0_sweeponepdm.h"  //EL
+
 
 void dmrg(double sweep_tol);
 void restart(double sweep_tol, bool reset_iter);
@@ -319,8 +322,7 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
+void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm, bool dS)
 {
   double sweep_tol = 1e-7;
   sweep_tol = dmrginp.get_sweep_tol();
@@ -379,6 +381,7 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
 
     if(dmrginp.new_npdm_code()){
     if      (npdm_order == NPDM_ONEPDM) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Onepdm_driver( dmrginp.last_site() ) );
+    else if ((npdm_order == NPDM_DS0)||(npdm_order == NPDM_DS1)) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Onepdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == NPDM_TWOPDM) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Twopdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == NPDM_THREEPDM) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Threepdm_driver( dmrginp.last_site() ) );
     else if (npdm_order == NPDM_FOURPDM) npdm_driver = boost::shared_ptr<Npdm_driver_base>( new Fourpdm_driver( dmrginp.last_site() ) );
@@ -388,7 +391,23 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
     }
   }
 
-
+ 
+if (dS) {
+    for (int state=0; state<dmrginp.nroots(); state++) {
+      for(int stateB=0; stateB<state; stateB++){
+       dmrginp.set_fullrestart() = true;
+       sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+       SweepGenblock::do_one(sweepParams, false, direction, false, 0, state, stateB); //this will generate the cd operators
+       dmrginp.set_fullrestart() = false;
+       npdm_driver->clear();
+          sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
+          if (npdm_order == NPDM_DS1) ds1_onepdm::do_one(sweepParams, false, !direction, false, 0, state, stateB);
+          else if (npdm_order == NPDM_DS0) ds0_onepdm::do_one(sweepParams, false, !direction, false, 0, state, stateB);
+          else abort();
+      }
+  }
+}
+else {
   if (dmrginp.specificpdm().size()!=0)
   {
     Timer timer;
@@ -566,7 +585,7 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm)
   sweep_copy.savestate(direction_copy, restartsize_copy);
 
 }
-
+}
 }
 }
 

@@ -16,6 +16,9 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <include/communicate.h>
 #include "sweepgenblock.h"
 #include "npdm.h"
+#include "ds1_sweeponepdm.h"  //EL
+#include "ds0_sweeponepdm.h"  //EL
+
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -413,6 +416,20 @@ int calldmrg(char* input, char* output)
   case(RESTART_NEVPT2):
     nevpt2::nevpt2_restart();
     break;
+//EL
+   case (DS1_ONEPDM):
+     Npdm::npdm(NPDM_DS1,false,true,true);
+    break;
+   case (RESTART_DS1_ONEPDM):
+     Npdm::npdm(NPDM_DS1,true,true,true);
+    break;
+   case (DS0_ONEPDM):
+     Npdm::npdm(NPDM_DS0,false,true,true);
+    break;
+   case (RESTART_DS0_ONEPDM):
+     Npdm::npdm(NPDM_DS0,true,true,true);
+    break;
+//EL
   default:
     pout << "Invalid calculation types" << endl; abort();
     
