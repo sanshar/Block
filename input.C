@@ -1593,8 +1593,7 @@ void SpinAdapted::Input::readorbitalsfile(string& orbitalfile, OneElectronArray&
 
 
   m_spatial_to_spin.push_back(m_norbs);
-  m_spin_to_spatial.push_back(m_norbs);
-//  m_spin_to_spatial.push_back(m_norbs/2); //EL
+  m_spin_to_spatial.push_back(m_norbs/2);
 
   while (!((boost::iequals(tok[0], "&END")) || (boost::iequals(tok[0], "/")))) {
     int temp;
