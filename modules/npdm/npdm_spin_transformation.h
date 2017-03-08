@@ -5,7 +5,7 @@
 #include <limits>
 #include <iterator>
 #include <boost/spirit/include/qi.hpp>
-#ifndef BOOST_1_56_0
+#if BOOST_VERSION >= 1056000
 #include <boost/spirit/home/phoenix/container.hpp>
 #include <boost/spirit/home/phoenix/operator.hpp>
 #include <boost/spirit/home/phoenix/object/construct.hpp>
