@@ -12,7 +12,7 @@ void sort1pdm (FORTINT N_act, FORTINT iRoot, FORTINT jRoot)
   if(mpigetrank() == 0) {
 
     std::ostringstream ifname;
-    ifname << "./node0/spatial_binary_onepdm." << iRoot << "." << jRoot << ".bin";
+    ifname << "./node0/spatial_onepdm." << iRoot << "." << jRoot << ".bin";
 
     std::ostringstream ofname;
     ofname << "./SORTED1PDM." << iRoot << "." << jRoot << ".0";
@@ -30,9 +30,9 @@ void sort1pdm (FORTINT N_act, FORTINT iRoot, FORTINT jRoot)
     // sort <i,j> (in row-major) to G(i,j) (in col-major)
     // i.e. G(i,j) = <i,j>
 
-    int Ndum;
-    fread(&Ndum,sizeof(int),1,ifp);
-    assert(Ndum == N_act);
+//  int Ndum;
+//  fread(&Ndum,sizeof(int),1,ifp);
+//  assert(Ndum == N_act);
 
     double *xbuf = new double[N2];
     fread(xbuf,sizeof(double),N2,ifp);
@@ -62,7 +62,7 @@ void sort2pdm (FORTINT N_act, FORTINT iRoot, FORTINT jRoot)
   if(mpigetrank() == 0) {
 
     std::ostringstream ifname;
-    ifname << "./node0/spatial_binary_twopdm." << iRoot << "." << jRoot << ".bin";
+    ifname << "./node0/spatial_twopdm." << iRoot << "." << jRoot << ".bin";
 
     std::ostringstream ofname;
     ofname << "./SORTED2PDM." << iRoot << "." << jRoot << ".0";
@@ -82,9 +82,9 @@ void sort2pdm (FORTINT N_act, FORTINT iRoot, FORTINT jRoot)
     // sort <i,j,k,l> (in row-major) to G(i,l,j,k) (in col-major)
     // i.e. G(i,j,k,l) = <i,k,l,j>
 
-    int Ndum;
-    fread(&Ndum,sizeof(int),1,ifp);
-    assert(Ndum == N_act);
+//  int Ndum;
+//  fread(&Ndum,sizeof(int),1,ifp);
+//  assert(Ndum == N_act);
 
     double *xbuf = new double[N4];
     fread(xbuf,sizeof(double),N4,ifp);

@@ -9,7 +9,7 @@
 BOOSTINCLUDE = /opt/local/include
 
 #specify boost and lapack-blas library locations
-BOOSTLIB = -L/opt/local/lib  -lboost_system-mt -lboost_filesystem-mt -lboost_serialization-mt
+BOOSTLIB = -L/opt/local/lib  -lboost_system -lboost_filesystem -lboost_serialization
 #BOOSTLIB = -lboost_serialization -lboost_system -lboost_filesystem
 LAPACKBLAS =    /usr/lib/liblapack.dylib /usr/lib/libblas.dylib
 
@@ -24,7 +24,7 @@ USE_MPI = no
 USE_MKL = no
 
 # change to icpc for Intel
-CXX =  clang++
+CXX =  icpc
 MPICXX = mpiicpc
 export CXX
 export MPICXX
@@ -43,13 +43,13 @@ MOLCAS = no
 OPENMP = no
 
 ifeq ($(USE_MKL), yes)
-MKLLIB = /opt/intel/compilers_and_libraries_2016.0.109/linux/mkl/lib/intel64
+MKLLIB = /opt/intel/compilers_and_libraries/linux/mkl/lib/intel64
 ifeq ($(OPENMP), yes)
 LAPACKBLAS = -L${MKLLIB} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core
 else
 LAPACKBLAS = -L${MKLLIB} -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 endif
-MKLFLAGS = /opt/intel/compilers_and_libraries_2016.0.109/linux/mkl/include
+MKLFLAGS = /opt/intel/compilers_and_libraries/linux/mkl/include
 MKLOPT = -D_HAS_INTEL_MKL
 else
 MKLFLAGS = .
@@ -81,6 +81,10 @@ BTAS = $(BLOCKHOME)/btas
 
 ifeq ($(MOLPRO), yes)
    MOLPRO_BLOCK= -DMOLPRO
+endif
+
+ifeq ($(MOLCAS), yes)
+   MOLCAS_BLOCK= -DMOLCAS
 endif
 
 FLAGS =  -I${MKLFLAGS} -I$(INCLUDE1) -I$(INCLUDE2) -I$(NEWMATINCLUDE) -I$(BOOSTINCLUDE) \
@@ -133,7 +137,7 @@ ifeq ($(USE_MPI), yes)
 endif
 
 
-OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(B56) $(MOLPRO_BLOCK)  -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL ${MKLOPT} ${UNITTEST} -fPIC
+OPT	+= $(OPENMP_FLAGS) -DBLAS -DUSELAPACK $(MPI_OPT) $(I8) $(B56) $(MOLPRO_BLOCK) $(MOLCAS_BLOCK) -DFAST_MTP -D_HAS_CBLAS -D_HAS_INTEL_MKL ${MKLOPT} ${UNITTEST} -fPIC
 
 SRC_genetic = genetic/CrossOver.C genetic/Evaluate.C genetic/GAInput.C genetic/GAOptimize.C genetic/Generation.C genetic/Mutation.C genetic/RandomGenerator.C genetic/ReadIntegral.C
 
