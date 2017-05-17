@@ -1343,10 +1343,11 @@ If 2 spins are given, the calculations of transition density matrix between wave
     }
     //add twodot_toonedot(bla bla bla)
     pout << "Summary of input"<<endl;
-    pout << "----------------"<<endl;
 #ifndef MOLPRO
+    pout << "----------------"<<endl;
     writeSummary();
 #else
+    pout << "================"<<endl;
     writeSummaryForMolpro();
 #endif
     pout << endl;
