@@ -3,7 +3,7 @@
 Block program as a standalone solver
 ************************************
 
-In the following DMRG calculation, C\ :sub:`2` molecule is used to demonstrate various computational features as of the 1.5.1 release.
+In the following DMRG calculation, C\ :sub:`2` molecule is used to demonstrate various computational features as of the 1.5.2 release.
 Integrals and orbitals must be supplied externally in
 `Molpro's FCIDUMP format <http://www.molpro.net/info/2010.1/doc/manual/node417.html>`_.
 The integral files for C\ :sub:`2` can be found here: `FCIDUMP <https://raw.githubusercontent.com/sanshar/Block/master/README_Examples/FCIDUMP>`_ 

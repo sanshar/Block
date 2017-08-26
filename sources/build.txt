@@ -8,11 +8,11 @@ Source code and binary
 
 * Version 1.5
 
-  - Source code `block-1.5.1.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.1.gz>`_,
-  - Source code `block-1.5.1-serial.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.1-serial.gz>`_,
-  - Binary `block.spin_adapted-1.5.1.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.1.gz>`_,
+  - Source code `block-1.5.2.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.2.gz>`_,
+  - Source code `block-1.5.2-serial.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.2-serial.gz>`_,
+  - Binary `block.spin_adapted-1.5.2.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.2.gz>`_,
     1.8 MB, compiled with GCC-4.8, Boost-1.55, OpenMPI-1.10.3, MKL-11
-  - Binary `block.spin_adapted-1.5.1-serial.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.1-serial.gz>`_
+  - Binary `block.spin_adapted-1.5.2-serial.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.2-serial.gz>`_
     1.7 MB, compiled with GCC-4.8, Boost-1.55, MKL-11
 
 * Version 1.1.1
