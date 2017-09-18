@@ -203,7 +203,13 @@ More CASCI/CASSCF parameters are documented in <a class="reference external" hre
 </div>
 <div class="section" id="setup-block-in-pyscf-package">
 <h2>Setup Block in PySCF package<a class="headerlink" href="#setup-block-in-pyscf-package" title="Permalink to this headline">¶</a></h2>
-<p>First is to <a class="reference internal" href="build.html#build"><em>prepare the Block executable binary</em></a>.
+<p>First you need <a class="reference internal" href="build.html#build"><em>prepare the Block executable binary</em></a>.
+You can either compile it from source code <a class="footnote-reference" href="#id4" id="id2">[2]</a> or download the
+precompiled binary
+<a class="reference external" href="http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.2.gz">block.spin_adapted-1.5.2.gz</a>
+(compiled with Boost-1.55, OpenMPI-1.10.3, MKL-11) and the MPI-disabled version
+<a class="reference external" href="http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.2-serial.gz">block.spin_adapted-1.5.2-serial.gz</a>
+(compiled with Boost-1.55, MKL-11).
 Next, you need setup the Block runtime environment in PySCF.  In the config file
 <tt class="file docutils literal"><span class="pre">/path/to/pyscf/future/dmrgscf/settings.py</span></tt> (see also the template
 <tt class="file docutils literal"><span class="pre">/path/to/pyscf/future/dmrgscf/settings.py.template</span></tt>), you need specify:</p>
@@ -272,11 +278,12 @@ whenever is possible.</p>
 <h2>Control Block program through PySCF wrapper<a class="headerlink" href="#control-block-program-through-pyscf-wrapper" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="parallelism">
 <h3>Parallelism<a class="headerlink" href="#parallelism" title="Permalink to this headline">¶</a></h3>
-<p>MPI parallelization parameters for Block are controlled by the variable
-<tt class="docutils literal"><span class="pre">MPIPREFIX</span></tt> in <tt class="file docutils literal"><span class="pre">pyscf/future/dmrgscf/settings.py</span></tt> or the attribute
-<tt class="xref py py-attr docutils literal"><span class="pre">mpiprefix</span></tt> of <a class="reference internal" href="#DMRGCI" title="DMRGCI"><tt class="xref py py-class docutils literal"><span class="pre">DMRGCI</span></tt></a> object.  For example, if you want to run
-Block using 4 processors on 2 nodes with Infiniband as the communication layer,
-you can specify in the input script:</p>
+<p>Block-1.1.1 or older version support MPI level parallelization.  The MPI
+parallelization parameters are controlled by the variable <tt class="docutils literal"><span class="pre">MPIPREFIX</span></tt> in
+<tt class="file docutils literal"><span class="pre">pyscf/future/dmrgscf/settings.py</span></tt> or the attribute <tt class="xref py py-attr docutils literal"><span class="pre">mpiprefix</span></tt> of
+<a class="reference internal" href="#DMRGCI" title="DMRGCI"><tt class="xref py py-class docutils literal"><span class="pre">DMRGCI</span></tt></a> object.  For example, if you want to run Block using 4
+processors on 2 nodes with Infiniband as the communication layer, you can
+specify in the input script:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">mc</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">DMRGSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
 <span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">mpiprefix</span> <span class="o">=</span> <span class="s">&#39;mpirun -np 4 -npernode --mca btl self,openib&#39;</span>
 <span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
@@ -695,12 +702,25 @@ you can find more examples of state-average and state-specific calculations.</p>
 </div>
 <div class="section" id="dmrg-nevpt2">
 <h2>DMRG-NEVPT2<a class="headerlink" href="#dmrg-nevpt2" title="Permalink to this headline">¶</a></h2>
-<p>DMRG-NEVPT2 <a class="footnote-reference" href="#id4" id="id2">[2]</a> calculations are available since Block-1.1.  In Block-1.1, we
-implemented the standard DMRG-NEVPT2 method which requires the 4-particle
-density matrix.  Computing and storing the 4-particle density matrix is
-extremely demanding.  It limits the system size to at most 26 orbitals.
-To handle systems with larger active space, we implemented an effective
-approximation based on compressed MPS-perturber
+<p>For Block 1.1.1 version or older, the standard DMRG-NEVPT2 calculation can be
+carried out on top of the DMRG-CASCI or DMRG-CASSCF calculation:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">dmrgscf</span><span class="p">,</span> <span class="n">mrpt</span>
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span><span class="n">atom</span><span class="o">=</span><span class="s">&quot;N 0 0 0; N 0 0 1&quot;</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s">&quot;ccpvdz&quot;</span><span class="p">)</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="n">mc</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">DMRGSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASCI</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">DMRGCI</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The standard DMRG-NEVPT2 method requires the 4-particle density matrix.
+Computing and storing the 4-particle density matrix is extremely demanding.  It
+limits the system size to at most 26 orbitals.  Starting from Block 1.1 version,
+we implemented an effective approximation based on compressed MPS-perturber
 technique which can significantly reduce the computation cost.  The MPS-perturber
 NEVPT2 implementation requires the <a class="reference external" href="http://mpi4py.scipy.org">MPI4Py</a> library
 and the <strong>serial version</strong> of Block program.  You need set in the config file
@@ -712,10 +732,9 @@ and the <strong>serial version</strong> of Block program.  You need set in the c
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The wavefunction structure from different Block versions are incompatible.  If
-BLOCKEXE for zeroth order wavefunction is set to Block-1.1, the variable
-BLOCKEXE_COMPRESS_NEVPT should also be Block-1.1.  Similarly, Block-1.5
-(stackblock) PT code only compatible with the zeroth order wavefunction of
-Block-1.5 (stackblock).</p>
+BLOCKEXE for zeroth order wavefunction is set to Block-1.1, BLOCKEXE_COMPRESS_NEVPT
+for PT should also be Block-1.1.  Similarly, Block-1.5 (stackblock) PT code
+only compatible with the zeroth order wavefunction of Block-1.5 (stackblock).</p>
 </div>
 <p>Now you can use <tt class="xref py py-func docutils literal"><span class="pre">compress_approx()</span></tt> function to initialize a compressed
 pertuber NEVPT2 method.  In the <tt class="xref py py-func docutils literal"><span class="pre">compress_approx()</span></tt> function, we precomputed
@@ -775,91 +794,527 @@ ID to the <tt class="docutils literal"><span class="pre">mc</span></tt> object b
 </div>
 <div class="section" id="case-study">
 <h2>Case study<a class="headerlink" href="#case-study" title="Permalink to this headline">¶</a></h2>
-<p>In this example, we computed the lowest excited states with DMRG-CASSCF and
-DMRG-NEVPT2 methods.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
-<span class="kn">from</span> <span class="nn">pyscf.mcscf</span> <span class="kn">import</span> <span class="n">avas</span>
-<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">dmrgscf</span>
-<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">mrpt</span>
-<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">lib</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="c">#</span>
+<span class="c"># Contributors:</span>
+<span class="c">#       Zhendong Li &lt;zhendongli2008@gmail.com&gt;</span>
+<span class="c">#       Qiming Sun &lt;osirpt.sun@gmail.com&gt;</span>
+<span class="c">#</span>
+
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="nb">reduce</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">scipy.linalg</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">gto</span><span class="p">,</span> <span class="n">scf</span><span class="p">,</span> <span class="n">mcscf</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">tools</span>
+
+<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">Mole</span><span class="p">()</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">output</span> <span class="o">=</span> <span class="s">&#39;hs.out&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">  Mo  7.34411020207581      1.17495097908005      6.72284263905920</span>
+<span class="s">  Fe  7.84036274632279      2.40948832380662      3.90857987198295</span>
+<span class="s">  S   8.11413397508734      3.34683967317511      5.92473122721237</span>
+<span class="s">  Cl  9.42237962692288      2.83901882053830      2.40523971787167</span>
+<span class="s">  S   7.63129189448338      0.24683725427736      4.48256715460659</span>
+<span class="s">  Cl  5.78420653505383      3.15381896731458      3.13969003482939</span>
+<span class="s">  N   7.05276738605521      2.42445066370842      8.66076404425459</span>
+<span class="s">  N   6.64167403727998     -1.00707407196440      7.11600799320614</span>
+<span class="s">  N   5.24002742536262      1.70306900993116      5.97156233521481</span>
+<span class="s">  H   6.27407522563538      2.37009344884271      9.32021452836747</span>
+<span class="s">  H   7.93656914286549      2.22405698642280      9.14675757456406</span>
+<span class="s">  H   7.12313637861828      3.37423478174186      8.26848891472229</span>
+<span class="s">  H   4.53157107313027      2.02429015953190      6.63557341863725</span>
+<span class="s">  H   5.36325579034589      2.43796505637839      5.24458486826946</span>
+<span class="s">  H   4.86812692298093      0.90155604764634      5.45231738540969</span>
+<span class="s">  H   5.82209673287966     -1.30027608533573      7.65147593202357</span>
+<span class="s">  H   6.56861368828978     -1.33871396574670      6.14286445056596</span>
+<span class="s">  H   7.48831993436433     -1.42577562013418      7.51985443522153</span>
+<span class="s">  S   9.40594188780477      0.42545761808747      7.87277304102829</span>
+<span class="s">  H   8.82966334944139     -0.10099345030206      8.99111747895267</span>
+<span class="s">&#39;&#39;&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;tzp-dkh&#39;</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">charge</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">spin</span> <span class="o">=</span> <span class="mi">8</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
 
 <span class="c">#</span>
+<span class="c"># X2C correction for relativistic effects</span>
+<span class="c">#</span>
+<span class="c"># first pass, to generate initial guess</span>
+<span class="c">#</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">sfx2c</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">UHF</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">chkfile</span> <span class="o">=</span> <span class="s">&#39;hs.chk&#39;</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">level_shift</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">conv_tol</span> <span class="o">=</span> <span class="mf">1e-2</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="c">#</span>
+<span class="c"># second pass to converge SCF calculation</span>
+<span class="c">#</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">newton</span><span class="p">(</span><span class="n">mf</span><span class="p">)</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">conv_tol</span> <span class="o">=</span> <span class="mf">1e-12</span>
+<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+
+
+
+<span class="c">##################################################</span>
+<span class="c">#</span>
+<span class="c"># Analyze SCF results and make MCSCF initial guess</span>
+<span class="c">#</span>
+<span class="c">##################################################</span>
+
+<span class="c"># This parameter to control the call to matplotlib</span>
+<span class="n">ifplot</span> <span class="o">=</span> <span class="bp">False</span>
+
+<span class="k">def</span> <span class="nf">sqrtm</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">e</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="o">*</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">v</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
+
+<span class="k">def</span> <span class="nf">lowdin</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="n">e</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="o">/</span><span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">v</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">conj</span><span class="p">())</span>
+
+<span class="c">##################################################</span>
+<span class="c">#</span>
+<span class="c"># 1. Read UHF-alpha/beta orbitals from chkfile</span>
+<span class="c">#</span>
+<span class="c">##################################################</span>
+<span class="n">fname</span> <span class="o">=</span> <span class="s">&#39;hs.chk&#39;</span>
+<span class="n">chkfile</span> <span class="o">=</span> <span class="n">fname</span>
+<span class="n">mol</span><span class="p">,</span> <span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">chkfile</span><span class="o">.</span><span class="n">load_scf</span><span class="p">(</span><span class="n">chkfile</span><span class="p">)</span>
+<span class="n">mo_coeff</span> <span class="o">=</span> <span class="n">mf</span><span class="p">[</span><span class="s">&quot;mo_coeff&quot;</span><span class="p">]</span>
+<span class="n">ma</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">mb</span> <span class="o">=</span> <span class="n">mo_coeff</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">nb</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">nalpha</span> <span class="o">=</span> <span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="o">+</span><span class="n">mol</span><span class="o">.</span><span class="n">spin</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+<span class="n">nbeta</span>  <span class="o">=</span> <span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="o">-</span><span class="n">mol</span><span class="o">.</span><span class="n">spin</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;Nalpha = </span><span class="si">%d</span><span class="s">, Nbeta </span><span class="si">%d</span><span class="s">, Sz = </span><span class="si">%d</span><span class="s">, Norb = </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nalpha</span><span class="p">,</span> <span class="n">nbeta</span><span class="p">,</span> <span class="n">mol</span><span class="o">.</span><span class="n">spin</span><span class="p">,</span> <span class="n">nb</span><span class="p">))</span>
+
+<span class="c">#=============================</span>
+<span class="c"># DUMP from chkfile to molden</span>
+<span class="c">#=============================</span>
+<span class="c">#</span>
+<span class="c"># One can view the orbitals in many visualization tool like Jmol, IBOviewer</span>
+<span class="c">#</span>
+<span class="n">moldenfile</span> <span class="o">=</span> <span class="n">fname</span><span class="o">+</span><span class="s">&#39;0.molden&#39;</span>
+<span class="n">tools</span><span class="o">.</span><span class="n">molden</span><span class="o">.</span><span class="n">from_chkfile</span><span class="p">(</span><span class="n">moldenfile</span><span class="p">,</span> <span class="n">chkfile</span><span class="p">)</span>
+<span class="k">if</span> <span class="mi">0</span><span class="p">:</span>
+    <span class="c"># Jmol script to generate orbital images.  Run this jmol script in command line</span>
+    <span class="c">#       jmol hs.spt</span>
+    <span class="c"># It writes out images for 10 HOMO and 10 LUMO orbitals.</span>
+    <span class="n">tools</span><span class="o">.</span><span class="n">molden</span><span class="o">.</span><span class="n">from_mo</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">fname</span><span class="o">+</span><span class="s">&#39;_alpha.molden&#39;</span><span class="p">,</span> <span class="n">ma</span><span class="p">)</span>
+    <span class="n">tools</span><span class="o">.</span><span class="n">molden</span><span class="o">.</span><span class="n">from_mo</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">fname</span><span class="o">+</span><span class="s">&#39;_beta.molden&#39;</span><span class="p">,</span> <span class="n">mb</span><span class="p">)</span>
+    <span class="n">jmol_script</span> <span class="o">=</span> <span class="s">&#39;hs.spt&#39;</span>
+    <span class="n">fspt</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">jmol_script</span><span class="p">,</span><span class="s">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">fspt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;&#39;&#39;</span>
+<span class="s">initialize;</span>
+<span class="s">set background [xffffff];</span>
+<span class="s">set frank off</span>
+<span class="s">set autoBond true;</span>
+<span class="s">set bondRadiusMilliAngstroms 66;</span>
+<span class="s">set bondTolerance 0.5;</span>
+<span class="s">set forceAutoBond false;</span>
+<span class="s">#cd /home/abc/pyscf/examples/dmrg</span>
+<span class="s">&#39;&#39;&#39;</span><span class="p">)</span>
+    <span class="n">fspt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;load </span><span class="si">%s</span><span class="s">_beta.molden;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="n">fspt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;rotate -30 y;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="n">fspt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;rotate 20 x;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nalpha</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span><span class="n">nalpha</span><span class="o">+</span><span class="mi">10</span><span class="p">):</span>
+        <span class="n">fspt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;isoSurface MO </span><span class="si">%d</span><span class="s"> fill noMesh noDots;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">fspt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;#color isoSurface translucent 0.6 [x00ff00];</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">fspt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;write JPG 90 &quot;</span><span class="si">%s</span><span class="s">-alpha-</span><span class="si">%d</span><span class="s">.jpg&quot;;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">jmol_script</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+
+    <span class="n">fspt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;load </span><span class="si">%s</span><span class="s">_alpha.molden;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="n">fspt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;rotate -30 y;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="n">fspt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;rotate 20 x;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbeta</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span><span class="n">nbeta</span><span class="o">+</span><span class="mi">10</span><span class="p">):</span>
+        <span class="n">fspt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;isoSurface MO </span><span class="si">%d</span><span class="s"> fill noMesh noDots;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">fspt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;#color isoSurface translucent 0.6 [x0000ff];</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">fspt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;write JPG 90 &quot;</span><span class="si">%s</span><span class="s">-beta-</span><span class="si">%d</span><span class="s">.jpg&quot;;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">jmol_script</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span>
+    <span class="n">fspt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<span class="c">##################################################</span>
+<span class="c">#</span>
+<span class="c"># 2. Sanity check, using eg orthogonality</span>
+<span class="c">#</span>
+<span class="c">##################################################</span>
+<span class="n">ova</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s">&quot;cint1e_ovlp_sph&quot;</span><span class="p">)</span>
+<span class="n">diff</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,(</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">ova</span><span class="p">,</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nb</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">diff</span><span class="p">))</span>
+<span class="n">diff</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,(</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">ova</span><span class="p">,</span><span class="n">mo_coeff</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nb</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">diff</span><span class="p">))</span>
+
+<span class="c">#=============================</span>
+<span class="c"># Natural orbitals</span>
+<span class="c"># Lowdin basis X=S{-1/2}</span>
+<span class="c"># psi = chi * C</span>
+<span class="c">#     = chi&#39; * C&#39;</span>
+<span class="c">#     = chi*X*(X{-1}C&#39;)</span>
+<span class="c">#=============================</span>
+<span class="n">pTa</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">ma</span><span class="p">[:,:</span><span class="n">nalpha</span><span class="p">],</span><span class="n">ma</span><span class="p">[:,:</span><span class="n">nalpha</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+<span class="n">pTb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">mb</span><span class="p">[:,:</span><span class="n">nbeta</span><span class="p">],</span><span class="n">mb</span><span class="p">[:,:</span><span class="n">nbeta</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+<span class="n">pT</span> <span class="o">=</span> <span class="n">pTa</span><span class="o">+</span><span class="n">pTb</span>
+<span class="n">pT</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">pT</span>
+<span class="c"># Lowdin basis</span>
+<span class="n">s12</span> <span class="o">=</span> <span class="n">sqrtm</span><span class="p">(</span><span class="n">ova</span><span class="p">)</span>
+<span class="n">s12inv</span> <span class="o">=</span> <span class="n">lowdin</span><span class="p">(</span><span class="n">ova</span><span class="p">)</span>
+<span class="n">pT</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,(</span><span class="n">s12</span><span class="p">,</span><span class="n">pT</span><span class="p">,</span><span class="n">s12</span><span class="p">))</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;idemponency of DM: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">pT</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pT</span><span class="p">)</span><span class="o">-</span><span class="n">pT</span><span class="p">))</span>
+<span class="n">enorb</span> <span class="o">=</span> <span class="n">mf</span><span class="p">[</span><span class="s">&quot;mo_energy&quot;</span><span class="p">]</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">CMO_enorb:&#39;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">enorb</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">ifplot</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nb</span><span class="p">),</span><span class="n">enorb</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s">&#39;ro&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nb</span><span class="p">),</span><span class="n">enorb</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="s">&#39;bo&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c">#</span>
+<span class="c"># Non-orthogonal cases: FC=SCE</span>
+<span class="c"># Fao = SC*e*C{-1} = S*C*e*Ct*S</span>
+<span class="c"># OAO basis:</span>
+<span class="c"># F = Xt*Fao*X = S1/2*C*e*Ct*S1/2</span>
+<span class="c">#</span>
+<span class="n">fa</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,(</span><span class="n">ma</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">enorb</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span><span class="n">ma</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+<span class="n">fb</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,(</span><span class="n">mb</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">enorb</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span><span class="n">mb</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+<span class="n">fav</span> <span class="o">=</span> <span class="p">(</span><span class="n">fa</span><span class="o">+</span><span class="n">fb</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+<span class="n">fock_sf</span> <span class="o">=</span> <span class="n">fOAO</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,(</span><span class="n">s12</span><span class="p">,</span><span class="n">fav</span><span class="p">,</span><span class="n">s12</span><span class="p">))</span>
+<span class="c">#</span>
+<span class="c"># Small level shift on density matrix to break occupation degeneracy in natual</span>
+<span class="c"># orbitals</span>
+<span class="c">#</span>
+<span class="n">shift</span> <span class="o">=</span> <span class="mf">1e-7</span>
+<span class="n">pTshift</span> <span class="o">=</span> <span class="n">pT</span> <span class="o">+</span> <span class="n">shift</span><span class="o">*</span><span class="n">fOAO</span>
+<span class="c">#</span>
+<span class="c"># &#39;natural&#39; occupations and orbitals</span>
+<span class="c">#</span>
+<span class="n">eig</span><span class="p">,</span><span class="n">coeff</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">pTshift</span><span class="p">)</span>
+<span class="n">eig</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">eig</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;Natual occupancy </span><span class="si">%s</span><span class="s"> &#39;</span> <span class="o">%</span> <span class="n">eig</span><span class="p">)</span>
+<span class="n">eig</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">eig</span><span class="p">)</span><span class="o">&lt;</span><span class="mf">1.e-14</span><span class="p">]</span><span class="o">=</span><span class="mf">0.0</span>
+<span class="k">if</span> <span class="n">ifplot</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nb</span><span class="p">),</span><span class="n">eig</span><span class="p">,</span><span class="s">&#39;ro&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="c">#</span>
+<span class="c"># Rotate back to AO representation and check orthogonality</span>
+<span class="c">#</span>
+<span class="n">coeff</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">s12inv</span><span class="p">,</span><span class="n">coeff</span><span class="p">)</span>
+<span class="n">ova</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s">&quot;cint1e_ovlp_sph&quot;</span><span class="p">)</span>
+<span class="n">diff</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,(</span><span class="n">coeff</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">ova</span><span class="p">,</span><span class="n">coeff</span><span class="p">))</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nb</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;CtSC-I&#39;</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">diff</span><span class="p">))</span>
+
+
+<span class="c">##################################################</span>
+<span class="c">#</span>
+<span class="c"># 3. Search for active space</span>
+<span class="c">#</span>
+<span class="c">##################################################</span>
+
+<span class="c">#</span>
+<span class="c"># 3.1 Transform the entire MO space into core, active, and external space</span>
+<span class="c"># based on natural occupancy</span>
+<span class="c">#</span>
+<span class="c"># Expectation value of natural orbitals &lt;i|F|i&gt;</span>
+<span class="n">fexpt</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,(</span><span class="n">coeff</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">ova</span><span class="p">,</span><span class="n">fav</span><span class="p">,</span><span class="n">ova</span><span class="p">,</span><span class="n">coeff</span><span class="p">))</span>
+<span class="n">enorb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">fexpt</span><span class="p">)</span>
+<span class="c"># Sort by occupancy</span>
+<span class="n">index</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">eig</span><span class="p">)</span>
+<span class="n">enorb</span> <span class="o">=</span> <span class="n">enorb</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+<span class="n">nocc</span>  <span class="o">=</span> <span class="n">eig</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+<span class="n">coeff</span> <span class="o">=</span> <span class="n">coeff</span><span class="p">[:,</span><span class="n">index</span><span class="p">]</span>
+<span class="c">#</span>
+<span class="c"># Reordering and define active space according to thresh</span>
+<span class="c">#</span>
+<span class="n">thresh</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">active</span> <span class="o">=</span> <span class="p">(</span><span class="n">thresh</span> <span class="o">&lt;=</span> <span class="n">nocc</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">nocc</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="o">-</span><span class="n">thresh</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">Natural orbitals:&#39;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;Offdiag(F) = </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">fexpt</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">enorb</span><span class="p">)))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb</span><span class="p">):</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;orb:&#39;</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">active</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">nocc</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">enorb</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+<span class="n">actIndices</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">active</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;active orbital indices </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">actIndices</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;Num active orbitals </span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">actIndices</span><span class="p">))</span>
+<span class="n">cOrbs</span> <span class="o">=</span> <span class="n">coeff</span><span class="p">[:,:</span><span class="n">actIndices</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+<span class="n">aOrbs</span> <span class="o">=</span> <span class="n">coeff</span><span class="p">[:,</span><span class="n">actIndices</span><span class="p">]</span>
+<span class="n">vOrbs</span> <span class="o">=</span> <span class="n">coeff</span><span class="p">[:,</span><span class="n">actIndices</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+<span class="n">nb</span> <span class="o">=</span> <span class="n">cOrbs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">nc</span> <span class="o">=</span> <span class="n">cOrbs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">na</span> <span class="o">=</span> <span class="n">aOrbs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">nv</span> <span class="o">=</span> <span class="n">vOrbs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;core orbs:&#39;</span><span class="p">,</span><span class="n">cOrbs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;act  orbs:&#39;</span><span class="p">,</span><span class="n">aOrbs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;vir  orbs:&#39;</span><span class="p">,</span><span class="n">vOrbs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">nc</span><span class="o">+</span><span class="n">na</span><span class="o">+</span><span class="n">nv</span> <span class="o">==</span> <span class="n">nb</span>
+
+<span class="c">#</span>
+<span class="c"># 3.2 Localizing core, active, external space separately, based on certain</span>
+<span class="c"># local orbitals.</span>
+<span class="c">#</span>
+<span class="c"># We now dump out UHF natual orbitals and localized orbitals to help identify</span>
+<span class="c"># active space.</span>
+<span class="c">#</span>
+<span class="c"># dump UHF natrual orbital</span>
+<span class="c">#</span>
+<span class="n">tools</span><span class="o">.</span><span class="n">molden</span><span class="o">.</span><span class="n">from_mo</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">fname</span><span class="o">+</span><span class="s">&#39;_uno.molden&#39;</span><span class="p">,</span> <span class="n">coeff</span><span class="p">)</span>
+
+<span class="c">#=============================</span>
+<span class="c"># localized orbitals</span>
+<span class="c">#=============================</span>
+<span class="n">iflocal</span>  <span class="o">=</span> <span class="bp">False</span>
+<span class="k">if</span> <span class="n">iflocal</span><span class="p">:</span>
+    <span class="c"># We implemented different localization later</span>
+    <span class="kn">from</span> <span class="nn">pyscf.tools</span> <span class="kn">import</span> <span class="n">localizer</span>
+    <span class="n">loc</span> <span class="o">=</span> <span class="n">localizer</span><span class="o">.</span><span class="n">localizer</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span><span class="n">ma</span><span class="p">[:,:</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span><span class="s">&#39;boys&#39;</span><span class="p">)</span>
+    <span class="n">loc</span><span class="o">.</span><span class="n">verbose</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">new_coeff</span> <span class="o">=</span> <span class="n">loc</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
+    <span class="n">loc</span> <span class="o">=</span> <span class="n">localizer</span><span class="o">.</span><span class="n">localizer</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span><span class="n">ma</span><span class="p">[:,</span><span class="n">mol</span><span class="o">.</span><span class="n">nelectron</span><span class="o">/</span><span class="mi">2</span><span class="p">:],</span><span class="s">&#39;boys&#39;</span><span class="p">)</span>
+    <span class="n">new_coeff2</span> <span class="o">=</span> <span class="n">loc</span><span class="o">.</span><span class="n">optimize</span><span class="p">()</span>
+    <span class="n">lmo</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">new_coeff</span><span class="p">,</span><span class="n">new_coeff2</span><span class="p">])</span>
+    <span class="n">tools</span><span class="o">.</span><span class="n">molden</span><span class="o">.</span><span class="n">from_mo</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">fname</span><span class="o">+</span><span class="s">&#39;lmo.molden&#39;</span><span class="p">,</span> <span class="n">lmo</span><span class="p">)</span>
+
+<span class="c">#</span>
+<span class="c"># Test orthogonality because occasionally localization procedure may break the</span>
+<span class="c"># orbital orthogonality (when AO functions are close to linear dependent).</span>
+<span class="c">#</span>
+<span class="n">cOrbsOAO</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">s12</span><span class="p">,</span><span class="n">cOrbs</span><span class="p">)</span>
+<span class="n">aOrbsOAO</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">s12</span><span class="p">,</span><span class="n">aOrbs</span><span class="p">)</span>
+<span class="n">vOrbsOAO</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">s12</span><span class="p">,</span><span class="n">vOrbs</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;Ortho-cOAO&#39;</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">cOrbsOAO</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">cOrbsOAO</span><span class="p">)</span><span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nc</span><span class="p">)))</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;Ortho-aOAO&#39;</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">aOrbsOAO</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">aOrbsOAO</span><span class="p">)</span><span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">na</span><span class="p">)))</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;Ortho-vOAO&#39;</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">vOrbsOAO</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">vOrbsOAO</span><span class="p">)</span><span class="o">-</span><span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nv</span><span class="p">)))</span>
+
+<span class="c">#==========================================</span>
+<span class="c"># Now try to get localized molecular orbitals (SCDM)</span>
+<span class="c">#==========================================</span>
+<span class="k">def</span> <span class="nf">scdm</span><span class="p">(</span><span class="n">coeff</span><span class="p">,</span> <span class="n">overlap</span><span class="p">,</span> <span class="n">aux</span><span class="p">):</span>
+<span class="c">#</span>
+<span class="c"># Argument coeff is a set of orthogonal orbitals |O&gt; (eg occupied HF</span>
+<span class="c"># orbitals); aux is a set of localized orbitals.  One can define a subset |B&gt;</span>
+<span class="c"># of aux, which has the closest overlap to the coeff space.</span>
+<span class="c"># The (orthogonalized) resultant local orbitals |B&gt; can be considered as the</span>
+<span class="c"># localized coeff |O&gt;</span>
+<span class="c">#</span>
+<span class="c">#       |B&gt; = |O&gt;&lt;O|aux&gt;, in which det(&lt;O|aux&gt;) is maximized;</span>
+<span class="c">#       return lowdin(|B&gt;)</span>
+<span class="c">#</span>
+    <span class="n">no</span> <span class="o">=</span> <span class="n">coeff</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">ova</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,(</span><span class="n">coeff</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">overlap</span><span class="p">,</span> <span class="n">aux</span><span class="p">))</span>
+    <span class="c"># ova = no*nb</span>
+    <span class="n">q</span><span class="p">,</span><span class="n">r</span><span class="p">,</span><span class="n">piv</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">qr</span><span class="p">(</span><span class="n">ova</span><span class="p">,</span> <span class="n">pivoting</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c"># piv[:no] defines the subset of aux which has the largest overlap to coeff space</span>
+    <span class="n">bc</span> <span class="o">=</span> <span class="n">ova</span><span class="p">[:,</span><span class="n">piv</span><span class="p">[:</span><span class="n">no</span><span class="p">]]</span>
+
+    <span class="n">ova</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">bc</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">bc</span><span class="p">)</span>
+    <span class="n">s12inv</span> <span class="o">=</span> <span class="n">lowdin</span><span class="p">(</span><span class="n">ova</span><span class="p">)</span>
+    <span class="n">cnew</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,(</span><span class="n">coeff</span><span class="p">,</span><span class="n">bc</span><span class="p">,</span><span class="n">s12inv</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">cnew</span>
+<span class="c">#</span>
+<span class="c"># Various choices for the localized orbitals</span>
+<span class="c"># * the non-orthogonal AOs</span>
+<span class="c">#       aux=numpy.identity(nb)</span>
+<span class="c"># * Lowdin orthogonalized AOs</span>
+<span class="n">aux</span> <span class="o">=</span> <span class="n">s12inv</span>
+<span class="c"># * Meta-lowdin orthogonalized AOs</span>
+<span class="c">#       from pyscf import lo</span>
+<span class="c">#       aux = lo.orth.orth_ao(mol,method=&#39;meta_lowdin&#39;,pre_orth_ao=lo.orth.pre_orth_ao(mol))</span>
+<span class="c"># * ...</span>
+<span class="c">#</span>
+<span class="n">ova</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">intor_symmetric</span><span class="p">(</span><span class="s">&quot;cint1e_ovlp_sph&quot;</span><span class="p">)</span>
+<span class="n">clmo</span> <span class="o">=</span> <span class="n">scdm</span><span class="p">(</span><span class="n">cOrbs</span><span class="p">,</span> <span class="n">ova</span><span class="p">,</span> <span class="n">aux</span><span class="p">)</span>  <span class="c"># local &quot;AOs&quot; in core space</span>
+<span class="n">almo</span> <span class="o">=</span> <span class="n">scdm</span><span class="p">(</span><span class="n">aOrbs</span><span class="p">,</span> <span class="n">ova</span><span class="p">,</span> <span class="n">aux</span><span class="p">)</span>  <span class="c"># local &quot;AOs&quot; in active space</span>
+<span class="n">vlmo</span> <span class="o">=</span> <span class="n">scdm</span><span class="p">(</span><span class="n">vOrbs</span><span class="p">,</span> <span class="n">ova</span><span class="p">,</span> <span class="n">aux</span><span class="p">)</span>  <span class="c"># local &quot;AOs&quot; in external space</span>
+
+
+<span class="c">#</span>
+<span class="c"># 3.3 Sorting each space (core, active, external) based on &quot;orbital energy&quot; to</span>
+<span class="c"># prevent high-lying orbitals standing in valence space.</span>
+<span class="c">#</span>
+<span class="c"># Get &lt;i|F|i&gt;</span>
+<span class="k">def</span> <span class="nf">psort</span><span class="p">(</span><span class="n">ova</span><span class="p">,</span> <span class="n">fav</span><span class="p">,</span> <span class="n">coeff</span><span class="p">):</span>
+    <span class="c"># pT is density matrix, fav is Fock matrix</span>
+    <span class="c"># OCC-SORT</span>
+    <span class="n">pTnew</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,(</span><span class="n">coeff</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">s12</span><span class="p">,</span><span class="n">pT</span><span class="p">,</span><span class="n">s12</span><span class="p">,</span><span class="n">coeff</span><span class="p">))</span>
+    <span class="n">nocc</span>  <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">pTnew</span><span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">nocc</span><span class="p">)</span>
+    <span class="n">ncoeff</span> <span class="o">=</span> <span class="n">coeff</span><span class="p">[:,</span><span class="n">index</span><span class="p">]</span>
+    <span class="n">nocc</span>   <span class="o">=</span> <span class="n">nocc</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+    <span class="n">enorb</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,(</span><span class="n">ncoeff</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">ova</span><span class="p">,</span><span class="n">fav</span><span class="p">,</span><span class="n">ova</span><span class="p">,</span><span class="n">ncoeff</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">ncoeff</span><span class="p">,</span> <span class="n">nocc</span><span class="p">,</span> <span class="n">enorb</span>
+
+<span class="c"># E-SORT</span>
+<span class="n">mo_c</span><span class="p">,</span> <span class="n">n_c</span><span class="p">,</span> <span class="n">e_c</span> <span class="o">=</span> <span class="n">psort</span><span class="p">(</span><span class="n">ova</span><span class="p">,</span> <span class="n">fav</span><span class="p">,</span> <span class="n">clmo</span><span class="p">)</span>
+<span class="n">mo_o</span><span class="p">,</span> <span class="n">n_o</span><span class="p">,</span> <span class="n">e_o</span> <span class="o">=</span> <span class="n">psort</span><span class="p">(</span><span class="n">ova</span><span class="p">,</span> <span class="n">fav</span><span class="p">,</span> <span class="n">almo</span><span class="p">)</span>
+<span class="n">mo_v</span><span class="p">,</span> <span class="n">n_v</span><span class="p">,</span> <span class="n">e_v</span> <span class="o">=</span> <span class="n">psort</span><span class="p">(</span><span class="n">ova</span><span class="p">,</span> <span class="n">fav</span><span class="p">,</span> <span class="n">vlmo</span><span class="p">)</span>
+<span class="c">#</span>
+<span class="c"># coeff is the local molecular orbitals</span>
+<span class="c">#</span>
+<span class="n">coeff</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">mo_c</span><span class="p">,</span> <span class="n">mo_o</span><span class="p">,</span> <span class="n">mo_v</span><span class="p">))</span>
+
+<span class="c">#</span>
+<span class="c"># Test orthogonality for the localize MOs as before</span>
+<span class="c">#</span>
+<span class="n">diff</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,(</span><span class="n">coeff</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">ova</span><span class="p">,</span><span class="n">coeff</span><span class="p">))</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nb</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;diff=&#39;</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">diff</span><span class="p">))</span>
+<span class="n">tools</span><span class="o">.</span><span class="n">molden</span><span class="o">.</span><span class="n">from_mo</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span> <span class="n">fname</span><span class="o">+</span><span class="s">&#39;_scdm.molden&#39;</span><span class="p">,</span> <span class="n">coeff</span><span class="p">)</span>
+
+<span class="c">#</span>
+<span class="c"># Population analysis to confirm that our LMO (coeff) make sense</span>
+<span class="c">#</span>
+<span class="c">#==========================================</span>
+<span class="c"># lowdin-pop of the obtained LMOs in OAOs</span>
+<span class="c">#==========================================</span>
+<span class="n">lcoeff</span> <span class="o">=</span> <span class="n">s12</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">coeff</span><span class="p">)</span>
+<span class="c"># Orthogonality test</span>
+<span class="n">diff</span> <span class="o">=</span> <span class="nb">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">dot</span><span class="p">,(</span><span class="n">lcoeff</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">lcoeff</span><span class="p">))</span> <span class="o">-</span> <span class="n">numpy</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">nb</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;diff=&#39;</span><span class="p">,</span><span class="n">numpy</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">diff</span><span class="p">))</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">Lowdin population for LMOs:&#39;</span><span class="p">)</span>
+
+<span class="n">pthresh</span> <span class="o">=</span> <span class="mf">0.02</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">ao_labels</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+<span class="n">ifACTONLY</span> <span class="o">=</span> <span class="bp">False</span> <span class="c">#True</span>
+<span class="n">nelec</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">nact</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="k">for</span> <span class="n">iorb</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb</span><span class="p">):</span>
+    <span class="n">vec</span> <span class="o">=</span> <span class="n">lcoeff</span><span class="p">[:,</span><span class="n">iorb</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">vec</span><span class="o">&gt;</span><span class="n">pthresh</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">ifACTONLY</span> <span class="o">==</span> <span class="bp">False</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">iorb</span> <span class="o">&lt;</span> <span class="n">nc</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39; iorb_C=&#39;</span><span class="p">,</span><span class="n">iorb</span><span class="p">,</span><span class="s">&#39; occ=&#39;</span><span class="p">,</span><span class="n">n_c</span><span class="p">[</span><span class="n">iorb</span><span class="p">],</span><span class="s">&#39; fii=&#39;</span><span class="p">,</span><span class="n">e_c</span><span class="p">[</span><span class="n">iorb</span><span class="p">])</span>
+            <span class="n">nelec</span> <span class="o">+=</span> <span class="n">n_c</span><span class="p">[</span><span class="n">iorb</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">iorb</span> <span class="o">&gt;=</span> <span class="n">nc</span> <span class="ow">and</span> <span class="n">iorb</span> <span class="o">&lt;</span> <span class="n">nc</span><span class="o">+</span><span class="n">na</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39; iorb_A=&#39;</span><span class="p">,</span><span class="n">iorb</span><span class="p">,</span><span class="s">&#39; occ=&#39;</span><span class="p">,</span><span class="n">n_o</span><span class="p">[</span><span class="n">iorb</span><span class="o">-</span><span class="n">nc</span><span class="p">],</span><span class="s">&#39; faa=&#39;</span><span class="p">,</span><span class="n">e_o</span><span class="p">[</span><span class="n">iorb</span><span class="o">-</span><span class="n">nc</span><span class="p">])</span>
+            <span class="n">nelec</span> <span class="o">+=</span> <span class="n">n_o</span><span class="p">[</span><span class="n">iorb</span><span class="o">-</span><span class="n">nc</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39; iorb_V=&#39;</span><span class="p">,</span><span class="n">iorb</span><span class="p">,</span><span class="s">&#39; occ=&#39;</span><span class="p">,</span><span class="n">n_v</span><span class="p">[</span><span class="n">iorb</span><span class="o">-</span><span class="n">nc</span><span class="o">-</span><span class="n">na</span><span class="p">],</span><span class="s">&#39; fvv=&#39;</span><span class="p">,</span><span class="n">e_v</span><span class="p">[</span><span class="n">iorb</span><span class="o">-</span><span class="n">nc</span><span class="o">-</span><span class="n">na</span><span class="p">])</span>
+            <span class="n">nelec</span> <span class="o">+=</span> <span class="n">n_v</span><span class="p">[</span><span class="n">iorb</span><span class="o">-</span><span class="n">nc</span><span class="o">-</span><span class="n">na</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">iao</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;    iao=&#39;</span><span class="p">,</span><span class="n">labels</span><span class="p">[</span><span class="n">iao</span><span class="p">],</span><span class="s">&#39; pop=&#39;</span><span class="p">,</span><span class="n">vec</span><span class="p">[</span><span class="n">iao</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">iorb</span> <span class="o">&gt;=</span> <span class="n">nc</span> <span class="ow">and</span> <span class="n">iorb</span> <span class="o">&lt;</span> <span class="n">nc</span><span class="o">+</span><span class="n">na</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39; iorb_A=&#39;</span><span class="p">,</span><span class="n">iorb</span><span class="p">,</span><span class="s">&#39; faa=&#39;</span><span class="p">,</span><span class="n">e_o</span><span class="p">[</span><span class="n">iorb</span><span class="o">-</span><span class="n">nc</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">iao</span> <span class="ow">in</span> <span class="n">idx</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&#39;    iao=&#39;</span><span class="p">,</span><span class="n">labels</span><span class="p">[</span><span class="n">iao</span><span class="p">],</span><span class="s">&#39; pop=&#39;</span><span class="p">,</span><span class="n">vec</span><span class="p">[</span><span class="n">iao</span><span class="p">])</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;nelec=&#39;</span><span class="p">,</span><span class="n">nelec</span><span class="p">)</span>
+
+
+<span class="c">#</span>
+<span class="c"># 3.4 select &#39;active&#39; orbitals</span>
+<span class="c">#</span>
+<span class="c"># By reading the orbital images with Jmol, we characterized some of the local</span>
+<span class="c"># orbitals</span>
+<span class="c">#</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="p">[</span><span class="mi">80</span><span class="p">,</span><span class="mi">82</span><span class="p">,</span><span class="mi">83</span><span class="p">,</span><span class="mi">84</span><span class="p">,</span><span class="mi">85</span><span class="p">,</span><span class="mi">86</span><span class="p">]</span> <span class="c"># S-3p = 7</span>
+<span class="n">o1</span> <span class="o">=</span> <span class="p">[</span> <span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="mi">6</span>  <span class="c"># approximate occupancies, to help obtain the electrons in active space</span>
+<span class="n">a2</span> <span class="o">=</span> <span class="p">[</span><span class="mi">87</span><span class="p">,</span><span class="mi">88</span><span class="p">,</span><span class="mi">89</span><span class="p">,</span><span class="mi">90</span><span class="p">,</span><span class="mi">91</span><span class="p">,</span><span class="mi">92</span><span class="p">,</span><span class="mi">93</span><span class="p">,</span><span class="mi">94</span><span class="p">,</span><span class="mi">95</span><span class="p">,</span><span class="mi">96</span><span class="p">]</span> <span class="c"># Fe-Mo (3d,4d) = 10</span>
+<span class="n">o2</span> <span class="o">=</span> <span class="p">[</span> <span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">8</span><span class="o">+</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span>  <span class="c"># approximate occupancies</span>
+<span class="n">a3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">97</span><span class="p">,</span><span class="mi">98</span><span class="p">,</span><span class="mi">99</span><span class="p">,</span><span class="mi">101</span><span class="p">,</span><span class="mi">103</span><span class="p">,</span><span class="mi">105</span><span class="p">]</span> <span class="c"># Mo-s + Fe4d = 6</span>
+<span class="n">o3</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mi">6</span>  <span class="c"># approximate occupancies</span>
+
+<span class="c">#</span>
+<span class="c"># There are many different choices for active space, here we just demonstrate</span>
+<span class="c"># one which is consists of Fe 3d, Mo 4d and S 3p orbitals</span>
+<span class="c">#</span>
+<span class="c">#==========================</span>
+<span class="c"># select &#39;active&#39; orbitals</span>
+<span class="c">#==========================</span>
+<span class="n">caslst</span> <span class="o">=</span> <span class="n">a1</span><span class="o">+</span><span class="n">a2</span>
+<span class="n">norb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">caslst</span><span class="p">)</span>
+<span class="n">ne_act</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">o1</span><span class="p">)</span> <span class="o">+</span> <span class="nb">sum</span><span class="p">(</span><span class="n">o2</span><span class="p">)</span>
+<span class="n">s</span> <span class="o">=</span> <span class="mi">1</span> <span class="c"># 0,1,2,3,4, High-spin case ms = s</span>
+<span class="n">ne_alpha</span> <span class="o">=</span> <span class="n">ne_act</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">s</span>
+<span class="n">ne_beta</span>  <span class="o">=</span> <span class="n">ne_act</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">s</span>
+<span class="n">nalpha</span> <span class="o">=</span> <span class="n">ne_alpha</span>
+<span class="n">nbeta</span> <span class="o">=</span> <span class="n">ne_beta</span>
+<span class="n">norb</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">caslst</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s">&#39;norb/nacte=&#39;</span><span class="p">,</span><span class="n">norb</span><span class="p">,[</span><span class="n">nalpha</span><span class="p">,</span><span class="n">nbeta</span><span class="p">])</span>
+
+
+<span class="c">##################################################</span>
+<span class="c">#</span>
+<span class="c"># 4. DMRG-CASSCF and DMRG-NEVPT2</span>
+<span class="c">#</span>
+<span class="c">##################################################</span>
+<span class="c">#</span>
 <span class="c"># Adjust the MPI schedular and scratch directory if needed.</span>
+<span class="c"># NOTE the DMRG-NEVPT2 is expensive, it requires about 8 GB memory per processor</span>
 <span class="c">#</span>
 <span class="c">#from pyscf.dmrgscf import settings</span>
 <span class="c">#settings.MPIPREFIX = &#39;srun&#39;</span>
 <span class="c">#settings.BLOCKSCRATCHDIR = &#39;/scratch&#39;</span>
 
-
-<span class="n">mol</span> <span class="o">=</span> <span class="n">gto</span><span class="o">.</span><span class="n">M</span><span class="p">(</span>
-    <span class="n">atom</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
-<span class="s">V     0.000000    0.000000    0.000000</span>
-<span class="s">O     0.000000    0.000000    1.592000</span>
-<span class="s">Cl    1.639807    1.639807   -0.539657</span>
-<span class="s">Cl   -1.639807    1.639807   -0.539657</span>
-<span class="s">Cl    1.639807   -1.639807   -0.539657</span>
-<span class="s">Cl   -1.639807   -1.639807   -0.539657</span>
-<span class="s">&#39;&#39;&#39;</span><span class="p">,</span>
-    <span class="n">basis</span> <span class="o">=</span> <span class="s">&#39;cc-pvtz-dk&#39;</span><span class="p">,</span>
-    <span class="n">spin</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="n">charge</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span>
-    <span class="n">verbose</span> <span class="o">=</span> <span class="mi">5</span><span class="p">)</span>
-
-<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">sfx2c1e</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">ROHF</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span>
-<span class="n">mf</span><span class="o">.</span><span class="n">chkfile</span> <span class="o">=</span> <span class="s">&#39;vocl4.chk&#39;</span>
-<span class="n">mf</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="kn">from</span> <span class="nn">pyscf.dmrgscf</span> <span class="kn">import</span> <span class="n">DMRGCI</span><span class="p">,</span> <span class="n">DMRGSCF</span>
+<span class="kn">from</span> <span class="nn">pyscf</span> <span class="kn">import</span> <span class="n">mrpt</span>
 
 <span class="c">#</span>
-<span class="c"># Generate the DMRG-CASSCF initial guess with AVAS (atomic valence active space) method.</span>
+<span class="c"># Redirect output to another file</span>
 <span class="c">#</span>
-<span class="n">norb_act</span><span class="p">,</span> <span class="n">ne_act</span><span class="p">,</span> <span class="n">mos</span> <span class="o">=</span> <span class="n">avas</span><span class="o">.</span><span class="n">avas</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;V 3s&#39;</span><span class="p">,</span> <span class="s">&#39;V 3p&#39;</span><span class="p">,</span> <span class="s">&#39;V 3d&#39;</span><span class="p">,</span> <span class="s">&#39;O 2p&#39;</span><span class="p">,</span> <span class="s">&#39;Cl 3p&#39;</span><span class="p">])</span>
+<span class="n">mol</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">output</span> <span class="o">=</span> <span class="s">&#39;hs_dmrg.out&#39;</span><span class="p">)</span>
 
-<span class="c">#</span>
-<span class="c"># Pass 1</span>
-<span class="c"># DMRG-CASSCF calculation with small M.  In many systems, the mcscf orbitals has</span>
-<span class="c"># weak dependence to the quality of the active space solution.  We can use small</span>
-<span class="c"># M to approximate the active space wave function and increase M for DMRG-CASCI</span>
-<span class="c"># and DMRG-NEVPT2 in next step.</span>
-<span class="c">#</span>
-<span class="n">mc</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">DMRGSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">norb_act</span><span class="p">,</span> <span class="n">ne_act</span><span class="p">)</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">maxM</span> <span class="o">=</span> <span class="mi">500</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">extraline</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;num_thrds </span><span class="si">%d</span><span class="s">&#39;</span><span class="o">%</span><span class="n">lib</span><span class="o">.</span><span class="n">num_threads</span><span class="p">(),</span> <span class="s">&#39;warmup local_2site&#39;</span><span class="p">]</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">memory</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c"># GB</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">conv_tol</span> <span class="o">=</span> <span class="mf">1e-6</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">state_average_</span><span class="p">([</span><span class="o">.</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mos</span><span class="p">)</span>
-<span class="n">mc_orbs</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">mo_coeff</span>
+<span class="n">mf</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">sfx2c1e</span><span class="p">(</span><span class="n">scf</span><span class="o">.</span><span class="n">RHF</span><span class="p">(</span><span class="n">mol</span><span class="p">))</span>
+<span class="n">mc</span> <span class="o">=</span> <span class="n">DMRGSCF</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="p">[</span><span class="n">nalpha</span><span class="p">,</span><span class="n">nbeta</span><span class="p">])</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">chkfile</span> <span class="o">=</span> <span class="s">&#39;hs_mc.chk&#39;</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">max_memory</span> <span class="o">=</span> <span class="mi">30000</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">maxM</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">tol</span> <span class="o">=</span> <span class="mf">1e-6</span>
+<span class="n">orbs</span> <span class="o">=</span> <span class="n">mc</span><span class="o">.</span><span class="n">sort_mo</span><span class="p">(</span><span class="n">caslst</span><span class="p">,</span> <span class="n">coeff</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">mc1step</span><span class="p">(</span><span class="n">orbs</span><span class="p">)</span>
 
 
 <span class="c">#</span>
-<span class="c"># Pass 2</span>
-<span class="c"># A separated DMRG-CASCI calculation based on DMRG-CASSCF orbitals obtained and</span>
-<span class="c"># DMRG solver with large bond dimension to improve the multi configurational</span>
-<span class="c"># wave function.</span>
+<span class="c"># CASCI-NEVPT2</span>
 <span class="c">#</span>
-<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASCI</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">norb_act</span><span class="p">,</span> <span class="n">ne_act</span><span class="p">)</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">dmrgscf</span><span class="o">.</span><span class="n">DMRGCI</span><span class="p">(</span><span class="n">mol</span><span class="p">)</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">maxM</span> <span class="o">=</span> <span class="mi">1500</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">extraline</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;num_thrds </span><span class="si">%d</span><span class="s">&#39;</span><span class="o">%</span><span class="n">lib</span><span class="o">.</span><span class="n">num_threads</span><span class="p">(),</span> <span class="s">&#39;warmup local_2site&#39;</span><span class="p">]</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">memory</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c"># GB</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span><span class="o">.</span><span class="n">nroots</span> <span class="o">=</span> <span class="mi">3</span>
-<span class="n">mc</span><span class="o">.</span><span class="n">kernel</span><span class="p">(</span><span class="n">mc_orbs</span><span class="p">)</span>
+<span class="c"># If DMRG-CASSCF was finished without any problems (eg convergence, wall time</span>
+<span class="c"># limits on cluster etc),  one can simply continue with DMRG-NEVPT2</span>
+<span class="c">#       mrpt.NEVPT(mc).kernel()</span>
+<span class="c">#</span>
+<span class="c"># But it&#39;s highly possible that one needs to restore the calculation from</span>
+<span class="c"># previous work.  The following is an example to restore the calculation.</span>
+<span class="c"># Assuming DMRG-CASSCF has converged and the DMRG temporary files were</span>
+<span class="c"># deleted, we just need the DMRG-CASCI calculation with the converged MCSCF</span>
+<span class="c"># orbitals to get the DMRG wavefunction.</span>
+<span class="c">#</span>
+<span class="n">mc</span> <span class="o">=</span> <span class="n">mcscf</span><span class="o">.</span><span class="n">CASCI</span><span class="p">(</span><span class="n">mf</span><span class="p">,</span> <span class="n">norb</span><span class="p">,</span> <span class="p">[</span><span class="n">nalpha</span><span class="p">,</span><span class="n">nbeta</span><span class="p">])</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">chkfile</span> <span class="o">=</span> <span class="s">&#39;hs_mc.chk&#39;</span>
+<span class="n">mo</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">chkfile</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s">&#39;hs_mc.chk&#39;</span><span class="p">,</span> <span class="s">&quot;mcscf/mo_coeff&quot;</span><span class="p">)</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">fcisolver</span> <span class="o">=</span> <span class="n">DMRGCI</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span><span class="n">maxM</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">tol</span> <span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
+<span class="c">#</span>
+<span class="c"># Tune DMRG parameters.  It&#39;s not necessary in most scenario.</span>
+<span class="c">#</span>
+<span class="c">#mc.fcisolver.outputlevel = 3</span>
+<span class="c">#mc.fcisolver.scheduleSweeps = [0, 4, 8, 12, 16, 20, 24, 28, 30, 34]</span>
+<span class="c">#mc.fcisolver.scheduleMaxMs  = [200, 400, 800, 1200, 2000, 4000, 3000, 2000, 1000, 500]</span>
+<span class="c">#mc.fcisolver.scheduleTols   = [0.0001, 0.0001, 0.0001, 0.0001, 1e-5, 1e-6, 1e-7, 1e-7, 1e-7, 1e-7 ]</span>
+<span class="c">#mc.fcisolver.scheduleNoises = [0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0001, 0.0, 0.0, 0.0, 0.0]</span>
+<span class="c">#mc.fcisolver.twodot_to_onedot = 38</span>
+<span class="c">#mc.fcisolver.maxIter = 50</span>
+<span class="n">mc</span><span class="o">.</span><span class="n">casci</span><span class="p">(</span><span class="n">mo</span><span class="p">)</span>
 
+<span class="c">#</span>
+<span class="c"># DMRG-NEVPT2</span>
+<span class="c">#</span>
+<span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
 
 <span class="c">#</span>
-<span class="c"># This step computes DMRG-NEVPT2 energy state-specificly. It is recommended to</span>
-<span class="c"># use large bond dimension (larger than the last DMRG-CASCI calculation) to</span>
-<span class="c"># guarantee the accuracy.</span>
+<span class="c"># There is also a fast DMRG-NEVPT2 implementation.  See also the example</span>
+<span class="c"># pyscf/examples/dmrg/02-dmrg_nevpt2.py</span>
 <span class="c">#</span>
-<span class="k">print</span> <span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">compress_approx</span><span class="p">(</span><span class="n">maxM</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
-<span class="k">print</span> <span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">compress_approx</span><span class="p">(</span><span class="n">maxM</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
-<span class="k">print</span> <span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">compress_approx</span><span class="p">(</span><span class="n">maxM</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+<span class="n">mrpt</span><span class="o">.</span><span class="n">NEVPT</span><span class="p">(</span><span class="n">mc</span><span class="p">)</span><span class="o">.</span><span class="n">compress_approx</span><span class="p">()</span><span class="o">.</span><span class="n">kernel</span><span class="p">()</span>
+
+<span class="c">##################################################</span>
+<span class="c">#</span>
+<span class="c"># Don&#39;t forget to clean up the scratch.  DMRG calculation can produce large</span>
+<span class="c"># amount of temporary files.</span>
+<span class="c">#</span>
+<span class="c">##################################################</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="run-block-standalone">
 <h2>Run Block standalone<a class="headerlink" href="#run-block-standalone" title="Permalink to this headline">¶</a></h2>
-<p><tt class="docutils literal"><span class="pre">Block</span></tt> program can be run standalone without the PySCF environment.
+<p><tt class="docutils literal"><span class="pre">Block</span></tt> program can be run standalone without the PySCF environments.
 In PySCF-1.3,  the DMRG interface provides dry run mode to generate the Block
 input config <tt class="file docutils literal"><span class="pre">dmrg.conf</span></tt> and the integral file
 <tt class="file docutils literal"><span class="pre">FCIDUMP</span></tt>.:</p>
@@ -878,22 +1333,14 @@ input config <tt class="file docutils literal"><span class="pre">dmrg.conf</span
 <table class="docutils footnote" frame="void" id="id3" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td><ol class="first last upperalpha simple" start="5">
-<li><ol class="first upperalpha" start="18">
-<li>Sayfutyarova, Q. Sun, G. K.-L. Chan, G. Knizia, arXiv:1701.07862 [physics.chem-ph]</li>
-</ol>
-</li>
-</ol>
-</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>cite paper.</td></tr>
 </tbody>
 </table>
 <table class="docutils footnote" frame="void" id="id4" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
-<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td><ol class="first last upperalpha simple" start="19">
-<li>Guo, M. A. Watson, W. Hu, Q. Sun, G. K.-L. Chan, J. Chem.  Theory Comput. 12, 1583 (2016)</li>
-</ol>
-</td></tr>
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Please contact &#8220;Sandeep Sharma&#8221; &lt;<a class="reference external" href="mailto:sanshar&#37;&#52;&#48;gmail&#46;com">sanshar<span>&#64;</span>gmail<span>&#46;</span>com</a>&gt; or &#8220;Garnet Chan&#8221;
+&lt;<a class="reference external" href="mailto:gkc1000&#37;&#52;&#48;gmail&#46;com">gkc1000<span>&#64;</span>gmail<span>&#46;</span>com</a>&gt; for Block source code.</td></tr>
 </tbody>
 </table>
 </div>
@@ -919,7 +1366,7 @@ input config <tt class="file docutils literal"><span class="pre">dmrg.conf</span
     </div>
     <div class="footer">
         &copy; Copyright 2015, Garnet Kin-Lic Chan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>
