@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Keywords &mdash; BLOCK 1.5.0 documentation</title>
+    <title>Keywords &#8212; BLOCK 1.5.0 documentation</title>
     
     <link rel="stylesheet" href="static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="static/pygments.css" type="text/css" />
@@ -23,25 +23,25 @@
     <script type="text/javascript" src="static/jquery.js"></script>
     <script type="text/javascript" src="static/underscore.js"></script>
     <script type="text/javascript" src="static/doctools.js"></script>
-    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="BLOCK 1.5.0 documentation" href="index.html" />
     <link rel="next" title="Benchmark" href="benchmark.html" />
-    <link rel="prev" title="Typical Calculations with BLOCK" href="examples.html" /> 
+    <link rel="prev" title="Block program as a standalone solver" href="examples.html" /> 
   </head>
-  <body>
-    <div class="related">
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
           <a href="benchmark.html" title="Benchmark"
              accesskey="N">next</a></li>
         <li class="right" >
-          <a href="examples.html" title="Typical Calculations with BLOCK"
+          <a href="examples.html" title="Block program as a standalone solver"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">BLOCK 1.5.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">BLOCK 1.5.0 documentation</a> &#187;</li> 
       </ul>
     </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
@@ -60,26 +60,25 @@
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="examples.html"
-                        title="previous chapter">Typical Calculations with <cite>BLOCK</cite></a></p>
+                        title="previous chapter">Block program as a standalone solver</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="benchmark.html"
                         title="next chapter">Benchmark</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="sources/keywords.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="sources/keywords.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
-    </p>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -88,21 +87,21 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="keywords">
 <span id="keywords-list"></span><h1>Keywords<a class="headerlink" href="#keywords" title="Permalink to this headline">¶</a></h1>
 <p>Block program offers many keywords to control the calculation.  In the Block
 input file, each keyword (and its value) should take one line.  There are two
 types of format to input the keywords.  One is the key-value pattern:</p>
-<div class="highlight-python"><div class="highlight"><pre>keyword value1 value2 ...
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">keyword</span> <span class="n">value1</span> <span class="n">value2</span> <span class="o">...</span>
 </pre></div>
 </div>
 <p>The other is the <cite>schedule</cite> section:</p>
-<div class="highlight-python"><div class="highlight"><pre>schedule
-0 50  1.0e-6 1e-06
-5 50  1.0e-7 0e-06
-end
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">schedule</span>
+<span class="mi">0</span> <span class="mi">50</span>  <span class="mf">1.0e-6</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">06</span>
+<span class="mi">5</span> <span class="mi">50</span>  <span class="mf">1.0e-7</span> <span class="mi">0</span><span class="n">e</span><span class="o">-</span><span class="mi">06</span>
+<span class="n">end</span>
 </pre></div>
 </div>
 <div class="section" id="hamiltonian-types">
@@ -132,7 +131,7 @@ two-dot to the one-dot algorithm.</dd>
 </div>
 <div class="section" id="warm-up-types">
 <h2>Warm-up Types<a class="headerlink" href="#warm-up-types" title="Permalink to this headline">¶</a></h2>
-<p>If <tt class="docutils literal"><span class="pre">warmup</span></tt> is not specified, the default is <tt class="docutils literal"><span class="pre">local\_0site</span></tt>.</p>
+<p>If <code class="docutils literal"><span class="pre">warmup</span></code> is not specified, the default is <code class="docutils literal"><span class="pre">local\_0site</span></code>.</p>
 <dl class="docutils">
 <dt>warmup</dt>
 <dd><p class="first">followed by one of the following strings.</p>
@@ -148,7 +147,7 @@ two-dot to the one-dot algorithm.</dd>
 </div>
 <div class="section" id="solver-types">
 <h2>Solver Types<a class="headerlink" href="#solver-types" title="Permalink to this headline">¶</a></h2>
-<p>If not specified, default is <tt class="docutils literal"><span class="pre">davidson</span></tt> solver.</p>
+<p>If not specified, default is <code class="docutils literal"><span class="pre">davidson</span></code> solver.</p>
 <dl class="docutils">
 <dt>davidson</dt>
 <dd>No associated value</dd>
@@ -158,7 +157,7 @@ two-dot to the one-dot algorithm.</dd>
 </div>
 <div class="section" id="orbital-reorder-types">
 <h2>Orbital Reorder Types<a class="headerlink" href="#orbital-reorder-types" title="Permalink to this headline">¶</a></h2>
-<p>If not specified, <tt class="docutils literal"><span class="pre">fielder</span></tt> ordering is used by default.</p>
+<p>If not specified, <code class="docutils literal"><span class="pre">fielder</span></code> ordering is used by default.</p>
 <dl class="docutils">
 <dt>fiedler</dt>
 <dd>No associated value</dd>
@@ -188,7 +187,7 @@ program also compute the 4-particle density matrix.</dd>
 <dd>No associated value</dd>
 <dt>onepdm</dt>
 <dd>No associated value, If set, the program also computes and stores the
-1-particle density matrix in <tt class="file docutils literal"><span class="pre">spatial_onepdm.*.*.txt</span></tt>.</dd>
+1-particle density matrix in <code class="file docutils literal"><span class="pre">spatial_onepdm.*.*.txt</span></code>.</dd>
 <dt>restart_fourpdm</dt>
 <dd>No associated value</dd>
 <dt>restart_nevpt2_npdm</dt>
@@ -205,30 +204,30 @@ program also compute the 4-particle density matrix.</dd>
 <dd>No associated value</dd>
 <dt>threepdm</dt>
 <dd>No associated value, If set, the program also computes and stores the
-3-particle density matrix in <tt class="file docutils literal"><span class="pre">spatial_threepdm.*.*.txt</span></tt>.</dd>
+3-particle density matrix in <code class="file docutils literal"><span class="pre">spatial_threepdm.*.*.txt</span></code>.</dd>
 <dt>transition_onepdm</dt>
 <dd>No associated value, If set, the program also computes and stores the
-transition density matrix in <tt class="file docutils literal"><span class="pre">spatial_onepdm.*.*.txt</span></tt>.</dd>
+transition density matrix in <code class="file docutils literal"><span class="pre">spatial_onepdm.*.*.txt</span></code>.</dd>
 <dt>transition_twopdm</dt>
 <dd>No associated value, If set, the program also computes and stores the
-transition 2-particle density matrix in <tt class="file docutils literal"><span class="pre">spatial_twopdm.*.*.txt</span></tt>.</dd>
+transition 2-particle density matrix in <code class="file docutils literal"><span class="pre">spatial_twopdm.*.*.txt</span></code>.</dd>
 <dt>twopdm</dt>
 <dd>No associated value, If set, the program also computes and stores the
-2-particle density matrix in <tt class="file docutils literal"><span class="pre">spatial_twopdm.*.*.txt</span></tt>.</dd>
+2-particle density matrix in <code class="file docutils literal"><span class="pre">spatial_twopdm.*.*.txt</span></code>.</dd>
 </dl>
 </div>
 <div class="section" id="schedule">
 <h2>Schedule<a class="headerlink" href="#schedule" title="Permalink to this headline">¶</a></h2>
 <p>DMRG sweep schedule.  It supports two types of input format.  One is:</p>
-<div class="highlight-python"><div class="highlight"><pre>schedule default
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">schedule</span> <span class="n">default</span>
 </pre></div>
 </div>
 <p>to generate the sweep schedule by Block program.  This is the default value of
-<tt class="docutils literal"><span class="pre">schedule</span></tt> keyword.  The other is to explicitly input the schedule, eg:</p>
-<div class="highlight-python"><div class="highlight"><pre>schedule
-0 50  1.0e-6 1e-06
-5 50  1.0e-7 0e-06
-end
+<code class="docutils literal"><span class="pre">schedule</span></code> keyword.  The other is to explicitly input the schedule, eg:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">schedule</span>
+<span class="mi">0</span> <span class="mi">50</span>  <span class="mf">1.0e-6</span> <span class="mi">1</span><span class="n">e</span><span class="o">-</span><span class="mi">06</span>
+<span class="mi">5</span> <span class="mi">50</span>  <span class="mf">1.0e-7</span> <span class="mi">0</span><span class="n">e</span><span class="o">-</span><span class="mi">06</span>
+<span class="n">end</span>
 </pre></div>
 </div>
 <p>The first column is the sweep-iteration, the second column is the corresponding
@@ -242,7 +241,7 @@ diagonalization, the fourth column is the noise.</p>
 <dd>No associated value.  If set, the program starts with backward sweep.</dd>
 <dt>hf_occ</dt>
 <dd><p class="first">The initial HF wave function occupancies, in spin orbital.  It can be one of
-the following values.  The recommended one is <tt class="docutils literal"><span class="pre">integral</span></tt>.</p>
+the following values.  The recommended one is <code class="docutils literal"><span class="pre">integral</span></code>.</p>
 <dl class="last docutils">
 <dt>integral</dt>
 <dd>Generate occupancy pattern based on the 1-electron integrals.</dd>
@@ -308,7 +307,7 @@ uniformly bet ween the different roots.</dd>
 <dd>followed by an integer for the number of OpenMP threads to use.</dd>
 <dt>memory (new in Block-1.5)</dt>
 <dd>followed by an integer and a letter as the unit (k, m, g).
-The default is <tt class="docutils literal"><span class="pre">2</span> <span class="pre">g</span></tt> (2 GB memory).</dd>
+The default is <code class="docutils literal"><span class="pre">2</span> <span class="pre">g</span></code> (2 GB memory).</dd>
 </dl>
 </div>
 </div>
@@ -319,21 +318,21 @@ The default is <tt class="docutils literal"><span class="pre">2</span> <span cla
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
           <a href="benchmark.html" title="Benchmark"
              >next</a></li>
         <li class="right" >
-          <a href="examples.html" title="Typical Calculations with BLOCK"
+          <a href="examples.html" title="Block program as a standalone solver"
              >previous</a> |</li>
-        <li><a href="index.html">BLOCK 1.5.0 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">BLOCK 1.5.0 documentation</a> &#187;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2015, Garnet Kin-Lic Chan.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2015, Garnet Kin-Lic Chan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.6.
     </div>
   </body>
 </html>

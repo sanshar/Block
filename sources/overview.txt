@@ -30,9 +30,9 @@ Downloads
 =========
 * Block-1.5 (stackblock)
 
-  - Source code `block-1.5.2.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.2.gz>`_.
+  - Source code `block-1.5.2.tar.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.2.tar.gz>`_.
 
-  - Source code `block-1.5.2-serial.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.2-serial.gz>`_.
+  - Source code `block-1.5.2-serial.tar.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.2-serial.tar.gz>`_.
     This serial version is used by DMRG-NEVPT2 compressed perturber method.
 
   - Precompiled binary `block.spin_adapted-1.5.2.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.2.gz>`_
