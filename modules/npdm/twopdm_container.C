@@ -134,10 +134,16 @@ void Twopdm_container::save_spatial_npdm_binary(const int &i, const int &j)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_twopdm.", i, j,".bin");
+#ifndef MOLCAS
     std::ofstream ofs(file, std::ios::binary);
     boost::archive::binary_oarchive save(ofs);
     save << spatial_twopdm;
     ofs.close();
+#else
+    FILE* f = fopen(file,"wb");
+    fwrite(spatial_twopdm.data(),sizeof(double),spatial_twopdm.size(),f);
+    fclose(f);
+#endif
   }
 }
 

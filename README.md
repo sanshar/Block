@@ -2,10 +2,14 @@
 
 `BLOCK` implements the density matrix renormalization group (DMRG) algorithm for quantum chemistry.
 
+This version Block-1.1.1 is not maintained anymore.  The DMRG code has been
+rewritten for better memory and computational efficiency.  The project was moved
+to bitbucket and released as Block-1.5.  Source code and manual of Block-1.5 can
+be found [here](https://sanshar.github.io/Block).
+
 * [New features](#new-features)
-* [Build Block](#build-block)
 * [How to cite Block](#how-to-cite-block)
-* [Project web](http://chemists.princeton.edu/chan/software/block-code-for-dmrg)
+* [Project web](http://chan.caltech.edu/software/block)
 * [Documentation](https://sanshar.github.io/Block)
 * [License GPLv3](../master/LICENSE.txt)
 
@@ -13,10 +17,15 @@
 New features
 ------------
 
+### Version 1.5
+
+* Optimized memory usage and efficiency
+* Supported (OpenMP) threads and shared memory
+
 ### [Version 1.1 (alpha)](../../releases/latest)
 
-* DMRG-CASSCF: close integration with [PySCF](http://chemists.princeton.edu/chan/software/pyscf/)
-  (up to about 40 orbitals and 3000 basis functions)
+* DMRG-CASSCF: close integration with PySCF (up to about 40 orbitals and 3000
+  basis functions)
 * DMRG-NEVPT2 (up to about 24 orbitals and 1200 basis functions with PySCF)
 * DMRG-NEVPT2 with compressed MPS perturber (up to about 30 orbitals and 1200
   basis functions through PySCF)
@@ -24,81 +33,52 @@ New features
 * 1, 2-particle transition density matrices
 
 
-Build Block
------------
+FAQ
+---
 
-### 1. Compile ```BLOCK```
+### Should I update to Block-1.5 (stackblock)?
+We highly recommend you to move to Block-1.5 for many reasons:
 
-```BLOCK``` requires BLAS, LAPACK and BOOST.
-MPI library is needed for distributed-memory parallel compilation.
-```BLOCK``` is compiled using the makefile supplied in the distribution. 
-The following customizations need to be made to the makefile placed in the main directory ```./Block```. 
+* Bugfix.  We fixed many bugs in Block-1.5.  Calculations, especially NEVPT2,
+  are more stable in Block-1.5.
 
-Choose compilers by specifying,
+* Performance.  Block-1.5 can be 1.5 to 5 times faster than Block-1.1.  The speed up
+  is significant for small systems.
 
-        CXX = g++  
+* Maintenance.  Block-1.5 is the long-term project that we'll invest energy to
+  maintain.  We'll not spend time to fix problems that only exist in Block-1.1.
 
-For MPI-based parallel execution on distributed-memory machines,
-  
-        USE_MPI = yes
-        MPICXX = mpicxx  
+### Where can I get Block-1.5?
+You can download the source code or the binary executable from online
+[manual](https://sanshar.github.io/Block/build.html).  If you are using DMRG
+for chemistry problems, we recommend to use Block-1.5 with its interface
+in [PySCF](https://github.com/sunqm/pyscf) program.  The Block programs in
+Molpro, ORCA and QChem are Block-1.1.  We are working to port Block-1.5
+program to these quantum chemistry packages.
 
-MPI library must be compiled using the same compiler as for compiling ```BLOCK```. 
-Intel compiler such as ```icpc``` is also supported with approriate compiling flags chosen automatically.
+### Can I use the input of Block-1.1 in Block-1.5?
+Yes.  Input files (FCIDUMP and dmrg.conf) of Block-1.1 can be used in Block-1.5
+without any changes.  Block-1.5 provides new keywords num_thrds and memory to
+control the number of threads and the total memory to use.
+```
+num_thrds 8
+memory, 40, g
+```
+Note these keywords are not recognized in Block-1.1 and they will cause
+Block-1.1 crashing.
 
-Please note that when choosing your compiler, either GNU or Intel, C++0x/C++11 standards must be appropriately supported,
-as ```BLOCK``` requires new features for some of the modules (eg, ```npdm```, ```nevpt2```, etc).
-Here are our suggested _minimum_ GNU/Intel compiler versions in order for the compiling process to be successful: 
+### Is wave-function format compatible in block-1.1 and block-1.5?
+No.  Block-1.1 and Block-1.5 have different data format for wave-function.
+You're not able to use wfn files of Block-1.1 to restart calculation in
+Block-1.5 and vice versa.
 
-* GNU g++: 4.8 or newer,
-* or Intel icpc: at least 14.0.1 (2013 SP1 Update 1) or newer.
+### Why does my Block-1.5 crash for multiple threads while it works all right with Block-1.1 and single-thread Block-1.5?
+It is mostly due to the memory size you specified in the input.  In Block-1.5,
+operators are held in memory within the limits you specified in the input (or
+2GB/proc).  The memory is shared by all threads of the process.  If you specify
+many threads (num_thrds keyword) in your calculation, you should increas
+the memory size accordingly.
 
-To enable MKL library,
-
-        USE_MKL = yes
-
-And supply MKL, BOOST, LAPACK, BLAS libraries by giving the link locations and link names
-    
-	MKLLIB = /opt/intel/composer_xe_2013_sp1.0.080/mkl/lib/intel64/ 
-	MKLFLAGS = /opt/intel/composer_xe_2013_sp1.0.080/mkl/include
-
-	BOOSTLIB = -L/opt/local/lib -lboost_serialization-mt -lboost_system-mt -lboost_filesystem-mt
-	BOOSTINCLUDE = /opt/local/include/include
-
-	LAPACKBLAS = -L/opt/local/lib -lblas -llapack
-	
-Note: BOOST libraries may have different names on different systems, e.g.
-boost_serialization vs. boost_serialization_mt. Check your BOOST installation. For BOOST
-versions > 1.56, set 
-
-        USE_BOOST56 = yes
-
-When the makefile is configured, run in the directory ```./Block```
-
-        $./make
-
-The successful compilation generates the executable ```block.spin_adapted```, static and shared DMRG libraries ```libqcdmrg.a``` and ```libqcdmrg.so```.
-
-### 2. Test ```BLOCK```
-
-```BLOCK``` can be tested by executing the script in the directory ```./Block/dmrg_tests```,
-
-        $cd dmrg_tests
-        $./runtest
-
-The tests require Python to be installed on the system.
-
-### 3. Run ```BLOCK```
-
-The standalone serial code can be executed running
-
-        $block.spin_adapted input.dat > output.dat
-
-```input.dat``` is the input file and the output of the program is piped into the output file ```output.dat```.
-
-The MPI parallel mode can be called running
-
-        $mpirun -np 4 block.spin_adapted input.dat > output.dat
 
 How to cite Block
 -----------------
@@ -113,6 +93,7 @@ use of `Block`:
 * G. K.-L. Chan, J. Chem. Phys. 120, 3172 (2004),
 * D. Ghosh, J. Hachmann, T. Yanai, and G. K.-L. Chan, J. Chem. Phys., 128, 144117 (2008),
 * S. Sharma and G. K-.L. Chan, J. Chem. Phys. 136, 124121 (2012).
+* S. Guo, M. A. Watson, W. Hu, Q. Sun, G. K.-L. Chan, J. Chem.  Theory Comput. 12, 1583 (2016)
 
 In addition, a useful list of DMRG references relevant to quantum chemistry can be found
 in the article above by Sharma and Chan.

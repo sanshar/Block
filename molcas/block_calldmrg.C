@@ -176,9 +176,11 @@ void block_calldmrg (
     switch (N_pdm) {
       case 1:
         fcon << "onepdm" << endl;
+        fcon << "new_npdm_code" << endl;
         break;
       case 2:
         fcon << "twopdm" << endl;
+        fcon << "new_npdm_code" << endl;
         break;
       case 3:
         fcon << "threepdm" << endl;

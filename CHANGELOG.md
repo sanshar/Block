@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+## [1.5] - 2017-02-16
+
+* Optimized memory usage and efficiency
+* Supported (OpenMP) threads and shard memory
+
+
 ## [1.1 alpha](https://github.com/sanshar/Block/tree/v1.1-alpha) - 2016-02-12
 
 * New NEVPT2 implementation based on MPS perturber

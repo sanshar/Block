@@ -4,6 +4,12 @@ Overview
 Features
 ========
 
+New features in Block 1.5 (stackblock)
+--------------------------------------
+
+* Optimized memory usage and efficiency
+* Supported (OpenMP) threads and shared memory
+
 New features in Block 1.1
 -------------------------
 
@@ -19,15 +25,42 @@ Features in Block 1.0
 * State-averaged and state-specific excited states
 * DMRG-SCF and/or DMRG-NEVPT2 interfaces to the PySCF, Molpro, ORCA, Q-Chem and Molcas program packages
 
-Calling `BLOCK` as an external function
-=======================================
 
-The makefile distributed with `Block` code can be used to generate a library file called
-libqcdmrg.a. 
-To call `Block` as a subroutine from a C++ program, the library file has to be
-linked to the program. 
-A DMRG calculation can be performed using the function call ``calldmrg(inputf, outputf)``,
-where ``inputf`` and ``outputf`` are C-style character arrays specifying the `Block` input and output fies respectively.
+Downloads
+=========
+* Block-1.5 (stackblock)
+
+  - Source code `block-1.5.0.tar.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.0.tar.gz>`_.
+
+  - Source code `block-1.5.0-serial.tar.gz <http://www.sunqm.net/pyscf/files/src/block-1.5.0-serial.tar.gz>`_.
+    This serial version is used by DMRG-NEVPT2 compressed perturber method.
+
+  - Precompiled binary `block.spin_adapted-1.5.0.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0.gz>`_
+    (+ OpenMPI + Boost-1.55 + MKL-11) for Linux x86_64.
+
+  - Precompiled binary `block.spin_adapted-1.5.0-serial.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.0-serial.gz>`_
+    (+ Boost-1.55 + MKL-11) for Linux x86_64.  This serial version is used by
+    DMRG-NEVPT2 compressed perturber method.
+
+
+Use Block with PySCF package
+============================
+
+Block program supports two executing modes: running standalone through command
+line or as a plugin of other quantum chemistry package.  The Python-based
+quantum chemistry program package `PySCF <http://www.pyscf.org>`_ provides a
+simple solution to run Block program.  It is the recommended way to use
+Block program in most scenario.  Please see the userguide :ref:`dmrg_pyscf`.
+
+.. Calling `BLOCK` as an external function
+.. =======================================
+.. 
+.. The makefile distributed with `Block` code can be used to generate a library file called
+.. libqcdmrg.a. 
+.. To call `Block` as a subroutine from a C++ program, the library file has to be
+.. linked to the program. 
+.. A DMRG calculation can be performed using the function call ``calldmrg(inputf, outputf)``,
+.. where ``inputf`` and ``outputf`` are C-style character arrays specifying the `Block` input and output fies respectively.
 
 License and how to cite
 =======================

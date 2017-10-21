@@ -121,10 +121,16 @@ void Onepdm_container::save_spatial_npdm_binary(const int &i, const int &j)
   {
     char file[5000];
     sprintf (file, "%s%s%d.%d%s", dmrginp.save_prefix().c_str(),"/spatial_onepdm.", i, j,".bin");
+#ifndef MOLCAS
     std::ofstream ofs(file, std::ios::binary);
     boost::archive::binary_oarchive save(ofs);
     save << spatial_onepdm;
     ofs.close();
+#else
+    FILE* f = fopen(file,"wb");
+    fwrite(spatial_onepdm.data(),sizeof(double),spatial_onepdm.size(),f);
+    fclose(f);
+#endif
   }
 }
 
