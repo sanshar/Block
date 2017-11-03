@@ -114,9 +114,9 @@ Setup Block in PySCF package
 First you need :ref:`prepare the Block executable binary <build>`.
 You can either compile it from source code [#]_ or download the
 precompiled binary
-`block.spin_adapted-1.5.2.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.2.gz>`_
+`block.spin_adapted-1.5.3.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.3.gz>`_
 (compiled with Boost-1.55, OpenMPI-1.10.3, MKL-11) and the MPI-disabled version
-`block.spin_adapted-1.5.2-serial.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.2-serial.gz>`_
+`block.spin_adapted-1.5.3-serial.gz <http://www.sunqm.net/pyscf/files/bin/block.spin_adapted-1.5.3-serial.gz>`_
 (compiled with Boost-1.55, MKL-11).
 Next, you need setup the Block runtime environment in PySCF.  In the config file
 :file:`/path/to/pyscf/future/dmrgscf/settings.py` (see also the template
