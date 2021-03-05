@@ -18,7 +18,11 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "SpinQuantum.h"
 #include "timer.h"
 #include "couplingCoeffs.h"
+#if __has_include("boost/tr1/unordered_map.hpp")
 #include <boost/tr1/unordered_map.hpp>
+#else
+#include <unordered_map>
+#endif
 #include "IntegralMatrix.h"
 
 
