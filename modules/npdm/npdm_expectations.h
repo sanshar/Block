@@ -31,9 +31,9 @@ class Npdm_expectations {
       get_nonspin_adapted_expectations(NpdmSpinOps_base& lhsOps, NpdmSpinOps_base& rhsOps, NpdmSpinOps_base& dotOps,std::map<std::vector<int>, Wavefunction>& leftwaves, std::map<std::vector<int>, Wavefunction>& rightwaves);
     void get_op_string( NpdmSpinOps_base & rhsOps, std::string& op_string);
     void get_op_string( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dotOps, std::string& op_string );
-    void compute_intermediate( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dotOps, std::map<std::vector<int>, Wavefunction> & waves);
+    void compute_intermediate( NpdmSpinOps_base * lhsOps_ptr, NpdmSpinOps_base * dotOps_ptr, std::map<std::vector<int>, Wavefunction> & waves);
 
-    void compute_intermediate( NpdmSpinOps_base & rhsOps, std::map<std::vector<int>, Wavefunction> &  waves);
+    void compute_intermediate( NpdmSpinOps_base * rhsOps_ptr, std::map<std::vector<int>, Wavefunction> &  waves);
     std::vector<std::string> intermediate_filenames;
 
   private:

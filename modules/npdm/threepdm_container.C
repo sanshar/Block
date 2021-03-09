@@ -139,7 +139,7 @@ void Threepdm_container::save_spatial_npdm_text(const int &i, const int &j)
                 }
               }
     ofs.close();
-    pout << "Spatial      3PDM trace = " << trace << "\n";
+    pout << "Spatial      3PDM trace = " << trace << " (state,state)=(" << i << "," << j << ")\n";
   }
 }
 

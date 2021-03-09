@@ -8,7 +8,12 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 
 #include "spinblock.h"
+#if __has_include("boost/bind/bind.hpp")
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
+#else
 #include <boost/bind.hpp>
+#endif
 #include <boost/functional.hpp>
 #include <boost/function.hpp>
 #include <boost/make_shared.hpp>

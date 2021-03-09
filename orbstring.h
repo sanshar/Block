@@ -32,7 +32,7 @@ public:
     : occ_rep (occ), sign (sn), empty (false)
   {
     // a little fix for IBMs xlC, see notes in Orbstring::distribute 
-    for (int i = 0; i < occ_rep.size (); ++i) occ_rep [i] = abs (occ_rep [i]);   
+    for (int i = 0; i < occ_rep.size (); ++i) occ_rep [i] = abs ((int)occ_rep [i]);   
   }
   
   inline Orbstring (const bool* occ, const int sz, const int sn = 1) 

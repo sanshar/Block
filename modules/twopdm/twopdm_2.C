@@ -21,15 +21,19 @@ Sandeep Sharma and Garnet K.-L. Chan
 
 namespace SpinAdapted{
 
-void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& leftOp, SparseMatrix& dotOp, SparseMatrix& rightOp, const SpinBlock& big, vector<double>& expectations, bool doTranspose)
+  void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix* leftOp_ptr, SparseMatrix* dotOp_ptr, SparseMatrix* rightOp_ptr, const SpinBlock& big, vector<double>& expectations, bool doTranspose)
 {
+  SparseMatrix& leftOp = *leftOp_ptr;
+  SparseMatrix& dotOp = *dotOp_ptr;
+  SparseMatrix& rightOp = *rightOp_ptr;
+
   //calculating <wave1| Oa*Ob | wave2>
   // do transpose specifies if we want  <wave1| Oa^T*Ob |wave2> separately. This can be avoided in some sitations if wave1 and wave2 are the same functions
   int leftindices=0, dotindices=0, rightindices=0;
 
-  leftindices = &leftOp ? leftOp.get_orbs().size() : 0;
-  dotindices = &dotOp ? dotOp.get_orbs().size() : 0;
-  rightindices = &rightOp ? rightOp.get_orbs().size() : 0;
+  leftindices = leftOp_ptr ? leftOp.get_orbs().size() : 0;
+  dotindices = dotOp_ptr ? dotOp.get_orbs().size() : 0;
+  rightindices = rightOp_ptr ? rightOp.get_orbs().size() : 0;
 
   int Aindices, Bindices;
   Aindices = leftindices+dotindices;
@@ -43,10 +47,10 @@ void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& lef
   SpinBlock* rightBlock = big.get_rightBlock();
 
   Cre AOp; //This is just an example class
-  int totalspin = (&rightOp) ? rightOp.get_spin().getirrep() : 0;
+  int totalspin = rightOp_ptr ? rightOp.get_spin().getirrep() : 0;
 
   if (Aindices != 0)
-    FormLeftOp(leftBlock, leftOp, dotOp, AOp, totalspin);
+    FormLeftOp(leftBlock, leftOp_ptr, dotOp_ptr, AOp, totalspin);
   
   //different cases
   if (Aindices == 0 && Bindices == 4)
@@ -74,13 +78,16 @@ void spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& lef
 }
 
 
-void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix& leftOp, const SparseMatrix& dotOp, SparseMatrix& Aop, int totalspin)
+void FormLeftOp(const SpinBlock* leftBlock, const SparseMatrix* leftOp_ptr, const SparseMatrix* dotOp_ptr, SparseMatrix& Aop, int totalspin)
 {
+  const SparseMatrix& leftOp = *leftOp_ptr;
+  const SparseMatrix& dotOp = *dotOp_ptr;
+
   //Cre is just a class..it is not actually cre
   int leftindices=0, dotindices=0, rightindices=0;
 
-  leftindices = &leftOp ? leftOp.get_orbs().size() : 0;
-  dotindices = &dotOp ? dotOp.get_orbs().size() : 0;
+  leftindices = leftOp_ptr ? leftOp.get_orbs().size() : 0;
+  dotindices = dotOp_ptr ? dotOp.get_orbs().size() : 0;
   
   int Aindices, Bindices;
   Aindices = leftindices+dotindices;
