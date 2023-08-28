@@ -192,6 +192,8 @@ double do_one(SweepParams &sweepParams, const bool &warmUp, const bool &forward,
   save_onepdm_spatial_text(onepdm, state, stateB);
   save_onepdm_text(onepdm, state, stateB);
   save_onepdm_spatial_binary(onepdm, state, stateB);
+
+  return sweepParams.get_lowest_energy()[0];
 }
 }
 }
