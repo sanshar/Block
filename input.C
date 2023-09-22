@@ -187,6 +187,9 @@ void SpinAdapted::Input::initialize_defaults()
   m_orbformat=MOLPROFORM;
 
   m_warmup = LOCAL0;
+  
+  m_orz3rdmalt1 = -1;
+  m_orz3rdmalt2 = -1;
 }
 
 void SpinAdapted::Input::usedkey_error(string& key, string& line) {
@@ -1197,6 +1200,12 @@ If 2 spins are given, the calculations of transition density matrix between wave
 	m_reset_iterations = true;
       }
 
+      else if(boost::iequals(keyword,  "orz3rdmalt") )
+      {
+        m_orz3rdmalt1 = atoi(tok[1].c_str());
+        m_orz3rdmalt2 = atoi(tok[2].c_str());
+      }
+      
       else
       {
         pout << "Unrecognized option :: " << keyword << endl;
@@ -1252,6 +1261,8 @@ If 2 spins are given, the calculations of transition density matrix between wave
   mpi::broadcast(world, m_load_prefix, 0);
   mpi::broadcast(world, m_save_prefix, 0);
   mpi::broadcast(world, m_calc_type, 0);
+  mpi::broadcast(world, m_orz3rdmalt1, 0);
+  mpi::broadcast(world, m_orz3rdmalt2, 0);
 #endif
 
   //make the scratch files   

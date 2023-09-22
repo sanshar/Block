@@ -8,7 +8,12 @@
 // C++11 involves these classes, however, they're not supported by boost serialization.
 // They should be replaced by STL library in the future.
 #include <boost/function.hpp>
+#if __has_include("boost/bind/bind.hpp")
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
+#else
 #include <boost/bind.hpp>
+#endif
 #include <boost/shared_ptr.hpp>
 
 #include <iostream>

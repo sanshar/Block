@@ -22,8 +22,9 @@ namespace Npdm{
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& leftOp, SparseMatrix& dotOp, SparseMatrix& rightOp, const SpinBlock& big)
+double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& leftOp, SparseMatrix& dotOp, SparseMatrix* rightOp_ptr, const SpinBlock& big)
 {
+  SparseMatrix& rightOp = *rightOp_ptr;
 
   //calculating <wave1| Oa*Ob | wave2>
   // do transpose specifies if we want  <wave1| Oa^T*Ob |wave2> separately. This can be avoided in some sitations if wave1 and wave2 are the same functions
@@ -39,9 +40,9 @@ double spinExpectation(Wavefunction& wave1, Wavefunction& wave2, SparseMatrix& l
   // In spin-adapted, getirrep is the value of S
   // In non spin-adapted, getirrep is the value of S_z
   if(dmrginp.spinAdapted())
-    totalspin = (&rightOp) ? rightOp.get_spin().getirrep() : 0;
+    totalspin = rightOp_ptr ? rightOp.get_spin().getirrep() : 0;
   else
-    totalspin = (&rightOp) ? -(rightOp.get_spin().getirrep()) : 0;
+    totalspin = rightOp_ptr ? -(rightOp.get_spin().getirrep()) : 0;
 
   FormLeftOp(leftBlock, leftOp, dotOp, AOp, totalspin);
   SpinQuantum hq(0,SpinSpace(0),IrrepSpace(0));

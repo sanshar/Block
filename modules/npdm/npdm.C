@@ -1,8 +1,8 @@
-/*                                                                           
-Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012                      
-Copyright (c) 2012, Garnet K.-L. Chan                                        
-                                                                             
-This program is integrated in Molpro with the permission of 
+/*
+Developed by Sandeep Sharma and Garnet K.-L. Chan, 2012
+Copyright (c) 2012, Garnet K.-L. Chan
+
+This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
@@ -29,7 +29,7 @@ namespace Npdm {
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem, 
+void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepParams, SpinBlock& system, SpinBlock& newSystem,
                               const bool &useSlater, const bool& dot_with_sys, const int state, const int stateB)
 {
   Timer timer;
@@ -51,7 +51,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
     systemDotStart = dmrginp.spinAdapted() ? system.get_sites()[0] - 1 : (system.get_sites()[0])/2 - 1 ;
     systemDotEnd = systemDotStart - systemDotSize;
   }
-  vector<int> spindotsites(2); 
+  vector<int> spindotsites(2);
   spindotsites[0] = systemDotStart;
   spindotsites[1] = systemDotEnd;
   //if (useSlater) {
@@ -70,7 +70,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   if(dmrginp.setStateSpecific() || dmrginp.transition_diff_irrep()){
     InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, state, stateB,
                                    sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), DISTRIBUTED_STORAGE, true, true);
-    
+
     InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
                                       state, stateB,
                                       sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
@@ -79,7 +79,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   else{
     InitBlocks::InitNewSystemBlock(system, systemDot, newSystem, sweepParams.current_root(), sweepParams.current_root(),
                                    sweepParams.get_sys_add(), dmrginp.direct(), system.get_integralIndex(), DISTRIBUTED_STORAGE, true, true);
-    
+
     InitBlocks::InitNewEnvironmentBlock(environment, systemDot, newEnvironment, system, systemDot,
                                       sweepParams.current_root(), sweepParams.current_root(),
                                       sweepParams.get_sys_add(), sweepParams.get_env_add(), forward, dmrginp.direct(),
@@ -90,21 +90,21 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   newSystem.set_loopblock(true);
   system.set_loopblock(false);
   newEnvironment.set_loopblock(false);
-  InitBlocks::InitBigBlock(newSystem, newEnvironment, big); 
+  InitBlocks::InitBigBlock(newSystem, newEnvironment, big);
 
   const int nroots = dmrginp.nroots();
   std::vector<Wavefunction> solution;
   if(state==stateB){
     solution.resize(1);
     DiagonalMatrix e;
-    GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, true, 0.0); 
+    GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, true, 0.0);
 
   }
   else{
     solution.resize(2);
     DiagonalMatrix e;
-    GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, true, 0.0,false); 
-    GuessWave::guess_wavefunctions(solution[1], e, big, sweepParams.get_guesstype(), true, stateB, true, 0.0,true); 
+    GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, true, 0.0,false);
+    GuessWave::guess_wavefunctions(solution[1], e, big, sweepParams.get_guesstype(), true, stateB, true, 0.0,true);
   }
 
 #ifndef SERIAL
@@ -113,8 +113,8 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
 #endif
 
 
-  //GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, false, 0.0); 
-  //GuessWave::guess_wavefunctions(solution[1], e, big, sweepParams.get_guesstype(), true, stateB, true, 0.0); 
+  //GuessWave::guess_wavefunctions(solution[0], e, big, sweepParams.get_guesstype(), true, state, false, 0.0);
+  //GuessWave::guess_wavefunctions(solution[1], e, big, sweepParams.get_guesstype(), true, stateB, true, 0.0);
 
 
 
@@ -152,7 +152,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   }
 
 
-  
+
 
 
   int sweepPos = sweepParams.get_block_iter();
@@ -168,13 +168,13 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
 
 
   //FIXME
-  //Maybe, for StateSpecific calculations, we can load rotation matrices, wavefuntions from the disk. 
+  //Maybe, for StateSpecific calculations, we can load rotation matrices, wavefuntions from the disk.
   //There is no longer need to transform wavefuntions and to make rotation matrices from the density matrices.
-  
+
   //FIXME
-  //If in the state-average pdm, different states do not share the same rotation matrices as they do in energy calculations. Making rotation matrices from 
-  //density matrices of different states is neccessary. 
-  
+  //If in the state-average pdm, different states do not share the same rotation matrices as they do in energy calculations. Making rotation matrices from
+  //density matrices of different states is neccessary.
+
   //if(newSystem.get_sites().size()>1)
   //if (!mpigetrank()){
   //LoadRotationMatrix (newSystem.get_sites(), rotateMatrix, state);
@@ -187,7 +187,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
   #endif
 
   // Do we need to do this step for NPDM on the last sweep site? (It's not negligible cost...?)
-  //It crashes at the last sweep site. 
+  //It crashes at the last sweep site.
   //Since it is useless, Just omit it at the last sweep site.
  // if( sweepParams.get_block_iter()  != sweepParams.get_n_iters() - 1)
   {
@@ -205,7 +205,7 @@ void npdm_block_and_decimate( Npdm_driver_base& npdm_driver, SweepParams &sweepP
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams, const bool &warmUp, const bool &forward, 
+double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams, const bool &warmUp, const bool &forward,
                          const bool &restart, const int &restartSize, const int state, const int stateB)
 {
   Timer sweeptimer;
@@ -220,11 +220,11 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
   // a new renormalisation sweep routine
   pout << ((forward) ? "\t\t\t Starting renormalisation sweep in forwards direction" : "\t\t\t Starting renormalisation sweep in backwards direction") << endl;
   pout << "\t\t\t ============================================================================ " << endl;
-  
+
   int integralIndex = 0;
   if(dmrginp.setStateSpecific() || dmrginp.transition_diff_irrep())
     InitBlocks::InitStartingBlock( system, forward, state, stateB, sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex);
-  else 
+  else
     InitBlocks::InitStartingBlock( system, forward, sweepParams.current_root(), sweepParams.current_root(), sweepParams.get_forward_starting_size(), sweepParams.get_backward_starting_size(), restartSize, restart, warmUp, integralIndex);
 
   pout << "\t\t\t Starting block is :: " << endl << system << endl;
@@ -253,26 +253,26 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
 
     if (dmrginp.no_transform())
      sweepParams.set_guesstype() = BASIC;
-    else if (!warmUp && sweepParams.get_block_iter() != 0) 
-	    sweepParams.set_guesstype() = TRANSFORM;
-    else if (!warmUp && sweepParams.get_block_iter() == 0 && 
+    else if (!warmUp && sweepParams.get_block_iter() != 0)
+            sweepParams.set_guesstype() = TRANSFORM;
+    else if (!warmUp && sweepParams.get_block_iter() == 0 &&
               ((dmrginp.algorithm_method() == TWODOT_TO_ONEDOT && dmrginp.twodot_to_onedot_iter() != sweepParams.get_sweep_iter()) ||
                 dmrginp.algorithm_method() != TWODOT_TO_ONEDOT))
       sweepParams.set_guesstype() = TRANSPOSE;
     else
       sweepParams.set_guesstype() = BASIC;
-    
+
     //pout << "guess wave funtion type: " << sweepParams.get_guesstype()<<endl;
     p1out << "\t\t\t Blocking and Decimating " << endl;
- 
+
     SpinBlock newSystem;
 
     // Build npdm elements
     npdm_block_and_decimate(npdm_driver, sweepParams, system, newSystem, warmUp, dot_with_sys, state, stateB);
 
 //    for(int j=0;j<nroots;++j)
-//      pout << "\t\t\t Total block energy for State [ " << j << 
-// " ] with " << sweepParams.get_keep_states()<<" :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;              
+//      pout << "\t\t\t Total block energy for State [ " << j <<
+// " ] with " << sweepParams.get_keep_states()<<" :: " << sweepParams.get_lowest_energy()[j]+dmrginp.get_coreenergy() <<endl;
 //
 //    finalEnergy_spins = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy_spins() : finalEnergy_spins);
 //    finalEnergy = ((sweepParams.get_lowest_energy()[0] < finalEnergy[0]) ? sweepParams.get_lowest_energy() : finalEnergy);
@@ -281,7 +281,7 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
     system = newSystem;
 
     pout << system<<endl;
-    
+
     if(dmrginp.setStateSpecific() || dmrginp.transition_diff_irrep())
       SpinBlock::store (forward, system.get_sites(), system, state, stateB);
     else
@@ -297,11 +297,11 @@ double npdm_do_one_sweep(Npdm_driver_base &npdm_driver, SweepParams &sweepParams
 
   //for(int j=0;j<nroots;++j)
 //  {int j = state;
-//    pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
+//    pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j
 //	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
 //  }
 //  {int j = stateB;
-//    pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j 
+//    pout << "\t\t\t Finished Sweep with " << sweepParams.get_keep_states() << " states and sweep energy for State [ " << j
 //	 << " ] with Spin [ " << dmrginp.molecule_quantum().get_s()  << " ] :: " << finalEnergy[j]+dmrginp.get_coreenergy() << endl;
 //  }
 //  pout << "\t\t\t Largest Error for Sweep with " << sweepParams.get_keep_states() << " states is " << finalError << endl;
@@ -391,7 +391,6 @@ void npdm(NpdmOrder npdm_order, bool restartpdm, bool transitionpdm, bool dS)
     }
   }
 
- 
 if (dS) {
     for (int state=0; state<dmrginp.nroots(); state++) {
       for(int stateB=0; stateB<state; stateB++){
@@ -413,15 +412,15 @@ else {
     Timer timer;
     dmrginp.set_fullrestart() = true;
     sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-	  dmrginp.npdm_generate() = true;
+          dmrginp.npdm_generate() = true;
     if ( !dmrginp.setStateSpecific())
-      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
+      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators
     else if (dmrginp.specificpdm().size()==1)
-      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, dmrginp.specificpdm()[0], dmrginp.specificpdm()[0]); //this will generate the cd operators                               
+      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, dmrginp.specificpdm()[0], dmrginp.specificpdm()[0]); //this will generate the cd operators
     else if (dmrginp.specificpdm().size()==2)
-      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, dmrginp.specificpdm()[0], dmrginp.specificpdm()[1]); //this will generate the cd operators                               
+      SweepGenblock::do_one(sweepParams, false, !direction, false, 0, dmrginp.specificpdm()[0], dmrginp.specificpdm()[1]); //this will generate the cd operators
     else abort();
-		dmrginp.npdm_generate() = false;
+                dmrginp.npdm_generate() = false;
     ecpu = timer.elapsedcputime();ewall=timer.elapsedwalltime();
     p3out << "\t\t\t NPDM SweepGenblock time " << ewall << " " << ecpu << endl;
     dmrginp.set_fullrestart() = false;
@@ -448,9 +447,9 @@ else {
         Timer timer;
         dmrginp.set_fullrestart() = true;
         sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-				dmrginp.npdm_generate() = true;
-        SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, stateB); //this will generate the cd operators                               
-				dmrginp.npdm_generate() = false;
+                                dmrginp.npdm_generate() = true;
+        SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, stateB); //this will generate the cd operators
+                                dmrginp.npdm_generate() = false;
         ecpu = timer.elapsedcputime();ewall=timer.elapsedwalltime();
         p3out << "\t\t\t NPDM SweepGenblock time " << ewall << " " << ecpu << endl;
         dmrginp.set_fullrestart() = false;
@@ -468,33 +467,41 @@ else {
     else if( !dmrginp.setStateSpecific()){
     Timer timer;
     dmrginp.set_fullrestart() = true;
-		dmrginp.npdm_generate() = true;
+                dmrginp.npdm_generate() = true;
     sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators                               
-		dmrginp.npdm_generate() = false;
+    SweepGenblock::do_one(sweepParams, false, !direction, false, 0, -1, -1); //this will generate the cd operators
+                dmrginp.npdm_generate() = false;
     ecpu = timer.elapsedcputime();ewall=timer.elapsedwalltime();
     p3out << "\t\t\t NPDM SweepGenblock time " << ewall << " " << ecpu << endl;
     dmrginp.set_fullrestart() = false;
 
-    
+
+//pout << "(orz3rdmalt1,orz3rdmalt2) = (" << dmrginp.orz3rdmalt1() << "," << dmrginp.orz3rdmalt2() << ")" << endl;
     if(transitionpdm){
       //  <\Phi_k|a^+_ia_j|\Phi_l> = <\Phi_l|a^+_ja_i|\Phi_k>*
       //  Therefore, only calculate the situations with k >= l.
       //  for(int stateB=0; stateB<= dmrginp.nroots(); stateB++){
+const bool docalc = (dmrginp.orz3rdmalt1()==-1 && dmrginp.orz3rdmalt2()==-1);
       for (int state=0; state<dmrginp.nroots(); state++) {
          for(int stateB=0; stateB<=state; stateB++){
+if( docalc || (state==dmrginp.orz3rdmalt1() && stateB==dmrginp.orz3rdmalt2()) ) {
+pout << endl << ">> NPDM (state,stateB)=(" << state << "," << stateB << ")" << endl;
           sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
           Timer timerX;
           npdm_driver->clear();
           npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,stateB);
           ecpu = timerX.elapsedcputime();ewall=timerX.elapsedwalltime();
           p3out << "\t\t\t NPDM sweep time " << ewall << " " << ecpu << endl;
-          }
+}
+         }
       }
 
     }
     else {
+const bool docalc = (dmrginp.orz3rdmalt1()==-1 && dmrginp.orz3rdmalt2()==-1);
       for (int state=0; state<dmrginp.nroots(); state++) {
+if( docalc || (state==dmrginp.orz3rdmalt1() && state==dmrginp.orz3rdmalt2()) ) {
+pout << endl << ">> NPDM (state)=(" << state << "," << ")" << endl;
         sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
         if ( dmrginp.new_npdm_code() ) {
           Timer timerX;
@@ -502,13 +509,14 @@ else {
           npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,state);
           ecpu = timerX.elapsedcputime();ewall=timerX.elapsedwalltime();
           p3out << "\t\t\t NPDM sweep time " << ewall << " " << ecpu << endl;
-        } 
+        }
         else{
-          if (npdm_order == NPDM_ONEPDM) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);     
+          if (npdm_order == NPDM_ONEPDM) SweepOnepdm::do_one(sweepParams, false, direction, false, 0, state);
           else if (npdm_order == NPDM_TWOPDM) SweepTwopdm::do_one(sweepParams, false, direction, false, 0, state);
           else abort();
         }
        }
+}
        }
 
     }
@@ -518,10 +526,10 @@ else {
     if(transitionpdm){
       for (int state=0; state<dmrginp.nroots(); state++) {
         for (int stateB=0; stateB<=state; stateB++) {
-  
+
         dmrginp.set_fullrestart() = true;
         sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-  
+
         if (mpigetrank() == 0) {
           Sweep::InitializeStateInfo(sweepParams, direction, state);
           Sweep::InitializeStateInfo(sweepParams, !direction, state);
@@ -529,7 +537,7 @@ else {
           Sweep::CanonicalizeWavefunction(sweepParams, !direction, state);
           Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
         }
-  
+
         sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
         if (mpigetrank() == 0) {
           Sweep::InitializeStateInfo(sweepParams, direction, stateB);
@@ -541,13 +549,13 @@ else {
         // Prepare NPDM operators
         Timer timer;
         sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
-				dmrginp.npdm_generate() = true;
+                                dmrginp.npdm_generate() = true;
         SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, stateB); //this will generate the cd operators
-				dmrginp.npdm_generate() = false;
+                                dmrginp.npdm_generate() = false;
         dmrginp.set_fullrestart() = false;
         ecpu = timer.elapsedcputime();ewall=timer.elapsedwalltime();
         p3out << "\t\t\t NPDM SweepGenblock time " << ewall << " " << ecpu << endl;
-  
+
         Timer timerX;
         npdm_driver->clear();
         sweepParams = sweep_copy; direction = direction_copy; restartsize = restartsize_copy;
@@ -570,16 +578,16 @@ else {
         Sweep::CanonicalizeWavefunction(sweepParams, direction, state);
       }
       // Prepare NPDM operators
-			dmrginp.npdm_generate() = true;
+                        dmrginp.npdm_generate() = true;
       SweepGenblock::do_one(sweepParams, false, !direction, false, 0, state, state); //this will generate the cd operators
-			dmrginp.npdm_generate() = false;
+                        dmrginp.npdm_generate() = false;
       dmrginp.set_fullrestart() = false;
       // Do NPDM sweep
       npdm_driver->clear();
       npdm_do_one_sweep(*npdm_driver, sweepParams, false, direction, false, 0, state,state);
    }
   }
-  
+
 }
 
   sweep_copy.savestate(direction_copy, restartsize_copy);
@@ -588,4 +596,3 @@ else {
 }
 }
 }
-

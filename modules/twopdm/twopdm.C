@@ -152,7 +152,7 @@ void compute_two_pdm_0_4_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   SparseMatrix* leftOp = 0;
   SparseMatrix* rightOp = 0;
   vector<double> expectations;
-  spinExpectation(wave1, wave2, *leftOp, dotop, *rightOp, big, expectations, false);
+  spinExpectation(wave1, wave2, leftOp, &dotop, rightOp, big, expectations, false);
   int ix = 2*dotindex;
   assign_antisymmetric(twopdm, ix, ix+1, ix+1, ix, 0.5*expectations[0]);
 }
@@ -178,7 +178,7 @@ void compute_two_pdm_4_0_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   SparseMatrix* dotOp = 0;
   SparseMatrix* rightOp = 0;
   vector<double> expectations;
-  spinExpectation(wave1, wave2, leftop, *dotOp, *rightOp, big, expectations, false);
+  spinExpectation(wave1, wave2, &leftop, dotOp, rightOp, big, expectations, false);
   int ix = 2*leftindex;
   assign_antisymmetric(twopdm, ix, ix+1, ix+1, ix, 0.5*expectations[0]);
 }
@@ -205,7 +205,7 @@ void compute_two_pdm_0_0_4(Wavefunction& wave1, Wavefunction& wave2, const SpinB
   SparseMatrix* leftOp = 0;
   SparseMatrix* dotop = 0;
   vector<double> expectations;
-  spinExpectation(wave1, wave2, *leftOp, *dotop, rightop, big, expectations, false);
+  spinExpectation(wave1, wave2, leftOp, dotop, &rightop, big, expectations, false);
   int ix = 2*rightindex;
   assign_antisymmetric(twopdm, ix, ix+1, ix+1, ix, 0.5*expectations[0]);
 }
@@ -245,8 +245,8 @@ void compute_two_pdm_0_2_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_rep(CRE_CRE, sq0, kx, lx);
       vector<double> expectations;
       Transposeview rop0 = Transposeview(*rightop0), rop2 = Transposeview(*rightop2); 
-      spinExpectation(wave1, wave2, *leftOp, *dotop0, rop0, big, expectations, false);
-      spinExpectation(wave1, wave2, *leftOp, *dotop2, rop2, big, expectations, false);
+      spinExpectation(wave1, wave2, leftOp, &(*dotop0), &rop0, big, expectations, false);
+      spinExpectation(wave1, wave2, leftOp, &(*dotop2), &rop2, big, expectations, false);
       vector<int> indices(4,0);
       indices[0] = ix; indices[1] = jx; indices[2] = lx; indices[3] = kx;
       expectations[0]*=-1; expectations[1]*=-1;
@@ -279,8 +279,8 @@ void compute_two_pdm_0_2_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       int lx = rightop2->get_orbs(1);
       boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);//rightBlock->get_op_rep(CRE_DES_S0, kx, lx);
       vector<double> expectations;
-      spinExpectation(wave1, wave2, *leftOp, *dotop0, *rightop0, big, expectations, false);
-      spinExpectation(wave1, wave2, *leftOp, *dotop2, *rightop2, big, expectations, false);
+      spinExpectation(wave1, wave2, leftOp, &(*dotop0), &(*rightop0), big, expectations, false);
+      spinExpectation(wave1, wave2, leftOp, &(*dotop2), &(*rightop2), big, expectations, false);
     
       vector<int> indices(4,0);
       indices[0] = ix; indices[1] = kx; indices[2] = jx; indices[3] = lx;
@@ -322,8 +322,8 @@ void compute_two_pdm_2_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE_CRE).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);
       vector<double> expectations;
       Transposeview rop0 = Transposeview(*rightop0), rop2 = Transposeview(*rightop2); 
-      spinExpectation(wave1, wave2, *leftop0, *dotop, rop0, big, expectations, false);
-      spinExpectation(wave1, wave2, *leftop2, *dotop, rop2, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop0), dotop, &rop0, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop2), dotop, &rop2, big, expectations, false);
       vector<int> indices(4,0);
       indices[0] = ix; indices[1] = jx; indices[2] = lx; indices[3] = kx;
       expectations[0]*=-1; expectations[1]*=-1;
@@ -355,8 +355,8 @@ void compute_two_pdm_2_0_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       int lx = rightop2->get_orbs(1);
       boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);//rightBlock->get_op_rep(CRE_DES_S0, kx, lx);
       vector<double> expectations;
-      spinExpectation(wave1, wave2, *leftop0, *dotop, *rightop0, big, expectations, false);
-      spinExpectation(wave1, wave2, *leftop2, *dotop, *rightop2, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop0), dotop, &(*rightop0), big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop2), dotop, &(*rightop2), big, expectations, false);
     
       vector<int> indices(4,0);
       indices[0] = ix; indices[1] = kx; indices[2] = jx; indices[3] = lx;
@@ -398,8 +398,8 @@ void compute_two_pdm_2_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_array(CRE_CRE).get_local_element(kl)[0]->getworkingrepresentation(dotBlock);//dotBlock->get_op_rep(CRE_CRE_S0, kx, lx);
       vector<double> expectations;
       Transposeview dop0 = Transposeview(*dotop0), dop2 = Transposeview(*dotop2); 
-      spinExpectation(wave1, wave2, *leftop0, dop0, *rightop, big, expectations, false);
-      spinExpectation(wave1, wave2, *leftop2, dop2, *rightop, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop0), &dop0, rightop, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop2), &dop2, rightop, big, expectations, false);
       vector<int> indices(4,0);
       indices[0] = ix; indices[1] = jx; indices[2] = lx; indices[3] = kx;
       expectations[0]*=-1; expectations[1]*=-1;
@@ -432,8 +432,8 @@ void compute_two_pdm_2_2_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       int lx = dotop2->get_orbs(1);
       boost::shared_ptr<SparseMatrix> dotop0 = dotBlock->get_op_array(CRE_DES).get_local_element(kl)[0]->getworkingrepresentation(dotBlock);//dotBlock->get_op_rep(CRE_DES_S0, kx, lx);
       vector<double> expectations;
-      spinExpectation(wave1, wave2, *leftop0, *dotop0, *rightop, big, expectations, false);
-      spinExpectation(wave1, wave2, *leftop2, *dotop2, *rightop, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop0), &(*dotop0), rightop, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop2), &(*dotop2), rightop, big, expectations, false);
     
       vector<int> indices(4,0);
       indices[0] = ix; indices[1] = kx; indices[2] = jx; indices[3] = lx;
@@ -470,8 +470,8 @@ void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE_CRE).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);//rightBlock->get_op_rep(CRE_CRE_S0, kx, lx);
       vector<double> expectations;
       Transposeview rop0 = Transposeview(*rightop0), rop2 = Transposeview(*rightop2); 
-      spinExpectation(wave1, wave2, *leftop, *dotop, rop0, big, expectations, false);
-      spinExpectation(wave1, wave2, *leftop, *dotop, rop2, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop), &(*dotop), &rop0, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop), &(*dotop), &rop2, big, expectations, false);
       vector<int> indices(4,0);
       indices[0] = ix; indices[1] = jx; indices[2] = kx; indices[3] = lx;
       expectations[0]*=-1; expectations[1]*=-1;
@@ -504,8 +504,8 @@ void compute_two_pdm_1_1_2(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       boost::shared_ptr<SparseMatrix> rightop0 = rightBlock->get_op_array(CRE_DES).get_local_element(kl)[0]->getworkingrepresentation(rightBlock);//rightBlock->get_op_rep(CRE_DES_S0, kx, lx);
       vector<double> expectations;
       Transposeview tdot = Transposeview(*dotop);
-      spinExpectation(wave1, wave2, *leftop, tdot, *rightop0, big, expectations, true);
-      spinExpectation(wave1, wave2, *leftop, tdot, *rightop2, big, expectations, true);
+      spinExpectation(wave1, wave2, &(*leftop), &tdot, &(*rightop0), big, expectations, true);
+      spinExpectation(wave1, wave2, &(*leftop), &tdot, &(*rightop2), big, expectations, true);
       vector<int> indices(4,0);
       vector<double> expect1(2), expect2(2);
       expect1[0] = expectations[0]; expect1[1] = expectations[2];
@@ -556,8 +556,8 @@ void compute_two_pdm_1_2_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       Transposeview tlop = Transposeview(*leftop);
 
       vector<double> expectations;
-      spinExpectation(wave1, wave2, tlop, *dotop0, trop, big, expectations, false);
-      spinExpectation(wave1, wave2, tlop, *dotop2, trop, big, expectations, false);
+      spinExpectation(wave1, wave2, &tlop, &(*dotop0), &trop, big, expectations, false);
+      spinExpectation(wave1, wave2, &tlop, &(*dotop2), &trop, big, expectations, false);
       vector<int> indices(4,0);
       indices[0] = jx; indices[1] = jx; indices[2] = ix; indices[3] = kx;
       spin_to_nonspin(indices, expectations, twopdm, D_CC_D, true);
@@ -573,15 +573,15 @@ void compute_two_pdm_1_2_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       Transposeview tlop = Transposeview(*leftop);
 
       vector<double> expectations;
-      spinExpectation(wave1, wave2, *leftop, *dotop0, trop, big, expectations, false);
-      spinExpectation(wave1, wave2, *leftop, *dotop2, trop, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop), &(*dotop0), &trop, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop), &(*dotop2), &trop, big, expectations, false);
       vector<int> indices(4,0);
       indices[0] = ix; indices[1] = jx; indices[2] = jx; indices[3] = kx;
       spin_to_nonspin(indices, expectations, twopdm, C_CD_D, true);
 
       expectations.resize(0);
-      spinExpectation(wave1, wave2, tlop, *dotop0, rightop, big, expectations, false);
-      spinExpectation(wave1, wave2, tlop, *dotop2, rightop, big, expectations, false);
+      spinExpectation(wave1, wave2, &tlop, &(*dotop0), &rightop, big, expectations, false);
+      spinExpectation(wave1, wave2, &tlop, &(*dotop2), &rightop, big, expectations, false);
       indices[0] = kx; indices[1] = jx; indices[2] = jx; indices[3] = ix;
       spin_to_nonspin(indices, expectations, twopdm, D_CD_C, true);
 
@@ -622,8 +622,8 @@ void compute_two_pdm_2_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       Transposeview tdop = Transposeview(dotop);
       
       vector<double> expectations;
-      spinExpectation(wave1, wave2, *leftop0, tdop, trop, big, expectations, false);
-      spinExpectation(wave1, wave2, *leftop2, tdop, trop, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop0), &tdop, &trop, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop2), &tdop, &trop, big, expectations, false);
       vector<int> indices(4,0);
       indices[0] = ix; indices[1] = ix; indices[2] = jx; indices[3] = kx;
       spin_to_nonspin(indices, expectations, twopdm, CC_D_D, true);
@@ -648,8 +648,8 @@ void compute_two_pdm_2_1_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       Transposeview tdop = Transposeview(dotop);
 
       vector<double> expectations;
-      spinExpectation(wave1, wave2, *leftop0, dotop, trop, big, expectations, false);
-      spinExpectation(wave1, wave2, *leftop2, dotop, trop, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop0), &dotop, &trop, big, expectations, false);
+      spinExpectation(wave1, wave2, &(*leftop2), &dotop, &trop, big, expectations, false);
       vector<int> indices(4,0);
       indices[0] = ix; indices[1] = jx; indices[2] = ix; indices[3] = kx;
       spin_to_nonspin(indices, expectations, twopdm, CD_CD, true);
@@ -702,8 +702,8 @@ void compute_two_pdm_0_3_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       Transposeview trop = Transposeview(rightop);
 
       vector<double> expectations;
-      spinExpectation(wave1, wave2, *leftop, Dotop1, trop, big, expectations, false);
-      spinExpectation(wave1, wave2, *leftop, Dotop2, trop, big, expectations, false);
+      spinExpectation(wave1, wave2, leftop, &Dotop1, &trop, big, expectations, false);
+      spinExpectation(wave1, wave2, leftop, &Dotop2, &trop, big, expectations, false);
       vector<int> indices(4,0);
       indices[0] = jx; indices[1] = jx; indices[2] = jx; indices[3] = kx;
       spin_to_nonspin(indices, expectations, twopdm, CC_D_D, true);
@@ -789,8 +789,8 @@ void compute_two_pdm_0_3_1_notranspose(Wavefunction& wave1, Wavefunction& wave2,
       int kx = rightop.get_orbs(0);
 
       vector<double> expectations;
-      spinExpectation(wave1, wave2, *leftop, Dotop1, rightop, big, expectations, false);
-      spinExpectation(wave1, wave2, *leftop, Dotop2, rightop, big, expectations, false);
+      spinExpectation(wave1, wave2, leftop, &Dotop1, &rightop, big, expectations, false);
+      spinExpectation(wave1, wave2, leftop, &Dotop2, &rightop, big, expectations, false);
       vector<int> indices(4,0);
       indices[0] = jx; indices[1] = jx; indices[2] = jx; indices[3] = kx;
       spin_to_nonspin(indices, expectations, twopdm, CC_D_D, false);
@@ -835,8 +835,8 @@ void compute_two_pdm_0_3_1_notranspose(Wavefunction& wave1, Wavefunction& wave2,
 	  int kx = rightop.get_orbs(0);
 	  
 	  vector<double> expectations;
-	  spinExpectation(wave1, wave2, *leftop, Dotop1, rightop, big, expectations, false);
-	  spinExpectation(wave1, wave2, *leftop, Dotop2, rightop, big, expectations, false);
+	  spinExpectation(wave1, wave2, leftop, &Dotop1, &rightop, big, expectations, false);
+	  spinExpectation(wave1, wave2, leftop, &Dotop2, &rightop, big, expectations, false);
 	  vector<int> indices(4,0);
 	  indices[0] = kx; indices[1] = jx; indices[2] = jx; indices[3] = jx;
 	  spin_to_nonspin(indices, expectations, twopdm, CC_D_D, false);
@@ -892,8 +892,8 @@ void compute_two_pdm_3_0_1(Wavefunction& wave1, Wavefunction& wave2, const SpinB
 
       vector<double> expectations;
       dotop = 0;
-      spinExpectation(wave1, wave2, Leftop1, *dotop, trop, big, expectations, false);
-      spinExpectation(wave1, wave2, Leftop2, *dotop, trop, big, expectations, false);
+      spinExpectation(wave1, wave2, &Leftop1, dotop, &trop, big, expectations, false);
+      spinExpectation(wave1, wave2, &Leftop2, dotop, &trop, big, expectations, false);
       vector<int> indices(4,0);
       indices[0] = jx; indices[1] = jx; indices[2] = jx; indices[3] = kx;
       spin_to_nonspin(indices, expectations, twopdm, CC_D_D, true);
@@ -938,8 +938,8 @@ void compute_two_pdm_3_1_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
     
     vector<double> expectations;
 
-    spinExpectation(wave1, wave2, Leftop1, tdop, *rightop, big, expectations, false);
-    spinExpectation(wave1, wave2, Leftop2, tdop, *rightop, big, expectations, false);
+    spinExpectation(wave1, wave2, &Leftop1, &tdop, rightop, big, expectations, false);
+    spinExpectation(wave1, wave2, &Leftop2, &tdop, rightop, big, expectations, false);
     vector<int> indices(4,0);
     indices[0] = jx; indices[1] = jx; indices[2] = jx; indices[3] = kx;
 
@@ -1024,8 +1024,8 @@ void compute_two_pdm_1_3_0(Wavefunction& wave1, Wavefunction& wave2, const SpinB
       Transposeview tlop = Transposeview(leftop);
 
       vector<double> expectations;
-      spinExpectation(wave1, wave2, tlop, Dotop1, *rightop, big, expectations, false);
-      spinExpectation(wave1, wave2, tlop, Dotop2, *rightop, big, expectations, false);
+      spinExpectation(wave1, wave2, &tlop, &Dotop1, rightop, big, expectations, false);
+      spinExpectation(wave1, wave2, &tlop, &Dotop2, rightop, big, expectations, false);
 
       vector<int> indices(4,0);
       indices[0] = jx; indices[1] = jx; indices[2] = jx; indices[3] = kx;
@@ -1095,8 +1095,8 @@ void compute_two_pdm_1_3(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
       SparseMatrix* dotop = 0;
 
       vector<double> expectations;
-      spinExpectation(wave1, wave2, leftop, *dotop, Rightop1, big, expectations, false);
-      spinExpectation(wave1, wave2, leftop, *dotop, Rightop2, big, expectations, false);
+      spinExpectation(wave1, wave2, &leftop, dotop, &Rightop1, big, expectations, false);
+      spinExpectation(wave1, wave2, &leftop, dotop, &Rightop2, big, expectations, false);
 
       vector<int> indices(4,0);
       indices[0] = kx; indices[1] = jx; indices[2] = jx; indices[3] = jx;
@@ -1109,8 +1109,8 @@ void compute_two_pdm_1_3(Wavefunction& wave1, Wavefunction& wave2, const SpinBlo
   SparseMatrix* leftop = 0;
   
   vector<double> expectations;
-  spinExpectation(wave1, wave2, *leftop, dotop, Rightop1, big, expectations, false);
-  spinExpectation(wave1, wave2, *leftop, dotop, Rightop2, big, expectations, false);
+  spinExpectation(wave1, wave2, leftop, &dotop, &Rightop1, big, expectations, false);
+  spinExpectation(wave1, wave2, leftop, &dotop, &Rightop2, big, expectations, false);
   
   vector<int> indices(4,0);
   indices[0] = kx; indices[1] = jx; indices[2] = jx; indices[3] = jx;

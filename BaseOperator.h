@@ -11,7 +11,12 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include <cmath>
 #include <boost/function.hpp>
 #include <boost/functional.hpp>
+#if __has_include("boost/bind/bind.hpp")
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
+#else
 #include <boost/bind.hpp>
+#endif
 #include <boostutils.h>
 #include "SpinQuantum.h"
 #include "ObjectMatrix.h"

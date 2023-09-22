@@ -129,7 +129,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
     if ( dotOps.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_0, wavefunction_1, *lhsOp, *dotOp, *rhsOp, big_);
+    expectation = spinExpectation(wavefunction_0, wavefunction_1, *lhsOp, *dotOp, &(*rhsOp), big_);
   }
   // X_X_0
   else if ( (lhsOps.opReps_.size() > 0) && (dotOps.opReps_.size() > 0) && (rhsOps.opReps_.size() == 0) ) {
@@ -137,7 +137,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
     if ( lhsOps.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     Transposeview dotOpTr = Transposeview(*dotOp);
     if ( dotOps.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_0, wavefunction_1, *lhsOp, *dotOp, *null, big_);
+    expectation = spinExpectation(wavefunction_0, wavefunction_1, *lhsOp, *dotOp, null, big_);
   }
   // X_0_X
   else if ( (lhsOps.opReps_.size() > 0) && (dotOps.opReps_.size() == 0) && (rhsOps.opReps_.size() > 0) ) {
@@ -145,7 +145,7 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
     if ( lhsOps.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_0, wavefunction_1, *lhsOp, *null, *rhsOp, big_);
+    expectation = spinExpectation(wavefunction_0, wavefunction_1, *lhsOp, *null, &(*rhsOp), big_);
   }
   // 0_X_X
   else if ( (lhsOps.opReps_.size() == 0) && (dotOps.opReps_.size() > 0) && (rhsOps.opReps_.size() > 0) ) {
@@ -153,25 +153,25 @@ double Npdm_expectations::contract_spin_adapted_operators( int ilhs, int idot, i
     if ( dotOps.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_0, wavefunction_1, *null, *dotOp, *rhsOp, big_);
+    expectation = spinExpectation(wavefunction_0, wavefunction_1, *null, *dotOp, &(*rhsOp), big_);
   }
   // X_0_0
   else if ( (lhsOps.opReps_.size() > 0) && (dotOps.opReps_.size() == 0) && (rhsOps.opReps_.size() == 0) ) {
     Transposeview lhsOpTr = Transposeview(*lhsOp);
     if ( lhsOps.transpose_ ) lhsOp = boost::shared_ptr<SparseMatrix>( &lhsOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_0, wavefunction_1, *lhsOp, *null, *null, big_);
+    expectation = spinExpectation(wavefunction_0, wavefunction_1, *lhsOp, *null, null, big_);
   }
   // 0_X_0
   else if ( (lhsOps.opReps_.size() == 0) && (dotOps.opReps_.size() > 0) && (rhsOps.opReps_.size() == 0) ) {
     Transposeview dotOpTr = Transposeview(*dotOp);
     if ( dotOps.transpose_ ) dotOp = boost::shared_ptr<SparseMatrix>( &dotOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_0, wavefunction_1, *null, *dotOp, *null, big_);
+    expectation = spinExpectation(wavefunction_0, wavefunction_1, *null, *dotOp, null, big_);
   }
   // 0_0_X
   else if ( (lhsOps.opReps_.size() == 0) && (dotOps.opReps_.size() == 0) && (rhsOps.opReps_.size() > 0) ) {
     Transposeview rhsOpTr = Transposeview(*rhsOp);
     if ( rhsOps.transpose_ ) rhsOp = boost::shared_ptr<SparseMatrix>( &rhsOpTr, boostutils::null_deleter() );
-    expectation = spinExpectation(wavefunction_0, wavefunction_1, *null, *null, *rhsOp, big_);
+    expectation = spinExpectation(wavefunction_0, wavefunction_1, *null, *null, &(*rhsOp), big_);
   }
   else abort();
 
@@ -640,21 +640,23 @@ void Npdm_expectations::get_op_string( NpdmSpinOps_base & rhsOps,
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void Npdm_expectations::compute_intermediate( NpdmSpinOps_base & lhsOps, NpdmSpinOps_base & dotOps, std::map<std::vector<int>, Wavefunction> & waves)
+void Npdm_expectations::compute_intermediate( NpdmSpinOps_base * lhsOps_ptr, NpdmSpinOps_base * dotOps_ptr, std::map<std::vector<int>, Wavefunction> & waves)
 {
 #ifndef SERIAL
   boost::mpi::communicator world;
 #endif
-
+  NpdmSpinOps_base & lhsOps = *lhsOps_ptr;
+  NpdmSpinOps_base & dotOps = *dotOps_ptr;
+  
   SparseMatrix* null = 0; 
   vector<SpinQuantum> dQ = wavefunction_0.get_deltaQuantum();
   assert(dQ.size()==1 );
   assert(dQ[0].totalSpin.getirrep()== 0);
-  int lindices= &lhsOps ? lhsOps.indices_.size(): 0;
-  int dindices= &dotOps ? dotOps.indices_.size(): 0;
+  int lindices= lhsOps_ptr ? lhsOps.indices_.size(): 0;
+  int dindices= dotOps_ptr ? dotOps.indices_.size(): 0;
   int rindices= 2*npdm_order_-lindices- dindices;
-  int hilhs = lhsOps.opReps_.size();
-  int hidot = dotOps.opReps_.size();
+  int hilhs = lhsOps_ptr ? lhsOps.opReps_.size(): 0;
+  int hidot = dotOps_ptr ? dotOps.opReps_.size(): 0;
   for (int idot = 0; idot < std::max(1,hidot); ++idot) {
     for (int ilhs = 0; ilhs < std::max(1,hilhs); ++ilhs) {
      // int ls= hilhs? lhsOps.opReps_.at(ilhs)->get_deltaQuantum(0).get_s().getirrep(): 0;
@@ -695,18 +697,19 @@ void Npdm_expectations::compute_intermediate( NpdmSpinOps_base & lhsOps, NpdmSpi
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------------------------
-void Npdm_expectations::compute_intermediate( NpdmSpinOps_base & rhsOps, std::map<std::vector<int>, Wavefunction> &  waves)
+void Npdm_expectations::compute_intermediate( NpdmSpinOps_base * rhsOps_ptr, std::map<std::vector<int>, Wavefunction> &  waves)
 {
 #ifndef SERIAL
   boost::mpi::communicator world;
 #endif
+  NpdmSpinOps_base & rhsOps = *rhsOps_ptr;
 
   SparseMatrix* null = 0; 
   vector<SpinQuantum> dQ = wavefunction_1.get_deltaQuantum();
   assert(dQ.size()==1 );
   assert(dQ[0].totalSpin.getirrep()== 0);
-  int rindices= &rhsOps ? rhsOps.indices_.size(): 0;
-  int hirhs = rhsOps.opReps_.size();
+  int rindices= rhsOps_ptr ? rhsOps.indices_.size(): 0;
+  int hirhs = rhsOps_ptr ? rhsOps.opReps_.size(): 0;
   for (int irhs = 0; irhs < hirhs; ++irhs) {
     int rs= !rhsOps.transpose_? rhsOps.opReps_.at(irhs)->get_deltaQuantum(0).get_s().getirrep(): (-rhsOps.opReps_.at(irhs)->get_deltaQuantum(0).get_s()).getirrep();
     if(std::abs(rs)<= 2*npdm_order_-rindices )
