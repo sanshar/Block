@@ -18,7 +18,11 @@ Sandeep Sharma and Garnet K.-L. Chan
 #include "SpinQuantum.h"
 #include "timer.h"
 #include "couplingCoeffs.h"
+#if __has_include("boost/tr1/unordered_map.hpp")
 #include <boost/tr1/unordered_map.hpp>
+#else
+#include <unordered_map>
+#endif
 #include "IntegralMatrix.h"
 
 
@@ -205,6 +209,9 @@ class Input {
   int m_kept_nevpt2_states;
   pair<bool,int> NevPrint;
 
+  int m_orz3rdmalt1;
+  int m_orz3rdmalt2;
+  
   friend class boost::serialization::access;
   template<class Archive>
   void serialize(Archive & ar, const unsigned int version)
@@ -234,6 +241,7 @@ class Input {
     ar & n_twodot_noise & m_twodot_noise & m_twodot_gamma & m_guessState;
     ar & m_calc_ri_4pdm & m_store_ripdm_readable & m_nevpt2 & m_conventional_nevpt2 & m_kept_nevpt2_states & NevPrint;
     ar & m_act_size & m_core_size & m_virt_size & m_total_orbs & m_total_spin_orbs_symmetry & m_total_spatial_to_spin & m_total_spin_to_spatial;
+    ar & m_orz3rdmalt1 & m_orz3rdmalt2;
   }
 
 
@@ -572,6 +580,8 @@ class Input {
   const bool &npdm_intermediate() const { return m_npdm_intermediate; }
   bool &npdm_multinode() { return m_npdm_multinode; }
   const bool &npdm_multinode() const { return m_npdm_multinode; }
+  int orz3rdmalt1() const { return m_orz3rdmalt1; }
+  int orz3rdmalt2() const { return m_orz3rdmalt2; }
 };
 }
 #endif

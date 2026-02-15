@@ -161,12 +161,12 @@ void Npdm_driver::do_parallel_intermediate_loop( const char inner, Npdm::Npdm_ex
     if( inner =='r')
     {
 
-      npdm_expectations.compute_intermediate(outerOps,dotOps,local_waves);
+      npdm_expectations.compute_intermediate(&outerOps,&dotOps,local_waves);
     }
 
     else if ( inner =='l')
     {
-      npdm_expectations.compute_intermediate(outerOps,local_waves);
+      npdm_expectations.compute_intermediate(&outerOps,local_waves);
 
     }
     else assert(false);
@@ -276,7 +276,7 @@ void Npdm_driver::get_inner_Operators( const char inner, Npdm_expectations& npdm
 			else{
 				boost::shared_ptr<std::map<std::vector<int>, Wavefunction> >  half_waves( new std::map<std::vector<int>, Wavefunction>);
 
-        npdm_expectations.compute_intermediate(*inner_Operators[i],*dotOps,*half_waves);
+                                npdm_expectations.compute_intermediate(&(*inner_Operators[i]),&(*dotOps),*half_waves);
 				inner_intermediate.push_back(half_waves);
 			}
 		}
@@ -299,7 +299,7 @@ void Npdm_driver::get_inner_Operators( const char inner, Npdm_expectations& npdm
 			else{
 				boost::shared_ptr<std::map<std::vector<int>, Wavefunction> >  half_waves( new std::map<std::vector<int>, Wavefunction>);
 
-        npdm_expectations.compute_intermediate(*inner_Operators[i], *half_waves);
+                                npdm_expectations.compute_intermediate(&(*inner_Operators[i]), *half_waves);
 				inner_intermediate.push_back(half_waves);
 			}
 		}

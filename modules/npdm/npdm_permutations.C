@@ -6,6 +6,7 @@ This program is integrated in Molpro with the permission of
 Sandeep Sharma and Garnet K.-L. Chan
 */
 
+#include <set>
 #include <cassert>
 #include <algorithm>
 

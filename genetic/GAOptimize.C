@@ -9,7 +9,12 @@
 using namespace std;
 
 #include <boost/function.hpp>
+#if __has_include("boost/bind/bind.hpp")
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
+#else
 #include <boost/bind.hpp>
+#endif
 
 #ifndef SERIAL
 #include <boost/mpi.hpp>
